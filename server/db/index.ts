@@ -58,7 +58,9 @@ export * from './api/Workflow';
 export * from './api/WorkflowStep';
 export * from './api/WorkflowStepSystemObjectXref';
 
+export * from './api/composite/ModelConstellation';
 export * from './api/composite/ObjectGraph';
 export * from './api/composite/ObjectGraphDatabase';
 export * from './api/composite/ObjectGraphDataEntry';
+export * from './api/composite/SceneConstellation';
 export * from './api/composite/SubjectUnitIdentifier';

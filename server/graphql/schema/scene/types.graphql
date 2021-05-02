@@ -35,3 +35,8 @@ type IntermediaryFile {
     Asset: Asset
     SystemObject: SystemObject
 }
+
+type SceneConstellation {
+    Scene: Scene
+    ModelSceneXref: [ModelSceneXref]
+}

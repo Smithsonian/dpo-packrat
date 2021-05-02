@@ -43,6 +43,7 @@ export type Query = {
   getProjectDocumentation: GetProjectDocumentationResult;
   getProjectList: GetProjectListResult;
   getScene: GetSceneResult;
+  getSceneForAssetVersion: GetSceneForAssetVersionResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
@@ -181,6 +182,11 @@ export type QueryGetProjectListArgs = {
 
 export type QueryGetSceneArgs = {
   input: GetSceneInput;
+};
+
+
+export type QueryGetSceneForAssetVersionArgs = {
+  input: GetSceneForAssetVersionInput;
 };
 
 
@@ -606,6 +612,16 @@ export type GetModelConstellationForAssetVersionResult = {
   ModelConstellation?: Maybe<ModelConstellation>;
 };
 
+export type GetSceneForAssetVersionInput = {
+  idAssetVersion: Scalars['Int'];
+};
+
+export type GetSceneForAssetVersionResult = {
+  __typename?: 'GetSceneForAssetVersionResult';
+  idAssetVersion: Scalars['Int'];
+  SceneConstellation?: Maybe<SceneConstellation>;
+};
+
 
 export type Asset = {
   __typename?: 'Asset';
@@ -835,25 +851,13 @@ export type IngestModelInput = {
   sourceObjects: Array<RelatedObjectInput>;
 };
 
-export type ReferenceModelInput = {
-  idSystemObject: Scalars['Int'];
-  name: Scalars['String'];
-  fileSize: Scalars['BigInt'];
-  resolution?: Maybe<Scalars['Int']>;
-  boundingBoxP1X?: Maybe<Scalars['Float']>;
-  boundingBoxP1Y?: Maybe<Scalars['Float']>;
-  boundingBoxP1Z?: Maybe<Scalars['Float']>;
-  boundingBoxP2X?: Maybe<Scalars['Float']>;
-  boundingBoxP2Y?: Maybe<Scalars['Float']>;
-  boundingBoxP2Z?: Maybe<Scalars['Float']>;
-  action: ReferenceModelAction;
-};
-
 export type IngestSceneInput = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
+  name: Scalars['String'];
+  hasBeenQCd: Scalars['Boolean'];
+  isOriented: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
-  referenceModels: Array<ReferenceModelInput>;
 };
 
 export type IngestOtherInput = {
@@ -1077,7 +1081,7 @@ export type ModelSceneXref = {
   Name?: Maybe<Scalars['String']>;
   Usage?: Maybe<Scalars['String']>;
   Quality?: Maybe<Scalars['String']>;
-  FileSize?: Maybe<Scalars['Int']>;
+  FileSize?: Maybe<Scalars['BigInt']>;
   UVResolution?: Maybe<Scalars['Int']>;
   BoundingBoxP1X?: Maybe<Scalars['Float']>;
   BoundingBoxP1Y?: Maybe<Scalars['Float']>;
@@ -1238,6 +1242,12 @@ export type IntermediaryFile = {
   idAsset: Scalars['Int'];
   Asset?: Maybe<Asset>;
   SystemObject?: Maybe<SystemObject>;
+};
+
+export type SceneConstellation = {
+  __typename?: 'SceneConstellation';
+  Scene?: Maybe<Scene>;
+  ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
 };
 
 export type UpdateObjectDetailsInput = {

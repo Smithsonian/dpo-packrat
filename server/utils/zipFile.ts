@@ -104,13 +104,13 @@ export class ZipFile implements IZip {
                             if (!error && stream)
                                 resolve(stream);
                             else {
-                                LOG.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
+                                LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
                                 resolve(null);
                             }
                         });
                     }
                 } catch (error) /* istanbul ignore next */ {
-                    LOG.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
+                    LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
                     resolve(null);
                 }
             }

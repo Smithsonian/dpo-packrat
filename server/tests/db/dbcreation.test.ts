@@ -1358,6 +1358,20 @@ describe('DB Creation Test Suite', () => {
             expect(systemObjectXrefSubItem3.idSystemObjectXref).toBeGreaterThan(0);
     });
 
+    test('DB Creation: SystemObjectXref Subject-Item 1/3 Wire Third Time', async () => {
+        if (systemObjectSubject && systemObjectSubjectNulls && systemObjectItem) {
+            systemObjectXrefSubItem1 = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(systemObjectSubject.idSystemObject, systemObjectItem.idSystemObject);
+            systemObjectXrefSubItem3 = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(systemObjectSubjectNulls.idSystemObject, systemObjectItem.idSystemObject);
+        }
+        expect(systemObjectXrefSubItem1).toBeTruthy();
+        if (systemObjectXrefSubItem1)
+            expect(systemObjectXrefSubItem1.idSystemObjectXref).toBeGreaterThan(0);
+
+        expect(systemObjectXrefSubItem3).toBeTruthy();
+        if (systemObjectXrefSubItem3)
+            expect(systemObjectXrefSubItem3.idSystemObjectXref).toBeGreaterThan(0);
+    });
+
     test('DB Creation: SystemObjectXref Subject-Item 2/4', async () => {
         if (subject && subjectNulls && itemNulls && project) {
             systemObjectXrefSubItem2 = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(subject, itemNulls);
@@ -2031,16 +2045,36 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetVersionFetch).toBeTruthy();
     });
 
-    test('DB Fetch AssetVersion: AssetVersion.fetchByStorageKeyStaging Not Ingested', async () => {
+    test('DB Fetch AssetVersion: AssetVersion.fetchByStorageKeyStaging', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
         if (assetVersion) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchByStorageKeyStaging(assetVersion.StorageKeyStaging);
             if (assetVersionFetch) {
                 expect(assetVersionFetch.length).toEqual(1);
-                expect(assetVersionFetch).toEqual(expect.arrayContaining(assetVersionFetch));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.countStorageKeyStaging Ingested, Not Retired', async () => {
+        let assetVersionCount: number | null = null;
+        if (assetVersion) {
+            assetVersionCount = await DBAPI.AssetVersion.countStorageKeyStaging(assetVersion.StorageKeyStaging, true, false);
+            if (assetVersionCount)
+                expect(assetVersionCount).toEqual(1);
+        }
+        expect(assetVersionCount).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.countStorageKeyStaging Defaults', async () => {
+        let assetVersionCount: number | null = null;
+        if (assetVersion) {
+            assetVersionCount = await DBAPI.AssetVersion.countStorageKeyStaging(assetVersion.StorageKeyStaging);
+            if (assetVersionCount)
+                expect(assetVersionCount).toEqual(0);
+        }
+        expect(assetVersionCount).not.toBeNull();
     });
 
     test('DB Fetch By ID: Audit', async () => {
@@ -4398,6 +4432,13 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(modelFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Model.fetchByFileNameSizeAndAssetType', async () => {
+        const modelFetch: DBAPI.Model[] | null = await DBAPI.Model.fetchByFileNameSizeAndAssetType('zzzOBVIOUSLY_INVALID_NAMEzzz', BigInt(100), [0]);
+        expect(modelFetch).toBeTruthy();
+        if (modelFetch)
+            expect(modelFetch.length).toEqual(0);
     });
 
     test('DB Fetch Special: ModelConstellation', async () => {
