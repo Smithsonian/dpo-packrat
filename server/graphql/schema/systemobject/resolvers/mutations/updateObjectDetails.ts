@@ -5,6 +5,7 @@ import * as LOG from '../../../../../utils';
 import * as DBAPI from '../../../../../db';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
+import { SystemObjectTypeToName } from '../../../../../db/api/ObjectType';
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs): Promise<UpdateObjectDetailsResult> {
     const { input } = args;
@@ -13,7 +14,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     // LOG.info(JSON.stringify(data, null, 2), LOG.LS.eGQL);
 
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired)) {
-        return { success: false };
+        return { success: false, message: 'Error with Name and/or Retired field(s)' };
     }
 
     const SO = await DBAPI.SystemObject.fetch(idSystemObject);
@@ -72,6 +73,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 }
 
                 await Unit.update();
+            } else {
+                return {
+                    success: false,
+                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                };
             }
             break;
         }
@@ -86,6 +92,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 }
 
                 await Project.update();
+            } else {
+                return {
+                    success: false,
+                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                };
             }
             break;
         }
@@ -136,6 +147,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         GeoLocation.TS2 = maybe<number>(TS2);
                         await GeoLocation.update();
                     }
+                } else {
+                    return {
+                        success: false,
+                        message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                    };
                 }
             }
             break;
@@ -188,6 +204,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             await GeoLocation.update();
                         }
                     }
+                } else {
+                    return {
+                        success: false,
+                        message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                    };
                 }
             }
             break;
@@ -198,6 +219,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 const CaptureData = await DBAPI.CaptureData.fetch(idObject);
 
                 if (CaptureData) {
+                    CaptureData.Name = data.Name;
                     const {
                         description,
                         captureMethod,
@@ -220,7 +242,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (captureMethod) CaptureData.idVCaptureMethod = captureMethod;
 
                     const CaptureDataPhoto = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(CaptureData.idCaptureData);
-
                     if (CaptureDataPhoto && CaptureDataPhoto[0]) {
                         const [CD] = CaptureDataPhoto;
 
@@ -236,8 +257,18 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         CD.idVClusterType = maybe<number>(clusterType);
                         CD.ClusterGeometryFieldID = maybe<number>(clusterGeometryFieldId);
                         await CD.update();
+                    } else {
+                        return {
+                            success: false,
+                            message: `Unable to fetch CaptureDataPhoto with id ${idObject}; update failed`
+                        };
                     }
                     await CaptureData.update();
+                } else {
+                    return {
+                        success: false,
+                        message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                    };
                 }
             }
             break;
@@ -293,6 +324,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     } catch (error) {
                         throw new Error(error);
                     }
+                } else {
+                    return {
+                        success: false,
+                        message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                    };
                 }
             }
             break;
@@ -301,10 +337,15 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (Scene) {
                 Scene.Name = data.Name;
                 if (data.Scene) {
-                    // Update values here
+                    if (typeof data.Scene.IsOriented === 'boolean') Scene.IsOriented = data.Scene.IsOriented;
+                    if (typeof data.Scene.HasBeenQCd === 'boolean') Scene.HasBeenQCd = data.Scene.HasBeenQCd;
                 }
-
                 await Scene.update();
+            } else {
+                return {
+                    success: false,
+                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                };
             }
             break;
         } case eSystemObjectType.eIntermediaryFile: {
@@ -315,6 +356,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Asset.FileName = data.Name;
                     await Asset.update();
                 }
+            } else {
+                return {
+                    success: false,
+                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                };
             }
             break;
         } case eSystemObjectType.eProjectDocumentation: {
@@ -329,6 +375,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 }
 
                 await ProjectDocumentation.update();
+            } else {
+                return {
+                    success: false,
+                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                };
             }
             break;
         }
@@ -345,6 +396,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 }
 
                 await Asset.update();
+            } else {
+                return {
+                    success: false,
+                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                };
             }
             break;
         }
@@ -361,6 +417,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 }
 
                 await AssetVersion.update();
+            } else {
+                return {
+                    success: false,
+                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                };
             }
             break;
         }
@@ -374,6 +435,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 }
                 await Actor.update();
+            } else {
+                return {
+                    success: false,
+                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                };
             }
             break;
         }
@@ -391,6 +457,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Stakeholder.PhoneNumberOffice = maybe<string>(PhoneNumberOffice);
                 }
                 await Stakeholder.update();
+            } else {
+                return {
+                    success: false,
+                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
+                };
             }
             break;
         }
@@ -398,5 +469,5 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             break;
     }
 
-    return { success: true };
+    return { success: true, message: '' };
 }

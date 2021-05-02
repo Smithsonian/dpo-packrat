@@ -1013,6 +1013,7 @@ input UpdateObjectDetailsDataInput {
 
 type UpdateObjectDetailsResult {
   success: Boolean!
+  message: String!
 }
 
 input UpdateDerivedObjectsInput {
@@ -1120,6 +1121,7 @@ type CaptureDataDetailFields {
   clusterType: Int
   clusterGeometryFieldId: Int
   folders: [IngestFolder!]!
+  isValidData: Boolean
 }
 
 type SceneDetailFields {
