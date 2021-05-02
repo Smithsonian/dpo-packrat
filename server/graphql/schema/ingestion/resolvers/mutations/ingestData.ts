@@ -1,4 +1,5 @@
-import { IngestDataResult, MutationIngestDataArgs, IngestSubjectInput, IngestItemInput, IngestPhotogrammetry, IngestModelInput, IngestIdentifier, User, IngestPhotogrammetryInput } from '../../../../../types/graphql';
+import { IngestDataResult, MutationIngestDataArgs, IngestSubjectInput, IngestItemInput, IngestPhotogrammetryInput,
+    IngestModelInput, IngestSceneInput, IngestIdentifierInput, User } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
@@ -60,24 +61,27 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
 
     const ingestPhotogrammetry: boolean = input.photogrammetry && input.photogrammetry.length > 0;
     const ingestModel: boolean = input.model && input.model.length > 0;
-    const assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>(); // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
-    const ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>(); // map from idAssetVersion -> photogrammetry input
-    // create photogrammetry objects, if needed
+    const ingestScene: boolean = input.scene && input.scene.length > 0;
+    const assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>();       // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
+    const ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>();    // map from idAssetVersion -> photogrammetry input
+
     if (ingestPhotogrammetry) {
         for (const photogrammetry of input.photogrammetry) {
-            const captureDataDB: DBAPI.CaptureData | null = await createPhotogrammetryObjects(photogrammetry);
-            if (!captureDataDB)
+            if (!await createPhotogrammetryObjects(photogrammetry, assetVersionMap, ingestPhotoMap))
                 return { success: false };
-            if (photogrammetry.idAssetVersion) {
-                assetVersionMap.set(photogrammetry.idAssetVersion, captureDataDB);
-                ingestPhotoMap.set(photogrammetry.idAssetVersion, photogrammetry);
-            }
         }
     }
 
     if (ingestModel) {
         for (const model of input.model) {
             if (!await createModelObjects(model, assetVersionMap))
+                return { success: false };
+        }
+    }
+
+    if (ingestScene) {
+        for (const scene of input.scene) {
+            if (!await createSceneObjects(scene, assetVersionMap))
                 return { success: false };
         }
     }
@@ -109,30 +113,27 @@ async function getVocabularyARK(): Promise<DBAPI.Vocabulary | undefined> {
     return vocabularyARK;
 }
 
-/**  */
-async function createIdentifier(identifierValue: string, SO: DBAPI.SystemObject | null, idVIdentifierType: number | null): Promise<DBAPI.Identifier | null> {
-    if (!idVIdentifierType) {
-        const vocabularyARK: DBAPI.Vocabulary | undefined = await getVocabularyARK();
-        if (!vocabularyARK)
-            return null;
-        idVIdentifierType = vocabularyARK.idVocabulary;
+async function handleIdentifiers(soBased: DBAPI.SystemObjectBased, systemCreated: boolean,
+    identifiers: IngestIdentifierInput[] | undefined): Promise<boolean> {
+    if (systemCreated) {
+        if (!await createIdentifierForObject(null, soBased)) {
+            LOG.error(`ingestData unable to create identifier for ${JSON.stringify(soBased)}`, LOG.LS.eGQL);
+            return false;
+        }
     }
 
-    const identifier: DBAPI.Identifier = new DBAPI.Identifier({
-        IdentifierValue: identifierValue,
-        idVIdentifierType,
-        idSystemObject: SO ? SO.idSystemObject : null,
-        idIdentifier: 0
-    });
-
-    if (!await identifier.create()) {
-        LOG.error(`ingestData unable to create identifier record for subject's arkId ${identifierValue}`, LOG.LS.eGQL);
-        return null;
+    if (identifiers && identifiers.length > 0) {
+        for (const identifier of identifiers) {
+            if (!await createIdentifierForObject(identifier, soBased)) {
+                LOG.error(`ingestData unable to create identifier for ${JSON.stringify(soBased)}`, LOG.LS.eGQL);
+                return false;
+            }
+        }
     }
-    return identifier;
+    return true;
 }
 
-async function createIdentifierForObject(identifier: IngestIdentifier | null, SOBased: DBAPI.SystemObjectBased): Promise<boolean> {
+async function createIdentifierForObject(identifier: IngestIdentifierInput | null, SOBased: DBAPI.SystemObjectBased): Promise<boolean> {
     const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
     if (!SO) {
         LOG.error(`ingestData unable to fetch system object from ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
@@ -180,6 +181,28 @@ async function createIdentifierForObject(identifier: IngestIdentifier | null, SO
     return true;
 }
 
+async function createIdentifier(identifierValue: string, SO: DBAPI.SystemObject | null, idVIdentifierType: number | null): Promise<DBAPI.Identifier | null> {
+    if (!idVIdentifierType) {
+        const vocabularyARK: DBAPI.Vocabulary | undefined = await getVocabularyARK();
+        if (!vocabularyARK)
+            return null;
+        idVIdentifierType = vocabularyARK.idVocabulary;
+    }
+
+    const identifier: DBAPI.Identifier = new DBAPI.Identifier({
+        IdentifierValue: identifierValue,
+        idVIdentifierType,
+        idSystemObject: SO ? SO.idSystemObject : null,
+        idIdentifier: 0
+    });
+
+    if (!await identifier.create()) {
+        LOG.error(`ingestData unable to create identifier record for subject's arkId ${identifierValue}`, LOG.LS.eGQL);
+        return null;
+    }
+    return identifier;
+}
+
 async function validateOrCreateUnitEdan(units: DBAPI.Unit[] | null, Abbreviation: string): Promise<DBAPI.Unit | null> {
     if (!units || units.length == 0) {
         const unitEdanDB = new DBAPI.UnitEdan({
@@ -214,7 +237,7 @@ async function createSubject(idUnit: number, Name: string, identifier: DBAPI.Ide
     return subjectDB;
 }
 
-async function updateIdentifier(identifier: DBAPI.Identifier | null, subjectDB: DBAPI.Subject): Promise<boolean> {
+async function updateSubjectIdentifier(identifier: DBAPI.Identifier | null, subjectDB: DBAPI.Subject): Promise<boolean> {
     // update identifier with systemobject ID of our subject
     if (!identifier)
         return true;
@@ -268,7 +291,7 @@ async function createSubjectAndRelated(subject: IngestSubjectInput, units: DBAPI
         return null;
 
     // update identifier, if it exists with systemobject ID of our subject
-    if (!await updateIdentifier(identifier, subjectDB))
+    if (!await updateSubjectIdentifier(identifier, subjectDB))
         return null;
 
     return subjectDB;
@@ -326,11 +349,12 @@ async function wireSubjectsToItem(subjectsDB: DBAPI.Subject[], itemDB: DBAPI.Ite
     return true;
 }
 
-async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry): Promise<DBAPI.CaptureData | null> {
+async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetryInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>,
+    ingestPhotoMap: Map<number, IngestPhotogrammetryInput>): Promise<boolean> {
     const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry);
     if (!vocabulary) {
         LOG.error('ingestData unable to retrieve photogrammetry capture method vocabulary from cache', LOG.LS.eGQL);
-        return null;
+        return false;
     }
 
     // create photogrammetry objects, identifiers, etc.
@@ -344,7 +368,7 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry)
     });
     if (!await captureDataDB.create()) {
         LOG.error(`ingestData unable to create CaptureData for photogrammetry data ${JSON.stringify(photogrammetry)}`, LOG.LS.eGQL);
-        return null;
+        return false;
     }
 
     const captureDataPhotoDB: DBAPI.CaptureDataPhoto = new DBAPI.CaptureDataPhoto({
@@ -364,26 +388,18 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry)
     });
     if (!await captureDataPhotoDB.create()) {
         LOG.error(`ingestData unable to create CaptureDataPhoto for photogrammetry data ${JSON.stringify(photogrammetry)}`, LOG.LS.eGQL);
-        return null;
+        return false;
     }
 
-    if (photogrammetry.systemCreated) {
-        if (!await createIdentifierForObject(null, captureDataDB)) {
-            LOG.error(`ingestData unable to create identifier for photogrammetry data ${JSON.stringify(photogrammetry)}`, LOG.LS.eGQL);
-            return null;
-        }
+    if (!await handleIdentifiers(captureDataDB, photogrammetry.systemCreated, photogrammetry.identifiers))
+        return false;
+
+    if (photogrammetry.idAssetVersion) {
+        assetVersionMap.set(photogrammetry.idAssetVersion, captureDataDB);
+        ingestPhotoMap.set(photogrammetry.idAssetVersion, photogrammetry);
     }
 
-    if (photogrammetry.identifiers && photogrammetry.identifiers.length > 0) {
-        for (const identifier of photogrammetry.identifiers) {
-            if (!await createIdentifierForObject(identifier, captureDataDB)) {
-                LOG.error(`ingestData unable to create identifier for photogrammetry data ${JSON.stringify(photogrammetry)}`, LOG.LS.eGQL);
-                return null;
-            }
-        }
-    }
-
-    return captureDataDB;
+    return true;
 }
 
 async function createPhotogrammetryDerivedObjects(assetVersionMap: Map<number, DBAPI.SystemObjectBased>,
@@ -485,43 +501,63 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
         return false;
     }
 
-    if (model.systemCreated) {
-        if (!await createIdentifierForObject(null, modelDB)) {
-            LOG.error(`ingestData unable to create identifier for model data ${JSON.stringify(model)}`, LOG.LS.eGQL);
-            return false;
-        }
-    }
-
-    if (model.identifiers && model.identifiers.length > 0) {
-        for (const identifier of model.identifiers) {
-            if (!await createIdentifierForObject(identifier, modelDB)) {
-                LOG.error(`ingestData unable to create identifier for model data ${JSON.stringify(model)}`, LOG.LS.eGQL);
-                return false;
-            }
-        }
-    }
+    if (!await handleIdentifiers(modelDB, model.systemCreated, model.identifiers))
+        return false;
 
     // wire model to sourceObjects
     if (model.sourceObjects && model.sourceObjects.length > 0) {
-        const SO: DBAPI.SystemObject | null = await modelDB.fetchSystemObject();
-        if (SO) {
-            for (const sourceObject of model.sourceObjects) {
-                const xref: DBAPI.SystemObjectXref = new DBAPI.SystemObjectXref({
-                    idSystemObjectMaster: sourceObject.idSystemObject,
-                    idSystemObjectDerived: SO.idSystemObject,
-                    idSystemObjectXref: 0
-                });
-                if (!await xref.create()) {
-                    LOG.error(`ingestData failed to create SystemObjectXref ${JSON.stringify(xref)}`, LOG.LS.eGQL);
-                    continue;
-                }
+        for (const sourceObject of model.sourceObjects) {
+            if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, modelDB)) {
+                LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
+                continue;
             }
-        } else
-            LOG.error(`ingestData unable to fetch system object for model ${modelDB.idModel}`, LOG.LS.eGQL);
+        }
     }
 
     if (model.idAssetVersion)
         assetVersionMap.set(model.idAssetVersion, modelDB);
+    return true;
+}
+
+async function createSceneObjects(scene: IngestSceneInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
+    const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion);
+    if (!sceneConstellation || !sceneConstellation.Scene)
+        return false;
+
+    const sceneDB: DBAPI.Scene = sceneConstellation.Scene;
+    sceneDB.Name = scene.name;
+    sceneDB.HasBeenQCd = scene.hasBeenQCd;
+    sceneDB.IsOriented = scene.isOriented;
+    let ret: boolean = await sceneDB.create();
+
+    if (!await handleIdentifiers(sceneDB, scene.systemCreated, scene.identifiers))
+        return false;
+
+    // wire scene to reference models, including SystemObjectXref of 'scene as master' to 'models as derived'
+    if (sceneConstellation.ModelSceneXref) {
+        for (const MSX of sceneConstellation.ModelSceneXref) {
+            if (MSX.idModelSceneXref || MSX.idScene) {
+                LOG.error(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as record already was populated: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                continue;
+            }
+            if (MSX.idModel <= 0) {
+                LOG.error(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                continue;
+            }
+            MSX.idScene = sceneDB.idScene;
+            ret = await MSX.create() && ret;
+
+            const modelDB: DBAPI.Model | null = await DBAPI.Model.fetch(MSX.idModel);
+            if (!modelDB || !await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneDB, modelDB)) {
+                LOG.error(`ingestData could not create SystemObjectXref for Scene ${sceneDB.idScene} using: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                ret = false;
+                continue;
+            }
+        }
+    }
+
+    if (scene.idAssetVersion)
+        assetVersionMap.set(scene.idAssetVersion, sceneDB);
     return true;
 }
 

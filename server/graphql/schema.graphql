@@ -513,25 +513,13 @@ input IngestModelInput {
   sourceObjects: [RelatedObjectInput!]!
 }
 
-input ReferenceModelInput {
-  idSystemObject: Int!
-  name: String!
-  fileSize: BigInt!
-  resolution: Int
-  boundingBoxP1X: Float
-  boundingBoxP1Y: Float
-  boundingBoxP1Z: Float
-  boundingBoxP2X: Float
-  boundingBoxP2Y: Float
-  boundingBoxP2Z: Float
-  action: ReferenceModelAction!
-}
-
 input IngestSceneInput {
   idAssetVersion: Int!
   systemCreated: Boolean!
+  name: String!
+  hasBeenQCd: Boolean!
+  isOriented: Boolean!
   identifiers: [IngestIdentifierInput!]!
-  referenceModels: [ReferenceModelInput!]!
 }
 
 input IngestOtherInput {

@@ -39,10 +39,9 @@ export class ZipStream implements IZip {
             this._zip = await JSZ.loadAsync(await P);
             return this.extractEntries();
         } catch (err) /* istanbul ignore next */ {
-            const error: string = `ZipStream.load: ${JSON.stringify(err)}`;
             if (this._logErrors)
-                LOG.error(error, LOG.LS.eSYS);
-            return { success: false, error };
+                LOG.error('ZipStream.load', LOG.LS.eSYS, err);
+            return { success: false, error: 'ZipStream.load' };
         }
     }
 
@@ -54,10 +53,9 @@ export class ZipStream implements IZip {
             this._zip.file(fileNameAndPath, H.Helpers.readFileFromStreamThrowErrors(inputStream), { binary: true });
             return this.extractEntries(); // Order n^2 if we're add()'ing lots of entries.
         } catch (err) /* istanbul ignore next */ {
-            const error: string = `ZipStream.add: ${JSON.stringify(err)}`;
             if (this._logErrors)
-                LOG.error(error, LOG.LS.eSYS);
-            return { success: false, error };
+                LOG.error('ZipStream.add', LOG.LS.eSYS, err);
+            return { success: false, error: 'ZipStream.add' };
         }
     }
 
@@ -107,7 +105,7 @@ export class ZipStream implements IZip {
             if (!this._zip)
                 return null;
             if (!entry)
-                return this._zip.generateNodeStream({ streamFiles: true, compression: 'DEFLATE', compressionOptions: { level: 9 } });
+                return this._zip.generateNodeStream({ streamFiles: true, compression: 'DEFLATE', compressionOptions: { level: 8 } }); // we seem to experience issues with zipFile uncompressing "level 9" compression, which perahsp corresponds to PKWare's DEFLATE64, per this article: https://github.com/thejoshwolfe/yauzl/issues/58
             else {
                 const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
                 return (ZO) ? ZO.nodeStream() : null;
