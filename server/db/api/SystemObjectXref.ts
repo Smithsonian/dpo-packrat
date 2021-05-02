@@ -131,14 +131,25 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
         }
     }
 
-    static async wireObjectsIfNeeded(master: SystemObjectBased, derived: SystemObjectBased): Promise<SystemObjectXref | null> {
-        const SOMaster: SystemObject | null = await master.fetchSystemObject(); /* istanbul ignore next */
+    static async wireObjectsIfNeeded(master: SystemObjectBased, derived: SystemObjectBased): Promise<SystemObjectXref | null>;
+    static async wireObjectsIfNeeded(master: SystemObjectBased, derivedID: number): Promise<SystemObjectXref | null>;
+    static async wireObjectsIfNeeded(masterID: number, derived: SystemObjectBased): Promise<SystemObjectXref | null>;
+    static async wireObjectsIfNeeded(masterID: number, derivedID: number): Promise<SystemObjectXref | null>;
+    static async wireObjectsIfNeeded(master: SystemObjectBased | number, derived: SystemObjectBased | number): Promise<SystemObjectXref | null> {
+        const masterID: number | null = (typeof(master) === 'number') ? master : null;
+        const derivedID: number | null = (typeof(derived) === 'number') ? derived : null;
+        const masterSOBased: SystemObjectBased | null = (typeof(master) !== 'number') ? master : null;
+        const derivedSOBased: SystemObjectBased | null = (typeof(derived) !== 'number') ? derived : null;
+
+        const SOMaster: SystemObject | null = masterSOBased ? await masterSOBased.fetchSystemObject() :
+            await SystemObject.fetch(masterID!); /* istanbul ignore next */ // eslint-disable-line @typescript-eslint/no-non-null-assertion
         if (!SOMaster) {
             LOG.error(`DBAPI.SystemObjectXref.wireObjectsIfNeeded Unable to compute SystemObject for ${JSON.stringify(master)}`, LOG.LS.eDB);
             return null;
         }
 
-        const SODerived: SystemObject | null = await derived.fetchSystemObject(); /* istanbul ignore next */
+        const SODerived: SystemObject | null = derivedSOBased ? await derivedSOBased.fetchSystemObject():
+            await SystemObject.fetch(derivedID!) ; /* istanbul ignore next */ // eslint-disable-line @typescript-eslint/no-non-null-assertion
         if (!SODerived) {
             LOG.error(`DBAPI.SystemObjectXref.wireObjectsIfNeeded Unable to compute SystemObject for ${JSON.stringify(derived)}`, LOG.LS.eDB);
             return null;
