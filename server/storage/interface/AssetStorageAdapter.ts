@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as STORE from '../interface';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
@@ -11,6 +10,9 @@ import { StorageFactory } from './StorageFactory';
 import { IStorage } from './IStorage';
 import { AssetVersionContent } from '../../types/graphql';
 import { eVocabularyID, VocabularyCache } from '../../cache';
+
+import * as path from 'path';
+import mime from 'mime';
 
 export type AssetStorageResult = {
     asset: DBAPI.Asset | null,
@@ -372,7 +374,8 @@ export class AssetStorageAdapter {
         const eAssetType: CACHE.eVocabularyID | undefined = await asset.assetType();
         const unzipAssets: boolean = isZipFilename &&
             (eAssetType == CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry ||
-            eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModel);
+             eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModel ||
+             eAssetType == CACHE.eVocabularyID.eAssetAssetTypeScene);
         if (assetVersion.BulkIngest || unzipAssets) {
             // Use bulkIngestReader to extract contents for assets in and below asset.FilePath
             const CAR: CrackAssetResult = await AssetStorageAdapter.crackAssetWorker(storage, asset, assetVersion); /* istanbul ignore next */
@@ -394,6 +397,8 @@ export class AssetStorageAdapter {
         metadata: DBAPI.ObjectGraph, opInfo: STORE.OperationInfo, zip: IZip, bulkIngest: boolean): Promise<IngestAssetResult> {
         const assets: DBAPI.Asset[] = [];
         const assetVersions: DBAPI.AssetVersion[] = [];
+        const eAssetTypeMaster: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType);
+
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${asset.FilePath}/` : '';
         for (const entry of (bulkIngest ? await zip.getAllEntries(null) : await zip.getJustFiles(null))) {
@@ -425,22 +430,34 @@ export class AssetStorageAdapter {
             // Determine asset type
             let eAssetType: eVocabularyID;
             let ingested: boolean | null = false;
-            switch (await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType)) {
-                case eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry: eAssetType = eVocabularyID.eAssetAssetTypeCaptureDataFile; break;
+            const unzippedFileName: string = path.basename(entry);
+            switch (eAssetTypeMaster) {
+                case eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry:
+                    eAssetType = eVocabularyID.eAssetAssetTypeCaptureDataFile;
+                    break;
+
                 case eVocabularyID.eAssetAssetTypeModel:
                     ingested = null;
-                    if (await CACHE.VocabularyCache.mapModelFileByExtension(asset.FileName) !== undefined)
+                    if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
                         eAssetType = eVocabularyID.eAssetAssetTypeModelGeometryFile;
                     else {
-                        let psuedoVariantType: string = path.extname(asset.FileName);
-                        if (psuedoVariantType)
-                            psuedoVariantType = psuedoVariantType.substring(1); // strip off leading '.' in extension
-                        if (await CACHE.VocabularyCache.mapPhotogrammetryVariantType(psuedoVariantType) !== undefined)
+                        const mimeType: string = mime.lookup(unzippedFileName);
+                        if (mimeType.startsWith('image/'))
                             eAssetType = eVocabularyID.eAssetAssetTypeModelUVMapFile;
                         else
                             eAssetType = eVocabularyID.eAssetAssetTypeOther;
                     }
                     break; /* istanbul ignore next */
+
+                case eVocabularyID.eAssetAssetTypeScene:
+                    if (unzippedFileName.toLowerCase().endsWith('.svx.json'))
+                        eAssetType = eVocabularyID.eAssetAssetTypeScene;
+                    else if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
+                        eAssetType = eVocabularyID.eAssetAssetTypeModelGeometryFile;
+                    else
+                        eAssetType = eVocabularyID.eAssetAssetTypeOther;
+                    break; /* istanbul ignore next */
+
                 default:
                     LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker encountered unxpected asset type id for Asset ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eSTR);
                     eAssetType = eVocabularyID.eAssetAssetTypeOther;
@@ -651,6 +668,16 @@ export class AssetStorageAdapter {
         return ASR;
     }
 
+    static async crackAssetByAssetVersionID(idAssetVersion: number): Promise<CrackAssetResult> {
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
+        if (!assetVersion) {
+            const error: string = `AssetStorageAdapter.crackAssetByAssetVersionID unable to compute AssetVersion for idAssetVersion ${idAssetVersion}`;
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error, zip: null, asset: null, isBagit: false };
+        }
+        return this.crackAsset(assetVersion);
+    }
+
     /** Cracks open the file associated with assetVersion in an efficient manner.
      * Caller must call 'await CrackAssetResult.zip.close()' if the returned zip is not null. */
     static async crackAsset(assetVersion: DBAPI.AssetVersion): Promise<CrackAssetResult> {
@@ -688,35 +715,37 @@ export class AssetStorageAdapter {
 
         const isZipFilename: boolean = (path.extname(assetVersion.FileName).toLowerCase() === '.zip');
         const isBulkIngest: boolean = assetVersion.BulkIngest || (await asset.assetType() == eVocabularyID.eAssetAssetTypeBulkIngestion);
-        LOG.info(`crackAssetWorker fileName ${assetVersion.FileName} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`, LOG.LS.eSTR);
-        let reader: IZip;
-        if (ingested) {
-            // ingested content lives on remote storage; we'll need to stream it back to the server for processing
-            const readStreamInput: STORE.ReadStreamInput = {
-                storageKey,
-                fileName: asset.FileName,
-                version: assetVersion.Version,
-                staging: !assetVersion.Ingested
-            };
 
-            const RSR: STORE.ReadStreamResult = await storage.readStream(readStreamInput); /* istanbul ignore next */
-            if (!RSR.success|| !RSR.readStream) {
-                LOG.error(RSR.error, LOG.LS.eSTR);
-                return { success: false, error: RSR.error, zip: null, asset: null, isBagit: false };
+        let reader: IZip | null = null;
+        try {
+            LOG.info(`AssetStorageAdapter.crackAssetWorker fileName ${assetVersion.FileName} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`, LOG.LS.eSTR);
+
+            if (ingested) {
+                // ingested content lives on remote storage; we'll need to stream it back to the server for processing
+                const readStreamInput: STORE.ReadStreamInput = {
+                    storageKey,
+                    fileName: asset.FileName,
+                    version: assetVersion.Version,
+                    staging: !assetVersion.Ingested
+                };
+
+                const RSR: STORE.ReadStreamResult = await storage.readStream(readStreamInput); /* istanbul ignore next */
+                if (!RSR.success|| !RSR.readStream) {
+                    LOG.error(RSR.error, LOG.LS.eSTR);
+                    return { success: false, error: RSR.error, zip: null, asset: null, isBagit: false };
+                }
+
+                reader = (isBulkIngest) /* istanbul ignore next */ // We don't ingest bulk ingest files as is -- they end up getting cracked apart, so we're unlikely to hit this branch of code
+                    ? new BagitReader({ zipFileName: null, zipStream: RSR.readStream, directory: null, validate: true, validateContent: false })
+                    : new ZipStream(RSR.readStream, isZipFilename); // use isZipFilename to determine if errors should be logged
+            } else {
+                // non-ingested content is staged locally
+                const stagingFileName: string = await storage.stagingFileName(storageKey);
+                reader = (isBulkIngest)
+                    ? new BagitReader({ zipFileName: stagingFileName, zipStream: null, directory: null, validate: true, validateContent: false })
+                    : new ZipFile(stagingFileName, isZipFilename); // use isZipFilename to determine if errors should be logged
             }
 
-            reader = (isBulkIngest) /* istanbul ignore next */ // We don't ingest bulk ingest files as is -- they end up getting cracked apart, so we're unlikely to hit this branch of code
-                ? new BagitReader({ zipFileName: null, zipStream: RSR.readStream, directory: null, validate: true, validateContent: false })
-                : new ZipStream(RSR.readStream, isZipFilename); // use isZipFilename to determine if errors should be logged
-        } else {
-            // non-ingested content is staged locally
-            const stagingFileName: string = await storage.stagingFileName(storageKey);
-            reader = (isBulkIngest)
-                ? new BagitReader({ zipFileName: stagingFileName, zipStream: null, directory: null, validate: true, validateContent: false })
-                : new ZipFile(stagingFileName, isZipFilename); // use isZipFilename to determine if errors should be logged
-        }
-
-        try {
             const ioResults: IOResults = await reader.load(); /* istanbul ignore next */
             if (!ioResults.success) {
                 await reader.close();
@@ -725,7 +754,8 @@ export class AssetStorageAdapter {
                 return { success: false, error: ioResults.error, zip: null, asset: null, isBagit: false };
             }
         } catch (error) /* istanbul ignore next */ {
-            await reader.close();
+            if (reader)
+                await reader.close();
             LOG.error('AssetStorageAdapter.crackAsset', LOG.LS.eSTR, error);
             return { success: false, error: `AssetStorageAdapter.crackAsset ${JSON.stringify(error, H.Helpers.stringifyMapsAndBigints)}`, zip: null, asset: null, isBagit: false };
         }
@@ -793,9 +823,20 @@ export class AssetStorageAdapter {
             return { asset: null, assetVersion, success: false, error: 'AssetStorageAdapter.discardAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()' };
 
         // discard staged asset
-        const DWSR: STORE.DiscardWriteStreamResult = await storage.discardWriteStream({ storageKey: assetVersion.StorageKeyStaging });
-        if (!DWSR.success)
-            return { asset: null, assetVersion, success: false, error: `AssetStorageAdapter.discardAssetVersion: ${DWSR.error}` };
+        // Bulk Ingest and Zip files may be referenced by multiple asset versions. To avoid removing the file referenced by these,
+        // we only perform the discard if this is the final non-retired reference
+        const storageKeyStagingCount: number | null = await DBAPI.AssetVersion.countStorageKeyStaging(assetVersion.StorageKeyStaging, false, false);
+        if (storageKeyStagingCount === null) {
+            const error: string = `AssetStorageAdapter.discardAssetVersion call to AssetVersion.countStorageKeyStaging(${assetVersion.StorageKeyStaging}, false, false) failed`;
+            LOG.error(error, LOG.LS.eSTR);
+            return { asset: null, assetVersion, success: false, error };
+        }
+        if (storageKeyStagingCount === 1) {
+            const DWSR: STORE.DiscardWriteStreamResult = await storage.discardWriteStream({ storageKey: assetVersion.StorageKeyStaging });
+            if (!DWSR.success)
+                return { asset: null, assetVersion, success: false, error: `AssetStorageAdapter.discardAssetVersion: ${DWSR.error}` };
+        } else
+            LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion} skipped IStorage.discardWriteStream as asset reference count is ${storageKeyStagingCount} > 1`, LOG.LS.eSTR);
 
         // retire assetVersion
         return (await DBAPI.SystemObject.retireSystemObject(assetVersion))

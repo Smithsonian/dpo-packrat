@@ -26,6 +26,7 @@ type Query {
   getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
   getProjectList(input: GetProjectListInput!): GetProjectListResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  getSceneForAssetVersion(input: GetSceneForAssetVersionInput!): GetSceneForAssetVersionResult!
   getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
@@ -286,6 +287,15 @@ type GetModelConstellationForAssetVersionResult {
   ModelConstellation: ModelConstellation
 }
 
+input GetSceneForAssetVersionInput {
+  idAssetVersion: Int!
+}
+
+type GetSceneForAssetVersionResult {
+  idAssetVersion: Int!
+  SceneConstellation: SceneConstellation
+}
+
 scalar BigInt
 
 type Asset {
@@ -505,25 +515,13 @@ input IngestModelInput {
   sourceObjects: [RelatedObjectInput!]!
 }
 
-input ReferenceModelInput {
-  idSystemObject: Int!
-  name: String!
-  fileSize: BigInt!
-  resolution: Int
-  boundingBoxP1X: Float
-  boundingBoxP1Y: Float
-  boundingBoxP1Z: Float
-  boundingBoxP2X: Float
-  boundingBoxP2Y: Float
-  boundingBoxP2Z: Float
-  action: ReferenceModelAction!
-}
-
 input IngestSceneInput {
   idAssetVersion: Int!
   systemCreated: Boolean!
+  name: String!
+  hasBeenQCd: Boolean!
+  isOriented: Boolean!
   identifiers: [IngestIdentifierInput!]!
-  referenceModels: [ReferenceModelInput!]!
 }
 
 input IngestOtherInput {
@@ -731,7 +729,7 @@ type ModelSceneXref {
   Name: String
   Usage: String
   Quality: String
-  FileSize: Int
+  FileSize: BigInt
   UVResolution: Int
   BoundingBoxP1X: Float
   BoundingBoxP1Y: Float
@@ -881,6 +879,11 @@ type IntermediaryFile {
   idAsset: Int!
   Asset: Asset
   SystemObject: SystemObject
+}
+
+type SceneConstellation {
+  Scene: Scene
+  ModelSceneXref: [ModelSceneXref]
 }
 
 input UpdateObjectDetailsInput {
