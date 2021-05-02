@@ -111,7 +111,8 @@ export class SceneConstellation {
                     // if we have a zip, look for our model within that zip by name
                     if (zip) {
                         const files: string[] = await zip.getJustFiles(MSX.Name);
-                        if (files.length == 1) {    // found it ... record it as not ingested (i.e. MSX.idModel === 0)
+                        if (files.length == 1) {    // found it ... record it as found but not ingested (i.e. MSX.idModel === -1)
+                            MSX.idModel = -1;   // non-zero value, but invalid...
                             modelSceneXrefs.push(MSX);
                             continue;
                         }
