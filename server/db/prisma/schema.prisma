@@ -507,8 +507,17 @@ model ModelSceneXref {
   idModelSceneXref Int     @id @default(autoincrement())
   idModel          Int
   idScene          Int
+  Name             String? @mariasql.VarChar(100)
   Usage            String? @mariasql.VarChar(100)
   Quality          String? @mariasql.VarChar(100)
+  FileSize         BigInt?
+  UVResolution     Int?
+  BoundingBoxP1X   Float?
+  BoundingBoxP1Y   Float?
+  BoundingBoxP1Z   Float?
+  BoundingBoxP2X   Float?
+  BoundingBoxP2Y   Float?
+  BoundingBoxP2Z   Float?
   TS0              Float?
   TS1              Float?
   TS2              Float?

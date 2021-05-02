@@ -4,15 +4,10 @@ import * as LOG from '../logger';
 import * as H from '../helpers';
 import * as SVX from '../../types/voyager';
 
-export type SvxModelAsset = {
-    asset: SVX.IAsset;
-    xref: DBAPI.ModelSceneXref;
-};
-
 /** Create instances using the static SvxExtraction.extract() */
 export class SvxExtraction {
     document: SVX.IDocument;
-    modelDetails: SvxModelAsset[] | null = null;
+    modelDetails: DBAPI.ModelSceneXref[] | null = null;
     sceneCount: number = 0;
     nodeCount: number = 0;
     cameraCount: number = 0;
@@ -41,13 +36,8 @@ export class SvxExtraction {
             return false;
         this.modelDetails = [];
         for (const model of this.document.models) {
-            let TS0: number = 0;
-            let TS1: number = 0;
-            let TS2: number = 0;
-            let R0: number = 0;
-            let R1: number = 0;
-            let R2: number = 0;
-            let R3: number = 0;
+            let TS0, TS1, TS2, R0, R1, R2, R3: number | null = null;
+            let BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z: number | null = null;
             if (model.translation && Array.isArray(model.translation) && model.translation.length >= 3) {
                 TS0 = model.translation[0];
                 TS1 = model.translation[1];
@@ -59,17 +49,28 @@ export class SvxExtraction {
                 R2 = model.rotation[2];
                 R3 = model.rotation[3];
             }
+            if (model.boundingBox) {
+                if (Array.isArray(model.boundingBox.min) && model.boundingBox.min.length >= 3) {
+                    BoundingBoxP1X = model.boundingBox.min[0];
+                    BoundingBoxP1Y = model.boundingBox.min[1];
+                    BoundingBoxP1Z = model.boundingBox.min[2];
+                }
+                if (Array.isArray(model.boundingBox.max) && model.boundingBox.max.length >= 3) {
+                    BoundingBoxP2X = model.boundingBox.max[0];
+                    BoundingBoxP2Y = model.boundingBox.max[1];
+                    BoundingBoxP2Z = model.boundingBox.max[2];
+                }
+            }
             for (const derivative of model.derivatives) {
                 for (const asset of derivative.assets) {
                     const xref: DBAPI.ModelSceneXref = new DBAPI.ModelSceneXref({
-                        idModelSceneXref: 0, idModel: 0, idScene: 0, Usage: derivative.usage, Quality: derivative.quality,
+                        idModelSceneXref: 0, idModel: 0, idScene: 0, Name: asset.uri, Usage: derivative.usage, Quality: derivative.quality,
+                        FileSize: BigInt(asset.byteSize) || null, UVResolution: asset.imageSize || null,
+                        BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
                         TS0, TS1, TS2, R0, R1, R2, R3
                     });
 
-                    this.modelDetails.push({
-                        asset,
-                        xref
-                    });
+                    this.modelDetails.push(xref);
                 }
             }
         }
