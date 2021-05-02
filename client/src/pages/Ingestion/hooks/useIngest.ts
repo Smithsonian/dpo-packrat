@@ -194,7 +194,7 @@ function useIngest(): UseIngest {
                 }
 
                 if (isScene) {
-                    const { identifiers, systemCreated, referenceModels } = scene;
+                    const { identifiers, systemCreated } = scene;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
@@ -202,7 +202,9 @@ function useIngest(): UseIngest {
                         idAssetVersion: parseFileId(file.id),
                         identifiers: ingestIdentifiers,
                         systemCreated,
-                        referenceModels
+                        name: '',           // TODO: populate me from the UI!
+                        hasBeenQCd: false,  // TODO: populate me from the UI!
+                        isOriented: false   // TODO: populate me from the UI!
                     };
 
                     ingestScene.push(sceneData);

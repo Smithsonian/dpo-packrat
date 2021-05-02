@@ -22,7 +22,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async readStream(readStreamInput: STORE.ReadStreamInput): Promise<STORE.ReadStreamResult> {
-        LOG.info(`LocalStorage.readStream ${readStreamInput.storageKey}/${readStreamInput.fileName}`, LOG.LS.eSTR);
+        LOG.info(`LocalStorage.readStream ${readStreamInput.storageKey + (readStreamInput.staging ? '' : ('/' + readStreamInput.fileName))}`, LOG.LS.eSTR);
         const retValue: STORE.ReadStreamResult = {
             readStream: null,
             fileName: null,

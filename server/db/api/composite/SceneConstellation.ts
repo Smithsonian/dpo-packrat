@@ -1,5 +1,4 @@
 import { Scene, Model, ModelSceneXref, Vocabulary } from '../..';
-
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 import * as STORE from '../../../storage/interface';
@@ -42,6 +41,7 @@ export class SceneConstellation {
             }
 
             // if our asset is a zip, crack it, and use first .svx.json found as our scene
+            let fileName: string = RSR.fileName;
             if (RSR.fileName.toLowerCase().endsWith('.zip')) {
                 const CAR: STORE.CrackAssetResult = await STORE.AssetStorageAdapter.crackAssetByAssetVersionID(idAssetVersion);
                 if (!CAR.success || !CAR.zip) {
@@ -62,12 +62,13 @@ export class SceneConstellation {
                     return null;
                 }
 
+                fileName += `/${files[0]}`;
                 readStream = await zip.streamContent(files[0]);
             } else
                 readStream = RSR.readStream;
 
             if (!readStream) {
-                LOG.error(`SceneConstellation.fetchFromAssetVersion unable to compute stream from ${RSR.fileName} for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
+                LOG.error(`SceneConstellation.fetchFromAssetVersion unable to compute stream from ${fileName} for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
                 return null;
             }
 

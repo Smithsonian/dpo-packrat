@@ -1,16 +1,18 @@
-import * as path from 'path';
 import * as STORE from '../interface';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ST from '../impl/LocalStorage/SharedTypes';
-import { ZipFile, ZipStream, IOResults, IZip } from '../../utils';
+import { ZipStream, IOResults, IZip } from '../../utils';
 import { BagitReader, BAGIT_DATA_DIRECTORY, BulkIngestReader, IngestMetadata } from '../../utils/parser';
 import { StorageFactory } from './StorageFactory';
 import { IStorage } from './IStorage';
 import { AssetVersionContent } from '../../types/graphql';
 import { eVocabularyID, VocabularyCache } from '../../cache';
+
+import * as path from 'path';
+import mime from 'mime';
 
 export type AssetStorageResult = {
     asset: DBAPI.Asset | null,
@@ -372,7 +374,8 @@ export class AssetStorageAdapter {
         const eAssetType: CACHE.eVocabularyID | undefined = await asset.assetType();
         const unzipAssets: boolean = isZipFilename &&
             (eAssetType == CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry ||
-            eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModel);
+             eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModel ||
+             eAssetType == CACHE.eVocabularyID.eAssetAssetTypeScene);
         if (assetVersion.BulkIngest || unzipAssets) {
             // Use bulkIngestReader to extract contents for assets in and below asset.FilePath
             const CAR: CrackAssetResult = await AssetStorageAdapter.crackAssetWorker(storage, asset, assetVersion); /* istanbul ignore next */
@@ -394,6 +397,8 @@ export class AssetStorageAdapter {
         metadata: DBAPI.ObjectGraph, opInfo: STORE.OperationInfo, zip: IZip, bulkIngest: boolean): Promise<IngestAssetResult> {
         const assets: DBAPI.Asset[] = [];
         const assetVersions: DBAPI.AssetVersion[] = [];
+        const eAssetTypeMaster: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType);
+
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${asset.FilePath}/` : '';
         for (const entry of (bulkIngest ? await zip.getAllEntries(null) : await zip.getJustFiles(null))) {
@@ -425,22 +430,34 @@ export class AssetStorageAdapter {
             // Determine asset type
             let eAssetType: eVocabularyID;
             let ingested: boolean | null = false;
-            switch (await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType)) {
-                case eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry: eAssetType = eVocabularyID.eAssetAssetTypeCaptureDataFile; break;
+            const unzippedFileName: string = path.basename(entry);
+            switch (eAssetTypeMaster) {
+                case eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry:
+                    eAssetType = eVocabularyID.eAssetAssetTypeCaptureDataFile;
+                    break;
+
                 case eVocabularyID.eAssetAssetTypeModel:
                     ingested = null;
-                    if (await CACHE.VocabularyCache.mapModelFileByExtension(asset.FileName) !== undefined)
+                    if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
                         eAssetType = eVocabularyID.eAssetAssetTypeModelGeometryFile;
                     else {
-                        let psuedoVariantType: string = path.extname(asset.FileName);
-                        if (psuedoVariantType)
-                            psuedoVariantType = psuedoVariantType.substring(1); // strip off leading '.' in extension
-                        if (await CACHE.VocabularyCache.mapPhotogrammetryVariantType(psuedoVariantType) !== undefined)
+                        const mimeType: string = mime.lookup(unzippedFileName);
+                        if (mimeType.startsWith('image/'))
                             eAssetType = eVocabularyID.eAssetAssetTypeModelUVMapFile;
                         else
                             eAssetType = eVocabularyID.eAssetAssetTypeOther;
                     }
                     break; /* istanbul ignore next */
+
+                case eVocabularyID.eAssetAssetTypeScene:
+                    if (unzippedFileName.toLowerCase().endsWith('.svx.json'))
+                        eAssetType = eVocabularyID.eAssetAssetTypeScene;
+                    else if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
+                        eAssetType = eVocabularyID.eAssetAssetTypeModelGeometryFile;
+                    else
+                        eAssetType = eVocabularyID.eAssetAssetTypeOther;
+                    break; /* istanbul ignore next */
+
                 default:
                     LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker encountered unxpected asset type id for Asset ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eSTR);
                     eAssetType = eVocabularyID.eAssetAssetTypeOther;
@@ -698,10 +715,13 @@ export class AssetStorageAdapter {
 
         const isZipFilename: boolean = (path.extname(assetVersion.FileName).toLowerCase() === '.zip');
         const isBulkIngest: boolean = assetVersion.BulkIngest || (await asset.assetType() == eVocabularyID.eAssetAssetTypeBulkIngestion);
-        LOG.info(`crackAssetWorker fileName ${assetVersion.FileName} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`, LOG.LS.eSTR);
-        let reader: IZip;
-        if (ingested) {
-            // ingested content lives on remote storage; we'll need to stream it back to the server for processing
+
+        let reader: IZip | null = null;
+        try {
+            LOG.info(`AssetStorageAdapter.crackAssetWorker fileName ${assetVersion.FileName} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`, LOG.LS.eSTR);
+
+            // ingested content lives on remote storage; we'll need to stream it back to the server for processing;
+            // non-ingested content is staged locally, but we still need a stream, as our ZipFile class cannot handle DEFLATE64 compressed zips (compression level 9)
             const readStreamInput: STORE.ReadStreamInput = {
                 storageKey,
                 fileName: asset.FileName,
@@ -718,15 +738,7 @@ export class AssetStorageAdapter {
             reader = (isBulkIngest) /* istanbul ignore next */ // We don't ingest bulk ingest files as is -- they end up getting cracked apart, so we're unlikely to hit this branch of code
                 ? new BagitReader({ zipFileName: null, zipStream: RSR.readStream, directory: null, validate: true, validateContent: false })
                 : new ZipStream(RSR.readStream, isZipFilename); // use isZipFilename to determine if errors should be logged
-        } else {
-            // non-ingested content is staged locally
-            const stagingFileName: string = await storage.stagingFileName(storageKey);
-            reader = (isBulkIngest)
-                ? new BagitReader({ zipFileName: stagingFileName, zipStream: null, directory: null, validate: true, validateContent: false })
-                : new ZipFile(stagingFileName, isZipFilename); // use isZipFilename to determine if errors should be logged
-        }
 
-        try {
             const ioResults: IOResults = await reader.load(); /* istanbul ignore next */
             if (!ioResults.success) {
                 await reader.close();
@@ -735,7 +747,8 @@ export class AssetStorageAdapter {
                 return { success: false, error: ioResults.error, zip: null, asset: null, isBagit: false };
             }
         } catch (error) /* istanbul ignore next */ {
-            await reader.close();
+            if (reader)
+                await reader.close();
             LOG.error('AssetStorageAdapter.crackAsset', LOG.LS.eSTR, error);
             return { success: false, error: `AssetStorageAdapter.crackAsset ${JSON.stringify(error, H.Helpers.stringifyMapsAndBigints)}`, zip: null, asset: null, isBagit: false };
         }
