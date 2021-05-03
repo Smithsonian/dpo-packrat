@@ -2897,6 +2897,36 @@ export type GetSceneQuery = (
   ) }
 );
 
+export type GetSceneForAssetVersionQueryVariables = Exact<{
+  input: GetSceneForAssetVersionInput;
+}>;
+
+
+export type GetSceneForAssetVersionQuery = (
+  { __typename?: 'Query' }
+  & { getSceneForAssetVersion: (
+    { __typename?: 'GetSceneForAssetVersionResult' }
+    & Pick<GetSceneForAssetVersionResult, 'idAssetVersion'>
+    & { SceneConstellation?: Maybe<(
+      { __typename?: 'SceneConstellation' }
+      & { Scene?: Maybe<(
+        { __typename?: 'Scene' }
+        & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'idAssetThumbnail' | 'IsOriented' | 'Name' | 'CountScene' | 'CountNode' | 'CountCamera' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour'>
+      )>, ModelSceneXref?: Maybe<Array<Maybe<(
+        { __typename?: 'ModelSceneXref' }
+        & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
+        & { Model?: Maybe<(
+          { __typename?: 'Model' }
+          & { SystemObject?: Maybe<(
+            { __typename?: 'SystemObject' }
+            & Pick<SystemObject, 'idSystemObject'>
+          )> }
+        )> }
+      )>>> }
+    )> }
+  ) }
+);
+
 export type GetAssetDetailsForSystemObjectQueryVariables = Exact<{
   input: GetAssetDetailsForSystemObjectInput;
 }>;
@@ -4912,6 +4942,79 @@ export function useGetSceneLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetSceneQueryHookResult = ReturnType<typeof useGetSceneQuery>;
 export type GetSceneLazyQueryHookResult = ReturnType<typeof useGetSceneLazyQuery>;
 export type GetSceneQueryResult = Apollo.QueryResult<GetSceneQuery, GetSceneQueryVariables>;
+export const GetSceneForAssetVersionDocument = gql`
+    query getSceneForAssetVersion($input: GetSceneForAssetVersionInput!) {
+  getSceneForAssetVersion(input: $input) {
+    idAssetVersion
+    SceneConstellation {
+      Scene {
+        idScene
+        HasBeenQCd
+        idAssetThumbnail
+        IsOriented
+        Name
+        CountScene
+        CountNode
+        CountCamera
+        CountLight
+        CountModel
+        CountMeta
+        CountSetup
+        CountTour
+      }
+      ModelSceneXref {
+        idModelSceneXref
+        idModel
+        idScene
+        Name
+        Usage
+        Quality
+        FileSize
+        UVResolution
+        BoundingBoxP1X
+        BoundingBoxP1Y
+        BoundingBoxP1Z
+        BoundingBoxP2X
+        BoundingBoxP2Y
+        BoundingBoxP2Z
+        Model {
+          SystemObject {
+            idSystemObject
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSceneForAssetVersionQuery__
+ *
+ * To run a query within a React component, call `useGetSceneForAssetVersionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSceneForAssetVersionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSceneForAssetVersionQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSceneForAssetVersionQuery(baseOptions: Apollo.QueryHookOptions<GetSceneForAssetVersionQuery, GetSceneForAssetVersionQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSceneForAssetVersionQuery, GetSceneForAssetVersionQueryVariables>(GetSceneForAssetVersionDocument, options);
+      }
+export function useGetSceneForAssetVersionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSceneForAssetVersionQuery, GetSceneForAssetVersionQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSceneForAssetVersionQuery, GetSceneForAssetVersionQueryVariables>(GetSceneForAssetVersionDocument, options);
+        }
+export type GetSceneForAssetVersionQueryHookResult = ReturnType<typeof useGetSceneForAssetVersionQuery>;
+export type GetSceneForAssetVersionLazyQueryHookResult = ReturnType<typeof useGetSceneForAssetVersionLazyQuery>;
+export type GetSceneForAssetVersionQueryResult = Apollo.QueryResult<GetSceneForAssetVersionQuery, GetSceneForAssetVersionQueryVariables>;
 export const GetAssetDetailsForSystemObjectDocument = gql`
     query getAssetDetailsForSystemObject($input: GetAssetDetailsForSystemObjectInput!) {
   getAssetDetailsForSystemObject(input: $input) {

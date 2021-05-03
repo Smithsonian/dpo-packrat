@@ -194,17 +194,17 @@ function useIngest(): UseIngest {
                 }
 
                 if (isScene) {
-                    const { identifiers, systemCreated } = scene;
-
+                    const { identifiers, systemCreated, hasBeenQCd, isOriented, name } = scene;
+                    console.log('startingestion scene', scene);
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const sceneData: IngestSceneInput = {
                         idAssetVersion: parseFileId(file.id),
                         identifiers: ingestIdentifiers,
                         systemCreated,
-                        name: '',           // TODO: populate me from the UI!
-                        hasBeenQCd: false,  // TODO: populate me from the UI!
-                        isOriented: false   // TODO: populate me from the UI!
+                        name,
+                        hasBeenQCd: hasBeenQCd,
+                        isOriented: isOriented
                     };
 
                     ingestScene.push(sceneData);
