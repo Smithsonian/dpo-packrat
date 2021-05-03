@@ -1,3 +1,6 @@
+/* eslint-disable react/jsx-max-props-per-line */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * ReferenceModels
  *
@@ -8,18 +11,29 @@ import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
 import { NewTabLink } from '../../../../../components';
-import { ReferenceModelAction, StateReferenceModel } from '../../../../../store';
 import { getDetailsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
-        width: '52vw',
+        [breakpoints.up('xl')]: {
+            width: '70vw'
+        },
+        [breakpoints.only('lg')]: {
+            width: '60vw'
+        },
+        [breakpoints.only('md')]: {
+            width: '54vw'
+        },
+        [breakpoints.down('sm')]: {
+            width: '45vw'
+        },
         flexDirection: 'column',
         borderRadius: 5,
         padding: 10,
-        backgroundColor: palette.primary.light
+        backgroundColor: palette.primary.light,
+        marginBottom: 10
     },
     list: {
         padding: 10,
@@ -40,6 +54,9 @@ const useStyles = makeStyles(({ palette }) => ({
         textDecoration: 'underline',
         cursor: 'pointer'
     },
+    labelItalics: {
+        fontStyle: 'italic'
+    },
     empty: {
         textAlign: 'center',
         margin: '15px 0px',
@@ -48,38 +65,37 @@ const useStyles = makeStyles(({ palette }) => ({
     }
 }));
 
-const mockReferenceModels: StateReferenceModel[] = [
-    {
-        idSystemObject: 1,
-        name: 'Armstrong1.obj (mock)',
-        fileSize: 1.27e+7,
-        resolution: 2000,
-        boundingBoxP1X: 1.0,
-        boundingBoxP1Y: 1.0,
-        boundingBoxP1Z: 1.0,
-        boundingBoxP2X: 10.0,
-        boundingBoxP2Y: 10.0,
-        boundingBoxP2Z: 10.0,
-        action: ReferenceModelAction.Update
-    },
-    {
-        idSystemObject: 1,
-        name: 'Armstrong2.obj (mock)',
-        fileSize: 1.27e+7,
-        resolution: 2000,
-        boundingBoxP1X: 1.0,
-        boundingBoxP1Y: 1.0,
-        boundingBoxP1Z: 1.0,
-        boundingBoxP2X: 10.0,
-        boundingBoxP2Y: 10.0,
-        boundingBoxP2Z: 10.0,
-        action: ReferenceModelAction.Update
-    }
-];
+interface ReferenceModel {
+    BoundingBoxP1X: number;
+    BoundingBoxP1Y: number;
+    BoundingBoxP1Z: number;
+    BoundingBoxP2X: number;
+    BoundingBoxP2Y: number;
+    BoundingBoxP2Z: number;
+    FileSize: number;
+    Model: any;
+    Name: string;
+    Quality: string;
+    UVResolution: number;
+    Usage: string;
+    idModel: number;
+    idModelSceneXref: number;
+    idScene: number;
+}
 
-function ReferenceModels(): React.ReactElement {
+interface ReferenceModelsProps {
+    referenceModels: ReferenceModel[];
+}
+
+const roundBoundingBox = (BB: number) => {
+    if (BB < 1) return Number(BB.toPrecision(3));
+    return BB.toFixed(2);
+};
+
+function ReferenceModels(props: ReferenceModelsProps): React.ReactElement {
+    const { referenceModels } = props;
     const classes = useStyles();
-    const hasModels = !!mockReferenceModels.length;
+    const hasModels = !!referenceModels.length;
 
     return (
         <Box className={classes.container}>
@@ -87,7 +103,9 @@ function ReferenceModels(): React.ReactElement {
             {!hasModels && <Empty />}
             {hasModels && (
                 <Box className={classes.list}>
-                    {mockReferenceModels.map((referenceModel: StateReferenceModel, index: number) => <Item key={index} referenceModel={referenceModel} />)}
+                    {referenceModels.map((referenceModel, index: number) => (
+                        <Item key={index} referenceModel={referenceModel} />
+                    ))}
                 </Box>
             )}
         </Box>
@@ -98,18 +116,18 @@ function Header(): React.ReactElement {
     const classes = useStyles();
 
     return (
-        <Box
-            display='flex'
-            flex={1}
-            flexDirection='row'
-            px={1}
-            marginBottom={1}
-        >
-            <Box display='flex' flex={2}>
+        <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
+            <Box display='flex' flex={3}>
                 <Typography className={classes.header}>Reference Models(s)</Typography>
             </Box>
             <Box display='flex' flex={1}>
-                <Typography className={classes.header}>Geometry File Size</Typography>
+                <Typography className={classes.header}>Usage</Typography>
+            </Box>
+            <Box display='flex' flex={1}>
+                <Typography className={classes.header}>Quality</Typography>
+            </Box>
+            <Box display='flex' flex={1}>
+                <Typography className={classes.header}>File Size</Typography>
             </Box>
             <Box display='flex' flex={1} justifyContent='center'>
                 <Typography className={classes.header}>UV Resolution</Typography>
@@ -124,46 +142,50 @@ function Header(): React.ReactElement {
     );
 }
 
-interface ItemProps {
-    referenceModel: StateReferenceModel;
-}
-
-function Item(props: ItemProps): React.ReactElement {
-    const { referenceModel } = props;
-    const { idSystemObject, name, fileSize, resolution, action } = referenceModel;
-    const { boundingBoxP1X, boundingBoxP1Y, boundingBoxP1Z, boundingBoxP2X, boundingBoxP2Y, boundingBoxP2Z } = referenceModel;
+function Item({ referenceModel }: { referenceModel: ReferenceModel }): React.ReactElement {
+    const { Model, Name, FileSize, UVResolution, Quality, Usage } = referenceModel;
+    const { BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z } = referenceModel;
     const classes = useStyles();
 
-    const onAction = () => {
-        alert(`TODO: KARAN: Handle ${action.toString()} action`);
-    };
+    // const onAction = () => {
+    //     alert(`TODO: KARAN: Handle ${action.toString()} action`);
+    // };
 
-    const boundingBox: string = `(${boundingBoxP1X}, ${boundingBoxP1Y}, ${boundingBoxP1Z}) - (${boundingBoxP2X}, ${boundingBoxP2Y}, ${boundingBoxP2Z})`;
-
+    const boundingBox: string = `(${roundBoundingBox(BoundingBoxP1X)}, ${roundBoundingBox(BoundingBoxP1Y)}, ${roundBoundingBox(BoundingBoxP1Z)}) - (${roundBoundingBox(
+        BoundingBoxP2X
+    )}, ${roundBoundingBox(BoundingBoxP2Y)}, ${roundBoundingBox(BoundingBoxP2Z)})`;
     return (
-        <Box
-            display='flex'
-            flex={1}
-            flexDirection='row'
-            px={1}
-            marginBottom={1}
-        >
-            <Box display='flex' flex={2}>
-                <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
-                    <Typography className={clsx(classes.label, classes.labelUnderline)}>{name}</Typography>
-                </NewTabLink>
+        <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
+            <Box display='flex' flex={2.5}>
+                {Model ? (
+                    <NewTabLink to={getDetailsUrlForObject(Model?.SystemObject?.idSystemObject)}>
+                        <Typography className={clsx(classes.label, classes.labelUnderline)}>{Name}</Typography>
+                    </NewTabLink>
+                ) : (
+                    <Typography className={clsx(classes.label, classes.labelItalics)}>{Name}</Typography>
+                )}
+            </Box>
+
+            <Box display='flex' flex={1} justifyContent='center'>
+                <Typography className={classes.label}>{Usage}</Typography>
             </Box>
             <Box display='flex' flex={1} justifyContent='center'>
-                <Typography className={classes.label}>{formatBytes(fileSize)}</Typography>
+                <Typography className={classes.label}>{Quality}</Typography>
+            </Box>
+
+            <Box display='flex' flex={1} justifyContent='center'>
+                <Typography className={classes.label}>{formatBytes(FileSize)}</Typography>
             </Box>
             <Box display='flex' flex={1} justifyContent='center'>
-                <Typography className={classes.label}>{resolution}</Typography>
+                <Typography className={classes.label}>{UVResolution}</Typography>
             </Box>
             <Box display='flex' flex={2} justifyContent='center'>
                 <Typography className={classes.label}>{boundingBox}</Typography>
             </Box>
             <Box display='flex' flex={0.5} justifyContent='center'>
-                <Typography onClick={onAction} className={clsx(classes.label, classes.labelUnderline)}>{action.toString()}</Typography>
+                <Typography onClick={() => {}} className={clsx(classes.label, classes.labelUnderline)}>
+                    {Model ? 'Update' : 'Ingest'}
+                </Typography>
             </Box>
         </Box>
     );
