@@ -83,6 +83,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         switch (eWorkflowEvent) {
             case CACHE.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion: return this.eventIngestionUploadAssetVersion(workflowParams);
+            case CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject: return this.eventIngestionIngestObject(workflowParams);
             default:
                 LOG.info(`WorkflowEngine.event called with unhandled workflow event type ${CACHE.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
                 return null;
@@ -142,6 +143,61 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     if (!workflow) {
                         LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}`, LOG.LS.eWF);
                         continue;
+                    }
+                } break;
+            }
+        }
+        return workflow;
+    }
+
+    private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow | null> {
+        if (!workflowParams || !workflowParams.idSystemObject)
+            return null;
+
+        const workflow: WF.IWorkflow | null = null;
+        for (const idSystemObject of workflowParams.idSystemObject) {
+            const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+            if (!oID) {
+                LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid idSystemObject ${idSystemObject}`, LOG.LS.eWF);
+                continue;
+            }
+
+            // take appropriate workflow actions based on the ingested object type
+            switch (oID.eObjectType) {
+                case DBAPI.eSystemObjectType.eModel: {
+                    const modelConstellation: DBAPI.ModelConstellation | null = await DBAPI.ModelConstellation.fetch(oID.idObject);
+                    if (!modelConstellation || !modelConstellation.Model) {
+                        LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to retrieve model constellation for ${JSON.stringify(oID)}`, LOG.LS.eWF);
+                        continue;
+                    }
+                    const model: DBAPI.Model = modelConstellation.Model;
+                    if (model.Master) {
+                        /*
+                        // lookup the model geometry file and the diffuse color texture map:
+                        modelConstellation.ModelAssets[0].AssetType ==  ...
+                        modelConstellation.ModelMaterialChannels[0].idVMaterialType;
+                        modelConstellation.ModelMaterialChannels[0].UVMapEmbedded;
+                        modelConstellation.ModelMaterialChannels[0].idModelMaterialUVMap;
+                        modelConstellation.ModelMaterialUVMaps[0].idAsset;
+                        // initiate WorkflowJob for cook si-voyager-scene
+                        const parameters: WFP.WorkflowJobParameters =
+                            new WFP.WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
+                                new COOK.JobCookSIPackratInspectParameters(assetVersion.FileName));
+
+                        const wfParams: WF.WorkflowParameters = {
+                            eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
+                            idSystemObject: [idSystemObject],
+                            idProject: null,
+                            idUserInitiator: null,
+                            parameters,
+                        };
+
+                        workflow = await this.create(wfParams);
+                        if (!workflow) {
+                            LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}`, LOG.LS.eWF);
+                            continue;
+                        }
+                        */
                     }
                 } break;
             }

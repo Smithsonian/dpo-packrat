@@ -74,18 +74,18 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
                     let error: string = '';
                     const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
                     const idAssetVersions: number[] = [];
-                    for (const assetVersion of assetVersions) {
-                        // At this point, we've created the assets
-                        // Now, we want to perform ingestion object-type specific automations ... i.e. based on vocabulary
-                        // If we're ingesting a model, we want to initiate two separate workflows:
-                        // (1) WorkflowJob, for the Cook si-packrat-inspect recipe
-                        // (2) if this is a master model, WorkflowJob, for Cook scene creation & derivative generation
-                        //
-                        // Our aim is to be able to update the apolloUpload control, changing status, and perhaps showing progress
-                        // We could make the upload 80% of the total, and then workflow step (1) the remaining 20%
-                        // Workflow (1) has create job, transfer files, start job, await results
-                        // Workflow (2) should run asynchronously and independently
-                        if (workflowEngine) {
+                    if (workflowEngine) {
+                        for (const assetVersion of assetVersions) {
+                            // At this point, we've created the assets
+                            // Now, we want to perform ingestion object-type specific automations ... i.e. based on vocabulary
+                            // If we're ingesting a model, we want to initiate two separate workflows:
+                            // (1) WorkflowJob, for the Cook si-packrat-inspect recipe
+                            // (2) if this is a master model, WorkflowJob, for Cook scene creation & derivative generation
+                            //
+                            // Our aim is to be able to update the apolloUpload control, changing status, and perhaps showing progress
+                            // We could make the upload 80% of the total, and then workflow step (1) the remaining 20%
+                            // Workflow (1) has create job, transfer files, start job, await results
+                            // Workflow (2) should run asynchronously and independently
                             // assetVersion.fetchSystemObject()
                             const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
                             const workflowParams: WF.WorkflowParameters = {
