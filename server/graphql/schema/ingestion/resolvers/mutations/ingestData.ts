@@ -6,9 +6,11 @@ import * as CACHE from '../../../../../cache';
 import * as COL from '../../../../../collections/interface';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
+import * as WF from '../../../../../workflow/interface';
 import { AssetStorageAdapter, IngestAssetResult, OperationInfo } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
+import { SystemObjectBased } from '../../../../../db';
 
 export default async function ingestData(_: Parent, args: MutationIngestDataArgs, context: Context): Promise<IngestDataResult> {
     const { input } = args;
@@ -93,11 +95,13 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     // next, promote asset into repository storage
     const ingestRes: Map<number, IngestAssetResult | null> = await promoteAssetsIntoRepository(assetVersionMap, user);
 
-    // finally, use results to create/update derived objects
-    if (ingestPhotogrammetry) {
+    // use results to create/update derived objects
+    if (ingestPhotogrammetry)
         await createPhotogrammetryDerivedObjects(assetVersionMap, ingestPhotoMap, ingestRes);
-    }
 
+    // notify workflow engine about this ingestion:
+    if (!await sendWorkflowIngestionEvent(assetVersionMap, user))
+        return { success: false };
     return { success: true };
 }
 
@@ -602,4 +606,29 @@ async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.Sy
         res.set(idAssetVersion, ISR);
     }
     return res;
+}
+
+async function sendWorkflowIngestionEvent(assetVersionMap: Map<number, DBAPI.SystemObjectBased>, user: User): Promise<boolean> {
+    const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+    if (!workflowEngine) {
+        LOG.error('ingestData sendWorkflowIngestionEvent could not load WorkflowEngine', LOG.LS.eGQL);
+        return false;
+    }
+
+    // compute set of unique objects ingested:
+    const objectSet: Set<SystemObjectBased> = new Set(assetVersionMap.values());
+    for (const SOBased of objectSet.values()) {
+        const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
+        const workflowParams: WF.WorkflowParameters = {
+            eWorkflowType: null,
+            idSystemObject: SO ? [SO.idSystemObject] : null,
+            idProject: null, // TODO: update with project ID
+            idUserInitiator: user.idUser,
+            parameters: null
+        };
+
+        // send workflow engine event, but don't wait for results
+        workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);
+    }
+    return true;
 }
