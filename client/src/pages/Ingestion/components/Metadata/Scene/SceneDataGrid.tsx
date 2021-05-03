@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 import React from 'react';
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -36,8 +38,8 @@ interface SceneDataProps {
     name: string;
     hasBeenQCd: boolean;
     isOriented: boolean;
-    setNameField: ({ target }: { target: any }) => void;
-    setCheckboxField: ({ target }: { target: any }) => void;
+    setNameField: ({ target }: { target: EventTarget }) => void;
+    setCheckboxField: ({ target }: { target: EventTarget }) => void;
 }
 
 function SceneDataGrid(props: SceneDataProps): React.ReactElement {
@@ -50,7 +52,7 @@ function SceneDataGrid(props: SceneDataProps): React.ReactElement {
         <Box display='flex' flexDirection='column' className={classes.container}>
             <InputField required type='string' label='Name' value={name} name='name' onChange={setNameField} />
 
-            <FieldType required label={"Has been QC'd"} direction='row' containerProps={rowFieldProps}>
+            <FieldType required label="Has been QC'd" direction='row' containerProps={rowFieldProps}>
                 <Checkbox name='hasBeenQCd' checked={hasBeenQCd} color='primary' onChange={setCheckboxField} />
             </FieldType>
 
