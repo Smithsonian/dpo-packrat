@@ -8,4 +8,5 @@ export enum eEventKey {
     eDBUpdate = 2,
     eDBDelete = 3,
     eAuthLogin = 4,
+    eSceneQCd = 5
 }
