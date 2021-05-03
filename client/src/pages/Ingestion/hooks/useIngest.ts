@@ -203,8 +203,8 @@ function useIngest(): UseIngest {
                         identifiers: ingestIdentifiers,
                         systemCreated,
                         name,
-                        hasBeenQCd: hasBeenQCd,
-                        isOriented: isOriented
+                        hasBeenQCd,
+                        isOriented
                     };
 
                     ingestScene.push(sceneData);

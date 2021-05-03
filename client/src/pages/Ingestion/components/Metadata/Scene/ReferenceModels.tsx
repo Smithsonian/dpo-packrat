@@ -1,3 +1,6 @@
+/* eslint-disable react/jsx-max-props-per-line */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * ReferenceModels
  *
@@ -69,7 +72,7 @@ interface ReferenceModel {
     BoundingBoxP2X: number;
     BoundingBoxP2Y: number;
     BoundingBoxP2Z: number;
-    FileSize: string;
+    FileSize: number;
     Model: any;
     Name: string;
     Quality: string;
@@ -139,7 +142,7 @@ function Header(): React.ReactElement {
     );
 }
 
-function Item({ referenceModel }): React.ReactElement {
+function Item({ referenceModel }: { referenceModel: ReferenceModel }): React.ReactElement {
     const { Model, Name, FileSize, UVResolution, Quality, Usage } = referenceModel;
     const { BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z } = referenceModel;
     const classes = useStyles();

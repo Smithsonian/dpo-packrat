@@ -39,7 +39,7 @@ function Scene(props: SceneProps): React.ReactElement {
             BoundingBoxP2X: 0,
             BoundingBoxP2Y: 0,
             BoundingBoxP2Z: 0,
-            FileSize: '',
+            FileSize: 0,
             Model: null,
             Name: '',
             Quality: '',
