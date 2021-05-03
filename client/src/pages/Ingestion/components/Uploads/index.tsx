@@ -177,6 +177,7 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
                 rightLoading={gettingAssetDetails}
                 onClickLeft={onDiscard}
                 onClickRight={onIngest}
+                uploadVersion
             />
             <UploadCompleteList />
         </React.Fragment>
