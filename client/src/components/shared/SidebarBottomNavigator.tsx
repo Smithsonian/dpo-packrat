@@ -14,13 +14,22 @@ import { Colors } from '../../theme';
 import LoadingButton from '../controls/LoadingButton';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
+    uploadContainer: {
+        display: 'flex',
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '10px 0px',
+        background: palette.background.paper
+    },
     container: {
         display: 'flex',
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
-        // width: '52vw',
-        padding: '10px 0px',
+        width: '53vw',
+        padding: '20px 0px',
+        marginLeft: 20,
         background: palette.background.paper
     },
     navButton: {
@@ -40,6 +49,7 @@ interface SidebarBottomNavigatorProps {
     leftLabel: string;
     leftLoading?: boolean;
     leftRoute?: string;
+    uploadVersion?: boolean;
     onClickLeft?: () => void;
     rightLabel: string;
     rightLoading?: boolean;
@@ -48,7 +58,7 @@ interface SidebarBottomNavigatorProps {
 }
 
 function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.ReactElement {
-    const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading } = props;
+    const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading, uploadVersion } = props;
     const classes = useStyles();
 
     let leftButton = (
@@ -78,9 +88,10 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
             </Link>
         );
     }
+    const containerType = uploadVersion ? classes.uploadContainer : classes.container;
 
     return (
-        <Box className={classes.container}>
+        <Box className={containerType}>
             {leftButton}
             {rightButton}
         </Box>

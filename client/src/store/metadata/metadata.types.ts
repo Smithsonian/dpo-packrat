@@ -105,6 +105,9 @@ export type SceneFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     referenceModels: StateReferenceModel[];
+    hasBeenQCd: boolean;
+    isOriented: boolean;
+    name: string;
 };
 
 export type OtherFields = {
