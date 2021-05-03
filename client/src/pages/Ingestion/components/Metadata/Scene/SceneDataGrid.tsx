@@ -5,77 +5,66 @@ import { InputField, FieldType, ReadOnlyRow } from '../../../../../components';
 
 const useStyles = makeStyles(() => ({
     container: {
-        marginTop: 20
+        marginBottom: 10,
+        '& > *': {
+            width: 'fit-content',
+            minWidth: '20vw',
+            height: '20px',
+            '&:not(:last-child)': {
+                borderBottom: '1px solid #D8E5EE'
+            }
+        }
     }
 }));
 
 interface SceneData {
-    hasBeenQCd: boolean;
-    isOriented: boolean;
-    sceneCount: number;
-    nodeCount: number;
-    cameraCount: number;
-    lightCount: number;
-    modelCount: number;
-    metaCount: number;
-    setupCount: number;
-    tourCount: number;
-    setNameField?: () => void;
-    setCheckboxField?: () => void;
+    Name: string;
+    HasBeenQCd: boolean;
+    IsOriented: boolean;
+    CountScene: number;
+    CountNode: number;
+    CountCamera: number;
+    CountLight: number;
+    CountModel: number;
+    CountMeta: number;
+    CountSetup: number;
+    CountTour: number;
 }
 
 interface SceneDataProps {
     sceneData: SceneData;
+    name: string;
+    hasBeenQCd: boolean;
+    isOriented: boolean;
+    setNameField: ({ target }: { target: any }) => void;
+    setCheckboxField: ({ target }: { target: any }) => void;
 }
 
 function SceneDataGrid(props: SceneDataProps): React.ReactElement {
-    const { sceneData } = props;
-    const { hasBeenQCd, isOriented, sceneCount, nodeCount, cameraCount, lightCount, modelCount, metaCount, setupCount, tourCount } = sceneData;
+    const { sceneData, setCheckboxField, setNameField, name, hasBeenQCd, isOriented } = props;
+    const { CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour } = sceneData;
     const classes = useStyles();
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
         <Box display='flex' flexDirection='column' className={classes.container}>
-            <InputField
-                required
-                type='string'
-                label='Name'
-                value={'Sample'}
-                name='name'
-                onChange={() => {
-                    console.log('name change');
-                }}
-            />
+            <InputField required type='string' label='Name' value={name} name='name' onChange={setNameField} />
 
             <FieldType required label={"Has been QC'd"} direction='row' containerProps={rowFieldProps}>
-                <Checkbox
-                    name='hasBeenQCd'
-                    checked={hasBeenQCd}
-                    color='primary'
-                    onChange={() => {
-                        console.log('check');
-                    }}
-                />
+                <Checkbox name='hasBeenQCd' checked={hasBeenQCd} color='primary' onChange={setCheckboxField} />
             </FieldType>
 
-            <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
-                <Checkbox
-                    name='authoritative'
-                    checked={isOriented}
-                    color='primary'
-                    onChange={() => {
-                        console.log('check');
-                    }}
-                />
+            <FieldType required label='Is Oriented' direction='row' containerProps={rowFieldProps}>
+                <Checkbox name='isOriented' checked={isOriented} color='primary' onChange={setCheckboxField} />
             </FieldType>
-            <ReadOnlyRow label='Scene Count' value={sceneCount} />
-            <ReadOnlyRow label='Node Count' value={nodeCount} />
-            <ReadOnlyRow label='Camera Count' value={cameraCount} />
-            <ReadOnlyRow label='Light Count' value={lightCount} />
-            <ReadOnlyRow label='Model Count' value={modelCount} />
-            <ReadOnlyRow label='Meta Count' value={metaCount} />
-            <ReadOnlyRow label='Setup Count' value={setupCount} />
-            <ReadOnlyRow label='Tour Count' value={tourCount} />
+            <ReadOnlyRow label='Scene Count' value={CountScene} padding={15} />
+            <ReadOnlyRow label='Node Count' value={CountNode} padding={15} />
+            <ReadOnlyRow label='Camera Count' value={CountCamera} padding={15} />
+            <ReadOnlyRow label='Light Count' value={CountLight} padding={15} />
+            <ReadOnlyRow label='Model Count' value={CountModel} padding={15} />
+            <ReadOnlyRow label='Meta Count' value={CountMeta} padding={15} />
+            <ReadOnlyRow label='Setup Count' value={CountSetup} padding={15} />
+            <ReadOnlyRow label='Tour Count' value={CountTour} padding={15} />
         </Box>
     );
 }

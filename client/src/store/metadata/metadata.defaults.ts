@@ -148,7 +148,10 @@ export const modelFieldsSchema = yup.object().shape({
 export const defaultSceneFields: SceneFields = {
     systemCreated: true,
     identifiers: [],
-    referenceModels: []
+    referenceModels: [],
+    hasBeenQCd: false,
+    isOriented: false,
+    name: ''
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;
