@@ -154,10 +154,17 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         let assetVersionDiffuse: DBAPI.AssetVersion | null | undefined = undefined;
         let units: string | undefined = undefined;
 
+        const systemObjectHandled: Set<number> = new Set<number>();
         for (const idSystemObject of workflowParams.idSystemObject) {
             const { success, asset, assetVersion } = await this.computeAssetAndVersion(idSystemObject);
             if (!success || !asset || !assetVersion || !asset.idSystemObject)
                 continue;
+
+            // skip processing asset-owning parent objects multiple times
+            if (systemObjectHandled.has(asset.idSystemObject))
+                continue;
+            else
+                systemObjectHandled.add(asset.idSystemObject);
 
             const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(asset.idSystemObject);
             if (!oID) {
@@ -166,10 +173,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             }
 
             // for now, we only have special rules for ingestion of asset versions owned by models:
-            if (oID.eObjectType !== DBAPI.eSystemObjectType.eModel) {
-                LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping non-model asset ${JSON.stringify(oID)}`, LOG.LS.eWF);
+            if (oID.eObjectType !== DBAPI.eSystemObjectType.eModel)
                 continue;
-            }
+                // LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping non-model asset ${JSON.stringify(oID)}`, LOG.LS.eWF);
 
             // lookup model constellation, if we haven't already; if we have, make sure we're processing the same model:
             if (!idModel) {
@@ -186,6 +192,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 return null;
             }
         }
+
+        if (!idModel)
+            return null;
 
         if (assetVersionGeometry === undefined) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to compute geometry and/or diffuse texture from model ${idModel}`, LOG.LS.eWF);
