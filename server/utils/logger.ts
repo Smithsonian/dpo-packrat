@@ -31,7 +31,11 @@ export function info(message: string, eLogSection: LS): void {
 }
 
 export function error(message: string, eLogSection: LS, obj: any | null = null): void {
-    logger.error(message, obj, { eLS: eLogSection });
+    if (obj) {
+        obj.eLS = eLogSection;
+        logger.error(message, obj);
+    } else
+        logger.error(message, { eLS: eLogSection });
 }
 
 function loggerSectionName(eLogSection: LS | undefined): string {
