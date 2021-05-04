@@ -611,7 +611,7 @@ export class AssetStorageAdapter {
     }
 
     static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestStreamOrFileResult> {
-        LOG.error(`AssetStorageAdapter.ingestStreamOrFile ${JSON.stringify(ISI)}`, LOG.LS.eSTR);
+        LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} starting`, LOG.LS.eSTR);
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             const error: string = 'AssetStorageAdapter.ingestStream unable to retrieve Storage Implementation from StorageFactory.getInstace()';
@@ -670,6 +670,7 @@ export class AssetStorageAdapter {
         const opInfo: STORE.OperationInfo = { message: 'Ingesting asset', idUser: ISI.idUserCreator,
             userEmailAddress: user?.EmailAddress ?? '', userName: user?.Name ?? '' };
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(comRes.assets[0], comRes.assetVersions[0], ISI.SOBased, opInfo);
+        LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eSTR);
         return { success: IAR.success, error: IAR.error, asset: comRes.assets[0] || null, assetVersion: comRes.assetVersions[0] || null };
     }
 
