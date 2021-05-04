@@ -10,7 +10,7 @@ const useStyles = makeStyles(() => ({
         marginBottom: 10,
         '& > *': {
             width: 'fit-content',
-            minWidth: '20vw',
+            minWidth: '300px',
             height: '20px',
             '&:not(:last-child)': {
                 borderBottom: '1px solid #D8E5EE'

@@ -17,18 +17,14 @@ import { formatBytes } from '../../../../../utils/upload';
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
-        [breakpoints.up('xl')]: {
-            width: '70vw'
-        },
-        [breakpoints.only('lg')]: {
+        [breakpoints.up('lg')]: {
             width: '60vw'
         },
         [breakpoints.only('md')]: {
             width: '54vw'
         },
-        [breakpoints.down('sm')]: {
-            width: '45vw'
-        },
+        minWidth: '880px',
+        maxWidth: '1100px',
         flexDirection: 'column',
         borderRadius: 5,
         padding: 10,
@@ -117,22 +113,22 @@ function Header(): React.ReactElement {
 
     return (
         <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
-            <Box display='flex' flex={3}>
+            <Box display='flex' flex={3.5}>
                 <Typography className={classes.header}>Reference Models(s)</Typography>
             </Box>
-            <Box display='flex' flex={1}>
+            <Box display='flex' flex={0.75}>
                 <Typography className={classes.header}>Usage</Typography>
             </Box>
-            <Box display='flex' flex={1}>
+            <Box display='flex' flex={0.75}>
                 <Typography className={classes.header}>Quality</Typography>
             </Box>
-            <Box display='flex' flex={1}>
+            <Box display='flex' flex={0.75}>
                 <Typography className={classes.header}>File Size</Typography>
             </Box>
             <Box display='flex' flex={1} justifyContent='center'>
                 <Typography className={classes.header}>UV Resolution</Typography>
             </Box>
-            <Box display='flex' flex={2} justifyContent='center'>
+            <Box display='flex' flex={2.5} justifyContent='center'>
                 <Typography className={classes.header}>Bounding Box</Typography>
             </Box>
             <Box display='flex' flex={0.5}>
@@ -156,7 +152,7 @@ function Item({ referenceModel }: { referenceModel: ReferenceModel }): React.Rea
     )}, ${roundBoundingBox(BoundingBoxP2Y)}, ${roundBoundingBox(BoundingBoxP2Z)})`;
     return (
         <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
-            <Box display='flex' flex={2.5}>
+            <Box display='flex' flex={3}>
                 {Model ? (
                     <NewTabLink to={getDetailsUrlForObject(Model?.SystemObject?.idSystemObject)}>
                         <Typography className={clsx(classes.label, classes.labelUnderline)}>{Name}</Typography>
@@ -166,20 +162,20 @@ function Item({ referenceModel }: { referenceModel: ReferenceModel }): React.Rea
                 )}
             </Box>
 
-            <Box display='flex' flex={1} justifyContent='center'>
+            <Box display='flex' flex={0.75} justifyContent='center'>
                 <Typography className={classes.label}>{Usage}</Typography>
             </Box>
-            <Box display='flex' flex={1} justifyContent='center'>
+            <Box display='flex' flex={0.75} justifyContent='center'>
                 <Typography className={classes.label}>{Quality}</Typography>
             </Box>
 
-            <Box display='flex' flex={1} justifyContent='center'>
+            <Box display='flex' flex={0.75} justifyContent='center'>
                 <Typography className={classes.label}>{formatBytes(FileSize)}</Typography>
             </Box>
-            <Box display='flex' flex={1} justifyContent='center'>
+            <Box display='flex' flex={0.5} justifyContent='center'>
                 <Typography className={classes.label}>{UVResolution}</Typography>
             </Box>
-            <Box display='flex' flex={2} justifyContent='center'>
+            <Box display='flex' flex={2.5} justifyContent='center'>
                 <Typography className={classes.label}>{boundingBox}</Typography>
             </Box>
             <Box display='flex' flex={0.5} justifyContent='center'>

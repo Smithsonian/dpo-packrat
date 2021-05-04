@@ -85,6 +85,7 @@ type SceneDetailFields {
     CountMeta: Int
     CountSetup: Int
     CountTour: Int
+    idScene: Int
 }
 
 type IntermediaryFileDetailFields {
