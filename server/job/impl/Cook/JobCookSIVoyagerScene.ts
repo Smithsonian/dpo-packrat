@@ -60,12 +60,20 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     }
 
     async cleanupJob(): Promise<H.IOResults> {
-        if (!this._results.success)
-            return { success: true, error: '' };
-        if (this.cleanupCalled)
-            return { success: true, error: 'cleanupJob already called, exiting early' };
-        this.cleanupCalled = true;
+        try {
+            if (!this._results.success)
+                return { success: true, error: '' };
+            if (this.cleanupCalled)
+                return { success: true, error: 'cleanupJob already called, exiting early' };
+            this.cleanupCalled = true;
+            return await this.createSystemObjects();
+        } catch (error) {
+            LOG.error('JobCookSIVoyagerScene.cleanupJob', LOG.LS.eJOB, error);
+            return { success: false, error: JSON.stringify(error) };
+        }
+    }
 
+    private async createSystemObjects(): Promise<H.IOResults> {
         const modelSource: DBAPI.Model | null = this.idModel ? await DBAPI.Model.fetch(this.idModel) : null;
 
         const svxFile: string = this.parameters.svxFile ?? 'scene.svx.json';
@@ -88,6 +96,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         // create cloneable stream wrapper, so that we can load the scene into memory for processing, and also stream it out to storage as an ingested asset
         const clone = cloneable(new Readable().wrap(RSR.readStream));
         LOG.info(`JobCookSIVoyagerScene.cleanupJob[${svxFile}] create cloneable stream wrapper`, LOG.LS.eJOB);
+        const cloneStream = clone.clone();
 
         // Parse Scene
         const svx: SvxReader = new SvxReader();
@@ -120,7 +129,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         const LS: LocalStore | undefined = ASL.getStore();
         const idUserCreator: number = LS?.idUser ?? 0;
         const ISI: STORE.IngestStreamOrFileInput = {
-            ReadStream: clone.clone(),
+            ReadStream: cloneStream,
             LocalFilePath: null,
             FileName: svxFile,
             FilePath: '',
