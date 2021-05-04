@@ -618,8 +618,11 @@ export class AssetStorageAdapter {
             return { success: false, error };
         }
 
-        if (!ISI.idUserCreator || !ISI.idVAssetType)
-            return { success: false, error: 'AssetStorageAdapter.ingestStream missing required parameters' };
+        if (!ISI.idUserCreator || !ISI.idVAssetType) {
+            const error: string = 'AssetStorageAdapter.ingestStream missing required parameters';
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
 
         const wsRes: STORE.WriteStreamResult = await storage.writeStream(ISI.FileName);
         if (!wsRes.success || !wsRes.writeStream || !wsRes.storageKey) {
