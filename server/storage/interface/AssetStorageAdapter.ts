@@ -611,6 +611,7 @@ export class AssetStorageAdapter {
     }
 
     static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestStreamOrFileResult> {
+        LOG.error(`AssetStorageAdapter.ingestStreamOrFile ${JSON.stringify(ISI)}`, LOG.LS.eSTR);
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             const error: string = 'AssetStorageAdapter.ingestStream unable to retrieve Storage Implementation from StorageFactory.getInstace()';
@@ -618,7 +619,7 @@ export class AssetStorageAdapter {
             return { success: false, error };
         }
 
-        if (!ISI.idUserCreator || !ISI.idVAssetType) {
+        if (!ISI.idVAssetType) { // !ISI.idUserCreator ||
             const error: string = 'AssetStorageAdapter.ingestStream missing required parameters';
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };

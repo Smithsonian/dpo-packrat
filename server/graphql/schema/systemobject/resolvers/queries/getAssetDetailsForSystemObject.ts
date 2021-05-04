@@ -17,7 +17,7 @@ async function getAssetDetails(idSystemObject: number): Promise<AssetDetail[]> {
     const assetDetails: AssetDetail[] = [];
     const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSystemObject(idSystemObject);
     if (!assetVersions) {
-        LOG.error(`getAssetDetails could not retrieve asset versions for ${idSystemObject}`, LOG.LS.eGQL);
+        LOG.info(`getAssetDetails retrieved no asset versions for ${idSystemObject}`, LOG.LS.eGQL);
         return assetDetails;
     }
 

@@ -268,7 +268,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
             // look for completion in 'state' member, via value of 'done', 'error', or 'cancelled'; update eJobRunStatus and terminate polling job
             const cookJobReport = axiosResponse.data;
-            if (pollNumber <= 10 || ((pollNumber % 10) == 0))
+            if (pollNumber <= 10 || ((pollNumber % 5) == 0))
                 LOG.info(`JobCook [${this.name()}] polling [${pollNumber}], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
             switch (cookJobReport['state']) {
                 case 'created':     await this.recordCreated();                                 break;
