@@ -8,6 +8,7 @@ import * as LOG from '../utils/logger';
 import { logtest } from './routes/logtest';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
 import { download } from './routes/download';
+import { errorhandler } from './routes/errorhandler';
 
 import express, { Request } from 'express';
 import cors from 'cors';
@@ -65,6 +66,7 @@ export class HttpServer {
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
         this.app.get('/download', download);
+        this.app.use(errorhandler); // keep last
 
         if (process.env.NODE_ENV !== 'test') {
             this.app.listen(Config.http.port, () => {
