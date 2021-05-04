@@ -84,8 +84,9 @@ interface ReferenceModelsProps {
 }
 
 const roundBoundingBox = (BB: number) => {
-    if (BB < 1) return Number(BB.toPrecision(3));
-    return BB.toFixed(2);
+    if (BB == null)
+        return '';
+    return (BB < 1) ? Number(BB.toPrecision(3)) : BB.toFixed(2);
 };
 
 function ReferenceModels(props: ReferenceModelsProps): React.ReactElement {
@@ -147,9 +148,11 @@ function Item({ referenceModel }: { referenceModel: ReferenceModel }): React.Rea
     //     alert(`TODO: KARAN: Handle ${action.toString()} action`);
     // };
 
-    const boundingBox: string = `(${roundBoundingBox(BoundingBoxP1X)}, ${roundBoundingBox(BoundingBoxP1Y)}, ${roundBoundingBox(BoundingBoxP1Z)}) - (${roundBoundingBox(
-        BoundingBoxP2X
-    )}, ${roundBoundingBox(BoundingBoxP2Y)}, ${roundBoundingBox(BoundingBoxP2Z)})`;
+    let boundingBox: string = '';
+    if (BoundingBoxP1X != null && BoundingBoxP1Y != null && BoundingBoxP1Z != null &&
+        BoundingBoxP2X != null && BoundingBoxP2Y != null && BoundingBoxP2Z != null)
+        boundingBox = `(${roundBoundingBox(BoundingBoxP1X)}, ${roundBoundingBox(BoundingBoxP1Y)}, ${roundBoundingBox(BoundingBoxP1Z)}) - (${
+            roundBoundingBox(BoundingBoxP2X)}, ${roundBoundingBox(BoundingBoxP2Y)}, ${roundBoundingBox(BoundingBoxP2Z)})`;
     return (
         <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
             <Box display='flex' flex={3}>
