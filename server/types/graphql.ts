@@ -1325,7 +1325,6 @@ export type ModelDetailFieldsInput = {
 };
 
 export type SceneDetailFieldsInput = {
-  Links: Array<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
@@ -1519,6 +1518,7 @@ export type SceneDetailFields = {
   CountMeta?: Maybe<Scalars['Int']>;
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
+  idScene?: Maybe<Scalars['Int']>;
 };
 
 export type IntermediaryFileDetailFields = {

@@ -8,6 +8,14 @@ type Args = { input: GetSceneInput };
 export default async function getScene(_: Parent, args: Args): Promise<GetSceneResult> {
     const { input } = args;
     const { idScene } = input;
+    let result: GetSceneResult = {};
     const Scene = await DBAPI.Scene.fetch(idScene);
-    return { Scene };
+    const xRef = await DBAPI.ModelSceneXref.fetchFromScene(idScene);
+    if (Scene) {
+        result = { Scene };
+    }
+    if (result.Scene && xRef) {
+        result.Scene.ModelSceneXref = xRef;
+    }
+    return result;
 }

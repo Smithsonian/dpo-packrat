@@ -314,6 +314,11 @@ function DetailsView(): React.ReactElement {
                 };
             }
 
+            if (objectType === eSystemObjectType.eScene && updatedData.Scene) {
+                const { IsOriented, HasBeenQCd } = updatedData.Scene;
+                updatedData.Scene = { IsOriented, HasBeenQCd };
+            }
+
             if (objectType === eSystemObjectType.eCaptureData && !updatedData.CaptureData) {
                 const {
                     data: {
@@ -381,7 +386,6 @@ function DetailsView(): React.ReactElement {
             updatedData.Retired = updatedData?.Retired || details?.retired;
             updatedData.Name = updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name;
             updatedData.Identifiers = stateIdentifiersWithIdSystemObject || [];
-            console.log('updatedData', updatedData);
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
