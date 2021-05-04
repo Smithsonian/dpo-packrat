@@ -1328,7 +1328,6 @@ export type ModelDetailFieldsInput = {
 };
 
 export type SceneDetailFieldsInput = {
-  Links: Array<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
@@ -1522,6 +1521,7 @@ export type SceneDetailFields = {
   CountMeta?: Maybe<Scalars['Int']>;
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
+  idScene?: Maybe<Scalars['Int']>;
 };
 
 export type IntermediaryFileDetailFields = {
@@ -2892,7 +2892,11 @@ export type GetSceneQuery = (
     { __typename?: 'GetSceneResult' }
     & { Scene?: Maybe<(
       { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene'>
+      & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour'>
+      & { ModelSceneXref?: Maybe<Array<Maybe<(
+        { __typename?: 'ModelSceneXref' }
+        & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
+      )>>> }
     )> }
   ) }
 );
@@ -2994,7 +2998,7 @@ export type GetDetailsTabDataForObjectQuery = (
       )>> }
     )>, Scene?: Maybe<(
       { __typename?: 'SceneDetailFields' }
-      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented'>
+      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented' | 'idScene'>
     )>, IntermediaryFile?: Maybe<(
       { __typename?: 'IntermediaryFileDetailFields' }
       & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>
@@ -4910,6 +4914,33 @@ export const GetSceneDocument = gql`
   getScene(input: $input) {
     Scene {
       idScene
+      HasBeenQCd
+      IsOriented
+      Name
+      CountCamera
+      CountScene
+      CountNode
+      CountLight
+      CountModel
+      CountMeta
+      CountSetup
+      CountTour
+      ModelSceneXref {
+        idModelSceneXref
+        idModel
+        idScene
+        Name
+        Usage
+        Quality
+        FileSize
+        UVResolution
+        BoundingBoxP1X
+        BoundingBoxP1Y
+        BoundingBoxP1Z
+        BoundingBoxP2X
+        BoundingBoxP2Y
+        BoundingBoxP2Z
+      }
     }
   }
 }
@@ -5191,6 +5222,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       Annotation
       HasBeenQCd
       IsOriented
+      idScene
     }
     IntermediaryFile {
       idIntermediaryFile

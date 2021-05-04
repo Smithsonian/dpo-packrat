@@ -4,40 +4,89 @@
  *
  * This component renders details tab for Scene specific details used in DetailsTab component.
  */
-import { Box, makeStyles, Typography } from '@material-ui/core';
+import { Box, makeStyles, Checkbox /*, Typography */ } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
-import { CheckboxField, FieldType, Loader } from '../../../../../components';
-import { SceneDetailFields } from '../../../../../types/graphql';
-import { isFieldUpdated } from '../../../../../utils/repository';
+import { Loader } from '../../../../../components';
+import { GetSceneDocument } from '../../../../../types/graphql';
 import { DetailComponentProps } from './index';
+import { apolloClient } from '../../../../../graphql/index';
+import ReferenceModels from '../../../../Ingestion/components/Metadata/Scene/ReferenceModels';
+import { ReadOnlyRow, FieldType } from '../../../../../components/index';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {
         fontSize: '0.8em',
         color: palette.primary.dark
+    },
+    container: {
+        marginBottom: 10,
+        '& > *': {
+            width: '20%',
+            maxWidth: '300px',
+            minWidth: '200px',
+            height: '20px',
+            '&:not(:last-child)': {
+                borderBottom: '1px solid #D8E5EE'
+            }
+        }
     }
 }));
 
 function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const { data, loading, onUpdateDetail, objectType } = props;
-
-    const [details, setDetails] = useState<SceneDetailFields>({
-        Links: []
+    const [details, setDetails] = useState({
+        Name: '',
+        HasBeenQCd: false,
+        IsOriented: false,
+        CountScene: 0,
+        CountNode: 0,
+        CountCamera: 0,
+        CountLight: 0,
+        CountModel: 0,
+        CountMeta: 0,
+        CountSetup: 0,
+        CountTour: 0,
+        ModelSceneXref: [
+            {
+                BoundingBoxP1X: 0,
+                BoundingBoxP1Y: 0,
+                BoundingBoxP1Z: 0,
+                BoundingBoxP2X: 0,
+                BoundingBoxP2Y: 0,
+                BoundingBoxP2Z: 0,
+                FileSize: 0,
+                Model: null,
+                Name: '',
+                Quality: '',
+                UVResolution: 0,
+                Usage: '',
+                idModel: -1,
+                idModelSceneXref: 0,
+                idScene: 0
+            }
+        ]
     });
 
     useEffect(() => {
-        if (data && !loading) {
-            const { Scene } = data.getDetailsTabDataForObject;
-            setDetails({
-                Links: Scene?.Links ?? [],
-                AssetType: Scene?.AssetType,
-                Tours: Scene?.Tours,
-                Annotation: Scene?.Annotation,
-                HasBeenQCd: Scene?.HasBeenQCd,
-                IsOriented: Scene?.IsOriented,
-            });
-        }
+        const retrieveSceneData = async () => {
+            if (data && !loading) {
+                const { Scene } = data.getDetailsTabDataForObject;
+                const {
+                    data: { getScene }
+                } = await apolloClient.query({
+                    query: GetSceneDocument,
+                    variables: {
+                        input: {
+                            idScene: Scene?.idScene
+                        }
+                    },
+                    fetchPolicy: 'no-cache'
+                });
+                setDetails(getScene?.Scene);
+            }
+        };
+        retrieveSceneData();
     }, [data, loading]);
 
     useEffect(() => {
@@ -55,63 +104,27 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
-    const sceneData = data.getDetailsTabDataForObject?.Scene;
-
     return (
         <Box>
-            {details.Links.map((link: string, index: number) => (
-                <FieldType
-                    key={index}
-                    required
-                    label='Link'
-                    direction='row'
-                    containerProps={rowFieldProps}
-                    width='auto'
-                >
-                    <Typography className={classes.value}>{link}</Typography>
+            <ReferenceModels referenceModels={details.ModelSceneXref} />
+
+            <Box display='flex' flexDirection='column' className={classes.container}>
+                <FieldType required label="Has been QC'd" direction='row' containerProps={rowFieldProps}>
+                    <Checkbox name='HasBeenQCd' checked={details.HasBeenQCd} color='primary' onChange={setCheckboxField} />
                 </FieldType>
-            ))}
 
-            <FieldType
-                required
-                label='Tours'
-                direction='row'
-                containerProps={rowFieldProps}
-                width='auto'
-            >
-                <Typography className={classes.value}>{details.Tours}</Typography>
-            </FieldType>
-            <FieldType
-                required
-                label='Annotation'
-                direction='row'
-                containerProps={rowFieldProps}
-                width='auto'
-            >
-                <Typography className={classes.value}>{details.Annotation}</Typography>
-            </FieldType>
-
-            <CheckboxField
-                viewMode
-                required
-                updated={isFieldUpdated(details, sceneData, 'HasBeenQCd')}
-                disabled
-                name='HasBeenQCd'
-                label='HasBeenQCd'
-                value={details.HasBeenQCd ?? false}
-                onChange={setCheckboxField}
-            />
-
-            <CheckboxField
-                viewMode
-                required
-                updated={isFieldUpdated(details, sceneData, 'IsOriented')}
-                disabled
-                name='IsOriented'
-                label='IsOriented'
-                value={details.IsOriented ?? false}
-                onChange={setCheckboxField}
-            />
+                <FieldType required label='Is Oriented' direction='row' containerProps={rowFieldProps}>
+                    <Checkbox name='IsOriented' checked={details.IsOriented} color='primary' onChange={setCheckboxField} />
+                </FieldType>
+                <ReadOnlyRow label='Scene Count' value={details.CountScene} padding={15} />
+                <ReadOnlyRow label='Node Count' value={details.CountNode} padding={15} />
+                <ReadOnlyRow label='Camera Count' value={details.CountCamera} padding={15} />
+                <ReadOnlyRow label='Light Count' value={details.CountLight} padding={15} />
+                <ReadOnlyRow label='Model Count' value={details.CountModel} padding={15} />
+                <ReadOnlyRow label='Meta Count' value={details.CountMeta} padding={15} />
+                <ReadOnlyRow label='Setup Count' value={details.CountSetup} padding={15} />
+                <ReadOnlyRow label='Tour Count' value={details.CountTour} padding={15} />
+            </Box>
         </Box>
     );
 }
