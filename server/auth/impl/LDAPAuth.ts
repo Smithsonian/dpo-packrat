@@ -20,7 +20,7 @@ class LDAPAuth implements IAuth {
         });
 
         // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
-        client.on('error', error=> { LOG.error('LDAPAuth.verifyUser', error, LOG.LS.eAUTH); });
+        client.on('error', error => { LOG.error('LDAPAuth.verifyUser', LOG.LS.eAUTH, error); });
 
         // Step 2: Bind Packrat Service Account
         const res: VerifyUserResult = await this.bindService(client, ldapConfig);
