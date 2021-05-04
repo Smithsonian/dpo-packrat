@@ -33,7 +33,7 @@ export abstract class DBObject<T> {
         const retVal: boolean = await this.createWorker(); /* istanbul ignore else */
         if (retVal) {
             this.updateCachedValues();
-            this.audit(eEventKey.eDBCreate);
+            this.audit(eEventKey.eDBCreate); // don't await, allow this to continue asynchronously
         }
         return retVal;
     }
@@ -41,14 +41,14 @@ export abstract class DBObject<T> {
         const retVal: boolean = await this.updateWorker(); /* istanbul ignore else */
         if (retVal) {
             this.updateCachedValues();
-            this.audit(eEventKey.eDBUpdate);
+            this.audit(eEventKey.eDBUpdate); // don't await, allow this to continue asynchronously
         }
         return retVal;
     }
     async delete(): Promise<boolean> {
         const retVal: boolean = await this.deleteWorker(); /* istanbul ignore else */
         if (retVal)
-            this.audit(eEventKey.eDBDelete);
+            this.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
         return retVal;
     }
 }

@@ -80,21 +80,7 @@ export class SceneConstellation {
                 return null;
             }
 
-            const scene: Scene = new Scene({
-                Name: '',
-                idAssetThumbnail: null,
-                IsOriented: false,
-                HasBeenQCd: false,
-                CountScene: svx.SvxExtraction.sceneCount,
-                CountNode: svx.SvxExtraction.nodeCount,
-                CountCamera: svx.SvxExtraction.cameraCount,
-                CountLight: svx.SvxExtraction.lightCount,
-                CountModel: svx.SvxExtraction.modelCount,
-                CountMeta: svx.SvxExtraction.metaCount,
-                CountSetup: svx.SvxExtraction.setupCount,
-                CountTour: svx.SvxExtraction.tourCount,
-                idScene: 0
-            });
+            const scene: Scene = svx.SvxExtraction.extractScene();
 
             let modelSceneXrefs: ModelSceneXref[] | null = null;
             if (svx.SvxExtraction.modelDetails) {

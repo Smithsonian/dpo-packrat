@@ -17,6 +17,30 @@ export class SvxExtraction {
     setupCount: number = 0;
     tourCount: number = 0;
 
+    extractScene(): DBAPI.Scene {
+        let Name: string = '';
+        if (this.document.scene !== undefined &&                    // we have a specific scene index
+            this.document.scenes &&                                 // we have a list of scenes
+            (this.document.scenes.length > this.document.scene))    // we have that specific scene
+            Name = this.document.scenes[this.document.scene].name ?? '';
+
+        return new DBAPI.Scene({
+            Name,
+            idAssetThumbnail: null,
+            IsOriented: false,
+            HasBeenQCd: false,
+            CountScene: this.sceneCount,
+            CountNode: this.nodeCount,
+            CountCamera: this.cameraCount,
+            CountLight: this.lightCount,
+            CountModel: this.modelCount,
+            CountMeta: this.metaCount,
+            CountSetup: this.setupCount,
+            CountTour: this.tourCount,
+            idScene: 0
+        });
+    }
+
     private constructor(document: SVX.IDocument) {
         this.document = document;
     }
@@ -84,6 +108,7 @@ export class SvxExtraction {
             return { svx: null, results: { success: false, error: 'Missing asset' } };
         if (document.asset.type !== 'application/si-dpo-3d.document+json')
             return { svx: null, results: { success: false, error: `Incorrect asset.type: ${document.asset.type}` } };
+        /*
         if (document.asset.version === undefined)
             return { svx: null, results: { success: false, error: 'Missing asset.version' } };
         if (document.scene === undefined)
@@ -102,15 +127,15 @@ export class SvxExtraction {
             return { svx: null, results: { success: false, error: 'Missing metas' } };
         if (!document.setups || !Array.isArray(document.setups))
             return { svx: null, results: { success: false, error: 'Missing setups' } };
-
+        */
         const svx: SvxExtraction = new SvxExtraction(document);
-        svx.sceneCount = document.scenes.length;
-        svx.nodeCount = document.nodes.length;
-        svx.cameraCount = document.cameras.length;
-        svx.lightCount = document.lights.length;
-        svx.modelCount = document.models.length;
-        svx.metaCount = document.metas.length;
-        svx.setupCount = document.setups.length;
+        svx.sceneCount = document.scenes?.length ?? 0;
+        svx.nodeCount = document.nodes?.length ?? 0;
+        svx.cameraCount = document.cameras?.length ?? 0;
+        svx.lightCount = document.lights?.length ?? 0;
+        svx.modelCount = document.models?.length ?? 0;
+        svx.metaCount = document.metas?.length ?? 0;
+        svx.setupCount = document.setups?.length ?? 0;
 
         let tourCount: number = 0; /* istanbul ignore else */
         if (svx.document.setups) {

@@ -3,6 +3,7 @@ import { Scene as SceneBase, SystemObject as SystemObjectBase, Prisma } from '@p
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import { eEventKey } from '../../event/interface/EventEnums';
 
 export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemObjectBased {
     idScene!: number;
@@ -19,8 +20,14 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
     CountSetup!: number | null;
     CountTour!: number | null;
 
+    HasBeenQCdOrig!: boolean;
+
     constructor(input: SceneBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.HasBeenQCdOrig = this.HasBeenQCd;
     }
 
     public fetchTableName(): string { return 'Scene'; }
@@ -45,6 +52,10 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                         CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour
                     },
                 }));
+
+            // Audit if someone marks this scene as QC'd
+            if (HasBeenQCd)
+                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Scene.create', LOG.LS.eDB, error);
@@ -55,7 +66,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd,
-                CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour } = this;
+                CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour, HasBeenQCdOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.scene.update({
                 where: { idScene, },
                 data: {
@@ -66,6 +77,10 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                     CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour
                 },
             }) ? true : /* istanbul ignore next */ false;
+
+            // Audit if someone marks this scene as QC'd
+            if (HasBeenQCd && !HasBeenQCdOrig)
+                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Scene.update', LOG.LS.eDB, error);

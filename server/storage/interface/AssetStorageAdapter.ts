@@ -12,6 +12,7 @@ import { AssetVersionContent } from '../../types/graphql';
 import { eVocabularyID, VocabularyCache } from '../../cache';
 
 import * as path from 'path';
+import * as fs from 'fs-extra';
 import mime from 'mime';
 
 export type AssetStorageResult = {
@@ -52,6 +53,24 @@ export type CrackAssetResult = {
     zip: IZip | null;
     asset: DBAPI.Asset | null;
     isBagit: boolean;
+};
+
+export type IngestStreamOrFileInput = {
+    ReadStream: NodeJS.ReadableStream | null;
+    LocalFilePath: string | null;
+    FileName: string;
+    FilePath: string;
+    idAssetGroup: number;
+    idVAssetType: number;
+    idUserCreator: number;
+    SOBased: DBAPI.SystemObjectBased;
+};
+
+export type IngestStreamOrFileResult = {
+    success: boolean;
+    error: string;
+    asset?: DBAPI.Asset | null | undefined;
+    assetVersion?: DBAPI.AssetVersion | null | undefined;
 };
 
 /**
@@ -589,6 +608,70 @@ export class AssetStorageAdapter {
         }
 
         return { asset, assetVersion, success: true, error: '' };
+    }
+
+    static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestStreamOrFileResult> {
+        LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} starting`, LOG.LS.eSTR);
+        const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
+        if (!storage) {
+            const error: string = 'AssetStorageAdapter.ingestStream unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+
+        if (!ISI.idVAssetType) { // !ISI.idUserCreator ||
+            const error: string = 'AssetStorageAdapter.ingestStream missing required parameters';
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+
+        const wsRes: STORE.WriteStreamResult = await storage.writeStream(ISI.FileName);
+        if (!wsRes.success || !wsRes.writeStream || !wsRes.storageKey) {
+            const error: string = `AssetStorageAdapter.ingestStream Unable to create write stream for ${ISI.FileName}: ${wsRes.error}`;
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+
+        if (!ISI.ReadStream) {
+            if (!ISI.LocalFilePath) {
+                const error: string = 'AssetStorageAdapter.ingestStream called without either ReadStream or LocalFilePath specified';
+                LOG.error(error, LOG.LS.eSTR);
+                return { success: false, error };
+            }
+            ISI.ReadStream = fs.createReadStream(ISI.LocalFilePath);
+        }
+
+        const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.ReadStream, wsRes.writeStream);
+        if (!wrRes.success) {
+            const error: string = `AssetStorageAdapter.ingestStream Unable to write to stream: ${wrRes.error}`;
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+
+        const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
+            storageKey: wsRes.storageKey,
+            storageHash: null,
+            FileName: ISI.FileName,
+            FilePath: ISI.FilePath,
+            idAssetGroup: 0,
+            idVAssetType: ISI.idVAssetType,
+            idUserCreator: ISI.idUserCreator,
+            DateCreated: new Date()
+        };
+
+        const comRes: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
+        if (!comRes.success || !comRes.assets || comRes.assets.length != 1 || !comRes.assetVersions || comRes.assetVersions.length != 1) {
+            const error: string = `AssetStorageAdapter.ingestStream Unable to commit asset: ${comRes.error}`;
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+
+        const user: DBAPI.User | undefined = await CACHE.UserCache.getUser(ISI.idUserCreator);
+        const opInfo: STORE.OperationInfo = { message: 'Ingesting asset', idUser: ISI.idUserCreator,
+            userEmailAddress: user?.EmailAddress ?? '', userName: user?.Name ?? '' };
+        const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(comRes.assets[0], comRes.assetVersions[0], ISI.SOBased, opInfo);
+        LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eSTR);
+        return { success: IAR.success, error: IAR.error, asset: comRes.assets[0] || null, assetVersion: comRes.assetVersions[0] || null };
     }
 
     static async renameAsset(asset: DBAPI.Asset, fileNameNew: string, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {

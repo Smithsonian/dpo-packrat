@@ -298,7 +298,7 @@ model JobRun {
   DateEnd       DateTime?      @mariasql.DateTime(0)
   Configuration String?        @mariasql.Text
   Parameters    String?        @mariasql.Text
-  Output        String?        @mariasql.Text
+  Output        String?        @mariasql.LongText
   Error         String?        @mariasql.Text
   Job           Job            @relation(fields: [idJob], references: [idJob])
   WorkflowStep  WorkflowStep[]
@@ -845,7 +845,7 @@ model Audit {
   DBObjectType   Int?
   idDBObject     Int?
   idSystemObject Int?
-  Data           String?       @mariasql.Text
+  Data           String?       @mariasql.LongText
   SystemObject   SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
   User           User?         @relation(fields: [idUser], references: [idUser])
 
