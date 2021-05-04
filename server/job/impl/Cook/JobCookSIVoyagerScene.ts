@@ -110,7 +110,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to parse scene file ${svxFile}: ${res.error}`, LOG.LS.eJOB);
             return { success: false, error: res.error };
         }
-        LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] parse scene: ${JSON.stringify(svx.SvxExtraction, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
+        LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] parse scene`, LOG.LS.eJOB);
+        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects fetched scene:\n${JSON.stringify(svx.SvxExtraction, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
         // Create Scene
         const scene: DBAPI.Scene = svx.SvxExtraction.extractScene();
@@ -118,7 +119,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`, LOG.LS.eJOB);
             return { success: false, error: res.error };
         }
-        LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] create scene: ${JSON.stringify(scene, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
+        LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] create scene`, LOG.LS.eJOB);
 
         // wire ModelSource to Scene
         const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, scene);
@@ -126,7 +127,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.stringifyMapsAndBigints)} to Scene ${JSON.stringify(scene, H.Helpers.stringifyMapsAndBigints)}: database error`, LOG.LS.eJOB);
             return { success: false, error: res.error };
         }
-        LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ModelSource to Scene: ${JSON.stringify(SOX, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
+        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ModelSource to Scene: ${JSON.stringify(SOX, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
         // Scene owns this ingested asset of the SVX File
         // Read file a second time ... cloneStream isn't available
@@ -135,7 +136,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch stream for scene file ${svxFile}: ${RSR.error}`, LOG.LS.eJOB);
             return { success: false, error: RSR.error };
         }
-        LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] retrieve svx.json 2`, LOG.LS.eJOB);
+        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] retrieve svx.json 2`, LOG.LS.eJOB);
 
         const LS: LocalStore | undefined = ASL.getStore();
         const idUserCreator: number = LS?.idUser ?? 0;
@@ -154,10 +155,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to ingest scene file ${svxFile}: ${ISR.error}`, LOG.LS.eJOB);
             return { success: false, error: ISR.error };
         }
-        LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
-
-        LOG.info(`JobCookSIVoyagerScene.createSystemObjects fetched scene:\n${JSON.stringify(svx.SvxExtraction.modelDetails, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
-        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects fetched scene:\n${JSON.stringify(svx.SvxExtraction, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
+        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
         // Now extract (just) the models; per Jamie Cope 5/3/2021, each model has all textures embedded
         // How do we create the Model objects here? We can ingest the assets, as above, but we need to connect them to the right objects
