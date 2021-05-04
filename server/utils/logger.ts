@@ -31,7 +31,7 @@ export function info(message: string, eLogSection: LS): void {
 }
 
 export function error(message: string, eLogSection: LS, obj: any | null = null): void {
-    if (obj) {
+    if (obj && typeof obj === 'object' && obj !== null) {
         obj.eLS = eLogSection;
         logger.error(message, obj);
     } else
