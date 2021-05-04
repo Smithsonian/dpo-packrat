@@ -106,3 +106,12 @@ export class HttpServer {
         return next();
     }
 }
+
+process.on('uncaughtException', (err) => {
+    LOG.error('*** UNCAUGHT EXCEPTION ***', LOG.LS.eSYS, err);
+    // For the time being, in non-production builds, we prevent Node from exiting.
+    // Once we've installed a process monitor in staging, like PM2, change this to
+    // exit with a non-zero exit code
+    if (process.env.NODE_ENV === 'production')
+        process.exit(1);
+});
