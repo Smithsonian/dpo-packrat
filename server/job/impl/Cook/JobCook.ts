@@ -9,8 +9,8 @@ import { Config } from '../../../config';
 import * as H from '../../../utils/helpers';
 
 import { v4 as uuidv4 } from 'uuid';
-import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions } from 'webdav';
-import { Writable } from 'stream';
+import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions, CreateReadStreamOptions } from 'webdav';
+import { Writable, Readable } from 'stream';
 import axios, { AxiosResponse } from 'axios';
 import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
 import * as path from 'path';
@@ -72,7 +72,8 @@ export abstract class JobCook<T> extends JobPackrat {
     private _complete: boolean = false;
     protected _streamOverrideMap: Map<number, STORE.ReadStreamResult> = new Map<number, STORE.ReadStreamResult>();
 
-    private static _stagingSempaphore = new Semaphore(CookWebDAVSimultaneousTransfers);
+    private static _stagingSempaphoreWrite = new Semaphore(CookWebDAVSimultaneousTransfers);
+    private static _stagingSempaphoreRead = new Semaphore(CookWebDAVSimultaneousTransfers);
 
     protected abstract getParameters(): Promise<T>;
 
@@ -164,20 +165,21 @@ export abstract class JobCook<T> extends JobPackrat {
             const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, await this.getParameters(), eJobCookPriority.eNormal);
 
             LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl}`, LOG.LS.eJOB);
-            while (requestCount++ < CookRequestRetryCount) {
+            while (requestCount < CookRequestRetryCount) {
                 try {
                     axiosResponse = await axios.post(requestUrl, jobCookPostBody);
                     if (axiosResponse?.status === 201)
                         break; // success, continue
                     res = { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed: ${JSON.stringify(axiosResponse)}` };
+                    requestCount++;
                 } catch (error) {
                     const message: string | null = error.message;
                     res = (message && message.indexOf('getaddrinfo ENOTFOUND'))
                         ? { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(error)}` }
                         : { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
                 }
-                if (requestCount === CookRequestRetryCount) {
-                    LOG.error(`${res.error} Retries Failed`, LOG.LS.eJOB);
+                if (requestCount >= CookRequestRetryCount) {
+                    LOG.error(`JobCook [${this.name()}] failed after ${CookRequestRetryCount} retries: ${res.error}`, LOG.LS.eJOB);
                     return res;
                 } else
                     await H.Helpers.sleep(CookRetryDelay);
@@ -266,7 +268,8 @@ export abstract class JobCook<T> extends JobPackrat {
 
             // look for completion in 'state' member, via value of 'done', 'error', or 'cancelled'; update eJobRunStatus and terminate polling job
             const cookJobReport = axiosResponse.data;
-            LOG.info(`JobCook [${this.name()}] polling [${pollNumber}], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
+            if (pollNumber <= 10 || ((pollNumber % 10) == 0))
+                LOG.info(`JobCook [${this.name()}] polling [${pollNumber}], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
             switch (cookJobReport['state']) {
                 case 'created':     await this.recordCreated();                                 break;
                 case 'waiting':     await this.recordWaiting();                                 break;
@@ -283,13 +286,38 @@ export abstract class JobCook<T> extends JobPackrat {
         return false;
     }
 
+    protected async fetchFile(fileName: string): Promise<STORE.ReadStreamResult> {
+        const res: STORE.ReadStreamResult = await JobCook._stagingSempaphoreRead.runExclusive(async (value) => {
+            try {
+                // transmit file to Cook work folder via WebDAV
+                const destination: string = `/${this._configuration.jobId}/${fileName}`;
+                LOG.info(`JobCook.fetchFile via WebDAV from ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
+
+                const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl, {
+                    authType: AuthType.None,
+                    maxBodyLength: 10 * 1024 * 1024 * 1024,
+                    withCredentials: false
+                });
+                const webdavWSOpts: CreateReadStreamOptions = {
+                    headers: { 'Content-Type': 'application/octet-stream' }
+                };
+                const RS: Readable = webdavClient.createReadStream(destination, webdavWSOpts);
+                return { readStream: RS, fileName, storageHash: null, success: true, error: '' };
+            } catch (error) {
+                LOG.error('JobCook.fetchFile', LOG.LS.eJOB, error);
+                return { readStream: null, fileName, storageHash: null, success: false, error: JSON.stringify(error) };
+            }
+        });
+        return res;
+    }
+
     protected async stageFiles(): Promise<H.IOResults> {
         if (!this._idAssetVersions)
             return { success: true, error: '' };
 
         let resOuter: H.IOResults = { success: true, error: '' };
         for (const idAssetVersion of this._idAssetVersions) {
-            const resInner: H.IOResults = await JobCook._stagingSempaphore.runExclusive(async (value) => {
+            const resInner: H.IOResults = await JobCook._stagingSempaphoreWrite.runExclusive(async (value) => {
                 try {
                     // look for read stream in override map, which may be supplied when we're ingesting a zip file containing a model and associated UV Maps
                     // in this case, the override stream is for the model geometry file
