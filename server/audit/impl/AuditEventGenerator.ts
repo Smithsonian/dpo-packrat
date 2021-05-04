@@ -45,6 +45,7 @@ export class AuditEventGenerator {
                 case EVENT.eEventKey.eDBUpdate: AuditType = eAuditType.eDBUpdate; break;
                 case EVENT.eEventKey.eDBDelete: AuditType = eAuditType.eDBDelete; break;
                 case EVENT.eEventKey.eAuthLogin: AuditType = eAuditType.eAuthLogin; eventTopic = EVENT.eEventTopic.eAuth; break;
+                case EVENT.eEventKey.eSceneQCd: AuditType = eAuditType.eSceneQCd; eventTopic = EVENT.eEventTopic.eDB; break;
             }
 
             const value: Audit = {

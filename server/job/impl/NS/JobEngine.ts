@@ -166,19 +166,27 @@ export class JobEngine implements JOB.IJobEngine {
     }
 
     private createJobWorker(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null, parameters: any, dbJobRun: DBAPI.JobRun): JobPackrat | null {
+        let job: JobPackrat | null = null;
+        let expectedJob: string = '';
         switch (eJobType) {
             case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect:
-                // confirm that parameters is of type JobCookSIPackratInspectParameters
-                if (parameters instanceof COOK.JobCookSIPackratInspectParameters)
-                    return new COOK.JobCookSIPackratInspect(this, idAssetVersions, parameters, dbJobRun);
-                else {
-                    LOG.error(`JobEngine.createJobWorker called with parameters not of type JobCookSIPackratInspect: ${JSON.stringify(parameters)}`, LOG.LS.eJOB);
-                    return null;
-                }
+                expectedJob = 'JobCookSIPackratInspect';
+                if (parameters instanceof COOK.JobCookSIPackratInspectParameters) // confirm that parameters is of type JobCookSIPackratInspectParameters
+                    job = new COOK.JobCookSIPackratInspect(this, idAssetVersions, parameters, dbJobRun);
+                break;
+            case CACHE.eVocabularyID.eJobJobTypeCookSIVoyagerScene:
+                expectedJob = 'JobCookSIVoyagerScene';
+                if (parameters instanceof COOK.JobCookSIVoyagerSceneParameters) // confirm that parameters is of type JobCookSIVoyagerSceneParameters
+                    job = new COOK.JobCookSIVoyagerScene(this, idAssetVersions, parameters, dbJobRun);
+                break;
             default:
                 LOG.error(`JobEngine.createJobWorker unknown job type ${CACHE.eVocabularyID[eJobType]}`, LOG.LS.eJOB);
                 return null;
         }
+
+        if (!job)
+            LOG.error(`JobEngine.createJobWorker called with parameters not of type ${expectedJob}: ${JSON.stringify(parameters)}`, LOG.LS.eJOB);
+        return job;
     }
     // #endregion
 }
