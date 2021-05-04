@@ -83,7 +83,6 @@ input ModelDetailFieldsInput {
 }
 
 input SceneDetailFieldsInput {
-    Links: [String!]!
     AssetType: Int
     Tours: Int
     Annotation: Int
