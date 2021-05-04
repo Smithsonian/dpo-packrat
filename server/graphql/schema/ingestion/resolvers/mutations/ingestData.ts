@@ -10,7 +10,6 @@ import * as WF from '../../../../../workflow/interface';
 import { AssetStorageAdapter, IngestAssetResult, OperationInfo } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
-import { SystemObjectBased } from '../../../../../db';
 
 export default async function ingestData(_: Parent, args: MutationIngestDataArgs, context: Context): Promise<IngestDataResult> {
     const { input } = args;
@@ -93,14 +92,14 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
         return { success: false };
 
     // next, promote asset into repository storage
-    const ingestRes: Map<number, IngestAssetResult | null> = await promoteAssetsIntoRepository(assetVersionMap, user);
+    const ingestResMap: Map<number, IngestAssetResult | null> = await promoteAssetsIntoRepository(assetVersionMap, user);
 
     // use results to create/update derived objects
     if (ingestPhotogrammetry)
-        await createPhotogrammetryDerivedObjects(assetVersionMap, ingestPhotoMap, ingestRes);
+        await createPhotogrammetryDerivedObjects(assetVersionMap, ingestPhotoMap, ingestResMap);
 
     // notify workflow engine about this ingestion:
-    if (!await sendWorkflowIngestionEvent(assetVersionMap, user))
+    if (!await sendWorkflowIngestionEvent(ingestResMap, user))
         return { success: false };
     return { success: true };
 }
@@ -408,13 +407,13 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetryI
 
 async function createPhotogrammetryDerivedObjects(assetVersionMap: Map<number, DBAPI.SystemObjectBased>,
     ingestPhotoMap: Map<number, IngestPhotogrammetryInput>,
-    ingestRes: Map<number, IngestAssetResult | null>): Promise<boolean> {
+    ingestResMap: Map<number, IngestAssetResult | null>): Promise<boolean> {
     // create CaptureDataFile
     let res: boolean = true;
     for (const [ idAssetVersion, SOBased ] of assetVersionMap) {
         if (!(SOBased instanceof DBAPI.CaptureData))
             continue;
-        const ingestAssetRes: IngestAssetResult | null | undefined = ingestRes.get(idAssetVersion);
+        const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
         if (!ingestAssetRes) {
             LOG.error(`ingestData unable to locate ingest results for idAssetVersion ${idAssetVersion}`, LOG.LS.eGQL);
             res = false;
@@ -608,20 +607,35 @@ async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.Sy
     return res;
 }
 
-async function sendWorkflowIngestionEvent(assetVersionMap: Map<number, DBAPI.SystemObjectBased>, user: User): Promise<boolean> {
+async function sendWorkflowIngestionEvent(ingestResMap: Map<number, IngestAssetResult | null>, user: User): Promise<boolean> {
     const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
     if (!workflowEngine) {
         LOG.error('ingestData sendWorkflowIngestionEvent could not load WorkflowEngine', LOG.LS.eGQL);
         return false;
     }
 
-    // compute set of unique objects ingested:
-    const objectSet: Set<SystemObjectBased> = new Set(assetVersionMap.values());
-    for (const SOBased of objectSet.values()) {
-        const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
+    // compute set of unique asset versions ingested:
+    let ret: boolean = true;
+    const idSystemObject: number[] = [];
+    for (const IAR of ingestResMap.values()) {
+        if (IAR && IAR.assetVersions) {
+            for (const assetVersion of IAR.assetVersions) {
+                const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion };
+                const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
+                if (!sysInfo) {
+                    LOG.error(`ingestData sendWorkflowIngestionEvent could not find system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                    ret = false;
+                    continue;
+                }
+                idSystemObject.push(sysInfo.idSystemObject);
+            }
+        }
+    }
+
+    if (idSystemObject.length > 0) {
         const workflowParams: WF.WorkflowParameters = {
             eWorkflowType: null,
-            idSystemObject: SO ? [SO.idSystemObject] : null,
+            idSystemObject,
             idProject: null, // TODO: update with project ID
             idUserInitiator: user.idUser,
             parameters: null
@@ -630,5 +644,6 @@ async function sendWorkflowIngestionEvent(assetVersionMap: Map<number, DBAPI.Sys
         // send workflow engine event, but don't wait for results
         workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);
     }
-    return true;
+
+    return ret;
 }

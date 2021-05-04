@@ -4,6 +4,7 @@ import * as STORE from '../../../storage/interface';
 import * as H from '../../../utils/helpers';
 import * as UTIL from '../api';
 import * as LOG from '../../../utils/logger';
+
 import * as path from 'path';
 
 class ModelTestFile {
@@ -112,39 +113,39 @@ export class ModelTestSetup {
     modelWrl:           DBAPI.Model | null = null;
     modelX3d:           DBAPI.Model | null = null;
 
-    assetFbxA:          DBAPI.Asset | null = null;
-    assetFbxB1:         DBAPI.Asset | null = null;
-    assetFbxB2:         DBAPI.Asset | null = null;
-    assetGlb:           DBAPI.Asset | null = null;
-    assetObj1:          DBAPI.Asset | null = null;
-    assetObj2:          DBAPI.Asset | null = null;
-    assetObj3:          DBAPI.Asset | null = null;
-    assetPly:           DBAPI.Asset | null = null;
-    assetStl:           DBAPI.Asset | null = null;
-    assetUsd1:          DBAPI.Asset | null = null;
-    assetUsd2:          DBAPI.Asset | null = null;
-    assetUsdz:          DBAPI.Asset | null = null;
-    assetWrl1:          DBAPI.Asset | null = null;
-    assetWrl2:          DBAPI.Asset | null = null;
-    assetX3d1:          DBAPI.Asset | null = null;
-    assetX3d2:          DBAPI.Asset | null = null;
+    assetFbxA:          DBAPI.Asset | null | undefined = null;
+    assetFbxB1:         DBAPI.Asset | null | undefined = null;
+    assetFbxB2:         DBAPI.Asset | null | undefined = null;
+    assetGlb:           DBAPI.Asset | null | undefined = null;
+    assetObj1:          DBAPI.Asset | null | undefined = null;
+    assetObj2:          DBAPI.Asset | null | undefined = null;
+    assetObj3:          DBAPI.Asset | null | undefined = null;
+    assetPly:           DBAPI.Asset | null | undefined = null;
+    assetStl:           DBAPI.Asset | null | undefined = null;
+    assetUsd1:          DBAPI.Asset | null | undefined = null;
+    assetUsd2:          DBAPI.Asset | null | undefined = null;
+    assetUsdz:          DBAPI.Asset | null | undefined = null;
+    assetWrl1:          DBAPI.Asset | null | undefined = null;
+    assetWrl2:          DBAPI.Asset | null | undefined = null;
+    assetX3d1:          DBAPI.Asset | null | undefined = null;
+    assetX3d2:          DBAPI.Asset | null | undefined = null;
 
-    assetVersionFbxA:   DBAPI.AssetVersion | null = null;
-    assetVersionFbxB1:  DBAPI.AssetVersion | null = null;
-    assetVersionFbxB2:  DBAPI.AssetVersion | null = null;
-    assetVersionGlb:    DBAPI.AssetVersion | null = null;
-    assetVersionObj1:   DBAPI.AssetVersion | null = null;
-    assetVersionObj2:   DBAPI.AssetVersion | null = null;
-    assetVersionObj3:   DBAPI.AssetVersion | null = null;
-    assetVersionPly:    DBAPI.AssetVersion | null = null;
-    assetVersionStl:    DBAPI.AssetVersion | null = null;
-    assetVersionUsd1:   DBAPI.AssetVersion | null = null;
-    assetVersionUsd2:   DBAPI.AssetVersion | null = null;
-    assetVersionUsdz:   DBAPI.AssetVersion | null = null;
-    assetVersionWrl1:   DBAPI.AssetVersion | null = null;
-    assetVersionWrl2:   DBAPI.AssetVersion | null = null;
-    assetVersionX3d1:   DBAPI.AssetVersion | null = null;
-    assetVersionX3d2:   DBAPI.AssetVersion | null = null;
+    assetVersionFbxA:   DBAPI.AssetVersion | null | undefined = null;
+    assetVersionFbxB1:  DBAPI.AssetVersion | null | undefined = null;
+    assetVersionFbxB2:  DBAPI.AssetVersion | null | undefined = null;
+    assetVersionGlb:    DBAPI.AssetVersion | null | undefined = null;
+    assetVersionObj1:   DBAPI.AssetVersion | null | undefined = null;
+    assetVersionObj2:   DBAPI.AssetVersion | null | undefined = null;
+    assetVersionObj3:   DBAPI.AssetVersion | null | undefined = null;
+    assetVersionPly:    DBAPI.AssetVersion | null | undefined = null;
+    assetVersionStl:    DBAPI.AssetVersion | null | undefined = null;
+    assetVersionUsd1:   DBAPI.AssetVersion | null | undefined = null;
+    assetVersionUsd2:   DBAPI.AssetVersion | null | undefined = null;
+    assetVersionUsdz:   DBAPI.AssetVersion | null | undefined = null;
+    assetVersionWrl1:   DBAPI.AssetVersion | null | undefined = null;
+    assetVersionWrl2:   DBAPI.AssetVersion | null | undefined = null;
+    assetVersionX3d1:   DBAPI.AssetVersion | null | undefined = null;
+    assetVersionX3d2:   DBAPI.AssetVersion | null | undefined = null;
 
     userOwner:          DBAPI.User | null = null;
     vocabModel:         DBAPI.Vocabulary | undefined = undefined;
@@ -329,43 +330,24 @@ export class ModelTestSetup {
         return this.testCaseMap.get(testCase);
     }
 
-    private async ingestFile(MTD: ModelTestFile, model: DBAPI.Model): Promise<{ success: boolean, asset: DBAPI.Asset | null, assetVersion: DBAPI.AssetVersion | null}> {
+    private async ingestFile(MTD: ModelTestFile, model: DBAPI.Model): Promise<{ success: boolean, asset?: DBAPI.Asset | null | undefined, assetVersion?: DBAPI.AssetVersion | null | undefined}> {
         if (!this.userOwner || !this.vocabModel || !this.storage)
-            return { success: false, asset: null, assetVersion: null };
+            return { success: false };
 
-        const wsRes: STORE.WriteStreamResult = await this.storage.writeStream(MTD.fileName);
-        if (!wsRes.success || !wsRes.writeStream || !wsRes.storageKey) {
-            LOG.error(`ModelTestSetup.ingestFile Unable to create write stream for ${MTD.fileName}: ${wsRes.error}`, LOG.LS.eTEST);
-            return { success: false, asset: null, assetVersion: null };
-        }
-        const filePath: string = this.computeFilePath(MTD);
-        const wrRes: H.IOResults = await H.Helpers.writeFileToStream(filePath, wsRes.writeStream);
-        if (!wrRes.success) {
-            LOG.error(`ModelTestSetup.ingestFile Unable to write ${filePath} to stream: ${wrRes.error}`, LOG.LS.eTEST);
-            return { success: false, asset: null, assetVersion: null };
-        }
-
-        const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
-            storageKey: wsRes.storageKey,
-            storageHash: null,
+        const LocalFilePath: string = this.computeFilePath(MTD);
+        const ISI: STORE.IngestStreamOrFileInput = {
+            ReadStream: null,
+            LocalFilePath,
             FileName: MTD.fileName,
             FilePath: MTD.directory,
             idAssetGroup: 0,
             idVAssetType: this.vocabModel.idVocabulary,
             idUserCreator: this.userOwner.idUser,
-            DateCreated: new Date()
+            SOBased: model
         };
 
-        const comRes: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
-        if (!comRes.success || !comRes.assets || comRes.assets.length != 1 || !comRes.assetVersions || comRes.assetVersions.length != 1) {
-            LOG.error(`ModelTestSetup.ingestFile Unable to commit asset: ${comRes.error}`, LOG.LS.eTEST);
-            return { success: false, asset: null, assetVersion: null };
-        }
-
-        const opInfo: STORE.OperationInfo = { message: 'Ingesting asset', idUser: this.userOwner.idUser,
-            userEmailAddress: this.userOwner.EmailAddress, userName: this.userOwner.Name };
-        const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(comRes.assets[0], comRes.assetVersions[0], model, opInfo);
-        return { success: IAR.success, asset: comRes.assets[0] || null, assetVersion: comRes.assetVersions[0] || null };
+        const { success, asset, assetVersion } = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
+        return { success, asset, assetVersion };
     }
 
     private computeFilePath(MTD: ModelTestFile): string {

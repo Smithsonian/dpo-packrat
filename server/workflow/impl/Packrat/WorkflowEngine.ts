@@ -7,6 +7,20 @@ import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
+import path from 'path';
+
+type AssetAndVersionResult = {
+    success: boolean;
+    asset?: DBAPI.Asset | null | undefined;
+    assetVersion?: DBAPI.AssetVersion | null | undefined;
+};
+
+type ComputeModelInfoResult = {
+    exitEarly: boolean;
+    assetVersionGeometry?: DBAPI.AssetVersion | undefined;
+    assetVersionDiffuse?: DBAPI.AssetVersion | undefined;
+    units?: string | undefined;
+};
 
 export class WorkflowEngine implements WF.IWorkflowEngine {
     private workflowMap: Map<number, WF.IWorkflow> = new Map<number, WF.IWorkflow>();
@@ -96,30 +110,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         let workflow: WF.IWorkflow | null = null;
         for (const idSystemObject of workflowParams.idSystemObject) {
-            const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
-            if (!oID) {
-                LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid idSystemObject ${idSystemObject}`, LOG.LS.eWF);
+            const { success, asset, assetVersion } = await this.computeAssetAndVersion(idSystemObject);
+            if (!success || !asset || !assetVersion)
                 continue;
-            }
-
-            if (oID.eObjectType != DBAPI.eSystemObjectType.eAssetVersion) {
-                LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid object ${JSON.stringify(oID)}`, LOG.LS.eWF);
-                continue;
-            }
-
-            // load asset version
-            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(oID.idObject);
-            if (!assetVersion)  {
-                LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid object ${JSON.stringify(oID)}`, LOG.LS.eWF);
-                continue;
-            }
-
-            // load asset
-            const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
-            if (!asset) {
-                LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to load asset from idAsset ${assetVersion.idAsset}`, LOG.LS.eWF);
-                continue;
-            }
 
             // take appropriate workflow actions based on asset version type
             const eAssetType: CACHE.eVocabularyID | undefined = await asset.assetType();
@@ -134,7 +127,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     const wfParams: WF.WorkflowParameters = {
                         eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
                         idSystemObject: [idSystemObject],
-                        idProject: null,
+                        idProject: null,    // TODO: populate with idProject
                         idUserInitiator: null,
                         parameters,
                     };
@@ -151,60 +144,86 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     }
 
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow | null> {
+        LOG.info(`WorkflowEngine.eventIngestionIngestObject params=${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
         if (!workflowParams || !workflowParams.idSystemObject)
             return null;
 
-        const workflow: WF.IWorkflow | null = null;
+        let workflow: WF.IWorkflow | null = null;
+        let idModel: number | undefined = undefined;
+        let assetVersionGeometry: DBAPI.AssetVersion | undefined = undefined;
+        let assetVersionDiffuse: DBAPI.AssetVersion | null | undefined = undefined;
+        let units: string | undefined = undefined;
+
         for (const idSystemObject of workflowParams.idSystemObject) {
-            const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+            const { success, asset, assetVersion } = await this.computeAssetAndVersion(idSystemObject);
+            if (!success || !asset || !assetVersion || !asset.idSystemObject)
+                continue;
+
+            const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(asset.idSystemObject);
             if (!oID) {
-                LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid idSystemObject ${idSystemObject}`, LOG.LS.eWF);
+                LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to compute system object owner of ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eWF);
                 continue;
             }
 
-            // take appropriate workflow actions based on the ingested object type
-            switch (oID.eObjectType) {
-                case DBAPI.eSystemObjectType.eModel: {
-                    const modelConstellation: DBAPI.ModelConstellation | null = await DBAPI.ModelConstellation.fetch(oID.idObject);
-                    if (!modelConstellation || !modelConstellation.Model) {
-                        LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to retrieve model constellation for ${JSON.stringify(oID)}`, LOG.LS.eWF);
-                        continue;
-                    }
-                    const model: DBAPI.Model = modelConstellation.Model;
-                    if (model.Master) {
-                        /*
-                        // lookup the model geometry file and the diffuse color texture map:
-                        modelConstellation.ModelAssets[0].AssetType ==  ...
-                        modelConstellation.ModelMaterialChannels[0].idVMaterialType;
-                        modelConstellation.ModelMaterialChannels[0].UVMapEmbedded;
-                        modelConstellation.ModelMaterialChannels[0].idModelMaterialUVMap;
-                        modelConstellation.ModelMaterialUVMaps[0].idAsset;
-                        // initiate WorkflowJob for cook si-voyager-scene
-                        const parameters: WFP.WorkflowJobParameters =
-                            new WFP.WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
-                                new COOK.JobCookSIPackratInspectParameters(assetVersion.FileName));
+            // for now, we only have special rules for ingestion of asset versions owned by models:
+            if (oID.eObjectType !== DBAPI.eSystemObjectType.eModel) {
+                LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping non-model asset ${JSON.stringify(oID)}`, LOG.LS.eWF);
+                continue;
+            }
 
-                        const wfParams: WF.WorkflowParameters = {
-                            eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
-                            idSystemObject: [idSystemObject],
-                            idProject: null,
-                            idUserInitiator: null,
-                            parameters,
-                        };
+            // lookup model constellation, if we haven't already; if we have, make sure we're processing the same model:
+            if (!idModel) {
+                let exitEarly: boolean = false;
+                ({ exitEarly, assetVersionGeometry, assetVersionDiffuse, units } = await this.computeModelInfo(oID.idObject));
+                if (exitEarly || assetVersionGeometry === undefined) {
+                    LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping invalid model ${JSON.stringify(oID)}`, LOG.LS.eWF);
+                    return null;
+                }
+                idModel = oID.idObject;
 
-                        workflow = await this.create(wfParams);
-                        if (!workflow) {
-                            LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}`, LOG.LS.eWF);
-                            continue;
-                        }
-                        */
-                    }
-                } break;
+            } else if (idModel !== oID.idObject) {
+                LOG.error(`WorkflowEngine.eventIngestionIngestObject encountered multiple models ([${idModel}, ${oID.idObject}])`, LOG.LS.eWF);
+                return null;
             }
         }
+
+        if (assetVersionGeometry === undefined) {
+            LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to compute geometry and/or diffuse texture from model ${idModel}`, LOG.LS.eWF);
+            return null;
+        }
+
+        const SOGeometry: DBAPI.SystemObject| null = await assetVersionGeometry.fetchSystemObject();
+        if (!SOGeometry) {
+            LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to compute geometry file systemobject from ${JSON.stringify(assetVersionGeometry, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eWF);
+            return null;
+        }
+        const SODiffuse: DBAPI.SystemObject| null = assetVersionDiffuse ? await assetVersionDiffuse.fetchSystemObject() : null;
+        const idSystemObject: number[] = [SOGeometry.idSystemObject];
+        if (SODiffuse)
+            idSystemObject.push(SODiffuse.idSystemObject);
+
+        // initiate WorkflowJob for cook si-voyager-scene
+        const baseName: string = path.parse(assetVersionGeometry.FileName).name;
+        const parameters: WFP.WorkflowJobParameters =
+            new WFP.WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
+                new COOK.JobCookSIVoyagerSceneParameters(idModel, assetVersionGeometry.FileName, units || '',
+                assetVersionDiffuse?.FileName, baseName + '.svx.json'));
+
+        const wfParams: WF.WorkflowParameters = {
+            eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
+            idSystemObject,
+            idProject: null,    // TODO: populate with idProject
+            idUserInitiator: null,
+            parameters,
+        };
+
+        workflow = await this.create(wfParams);
+        if (!workflow)
+            LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParams)}`, LOG.LS.eWF);
         return workflow;
     }
 
+    /*
     static computeWorkflowParameters(modelName: string, eWorkflowType: CACHE.eVocabularyID, eJobType: CACHE.eVocabularyID): any {
         switch (eWorkflowType) {
             case CACHE.eVocabularyID.eWorkflowTypeCookJob:
@@ -213,6 +232,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 LOG.error(`WorkflowEngine.computeWorkflowParameters: unexpected workflow type ${CACHE.eVocabularyID[eWorkflowType]}`, LOG.LS.eWF);
         }
     }
+    */
 
     static async computeWorkflowIDFromEnum(eVocabEnum: CACHE.eVocabularyID, eVocabSetEnum: CACHE.eVocabularySetID): Promise<number | undefined> {
         const idVocab: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eVocabEnum);
@@ -311,5 +331,110 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             case CACHE.eVocabularyID.eWorkflowTypeCookJob: return await WorkflowJob.constructWorkflowJob(workflowParams, WFC);
         }
         return null;
+    }
+
+    private async computeAssetAndVersion(idSystemObject: number): Promise<AssetAndVersionResult> {
+        const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+        if (!oID) {
+            LOG.error(`WorkflowEngine.computeAssetAndVersion skipping invalid idSystemObject ${idSystemObject}`, LOG.LS.eWF);
+            return { success: false };
+        }
+
+        if (oID.eObjectType != DBAPI.eSystemObjectType.eAssetVersion) {
+            LOG.error(`WorkflowEngine.computeAssetAndVersion skipping invalid object ${JSON.stringify(oID)}`, LOG.LS.eWF);
+            return { success: false };
+        }
+
+        // load asset version
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(oID.idObject);
+        if (!assetVersion)  {
+            LOG.error(`WorkflowEngine.computeAssetAndVersion skipping invalid object ${JSON.stringify(oID)}`, LOG.LS.eWF);
+            return { success: false };
+        }
+
+        // load asset
+        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
+        if (!asset) {
+            LOG.error(`WorkflowEngine.computeAssetAndVersion unable to load asset from idAsset ${assetVersion.idAsset}`, LOG.LS.eWF);
+            return { success: false };
+        }
+        return { success: true, asset, assetVersion };
+    }
+
+    private async computeModelInfo(idModel: number): Promise<ComputeModelInfoResult> {
+        // lookup model constellation
+        const modelConstellation: DBAPI.ModelConstellation | null = await DBAPI.ModelConstellation.fetch(idModel);
+        if (!modelConstellation || !modelConstellation.Model || !modelConstellation.ModelAssets) {
+            LOG.error(`WorkflowEngine.computeModelInfo unable to compute model from ${JSON.stringify(idModel)}`, LOG.LS.eWF);
+            return { exitEarly: true };
+        }
+
+        const vMaster: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeMaster);
+        const vDiffuse: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+        if (!vMaster || !vDiffuse) {
+            LOG.error('WorkflowEngine.computeModelInfo unable to compute model vocabulary', LOG.LS.eWF);
+            return { exitEarly: true };
+        }
+        // If this is not a master model, skip post-ingestion workflow
+        if (modelConstellation.Model.idVPurpose != vMaster.idVocabulary) {
+            LOG.info(`WorkflowEngine.computeModelInfo skipping non-master model ${JSON.stringify(modelConstellation.Model, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eWF);
+            return { exitEarly: true };
+        }
+
+        // lookup the model geometry file and the diffuse color texture map:
+        let idAssetDiffuse: number | null | undefined = undefined;
+        let assetVersionGeometry: DBAPI.AssetVersion | undefined = undefined;
+        let assetVersionDiffuse: DBAPI.AssetVersion | undefined = undefined;
+        if (modelConstellation.ModelMaterialChannels) {
+            for (const MMC of modelConstellation.ModelMaterialChannels) {
+                // Skip everything but diffuse channel
+                if (MMC.idVMaterialType != vDiffuse.idVocabulary)
+                    continue;
+                if (idAssetDiffuse !== undefined) {
+                    LOG.error(`WorkflowEngine.computeModelInfo encountered multiple diffuse channels in model ${modelConstellation.Model.idModel}`, LOG.LS.eWF);
+                    break;
+                }
+
+                if (MMC.UVMapEmbedded) // stored in geometry file
+                    idAssetDiffuse = null;
+                else if (MMC.idModelMaterialUVMap) { // stored in map ... now find it!
+                    if (modelConstellation.ModelMaterialUVMaps) {
+                        for (const MMUV of modelConstellation.ModelMaterialUVMaps) {
+                            if (MMUV.idModelMaterialUVMap == MMC.idModelMaterialUVMap) {
+                                idAssetDiffuse = MMUV.idAsset;
+                                break;
+                            }
+                        }
+                    }
+                    if (!idAssetDiffuse) {
+                        LOG.error(`WorkflowEngine.computeModelInfo could not find expected diffuse channel in UV Map ${MMC.idModelMaterial}`, LOG.LS.eWF);
+                        continue;
+                    }
+                }
+            }
+        }
+
+        for (const modelAsset of modelConstellation.ModelAssets) {
+            if (idAssetDiffuse === modelAsset.Asset.idAsset)
+                assetVersionDiffuse = modelAsset.AssetVersion;
+
+            const eAssetType: CACHE.eVocabularyID | undefined = await modelAsset.Asset.assetType();
+            switch (eAssetType) {
+                case CACHE.eVocabularyID.eAssetAssetTypeModel:
+                case CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile:
+                    if (!assetVersionGeometry)
+                        assetVersionGeometry = modelAsset.AssetVersion;
+                    else {
+                        LOG.error(`WorkflowEngine.computeModelInfo encountered multiple geometry files for model ${JSON.stringify(modelConstellation.Model)}`, LOG.LS.eWF);
+                        continue;
+                    }
+                    break;
+            }
+        }
+
+        const units: string | undefined = await COOK.JobCookSIVoyagerScene.convertModelUnitsVocabToCookUnits(modelConstellation.Model.idVUnits);
+        const retValue = { exitEarly: false, assetVersionGeometry, assetVersionDiffuse, units };
+        LOG.info(`WorkflowEngine.computeModelInfo returning ${JSON.stringify(retValue, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eWF);
+        return retValue;
     }
 }

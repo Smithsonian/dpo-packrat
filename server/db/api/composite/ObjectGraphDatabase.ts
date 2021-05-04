@@ -73,7 +73,7 @@ export class ObjectGraphDatabase {
 
     /* #region Compute Graph Data */
     public async fetchFromSystemObject(idSystemObject: number): Promise<boolean> {
-        LOG.info(`ObjectGraphDatabase.fetchFromSystemObject ${idSystemObject}`, LOG.LS.eDB);
+        // LOG.info(`ObjectGraphDatabase.fetchFromSystemObject ${idSystemObject}`, LOG.LS.eDB);
         const oIDsID: SystemObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectAndSystemFromSystem(idSystemObject);
         if (!oIDsID) {
             LOG.error(`ObjectGraphDatabase.fetchFromSystemObject unable to compute ObjectUDAndType / SystemObjectInfo for ${idSystemObject}`, LOG.LS.eDB);
@@ -297,7 +297,9 @@ export class ObjectGraphDatabase {
 
     /* #region Apply Graph Data */
     private async applyGraphData(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.applyGraphData', LOG.LS.eDB);
+        const log: boolean = (this.objectMap.size > 20);
+        if (log)
+            LOG.info('ObjectGraphDatabase.applyGraphData', LOG.LS.eDB);
         // walk across all entries
         //      for each entry, extract state: compute unit, project, subject, item, capture method, variant type, model purpose, and model file type
         //      walk all children
@@ -316,7 +318,8 @@ export class ObjectGraphDatabase {
             const objectGraphState = await this.extractState(objectGraphDataEntry.systemObjectIDType);
             retValue = await this.applyGraphState(objectGraphDataEntry, objectGraphState, ++entry, entries) && retValue;
         }
-        LOG.info('ObjectGraphDatabase.applyGraphData finished', LOG.LS.eDB);
+        if (log)
+            LOG.info('ObjectGraphDatabase.applyGraphData finished', LOG.LS.eDB);
         return retValue;
     }
 
