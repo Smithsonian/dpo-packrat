@@ -12,28 +12,33 @@ type UserSearchResult = {
 
 class LDAPAuth implements IAuth {
     async verifyUser(email: string, password: string): Promise<VerifyUserResult> {
-        const ldapConfig: LDAPConfig = Config.auth.ldap;
+        try {
+            const ldapConfig: LDAPConfig = Config.auth.ldap;
 
-        // Step 1: Create a ldap client using server address
-        const client: LDAP.Client = LDAP.createClient({
-            url: ldapConfig.server
-        });
+            // Step 1: Create a ldap client using server address
+            const client: LDAP.Client = LDAP.createClient({
+                url: ldapConfig.server
+            });
 
-        // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
-        client.on('error', error => { LOG.error('LDAPAuth.verifyUser', LOG.LS.eAUTH, error); });
+            // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
+            client.on('error', error => { LOG.error('LDAPAuth.verifyUser', LOG.LS.eAUTH, error); });
 
-        // Step 2: Bind Packrat Service Account
-        const res: VerifyUserResult = await this.bindService(client, ldapConfig);
-        if (!res.success)
-            return res;
+            // Step 2: Bind Packrat Service Account
+            const res: VerifyUserResult = await this.bindService(client, ldapConfig);
+            if (!res.success)
+                return res;
 
-        // Step 3: Search for passed user by email
-        const resUserSearch: UserSearchResult = await this.searchForUser(client, ldapConfig, email);
-        if (!resUserSearch.success|| !resUserSearch.DN)
-            return resUserSearch;
+            // Step 3: Search for passed user by email
+            const resUserSearch: UserSearchResult = await this.searchForUser(client, ldapConfig, email);
+            if (!resUserSearch.success|| !resUserSearch.DN)
+                return resUserSearch;
 
-        //Step 4: If user is found, bind on their credentials
-        return await this.bindUser(client, resUserSearch.DN, email, password);
+            //Step 4: If user is found, bind on their credentials
+            return await this.bindUser(client, resUserSearch.DN, email, password);
+        } catch (error) {
+            LOG.error('LDAPAuth.verifyUser', LOG.LS.eAUTH, error);
+            return { success: false, error: JSON.stringify(error) };
+        }
     }
 
     private async bindService(client: LDAP.Client, ldapConfig: LDAPConfig): Promise<VerifyUserResult> {
