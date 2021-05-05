@@ -10,6 +10,7 @@ import { useRepositoryStore } from '../../../../store';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../../../../global/datepicker.css';
+import parseISO from 'date-fns/parseISO';
 
 const useStyles = makeStyles(({ palette }) => ({
     label: {
@@ -45,10 +46,10 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
     const { label } = props;
     const classes = useStyles();
 
-    const [dateCreatedFrom, dateCreatedTo, updateFilterValue] = useRepositoryStore(state => [state.dateCreatedFrom, state.dateCreatedTo, state.updateFilterValue]);
+    let [dateCreatedFrom, dateCreatedTo, updateFilterValue] = useRepositoryStore(state => [state.dateCreatedFrom, state.dateCreatedTo, state.updateFilterValue]); // eslint-disable-line prefer-const
 
     const onDate = (name: string, date: string | null | undefined) => {
-        console.log(`onDate ${name}: ${date}`);
+        // console.log(`onDate ${name}: ${date}`);
         if (date == null) // or undefined
             updateFilterValue(name, null);
         else {
@@ -57,6 +58,11 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
                 updateFilterValue(name, new Date(timestamp));
         }
     };
+
+    if (typeof(dateCreatedFrom) === 'string')
+        dateCreatedFrom = parseISO(dateCreatedFrom);
+    if (typeof(dateCreatedTo) === 'string')
+        dateCreatedTo = parseISO(dateCreatedTo);
 
     return (
         <Box display='flex' alignItems='center' mb={1}>
