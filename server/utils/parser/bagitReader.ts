@@ -167,7 +167,7 @@ export class BagitReader implements IZip {
         return file;
     }
 
-    async streamContent(file: string | null): Promise<NodeJS.ReadableStream | null> {
+    async streamContent(file: string | null, doNotLogErrors?: boolean | undefined): Promise<NodeJS.ReadableStream | null> {
         if (!this._validated) { /* istanbul ignore if */
             if (!(await this.validate()).success)
                 return null;
@@ -178,10 +178,11 @@ export class BagitReader implements IZip {
             // LOG.info(`getFileStream(${file}) looking in ${fileName} with prefixDir of ${this._prefixDir}`, LOG.LS.eSYS);
 
             return (this._zip)
-                ? this._zip.streamContent(fileName)
+                ? this._zip.streamContent(fileName, doNotLogErrors)
                 : fileName ? fs.createReadStream(fileName) : null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.info(`bagitReader.streamContent unable to read ${file}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
+            if (doNotLogErrors !== true)
+                LOG.error(`bagitReader.streamContent unable to read ${file}`, LOG.LS.eSYS, error);
             return null;
         }
     }
