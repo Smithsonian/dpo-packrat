@@ -71,7 +71,7 @@ export class BulkIngestReader {
         // extract metadata for capture data
 
         let results: H.IOResults;
-        let readStream: NodeJS.ReadableStream | null = await this._zip.streamContent('capture_data_photo.csv');
+        let readStream: NodeJS.ReadableStream | null = await this._zip.streamContent('capture_data_photo.csv', true);
         if (readStream) {
             results = await this.computeCaptureDataPhotos(readStream); /* istanbul ignore if */
             if (!results.success)
@@ -79,7 +79,7 @@ export class BulkIngestReader {
         }
 
         // extract metadata for models
-        readStream = await this._zip.streamContent('models.csv');
+        readStream = await this._zip.streamContent('models.csv', true);
         if (readStream) {
             results = await this.computeModels(readStream); /* istanbul ignore next */
             if (!results.success)
