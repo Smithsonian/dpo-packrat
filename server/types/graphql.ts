@@ -1142,6 +1142,8 @@ export type GetObjectChildrenInput = {
   modelFileType: Array<Scalars['Int']>;
   dateCreatedFrom?: Maybe<Scalars['DateTime']>;
   dateCreatedTo?: Maybe<Scalars['DateTime']>;
+  rows: Scalars['Int'];
+  cursorMark: Scalars['String'];
 };
 
 export type NavigationResultEntry = {
@@ -1159,6 +1161,7 @@ export type GetObjectChildrenResult = {
   error: Scalars['String'];
   entries: Array<NavigationResultEntry>;
   metadataColumns: Array<Scalars['Int']>;
+  cursorMark?: Maybe<Scalars['String']>;
 };
 
 export type GetFilterViewDataResult = {

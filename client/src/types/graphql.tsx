@@ -1145,6 +1145,8 @@ export type GetObjectChildrenInput = {
   modelFileType: Array<Scalars['Int']>;
   dateCreatedFrom?: Maybe<Scalars['DateTime']>;
   dateCreatedTo?: Maybe<Scalars['DateTime']>;
+  rows: Scalars['Int'];
+  cursorMark: Scalars['String'];
 };
 
 export type NavigationResultEntry = {
@@ -1162,6 +1164,7 @@ export type GetObjectChildrenResult = {
   error: Scalars['String'];
   entries: Array<NavigationResultEntry>;
   metadataColumns: Array<Scalars['Int']>;
+  cursorMark?: Maybe<Scalars['String']>;
 };
 
 export type GetFilterViewDataResult = {
@@ -2857,7 +2860,7 @@ export type GetObjectChildrenQuery = (
   { __typename?: 'Query' }
   & { getObjectChildren: (
     { __typename?: 'GetObjectChildrenResult' }
-    & Pick<GetObjectChildrenResult, 'success' | 'error' | 'metadataColumns'>
+    & Pick<GetObjectChildrenResult, 'success' | 'error' | 'metadataColumns' | 'cursorMark'>
     & { entries: Array<(
       { __typename?: 'NavigationResultEntry' }
       & Pick<NavigationResultEntry, 'idSystemObject' | 'name' | 'objectType' | 'idObject' | 'metadata'>
@@ -4841,6 +4844,7 @@ export const GetObjectChildrenDocument = gql`
       metadata
     }
     metadataColumns
+    cursorMark
   }
 }
     `;

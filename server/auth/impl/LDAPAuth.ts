@@ -11,44 +11,65 @@ type UserSearchResult = {
 };
 
 class LDAPAuth implements IAuth {
+    private _ldapConfig: LDAPConfig = Config.auth.ldap;
+    private _client: LDAP.Client | null = null;
     async verifyUser(email: string, password: string): Promise<VerifyUserResult> {
         try {
-            const ldapConfig: LDAPConfig = Config.auth.ldap;
-
-            // Step 1: Create a ldap client using server address
-            const client: LDAP.Client = LDAP.createClient({
-                url: ldapConfig.server
-            });
-
-            // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
-            client.on('error', error => { LOG.error('LDAPAuth.verifyUser', LOG.LS.eAUTH, error); });
+            let res: VerifyUserResult = await this.fetchClient();
+            if (!res.success) {
+                LOG.error(`LDAPAuth.verifyUser: ${res.error}`, LOG.LS.eAUTH);
+                return res;
+            }
 
             // Step 2: Bind Packrat Service Account
-            const res: VerifyUserResult = await this.bindService(client, ldapConfig);
+            res = await this.bindService();
             if (!res.success)
                 return res;
 
+
             // Step 3: Search for passed user by email
-            const resUserSearch: UserSearchResult = await this.searchForUser(client, ldapConfig, email);
+            const resUserSearch: UserSearchResult = await this.searchForUser(this._ldapConfig, email);
             if (!resUserSearch.success|| !resUserSearch.DN)
                 return resUserSearch;
 
             //Step 4: If user is found, bind on their credentials
-            return await this.bindUser(client, resUserSearch.DN, email, password);
+            return await this.bindUser(resUserSearch.DN, email, password);
         } catch (error) {
             LOG.error('LDAPAuth.verifyUser', LOG.LS.eAUTH, error);
             return { success: false, error: JSON.stringify(error) };
         }
     }
 
-    private async bindService(client: LDAP.Client, ldapConfig: LDAPConfig): Promise<VerifyUserResult> {
-        let ldapBind: string = ldapConfig.CN;
+    private async fetchClient(): Promise<VerifyUserResult> {
+        if (this._client)
+            return { success: true, error: null };
+
+        // Step 1: Create a ldap client using server address
+        this._client = LDAP.createClient({ url: this._ldapConfig.server });
+
+        // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
+        this._client.on('error', error => {
+            LOG.error('LDAPAuth.fetchClient', LOG.LS.eAUTH, error);
+            if (this._client) {
+                this._client.destroy();
+                this._client = null;
+            }
+        });
+        return { success: true, error: null };
+    }
+
+    private async bindService(): Promise<VerifyUserResult> {
+        if (!this._client)
+            return { success: false, error: 'LDAPClient is null' };
+        let ldapBind: string = this._ldapConfig.CN;
         if (ldapBind)
-            ldapBind += `,${ldapConfig.OU}`;
+            ldapBind += `,${this._ldapConfig.OU}`;
         if (ldapBind)
-            ldapBind += `,${ldapConfig.DC}`;
+            ldapBind += `,${this._ldapConfig.DC}`;
+        const client: LDAP.Client = this._client;
+        const password: string = this._ldapConfig.password;
         return new Promise<VerifyUserResult>(function(resolve) {
-            client.bind(ldapBind, ldapConfig.password, (err: any): void => {
+            client.bind(ldapBind, password, (err: any): void => {
                 if (err) {
                     LOG.error(`LDAPAuth.bindService failed: ${JSON.stringify(err)}`, LOG.LS.eAUTH);
                     resolve({ success: false, error: 'Unable to connect to LDAP server' });
@@ -58,7 +79,10 @@ class LDAPAuth implements IAuth {
         });
     }
 
-    private async searchForUser(client: LDAP.Client, ldapConfig: LDAPConfig, email: string): Promise<UserSearchResult> {
+    private async searchForUser(ldapConfig: LDAPConfig, email: string): Promise<UserSearchResult> {
+        if (!this._client)
+            return { success: false, error: 'LDAPClient is null', DN: null };
+
         // LDAP Search Options
         const searchOptions: LDAP.SearchOptions = {
             scope: 'sub',
@@ -69,6 +93,7 @@ class LDAPAuth implements IAuth {
         };
 
         let searchComplete: boolean = false;
+        const client: LDAP.Client = this._client;
 
         return new Promise<UserSearchResult>(function(resolve) {
             client.search(ldapConfig.DC, searchOptions, (err: any, res: LDAP.SearchCallbackResponse): void => {
@@ -85,9 +110,8 @@ class LDAPAuth implements IAuth {
                 });
 
                 res.on('error', (err: any) => {
-                    err;
                     const error: string = `Unable to locate ${email}`;
-                    LOG.error(`LDAPAuth.searchForUser ${error}`, LOG.LS.eAUTH);
+                    LOG.error(`LDAPAuth.searchForUser ${error}`, LOG.LS.eAUTH, err);
                     resolve({ success: false, error, DN: null });
                 });
 
@@ -103,7 +127,10 @@ class LDAPAuth implements IAuth {
         });
     }
 
-    private async bindUser(client: LDAP.Client, DN: string, email: string, password: string): Promise<VerifyUserResult> {
+    private async bindUser(DN: string, email: string, password: string): Promise<VerifyUserResult> {
+        if (!this._client)
+            return { success: false, error: 'LDAPClient is null' };
+        const client: LDAP.Client = this._client;
         return new Promise<VerifyUserResult>(function(resolve) {
             client.bind(DN, password, (err: any): void => {
                 if (err) {
