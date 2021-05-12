@@ -1538,6 +1538,8 @@ export type AssetDetailFields = {
   __typename?: 'AssetDetailFields';
   FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
+  Asset?: Maybe<Asset>;
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export type AssetVersionDetailFields = {
@@ -1547,6 +1549,9 @@ export type AssetVersionDetailFields = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
   StorageSize?: Maybe<Scalars['BigInt']>;
+  AssetVersion?: Maybe<AssetVersion>;
+  idAsset?: Maybe<Scalars['Int']>;
+  idAssetVersion?: Maybe<Scalars['Int']>;
 };
 
 export type ActorDetailFields = {
@@ -3007,10 +3012,10 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<ProjectDocumentationDetailFields, 'Description'>
     )>, Asset?: Maybe<(
       { __typename?: 'AssetDetailFields' }
-      & Pick<AssetDetailFields, 'FilePath' | 'AssetType'>
+      & Pick<AssetDetailFields, 'FilePath' | 'AssetType' | 'idAsset'>
     )>, AssetVersion?: Maybe<(
       { __typename?: 'AssetVersionDetailFields' }
-      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version'>
+      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion'>
     )>, Actor?: Maybe<(
       { __typename?: 'ActorDetailFields' }
       & Pick<ActorDetailFields, 'OrganizationName'>
@@ -5233,6 +5238,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
     Asset {
       FilePath
       AssetType
+      idAsset
     }
     AssetVersion {
       Creator
@@ -5240,6 +5246,8 @@ export const GetDetailsTabDataForObjectDocument = gql`
       StorageSize
       Ingested
       Version
+      idAsset
+      idAssetVersion
     }
     Actor {
       OrganizationName

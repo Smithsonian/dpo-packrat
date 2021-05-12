@@ -65,8 +65,13 @@ function Uploads(): React.ReactElement {
     const history = useHistory();
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
-    const [completed, discardFiles] = useUploadStore(state => [state.completed, state.discardFiles]);
+    const [completed, discardFiles, setUpdateMode] = useUploadStore(state => [state.completed, state.discardFiles, state.setUpdateMode]);
     const updateMetadataSteps = useMetadataStore(state => state.updateMetadataSteps);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    useEffect(() => {
+        if (urlParams.has('mode')) setUpdateMode(true);
+    }, [setUpdateMode]);
 
     const onIngest = async (): Promise<void> => {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);

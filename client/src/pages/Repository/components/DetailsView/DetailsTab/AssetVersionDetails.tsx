@@ -4,26 +4,31 @@
  *
  * This component renders details tab for AssetVersion specific details used in DetailsTab component.
  */
-import { Box, makeStyles, Typography } from '@material-ui/core';
+import { Box, makeStyles, Typography, Button } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { CheckboxField, FieldType, Loader } from '../../../../../components';
 import { AssetVersionDetailFields } from '../../../../../types/graphql';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { DetailComponentProps } from './index';
+import { sharedButtonProps } from '../../../../../utils/shared';
+import { updateSystemObjectUploadRedirect } from '../../../../../constants';
+import { eSystemObjectType } from '../../../../../types/server';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {
         fontSize: '0.8em',
         color: palette.primary.dark
-    }
+    },
+    button: sharedButtonProps
 }));
 
 function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const { data, loading, onUpdateDetail, objectType } = props;
     let { disabled } = props;
-
+    const history = useHistory();
     const [details, setDetails] = useState<AssetVersionDetailFields>({});
 
     useEffect(() => {
@@ -34,7 +39,7 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
                 Creator: AssetVersion?.Creator,
                 DateCreated: AssetVersion?.DateCreated,
                 StorageSize: AssetVersion?.StorageSize,
-                Ingested: AssetVersion?.Ingested,
+                Ingested: AssetVersion?.Ingested
             });
         }
     }, [data, loading]);
@@ -55,43 +60,28 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
     const assetVersionData = data.getDetailsTabDataForObject?.AssetVersion;
+
+    let redirect = () => {};
+    if (assetVersionData) {
+        redirect = () => {
+            const newEndpoint = updateSystemObjectUploadRedirect(assetVersionData.idAsset, assetVersionData.idAssetVersion, eSystemObjectType.eAssetVersion);
+            history.push(newEndpoint);
+        };
+    }
+
     disabled = true;
     return (
         <Box>
-            <FieldType
-                required
-                label='Version'
-                direction='row'
-                containerProps={rowFieldProps}
-                width='auto'
-            >
+            <FieldType required label='Version' direction='row' containerProps={rowFieldProps} width='auto'>
                 <Typography className={classes.value}>{details.Version}</Typography>
             </FieldType>
-            <FieldType
-                required
-                label='Creator'
-                direction='row'
-                containerProps={rowFieldProps}
-                width='auto'
-            >
+            <FieldType required label='Creator' direction='row' containerProps={rowFieldProps} width='auto'>
                 <Typography className={classes.value}>{details.Creator}</Typography>
             </FieldType>
-            <FieldType
-                required
-                label='Date Created'
-                direction='row'
-                containerProps={rowFieldProps}
-                width='auto'
-            >
+            <FieldType required label='Date Created' direction='row' containerProps={rowFieldProps} width='auto'>
                 <Typography className={classes.value}>{details.DateCreated}</Typography>
             </FieldType>
-            <FieldType
-                required
-                label='StorageSize'
-                direction='row'
-                containerProps={rowFieldProps}
-                width='auto'
-            >
+            <FieldType required label='StorageSize' direction='row' containerProps={rowFieldProps} width='auto'>
                 <Typography className={classes.value}>{formatBytes(details.StorageSize ?? 0)}</Typography>
             </FieldType>
 
@@ -105,6 +95,10 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
                 value={details.Ingested ?? false}
                 onChange={setCheckboxField}
             />
+
+            <Button className={classes.button} variant='contained' color='primary' style={{ width: 'fit-content', marginTop: '7px' }} onClick={redirect}>
+                Add Version
+            </Button>
         </Box>
     );
 }

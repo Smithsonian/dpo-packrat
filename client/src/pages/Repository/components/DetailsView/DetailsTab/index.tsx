@@ -6,7 +6,7 @@
  *
  * This component renders details tab for the DetailsView component.
  */
-import { Box, Tab, TabProps, Tabs } from '@material-ui/core';
+import { Box, Tab, TabProps, Tabs, Button } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
 import { StateRelatedObject } from '../../../../../store';
@@ -45,6 +45,9 @@ import StakeholderDetails from './StakeholderDetails';
 import SubjectDetails from './SubjectDetails';
 import UnitDetails from './UnitDetails';
 import { deleteObjectConnection } from '../../../hooks/useDetailsView';
+import { sharedButtonProps } from '../../../../../utils/shared';
+import { useHistory } from 'react-router-dom';
+import { updateSystemObjectUploadRedirect } from '../../../../../constants';
 
 const useStyles = makeStyles(({ palette }) => ({
     tab: {
@@ -52,7 +55,8 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     tabpanel: {
         backgroundColor: fade(palette.primary.main, 0.25)
-    }
+    },
+    updateButton: sharedButtonProps
 }));
 
 export interface DetailComponentProps extends GetDetailsTabDataForObjectQueryResult {
@@ -90,13 +94,13 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     const { disabled, idSystemObject, objectType, sourceObjects, derivedObjects, onAddSourceObject, onAddDerivedObject, onUpdateDetail } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
+    const history = useHistory();
 
     const handleTabChange = (_, nextTab: number) => {
         setTab(nextTab);
     };
 
     const detailsQueryResult = useDetailsTabData(idSystemObject, objectType);
-
     let tabs: string[] = [];
 
     let tabPanels: React.ReactNode = null;
@@ -133,6 +137,14 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         ...detailsQueryResult,
         ...sharedProps
     };
+
+    let redirect = () => {};
+    if (detailsQueryResult.data?.getDetailsTabDataForObject.Asset?.idAsset) {
+        redirect = () => {
+            const newEndpoint = updateSystemObjectUploadRedirect(detailsQueryResult.data?.getDetailsTabDataForObject.Asset?.idAsset, null, eSystemObjectType.eAsset);
+            history.push(newEndpoint);
+        };
+    }
 
     switch (objectType) {
         case eSystemObjectType.eUnit:
@@ -261,6 +273,9 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
                         <AssetVersionsTable idSystemObject={idSystemObject} />
+                        <Button className={classes.updateButton} variant='contained' color='primary' style={{ width: 'fit-content' }} onClick={redirect}>
+                            Add Version
+                        </Button>
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
                         <AssetDetails {...detailsProps} />
