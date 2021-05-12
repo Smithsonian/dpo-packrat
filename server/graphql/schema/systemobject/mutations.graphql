@@ -72,7 +72,6 @@ input CaptureDataDetailFieldsInput {
 
 input ModelDetailFieldsInput {
     Name: String
-    Master: Boolean
     Authoritative: Boolean
     CreationMethod: Int
     Modality: Int

@@ -70,7 +70,6 @@ input IngestModelInput {
     idAssetVersion: Int!
     systemCreated: Boolean!
     name: String!
-    master: Boolean!
     authoritative: Boolean!
     creationMethod: Int!
     modality: Int!
