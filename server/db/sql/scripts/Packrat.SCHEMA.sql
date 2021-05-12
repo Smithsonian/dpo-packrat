@@ -257,7 +257,7 @@ CREATE TABLE IF NOT EXISTS `Metadata` (
   `idMetadata` int(11) NOT NULL AUTO_INCREMENT,
   `Name` VARCHAR(100) NOT NULL,
   `ValueShort` varchar(255) DEFAULT NULL,
-  `ValueExtended` TEXT DEFAULT NULL,
+  `ValueExtended` longtext DEFAULT NULL,
   `idAssetValue` int(11) DEFAULT NULL,
   `idUser` int(11) DEFAULT NULL,
   `idVMetadataSource` int(11) DEFAULT NULL,
