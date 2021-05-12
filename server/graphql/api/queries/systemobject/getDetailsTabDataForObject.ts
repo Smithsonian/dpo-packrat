@@ -143,6 +143,7 @@ const getDetailsTabDataForObject = gql`
             Asset {
                 FilePath
                 AssetType
+                idAsset
             }
             AssetVersion {
                 Creator
@@ -150,6 +151,8 @@ const getDetailsTabDataForObject = gql`
                 StorageSize
                 Ingested
                 Version
+                idAsset
+                idAssetVersion
             }
             Actor {
                 OrganizationName

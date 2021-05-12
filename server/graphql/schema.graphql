@@ -1157,6 +1157,8 @@ type ProjectDocumentationDetailFields {
 type AssetDetailFields {
   FilePath: String
   AssetType: Int
+  Asset: Asset
+  idAsset: Int
 }
 
 type AssetVersionDetailFields {
@@ -1165,6 +1167,9 @@ type AssetVersionDetailFields {
   Ingested: Boolean
   Version: Int
   StorageSize: BigInt
+  AssetVersion: AssetVersion
+  idAsset: Int
+  idAssetVersion: Int
 }
 
 type ActorDetailFields {

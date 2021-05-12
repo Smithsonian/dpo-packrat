@@ -14,7 +14,7 @@ import { FaCheckCircle, FaRedo, FaRegCircle } from 'react-icons/fa';
 import { IoIosCloseCircle } from 'react-icons/io';
 import { MdFileUpload } from 'react-icons/md';
 import { Progress } from '../../../../components';
-import { FileId, VocabularyOption } from '../../../../store';
+import { FileId, VocabularyOption, useUploadStore } from '../../../../store';
 import { palette } from '../../../../theme';
 import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
@@ -152,7 +152,7 @@ interface FileListItemProps {
 function FileListItem(props: FileListItemProps): React.ReactElement {
     const { id, name, size, type, typeOptions, status, complete, progress, selected, failed, uploading, onChangeType, onUpload, onCancel, onRemove, onRetry, onSelect } = props;
     const classes = useStyles(props);
-
+    const [updateMode] = useUploadStore(state => [state.updateMode]);
     const upload = () => onUpload(id);
     const remove = () => (uploading ? onCancel(id) : onRemove(id));
     const retry = () => onRetry(id);
@@ -217,19 +217,25 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                     </Typography>
                 </Box>
                 <Box className={classes.type}>
-                    <Select
-                        value={type}
-                        disabled={complete || uploading}
-                        className={classes.typeSelect}
-                        onChange={({ target: { value } }) => onChangeType(id, value as number)}
-                        disableUnderline
-                    >
-                        {typeOptions.map((option: VocabularyOption, index) => (
-                            <MenuItem key={index} value={option.idVocabulary}>
-                                {option.Term}
-                            </MenuItem>
-                        ))}
-                    </Select>
+                    {updateMode ? (
+                        <Select value='Update' disabled className={classes.typeSelect} disableUnderline>
+                            <MenuItem value='Update'>Update</MenuItem>
+                        </Select>
+                    ) : (
+                        <Select
+                            value={type}
+                            disabled={complete || uploading}
+                            className={classes.typeSelect}
+                            onChange={({ target: { value } }) => onChangeType(id, value as number)}
+                            disableUnderline
+                        >
+                            {typeOptions.map((option: VocabularyOption, index) => (
+                                <MenuItem key={index} value={option.idVocabulary}>
+                                    {option.Term}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    )}
                 </Box>
                 <Box className={classes.options}>{options}</Box>
             </Box>

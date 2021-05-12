@@ -43,6 +43,9 @@ type UploadStore = {
     completed: IngestionFile[];
     pending: IngestionFile[];
     loading: boolean;
+    updateMode: boolean;
+    //create new property to handle the asset context
+    setUpdateMode: (update: boolean) => void;
     getSelectedFiles: (files: IngestionFile[], selected: boolean) => IngestionFile[];
     loadPending: (acceptedFiles: File[]) => void;
     loadCompleted: (completed: IngestionFile[]) => void;
@@ -66,6 +69,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     completed: [],
     pending: [],
     loading: true,
+    updateMode: false,
+    setUpdateMode: (update) => { set({ updateMode: update }) },
     getSelectedFiles: (files: IngestionFile[], selected: boolean): IngestionFile[] => lodash.filter(files, file => file.selected === selected),
     loadPending: (acceptedFiles: File[]) => {
         const { pending } = get();
