@@ -539,7 +539,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         // LOG.info(`JobCookPackratInspect createModel ${fileName} -> ${JSON.stringify(vFileType)}`, LOG.LS.eJOB);
         return new DBAPI.Model({
             Name: fileName || '',
-            Master: true,
             Authoritative: true,
             DateCreated: dateCreated || new Date(),
             idVCreationMethod: 0,
