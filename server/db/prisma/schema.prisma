@@ -334,7 +334,7 @@ model Metadata {
   idMetadata        Int           @id @default(autoincrement())
   Name              String        @mariasql.VarChar(100)
   ValueShort        String?       @mariasql.VarChar(255)
-  ValueExtended     String?       @mariasql.Text
+  ValueExtended     String?       @mariasql.LongText
   idAssetValue      Int?
   idUser            Int?
   idVMetadataSource Int?
