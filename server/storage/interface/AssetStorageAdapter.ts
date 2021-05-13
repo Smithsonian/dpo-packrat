@@ -366,25 +366,53 @@ export class AssetStorageAdapter {
             LOG.error(error, LOG.LS.eSTR);
             return { assets: null, assetVersions: null, success: false, error };
         }
-        return await AssetStorageAdapter.ingestAssetForSystemObjectID(asset, assetVersion, SO.idSystemObject, opInfo);
+        return AssetStorageAdapter.ingestAssetWrapper(asset, assetVersion, SO.idSystemObject, opInfo);
     }
 
     static async ingestAssetForSystemObjectID(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
         idSystemObject: number, opInfo: STORE.OperationInfo): Promise<IngestAssetResult> {
-        LOG.info(`AssetStorageAdapter.ingestAssetForSystemObjectID idAsset ${asset.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}, idSystemObject ${idSystemObject}`, LOG.LS.eSTR);
+        return AssetStorageAdapter.ingestAssetWrapper(asset, assetVersion, idSystemObject, opInfo);
+    }
+
+    private static async ingestAssetWrapper(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
+        idSystemObject: number, opInfo: STORE.OperationInfo): Promise<IngestAssetResult> {
+        const IAR: IngestAssetResult = await AssetStorageAdapter.ingestAssetWorker(asset, assetVersion, idSystemObject, opInfo);
+        if (!IAR.success)
+            return IAR;
+
+        const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
+        if (IAR.assetVersions) {
+            for (const assetVersion of IAR.assetVersions)
+                assetVersionOverrideMap.set(assetVersion.idAsset, assetVersion.idAssetVersion);
+        }
+
+        const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, assetVersionOverrideMap);
+        if (!SOV) {
+            IAR.success = false;
+            IAR.error = 'DB Failure creating SystemObjectVersion';
+            LOG.error(`AssetStorageAdapter.ingestAssetWrapper failed to create new SystemObjectVersion for ${idSystemObject}`, LOG.LS.eSTR);
+            return IAR;
+        }
+
+        return IAR;
+    }
+
+    private static async ingestAssetWorker(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
+        idSystemObject: number, opInfo: STORE.OperationInfo): Promise<IngestAssetResult> {
+        LOG.info(`AssetStorageAdapter.ingestAssetWorker idAsset ${asset.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}, idSystemObject ${idSystemObject}`, LOG.LS.eSTR);
         // Call IStorage.promote
         // Update asset.StorageKey, if needed
         // Update assetVersion.Ingested to true
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
-            const error: string = 'AssetStorageAdapter.ingestAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            const error: string = 'AssetStorageAdapter.ingestAssetWorker: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
             LOG.error(error, LOG.LS.eSTR);
             return { assets: null, assetVersions: null, success: false, error };
         }
 
         const metadata: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors); /* istanbul ignore next */
         if (!await metadata.fetch()) {
-            const error: string = `AssetStorageAdapter.ingestAsset: Update to retrieve object ancestry for system object ${idSystemObject}`;
+            const error: string = `AssetStorageAdapter.ingestAssetWorker: Update to retrieve object ancestry for system object ${idSystemObject}`;
             LOG.error(error, LOG.LS.eSTR);
             return { assets: null, assetVersions: null, success: false, error };
         }
@@ -614,27 +642,27 @@ export class AssetStorageAdapter {
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} starting`, LOG.LS.eSTR);
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
-            const error: string = 'AssetStorageAdapter.ingestStream unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            const error: string = 'AssetStorageAdapter.ingestStreamOrFile unable to retrieve Storage Implementation from StorageFactory.getInstace()';
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };
         }
 
         if (!ISI.idVAssetType) { // !ISI.idUserCreator ||
-            const error: string = 'AssetStorageAdapter.ingestStream missing required parameters';
+            const error: string = 'AssetStorageAdapter.ingestStreamOrFile missing required parameters';
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };
         }
 
         const wsRes: STORE.WriteStreamResult = await storage.writeStream(ISI.FileName);
         if (!wsRes.success || !wsRes.writeStream || !wsRes.storageKey) {
-            const error: string = `AssetStorageAdapter.ingestStream Unable to create write stream for ${ISI.FileName}: ${wsRes.error}`;
+            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to create write stream for ${ISI.FileName}: ${wsRes.error}`;
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };
         }
 
         if (!ISI.ReadStream) {
             if (!ISI.LocalFilePath) {
-                const error: string = 'AssetStorageAdapter.ingestStream called without either ReadStream or LocalFilePath specified';
+                const error: string = 'AssetStorageAdapter.ingestStreamOrFile called without either ReadStream or LocalFilePath specified';
                 LOG.error(error, LOG.LS.eSTR);
                 return { success: false, error };
             }
@@ -643,7 +671,7 @@ export class AssetStorageAdapter {
 
         const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.ReadStream, wsRes.writeStream);
         if (!wrRes.success) {
-            const error: string = `AssetStorageAdapter.ingestStream Unable to write to stream: ${wrRes.error}`;
+            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to write to stream: ${wrRes.error}`;
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };
         }
@@ -661,7 +689,7 @@ export class AssetStorageAdapter {
 
         const comRes: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
         if (!comRes.success || !comRes.assets || comRes.assets.length != 1 || !comRes.assetVersions || comRes.assetVersions.length != 1) {
-            const error: string = `AssetStorageAdapter.ingestStream Unable to commit asset: ${comRes.error}`;
+            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to commit asset: ${comRes.error}`;
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };
         }
