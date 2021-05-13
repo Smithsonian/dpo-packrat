@@ -502,6 +502,13 @@ CREATE TABLE IF NOT EXISTS `SystemObjectVersion` (
   KEY `ObjectVersion_idSystemObject_idObjectVersion` (`idSystemObject`,`idSystemObjectVersion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
+CREATE TABLE IF NOT EXISTS `SystemObjectVersionAssetVersionXref` (
+  `idSystemObjectVersionAssetVersionXref` int(11) NOT NULL AUTO_INCREMENT,
+  `idSystemObjectVersion` int(11) NOT NULL,
+  `idAssetVersion` int(11) NOT NULL,
+  PRIMARY KEY (`idSystemObjectVersionAssetVersionXref`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
 CREATE TABLE IF NOT EXISTS `SystemObjectXref` (
   `idSystemObjectXref` int(11) NOT NULL AUTO_INCREMENT,
   `idSystemObjectMaster` int(11) NOT NULL,
@@ -1091,6 +1098,18 @@ ALTER TABLE `SystemObjectVersion`
 ADD CONSTRAINT `fk_systemobjectversion_systemobject`
   FOREIGN KEY (`idSystemObject`)
   REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `SystemObjectVersionAssetVersionXref`
+ADD CONSTRAINT `fk_systemobjectversionassetversionxref_systemobjectversion`
+  FOREIGN KEY (`idSystemObjectVersion`)
+  REFERENCES `SystemObjectVersion` (`idSystemObjectVersion`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_systemobjectversionassetversionxref_assetversion`
+  FOREIGN KEY (`idAssetVersion`)
+  REFERENCES `AssetVersion` (`idAssetVersion`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
