@@ -84,4 +84,62 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
             return null;
         }
     }
+
+    /** Computes the map of idAsset -> idAssetVersion for the specified idSystemObjectVersion */
+    static async fetchAssetVersionMap(idSystemObjectVersion: number): Promise<Map<number, number> | null> {
+        LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(${idSystemObjectVersion})`, LOG.LS.eDB);
+        if (!idSystemObjectVersion)
+            return null;
+        try {
+            const versions: { idAsset: number, idAssetVersion: number }[] | null =
+                await DBC.DBConnection.prisma.$queryRaw<{ idAsset: number, idAssetVersion: number }[]>`
+                SELECT AV.idAsset AS 'idAsset', MAX(AV.idAssetVersion) AS 'idAssetVersion'
+                FROM SystemObjectVersionAssetVersionXref AS SOX
+                JOIN AssetVersion AS AV ON (SOX.idAssetVersion = AV.idAssetVersion)
+                WHERE SOX.idSystemObjectVersion = ${idSystemObjectVersion}
+                GROUP BY AV.idAsset`; //, SystemObjectVersion);
+            /* istanbul ignore if */
+            if (!versions)
+                return null;
+
+            const assetVersionMap: Map<number, number> = new Map<number, number>(); // map from idAsset -> idAssetVersion
+            for (const assetPair of versions)
+                assetVersionMap.set(assetPair.idAsset, assetPair.idAssetVersion);
+            // LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(${idSystemObjectVersion}) = ${JSON.stringify(versions)} -> ${JSON.stringify(assetVersionMap, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eDB);
+            return assetVersionMap;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** Computes the map of idAsset -> idAssetVersion for the most recent system object version for the specified idSystemObject */
+    static async fetchLatestAssetVersionMap(idSystemObject: number): Promise<Map<number, number> | null> {
+        LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(${idSystemObject})`, LOG.LS.eDB);
+        if (!idSystemObject)
+            return null;
+        try {
+            const versions: { idAsset: number, idAssetVersion: number }[] | null =
+                await DBC.DBConnection.prisma.$queryRaw<{ idAsset: number, idAssetVersion: number }[]>`
+                SELECT AV.idAsset AS 'idAsset', MAX(AV.idAssetVersion) AS 'idAssetVersion'
+                FROM SystemObjectVersionAssetVersionXref AS SOX
+                JOIN AssetVersion AS AV ON (SOX.idAssetVersion = AV.idAssetVersion)
+                WHERE SOX.idSystemObjectVersion = (SELECT MAX(idSystemObjectVersion)
+                                                   FROM SystemObjectVersion
+                                                   WHERE idSystemObject = ${idSystemObject})
+                GROUP BY AV.idAsset`; //, SystemObjectVersion);
+            /* istanbul ignore if */
+            if (!versions)
+                return null;
+
+            const assetVersionMap: Map<number, number> = new Map<number, number>(); // map from idAsset -> idAssetVersion
+            for (const assetPair of versions)
+                assetVersionMap.set(assetPair.idAsset, assetPair.idAssetVersion);
+            // LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(${idSystemObject}) = ${JSON.stringify(versions)} -> ${JSON.stringify(assetVersionMap, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eDB);
+            return assetVersionMap;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }

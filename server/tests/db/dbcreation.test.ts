@@ -2692,6 +2692,26 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(systemObjectVersionFetch).toBeTruthy();
     });
 
+    test('DB Fetch SystemObjectVersion: SystemObjectVersion.clone latest', async () => {
+        let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
+        if (systemObjectScene) {
+            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, null);
+            if (systemObjectVersionFetch && systemObjectVersion)
+                expect(systemObjectVersionFetch.idSystemObjectVersion).toBeGreaterThan(systemObjectVersion.idSystemObjectVersion);
+        }
+        expect(systemObjectVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectVersion: SystemObjectVersion.clone specific', async () => {
+        let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
+        if (systemObjectScene && systemObjectVersion && assetVersion) {
+            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, systemObjectVersion.idSystemObjectVersion, new Map<number, number>([[assetVersion.idAsset, assetVersion.idAssetVersion]]));
+            if (systemObjectVersionFetch && systemObjectVersion)
+                expect(systemObjectVersionFetch.idSystemObjectVersion).toBeGreaterThan(systemObjectVersion.idSystemObjectVersion);
+        }
+        expect(systemObjectVersionFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: SystemObjectVersionAssetVersionXref', async () => {
         let systemObjectVersionAssetVersionXrefFetch: DBAPI.SystemObjectVersionAssetVersionXref | null = null;
         if (systemObjectVersionAssetVersionXref) {
@@ -6912,9 +6932,12 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObjectVersion.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersion.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(0, null, undefined)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromSystemObjectVersion(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromAssetVersion(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(0)).toBeNull();
         expect(await DBAPI.SystemObjectXref.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectXref.fetchXref(0, 1)).toBeNull();
         expect(await DBAPI.SystemObjectXref.fetchXref(1, 0)).toBeNull();
