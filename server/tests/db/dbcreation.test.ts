@@ -1940,6 +1940,16 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetVersionFetch).toBeTruthy();
     });
 
+    test('DB Fetch AssetVersion: AssetVersion.fetchFromSystemObjectVersion', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (systemObjectVersion) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFromSystemObjectVersion(systemObjectVersion.idSystemObjectVersion);
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
     test('DB Fetch AssetVersion: AssetVersion.fetchLatestFromAsset Not Ingested, Bulk Ingested', async () => {
         let assetVersionFetch: DBAPI.AssetVersion | null = null;
         if (assetThumbnail) {
@@ -6787,6 +6797,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromSystemObjectVersion(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchLatestFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
