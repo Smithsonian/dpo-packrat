@@ -279,7 +279,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     const {
                         Name,
                         DateCaptured,
-                        Master,
                         Authoritative,
                         CreationMethod,
                         Modality,
@@ -289,7 +288,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     } = data.Model;
 
                     if (Name) Model.Name = Name;
-                    if (typeof Master === 'boolean') Model.Master = Master;
                     if (typeof Authoritative === 'boolean') Model.Authoritative = Authoritative;
                     if (CreationMethod) Model.idVCreationMethod = CreationMethod;
                     if (Modality) Model.idVModality = Modality;

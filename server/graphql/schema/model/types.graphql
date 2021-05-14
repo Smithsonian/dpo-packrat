@@ -4,7 +4,6 @@ type Model {
     idModel: Int!
     Name: String!
     DateCreated: DateTime!
-    Master: Boolean!
     Authoritative: Boolean!
     idVCreationMethod: Int!
     idVModality: Int!

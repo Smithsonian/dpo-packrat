@@ -46,6 +46,7 @@ export * from './api/Subject';
 export * from './api/SystemObject';
 export * from './api/SystemObjectPairs';
 export * from './api/SystemObjectVersion';
+export * from './api/SystemObjectVersionAssetVersionXref';
 export * from './api/SystemObjectXref';
 export * from './api/Unit';
 export * from './api/UnitEdan';

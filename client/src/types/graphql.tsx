@@ -515,7 +515,6 @@ export type IngestModel = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  master: Scalars['Boolean'];
   authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
@@ -841,7 +840,6 @@ export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  master: Scalars['Boolean'];
   authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
@@ -946,7 +944,6 @@ export type Model = {
   idModel: Scalars['Int'];
   Name: Scalars['String'];
   DateCreated: Scalars['DateTime'];
-  Master: Scalars['Boolean'];
   Authoritative: Scalars['Boolean'];
   idVCreationMethod: Scalars['Int'];
   idVModality: Scalars['Int'];
@@ -1145,6 +1142,8 @@ export type GetObjectChildrenInput = {
   modelFileType: Array<Scalars['Int']>;
   dateCreatedFrom?: Maybe<Scalars['DateTime']>;
   dateCreatedTo?: Maybe<Scalars['DateTime']>;
+  rows: Scalars['Int'];
+  cursorMark: Scalars['String'];
 };
 
 export type NavigationResultEntry = {
@@ -1162,6 +1161,7 @@ export type GetObjectChildrenResult = {
   error: Scalars['String'];
   entries: Array<NavigationResultEntry>;
   metadataColumns: Array<Scalars['Int']>;
+  cursorMark?: Maybe<Scalars['String']>;
 };
 
 export type GetFilterViewDataResult = {
@@ -1317,7 +1317,6 @@ export type CaptureDataDetailFieldsInput = {
 
 export type ModelDetailFieldsInput = {
   Name?: Maybe<Scalars['String']>;
-  Master?: Maybe<Scalars['Boolean']>;
   Authoritative?: Maybe<Scalars['Boolean']>;
   CreationMethod?: Maybe<Scalars['Int']>;
   Modality?: Maybe<Scalars['Int']>;
@@ -2595,7 +2594,7 @@ export type GetAssetVersionsDetailsQuery = (
         )> }
       )>, Model?: Maybe<(
         { __typename?: 'IngestModel' }
-        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory'>
+        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
           & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -2775,7 +2774,7 @@ export type GetModelConstellationQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'Master' | 'Authoritative' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding'>
+        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'Authoritative' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding'>
         & { VCreationMethod?: Maybe<(
           { __typename?: 'Vocabulary' }
           & Pick<Vocabulary, 'Term'>
@@ -2857,7 +2856,7 @@ export type GetObjectChildrenQuery = (
   { __typename?: 'Query' }
   & { getObjectChildren: (
     { __typename?: 'GetObjectChildrenResult' }
-    & Pick<GetObjectChildrenResult, 'success' | 'error' | 'metadataColumns'>
+    & Pick<GetObjectChildrenResult, 'success' | 'error' | 'metadataColumns' | 'cursorMark'>
     & { entries: Array<(
       { __typename?: 'NavigationResultEntry' }
       & Pick<NavigationResultEntry, 'idSystemObject' | 'name' | 'objectType' | 'idObject' | 'metadata'>
@@ -2979,7 +2978,7 @@ export type GetDetailsTabDataForObjectQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name' | 'DateCreated' | 'Master' | 'Authoritative' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name' | 'DateCreated' | 'Authoritative' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
         & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
@@ -4225,7 +4224,6 @@ export const GetAssetVersionsDetailsDocument = gql`
         idAssetVersion
         systemCreated
         name
-        master
         authoritative
         creationMethod
         modality
@@ -4653,7 +4651,6 @@ export const GetModelConstellationDocument = gql`
         idModel
         Name
         DateCreated
-        Master
         Authoritative
         VCreationMethod {
           Term
@@ -4841,6 +4838,7 @@ export const GetObjectChildrenDocument = gql`
       metadata
     }
     metadataColumns
+    cursorMark
   }
 }
     `;
@@ -5161,7 +5159,6 @@ export const GetDetailsTabDataForObjectDocument = gql`
         FileEncoding
         Name
         DateCreated
-        Master
         Authoritative
         idVCreationMethod
         idVModality
