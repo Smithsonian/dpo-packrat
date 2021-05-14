@@ -100,7 +100,8 @@ export class ZipStream implements IZip {
     async getJustFiles(filter: string | null): Promise<string[]> { return zipFilterResults(Array.from(this._files.values()), filter); }
     async getJustDirectories(filter: string | null): Promise<string[]> { return zipFilterResults(Array.from(this._dirs.values()), filter); }
 
-    async streamContent(entry: string | null): Promise<NodeJS.ReadableStream | null> {
+    async streamContent(entry: string | null, doNotLogErrors?: boolean | undefined): Promise<NodeJS.ReadableStream | null> {
+        const logErrors = this._logErrors && (doNotLogErrors !== true);
         try {
             if (!this._zip)
                 return null;
@@ -112,7 +113,7 @@ export class ZipStream implements IZip {
             }
         } catch (err) /* istanbul ignore next */ {
             const error: string = `ZipStream.streamContent: ${JSON.stringify(err)}`;
-            if (this._logErrors)
+            if (logErrors)
                 LOG.error(error, LOG.LS.eSYS);
             return null;
         }

@@ -182,7 +182,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 let exitEarly: boolean = false;
                 ({ exitEarly, assetVersionGeometry, assetVersionDiffuse, units } = await this.computeModelInfo(oID.idObject));
                 if (exitEarly || assetVersionGeometry === undefined) {
-                    LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping invalid model ${JSON.stringify(oID)}`, LOG.LS.eWF);
+                    LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping model ${JSON.stringify(oID)}`, LOG.LS.eWF);
                     return null;
                 }
                 idModel = oID.idObject;

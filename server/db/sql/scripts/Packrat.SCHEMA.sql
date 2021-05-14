@@ -257,7 +257,7 @@ CREATE TABLE IF NOT EXISTS `Metadata` (
   `idMetadata` int(11) NOT NULL AUTO_INCREMENT,
   `Name` VARCHAR(100) NOT NULL,
   `ValueShort` varchar(255) DEFAULT NULL,
-  `ValueExtended` TEXT DEFAULT NULL,
+  `ValueExtended` longtext DEFAULT NULL,
   `idAssetValue` int(11) DEFAULT NULL,
   `idUser` int(11) DEFAULT NULL,
   `idVMetadataSource` int(11) DEFAULT NULL,
@@ -272,7 +272,6 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `idModel` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `DateCreated` datetime NOT NULL,
-  `Master` boolean NOT NULL,
   `Authoritative` boolean NOT NULL,
   `idVCreationMethod` int(11) NOT NULL,
   `idVModality` int(11) NOT NULL,
@@ -501,6 +500,13 @@ CREATE TABLE IF NOT EXISTS `SystemObjectVersion` (
   `PublishedState` int(11) NOT NULL,
   PRIMARY KEY (`idSystemObjectVersion`),
   KEY `ObjectVersion_idSystemObject_idObjectVersion` (`idSystemObject`,`idSystemObjectVersion`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `SystemObjectVersionAssetVersionXref` (
+  `idSystemObjectVersionAssetVersionXref` int(11) NOT NULL AUTO_INCREMENT,
+  `idSystemObjectVersion` int(11) NOT NULL,
+  `idAssetVersion` int(11) NOT NULL,
+  PRIMARY KEY (`idSystemObjectVersionAssetVersionXref`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `SystemObjectXref` (
@@ -1092,6 +1098,18 @@ ALTER TABLE `SystemObjectVersion`
 ADD CONSTRAINT `fk_systemobjectversion_systemobject`
   FOREIGN KEY (`idSystemObject`)
   REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `SystemObjectVersionAssetVersionXref`
+ADD CONSTRAINT `fk_systemobjectversionassetversionxref_systemobjectversion`
+  FOREIGN KEY (`idSystemObjectVersion`)
+  REFERENCES `SystemObjectVersion` (`idSystemObjectVersion`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_systemobjectversionassetversionxref_assetversion`
+  FOREIGN KEY (`idAssetVersion`)
+  REFERENCES `AssetVersion` (`idAssetVersion`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

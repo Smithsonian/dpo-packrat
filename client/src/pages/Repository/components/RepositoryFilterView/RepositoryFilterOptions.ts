@@ -67,7 +67,6 @@ export const metadataToDisplayOptions: FilterOption[] = [
     { label: 'Capture Camera Settings Uniform', value: eMetadata.eCDCameraSettingsUniform },
     { label: 'Capture Variant Type', value: eMetadata.eCDVariantType },
     { label: 'Model Creation Method', value: eMetadata.eModelCreationMethod },
-    { label: 'Model Master', value: eMetadata.eModelMaster },
     { label: 'Model Authoritative', value: eMetadata.eModelAuthoritative },
     { label: 'Model Modality', value: eMetadata.eModelModality },
     { label: 'Model Units', value: eMetadata.eModelUnits },

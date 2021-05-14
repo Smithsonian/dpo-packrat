@@ -89,8 +89,10 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         [tree, getChildren]
     );
 
+    // recursive
     const renderTree = (children: NavigationResultEntry[] | undefined) => {
-        if (!children) return null;
+        if (!children)
+            return null;
         return children.map((child: NavigationResultEntry, index: number) => {
             const { idSystemObject, objectType, idObject, name, metadata } = child;
             const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject);
