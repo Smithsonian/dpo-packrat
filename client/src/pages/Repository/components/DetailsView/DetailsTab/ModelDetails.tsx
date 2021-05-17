@@ -93,11 +93,10 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
 
     const { ingestionModel, modelObjects } = extractModelConstellation(data?.getDetailsTabDataForObject?.Model);
     const [details] = useState({});
-    const [setFormField, setFormDateField, dateCaptured, master, authoritative, creationMethod, modality, purpose, units, fileType] = useRepositoryDetailsFormStore(state => [
+    const [setFormField, setFormDateField, dateCaptured, authoritative, creationMethod, modality, purpose, units, fileType] = useRepositoryDetailsFormStore(state => [
         state.setFormField,
         state.setFormDateField,
         state.dateCaptured,
-        state.master,
         state.authoritative,
         state.creationMethod,
         state.modality,
@@ -114,16 +113,13 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
     useEffect(() => {
         if (data && !loading) {
             if (data.getDetailsTabDataForObject?.Model?.Model) {
-                const { DateCreated, Authoritative, Master, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = data.getDetailsTabDataForObject.Model.Model;
+                const { DateCreated, Authoritative, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = data.getDetailsTabDataForObject.Model.Model;
 
                 if (DateCreated) {
                     setFormDateField(new Date(DateCreated));
                 }
                 if (typeof Authoritative === 'boolean') {
                     setFormField('authoritative', Authoritative);
-                }
-                if (typeof Master === 'boolean') {
-                    setFormField('master', Master);
                 }
                 setFormField('creationMethod', idVCreationMethod);
                 setFormField('modality', idVModality);
@@ -173,10 +169,6 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                     <Box display='flex' flexDirection='column' className={classes.dataEntry}>
                         <FieldType required label='Date Created' direction='row' containerProps={rowFieldProps}>
                             <DateInputField value={dateCaptured} onChange={(_, value) => setDateField(value)} />
-                        </FieldType>
-
-                        <FieldType required label='Master Model' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox name='master' checked={!!master} color='primary' onChange={setCheckboxField} />
                         </FieldType>
 
                         <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>

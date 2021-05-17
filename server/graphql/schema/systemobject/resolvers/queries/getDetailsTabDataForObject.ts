@@ -213,7 +213,6 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
 //     fields = {
 //         ...fields,
 //         name: model?.Name,
-//         master: model?.Master,
 //         authoritative: model?.Authoritative,
 //         creationMethod: model?.idVCreationMethod,
 //         modality: model?.idVModality,

@@ -71,7 +71,6 @@ const getDetailsTabDataForObject = gql`
                     FileEncoding
                     Name
                     DateCreated
-                    Master
                     Authoritative
                     idVCreationMethod
                     idVModality

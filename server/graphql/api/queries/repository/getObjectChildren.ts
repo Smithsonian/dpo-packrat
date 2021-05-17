@@ -13,6 +13,7 @@ const getObjectChildren = gql`
                 metadata
             }
             metadataColumns
+            cursorMark
         }
     }
 `;

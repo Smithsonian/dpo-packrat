@@ -92,7 +92,6 @@ export type ModelFields = {
     sourceObjects: StateRelatedObject[];
     dateCaptured: Date | string | null;
     creationMethod: number | null;
-    master: boolean;
     authoritative: boolean;
     modality: number | null;
     units: number | null;

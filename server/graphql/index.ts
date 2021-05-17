@@ -3,6 +3,7 @@ import { ApolloServerExpressConfig, AuthenticationError } from 'apollo-server-ex
 
 import GraphQLApi from './api';
 import schema from './schema';
+import * as LOG from '../utils/logger';
 
 const gqlAuthRequired: boolean = (process.env.NODE_ENV === 'production'); // set to false for debugging GraphQL using the GQL Playground ... this lets us avoid authentication
 const unauthenticatedGQLQueries: Set<string> = new Set<string>([
@@ -18,9 +19,12 @@ const ApolloServerOptions: ApolloServerExpressConfig = {
         const isAuthenticated = req['isAuthenticated']();
 
         if (gqlAuthRequired) {
-            const authRequired: boolean = !unauthenticatedGQLQueries.has(computeGQLQuery(req) || '');
-            if (authRequired && !user)
+            const gqlQuery: string = computeGQLQuery(req) || '';
+            const authRequired: boolean = !unauthenticatedGQLQueries.has(gqlQuery);
+            if (authRequired && !user) {
+                LOG.error(`ApolloServerOptions.context GraphQL user is not authenticated for ${gqlQuery}`, LOG.LS.eGQL);
                 throw new AuthenticationError('GraphQL user is not authenticated');
+            }
         }
 
         return {
