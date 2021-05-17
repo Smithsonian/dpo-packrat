@@ -877,6 +877,7 @@ export type IngestDataInput = {
   model: Array<IngestModelInput>;
   scene: Array<IngestSceneInput>;
   other: Array<IngestOtherInput>;
+  update?: Maybe<Scalars['Boolean']>;
 };
 
 export type IngestDataResult = {
@@ -2561,7 +2562,7 @@ export type GetAssetQuery = (
     { __typename?: 'GetAssetResult' }
     & { Asset?: Maybe<(
       { __typename?: 'Asset' }
-      & Pick<Asset, 'idAsset'>
+      & Pick<Asset, 'idAsset' | 'idVAssetType'>
     )> }
   ) }
 );
@@ -4145,6 +4146,7 @@ export const GetAssetDocument = gql`
   getAsset(input: $input) {
     Asset {
       idAsset
+      idVAssetType
     }
   }
 }

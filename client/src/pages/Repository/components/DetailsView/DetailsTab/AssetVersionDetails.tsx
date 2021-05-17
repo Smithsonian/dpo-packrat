@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react/jsx-max-props-per-line */
 /**
  * AssetVersionDetails
  *
@@ -15,6 +16,8 @@ import { DetailComponentProps } from './index';
 import { sharedButtonProps } from '../../../../../utils/shared';
 import { updateSystemObjectUploadRedirect } from '../../../../../constants';
 import { eSystemObjectType } from '../../../../../types/server';
+import { apolloClient } from '../../../../../graphql';
+import { GetAssetDocument } from '../../../../../types/graphql';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {
@@ -63,8 +66,20 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
 
     let redirect = () => {};
     if (assetVersionData) {
-        redirect = () => {
-            const newEndpoint = updateSystemObjectUploadRedirect(assetVersionData.idAsset, assetVersionData.idAssetVersion, eSystemObjectType.eAssetVersion);
+        // redirect function fetches assetType so that uploads remembers the assetType for uploads
+        redirect = async () => {
+            const {
+                data: {
+                    getAsset: {
+                        Asset: { idVAssetType }
+                    }
+                }
+            } = await apolloClient.query({
+                query: GetAssetDocument,
+                variables: { input: { idAsset: assetVersionData.idAsset } }
+            });
+
+            const newEndpoint = updateSystemObjectUploadRedirect(assetVersionData.idAsset, assetVersionData.idAssetVersion, eSystemObjectType.eAssetVersion, idVAssetType);
             history.push(newEndpoint);
         };
     }
