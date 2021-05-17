@@ -106,6 +106,7 @@ input IngestDataInput {
     model: [IngestModelInput!]!
     scene: [IngestSceneInput!]!
     other: [IngestOtherInput!]!
+    update: Boolean
 }
 
 type IngestDataResult {

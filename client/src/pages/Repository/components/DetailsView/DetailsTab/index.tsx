@@ -141,7 +141,12 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     let redirect = () => {};
     if (detailsQueryResult.data?.getDetailsTabDataForObject.Asset?.idAsset) {
         redirect = () => {
-            const newEndpoint = updateSystemObjectUploadRedirect(detailsQueryResult.data?.getDetailsTabDataForObject.Asset?.idAsset, null, eSystemObjectType.eAsset);
+            const newEndpoint = updateSystemObjectUploadRedirect(
+                detailsQueryResult.data?.getDetailsTabDataForObject.Asset?.idAsset,
+                null,
+                eSystemObjectType.eAsset,
+                detailsQueryResult.data?.getDetailsTabDataForObject.Asset?.AssetType
+            );
             history.push(newEndpoint);
         };
     }

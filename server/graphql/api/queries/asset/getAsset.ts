@@ -5,6 +5,7 @@ const getAsset = gql`
         getAsset(input: $input) {
             Asset {
                 idAsset
+                idVAssetType
             }
         }
     }

@@ -7,7 +7,7 @@ import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import path from 'path';
 import { toast } from 'react-toastify';
-import { eVocabularySetID } from '../types/server';
+import { eVocabularySetID, eSystemObjectType } from '../types/server';
 import { generateFileId } from '../utils/upload';
 import { useVocabularyStore } from './vocabulary';
 import { apolloClient, apolloUploader } from '../graphql';
@@ -44,8 +44,9 @@ type UploadStore = {
     pending: IngestionFile[];
     loading: boolean;
     updateMode: boolean;
-    //create new property to handle the asset context
+    updateWorkflowFileType: eSystemObjectType | null;
     setUpdateMode: (update: boolean) => void;
+    setUpdateWorkflowFileType: (fileType: eSystemObjectType) => void;
     getSelectedFiles: (files: IngestionFile[], selected: boolean) => IngestionFile[];
     loadPending: (acceptedFiles: File[]) => void;
     loadCompleted: (completed: IngestionFile[]) => void;
@@ -70,7 +71,9 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     pending: [],
     loading: true,
     updateMode: false,
-    setUpdateMode: (update) => { set({ updateMode: update }) },
+    updateWorkflowFileType: null,
+    setUpdateMode: (update) => { set({ updateMode: update }); },
+    setUpdateWorkflowFileType: (fileType) => { set({ updateWorkflowFileType: fileType }); },
     getSelectedFiles: (files: IngestionFile[], selected: boolean): IngestionFile[] => lodash.filter(files, file => file.selected === selected),
     loadPending: (acceptedFiles: File[]) => {
         const { pending } = get();

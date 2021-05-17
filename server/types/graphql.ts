@@ -874,6 +874,7 @@ export type IngestDataInput = {
   model: Array<IngestModelInput>;
   scene: Array<IngestSceneInput>;
   other: Array<IngestOtherInput>;
+  update?: Maybe<Scalars['Boolean']>;
 };
 
 export type IngestDataResult = {
