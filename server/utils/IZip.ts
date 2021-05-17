@@ -8,7 +8,7 @@ export interface IZip {
     getJustFiles(filter: string | null): Promise<string[]>;
     getJustDirectories(filter: string | null): Promise<string[]>;
     /** Pass in null for entry to stream the entire zip */
-    streamContent(entry: string | null): Promise<NodeJS.ReadableStream | null>;
+    streamContent(entry: string | null, doNotLogErrors?: boolean | undefined): Promise<NodeJS.ReadableStream | null>;
     uncompressedSize(entry: string): Promise<number | null>;
 }
 

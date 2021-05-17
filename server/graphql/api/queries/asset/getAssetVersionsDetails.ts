@@ -53,7 +53,6 @@ const getAssetVersionsDetails = gql`
                     idAssetVersion
                     systemCreated
                     name
-                    master
                     authoritative
                     creationMethod
                     modality

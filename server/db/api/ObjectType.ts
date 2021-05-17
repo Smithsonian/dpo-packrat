@@ -271,3 +271,22 @@ export enum eAuditType {
     eAuthLogin = 4,
     eSceneQCd = 5
 }
+
+export enum ePublishedState {
+    eNotPublished = 0,              // 'Not Published', default
+    eRestricted = 1,                // 'Restricted',
+    eViewOnly = 2,                  // 'View Only',
+    eViewDownloadRestriction = 3,   // 'View and Download with usage restrictions',
+    eViewDownloadCC0 = 4,           // 'View and Download CC0'
+}
+
+export function PublishedStateEnumToString(eState: ePublishedState): string {
+    switch (eState) {
+        case ePublishedState.eRestricted:               return 'Restricted';
+        case ePublishedState.eViewOnly:                 return 'View Only';
+        case ePublishedState.eViewDownloadRestriction:  return 'View and Download with usage restrictions';
+        case ePublishedState.eViewDownloadCC0:          return 'View and Download CC0';
+        default:
+        case ePublishedState.eNotPublished:             return 'Not Published';
+    }
+}

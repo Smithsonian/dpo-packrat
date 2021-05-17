@@ -264,10 +264,6 @@ function Model(props: ModelProps): React.ReactElement {
                                 <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
                             </FieldType>
 
-                            <FieldType required label='Master Model' direction='row' containerProps={rowFieldProps}>
-                                <Checkbox name='master' checked={model.master} color='primary' onChange={setCheckboxField} />
-                            </FieldType>
-
                             <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
                                 <Checkbox name='authoritative' checked={model.authoritative} color='primary' onChange={setCheckboxField} />
                             </FieldType>

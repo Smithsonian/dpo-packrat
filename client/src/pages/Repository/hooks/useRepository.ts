@@ -29,6 +29,8 @@ function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0):
                 modelFileType: filter.modelFileType,
                 dateCreatedFrom: filter.dateCreatedFrom,
                 dateCreatedTo: filter.dateCreatedTo,
+                rows: 300,
+                cursorMark: ''
             }
         }
     });
@@ -55,6 +57,8 @@ function getObjectChildren(idRoot: number, filter: RepositoryFilter): Promise<Ap
                 modelFileType: filter.modelFileType,
                 dateCreatedFrom: filter.dateCreatedFrom,
                 dateCreatedTo: filter.dateCreatedTo,
+                rows: 300,
+                cursorMark: ''
             }
         }
     });

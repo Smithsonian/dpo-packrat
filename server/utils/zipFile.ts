@@ -79,7 +79,8 @@ export class ZipFile implements IZip {
                         resolve({ success: true, error: '' });
                     else {
                         const error: string = `ZipFile.close ${err}`;
-                        LOG.error(error, LOG.LS.eSYS);
+                        if (this._logErrors)
+                            LOG.error(error, LOG.LS.eSYS);
                         resolve({ success: false, error });
                     }
                 });
@@ -91,7 +92,8 @@ export class ZipFile implements IZip {
     async getJustFiles(filter: string | null): Promise<string[]> { return zipFilterResults(this._files, filter); }
     async getJustDirectories(filter: string | null): Promise<string[]> { return zipFilterResults(this._dirs, filter); }
 
-    async streamContent(entry: string | null): Promise<NodeJS.ReadableStream | null> {
+    async streamContent(entry: string | null, doNotLogErrors?: boolean | undefined): Promise<NodeJS.ReadableStream | null> {
+        const logErrors = this._logErrors && (doNotLogErrors !== true);
         return new Promise<NodeJS.ReadableStream | null>((resolve) => {
             if (!this._zip)
                 resolve(null);
@@ -104,13 +106,15 @@ export class ZipFile implements IZip {
                             if (!error && stream)
                                 resolve(stream);
                             else {
-                                LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
+                                if (logErrors)
+                                    LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
                                 resolve(null);
                             }
                         });
                     }
                 } catch (error) /* istanbul ignore next */ {
-                    LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
+                    if (logErrors)
+                        LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
                     resolve(null);
                 }
             }

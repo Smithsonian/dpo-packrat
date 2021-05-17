@@ -60,20 +60,9 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     };
 }
 
-enum ePublishedState {
-    eNotPublished = 'Not Published',
-    eViewOnly = 'View Only',
-    eViewDownloadRestriction = 'View and Download with usage restrictions',
-    eViewDownloadCC0 = 'View and Download CC0'
-}
-
-// TODO: define system object version cache
-async function getPublishedState(idSystemObject: number): Promise<ePublishedState> {
-    const systemObjectVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
-
-    if (!systemObjectVersions || !systemObjectVersions?.length) return ePublishedState.eNotPublished;
-
-    return ePublishedState.eViewOnly;
+async function getPublishedState(idSystemObject: number): Promise<string> {
+    const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
+    return DBAPI.PublishedStateEnumToString(systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished);
 }
 
 async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {

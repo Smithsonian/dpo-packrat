@@ -21,6 +21,8 @@ input GetObjectChildrenInput {
     modelFileType: [Int!]!
     dateCreatedFrom: DateTime
     dateCreatedTo: DateTime
+    rows: Int!
+    cursorMark: String!
 }
 
 type NavigationResultEntry {
@@ -36,6 +38,7 @@ type GetObjectChildrenResult {
     error: String!
     entries: [NavigationResultEntry!]!
     metadataColumns: [Int!]!
+    cursorMark: String
 }
 
 type GetFilterViewDataResult {

@@ -21,6 +21,8 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         modelFileType,
         dateCreatedFrom,
         dateCreatedTo,
+        rows,
+        cursorMark
     } = args.input;
     const navigation: INavigation | null = await NavigationFactory.getInstance();
 
@@ -52,8 +54,8 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         modelFileType,
         dateCreatedFrom: H.Helpers.safeDate(dateCreatedFrom),   // convert ISO representation to Date
         dateCreatedTo: H.Helpers.safeDate(dateCreatedTo),       // convert ISO representation to Date
-        rows: 300,
-        cursorMark: ''
+        rows,
+        cursorMark
     };
 
     const result: NavigationResult = await navigation.getObjectChildren(filter);

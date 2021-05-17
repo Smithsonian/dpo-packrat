@@ -105,10 +105,11 @@ function configureLogger(logPath: string | null): void {
         ]
     });
 
-    /* istanbul ignore else */
-    if (process.env.NODE_ENV !== 'production') {
-        logger.add(new winston.transports.Console());
-    }
+    // For the time being, let's emit logs to the Console in production, for use in debugging
+    // /* istanbul ignore else */
+    // if (process.env.NODE_ENV !== 'production') {
+    logger.add(new winston.transports.Console());
+    // }
 
     try {
         /* istanbul ignore if */

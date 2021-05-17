@@ -238,7 +238,6 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             idModel: 0,
             Name,
             DateCreated: new Date(),
-            Master: false,
             Authoritative: false,
             idVCreationMethod: source?.idVCreationMethod ?? 0,
             idVModality: source?.idVModality ?? 0,

@@ -196,7 +196,6 @@ type IngestModel {
   idAssetVersion: Int!
   systemCreated: Boolean!
   name: String!
-  master: Boolean!
   authoritative: Boolean!
   creationMethod: Int!
   modality: Int!
@@ -502,7 +501,6 @@ input IngestModelInput {
   idAssetVersion: Int!
   systemCreated: Boolean!
   name: String!
-  master: Boolean!
   authoritative: Boolean!
   creationMethod: Int!
   modality: Int!
@@ -600,7 +598,6 @@ type Model {
   idModel: Int!
   Name: String!
   DateCreated: DateTime!
-  Master: Boolean!
   Authoritative: Boolean!
   idVCreationMethod: Int!
   idVModality: Int!
@@ -789,6 +786,8 @@ input GetObjectChildrenInput {
   modelFileType: [Int!]!
   dateCreatedFrom: DateTime
   dateCreatedTo: DateTime
+  rows: Int!
+  cursorMark: String!
 }
 
 type NavigationResultEntry {
@@ -804,6 +803,7 @@ type GetObjectChildrenResult {
   error: String!
   entries: [NavigationResultEntry!]!
   metadataColumns: [Int!]!
+  cursorMark: String
 }
 
 type GetFilterViewDataResult {
@@ -951,7 +951,6 @@ input CaptureDataDetailFieldsInput {
 
 input ModelDetailFieldsInput {
   Name: String
-  Master: Boolean
   Authoritative: Boolean
   CreationMethod: Int
   Modality: Int

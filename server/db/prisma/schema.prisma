@@ -119,20 +119,21 @@ model AssetGroup {
 }
 
 model AssetVersion {
-  idAssetVersion    Int           @id @default(autoincrement())
-  idAsset           Int
-  Version           Int
-  FileName          String        @mariasql.VarChar(512)
-  idUserCreator     Int
-  DateCreated       DateTime      @mariasql.DateTime(0)
-  StorageHash       String        @mariasql.VarChar(128)
-  StorageSize       BigInt        @default(0)
-  StorageKeyStaging String        @mariasql.VarChar(512)
-  Ingested          Boolean?
-  BulkIngest        Boolean
-  Asset             Asset         @relation(fields: [idAsset], references: [idAsset])
-  User              User          @relation(fields: [idUserCreator], references: [idUser])
-  SystemObject      SystemObject?
+  idAssetVersion                      Int                                   @id @default(autoincrement())
+  idAsset                             Int
+  Version                             Int
+  FileName                            String                                @mariasql.VarChar(512)
+  idUserCreator                       Int
+  DateCreated                         DateTime                              @mariasql.DateTime(0)
+  StorageHash                         String                                @mariasql.VarChar(128)
+  StorageSize                         BigInt                                @default(0)
+  StorageKeyStaging                   String                                @mariasql.VarChar(512)
+  Ingested                            Boolean?
+  BulkIngest                          Boolean
+  Asset                               Asset                                 @relation(fields: [idAsset], references: [idAsset])
+  User                                User                                  @relation(fields: [idUserCreator], references: [idUser])
+  SystemObject                        SystemObject?
+  SystemObjectVersionAssetVersionXref SystemObjectVersionAssetVersionXref[]
 
   @@index([Ingested, idUserCreator], name: "AssetVersion_Ingested_idUserCreator")
   @@index([StorageHash], name: "AssetVersion_StorageHash")
@@ -334,7 +335,7 @@ model Metadata {
   idMetadata        Int           @id @default(autoincrement())
   Name              String        @mariasql.VarChar(100)
   ValueShort        String?       @mariasql.VarChar(255)
-  ValueExtended     String?       @mariasql.Text
+  ValueExtended     String?       @mariasql.LongText
   idAssetValue      Int?
   idUser            Int?
   idVMetadataSource Int?
@@ -355,7 +356,6 @@ model Model {
   idModel                                        Int                     @id @default(autoincrement())
   Name                                           String                  @mariasql.VarChar(255)
   DateCreated                                    DateTime                @mariasql.DateTime(0)
-  Master                                         Boolean
   Authoritative                                  Boolean
   idVCreationMethod                              Int
   idVModality                                    Int
@@ -660,10 +660,11 @@ model SystemObject {
 }
 
 model SystemObjectVersion {
-  idSystemObjectVersion Int          @id @default(autoincrement())
-  idSystemObject        Int
-  PublishedState        Int
-  SystemObject          SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
+  idSystemObjectVersion               Int                                   @id @default(autoincrement())
+  idSystemObject                      Int
+  PublishedState                      Int
+  SystemObject                        SystemObject                          @relation(fields: [idSystemObject], references: [idSystemObject])
+  SystemObjectVersionAssetVersionXref SystemObjectVersionAssetVersionXref[]
 
   @@index([idSystemObject, idSystemObjectVersion], name: "ObjectVersion_idSystemObject_idObjectVersion")
 }
@@ -852,4 +853,15 @@ model Audit {
   @@index([DBObjectType, idDBObject, AuditDate], name: "Audit_idAsset_DBObjectType_idDBObject_AuditDate")
   @@index([idSystemObject, AuditDate], name: "Audit_idAsset_idSystemObject_AuditDate")
   @@index([idUser, AuditDate], name: "Audit_idAsset_idUser_AuditDate")
+}
+
+model SystemObjectVersionAssetVersionXref {
+  idSystemObjectVersionAssetVersionXref Int                 @id @default(autoincrement())
+  idSystemObjectVersion                 Int
+  idAssetVersion                        Int
+  AssetVersion                          AssetVersion        @relation(fields: [idAssetVersion], references: [idAssetVersion])
+  SystemObjectVersion                   SystemObjectVersion @relation(fields: [idSystemObjectVersion], references: [idSystemObjectVersion])
+
+  @@index([idAssetVersion], name: "fk_systemobjectversionassetversionxref_assetversion")
+  @@index([idSystemObjectVersion], name: "fk_systemobjectversionassetversionxref_systemobjectversion")
 }
