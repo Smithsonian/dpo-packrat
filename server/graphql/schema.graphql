@@ -31,6 +31,7 @@ type Query {
   getSubject(input: GetSubjectInput!): GetSubjectResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
   getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
+  getSystemObjectVersionFromSystemObject(input: GetSystemObjectVersionFromSystemObjectInput!): GetSystemObjectVersionFromSystemObjectResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput!): GetUnitsFromNameSearchResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
@@ -1278,6 +1279,14 @@ type GetProjectListResult {
 
 input GetProjectListInput {
   search: String!
+}
+
+type GetSystemObjectVersionFromSystemObjectResult {
+  systemObjectVersions: [SystemObjectVersion!]!
+}
+
+input GetSystemObjectVersionFromSystemObjectInput {
+  idSystemObject: Int!
 }
 
 type SystemObject {

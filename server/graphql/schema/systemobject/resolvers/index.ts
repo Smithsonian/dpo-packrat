@@ -13,6 +13,7 @@ import updateSourceObjects from './mutations/updateSourceObjects';
 import updateDerivedObjects from './mutations/updateDerivedObjects';
 import deleteObjectConnection from './mutations/deleteObjectConnection';
 import deleteIdentifier from './mutations/deleteIdentifier';
+import getSystemObjectVersionFromSystemObject from './queries/getSystemObjectVersionFromSystemObject';
 
 const resolvers = {
     Query: {
@@ -21,7 +22,8 @@ const resolvers = {
         getAssetDetailsForSystemObject,
         getVersionsForAsset,
         getDetailsTabDataForObject,
-        getProjectList
+        getProjectList,
+        getSystemObjectVersionFromSystemObject
     },
     Mutation: {
         updateObjectDetails,

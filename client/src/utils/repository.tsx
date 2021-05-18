@@ -122,20 +122,20 @@ export function generateRepositoryUrl(filter: RepositoryFilter): string {
         filterCopy = lodash.clone(filter);
         const dateCreatedFrom: Date | null = safeDate(filterCopy.dateCreatedFrom);
         delete filterCopy.dateCreatedFrom;
-        if (dateCreatedFrom)
-            filterCopy.dateCreatedFrom = dateCreatedFrom.toISOString().substring(0, 10);
+        if (dateCreatedFrom) filterCopy.dateCreatedFrom = dateCreatedFrom.toISOString().substring(0, 10);
 
         const dateCreatedTo: Date | null = safeDate(filterCopy.dateCreatedTo);
         delete filterCopy.dateCreatedTo;
-        if (dateCreatedTo)
-            filterCopy.dateCreatedTo = dateCreatedTo.toISOString().substring(0, 10);
+        if (dateCreatedTo) filterCopy.dateCreatedTo = dateCreatedTo.toISOString().substring(0, 10);
     }
 
-    const ret: string = '?' + qs.stringify(filterCopy, {
-        arrayFormat: 'comma',
-        skipEmptyString: true,
-        skipNull: true,
-    });
+    const ret: string =
+        '?' +
+        qs.stringify(filterCopy, {
+            arrayFormat: 'comma',
+            skipEmptyString: true,
+            skipNull: true
+        });
     return ret;
 }
 
@@ -256,6 +256,10 @@ export function getDownloadAllAssetsUrlForObject(serverEndPoint: string | undefi
 
 export function getDownloadAssetVersionUrlForObject(serverEndPoint: string | undefined, idAssetVersion: number): string {
     return `${serverEndPoint}/download?idAssetVersion=${idAssetVersion}`;
+}
+
+export function getDownloadObjectVersionForObject(serverEndPoint: string | undefined, idSystemObjectVersion): string {
+    return `${serverEndPoint}/download?idAssetVersion=${idSystemObjectVersion}`;
 }
 
 // prettier-ignore
