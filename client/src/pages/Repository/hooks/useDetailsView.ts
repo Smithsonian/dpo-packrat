@@ -8,6 +8,8 @@ import {
     GetSystemObjectDetailsDocument,
     GetSystemObjectDetailsQueryResult,
     GetVersionsForAssetDocument,
+    GetSystemObjectVersionFromSystemObjectQueryResult,
+    GetSystemObjectVersionFromSystemObjectDocument,
     GetVersionsForAssetQueryResult,
     GetDetailsTabDataForObjectDocument,
     GetDetailsTabDataForObjectQueryResult,
@@ -39,6 +41,17 @@ export function useObjectAssets(idSystemObject: number): GetAssetDetailsForSyste
             }
         }
     });
+}
+
+
+export function useSystemObjectVersionFromSystemObject(idSystemObject: number): GetSystemObjectVersionFromSystemObjectQueryResult {
+    return useQuery(GetSystemObjectVersionFromSystemObjectDocument, {
+        variables: {
+            input: {
+                idSystemObject
+            }
+        }
+    })
 }
 
 export function useObjectVersions(idSystemObject: number): GetVersionsForAssetQueryResult {

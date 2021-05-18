@@ -48,6 +48,7 @@ export type Query = {
   getSubject: GetSubjectResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
+  getSystemObjectVersionFromSystemObject: GetSystemObjectVersionFromSystemObjectResult;
   getUnit: GetUnitResult;
   getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
@@ -207,6 +208,11 @@ export type QueryGetSubjectsForUnitArgs = {
 
 export type QueryGetSystemObjectDetailsArgs = {
   input: GetSystemObjectDetailsInput;
+};
+
+
+export type QueryGetSystemObjectVersionFromSystemObjectArgs = {
+  input: GetSystemObjectVersionFromSystemObjectInput;
 };
 
 
@@ -1669,6 +1675,15 @@ export type GetProjectListResult = {
 
 export type GetProjectListInput = {
   search: Scalars['String'];
+};
+
+export type GetSystemObjectVersionFromSystemObjectResult = {
+  __typename?: 'GetSystemObjectVersionFromSystemObjectResult';
+  systemObjectVersions: Array<SystemObjectVersion>;
+};
+
+export type GetSystemObjectVersionFromSystemObjectInput = {
+  idSystemObject: Scalars['Int'];
 };
 
 export type SystemObject = {
