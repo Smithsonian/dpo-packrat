@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 export function toTitleCase(str: string): string {
     return str.replace(/\w\S*/g, txt => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -101,3 +102,18 @@ export function extractModelConstellation(data: any) {
 
     return { ingestionModel, modelObjects, assets };
 }
+
+
+export const updateSystemObjectUploadRedirect = (idAsset: number | undefined | null, idAssetVersion: number | undefined | null, ObjectType: number | undefined | null, uploadFileType: number | undefined | null = null) => {
+    if (!idAsset || !ObjectType) return '/';
+
+    let assetVersion = '';
+    let asset = '';
+    let fileType = '';
+
+    if (idAsset) asset = `idAsset=${idAsset}`;
+    if (idAssetVersion) assetVersion = `&idAssetVersion=${idAssetVersion}`;
+    if (uploadFileType) fileType = `&fileType=${uploadFileType}`;
+
+    return `/ingestion/uploads?${asset}${assetVersion}${fileType}&type=${ObjectType}&mode=1`;
+};

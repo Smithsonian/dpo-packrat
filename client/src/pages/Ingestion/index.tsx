@@ -11,7 +11,7 @@ import { Redirect, useRouteMatch } from 'react-router';
 import { Prompt } from 'react-router-dom';
 import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, INGESTION_PARAMS_TYPE, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
-import { useMetadataStore } from '../../store';
+import { useMetadataStore, useUploadStore } from '../../store';
 import { IngestionSidebarMenu, IngestionSidebarOption } from './components/IngestionSidebar';
 import Metadata from './components/Metadata';
 import SubjectItem from './components/SubjectItem';
@@ -21,7 +21,7 @@ import useIngest from './hooks/useIngest';
 const useStyles = makeStyles(() => ({
     container: {
         display: 'flex',
-        flex: 1,
+        flex: 1
     }
 }));
 
@@ -30,6 +30,7 @@ function Ingestion(): React.ReactElement {
     const { path } = useRouteMatch();
     const { metadatas } = useMetadataStore();
     const { ingestionReset } = useIngest();
+    const { updateMode } = useUploadStore();
 
     const [options, setOptions] = useState<IngestionSidebarOption[]>([]);
 
@@ -37,11 +38,13 @@ function Ingestion(): React.ReactElement {
         const updatedOptions: IngestionSidebarOption[] = [];
 
         if (metadatas.length) {
-            updatedOptions.push({
-                title: 'Subject & Item',
-                route: INGESTION_ROUTE.ROUTES.SUBJECT_ITEM,
-                enabled: false
-            });
+            if (!updateMode) {
+                updatedOptions.push({
+                    title: 'Subject & Item',
+                    route: INGESTION_ROUTE.ROUTES.SUBJECT_ITEM,
+                    enabled: false
+                });
+            }
 
             metadatas.forEach(({ file: { id, name, type } }) => {
                 const route = `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`;
@@ -55,7 +58,7 @@ function Ingestion(): React.ReactElement {
         }
 
         setOptions(updatedOptions);
-    }, [metadatas]);
+    }, [metadatas, updateMode]);
 
     const routeChangeCheck = ({ pathname }): boolean | string => {
         let allowChange: boolean = true;
@@ -89,29 +92,13 @@ function Ingestion(): React.ReactElement {
             </PrivateRoute>
 
             <PrivateRoute path={resolveRoute(INGESTION_ROUTE.TYPE)}>
-                <IngestionSidebarMenu
-                    title='INGESTION'
-                    paramIdentifier={INGESTION_PARAMS_TYPE.STEP}
-                    options={options}
-                />
+                <IngestionSidebarMenu title='INGESTION' paramIdentifier={INGESTION_PARAMS_TYPE.STEP} options={options} />
 
-                <PrivateRoute
-                    exact
-                    path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)}
-                    component={Uploads}
-                />
+                <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)} component={Uploads} />
 
-                <PrivateRoute
-                    exact
-                    path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_ITEM)}
-                    component={SubjectItem}
-                />
+                <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_ITEM)} component={SubjectItem} />
 
-                <PrivateRoute
-                    exact
-                    path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)}
-                    component={Metadata}
-                />
+                <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)} component={Metadata} />
             </PrivateRoute>
         </Box>
     );
