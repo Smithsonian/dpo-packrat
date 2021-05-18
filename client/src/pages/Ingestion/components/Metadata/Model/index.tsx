@@ -103,6 +103,7 @@ function Model(props: ModelProps): React.ReactElement {
         CountEmbeddedTextures: null,
         CountLinkedTextures: null,
         FileEncoding: '',
+        IsDracoCompressed: null,
         idVFileType: null
     });
     const [assetFiles, setAssetFiles] = useState([{ assetName: '', assetType: '' }]);
@@ -331,6 +332,7 @@ function Model(props: ModelProps): React.ReactElement {
                             <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} />
                             <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} />
                             <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} />
+                            <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} />
                         </Box>
                         {/* End of  model-level metrics form */}
                     </Box>

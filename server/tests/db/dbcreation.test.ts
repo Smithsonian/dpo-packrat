@@ -1021,7 +1021,7 @@ describe('DB Creation Test Suite', () => {
                 idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: assetThumbnail.idAsset,
                 CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
-                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY',
+                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false,
                 idModel: 0
             });
         expect(model).toBeTruthy();
@@ -1040,7 +1040,7 @@ describe('DB Creation Test Suite', () => {
                 idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: null,
                 CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
-                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY',
+                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false,
                 idModel: 0
             });
         expect(modelNulls).toBeTruthy();
