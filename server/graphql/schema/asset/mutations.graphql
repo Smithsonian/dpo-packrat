@@ -1,7 +1,7 @@
 scalar Upload
 
 type Mutation {
-    uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
+    uploadAsset(file: Upload!, type: Int!, idASset: Int): UploadAssetResult!
     discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
 }
 
