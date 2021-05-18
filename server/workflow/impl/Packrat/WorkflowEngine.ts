@@ -229,6 +229,27 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         workflow = await this.create(wfParams);
         if (!workflow)
             LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParams)}`, LOG.LS.eWF);
+
+        /*
+        // initiate WorkflowJob for cook si-generate-downloads
+        // const baseName: string = path.parse(assetVersionGeometry.FileName).name;
+        const parameters2: WFP.WorkflowJobParameters =
+            new WFP.WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
+                new COOK.JobCookSIVoyagerSceneParameters(idModel, assetVersionGeometry.FileName, units || '',
+                assetVersionDiffuse?.FileName, baseName + '.svx.json'));
+
+        const wfParams2: WF.WorkflowParameters = {
+            eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
+            idSystemObject,
+            idProject: null,    // TODO: populate with idProject
+            idUserInitiator: null,
+            parameters2,
+        };
+
+        workflow = await this.create(wfParams2);
+        if (!workflow)
+            LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-generate-downloads workflow: ${JSON.stringify(wfParams2)}`, LOG.LS.eWF);
+        */
         return workflow;
     }
 
