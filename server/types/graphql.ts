@@ -959,6 +959,7 @@ export type Model = {
   CountEmbeddedTextures?: Maybe<Scalars['Int']>;
   CountLinkedTextures?: Maybe<Scalars['Int']>;
   FileEncoding?: Maybe<Scalars['String']>;
+  IsDracoCompressed?: Maybe<Scalars['Boolean']>;
   ModelConstellation?: Maybe<ModelConstellation>;
   VCreationMethod?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;

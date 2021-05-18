@@ -69,6 +69,7 @@ const getDetailsTabDataForObject = gql`
                     CountEmbeddedTextures
                     CountLinkedTextures
                     FileEncoding
+                    IsDracoCompressed
                     Name
                     DateCreated
                     Authoritative

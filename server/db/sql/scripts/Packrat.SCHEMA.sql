@@ -289,6 +289,7 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `CountEmbeddedTextures` int (11) NULL,
   `CountLinkedTextures` int (11) NULL,
   `FileEncoding` varchar(40) NULL,
+  `IsDracoCompressed` boolean NULL,
   PRIMARY KEY (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

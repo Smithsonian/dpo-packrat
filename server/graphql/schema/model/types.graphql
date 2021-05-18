@@ -21,6 +21,7 @@ type Model {
     CountEmbeddedTextures: Int
     CountLinkedTextures: Int
     FileEncoding: String
+    IsDracoCompressed: Boolean
     ModelConstellation: ModelConstellation
     VCreationMethod: Vocabulary
     VModality: Vocabulary
