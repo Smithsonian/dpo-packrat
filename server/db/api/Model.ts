@@ -25,6 +25,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     CountEmbeddedTextures!: number | null;
     CountLinkedTextures!: number | null;
     FileEncoding!: string | null;
+    IsDracoCompressed!: boolean | null;
 
     constructor(input: ModelBase) {
         super(input);
@@ -37,14 +38,14 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         try {
             const { Name, DateCreated, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
                 idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
-                CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding } = this;
+                CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed } = this;
             ({ idModel: this.idModel, Name: this.Name, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
                 Authoritative: this.Authoritative, idVModality: this.idVModality, idVUnits: this.idVUnits,
                 idVPurpose: this.idVPurpose, idVFileType: this.idVFileType, idAssetThumbnail: this.idAssetThumbnail,
                 CountAnimations: this.CountAnimations, CountCameras: this.CountCameras, CountFaces: this.CountFaces,
                 CountLights: this.CountLights, CountMaterials: this.CountMaterials, CountMeshes: this.CountMeshes,
                 CountVertices: this.CountVertices, CountEmbeddedTextures: this.CountEmbeddedTextures, CountLinkedTextures: this.CountLinkedTextures,
-                FileEncoding: this.FileEncoding } =
+                FileEncoding: this.FileEncoding, IsDracoCompressed: this.IsDracoCompressed } =
                 await DBC.DBConnection.prisma.model.create({
                     data: {
                         Name,
@@ -56,7 +57,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                         Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
                         Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
                         Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                        CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding,
+                        CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
@@ -71,7 +72,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         try {
             const { idModel, Name, DateCreated, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
                 idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes,
-                CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding } = this;
+                CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
                 where: { idModel, },
                 data: {
@@ -83,7 +84,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                     Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
                     Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
                     Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
-                    CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding,
+                    CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
                     Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;

@@ -500,6 +500,7 @@ export class IndexSolr {
         doc.ModelCountEmbeddedTextures = model.CountEmbeddedTextures;
         doc.ModelCountLinkedTextures = model.CountLinkedTextures;
         doc.ModelFileEncoding = model.FileEncoding;
+        doc.ModelIsDracoCompressed = model.IsDracoCompressed;
 
         const modelMaterialNameMap: Map<string, boolean> = new Map<string, boolean>();
         const modelMaterialChannelTypeMap: Map<string, boolean> = new Map<string, boolean>();

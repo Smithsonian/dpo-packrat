@@ -17,6 +17,7 @@ const getModelConstellationForAssetVersion = gql`
                     CountEmbeddedTextures
                     CountLinkedTextures
                     FileEncoding
+                    IsDracoCompressed
                     Name
                     idVFileType
                 }
