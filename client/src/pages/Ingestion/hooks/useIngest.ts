@@ -211,7 +211,6 @@ function useIngest(): UseIngest {
                     model: ingestModel,
                     scene: ingestScene,
                     other: ingestOther,
-                    update: true
                 };
                 const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
                     mutation: IngestDataDocument,
