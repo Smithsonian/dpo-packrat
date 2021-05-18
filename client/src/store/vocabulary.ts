@@ -76,7 +76,6 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
         });
 
         set({ vocabularies, vocabularyMap });
-
         return vocabularies;
     },
     getEntries: (eVocabularySetID: eVocabularySetID): VocabularyOption[] => {
