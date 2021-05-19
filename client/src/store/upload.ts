@@ -189,6 +189,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     startUploadTransfer: async (ingestionFile: IngestionFile) => {
         const { pending } = get();
         const { id, file, type } = ingestionFile;
+        const urlParams = new URLSearchParams(window.location.search);
 
         try {
             const onProgress = (event: ProgressEvent) => {
@@ -213,9 +214,11 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 UploadEvents.dispatch(UploadEventType.SET_CANCELLED, setCancelEvent);
             };
 
+            const uploadAssetInputs = urlParams.has('idAsset') ? { file, type, idAsset: Number(urlParams.get('idAsset')) } : { file, type };
+
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
-                variables: { file, type },
+                variables: uploadAssetInputs,
                 refetchQueries: ['getUploadedAssetVersion'],
                 useUpload: true,
                 onProgress,
@@ -367,3 +370,4 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 }));
 
 const getFile = (id: FileId, files: IngestionFile[]) => lodash.find(files, { id });
+
