@@ -83,6 +83,7 @@ export type PhotogrammetryFields = {
     clusterGeometryFieldId: number | null;
     cameraSettingUniform: boolean;
     directory: string;
+    idAsset?: number;
 };
 
 export type ModelFields = {
@@ -98,6 +99,7 @@ export type ModelFields = {
     purpose: number | null;
     modelFileType: number | null;
     directory: string;
+    idAsset?: number;
 };
 
 export type SceneFields = {
@@ -107,11 +109,13 @@ export type SceneFields = {
     hasBeenQCd: boolean;
     isOriented: boolean;
     name: string;
+    idAsset?: number;
 };
 
 export type OtherFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    idAsset?: number;
 };
 
 export type StateRelatedObject = RelatedObject;
