@@ -259,7 +259,7 @@ export function getDownloadAssetVersionUrlForObject(serverEndPoint: string | und
 }
 
 export function getDownloadObjectVersionForObject(serverEndPoint: string | undefined, idSystemObjectVersion): string {
-    return `${serverEndPoint}/download?idAssetVersion=${idSystemObjectVersion}`;
+    return `${serverEndPoint}/download?idSystemObjectVersion=${idSystemObjectVersion}`;
 }
 
 // prettier-ignore
