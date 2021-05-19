@@ -214,7 +214,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 UploadEvents.dispatch(UploadEventType.SET_CANCELLED, setCancelEvent);
             };
 
-            const uploadAssetInputs = urlParams.has('idAsset') ? { file, type, idAsset: Number(urlParams.get('idAsset')) } : { file, type }
+            const uploadAssetInputs = urlParams.has('idAsset') ? { file, type, idAsset: Number(urlParams.get('idAsset')) } : { file, type };
 
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
