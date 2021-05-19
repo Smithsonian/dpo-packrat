@@ -26,3 +26,4 @@ ADD CONSTRAINT `fk_systemobjectversionassetversionxref_assetversion`
 
 -- 2021-05-18 Jon
 ALTER TABLE Model ADD COLUMN `IsDracoCompressed` boolean NULL;
+ALTER TABLE SystemObjectVersion ADD COLUMN `DateCreated` datetime NOT NULL;
