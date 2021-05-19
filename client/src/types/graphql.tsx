@@ -428,12 +428,14 @@ export type MutationUpdateUserArgs = {
 export type MutationUploadAssetArgs = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export type UploadAssetInput = {
   __typename?: 'UploadAssetInput';
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
