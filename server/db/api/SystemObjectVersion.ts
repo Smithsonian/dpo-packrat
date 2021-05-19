@@ -8,6 +8,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
     idSystemObjectVersion!: number;
     idSystemObject!: number;
     PublishedState!: number;
+    DateCreated!: Date;
 
     constructor(input: SystemObjectVersionBase) {
         super(input);
@@ -34,19 +35,21 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
         return new SystemObjectVersion({
             idSystemObjectVersion: systemObjectVersion.idSystemObjectVersion,
             idSystemObject: systemObjectVersion.idSystemObject,
-            PublishedState: systemObjectVersion.PublishedState
+            PublishedState: systemObjectVersion.PublishedState,
+            DateCreated: systemObjectVersion.DateCreated
         });
     }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idSystemObject, PublishedState } = this;
+            const { idSystemObject, PublishedState, DateCreated } = this;
             ({ idSystemObjectVersion: this.idSystemObjectVersion, idSystemObject: this.idSystemObject,
-                PublishedState: this.PublishedState } =
+                PublishedState: this.PublishedState, DateCreated: this.DateCreated } =
                 await DBC.DBConnection.prisma.systemObjectVersion.create({
                     data: {
                         SystemObject: { connect: { idSystemObject }, },
                         PublishedState,
+                        DateCreated,
                     },
                 }));
             return true;
@@ -58,12 +61,13 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idSystemObjectVersion, idSystemObject, PublishedState } = this;
+            const { idSystemObjectVersion, idSystemObject, PublishedState, DateCreated } = this;
             return await DBC.DBConnection.prisma.systemObjectVersion.update({
                 where: { idSystemObjectVersion, },
                 data: {
                     SystemObject: { connect: { idSystemObject }, },
                     PublishedState,
+                    DateCreated,
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
@@ -89,7 +93,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return null;
         try {
             return DBC.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
-                await DBC.DBConnection.prisma.systemObjectVersion.findMany({ where: { idSystemObject }, orderBy: { idSystemObjectVersion: 'desc' } }), SystemObjectVersion);
+                await DBC.DBConnection.prisma.systemObjectVersion.findMany({ where: { idSystemObject }, orderBy: { idSystemObjectVersion: 'asc' } }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SystemObjectVersion.fetchFromSystemObject', LOG.LS.eDB, error);
             return null;
@@ -143,7 +147,8 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             const SOV: SystemObjectVersion = new SystemObjectVersion({
                 idSystemObjectVersion: 0,
                 idSystemObject,
-                PublishedState: ePublishedState.eNotPublished
+                PublishedState: ePublishedState.eNotPublished,
+                DateCreated: new Date()
             }); /* istanbul ignore next */
 
             if (!await SOV.create()) {

@@ -664,6 +664,7 @@ model SystemObjectVersion {
   idSystemObjectVersion               Int                                   @id @default(autoincrement())
   idSystemObject                      Int
   PublishedState                      Int
+  DateCreated                         DateTime                              @mariasql.DateTime(0)
   SystemObject                        SystemObject                          @relation(fields: [idSystemObject], references: [idSystemObject])
   SystemObjectVersionAssetVersionXref SystemObjectVersionAssetVersionXref[]
 
