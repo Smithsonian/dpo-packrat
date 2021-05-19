@@ -54,6 +54,7 @@ const getSystemObjectDetails = gql`
             }
             objectVersions {
                 idSystemObjectVersion
+                idSystemObject
                 PublishedState
                 DateCreated
             }
