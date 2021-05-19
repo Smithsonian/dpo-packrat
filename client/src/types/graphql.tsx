@@ -3101,7 +3101,7 @@ export type GetSystemObjectDetailsQuery = (
       & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
     )>, objectVersions: Array<(
       { __typename?: 'SystemObjectVersion' }
-      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'PublishedState' | 'DateCreated'>
+      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated'>
     )> }
   ) }
 );
@@ -5431,6 +5431,7 @@ export const GetSystemObjectDetailsDocument = gql`
     }
     objectVersions {
       idSystemObjectVersion
+      idSystemObject
       PublishedState
       DateCreated
     }
