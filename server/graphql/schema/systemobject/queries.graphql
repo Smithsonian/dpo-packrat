@@ -163,6 +163,7 @@ type GetSystemObjectDetailsResult {
     objectAncestors: [[RepositoryPath!]!]!
     sourceObjects: [RelatedObject!]!
     derivedObjects: [RelatedObject!]!
+    objectVersions: [SystemObjectVersion!]!
     unit: RepositoryPath
     project: RepositoryPath
     subject: RepositoryPath

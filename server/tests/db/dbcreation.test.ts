@@ -1289,6 +1289,7 @@ describe('DB Creation Test Suite', () => {
             systemObjectVersion = new DBAPI.SystemObjectVersion({
                 idSystemObject: systemObjectScene.idSystemObject,
                 PublishedState: 0,
+                DateCreated: UTIL.nowCleansed(),
                 idSystemObjectVersion: 0
             });
         }
@@ -2695,8 +2696,11 @@ describe('DB Fetch By ID Test Suite', () => {
         let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
         if (systemObjectScene) {
             systemObjectVersionFetch = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(systemObjectScene.idSystemObject);
-            if (systemObjectVersionFetch) {
-                expect(systemObjectVersionFetch).toEqual(systemObjectVersion);
+            expect(systemObjectVersion).toBeTruthy();
+            if (systemObjectVersionFetch && systemObjectVersion) {
+                expect(systemObjectVersionFetch.idSystemObjectVersion).toEqual(systemObjectVersion.idSystemObjectVersion);
+                expect(systemObjectVersionFetch.idSystemObject).toEqual(systemObjectVersion.idSystemObject);
+                expect(systemObjectVersionFetch.PublishedState).toEqual(systemObjectVersion.PublishedState);
             }
         }
         expect(systemObjectVersionFetch).toBeTruthy();

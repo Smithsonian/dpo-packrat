@@ -499,6 +499,7 @@ CREATE TABLE IF NOT EXISTS `SystemObjectVersion` (
   `idSystemObjectVersion` int(11) NOT NULL AUTO_INCREMENT,
   `idSystemObject` int(11) NOT NULL,
   `PublishedState` int(11) NOT NULL,
+  `DateCreated` datetime NOT NULL,
   PRIMARY KEY (`idSystemObjectVersion`),
   KEY `ObjectVersion_idSystemObject_idObjectVersion` (`idSystemObject`,`idSystemObjectVersion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
