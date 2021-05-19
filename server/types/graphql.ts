@@ -1607,6 +1607,7 @@ export type GetSystemObjectDetailsResult = {
   objectAncestors: Array<Array<RepositoryPath>>;
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
+  objectVersions: Array<SystemObjectVersion>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
@@ -1728,6 +1729,7 @@ export type SystemObjectVersion = {
   idSystemObjectVersion: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   PublishedState: Scalars['Int'];
+  DateCreated: Scalars['DateTime'];
   SystemObject?: Maybe<SystemObject>;
 };
 

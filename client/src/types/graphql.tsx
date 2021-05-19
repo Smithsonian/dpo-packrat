@@ -1610,6 +1610,7 @@ export type GetSystemObjectDetailsResult = {
   objectAncestors: Array<Array<RepositoryPath>>;
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
+  objectVersions: Array<SystemObjectVersion>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
@@ -1731,6 +1732,7 @@ export type SystemObjectVersion = {
   idSystemObjectVersion: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   PublishedState: Scalars['Int'];
+  DateCreated: Scalars['DateTime'];
   SystemObject?: Maybe<SystemObject>;
 };
 
@@ -3097,6 +3099,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, derivedObjects: Array<(
       { __typename?: 'RelatedObject' }
       & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
+    )>, objectVersions: Array<(
+      { __typename?: 'SystemObjectVersion' }
+      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated'>
     )> }
   ) }
 );
@@ -5423,6 +5428,12 @@ export const GetSystemObjectDetailsDocument = gql`
       name
       identifier
       objectType
+    }
+    objectVersions {
+      idSystemObjectVersion
+      idSystemObject
+      PublishedState
+      DateCreated
     }
   }
 }
