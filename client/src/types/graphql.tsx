@@ -434,12 +434,14 @@ export type MutationUpdateUserArgs = {
 export type MutationUploadAssetArgs = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export type UploadAssetInput = {
   __typename?: 'UploadAssetInput';
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -809,6 +811,7 @@ export type IngestFolderInput = {
 
 export type IngestPhotogrammetryInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   name: Scalars['String'];
   dateCaptured: Scalars['String'];
   datasetType: Scalars['Int'];
@@ -844,6 +847,7 @@ export type RelatedObjectInput = {
 
 export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
   authoritative: Scalars['Boolean'];
@@ -860,6 +864,7 @@ export type IngestModelInput = {
 
 export type IngestSceneInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
   hasBeenQCd: Scalars['Boolean'];
@@ -869,6 +874,7 @@ export type IngestSceneInput = {
 
 export type IngestOtherInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
 };
@@ -967,6 +973,7 @@ export type Model = {
   CountEmbeddedTextures?: Maybe<Scalars['Int']>;
   CountLinkedTextures?: Maybe<Scalars['Int']>;
   FileEncoding?: Maybe<Scalars['String']>;
+  IsDracoCompressed?: Maybe<Scalars['Boolean']>;
   ModelConstellation?: Maybe<ModelConstellation>;
   VCreationMethod?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
@@ -1543,6 +1550,8 @@ export type AssetDetailFields = {
   __typename?: 'AssetDetailFields';
   FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
+  Asset?: Maybe<Asset>;
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export type AssetVersionDetailFields = {
@@ -1552,6 +1561,9 @@ export type AssetVersionDetailFields = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
   StorageSize?: Maybe<Scalars['BigInt']>;
+  AssetVersion?: Maybe<AssetVersion>;
+  idAsset?: Maybe<Scalars['Int']>;
+  idAssetVersion?: Maybe<Scalars['Int']>;
 };
 
 export type ActorDetailFields = {
@@ -1609,6 +1621,7 @@ export type GetSystemObjectDetailsResult = {
   objectAncestors: Array<Array<RepositoryPath>>;
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
+  objectVersions: Array<SystemObjectVersion>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
@@ -1739,6 +1752,7 @@ export type SystemObjectVersion = {
   idSystemObjectVersion: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   PublishedState: Scalars['Int'];
+  DateCreated: Scalars['DateTime'];
   SystemObject?: Maybe<SystemObject>;
 };
 
@@ -2570,7 +2584,7 @@ export type GetAssetQuery = (
     { __typename?: 'GetAssetResult' }
     & { Asset?: Maybe<(
       { __typename?: 'Asset' }
-      & Pick<Asset, 'idAsset'>
+      & Pick<Asset, 'idAsset' | 'idVAssetType'>
     )> }
   ) }
 );
@@ -2656,7 +2670,7 @@ export type GetModelConstellationForAssetVersionQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name' | 'idVFileType'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
         & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
@@ -2789,7 +2803,7 @@ export type GetModelConstellationQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'Authoritative' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding'>
+        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'Authoritative' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed'>
         & { VCreationMethod?: Maybe<(
           { __typename?: 'Vocabulary' }
           & Pick<Vocabulary, 'Term'>
@@ -2993,7 +3007,7 @@ export type GetDetailsTabDataForObjectQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name' | 'DateCreated' | 'Authoritative' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'DateCreated' | 'Authoritative' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
         & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
@@ -3021,10 +3035,10 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<ProjectDocumentationDetailFields, 'Description'>
     )>, Asset?: Maybe<(
       { __typename?: 'AssetDetailFields' }
-      & Pick<AssetDetailFields, 'FilePath' | 'AssetType'>
+      & Pick<AssetDetailFields, 'FilePath' | 'AssetType' | 'idAsset'>
     )>, AssetVersion?: Maybe<(
       { __typename?: 'AssetVersionDetailFields' }
-      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version'>
+      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion'>
     )>, Actor?: Maybe<(
       { __typename?: 'ActorDetailFields' }
       & Pick<ActorDetailFields, 'OrganizationName'>
@@ -3105,6 +3119,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, derivedObjects: Array<(
       { __typename?: 'RelatedObject' }
       & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
+    )>, objectVersions: Array<(
+      { __typename?: 'SystemObjectVersion' }
+      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated'>
     )> }
   ) }
 );
@@ -4170,6 +4187,7 @@ export const GetAssetDocument = gql`
   getAsset(input: $input) {
     Asset {
       idAsset
+      idVAssetType
     }
   }
 }
@@ -4365,6 +4383,7 @@ export const GetModelConstellationForAssetVersionDocument = gql`
         CountEmbeddedTextures
         CountLinkedTextures
         FileEncoding
+        IsDracoCompressed
         Name
         idVFileType
       }
@@ -4709,6 +4728,7 @@ export const GetModelConstellationDocument = gql`
         CountEmbeddedTextures
         CountLinkedTextures
         FileEncoding
+        IsDracoCompressed
       }
       ModelObjects {
         idModelObject
@@ -5188,6 +5208,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
         CountEmbeddedTextures
         CountLinkedTextures
         FileEncoding
+        IsDracoCompressed
         Name
         DateCreated
         Authoritative
@@ -5261,6 +5282,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
     Asset {
       FilePath
       AssetType
+      idAsset
     }
     AssetVersion {
       Creator
@@ -5268,6 +5290,8 @@ export const GetDetailsTabDataForObjectDocument = gql`
       StorageSize
       Ingested
       Version
+      idAsset
+      idAssetVersion
     }
     Actor {
       OrganizationName
@@ -5440,6 +5464,12 @@ export const GetSystemObjectDetailsDocument = gql`
       name
       identifier
       objectType
+    }
+    objectVersions {
+      idSystemObjectVersion
+      idSystemObject
+      PublishedState
+      DateCreated
     }
   }
 }

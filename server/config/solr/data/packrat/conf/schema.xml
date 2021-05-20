@@ -65,6 +65,7 @@
     <field name="ModelCountEmbeddedTextures" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="ModelCountLinkedTextures" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="ModelFileEncoding" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelIsDracoCompressed" type="boolean" indexed="true" stored="true" multiValued="false" />
 
     <field name="ModelMaterialName" type="strings" indexed="true" stored="true" />
     <field name="ModelMaterialChannelType" type="strings" indexed="true" stored="true" />

@@ -23,3 +23,7 @@ ADD CONSTRAINT `fk_systemobjectversionassetversionxref_assetversion`
   REFERENCES `AssetVersion` (`idAssetVersion`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
+
+-- 2021-05-18 Jon
+ALTER TABLE Model ADD COLUMN `IsDracoCompressed` boolean NULL;
+ALTER TABLE SystemObjectVersion ADD COLUMN `DateCreated` datetime NOT NULL;

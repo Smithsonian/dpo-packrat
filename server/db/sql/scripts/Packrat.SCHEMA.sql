@@ -289,6 +289,7 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `CountEmbeddedTextures` int (11) NULL,
   `CountLinkedTextures` int (11) NULL,
   `FileEncoding` varchar(40) NULL,
+  `IsDracoCompressed` boolean NULL,
   PRIMARY KEY (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -498,6 +499,7 @@ CREATE TABLE IF NOT EXISTS `SystemObjectVersion` (
   `idSystemObjectVersion` int(11) NOT NULL AUTO_INCREMENT,
   `idSystemObject` int(11) NOT NULL,
   `PublishedState` int(11) NOT NULL,
+  `DateCreated` datetime NOT NULL,
   PRIMARY KEY (`idSystemObjectVersion`),
   KEY `ObjectVersion_idSystemObject_idObjectVersion` (`idSystemObject`,`idSystemObjectVersion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;

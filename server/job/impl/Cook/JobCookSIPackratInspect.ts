@@ -152,6 +152,8 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 model.CountLinkedTextures = modelSource.CountLinkedTextures;
             if (modelSource.FileEncoding)
                 model.FileEncoding = modelSource.FileEncoding;
+            if (modelSource.IsDracoCompressed != null)
+                model.IsDracoCompressed = modelSource.IsDracoCompressed;
 
             if (!await model.update())
                 return { success: false, error: 'Model.update() failed' };
@@ -267,6 +269,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
     }
 
     static async extract(output: any, fileName: string | null, dateCreated: Date | null): Promise<JobCookSIPackratInspectOutput> {
+        // LOG.info(`JobCookSIPackratInspectOutput.extract: ${JSON.stringify(output, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
         const JCOutput: JobCookSIPackratInspectOutput = new JobCookSIPackratInspectOutput();
 
         const modelObjects: DBAPI.ModelObject[] = [];
@@ -304,6 +307,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let idAssetVersion: number = 0;
 
         const model: DBAPI.Model = await JobCookSIPackratInspectOutput.createModel(++idModel, modelStats, sourceMeshFile ? sourceMeshFile : fileName, dateCreated);
+        // LOG.info(`JobCookSIPackratInspectOutput.extract model: ${JSON.stringify(model, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
         if (sourceMeshFile) {
             if (!modelAssets)
@@ -557,6 +561,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             CountEmbeddedTextures: modelStats ? maybe<number>(modelStats?.numEmbeddedTextures) : null,
             CountLinkedTextures: modelStats ? maybe<number>(modelStats?.numLinkedTextures) : null,
             FileEncoding: modelStats ? maybe<string>(modelStats?.fileEncoding) : null,
+            IsDracoCompressed: modelStats ? maybe<boolean>(modelStats?.isDracoCompressed) : null,
             idModel
         });
     }

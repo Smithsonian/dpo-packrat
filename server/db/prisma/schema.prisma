@@ -373,6 +373,7 @@ model Model {
   CountEmbeddedTextures                          Int?
   CountLinkedTextures                            Int?
   FileEncoding                                   String?                 @mariasql.VarChar(40)
+  IsDracoCompressed                              Boolean?
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset])
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary              @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary])
   Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary              @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary])
@@ -663,6 +664,7 @@ model SystemObjectVersion {
   idSystemObjectVersion               Int                                   @id @default(autoincrement())
   idSystemObject                      Int
   PublishedState                      Int
+  DateCreated                         DateTime                              @mariasql.DateTime(0)
   SystemObject                        SystemObject                          @relation(fields: [idSystemObject], references: [idSystemObject])
   SystemObjectVersionAssetVersionXref SystemObjectVersionAssetVersionXref[]
 

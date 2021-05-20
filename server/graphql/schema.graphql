@@ -117,12 +117,13 @@ type Mutation {
   updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
   updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
   updateUser(input: UpdateUserInput!): CreateUserResult!
-  uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
+  uploadAsset(file: Upload!, type: Int!, idAsset: Int): UploadAssetResult!
 }
 
 type UploadAssetInput {
   file: Upload!
   type: Int!
+  idAsset: Int
 }
 
 enum UploadStatus {
@@ -465,6 +466,7 @@ input IngestFolderInput {
 
 input IngestPhotogrammetryInput {
   idAssetVersion: Int!
+  idAsset: Int
   name: String!
   dateCaptured: String!
   datasetType: Int!
@@ -500,6 +502,7 @@ input RelatedObjectInput {
 
 input IngestModelInput {
   idAssetVersion: Int!
+  idAsset: Int
   systemCreated: Boolean!
   name: String!
   authoritative: Boolean!
@@ -516,6 +519,7 @@ input IngestModelInput {
 
 input IngestSceneInput {
   idAssetVersion: Int!
+  idAsset: Int
   systemCreated: Boolean!
   name: String!
   hasBeenQCd: Boolean!
@@ -525,6 +529,7 @@ input IngestSceneInput {
 
 input IngestOtherInput {
   idAssetVersion: Int!
+  idAsset: Int
   systemCreated: Boolean!
   identifiers: [IngestIdentifierInput!]!
 }
@@ -615,6 +620,7 @@ type Model {
   CountEmbeddedTextures: Int
   CountLinkedTextures: Int
   FileEncoding: String
+  IsDracoCompressed: Boolean
   ModelConstellation: ModelConstellation
   VCreationMethod: Vocabulary
   VModality: Vocabulary
@@ -1157,6 +1163,8 @@ type ProjectDocumentationDetailFields {
 type AssetDetailFields {
   FilePath: String
   AssetType: Int
+  Asset: Asset
+  idAsset: Int
 }
 
 type AssetVersionDetailFields {
@@ -1165,6 +1173,9 @@ type AssetVersionDetailFields {
   Ingested: Boolean
   Version: Int
   StorageSize: BigInt
+  AssetVersion: AssetVersion
+  idAsset: Int
+  idAssetVersion: Int
 }
 
 type ActorDetailFields {
@@ -1217,6 +1228,7 @@ type GetSystemObjectDetailsResult {
   objectAncestors: [[RepositoryPath!]!]!
   sourceObjects: [RelatedObject!]!
   derivedObjects: [RelatedObject!]!
+  objectVersions: [SystemObjectVersion!]!
   unit: RepositoryPath
   project: RepositoryPath
   subject: RepositoryPath
@@ -1337,6 +1349,7 @@ type SystemObjectVersion {
   idSystemObjectVersion: Int!
   idSystemObject: Int!
   PublishedState: Int!
+  DateCreated: DateTime!
   SystemObject: SystemObject
 }
 

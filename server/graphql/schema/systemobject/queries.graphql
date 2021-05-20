@@ -99,6 +99,8 @@ type ProjectDocumentationDetailFields {
 type AssetDetailFields {
     FilePath: String
     AssetType: Int
+    Asset: Asset
+    idAsset: Int
 }
 
 type AssetVersionDetailFields {
@@ -107,6 +109,9 @@ type AssetVersionDetailFields {
     Ingested: Boolean
     Version: Int
     StorageSize: BigInt
+    AssetVersion: AssetVersion
+    idAsset: Int
+    idAssetVersion: Int
 }
 
 type ActorDetailFields {
@@ -159,6 +164,7 @@ type GetSystemObjectDetailsResult {
     objectAncestors: [[RepositoryPath!]!]!
     sourceObjects: [RelatedObject!]!
     derivedObjects: [RelatedObject!]!
+    objectVersions: [SystemObjectVersion!]!
     unit: RepositoryPath
     project: RepositoryPath
     subject: RepositoryPath
