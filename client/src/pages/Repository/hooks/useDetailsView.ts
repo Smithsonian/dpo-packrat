@@ -8,8 +8,6 @@ import {
     GetSystemObjectDetailsDocument,
     GetSystemObjectDetailsQueryResult,
     GetVersionsForAssetDocument,
-    GetSystemObjectVersionFromSystemObjectQueryResult,
-    GetSystemObjectVersionFromSystemObjectDocument,
     GetVersionsForAssetQueryResult,
     GetDetailsTabDataForObjectDocument,
     GetDetailsTabDataForObjectQueryResult,
@@ -36,17 +34,6 @@ export function useObjectDetails(idSystemObject: number): GetSystemObjectDetails
 
 export function useObjectAssets(idSystemObject: number): GetAssetDetailsForSystemObjectQueryResult {
     return useQuery(GetAssetDetailsForSystemObjectDocument, {
-        variables: {
-            input: {
-                idSystemObject
-            }
-        }
-    });
-}
-
-
-export function useSystemObjectVersionFromSystemObject(idSystemObject: number): GetSystemObjectVersionFromSystemObjectQueryResult {
-    return useQuery(GetSystemObjectVersionFromSystemObjectDocument, {
         variables: {
             input: {
                 idSystemObject

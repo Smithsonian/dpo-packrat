@@ -51,7 +51,6 @@ export type Query = {
   getSubject: GetSubjectResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
-  getSystemObjectVersionFromSystemObject: GetSystemObjectVersionFromSystemObjectResult;
   getUnit: GetUnitResult;
   getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
@@ -211,11 +210,6 @@ export type QueryGetSubjectsForUnitArgs = {
 
 export type QueryGetSystemObjectDetailsArgs = {
   input: GetSystemObjectDetailsInput;
-};
-
-
-export type QueryGetSystemObjectVersionFromSystemObjectArgs = {
-  input: GetSystemObjectVersionFromSystemObjectInput;
 };
 
 
@@ -1709,15 +1703,6 @@ export type GetProjectListInput = {
   search: Scalars['String'];
 };
 
-export type GetSystemObjectVersionFromSystemObjectResult = {
-  __typename?: 'GetSystemObjectVersionFromSystemObjectResult';
-  systemObjectVersions: Array<SystemObjectVersion>;
-};
-
-export type GetSystemObjectVersionFromSystemObjectInput = {
-  idSystemObject: Scalars['Int'];
-};
-
 export type SystemObject = {
   __typename?: 'SystemObject';
   idSystemObject: Scalars['Int'];
@@ -3151,22 +3136,6 @@ export type GetSystemObjectDetailsQuery = (
     )>, objectVersions: Array<(
       { __typename?: 'SystemObjectVersion' }
       & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated'>
-    )> }
-  ) }
-);
-
-export type GetSystemObjectVersionFromSystemObjectQueryVariables = Exact<{
-  input: GetSystemObjectVersionFromSystemObjectInput;
-}>;
-
-
-export type GetSystemObjectVersionFromSystemObjectQuery = (
-  { __typename?: 'Query' }
-  & { getSystemObjectVersionFromSystemObject: (
-    { __typename?: 'GetSystemObjectVersionFromSystemObjectResult' }
-    & { systemObjectVersions: Array<(
-      { __typename?: 'SystemObjectVersion' }
-      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState'>
     )> }
   ) }
 );
@@ -5565,45 +5534,6 @@ export function useGetSystemObjectDetailsLazyQuery(baseOptions?: Apollo.LazyQuer
 export type GetSystemObjectDetailsQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsQuery>;
 export type GetSystemObjectDetailsLazyQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsLazyQuery>;
 export type GetSystemObjectDetailsQueryResult = Apollo.QueryResult<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>;
-export const GetSystemObjectVersionFromSystemObjectDocument = gql`
-    query getSystemObjectVersionFromSystemObject($input: GetSystemObjectVersionFromSystemObjectInput!) {
-  getSystemObjectVersionFromSystemObject(input: $input) {
-    systemObjectVersions {
-      idSystemObjectVersion
-      idSystemObject
-      PublishedState
-    }
-  }
-}
-    `;
-
-/**
- * __useGetSystemObjectVersionFromSystemObjectQuery__
- *
- * To run a query within a React component, call `useGetSystemObjectVersionFromSystemObjectQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetSystemObjectVersionFromSystemObjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetSystemObjectVersionFromSystemObjectQuery({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useGetSystemObjectVersionFromSystemObjectQuery(baseOptions: Apollo.QueryHookOptions<GetSystemObjectVersionFromSystemObjectQuery, GetSystemObjectVersionFromSystemObjectQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetSystemObjectVersionFromSystemObjectQuery, GetSystemObjectVersionFromSystemObjectQueryVariables>(GetSystemObjectVersionFromSystemObjectDocument, options);
-      }
-export function useGetSystemObjectVersionFromSystemObjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSystemObjectVersionFromSystemObjectQuery, GetSystemObjectVersionFromSystemObjectQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetSystemObjectVersionFromSystemObjectQuery, GetSystemObjectVersionFromSystemObjectQueryVariables>(GetSystemObjectVersionFromSystemObjectDocument, options);
-        }
-export type GetSystemObjectVersionFromSystemObjectQueryHookResult = ReturnType<typeof useGetSystemObjectVersionFromSystemObjectQuery>;
-export type GetSystemObjectVersionFromSystemObjectLazyQueryHookResult = ReturnType<typeof useGetSystemObjectVersionFromSystemObjectLazyQuery>;
-export type GetSystemObjectVersionFromSystemObjectQueryResult = Apollo.QueryResult<GetSystemObjectVersionFromSystemObjectQuery, GetSystemObjectVersionFromSystemObjectQueryVariables>;
 export const GetVersionsForAssetDocument = gql`
     query getVersionsForAsset($input: GetVersionsForAssetInput!) {
   getVersionsForAsset(input: $input) {

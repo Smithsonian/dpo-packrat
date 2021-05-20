@@ -7,7 +7,6 @@ type Query {
     getVersionsForAsset(input: GetVersionsForAssetInput!): GetVersionsForAssetResult!
     getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
     getProjectList(input: GetProjectListInput!): GetProjectListResult!
-    getSystemObjectVersionFromSystemObject(input: GetSystemObjectVersionFromSystemObjectInput!): GetSystemObjectVersionFromSystemObjectResult!
 }
 
 input GetDetailsTabDataForObjectInput {
@@ -227,12 +226,4 @@ type GetProjectListResult {
 
 input GetProjectListInput {
     search: String!
-}
-
-type GetSystemObjectVersionFromSystemObjectResult {
-    systemObjectVersions: [SystemObjectVersion!]!
-}
-
-input GetSystemObjectVersionFromSystemObjectInput {
-    idSystemObject: Int!
 }
