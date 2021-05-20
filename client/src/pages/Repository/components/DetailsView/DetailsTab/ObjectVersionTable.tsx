@@ -2,7 +2,7 @@ import { Box, Typography } from '@material-ui/core';
 import clsx from 'clsx';
 import React from 'react';
 import { EmptyTable } from '../../../../../components';
-import { getDownloadObjectVersionUrlForObject /*, getDetailsUrlForObject */ } from '../../../../../utils/repository';
+import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repository';
 import { extractISOMonthDateYear } from '../../../../../constants/helperfunctions';
 import { rollbackSystemObjectVersion } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetDetailsTable';
@@ -20,7 +20,6 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     const classes = useStyles();
     const { objectVersions } = props;
     const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
-    console.log('objectVersions', objectVersions);
     const headers: string[] = ['Link', 'Published State', 'Action', 'Timestamp'];
 
     if (!objectVersions) {
@@ -30,7 +29,6 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     const onRollback = async (idSystemObjectVersion: number) => {
         const confirm = window.confirm('Are you sure you wish to rollback?');
         if (!confirm) return;
-        // pass the id into rollback mutation
         const { data } = await rollbackSystemObjectVersion(idSystemObjectVersion);
         if (data.rollbackSystemObjectVersion.success) {
             toast.success(`Successfully rolled back to to ${idSystemObjectVersion}!`);
@@ -75,7 +73,6 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                 <Typography
                                     style={{ width: 'fit-content', whiteSpace: 'nowrap', color: 'rgb(0,121,196)', cursor: 'pointer' }}
                                     onClick={() => onRollback(version.idSystemObjectVersion)}
-                                    // disabled={index >= objectVersions.length - 1}
                                 >
                                     Rollback
                                 </Typography>
