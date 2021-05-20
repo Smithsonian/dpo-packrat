@@ -263,6 +263,7 @@ type GetAssetResult {
 
 type GetUploadedAssetVersionResult {
   AssetVersion: [AssetVersion!]!
+  idAssetVersionsUpdated: [Int!]!
 }
 
 input GetContentsForAssetVersionsInput {
@@ -1284,6 +1285,7 @@ type DetailVersion {
   creator: String!
   dateCreated: DateTime!
   size: BigInt!
+  ingested: Boolean!
 }
 
 input GetVersionsForAssetInput {

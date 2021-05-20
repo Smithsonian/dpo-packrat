@@ -125,6 +125,7 @@ type GetAssetResult {
 
 type GetUploadedAssetVersionResult {
     AssetVersion: [AssetVersion!]!
+    idAssetVersionsUpdated: [Int!]!
 }
 
 input GetContentsForAssetVersionsInput {
