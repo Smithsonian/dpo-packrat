@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Asset as AssetBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { Asset as AssetBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import { VocabularyCache, eVocabularyID } from '../../cache';
 import * as DBC from '../connection';
@@ -131,6 +131,27 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                 await DBC.DBConnection.prisma.asset.findMany({ where: { SystemObject_Asset_idSystemObjectToSystemObject: { idSystemObject } } }), Asset);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Asset.fetchFromSystemObject', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** Returns a map of idAsset -> Version Count for the specified idAssets */
+    static async computeVersionCountMap(idAssets: number[]): Promise<Map<number, number> | null> {
+        const retValue: Map<number, number> = new Map<number, number>();
+        try {
+            const versionCounts: { idAsset: number, RowCount: number }[] =
+                await DBC.DBConnection.prisma.$queryRaw<{ idAsset: number, RowCount: number }[]>`
+                SELECT A.idAsset, COUNT(*) AS 'RowCount'
+                FROM Asset AS A
+                JOIN AssetVersion AS AV ON (AV.idAsset = A.idAsset)
+                WHERE A.idAsset IN (${Prisma.join(idAssets)})
+                GROUP BY A.idAsset`;
+
+            for (const countInfo of versionCounts)
+                retValue.set(countInfo.idAsset, countInfo.RowCount);
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Asset.computeVersionCountMap', LOG.LS.eDB, error);
             return null;
         }
     }
