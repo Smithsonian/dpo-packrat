@@ -114,7 +114,21 @@ function DetailsView(): React.ReactElement {
         return <ObjectNotFoundView loading={loading} />;
     }
 
-    const { idObject, objectType, allowed, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
+    const {
+        idObject,
+        objectType,
+        allowed,
+        publishedState,
+        thumbnail,
+        unit,
+        project,
+        subject,
+        item,
+        objectAncestors,
+        sourceObjects,
+        derivedObjects,
+        objectVersions
+    } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
 
@@ -451,6 +465,7 @@ function DetailsView(): React.ReactElement {
                     onAddSourceObject={onAddSourceObject}
                     onAddDerivedObject={onAddDerivedObject}
                     onUpdateDetail={onUpdateDetail}
+                    objectVersions={objectVersions}
                 />
                 <Box display='flex' flex={1} padding={2}>
                     <DetailsThumbnail thumbnail={thumbnail} />
