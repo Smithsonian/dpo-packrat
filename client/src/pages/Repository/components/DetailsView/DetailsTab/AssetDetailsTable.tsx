@@ -13,6 +13,7 @@ import { EmptyTable, NewTabLink } from '../../../../../components';
 import { StateAssetDetail, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
 import { getDetailsUrlForObject, getDownloadAllAssetsUrlForObject, getDownloadAssetUrlForObject } from '../../../../../utils/repository';
+import { formatDate } from '../../../../../utils/shared';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectAssets } from '../../../hooks/useDetailsView';
 import GetAppIcon from '@material-ui/icons/GetApp';
@@ -75,7 +76,7 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                 <thead>
                     <tr>
                         {headers.map((header, index: number) => (
-                            <th key={index} align='left'>
+                            <th key={index} align='center'>
                                 <Typography className={classes.header}>{header}</Typography>
                             </th>
                         ))}
@@ -103,16 +104,16 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                             <td>
                                 <Typography className={classes.value}>{assetDetail.path}</Typography>
                             </td>
-                            <td>
+                            <td align='center'>
                                 <Typography className={classes.value}>{getVocabularyTerm(eVocabularySetID.eAssetAssetType, assetDetail.assetType)}</Typography>
                             </td>
-                            <td align='left'>
+                            <td align='center'>
                                 <Typography className={classes.value}>{assetDetail.version}</Typography>
                             </td>
-                            <td>
-                                <Typography className={classes.value}>{assetDetail.dateCreated}</Typography>
+                            <td align='center'>
+                                <Typography className={classes.value}>{formatDate(assetDetail.dateCreated)}</Typography>
                             </td>
-                            <td>
+                            <td align='center'>
                                 <Typography className={classes.value}>{formatBytes(assetDetail.size)}</Typography>
                             </td>
                         </tr>
