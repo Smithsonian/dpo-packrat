@@ -39,6 +39,7 @@ DROP TABLE IF EXISTS `Stakeholder`;
 DROP TABLE IF EXISTS `Subject`;
 DROP TABLE IF EXISTS `SystemObject`;
 DROP TABLE IF EXISTS `SystemObjectVersion`;
+DROP TABLE IF EXISTS `SystemObjectVersionAssetVersionXref`;
 DROP TABLE IF EXISTS `SystemObjectXref`;
 DROP TABLE IF EXISTS `Unit`;
 DROP TABLE IF EXISTS `UnitEdan`;

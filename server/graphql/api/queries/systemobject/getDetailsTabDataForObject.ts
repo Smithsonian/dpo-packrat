@@ -69,6 +69,7 @@ const getDetailsTabDataForObject = gql`
                     CountEmbeddedTextures
                     CountLinkedTextures
                     FileEncoding
+                    IsDracoCompressed
                     Name
                     DateCreated
                     Authoritative
@@ -142,6 +143,7 @@ const getDetailsTabDataForObject = gql`
             Asset {
                 FilePath
                 AssetType
+                idAsset
             }
             AssetVersion {
                 Creator
@@ -149,6 +151,8 @@ const getDetailsTabDataForObject = gql`
                 StorageSize
                 Ingested
                 Version
+                idAsset
+                idAssetVersion
             }
             Actor {
                 OrganizationName

@@ -7,7 +7,7 @@ import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import path from 'path';
 import { toast } from 'react-toastify';
-import { eVocabularySetID } from '../types/server';
+import { eVocabularySetID, eSystemObjectType } from '../types/server';
 import { generateFileId } from '../utils/upload';
 import { useVocabularyStore } from './vocabulary';
 import { apolloClient, apolloUploader } from '../graphql';
@@ -43,6 +43,10 @@ type UploadStore = {
     completed: IngestionFile[];
     pending: IngestionFile[];
     loading: boolean;
+    updateMode: boolean;
+    updateWorkflowFileType: eSystemObjectType | null;
+    setUpdateMode: (update: boolean) => void;
+    setUpdateWorkflowFileType: (fileType: eSystemObjectType) => void;
     getSelectedFiles: (files: IngestionFile[], selected: boolean) => IngestionFile[];
     loadPending: (acceptedFiles: File[]) => void;
     loadCompleted: (completed: IngestionFile[]) => void;
@@ -66,6 +70,10 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     completed: [],
     pending: [],
     loading: true,
+    updateMode: false,
+    updateWorkflowFileType: null,
+    setUpdateMode: (update) => { set({ updateMode: update }); },
+    setUpdateWorkflowFileType: (fileType) => { set({ updateWorkflowFileType: fileType }); },
     getSelectedFiles: (files: IngestionFile[], selected: boolean): IngestionFile[] => lodash.filter(files, file => file.selected === selected),
     loadPending: (acceptedFiles: File[]) => {
         const { pending } = get();
@@ -181,6 +189,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     startUploadTransfer: async (ingestionFile: IngestionFile) => {
         const { pending } = get();
         const { id, file, type } = ingestionFile;
+        const urlParams = new URLSearchParams(window.location.search);
 
         try {
             const onProgress = (event: ProgressEvent) => {
@@ -205,9 +214,11 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 UploadEvents.dispatch(UploadEventType.SET_CANCELLED, setCancelEvent);
             };
 
+            const uploadAssetInputs = urlParams.has('idAsset') ? { file, type, idAsset: Number(urlParams.get('idAsset')) } : { file, type };
+
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
-                variables: { file, type },
+                variables: uploadAssetInputs,
                 refetchQueries: ['getUploadedAssetVersion'],
                 useUpload: true,
                 onProgress,
@@ -359,3 +370,4 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 }));
 
 const getFile = (id: FileId, files: IngestionFile[]) => lodash.find(files, { id });
+

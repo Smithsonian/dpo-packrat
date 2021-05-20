@@ -55,6 +55,7 @@ type MetadataStore = {
     updateMetadataFolders: () => Promise<void>;
     updateCameraSettings: (metadatas: StateMetadata[]) => Promise<StateMetadata[]>;
     reset: () => void;
+    getMetadatas: () => StateMetadata[];
 };
 
 export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
@@ -398,11 +399,9 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         }
                     };
                 }
-
                 return metadata;
             });
         });
-
         set({ metadatas: updatedMetadatas });
     },
     updateCameraSettings: async (metadatas: StateMetadata[]): Promise<StateMetadata[]> => {
@@ -444,6 +443,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     },
     reset: () => {
         set({ metadatas: [] });
+    },
+    getMetadatas: () => {
+        const { metadatas } = get();
+        return metadatas;
     }
 }));
 

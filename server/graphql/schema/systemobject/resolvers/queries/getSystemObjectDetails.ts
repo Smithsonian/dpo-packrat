@@ -23,6 +23,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const systemObject: SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
     const derivedObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Derived);
+    const objectVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
     const publishedState: string = await getPublishedState(idSystemObject);
     const identifiers = await getIngestIdentifiers(idSystemObject);
 
@@ -34,6 +35,12 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 
     if (!systemObject) {
         const message: string = `No system object found for ID: ${idSystemObject}`;
+        LOG.error(message, LOG.LS.eGQL);
+        throw new Error(message);
+    }
+
+    if (!objectVersions) {
+        const message: string = `No SystemObjectVersions found for ID: ${idSystemObject}`;
         LOG.error(message, LOG.LS.eGQL);
         throw new Error(message);
     }
@@ -56,7 +63,8 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         objectAncestors,
         identifiers,
         sourceObjects,
-        derivedObjects
+        derivedObjects,
+        objectVersions
     };
 }
 
