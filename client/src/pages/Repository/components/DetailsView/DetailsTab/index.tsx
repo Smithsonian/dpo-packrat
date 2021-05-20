@@ -162,31 +162,29 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     switch (objectType) {
         case eSystemObjectType.eUnit:
-            tabs = ['Details', 'Related', 'Versions'];
+            tabs = ['Details', 'Related'];
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
                         <UnitDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
-                    {ObjectVersionTableTab(2)}
                 </React.Fragment>
             );
             break;
         case eSystemObjectType.eProject:
-            tabs = ['Details', 'Related', 'Versions'];
+            tabs = ['Details', 'Related'];
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
                         <ProjectDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
-                    {ObjectVersionTableTab(2)}
                 </React.Fragment>
             );
             break;
         case eSystemObjectType.eSubject:
-            tabs = ['Assets', 'Details', 'Related', 'Versions'];
+            tabs = ['Assets', 'Details', 'Related'];
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
@@ -196,7 +194,6 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <SubjectDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
-                    {ObjectVersionTableTab(3)}
                 </React.Fragment>
             );
             break;
