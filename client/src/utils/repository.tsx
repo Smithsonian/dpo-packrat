@@ -258,7 +258,7 @@ export function getDownloadAssetVersionUrlForObject(serverEndPoint: string | und
     return `${serverEndPoint}/download?idAssetVersion=${idAssetVersion}`;
 }
 
-export function getDownloadObjectVersionForObject(serverEndPoint: string | undefined, idSystemObjectVersion): string {
+export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | undefined, idSystemObjectVersion): string {
     return `${serverEndPoint}/download?idSystemObjectVersion=${idSystemObjectVersion}`;
 }
 

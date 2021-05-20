@@ -113,6 +113,7 @@ type Mutation {
   deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
+  rollbackSystemObjectVersion(input: RollbackSystemObjectVersionInput!): RollbackSystemObjectVersionResult!
   updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
   updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
   updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
@@ -1071,6 +1072,15 @@ type DeleteIdentifierResult {
 
 input DeleteIdentifierInput {
   idIdentifier: Int!
+}
+
+type RollbackSystemObjectVersionResult {
+  success: Boolean!
+  message: String!
+}
+
+input RollbackSystemObjectVersionInput {
+  idSystemObjectVersion: Int!
 }
 
 input GetDetailsTabDataForObjectInput {
