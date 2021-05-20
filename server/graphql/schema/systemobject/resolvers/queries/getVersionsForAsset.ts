@@ -37,6 +37,7 @@ export default async function getVersionsForAsset(_: Parent, args: QueryGetVersi
             creator: user ? user.Name : '',
             dateCreated: assetVersion.DateCreated,
             size: assetVersion.StorageSize,
+            ingested: assetVersion.Ingested ?? false
         };
         versions.push(DV);
     }

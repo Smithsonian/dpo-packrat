@@ -1668,6 +1668,7 @@ export type DetailVersion = {
   creator: Scalars['String'];
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
+  ingested: Scalars['Boolean'];
 };
 
 export type GetVersionsForAssetInput = {
@@ -3124,7 +3125,7 @@ export type GetVersionsForAssetQuery = (
     { __typename?: 'GetVersionsForAssetResult' }
     & { versions: Array<(
       { __typename?: 'DetailVersion' }
-      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size'>
+      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested'>
     )> }
   ) }
 );
@@ -5485,6 +5486,7 @@ export const GetVersionsForAssetDocument = gql`
       creator
       dateCreated
       size
+      ingested
     }
   }
 }

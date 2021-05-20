@@ -3,12 +3,14 @@
  *
  * This component renders asset version table tab for the DetailsTab component.
  */
-import { Box, Typography } from '@material-ui/core';
+import { Box, Checkbox, Typography } from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
 import { EmptyTable, NewTabLink } from '../../../../../components';
 import { StateDetailVersion } from '../../../../../store';
 import { getDetailsUrlForObject, getDownloadAssetVersionUrlForObject } from '../../../../../utils/repository';
+import { formatDate } from '../../../../../utils/shared';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectVersions } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetDetailsTable';
@@ -18,13 +20,20 @@ interface AssetVersionsTableProps {
     idSystemObject: number;
 }
 
+const CheckboxNoPadding = withStyles({
+    root: {
+        border: '0px',
+        padding: '0px'
+    }
+})(Checkbox);
+
 function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement {
     const classes = useStyles();
     const { idSystemObject } = props;
     const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
     const { data, loading } = useObjectVersions(idSystemObject);
 
-    const headers: string[] = ['Link', 'Version', 'Name', 'Creator', 'Date Created', 'Size'];
+    const headers: string[] = ['Link', 'Version', 'Name', 'Creator', 'Date Created', 'Size', 'Ingested'];
 
     if (!data || loading) {
         return <EmptyTable />;
@@ -37,7 +46,7 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
             <thead>
                 <tr>
                     {headers.map((header, index: number) => (
-                        <th key={index} align='left'>
+                        <th key={index} align='center'>
                             <Typography className={classes.header}>{header}</Typography>
                         </th>
                     ))}
@@ -60,24 +69,30 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                                 <GetAppIcon />
                             </a>
                         </td>
-                        <td>
+                        <td align='center'>
                             <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
                                 <Typography className={clsx(classes.value, classes.link)}>{version.version}</Typography>
                             </NewTabLink>
                         </td>
-                        <td>
+                        <td align='center'>
                             <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
                                 <Typography className={clsx(classes.value, classes.link)}>{version.name}</Typography>
                             </NewTabLink>
                         </td>
-                        <td align='left'>
+                        <td align='center'>
                             <Typography className={classes.value}>{version.creator}</Typography>
                         </td>
-                        <td>
-                            <Typography className={classes.value}>{version.dateCreated}</Typography>
+                        <td align='center'>
+                            <Typography className={classes.value}>{formatDate(version.dateCreated)}</Typography>
                         </td>
-                        <td>
+                        <td align='center'>
                             <Typography className={classes.value}>{formatBytes(version.size)}</Typography>
+                        </td>
+                        <td align='center'>
+                            <CheckboxNoPadding
+                                disabled
+                                checked={version.ingested ?? false}
+                            />
                         </td>
                     </tr>
                 ))}
