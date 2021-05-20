@@ -591,6 +591,7 @@ export type GetAssetResult = {
 export type GetUploadedAssetVersionResult = {
   __typename?: 'GetUploadedAssetVersionResult';
   AssetVersion: Array<AssetVersion>;
+  idAssetVersionsUpdated: Array<Scalars['Int']>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -1680,6 +1681,7 @@ export type DetailVersion = {
   creator: Scalars['String'];
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
+  ingested: Scalars['Boolean'];
 };
 
 export type GetVersionsForAssetInput = {

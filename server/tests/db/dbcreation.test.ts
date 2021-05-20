@@ -1908,6 +1908,18 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetFetch).toBeTruthy();
     });
 
+    test('DB Fetch Asset: Asset.computeVersionCountMap', async () => {
+        let versionCountMap: Map<number, number> | null = null;
+        if (assetThumbnail) {
+            versionCountMap = await DBAPI.Asset.computeVersionCountMap([assetThumbnail.idAsset]);
+            if (versionCountMap) {
+                expect(versionCountMap.has(assetThumbnail.idAsset)).toBeTruthy();
+                expect(versionCountMap.get(assetThumbnail.idAsset)).toEqual(3);
+            }
+        }
+        expect(versionCountMap).toBeTruthy();
+    });
+
     test('DB Fetch By ID: AssetVersion', async () => {
         let assetVersionFetch: DBAPI.AssetVersion | null = null;
         if (assetVersion) {

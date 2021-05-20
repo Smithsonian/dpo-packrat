@@ -84,3 +84,10 @@ export function convertLocalDateToUTC(date: Date): Date {
     // return new Date(UTC);
     return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
 }
+
+export function formatDate(value: any): string {
+    const date: Date | null = safeDate(value);
+    if (!date)
+        return '';
+    return date.toLocaleDateString();
+}
