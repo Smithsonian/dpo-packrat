@@ -588,6 +588,7 @@ export type GetAssetResult = {
 export type GetUploadedAssetVersionResult = {
   __typename?: 'GetUploadedAssetVersionResult';
   AssetVersion: Array<AssetVersion>;
+  idAssetVersionsUpdated: Array<Scalars['Int']>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -2269,6 +2270,7 @@ export type DiscardUploadedAssetVersionsMutation = (
 export type UploadAssetMutationVariables = Exact<{
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 }>;
 
 
@@ -3476,8 +3478,8 @@ export type DiscardUploadedAssetVersionsMutationHookResult = ReturnType<typeof u
 export type DiscardUploadedAssetVersionsMutationResult = Apollo.MutationResult<DiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
 export const UploadAssetDocument = gql`
-    mutation uploadAsset($file: Upload!, $type: Int!) {
-  uploadAsset(file: $file, type: $type) {
+    mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int) {
+  uploadAsset(file: $file, type: $type, idAsset: $idAsset) {
     status
     idAssetVersions
     error
@@ -3501,6 +3503,7 @@ export type UploadAssetMutationFn = Apollo.MutationFunction<UploadAssetMutation,
  *   variables: {
  *      file: // value for 'file'
  *      type: // value for 'type'
+ *      idAsset: // value for 'idAsset'
  *   },
  * });
  */
