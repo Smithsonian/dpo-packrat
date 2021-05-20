@@ -19,7 +19,8 @@ import {
     UpdateSourceObjectsDocument,
     UpdateDerivedObjectsDocument,
     DeleteObjectConnectionDocument,
-    DeleteIdentifierDocument
+    DeleteIdentifierDocument,
+    RollbackSystemObjectVersionDocument
 } from '../../../types/graphql';
 import { eSystemObjectType } from '../../../types/server';
 
@@ -51,7 +52,7 @@ export function useSystemObjectVersionFromSystemObject(idSystemObject: number): 
                 idSystemObject
             }
         }
-    })
+    });
 }
 
 export function useObjectVersions(idSystemObject: number): GetVersionsForAssetQueryResult {
@@ -155,5 +156,17 @@ export async function deleteIdentifier(idIdentifier: number) {
                 idIdentifier
             }
         }
+    });
+}
+
+export async function rollbackSystemObjectVersion(idSystemObjectVersion: number) {
+    return await apolloClient.mutate({
+        mutation: RollbackSystemObjectVersionDocument,
+        variables: {
+            input: {
+                idSystemObjectVersion
+            }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
     });
 }

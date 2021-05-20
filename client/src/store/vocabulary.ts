@@ -199,4 +199,4 @@ export const PublishedStateEnumToString = (eState: ePublishedState): string => {
         default:
         case ePublishedState.eNotPublished: return 'Not Published';
     }
-}
+};

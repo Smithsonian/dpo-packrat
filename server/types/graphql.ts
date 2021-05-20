@@ -330,6 +330,7 @@ export type Mutation = {
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateObjectDetails: UpdateObjectDetailsResult;
   updateSourceObjects: UpdateSourceObjectsResult;
@@ -405,6 +406,11 @@ export type MutationDiscardUploadedAssetVersionsArgs = {
 
 export type MutationIngestDataArgs = {
   input: IngestDataInput;
+};
+
+
+export type MutationRollbackSystemObjectVersionArgs = {
+  input: RollbackSystemObjectVersionInput;
 };
 
 
@@ -1446,6 +1452,16 @@ export type DeleteIdentifierResult = {
 
 export type DeleteIdentifierInput = {
   idIdentifier: Scalars['Int'];
+};
+
+export type RollbackSystemObjectVersionResult = {
+  __typename?: 'RollbackSystemObjectVersionResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type RollbackSystemObjectVersionInput = {
+  idSystemObjectVersion: Scalars['Int'];
 };
 
 export type GetDetailsTabDataForObjectInput = {
