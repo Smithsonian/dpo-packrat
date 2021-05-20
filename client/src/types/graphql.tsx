@@ -327,6 +327,7 @@ export type Mutation = {
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateObjectDetails: UpdateObjectDetailsResult;
   updateSourceObjects: UpdateSourceObjectsResult;
@@ -402,6 +403,11 @@ export type MutationDiscardUploadedAssetVersionsArgs = {
 
 export type MutationIngestDataArgs = {
   input: IngestDataInput;
+};
+
+
+export type MutationRollbackSystemObjectVersionArgs = {
+  input: RollbackSystemObjectVersionInput;
 };
 
 
@@ -1445,6 +1451,16 @@ export type DeleteIdentifierInput = {
   idIdentifier: Scalars['Int'];
 };
 
+export type RollbackSystemObjectVersionResult = {
+  __typename?: 'RollbackSystemObjectVersionResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type RollbackSystemObjectVersionInput = {
+  idSystemObjectVersion: Scalars['Int'];
+};
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -2364,6 +2380,19 @@ export type DeleteObjectConnectionMutation = (
   & { deleteObjectConnection: (
     { __typename?: 'DeleteObjectConnectionResult' }
     & Pick<DeleteObjectConnectionResult, 'success' | 'details'>
+  ) }
+);
+
+export type RollbackSystemObjectVersionMutationVariables = Exact<{
+  input: RollbackSystemObjectVersionInput;
+}>;
+
+
+export type RollbackSystemObjectVersionMutation = (
+  { __typename?: 'Mutation' }
+  & { rollbackSystemObjectVersion: (
+    { __typename?: 'RollbackSystemObjectVersionResult' }
+    & Pick<RollbackSystemObjectVersionResult, 'success' | 'message'>
   ) }
 );
 
@@ -3716,6 +3745,40 @@ export function useDeleteObjectConnectionMutation(baseOptions?: Apollo.MutationH
 export type DeleteObjectConnectionMutationHookResult = ReturnType<typeof useDeleteObjectConnectionMutation>;
 export type DeleteObjectConnectionMutationResult = Apollo.MutationResult<DeleteObjectConnectionMutation>;
 export type DeleteObjectConnectionMutationOptions = Apollo.BaseMutationOptions<DeleteObjectConnectionMutation, DeleteObjectConnectionMutationVariables>;
+export const RollbackSystemObjectVersionDocument = gql`
+    mutation rollbackSystemObjectVersion($input: RollbackSystemObjectVersionInput!) {
+  rollbackSystemObjectVersion(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type RollbackSystemObjectVersionMutationFn = Apollo.MutationFunction<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>;
+
+/**
+ * __useRollbackSystemObjectVersionMutation__
+ *
+ * To run a mutation, you first call `useRollbackSystemObjectVersionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRollbackSystemObjectVersionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [rollbackSystemObjectVersionMutation, { data, loading, error }] = useRollbackSystemObjectVersionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRollbackSystemObjectVersionMutation(baseOptions?: Apollo.MutationHookOptions<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>(RollbackSystemObjectVersionDocument, options);
+      }
+export type RollbackSystemObjectVersionMutationHookResult = ReturnType<typeof useRollbackSystemObjectVersionMutation>;
+export type RollbackSystemObjectVersionMutationResult = Apollo.MutationResult<RollbackSystemObjectVersionMutation>;
+export type RollbackSystemObjectVersionMutationOptions = Apollo.BaseMutationOptions<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>;
 export const UpdateDerivedObjectsDocument = gql`
     mutation updateDerivedObjects($input: UpdateDerivedObjectsInput!) {
   updateDerivedObjects(input: $input) {
