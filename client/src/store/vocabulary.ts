@@ -7,7 +7,7 @@ import lodash from 'lodash';
 import create, { GetState, SetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
-import { eVocabularyID, eVocabularySetID } from '../types/server';
+import { eVocabularyID, eVocabularySetID, ePublishedState } from '../types/server';
 import { multiIncludes } from '../utils/shared';
 
 export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
@@ -76,7 +76,6 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
         });
 
         set({ vocabularies, vocabularyMap });
-
         return vocabularies;
     },
     getEntries: (eVocabularySetID: eVocabularySetID): VocabularyOption[] => {
@@ -187,5 +186,17 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
 
         const vocabulary = vocabularyMap.get(eVocabEnum);
         return (vocabulary) ? vocabulary.idVocabulary : null;
-    }
+    },
+
 }));
+
+export const PublishedStateEnumToString = (eState: ePublishedState): string => {
+    switch (eState) {
+        case ePublishedState.eRestricted: return 'Restricted';
+        case ePublishedState.eViewOnly: return 'View Only';
+        case ePublishedState.eViewDownloadRestriction: return 'View and Download with usage restrictions';
+        case ePublishedState.eViewDownloadCC0: return 'View and Download CC0';
+        default:
+        case ePublishedState.eNotPublished: return 'Not Published';
+    }
+};

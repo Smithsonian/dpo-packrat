@@ -52,6 +52,12 @@ const getSystemObjectDetails = gql`
                 identifier
                 objectType
             }
+            objectVersions {
+                idSystemObjectVersion
+                idSystemObject
+                PublishedState
+                DateCreated
+            }
         }
     }
 `;

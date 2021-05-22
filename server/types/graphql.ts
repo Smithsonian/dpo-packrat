@@ -324,6 +324,7 @@ export type Mutation = {
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateObjectDetails: UpdateObjectDetailsResult;
   updateSourceObjects: UpdateSourceObjectsResult;
@@ -402,6 +403,11 @@ export type MutationIngestDataArgs = {
 };
 
 
+export type MutationRollbackSystemObjectVersionArgs = {
+  input: RollbackSystemObjectVersionInput;
+};
+
+
 export type MutationUpdateDerivedObjectsArgs = {
   input: UpdateDerivedObjectsInput;
 };
@@ -425,12 +431,14 @@ export type MutationUpdateUserArgs = {
 export type MutationUploadAssetArgs = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export type UploadAssetInput = {
   __typename?: 'UploadAssetInput';
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -583,6 +591,7 @@ export type GetAssetResult = {
 export type GetUploadedAssetVersionResult = {
   __typename?: 'GetUploadedAssetVersionResult';
   AssetVersion: Array<AssetVersion>;
+  idAssetVersionsUpdated: Array<Scalars['Int']>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -800,6 +809,7 @@ export type IngestFolderInput = {
 
 export type IngestPhotogrammetryInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   name: Scalars['String'];
   dateCaptured: Scalars['String'];
   datasetType: Scalars['Int'];
@@ -835,6 +845,7 @@ export type RelatedObjectInput = {
 
 export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
   authoritative: Scalars['Boolean'];
@@ -851,6 +862,7 @@ export type IngestModelInput = {
 
 export type IngestSceneInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
   hasBeenQCd: Scalars['Boolean'];
@@ -860,6 +872,7 @@ export type IngestSceneInput = {
 
 export type IngestOtherInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
 };
@@ -958,6 +971,7 @@ export type Model = {
   CountEmbeddedTextures?: Maybe<Scalars['Int']>;
   CountLinkedTextures?: Maybe<Scalars['Int']>;
   FileEncoding?: Maybe<Scalars['String']>;
+  IsDracoCompressed?: Maybe<Scalars['Boolean']>;
   ModelConstellation?: Maybe<ModelConstellation>;
   VCreationMethod?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
@@ -1435,6 +1449,16 @@ export type DeleteIdentifierInput = {
   idIdentifier: Scalars['Int'];
 };
 
+export type RollbackSystemObjectVersionResult = {
+  __typename?: 'RollbackSystemObjectVersionResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type RollbackSystemObjectVersionInput = {
+  idSystemObjectVersion: Scalars['Int'];
+};
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -1534,6 +1558,8 @@ export type AssetDetailFields = {
   __typename?: 'AssetDetailFields';
   FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
+  Asset?: Maybe<Asset>;
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export type AssetVersionDetailFields = {
@@ -1543,6 +1569,9 @@ export type AssetVersionDetailFields = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
   StorageSize?: Maybe<Scalars['BigInt']>;
+  AssetVersion?: Maybe<AssetVersion>;
+  idAsset?: Maybe<Scalars['Int']>;
+  idAssetVersion?: Maybe<Scalars['Int']>;
 };
 
 export type ActorDetailFields = {
@@ -1600,6 +1629,7 @@ export type GetSystemObjectDetailsResult = {
   objectAncestors: Array<Array<RepositoryPath>>;
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
+  objectVersions: Array<SystemObjectVersion>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
@@ -1651,6 +1681,7 @@ export type DetailVersion = {
   creator: Scalars['String'];
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
+  ingested: Scalars['Boolean'];
 };
 
 export type GetVersionsForAssetInput = {
@@ -1721,6 +1752,7 @@ export type SystemObjectVersion = {
   idSystemObjectVersion: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   PublishedState: Scalars['Int'];
+  DateCreated: Scalars['DateTime'];
   SystemObject?: Maybe<SystemObject>;
 };
 

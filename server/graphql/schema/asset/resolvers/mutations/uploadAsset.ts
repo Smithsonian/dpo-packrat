@@ -22,7 +22,12 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
     }
 
     const { filename, createReadStream }: ApolloFile = await args.file;
-    LOG.info(`uploadAsset ${filename}`, LOG.LS.eGQL);
+    const idAsset: number | undefined | null = args.idAsset;
+    if (!idAsset)
+        LOG.info(`uploadAsset ADD ${filename}`, LOG.LS.eGQL);
+    else
+        LOG.info(`uploadAsset UPD ${filename} for idAsset ${idAsset}`, LOG.LS.eGQL);
+
     const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
     if (!storage) {
         LOG.error('uploadAsset unable to retrieve Storage Implementation from StorageFactory.getInstance()', LOG.LS.eGQL);
@@ -51,18 +56,31 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
             });
 
             stream.on('finish', async () => {
-                const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
-                    storageKey,
-                    storageHash: null,
-                    FileName: filename,
-                    FilePath: '',
-                    idAssetGroup: 0,
-                    idVAssetType: vocabulary.idVocabulary,
-                    idUserCreator: user.idUser,
-                    DateCreated: new Date()
-                };
+                let commitResult: STORE.AssetStorageResultCommit;
+                if (!idAsset) { // create new asset and asset version
+                    const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
+                        storageKey,
+                        storageHash: null,
+                        FileName: filename,
+                        FilePath: '',
+                        idAssetGroup: 0,
+                        idVAssetType: vocabulary.idVocabulary,
+                        idUserCreator: user.idUser,
+                        DateCreated: new Date()
+                    };
 
-                const commitResult: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
+                    commitResult = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
+                } else { // update existing asset with new asset version
+                    const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
+                    if (!asset) {
+                        const error: string = `uploadAsset unable to fetch asset ${idAsset}`;
+                        LOG.error(error, LOG.LS.eGQL);
+                        resolve({ status: UploadStatus.Failed, error });
+                        return;
+                    }
+                    commitResult = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash: null }, asset, user.idUser, new Date());
+                }
+
                 if (!commitResult.success) {
                     LOG.error(`uploadAsset AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`, LOG.LS.eGQL);
                     resolve({ status: UploadStatus.Failed, error: commitResult.error });

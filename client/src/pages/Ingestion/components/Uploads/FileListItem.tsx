@@ -1,4 +1,5 @@
 /* eslint-disable react/jsx-max-props-per-line */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 /**
  * FileListItem
@@ -9,12 +10,12 @@ import { Box, MenuItem, Select, Typography } from '@material-ui/core';
 import { green, grey, red, yellow } from '@material-ui/core/colors';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import { motion } from 'framer-motion';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FaCheckCircle, FaRedo, FaRegCircle } from 'react-icons/fa';
 import { IoIosCloseCircle } from 'react-icons/io';
 import { MdFileUpload } from 'react-icons/md';
 import { Progress } from '../../../../components';
-import { FileId, VocabularyOption } from '../../../../store';
+import { FileId, VocabularyOption, useUploadStore } from '../../../../store';
 import { palette } from '../../../../theme';
 import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
@@ -152,13 +153,17 @@ interface FileListItemProps {
 function FileListItem(props: FileListItemProps): React.ReactElement {
     const { id, name, size, type, typeOptions, status, complete, progress, selected, failed, uploading, onChangeType, onUpload, onCancel, onRemove, onRetry, onSelect } = props;
     const classes = useStyles(props);
-
+    const [updateMode, updateWorkflowFileType] = useUploadStore(state => [state.updateMode, state.updateWorkflowFileType]);
     const upload = () => onUpload(id);
     const remove = () => (uploading ? onCancel(id) : onRemove(id));
     const retry = () => onRetry(id);
     const select = () => (complete ? onSelect(id, !selected) : null);
 
     let options: React.ReactNode = null;
+
+    useEffect(() => {
+        if (updateWorkflowFileType) onChangeType(id, updateWorkflowFileType);
+    }, [updateWorkflowFileType]);
 
     if (!complete) {
         options = (
@@ -217,19 +222,25 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                     </Typography>
                 </Box>
                 <Box className={classes.type}>
-                    <Select
-                        value={type}
-                        disabled={complete || uploading}
-                        className={classes.typeSelect}
-                        onChange={({ target: { value } }) => onChangeType(id, value as number)}
-                        disableUnderline
-                    >
-                        {typeOptions.map((option: VocabularyOption, index) => (
-                            <MenuItem key={index} value={option.idVocabulary}>
-                                {option.Term}
-                            </MenuItem>
-                        ))}
-                    </Select>
+                    {updateMode ? (
+                        <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
+                            <MenuItem value={updateWorkflowFileType || type}>Update</MenuItem>
+                        </Select>
+                    ) : (
+                        <Select
+                            value={type}
+                            disabled={complete || uploading}
+                            className={classes.typeSelect}
+                            onChange={({ target: { value } }) => onChangeType(id, value as number)}
+                            disableUnderline
+                        >
+                            {typeOptions.map((option: VocabularyOption, index) => (
+                                <MenuItem key={index} value={option.idVocabulary}>
+                                    {option.Term}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    )}
                 </Box>
                 <Box className={classes.options}>{options}</Box>
             </Box>
