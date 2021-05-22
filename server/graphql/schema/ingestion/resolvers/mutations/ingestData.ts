@@ -1,5 +1,6 @@
-import { IngestDataResult, MutationIngestDataArgs, IngestSubjectInput, IngestItemInput, IngestPhotogrammetryInput,
-    IngestModelInput, IngestSceneInput, IngestIdentifierInput, User } from '../../../../../types/graphql';
+import { IngestDataInput, IngestDataResult, MutationIngestDataArgs,
+    IngestSubjectInput, IngestItemInput, IngestIdentifierInput, User,
+    IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
@@ -15,54 +16,47 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     const { input } = args;
     const { user } = context;
 
-    // data validation; FYI ... input.project is allowed to be unspecified
-    if (!input.subjects || input.subjects.length == 0) {
-        LOG.error('ingestData called with no subjects', LOG.LS.eGQL);
+    LOG.info(`ingestData: input=${JSON.stringify(input, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+    const { success, ingestNew } = validateInput(user, input);
+    if (!success)
         return { success: false };
-    }
 
-    if (!input.item) {
-        LOG.error('ingestData called with no item', LOG.LS.eGQL);
-        return { success: false };
-    }
+    let itemDB: DBAPI.Item | null = null;
+    if (ingestNew) {
+        // retrieve/create subjects; if creating subjects, create related objects (Identifiers, possibly UnitEdan records, though unlikely)
+        const subjectsDB: DBAPI.Subject[] = [];
+        for (const subject of input.subjects) {
+            // fetch our understanding of EDAN's unit information:
+            const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(subject.unit);
+            let subjectDB: DBAPI.Subject | null = null;
 
-    if (!user) {
-        LOG.error('ingestData unable to retrieve user context', LOG.LS.eGQL);
-        return { success: false };
-    }
+            if (subject.id)     // if this subject exists, validate it
+                subjectDB = await validateExistingSubject(subject, units);
+            else                // otherwise create it and related objects, including possibly units
+                subjectDB = await createSubjectAndRelated(subject, units);
 
-    // retrieve/create subjects; if creating subjects, create related objects (Identifiers, possibly UnitEdan records, though unlikely)
-    const subjectsDB: DBAPI.Subject[] = [];
-    for (const subject of input.subjects) {
-        // fetch our understanding of EDAN's unit information:
-        const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(subject.unit);
-        let subjectDB: DBAPI.Subject | null = null;
+            if (!subjectDB)
+                return { success: false };
+            subjectsDB.push(subjectDB);
+        }
 
-        if (subject.id)     // if this subject exists, validate it
-            subjectDB = await validateExistingSubject(subject, units);
-        else                // otherwise create it and related objects, including possibly units
-            subjectDB = await createSubjectAndRelated(subject, units);
-
-        if (!subjectDB)
+        // wire projects to subjects
+        if (input.project.id && !(await wireProjectToSubjects(input.project.id, subjectsDB)))
             return { success: false };
-        subjectsDB.push(subjectDB);
+
+        itemDB = await fetchOrCreateItem(input.item);
+        if (!itemDB)
+            return { success: false };
+
+        // wire subjects to item
+        if (!await wireSubjectsToItem(subjectsDB, itemDB))
+            return { success: false };
     }
-
-    // wire projects to subjects
-    if (input.project.id && !(await wireProjectToSubjects(input.project.id, subjectsDB)))
-        return { success: false };
-
-    const itemDB: DBAPI.Item | null = await fetchOrCreateItem(input.item);
-    if (!itemDB)
-        return { success: false };
-
-    // wire subjects to item
-    if (!await wireSubjectsToItem(subjectsDB, itemDB))
-        return { success: false };
 
     const ingestPhotogrammetry: boolean = input.photogrammetry && input.photogrammetry.length > 0;
     const ingestModel: boolean = input.model && input.model.length > 0;
     const ingestScene: boolean = input.scene && input.scene.length > 0;
+    const ingestOther: boolean = input.other && input.other.length > 0;
     const assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>();       // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
     const ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>();    // map from idAssetVersion -> photogrammetry input
 
@@ -87,19 +81,28 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
         }
     }
 
+    if (ingestOther) {
+        for (const other of input.other) {
+            if (!await createOtherObjects(other, assetVersionMap))
+                return { success: false };
+        }
+    }
+
     // wire item to asset-owning objects
-    if (!await wireItemToAssetOwners(itemDB, assetVersionMap))
-        return { success: false };
+    if (itemDB) {
+        if (!await wireItemToAssetOwners(itemDB, assetVersionMap))
+            return { success: false };
+    }
 
     // next, promote asset into repository storage
-    const ingestResMap: Map<number, IngestAssetResult | null> = await promoteAssetsIntoRepository(assetVersionMap, user);
+    const ingestResMap: Map<number, IngestAssetResult | null> = await promoteAssetsIntoRepository(assetVersionMap, user!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
     // use results to create/update derived objects
     if (ingestPhotogrammetry)
         await createPhotogrammetryDerivedObjects(assetVersionMap, ingestPhotoMap, ingestResMap);
 
     // notify workflow engine about this ingestion:
-    if (!await sendWorkflowIngestionEvent(ingestResMap, user))
+    if (!await sendWorkflowIngestionEvent(ingestResMap, user!)) // eslint-disable-line @typescript-eslint/no-non-null-assertion
         return { success: false };
     return { success: true };
 }
@@ -564,6 +567,34 @@ async function createSceneObjects(scene: IngestSceneInput, assetVersionMap: Map<
     return true;
 }
 
+async function createOtherObjects(other: IngestOtherInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
+    // "other" means we're simply creating an asset version (and associated asset)
+    // fetch the associated asset and use that for identifiers
+
+    let idAsset: number | null | undefined = other.idAsset;
+    if (!idAsset) {
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(other.idAssetVersion);
+        if (!assetVersion) {
+            LOG.error(`ingestData could not fetch asset version for ${other.idAssetVersion}`, LOG.LS.eGQL);
+            return false;
+        }
+        idAsset = assetVersion.idAsset;
+    }
+
+    const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
+    if (!asset) {
+        LOG.error(`ingestData could not fetch asset for ${idAsset}`, LOG.LS.eGQL);
+        return false;
+    }
+
+    if (!await handleIdentifiers(asset, other.systemCreated, other.identifiers))
+        return false;
+
+    if (other.idAssetVersion)
+        assetVersionMap.set(other.idAssetVersion, asset);
+    return true;
+}
+
 async function wireItemToAssetOwners(itemDB: DBAPI.Item, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
     for (const SOBased of assetVersionMap.values()) {
         const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, SOBased);
@@ -646,4 +677,78 @@ async function sendWorkflowIngestionEvent(ingestResMap: Map<number, IngestAssetR
     }
 
     return ret;
+}
+
+function validateInput(user: User | undefined, input: IngestDataInput): { success: boolean, ingestNew?: boolean } {
+    const ingestPhotogrammetry: boolean = input.photogrammetry && input.photogrammetry.length > 0;
+    const ingestModel: boolean = input.model && input.model.length > 0;
+    const ingestScene: boolean = input.scene && input.scene.length > 0;
+    const ingestOther: boolean = input.other && input.other.length > 0;
+    let ingestNew: boolean = false;
+    let ingestUpdate: boolean = false;
+
+    if (ingestPhotogrammetry) {
+        for (const photogrammetry of input.photogrammetry) {
+            if (photogrammetry.idAsset)
+                ingestUpdate = true;
+            else
+                ingestNew = true;
+        }
+    }
+
+    if (ingestModel) {
+        for (const model of input.model) {
+            if (model.idAsset)
+                ingestUpdate = true;
+            else
+                ingestNew = true;
+        }
+    }
+
+    if (ingestScene) {
+        for (const scene of input.scene) {
+            if (scene.idAsset)
+                ingestUpdate = true;
+            else
+                ingestNew = true;
+        }
+    }
+
+    if (ingestOther) {
+        for (const other of input.other) {
+            if (other.idAsset)
+                ingestUpdate = true;
+            else
+                ingestNew = true;
+        }
+    }
+
+    // data validation; FYI ... input.project is allowed to be unspecified
+    if (ingestNew && ingestUpdate) {
+        LOG.error('ingestData called with an unsupported mix of additions and updates', LOG.LS.eGQL);
+        return { success: false };
+    }
+
+    if (!ingestNew && !ingestUpdate) {
+        LOG.error('ingestData called without both additions and updates', LOG.LS.eGQL);
+        return { success: false };
+    }
+
+    if (ingestNew) {
+        if (!input.subjects || input.subjects.length == 0) {
+            LOG.error('ingestData called with no subjects', LOG.LS.eGQL);
+            return { success: false };
+        }
+
+        if (!input.item) {
+            LOG.error('ingestData called with no item', LOG.LS.eGQL);
+            return { success: false };
+        }
+    }
+
+    if (!user) {
+        LOG.error('ingestData unable to retrieve user context', LOG.LS.eGQL);
+        return { success: false };
+    }
+    return { success: true, ingestNew };
 }

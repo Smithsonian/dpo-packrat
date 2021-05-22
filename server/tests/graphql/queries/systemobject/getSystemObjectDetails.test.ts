@@ -66,7 +66,7 @@ const getSystemObjectDetailsTest = (utils: TestSuiteUtils): void => {
                                     idSystemObject: SO.idSystemObject
                                 };
 
-                                const { name, identifiers, objectAncestors, sourceObjects, derivedObjects }: GetSystemObjectDetailsResult = await graphQLApi.getSystemObjectDetails(input);
+                                const { name, identifiers, objectAncestors, sourceObjects, derivedObjects, objectVersions }: GetSystemObjectDetailsResult = await graphQLApi.getSystemObjectDetails(input);
                                 const [{ identifier }] = identifiers;
 
                                 expect(name).toBe(subjectArgs.Name);
@@ -74,6 +74,7 @@ const getSystemObjectDetailsTest = (utils: TestSuiteUtils): void => {
                                 expect(objectAncestors).toBeTruthy();
                                 expect(sourceObjects).toBeTruthy();
                                 expect(derivedObjects).toBeTruthy();
+                                expect(objectVersions).toBeTruthy();
                             }
                         }
                     }

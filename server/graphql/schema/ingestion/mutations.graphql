@@ -33,6 +33,7 @@ input IngestFolderInput {
 
 input IngestPhotogrammetryInput {
     idAssetVersion: Int!
+    idAsset: Int
     name: String!
     dateCaptured: String!
     datasetType: Int!
@@ -68,6 +69,7 @@ input RelatedObjectInput {
 
 input IngestModelInput {
     idAssetVersion: Int!
+    idAsset: Int
     systemCreated: Boolean!
     name: String!
     authoritative: Boolean!
@@ -84,6 +86,7 @@ input IngestModelInput {
 
 input IngestSceneInput {
     idAssetVersion: Int!
+    idAsset: Int
     systemCreated: Boolean!
     name: String!
     hasBeenQCd: Boolean!
@@ -93,6 +96,7 @@ input IngestSceneInput {
 
 input IngestOtherInput {
     idAssetVersion: Int!
+    idAsset: Int
     systemCreated: Boolean!
     identifiers: [IngestIdentifierInput!]!
 }

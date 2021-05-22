@@ -69,11 +69,12 @@ describe('JobNS Cook Test Setup', () => {
         testCookExplicit('fbx-stand-alone', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('fbx-with-support', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookExplicit('glb', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('glb-draco', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('obj', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookExplicit('ply', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('stl', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('x3d', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // Not yet supported by cook's si-packrat-inspect, as of 2021-05-07
-        // testCookImplicit('x3d', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // testCookExplicit('usd', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // testCookImplicit('usdz', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // testCookExplicit('wrl', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -91,11 +92,12 @@ describe('JobNS IWorkflow Test Setup', () => {
         testWorkflow('fbx-stand-alone', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('fbx-with-support', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('glb', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('glb-draco', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('obj', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('ply', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('stl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('x3d', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // Not yet supported by cook's si-packrat-inspect, as of 2021-05-07
-        // testWorkflow('x3d', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // testWorkflow('usd', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // testWorkflow('usdz', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // testWorkflow('wrl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);

@@ -293,7 +293,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                       AND AV.Ingested = ${Ingested}
                       AND SO.Retired = ${Retired}`; //, AssetVersion);
                 /* istanbul ignore if */
-                if (!assetVersions || assetVersions.length == 0)
+                if (!assetVersions)
                     return null;
                 const res: AssetVersion[] = [];
                 for (const assetVersion of assetVersions)   // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean

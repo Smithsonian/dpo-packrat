@@ -327,6 +327,7 @@ export type Mutation = {
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateObjectDetails: UpdateObjectDetailsResult;
   updateSourceObjects: UpdateSourceObjectsResult;
@@ -405,6 +406,11 @@ export type MutationIngestDataArgs = {
 };
 
 
+export type MutationRollbackSystemObjectVersionArgs = {
+  input: RollbackSystemObjectVersionInput;
+};
+
+
 export type MutationUpdateDerivedObjectsArgs = {
   input: UpdateDerivedObjectsInput;
 };
@@ -428,12 +434,14 @@ export type MutationUpdateUserArgs = {
 export type MutationUploadAssetArgs = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export type UploadAssetInput = {
   __typename?: 'UploadAssetInput';
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -586,6 +594,7 @@ export type GetAssetResult = {
 export type GetUploadedAssetVersionResult = {
   __typename?: 'GetUploadedAssetVersionResult';
   AssetVersion: Array<AssetVersion>;
+  idAssetVersionsUpdated: Array<Scalars['Int']>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -803,6 +812,7 @@ export type IngestFolderInput = {
 
 export type IngestPhotogrammetryInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   name: Scalars['String'];
   dateCaptured: Scalars['String'];
   datasetType: Scalars['Int'];
@@ -838,6 +848,7 @@ export type RelatedObjectInput = {
 
 export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
   authoritative: Scalars['Boolean'];
@@ -854,6 +865,7 @@ export type IngestModelInput = {
 
 export type IngestSceneInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
   hasBeenQCd: Scalars['Boolean'];
@@ -863,6 +875,7 @@ export type IngestSceneInput = {
 
 export type IngestOtherInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
 };
@@ -961,6 +974,7 @@ export type Model = {
   CountEmbeddedTextures?: Maybe<Scalars['Int']>;
   CountLinkedTextures?: Maybe<Scalars['Int']>;
   FileEncoding?: Maybe<Scalars['String']>;
+  IsDracoCompressed?: Maybe<Scalars['Boolean']>;
   ModelConstellation?: Maybe<ModelConstellation>;
   VCreationMethod?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
@@ -1438,6 +1452,16 @@ export type DeleteIdentifierInput = {
   idIdentifier: Scalars['Int'];
 };
 
+export type RollbackSystemObjectVersionResult = {
+  __typename?: 'RollbackSystemObjectVersionResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type RollbackSystemObjectVersionInput = {
+  idSystemObjectVersion: Scalars['Int'];
+};
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -1537,6 +1561,8 @@ export type AssetDetailFields = {
   __typename?: 'AssetDetailFields';
   FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
+  Asset?: Maybe<Asset>;
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export type AssetVersionDetailFields = {
@@ -1546,6 +1572,9 @@ export type AssetVersionDetailFields = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
   StorageSize?: Maybe<Scalars['BigInt']>;
+  AssetVersion?: Maybe<AssetVersion>;
+  idAsset?: Maybe<Scalars['Int']>;
+  idAssetVersion?: Maybe<Scalars['Int']>;
 };
 
 export type ActorDetailFields = {
@@ -1603,6 +1632,7 @@ export type GetSystemObjectDetailsResult = {
   objectAncestors: Array<Array<RepositoryPath>>;
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
+  objectVersions: Array<SystemObjectVersion>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
@@ -1654,6 +1684,7 @@ export type DetailVersion = {
   creator: Scalars['String'];
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
+  ingested: Scalars['Boolean'];
 };
 
 export type GetVersionsForAssetInput = {
@@ -1724,6 +1755,7 @@ export type SystemObjectVersion = {
   idSystemObjectVersion: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   PublishedState: Scalars['Int'];
+  DateCreated: Scalars['DateTime'];
   SystemObject?: Maybe<SystemObject>;
 };
 
@@ -2255,6 +2287,7 @@ export type DiscardUploadedAssetVersionsMutation = (
 export type UploadAssetMutationVariables = Exact<{
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 }>;
 
 
@@ -2350,6 +2383,19 @@ export type DeleteObjectConnectionMutation = (
   & { deleteObjectConnection: (
     { __typename?: 'DeleteObjectConnectionResult' }
     & Pick<DeleteObjectConnectionResult, 'success' | 'details'>
+  ) }
+);
+
+export type RollbackSystemObjectVersionMutationVariables = Exact<{
+  input: RollbackSystemObjectVersionInput;
+}>;
+
+
+export type RollbackSystemObjectVersionMutation = (
+  { __typename?: 'Mutation' }
+  & { rollbackSystemObjectVersion: (
+    { __typename?: 'RollbackSystemObjectVersionResult' }
+    & Pick<RollbackSystemObjectVersionResult, 'success' | 'message'>
   ) }
 );
 
@@ -2555,7 +2601,7 @@ export type GetAssetQuery = (
     { __typename?: 'GetAssetResult' }
     & { Asset?: Maybe<(
       { __typename?: 'Asset' }
-      & Pick<Asset, 'idAsset'>
+      & Pick<Asset, 'idAsset' | 'idVAssetType'>
     )> }
   ) }
 );
@@ -2641,7 +2687,7 @@ export type GetModelConstellationForAssetVersionQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name' | 'idVFileType'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
         & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
@@ -2774,7 +2820,7 @@ export type GetModelConstellationQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'Authoritative' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding'>
+        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'Authoritative' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed'>
         & { VCreationMethod?: Maybe<(
           { __typename?: 'Vocabulary' }
           & Pick<Vocabulary, 'Term'>
@@ -2978,7 +3024,7 @@ export type GetDetailsTabDataForObjectQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name' | 'DateCreated' | 'Authoritative' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'DateCreated' | 'Authoritative' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
         & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
@@ -3006,10 +3052,10 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<ProjectDocumentationDetailFields, 'Description'>
     )>, Asset?: Maybe<(
       { __typename?: 'AssetDetailFields' }
-      & Pick<AssetDetailFields, 'FilePath' | 'AssetType'>
+      & Pick<AssetDetailFields, 'FilePath' | 'AssetType' | 'idAsset'>
     )>, AssetVersion?: Maybe<(
       { __typename?: 'AssetVersionDetailFields' }
-      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version'>
+      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion'>
     )>, Actor?: Maybe<(
       { __typename?: 'ActorDetailFields' }
       & Pick<ActorDetailFields, 'OrganizationName'>
@@ -3090,6 +3136,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, derivedObjects: Array<(
       { __typename?: 'RelatedObject' }
       & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
+    )>, objectVersions: Array<(
+      { __typename?: 'SystemObjectVersion' }
+      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated'>
     )> }
   ) }
 );
@@ -3105,7 +3154,7 @@ export type GetVersionsForAssetQuery = (
     { __typename?: 'GetVersionsForAssetResult' }
     & { versions: Array<(
       { __typename?: 'DetailVersion' }
-      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size'>
+      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested'>
     )> }
   ) }
 );
@@ -3459,8 +3508,8 @@ export type DiscardUploadedAssetVersionsMutationHookResult = ReturnType<typeof u
 export type DiscardUploadedAssetVersionsMutationResult = Apollo.MutationResult<DiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
 export const UploadAssetDocument = gql`
-    mutation uploadAsset($file: Upload!, $type: Int!) {
-  uploadAsset(file: $file, type: $type) {
+    mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int) {
+  uploadAsset(file: $file, type: $type, idAsset: $idAsset) {
     status
     idAssetVersions
     error
@@ -3484,6 +3533,7 @@ export type UploadAssetMutationFn = Apollo.MutationFunction<UploadAssetMutation,
  *   variables: {
  *      file: // value for 'file'
  *      type: // value for 'type'
+ *      idAsset: // value for 'idAsset'
  *   },
  * });
  */
@@ -3699,6 +3749,40 @@ export function useDeleteObjectConnectionMutation(baseOptions?: Apollo.MutationH
 export type DeleteObjectConnectionMutationHookResult = ReturnType<typeof useDeleteObjectConnectionMutation>;
 export type DeleteObjectConnectionMutationResult = Apollo.MutationResult<DeleteObjectConnectionMutation>;
 export type DeleteObjectConnectionMutationOptions = Apollo.BaseMutationOptions<DeleteObjectConnectionMutation, DeleteObjectConnectionMutationVariables>;
+export const RollbackSystemObjectVersionDocument = gql`
+    mutation rollbackSystemObjectVersion($input: RollbackSystemObjectVersionInput!) {
+  rollbackSystemObjectVersion(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type RollbackSystemObjectVersionMutationFn = Apollo.MutationFunction<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>;
+
+/**
+ * __useRollbackSystemObjectVersionMutation__
+ *
+ * To run a mutation, you first call `useRollbackSystemObjectVersionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRollbackSystemObjectVersionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [rollbackSystemObjectVersionMutation, { data, loading, error }] = useRollbackSystemObjectVersionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRollbackSystemObjectVersionMutation(baseOptions?: Apollo.MutationHookOptions<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>(RollbackSystemObjectVersionDocument, options);
+      }
+export type RollbackSystemObjectVersionMutationHookResult = ReturnType<typeof useRollbackSystemObjectVersionMutation>;
+export type RollbackSystemObjectVersionMutationResult = Apollo.MutationResult<RollbackSystemObjectVersionMutation>;
+export type RollbackSystemObjectVersionMutationOptions = Apollo.BaseMutationOptions<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>;
 export const UpdateDerivedObjectsDocument = gql`
     mutation updateDerivedObjects($input: UpdateDerivedObjectsInput!) {
   updateDerivedObjects(input: $input) {
@@ -4139,6 +4223,7 @@ export const GetAssetDocument = gql`
   getAsset(input: $input) {
     Asset {
       idAsset
+      idVAssetType
     }
   }
 }
@@ -4334,6 +4419,7 @@ export const GetModelConstellationForAssetVersionDocument = gql`
         CountEmbeddedTextures
         CountLinkedTextures
         FileEncoding
+        IsDracoCompressed
         Name
         idVFileType
       }
@@ -4678,6 +4764,7 @@ export const GetModelConstellationDocument = gql`
         CountEmbeddedTextures
         CountLinkedTextures
         FileEncoding
+        IsDracoCompressed
       }
       ModelObjects {
         idModelObject
@@ -5157,6 +5244,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
         CountEmbeddedTextures
         CountLinkedTextures
         FileEncoding
+        IsDracoCompressed
         Name
         DateCreated
         Authoritative
@@ -5230,6 +5318,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
     Asset {
       FilePath
       AssetType
+      idAsset
     }
     AssetVersion {
       Creator
@@ -5237,6 +5326,8 @@ export const GetDetailsTabDataForObjectDocument = gql`
       StorageSize
       Ingested
       Version
+      idAsset
+      idAssetVersion
     }
     Actor {
       OrganizationName
@@ -5410,6 +5501,12 @@ export const GetSystemObjectDetailsDocument = gql`
       identifier
       objectType
     }
+    objectVersions {
+      idSystemObjectVersion
+      idSystemObject
+      PublishedState
+      DateCreated
+    }
   }
 }
     `;
@@ -5452,6 +5549,7 @@ export const GetVersionsForAssetDocument = gql`
       creator
       dateCreated
       size
+      ingested
     }
   }
 }

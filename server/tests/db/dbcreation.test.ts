@@ -1021,7 +1021,7 @@ describe('DB Creation Test Suite', () => {
                 idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: assetThumbnail.idAsset,
                 CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
-                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY',
+                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false,
                 idModel: 0
             });
         expect(model).toBeTruthy();
@@ -1040,7 +1040,7 @@ describe('DB Creation Test Suite', () => {
                 idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: null,
                 CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
-                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY',
+                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false,
                 idModel: 0
             });
         expect(modelNulls).toBeTruthy();
@@ -1289,6 +1289,7 @@ describe('DB Creation Test Suite', () => {
             systemObjectVersion = new DBAPI.SystemObjectVersion({
                 idSystemObject: systemObjectScene.idSystemObject,
                 PublishedState: 0,
+                DateCreated: UTIL.nowCleansed(),
                 idSystemObjectVersion: 0
             });
         }
@@ -1905,6 +1906,18 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(assetFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Asset: Asset.computeVersionCountMap', async () => {
+        let versionCountMap: Map<number, number> | null = null;
+        if (assetThumbnail) {
+            versionCountMap = await DBAPI.Asset.computeVersionCountMap([assetThumbnail.idAsset]);
+            if (versionCountMap) {
+                expect(versionCountMap.has(assetThumbnail.idAsset)).toBeTruthy();
+                expect(versionCountMap.get(assetThumbnail.idAsset)).toEqual(3);
+            }
+        }
+        expect(versionCountMap).toBeTruthy();
     });
 
     test('DB Fetch By ID: AssetVersion', async () => {
@@ -2695,8 +2708,11 @@ describe('DB Fetch By ID Test Suite', () => {
         let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
         if (systemObjectScene) {
             systemObjectVersionFetch = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(systemObjectScene.idSystemObject);
-            if (systemObjectVersionFetch) {
-                expect(systemObjectVersionFetch).toEqual(systemObjectVersion);
+            expect(systemObjectVersion).toBeTruthy();
+            if (systemObjectVersionFetch && systemObjectVersion) {
+                expect(systemObjectVersionFetch.idSystemObjectVersion).toEqual(systemObjectVersion.idSystemObjectVersion);
+                expect(systemObjectVersionFetch.idSystemObject).toEqual(systemObjectVersion.idSystemObject);
+                expect(systemObjectVersionFetch.PublishedState).toEqual(systemObjectVersion.PublishedState);
             }
         }
         expect(systemObjectVersionFetch).toBeTruthy();

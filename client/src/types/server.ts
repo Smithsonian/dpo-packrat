@@ -193,3 +193,11 @@ export enum eSystemObjectType {
     eActor = 12,
     eStakeholder = 13,
 }
+
+export enum ePublishedState {
+    eNotPublished = 0,              // 'Not Published', default
+    eRestricted = 1,                // 'Restricted',
+    eViewOnly = 2,                  // 'View Only',
+    eViewDownloadRestriction = 3,   // 'View and Download with usage restrictions',
+    eViewDownloadCC0 = 4,           // 'View and Download CC0'
+}
