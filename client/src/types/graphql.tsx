@@ -2715,6 +2715,7 @@ export type GetUploadedAssetVersionQuery = (
   { __typename?: 'Query' }
   & { getUploadedAssetVersion: (
     { __typename?: 'GetUploadedAssetVersionResult' }
+    & Pick<GetUploadedAssetVersionResult, 'idAssetVersionsUpdated'>
     & { AssetVersion: Array<(
       { __typename?: 'AssetVersion' }
       & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated'>
@@ -4516,6 +4517,7 @@ export const GetUploadedAssetVersionDocument = gql`
         }
       }
     }
+    idAssetVersionsUpdated
   }
 }
     `;

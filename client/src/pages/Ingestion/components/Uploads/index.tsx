@@ -94,14 +94,29 @@ function Uploads(): React.ReactElement {
         try {
             await updateVocabularyEntries();
             await updateMetadataFolders();
-            const metadatas = getMetadatas();
-            const {
-                file: { id, type }
-            } = metadatas[0];
-            const { isLast } = getMetadataInfo(id);
-            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
-            toast.dismiss();
-            await history.push(nextRoute);
+
+            const queuedUploadedFiles = getSelectedFiles(completed, true);
+
+            if (updateMode && queuedUploadedFiles.every(file => file.type !== 86 && file.type !== 94 && file.type !== 97)) {
+                const success: boolean = await ingestionStart();
+                if (success) {
+                    toast.success('Ingestion complete');
+                    ingestionComplete();
+                    setUpdateMode(false);
+                } else {
+                    toast.error('Ingestion failed, please try again later');
+                }
+                return;
+            } else {
+                const metadatas = getMetadatas();
+                const {
+                    file: { id, type }
+                } = metadatas[0];
+                const { isLast } = getMetadataInfo(id);
+                const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
+                toast.dismiss();
+                await history.push(nextRoute);
+            }
         } catch (error) {
             toast.error(error);
             return;
@@ -110,7 +125,6 @@ function Uploads(): React.ReactElement {
 
     const onIngest = async (): Promise<void> => {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
-        // if looking through all of the readied files, we see that none of them are photogram, scene, or model, just run ingestStart()
         try {
             setGettingAssetDetails(true);
             const data = await updateMetadataSteps();
@@ -130,21 +144,6 @@ function Uploads(): React.ReactElement {
             }
             toast.dismiss();
 
-            // if updating and none of the selected files are photogrammetry, model, or scene, then immediately start the ingestion process
-            const queuedUploadedFiles = getSelectedFiles(completed, true);
-            if (updateMode && queuedUploadedFiles.every(file => file.type !== 86 && file.type !== 94 && file.type !== 97)) {
-                const success: boolean = await ingestionStart();
-                if (success) {
-                    toast.success('Ingestion complete');
-                    ingestionComplete();
-                    setUpdateMode(false);
-                } else {
-                    toast.error('Ingestion failed, please try again later');
-                }
-                return;
-            }
-
-            // otherwise either skip to Metadata or proceed to Subject/Item
             updateMode ? onNext() : await history.push(nextStep);
         } catch {
             setGettingAssetDetails(false);

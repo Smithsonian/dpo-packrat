@@ -1,6 +1,8 @@
-import { IngestDataInput, IngestDataResult, MutationIngestDataArgs,
+import {
+    IngestDataInput, IngestDataResult, MutationIngestDataArgs,
     IngestSubjectInput, IngestItemInput, IngestIdentifierInput, User,
-    IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput } from '../../../../../types/graphql';
+    IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput
+} from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
@@ -413,7 +415,7 @@ async function createPhotogrammetryDerivedObjects(assetVersionMap: Map<number, D
     ingestResMap: Map<number, IngestAssetResult | null>): Promise<boolean> {
     // create CaptureDataFile
     let res: boolean = true;
-    for (const [ idAssetVersion, SOBased ] of assetVersionMap) {
+    for (const [idAssetVersion, SOBased] of assetVersionMap) {
         if (!(SOBased instanceof DBAPI.CaptureData))
             continue;
         const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
@@ -734,17 +736,17 @@ function validateInput(user: User | undefined, input: IngestDataInput): { succes
         return { success: false };
     }
 
-    if (ingestNew) {
-        if (!input.subjects || input.subjects.length == 0) {
-            LOG.error('ingestData called with no subjects', LOG.LS.eGQL);
-            return { success: false };
-        }
+    // if (ingestNew) {
+    //     if (!input.subjects || input.subjects.length == 0) {
+    //         LOG.error('ingestData called with no subjects', LOG.LS.eGQL);
+    //         return { success: false };
+    //     }
 
-        if (!input.item) {
-            LOG.error('ingestData called with no item', LOG.LS.eGQL);
-            return { success: false };
-        }
-    }
+    //     if (!input.item) {
+    //         LOG.error('ingestData called with no item', LOG.LS.eGQL);
+    //         return { success: false };
+    //     }
+    // }
 
     if (!user) {
         LOG.error('ingestData unable to retrieve user context', LOG.LS.eGQL);

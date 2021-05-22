@@ -122,7 +122,6 @@ function Header(): React.ReactElement {
     // Specific to search while in repository view
     const updateRepositorySearch = (): void => {
         const filterState = getFilterState();
-        filterState.repositoryRootType = [];
         filterState.search = filterState.keyword;
         updateRepositoryFilter(filterState);
         const updatedFilterState = getFilterState();
