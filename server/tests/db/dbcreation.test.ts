@@ -1963,6 +1963,26 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetVersionFetch).toBeTruthy();
     });
 
+    test('DB Fetch AssetVersion: AssetVersion.fetchLatestFromSystemObject (from SystemObjectVersion)', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (systemObjectScene) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromSystemObject(systemObjectScene.idSystemObject);
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchLatestFromSystemObject (from SystemObject)', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (systemObjectSubject) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromSystemObject(systemObjectSubject.idSystemObject);
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotProcessed]));
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
     test('DB Fetch AssetVersion: AssetVersion.fetchLatestFromAsset Not Ingested, Bulk Ingested', async () => {
         let assetVersionFetch: DBAPI.AssetVersion | null = null;
         if (assetThumbnail) {
@@ -3647,6 +3667,18 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeNull();
     });
 
+    test('DB Fetch SystemObject: SystemObjectPairs.SystemObjectBased for empty SystemObjectPairs', async () => {
+        const SYOP: DBAPI.SystemObjectPairs = new DBAPI.SystemObjectPairs({
+            idSystemObject: 0, idUnit: null, idProject: null, idSubject: null, idItem: null, idCaptureData: null,
+            idModel: null, idScene: null, idIntermediaryFile: null, idAsset: null, idAssetVersion: null,
+            idProjectDocumentation: null, idActor: null, idStakeholder: null, Retired: false,
+            Actor: null, Asset_AssetToSystemObject_idAsset: null, AssetVersion: null, CaptureData: null, // eslint-disable-line camelcase
+            IntermediaryFile: null, Item: null, Model: null, Project: null, ProjectDocumentation: null,
+            Scene: null, Stakeholder: null, Subject: null, Unit: null
+        });
+        expect(SYOP.SystemObjectBased).toBeNull();
+    });
+
     test('DB Fetch SystemObject: SystemObjectPairs.fetch for Actor', async () => {
         let SYOP: DBAPI.SystemObjectPairs | null = null;
 
@@ -3657,6 +3689,8 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.Actor).toMatchObject(actorWithUnit);
                 if (SYOP.Actor)
                     expect(actorWithUnit).toMatchObject(SYOP.Actor);
+
+                expect(SYOP.SystemObjectBased).toMatchObject(actorWithUnit);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3669,9 +3703,12 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
             SYOP = await DBAPI.SystemObjectPairs.fetch(SOAsset.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Asset).toBeTruthy();
+                expect(SYOP.Asset).toMatchObject(assetThumbnail);
                 if (SYOP.Asset)
-                    expect(assetThumbnail.idAsset).toEqual(SYOP.Asset.idAsset);
-                SYOP.Asset = assetThumbnail;
+                    expect(assetThumbnail).toEqual(SYOP.Asset);
+                expect(SYOP.SystemObjectBased).toMatchObject(assetThumbnail);
+
+                SYOP.Asset = assetThumbnail; // for 100% test coverage ...
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3687,6 +3724,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.AssetVersion).toMatchObject(assetVersion);
                 if (SYOP.AssetVersion)
                     expect(assetVersion).toMatchObject(SYOP.AssetVersion);
+                expect(SYOP.SystemObjectBased).toMatchObject(assetVersion);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3702,6 +3740,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.CaptureData).toMatchObject(captureData);
                 if (SYOP.CaptureData)
                     expect(captureData).toMatchObject(SYOP.CaptureData);
+                expect(SYOP.SystemObjectBased).toMatchObject(captureData);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3717,6 +3756,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.IntermediaryFile).toMatchObject(intermediaryFile);
                 if (SYOP.IntermediaryFile)
                     expect(intermediaryFile).toMatchObject(SYOP.IntermediaryFile);
+                expect(SYOP.SystemObjectBased).toMatchObject(intermediaryFile);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3732,6 +3772,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.Item).toMatchObject(item);
                 if (SYOP.Item)
                     expect(item).toMatchObject(SYOP.Item);
+                expect(SYOP.SystemObjectBased).toMatchObject(item);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3747,6 +3788,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.Model).toMatchObject(model);
                 if (SYOP.Model)
                     expect(model).toMatchObject(SYOP.Model);
+                expect(SYOP.SystemObjectBased).toMatchObject(model);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3762,6 +3804,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.Project).toMatchObject(project);
                 if (SYOP.Project)
                     expect(project).toMatchObject(SYOP.Project);
+                expect(SYOP.SystemObjectBased).toMatchObject(project);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3777,6 +3820,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.ProjectDocumentation).toMatchObject(projectDocumentation);
                 if (SYOP.ProjectDocumentation)
                     expect(projectDocumentation).toMatchObject(SYOP.ProjectDocumentation);
+                expect(SYOP.SystemObjectBased).toMatchObject(projectDocumentation);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3792,6 +3836,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.Scene).toMatchObject(scene);
                 if (SYOP.Scene)
                     expect(scene).toMatchObject(SYOP.Scene);
+                expect(SYOP.SystemObjectBased).toMatchObject(scene);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3807,6 +3852,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.Stakeholder).toMatchObject(stakeholder);
                 if (SYOP.Stakeholder)
                     expect(stakeholder).toMatchObject(SYOP.Stakeholder);
+                expect(SYOP.SystemObjectBased).toMatchObject(stakeholder);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3822,6 +3868,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.Subject).toMatchObject(subject);
                 if (SYOP.Subject)
                     expect(subject).toMatchObject(SYOP.Subject);
+                expect(SYOP.SystemObjectBased).toMatchObject(subject);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3837,6 +3884,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.Unit).toMatchObject(unit);
                 if (SYOP.Unit)
                     expect(unit).toMatchObject(SYOP.Unit);
+                expect(SYOP.SystemObjectBased).toMatchObject(unit);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -6814,6 +6862,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromSystemObjectVersion(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchLatestFromSystemObject(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchLatestFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
