@@ -59,10 +59,11 @@ function useIngest(): UseIngest {
     const ingestionStart = async (): Promise<boolean> => {
         try {
             // This hash will act as an easy check if a selected file contains an idAsset
-            const idToIdAssetHash = {};
+            const idToIdAssetMap: Map<string, number> = new Map<string, number>(); // map of file.id (idAssetVersion) -> file.idAsset
             const selectedFiles = getSelectedFiles(completed, true);
             selectedFiles.forEach(({ id, idAsset }) => {
-                if (idAsset) idToIdAssetHash[id] = idAsset;
+                if (idAsset)
+                    idToIdAssetMap.set(id, idAsset);
             });
 
             const ingestSubjects: IngestSubjectInput[] = subjects.map(subject => ({
@@ -100,6 +101,7 @@ function useIngest(): UseIngest {
 
             const metadatasList = metadatas.length === 0 ? getMetadatas() : metadatas;
             lodash.forEach(metadatasList, metadata => {
+                console.log('ingestionStart metadata', metadata);
                 const { file, photogrammetry, model, scene, other } = metadata;
                 const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, other: isOther } = getAssetType(file.type);
 
@@ -150,9 +152,9 @@ function useIngest(): UseIngest {
                         clusterGeometryFieldId
                     };
 
-                    if (idToIdAssetHash[parseFileId(file.id)]) {
-                        photogrammetryData.idAsset = parseFileId(file.id);
-                    }
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        photogrammetryData.idAsset = idAsset;
 
                     ingestPhotogrammetry.push(photogrammetryData);
                 }
@@ -200,9 +202,9 @@ function useIngest(): UseIngest {
                         sourceObjects,
                     };
 
-                    if (idToIdAssetHash[parseFileId(file.id)]) {
-                        modelData.idAsset = parseFileId(file.id);
-                    }
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        modelData.idAsset = idAsset;
 
                     ingestModel.push(modelData);
                 }
@@ -220,9 +222,9 @@ function useIngest(): UseIngest {
                         isOriented
                     };
 
-                    if (idToIdAssetHash[parseFileId(file.id)]) {
-                        sceneData.idAsset = idToIdAssetHash[parseFileId(file.id)];
-                    }
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        sceneData.idAsset = idAsset;
 
                     ingestScene.push(sceneData);
                 }
@@ -237,9 +239,9 @@ function useIngest(): UseIngest {
                         systemCreated
                     };
 
-                    if (idToIdAssetHash[parseFileId(file.id)]) {
-                        otherData.idAsset = parseFileId(file.id);
-                    }
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        otherData.idAsset = idAsset;
 
                     ingestOther.push(otherData);
                 }
@@ -254,7 +256,7 @@ function useIngest(): UseIngest {
                 scene: ingestScene,
                 other: ingestOther
             };
-            console.log('***********IngestDataInput', input);
+            console.log('** IngestDataInput', input);
 
             const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
                 mutation: IngestDataDocument,
