@@ -106,7 +106,7 @@ export class AssetStorageAdapter {
 
         const readStreamInput: STORE.ReadStreamInput = {
             storageKey,
-            fileName: asset.FileName,
+            fileName: assetVersion.FileName,
             version: assetVersion.Version,
             staging: !assetVersion.Ingested
         };
@@ -152,7 +152,7 @@ export class AssetStorageAdapter {
             idAsset: 0
         });
 
-        return await AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash }, asset, idUserCreator, DateCreated);
+        return await AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash }, asset, idUserCreator, DateCreated, null);
     }
 
     /**
@@ -160,7 +160,7 @@ export class AssetStorageAdapter {
      * Creates and persists AssetVersion (and Asset if Asset.idAsset is 0)
      */
     static async commitNewAssetVersion(commitWriteStreamInput: STORE.CommitWriteStreamInput,
-        asset: DBAPI.Asset, idUserCreator: number, DateCreated: Date):
+        asset: DBAPI.Asset, idUserCreator: number, DateCreated: Date, assetNameOverride: string | null):
         Promise<AssetStorageResultCommit> {
         LOG.info(`AssetStorageAdapter.commitNewAssetVersion idAsset ${asset.idAsset}: ${commitWriteStreamInput.storageKey}`, LOG.LS.eSTR);
 
@@ -181,11 +181,12 @@ export class AssetStorageAdapter {
         const isBulkIngest: boolean = (await asset.assetType() == eVocabularyID.eAssetAssetTypeBulkIngestion);
         return (isBulkIngest)
             ? await AssetStorageAdapter.commitNewAssetVersionBulk(commitWriteStreamInput, asset, idUserCreator, DateCreated, resStorage, storage)
-            : await AssetStorageAdapter.commitNewAssetVersionNonBulk(commitWriteStreamInput, asset, idUserCreator, DateCreated, resStorage);
+            : await AssetStorageAdapter.commitNewAssetVersionNonBulk(commitWriteStreamInput, asset, idUserCreator, DateCreated, assetNameOverride, resStorage);
     }
 
     private static async commitNewAssetVersionNonBulk(commitWriteStreamInput: STORE.CommitWriteStreamInput,
-        asset: DBAPI.Asset, idUserCreator: number, DateCreated: Date, resStorage: STORE.CommitWriteStreamResult):
+        asset: DBAPI.Asset, idUserCreator: number, DateCreated: Date, assetNameOverride: string | null,
+        resStorage: STORE.CommitWriteStreamResult):
         Promise<AssetStorageResultCommit> {
 
         let ingested: boolean | null = false;
@@ -194,7 +195,7 @@ export class AssetStorageAdapter {
         }
 
         const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(asset, idUserCreator,
-            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, null, null, ingested);
+            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, null, assetNameOverride, ingested);
         /* istanbul ignore else */
         if (assetVersion)
             return { assets: [ asset ], assetVersions: [ assetVersion ], success: true, error: '' };

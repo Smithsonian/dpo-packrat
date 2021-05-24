@@ -1943,6 +1943,28 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetVersionFetch).toBeTruthy();
     });
 
+    test('DB Fetch AssetVersion: AssetVersion.fetchFromAsset Not Retired', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFromAsset(assetThumbnail.idAsset, false);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersionNotIngested, assetVersionNotProcessed]));
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchFromAsset Retired', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFromAsset(assetThumbnail.idAsset, true);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual([]);
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
     test('DB Fetch AssetVersion: AssetVersion.fetchFromSystemObject', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
         if (systemObjectSubject) {
@@ -6860,6 +6882,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromAsset(0, false)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromSystemObjectVersion(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchLatestFromSystemObject(0)).toBeNull();
