@@ -4,6 +4,7 @@ const ingestData = gql`
     mutation ingestData($input: IngestDataInput!) {
         ingestData(input: $input) {
             success
+            message
         }
     }
 `;

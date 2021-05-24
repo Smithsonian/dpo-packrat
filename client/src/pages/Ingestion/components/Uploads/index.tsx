@@ -18,6 +18,7 @@ import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, 
 import UploadCompleteList from './UploadCompleteList';
 import UploadFilesPicker from './UploadList';
 import useIngest from '../../hooks/useIngest';
+import { eVocabularySetID } from '../../../../types/server';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -67,7 +68,7 @@ function Uploads(): React.ReactElement {
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
 
-    const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
+    const [updateVocabularyEntries, getEntries] = useVocabularyStore(state => [state.updateVocabularyEntries, state.getEntries]);
     const [completed, discardFiles, setUpdateMode, setUpdateWorkflowFileType, updateMode, getSelectedFiles] = useUploadStore(state => [
         state.completed,
         state.discardFiles,
@@ -96,15 +97,21 @@ function Uploads(): React.ReactElement {
             await updateMetadataFolders();
 
             const queuedUploadedFiles = getSelectedFiles(completed, true);
+            const assetTypes = getEntries(eVocabularySetID.eAssetAssetType);
+            const metadataStepRequiredAssetTypesSet = new Set();
+            assetTypes.forEach(assetType => {
+                if (assetType.Term === 'Capture Data Set: Photogrammetry' || assetType.Term === 'Model' || assetType.Term === 'Scene')
+                    metadataStepRequiredAssetTypesSet.add(assetType.idVocabulary);
+            });
 
-            if (updateMode && queuedUploadedFiles.every(file => file.type !== 86 && file.type !== 94 && file.type !== 97)) {
-                const success: boolean = await ingestionStart();
+            if (updateMode && queuedUploadedFiles.every(file => !metadataStepRequiredAssetTypesSet.has(file.type))) {
+                const { success, message } = await ingestionStart();
                 if (success) {
                     toast.success('Ingestion complete');
                     ingestionComplete();
                     setUpdateMode(false);
                 } else {
-                    toast.error('Ingestion failed, please try again later');
+                    toast.error(`Ingestion failed, please try again later. Error: ${message}`);
                 }
                 return;
             } else {
@@ -144,6 +151,7 @@ function Uploads(): React.ReactElement {
             }
             toast.dismiss();
 
+            // this should be reading the ready files, not the updateMode state
             updateMode ? onNext() : await history.push(nextStep);
         } catch {
             setGettingAssetDetails(false);
