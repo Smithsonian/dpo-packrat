@@ -893,6 +893,7 @@ export type IngestDataInput = {
 export type IngestDataResult = {
   __typename?: 'IngestDataResult';
   success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type AreCameraSettingsUniformInput = {
@@ -2341,7 +2342,7 @@ export type IngestDataMutation = (
   { __typename?: 'Mutation' }
   & { ingestData: (
     { __typename?: 'IngestDataResult' }
-    & Pick<IngestDataResult, 'success'>
+    & Pick<IngestDataResult, 'success' | 'message'>
   ) }
 );
 
@@ -3620,6 +3621,7 @@ export const IngestDataDocument = gql`
     mutation ingestData($input: IngestDataInput!) {
   ingestData(input: $input) {
     success
+    message
   }
 }
     `;

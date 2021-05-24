@@ -40,8 +40,13 @@ import {
 } from '../../../types/graphql';
 import { nonNullValue } from '../../../utils/shared';
 
+type IngestionStartResult = {
+    success: boolean;
+    message: string;
+};
+
 interface UseIngest {
-    ingestionStart: () => Promise<boolean>;
+    ingestionStart: () => Promise<IngestionStartResult>;
     ingestionComplete: () => void;
     ingestionReset: () => void;
 }
@@ -56,7 +61,7 @@ function useIngest(): UseIngest {
 
     const history = useHistory();
 
-    const ingestionStart = async (): Promise<boolean> => {
+    const ingestionStart = async (): Promise<IngestionStartResult> => {
         try {
             // This hash will act as an easy check if a selected file contains an idAsset
             const idToIdAssetMap: Map<string, number> = new Map<string, number>(); // map of file.id (idAssetVersion) -> file.idAsset
@@ -267,16 +272,16 @@ function useIngest(): UseIngest {
             const { data } = ingestDataMutation;
             if (data) {
                 const { ingestData } = data;
-                const { success } = ingestData;
+                const { success, message } = ingestData;
 
-                return success;
+                return { success, message: message || '' };
             }
 
         } catch (error) {
             toast.error(error);
         }
 
-        return false;
+        return { success: false, message: 'unable to start ingestion process' };
     };
 
     const resetIngestionState = () => {
