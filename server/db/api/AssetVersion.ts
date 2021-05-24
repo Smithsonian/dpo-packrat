@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { AssetVersion as AssetVersionBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject, SystemObjectBased } from '..';
+import { SystemObject, SystemObjectBased, SystemObjectVersion } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -177,12 +177,27 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         }
     }
 
-    static async fetchFromAsset(idAsset: number): Promise<AssetVersion[] | null> {
+    static async fetchFromAsset(idAsset: number, retired?: boolean): Promise<AssetVersion[] | null> {
         if (!idAsset)
             return null;
         try {
-            return DBC.CopyArray<AssetVersionBase, AssetVersion>(
-                await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idAsset } }), AssetVersion);
+            if (retired === undefined)
+                return DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                    await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idAsset } }), AssetVersion);
+            const assetVersions: AssetVersionBase[] | null = // DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                SELECT AV.*
+                FROM AssetVersion AS AV
+                JOIN SystemObject AS SO ON (AV.idAssetVersion = SO.idAssetVersion)
+                WHERE AV.idAsset = ${idAsset}
+                  AND SO.Retired = ${retired};`; //, AssetVersion);
+            /* istanbul ignore if */
+            if (!assetVersions)
+                return null;
+            const res: AssetVersion[] = [];
+            for (const assetVersion of assetVersions)   // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
+                res.push(AssetVersion.constructFromPrisma(assetVersion));
+            return res;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.AssetVersion.fetchFromAsset', LOG.LS.eDB, error);
             return null;
@@ -236,6 +251,29 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             LOG.error('DBAPI.AssetVersion.fetchFromSystemObjectVersion', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    /** First attempts to retrieve asset versions associated with the latest SystemObjectVersion for idSystemObject;
+     * if there is no SystemObjectVersion, falls back to assets connected to idSystemObject */
+    static async fetchLatestFromSystemObject(idSystemObject: number): Promise<AssetVersion[] | null> {
+        if (!idSystemObject)
+            return null;
+        let assetVersions: AssetVersion[] | null = null;
+
+        const SOV: SystemObjectVersion | null = await SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
+        if (SOV) {
+            assetVersions = await AssetVersion.fetchFromSystemObjectVersion(SOV.idSystemObjectVersion); /* istanbul ignore next */
+            if (!assetVersions)
+                LOG.error(`DBAPI.AssetVersion.fetchLatestFromSystemObject failed to retrieve asset versions from SystemObjectVersion ${JSON.stringify(SOV)}; falling back to all asset versions for idSystemObject ${idSystemObject}`, LOG.LS.eDB);
+        }
+
+        if (!assetVersions)
+            assetVersions = await AssetVersion.fetchFromSystemObject(idSystemObject); /* istanbul ignore next */
+        if (!assetVersions) {
+            LOG.info(`DBAPI.AssetVersion.fetchLatestFromSystemObject retrieved no asset versions for ${idSystemObject}`, LOG.LS.eDB);
+            return null;
+        }
+        return assetVersions;
     }
 
     static async fetchLatestFromAsset(idAsset: number): Promise<AssetVersion | null> {

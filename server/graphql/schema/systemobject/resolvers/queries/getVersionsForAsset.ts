@@ -19,7 +19,7 @@ export default async function getVersionsForAsset(_: Parent, args: QueryGetVersi
         return { versions };
     }
 
-    const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromAsset(SO.idAsset);
+    const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromAsset(SO.idAsset, false);
     if (!assetVersions) {
         LOG.error(`getVersionsForAsset unable to load asset versions for asset ${SO.idAsset}`, LOG.LS.eGQL);
         return { versions };

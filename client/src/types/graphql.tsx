@@ -1659,6 +1659,7 @@ export type AssetDetail = {
   __typename?: 'AssetDetail';
   idSystemObject: Scalars['Int'];
   idAsset: Scalars['Int'];
+  idAssetVersion: Scalars['Int'];
   name: Scalars['String'];
   path: Scalars['String'];
   assetType: Scalars['Int'];
@@ -2989,7 +2990,7 @@ export type GetAssetDetailsForSystemObjectQuery = (
     { __typename?: 'GetAssetDetailsForSystemObjectResult' }
     & { assetDetails: Array<(
       { __typename?: 'AssetDetail' }
-      & Pick<AssetDetail, 'idSystemObject' | 'idAsset' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
+      & Pick<AssetDetail, 'idSystemObject' | 'idAsset' | 'idAssetVersion' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
     )> }
   ) }
 );
@@ -5141,6 +5142,7 @@ export const GetAssetDetailsForSystemObjectDocument = gql`
     assetDetails {
       idSystemObject
       idAsset
+      idAssetVersion
       name
       path
       assetType
