@@ -114,7 +114,7 @@ function Metadata(): React.ReactElement {
 
         if (isLast) {
             setIngestionLoading(true);
-            const success: boolean = await ingestionStart();
+            const { success, message } = await ingestionStart();
             setIngestionLoading(false);
 
             if (success) {
@@ -122,7 +122,7 @@ function Metadata(): React.ReactElement {
                 ingestionComplete();
                 setUpdateMode(false);
             } else {
-                toast.error('Ingestion failed, please try again later');
+                toast.error(`Ingestion failed, please try again later. Error: ${message}`);
             }
         } else {
             const nextMetadata = metadatas[metadataIndex + 1];

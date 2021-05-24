@@ -59,7 +59,7 @@ function Ingestion(): React.ReactElement {
         }
 
         setOptions(updatedOptions);
-    }, [metadatas]);
+    }, [metadatas, mode]);
 
     const routeChangeCheck = ({ pathname }): boolean | string => {
         let allowChange: boolean = true;
