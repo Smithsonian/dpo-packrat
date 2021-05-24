@@ -893,6 +893,7 @@ export type IngestDataInput = {
 export type IngestDataResult = {
   __typename?: 'IngestDataResult';
   success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type AreCameraSettingsUniformInput = {
@@ -1658,6 +1659,7 @@ export type AssetDetail = {
   __typename?: 'AssetDetail';
   idSystemObject: Scalars['Int'];
   idAsset: Scalars['Int'];
+  idAssetVersion: Scalars['Int'];
   name: Scalars['String'];
   path: Scalars['String'];
   assetType: Scalars['Int'];
@@ -2340,7 +2342,7 @@ export type IngestDataMutation = (
   { __typename?: 'Mutation' }
   & { ingestData: (
     { __typename?: 'IngestDataResult' }
-    & Pick<IngestDataResult, 'success'>
+    & Pick<IngestDataResult, 'success' | 'message'>
   ) }
 );
 
@@ -2715,6 +2717,7 @@ export type GetUploadedAssetVersionQuery = (
   { __typename?: 'Query' }
   & { getUploadedAssetVersion: (
     { __typename?: 'GetUploadedAssetVersionResult' }
+    & Pick<GetUploadedAssetVersionResult, 'idAssetVersionsUpdated'>
     & { AssetVersion: Array<(
       { __typename?: 'AssetVersion' }
       & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated'>
@@ -2987,7 +2990,7 @@ export type GetAssetDetailsForSystemObjectQuery = (
     { __typename?: 'GetAssetDetailsForSystemObjectResult' }
     & { assetDetails: Array<(
       { __typename?: 'AssetDetail' }
-      & Pick<AssetDetail, 'idSystemObject' | 'idAsset' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
+      & Pick<AssetDetail, 'idSystemObject' | 'idAsset' | 'idAssetVersion' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
     )> }
   ) }
 );
@@ -3618,6 +3621,7 @@ export const IngestDataDocument = gql`
     mutation ingestData($input: IngestDataInput!) {
   ingestData(input: $input) {
     success
+    message
   }
 }
     `;
@@ -4516,6 +4520,7 @@ export const GetUploadedAssetVersionDocument = gql`
         }
       }
     }
+    idAssetVersionsUpdated
   }
 }
     `;
@@ -5137,6 +5142,7 @@ export const GetAssetDetailsForSystemObjectDocument = gql`
     assetDetails {
       idSystemObject
       idAsset
+      idAssetVersion
       name
       path
       assetType

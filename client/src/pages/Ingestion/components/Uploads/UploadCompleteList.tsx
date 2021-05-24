@@ -50,12 +50,12 @@ function UploadListComplete(): React.ReactElement {
 
     const { completed, loadCompleted } = useUploadStore();
     const { data, loading, error } = useQuery(GetUploadedAssetVersionDocument);
-
     useEffect(() => {
         if (!loading && !error) {
             const { getUploadedAssetVersion } = data;
-            const { AssetVersion } = getUploadedAssetVersion;
+            const { AssetVersion, idAssetVersionsUpdated } = getUploadedAssetVersion;
             const fileIds: string[] = completed.map(({ id }) => id);
+            const idAssetVersionsUpdatedSet = new Set(idAssetVersionsUpdated);
 
             const sortedAssetVersion = lodash.orderBy(AssetVersion, ['DateCreated'], ['desc']);
 
@@ -71,7 +71,12 @@ function UploadListComplete(): React.ReactElement {
                 if (fileIds.includes(id)) {
                     return completed.find(file => file.id === id) || assetVersion;
                 }
-                return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType);
+
+                let idAsset = null;
+                if (idAssetVersionsUpdatedSet.has(idAssetVersion)) {
+                    idAsset = assetVersion.Asset.idAsset;
+                }
+                return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType, idAsset);
             });
 
             loadCompleted(completedFiles);

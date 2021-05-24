@@ -142,6 +142,8 @@ interface FileListItemProps {
     cancelled: boolean;
     type: number;
     status: string;
+    idAsset: number | undefined;
+    uploadPendingList: boolean | undefined;
     onSelect: (id: FileId, selected: boolean) => void;
     onUpload: (id: FileId) => void;
     onCancel: (id: FileId) => void;
@@ -151,13 +153,35 @@ interface FileListItemProps {
 }
 
 function FileListItem(props: FileListItemProps): React.ReactElement {
-    const { id, name, size, type, typeOptions, status, complete, progress, selected, failed, uploading, onChangeType, onUpload, onCancel, onRemove, onRetry, onSelect } = props;
+    const {
+        id,
+        name,
+        size,
+        type,
+        typeOptions,
+        status,
+        complete,
+        progress,
+        selected,
+        failed,
+        uploading,
+        idAsset,
+        uploadPendingList,
+        onChangeType,
+        onUpload,
+        onCancel,
+        onRemove,
+        onRetry,
+        onSelect
+    } = props;
     const classes = useStyles(props);
-    const [updateMode, updateWorkflowFileType] = useUploadStore(state => [state.updateMode, state.updateWorkflowFileType]);
+    const [updateWorkflowFileType] = useUploadStore(state => [state.updateWorkflowFileType]);
     const upload = () => onUpload(id);
     const remove = () => (uploading ? onCancel(id) : onRemove(id));
     const retry = () => onRetry(id);
     const select = () => (complete ? onSelect(id, !selected) : null);
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.has('mode');
 
     let options: React.ReactNode = null;
 
@@ -222,7 +246,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                     </Typography>
                 </Box>
                 <Box className={classes.type}>
-                    {updateMode ? (
+                    {idAsset || (uploadPendingList && mode) ? (
                         <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
                             <MenuItem value={updateWorkflowFileType || type}>Update</MenuItem>
                         </Select>

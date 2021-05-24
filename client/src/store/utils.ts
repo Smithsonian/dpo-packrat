@@ -51,13 +51,12 @@ export function parseProjectToState(project: Project, selected: boolean): StateP
     };
 }
 
-export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary: Vocabulary): IngestionFile {
+export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary: Vocabulary, idAsset: number | null = null): IngestionFile {
     const { idAssetVersion, StorageSize, FileName } = assetVersion;
     const { idVocabulary } = vocabulary;
 
     const id = String(idAssetVersion);
-
-    return {
+    const result: IngestionFile = {
         id,
         name: FileName,
         size: StorageSize,
@@ -68,6 +67,8 @@ export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary:
         selected: false,
         cancel: null
     };
+    if (idAsset) result.idAsset = idAsset;
+    return result;
 }
 
 export function parseIdentifiersToState(identifiers: IngestIdentifier[], defaultIdentifierField: StateIdentifier[]): StateIdentifier[] {

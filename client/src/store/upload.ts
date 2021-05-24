@@ -37,6 +37,7 @@ export type IngestionFile = {
     progress: number;
     selected: boolean;
     cancel: (() => void) | null;
+    idAsset?: number;
 };
 
 type UploadStore = {

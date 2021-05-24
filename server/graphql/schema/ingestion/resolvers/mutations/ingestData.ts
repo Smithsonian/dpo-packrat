@@ -1,6 +1,8 @@
-import { IngestDataInput, IngestDataResult, MutationIngestDataArgs,
+import {
+    IngestDataInput, IngestDataResult, MutationIngestDataArgs,
     IngestSubjectInput, IngestItemInput, IngestIdentifierInput, User,
-    IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput } from '../../../../../types/graphql';
+    IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput
+} from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
@@ -19,7 +21,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     LOG.info(`ingestData: input=${JSON.stringify(input, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
     const { success, ingestNew } = validateInput(user, input);
     if (!success)
-        return { success: false };
+        return { success: false, message: 'failure to validate input' };
 
     let itemDB: DBAPI.Item | null = null;
     if (ingestNew) {
@@ -36,21 +38,21 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
                 subjectDB = await createSubjectAndRelated(subject, units);
 
             if (!subjectDB)
-                return { success: false };
+                return { success: false, message: 'failure to retrieve or create subject' };
             subjectsDB.push(subjectDB);
         }
 
         // wire projects to subjects
         if (input.project.id && !(await wireProjectToSubjects(input.project.id, subjectsDB)))
-            return { success: false };
+            return { success: false, message: 'failure to wire project to subjects' };
 
         itemDB = await fetchOrCreateItem(input.item);
         if (!itemDB)
-            return { success: false };
+            return { success: false, message: 'failure to retrieve or create item' };
 
         // wire subjects to item
         if (!await wireSubjectsToItem(subjectsDB, itemDB))
-            return { success: false };
+            return { success: false, message: 'failure to wire subjects to item' };
     }
 
     const ingestPhotogrammetry: boolean = input.photogrammetry && input.photogrammetry.length > 0;
@@ -63,35 +65,35 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     if (ingestPhotogrammetry) {
         for (const photogrammetry of input.photogrammetry) {
             if (!await createPhotogrammetryObjects(photogrammetry, assetVersionMap, ingestPhotoMap))
-                return { success: false };
+                return { success: false, message: 'failure to create photogrammetry object' };
         }
     }
 
     if (ingestModel) {
         for (const model of input.model) {
             if (!await createModelObjects(model, assetVersionMap))
-                return { success: false };
+                return { success: false, message: 'failure to create model object' };
         }
     }
 
     if (ingestScene) {
         for (const scene of input.scene) {
             if (!await createSceneObjects(scene, assetVersionMap))
-                return { success: false };
+                return { success: false, message: 'failure to create scene object' };
         }
     }
 
     if (ingestOther) {
         for (const other of input.other) {
             if (!await createOtherObjects(other, assetVersionMap))
-                return { success: false };
+                return { success: false, message: 'failure to create other object' };
         }
     }
 
     // wire item to asset-owning objects
     if (itemDB) {
         if (!await wireItemToAssetOwners(itemDB, assetVersionMap))
-            return { success: false };
+            return { success: false, message: 'failure to wire item to asset owner' };
     }
 
     // next, promote asset into repository storage
@@ -103,7 +105,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
 
     // notify workflow engine about this ingestion:
     if (!await sendWorkflowIngestionEvent(ingestResMap, user!)) // eslint-disable-line @typescript-eslint/no-non-null-assertion
-        return { success: false };
+        return { success: false, message: 'failure to notify workflow engine about ingestion event' };
     return { success: true };
 }
 
@@ -363,6 +365,7 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetryI
         return false;
     }
 
+    // TODO: if we're updating an existing Capture Data Set, we should update these records instead of creating new ones
     // create photogrammetry objects, identifiers, etc.
     const captureDataDB: DBAPI.CaptureData = new DBAPI.CaptureData({
         Name: photogrammetry.name,
@@ -413,7 +416,7 @@ async function createPhotogrammetryDerivedObjects(assetVersionMap: Map<number, D
     ingestResMap: Map<number, IngestAssetResult | null>): Promise<boolean> {
     // create CaptureDataFile
     let res: boolean = true;
-    for (const [ idAssetVersion, SOBased ] of assetVersionMap) {
+    for (const [idAssetVersion, SOBased] of assetVersionMap) {
         if (!(SOBased instanceof DBAPI.CaptureData))
             continue;
         const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
@@ -478,6 +481,7 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
         return false;
     }
 
+    // TODO: if we're updating an existing Model, we should update these records instead of creating new ones
     const modelDB: DBAPI.Model = JCOutput.modelConstellation.Model;
     modelDB.Name = model.name;
     modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCaptured) || new Date();
@@ -526,6 +530,7 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
 }
 
 async function createSceneObjects(scene: IngestSceneInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
+    // TODO: if we're updating an existing Scehe, we should update these records instead of creating new ones
     const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion);
     if (!sceneConstellation || !sceneConstellation.Scene)
         return false;
@@ -570,6 +575,7 @@ async function createSceneObjects(scene: IngestSceneInput, assetVersionMap: Map<
 async function createOtherObjects(other: IngestOtherInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
     // "other" means we're simply creating an asset version (and associated asset)
     // fetch the associated asset and use that for identifiers
+    // BUT ... populate assetVersionMap with the system object that owns the specified asset ... or if none, the asset itself.
 
     let idAsset: number | null | undefined = other.idAsset;
     if (!idAsset) {
@@ -590,8 +596,22 @@ async function createOtherObjects(other: IngestOtherInput, assetVersionMap: Map<
     if (!await handleIdentifiers(asset, other.systemCreated, other.identifiers))
         return false;
 
-    if (other.idAssetVersion)
-        assetVersionMap.set(other.idAssetVersion, asset);
+    if (other.idAssetVersion) {
+        // if the asset is owned by a system object, use that system object as the owner of the new asset version
+        let SOOwner: DBAPI.SystemObjectBased | null = null;
+        if (asset.idSystemObject) {
+            const SOP: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(asset.idSystemObject);
+            if (!SOP) {
+                LOG.error(`ingestData could not fetch system object paids from ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+                return false;
+            }
+            SOOwner = SOP.SystemObjectBased;
+        }
+        if (!SOOwner)
+            SOOwner = asset;
+
+        assetVersionMap.set(other.idAssetVersion, SOOwner);
+    }
     return true;
 }
 
@@ -610,6 +630,7 @@ async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.Sy
     // map from idAssetVersion -> object that "owns" the asset
     const res: Map<number, IngestAssetResult | null> = new Map<number, IngestAssetResult | null>();
     for (const [idAssetVersion, SOBased] of assetVersionMap) {
+        // LOG.info(`ingestData.promoteAssetsIntoRepository ${idAssetVersion} -> ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
         const assetVersionDB: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
         if (!assetVersionDB) {
             LOG.error(`ingestData unable to load assetVersion for ${idAssetVersion}`, LOG.LS.eGQL);

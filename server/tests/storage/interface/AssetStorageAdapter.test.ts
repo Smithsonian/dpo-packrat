@@ -284,7 +284,7 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
     } else {
         // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`, LOG.LS.eTEST);
         ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: TestCase.assetVersions[0].StorageKeyStaging, storageHash },
-            TestCase.assets[0], TestCase.assetVersions[0].idUserCreator, TestCase.assetVersions[0].DateCreated);
+            TestCase.assets[0], TestCase.assetVersions[0].idUserCreator, TestCase.assetVersions[0].DateCreated, TestCase.assetVersions[0].FileName);
     }
     expect(ASRC.success).toBeTruthy();
     if (!ASRC.success) {
