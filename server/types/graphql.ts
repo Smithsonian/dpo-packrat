@@ -890,6 +890,7 @@ export type IngestDataInput = {
 export type IngestDataResult = {
   __typename?: 'IngestDataResult';
   success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type AreCameraSettingsUniformInput = {
@@ -1655,6 +1656,7 @@ export type AssetDetail = {
   __typename?: 'AssetDetail';
   idSystemObject: Scalars['Int'];
   idAsset: Scalars['Int'];
+  idAssetVersion: Scalars['Int'];
   name: Scalars['String'];
   path: Scalars['String'];
   assetType: Scalars['Int'];

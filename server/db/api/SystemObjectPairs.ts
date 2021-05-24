@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import * as P from '@prisma/client';
 import { Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model,
-    Project, ProjectDocumentation, Scene, Stakeholder, SystemObject, Subject, Unit } from '..';
+    Project, ProjectDocumentation, Scene, Stakeholder, SystemObject, SystemObjectBased, Subject, Unit } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -347,6 +347,23 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
     }
     set Asset(value: Asset | null) {
         this.Asset_AssetToSystemObject_idAsset = value;
+    }
+
+    get SystemObjectBased(): SystemObjectBased | null {
+        if (this.Actor) return this.Actor;
+        if (this.Asset_AssetToSystemObject_idAsset) return this.Asset_AssetToSystemObject_idAsset;
+        if (this.AssetVersion) return this.AssetVersion;
+        if (this.CaptureData) return this.CaptureData;
+        if (this.IntermediaryFile) return this.IntermediaryFile;
+        if (this.Item) return this.Item;
+        if (this.Model) return this.Model;
+        if (this.Project) return this.Project;
+        if (this.ProjectDocumentation) return this.ProjectDocumentation;
+        if (this.Scene) return this.Scene;
+        if (this.Stakeholder) return this.Stakeholder;
+        if (this.Subject) return this.Subject;
+        if (this.Unit) return this.Unit;
+        return null;
     }
 
     constructor(input: SystemObjectPairsBase) {

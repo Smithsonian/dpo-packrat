@@ -6,6 +6,7 @@ const getAssetDetailsForSystemObject = gql`
           assetDetails {
                 idSystemObject
                 idAsset
+                idAssetVersion
                 name
                 path
                 assetType

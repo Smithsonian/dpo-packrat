@@ -90,7 +90,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
             >
                 <UploadListHeader />
                 <Box className={classes.list}>
-                    <FileList files={pending} />
+                    <FileList files={pending} uploadPendingList />
                     <Typography className={classes.title}>Drag and drop files here or click the button</Typography>
                     <BsCloudUpload className={classes.icon} size='50px' />
                     <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
