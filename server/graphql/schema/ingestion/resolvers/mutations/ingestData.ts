@@ -21,7 +21,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     LOG.info(`ingestData: input=${JSON.stringify(input, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
     const { success, ingestNew } = validateInput(user, input);
     if (!success)
-        return { success: false };
+        return { success: false, message: 'failure to validate input' };
 
     let itemDB: DBAPI.Item | null = null;
     if (ingestNew) {
@@ -38,21 +38,21 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
                 subjectDB = await createSubjectAndRelated(subject, units);
 
             if (!subjectDB)
-                return { success: false };
+                return { success: false, message: 'failure to retrieve or create subject' };
             subjectsDB.push(subjectDB);
         }
 
         // wire projects to subjects
         if (input.project.id && !(await wireProjectToSubjects(input.project.id, subjectsDB)))
-            return { success: false };
+            return { success: false, message: 'failure to wire project to subjects' };
 
         itemDB = await fetchOrCreateItem(input.item);
         if (!itemDB)
-            return { success: false };
+            return { success: false, message: 'failure to retrieve or create item' };
 
         // wire subjects to item
         if (!await wireSubjectsToItem(subjectsDB, itemDB))
-            return { success: false };
+            return { success: false, message: 'failure to wire subjects to item' };
     }
 
     const ingestPhotogrammetry: boolean = input.photogrammetry && input.photogrammetry.length > 0;
@@ -65,35 +65,35 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     if (ingestPhotogrammetry) {
         for (const photogrammetry of input.photogrammetry) {
             if (!await createPhotogrammetryObjects(photogrammetry, assetVersionMap, ingestPhotoMap))
-                return { success: false };
+                return { success: false, message: 'failure to create photogrammetry object' };
         }
     }
 
     if (ingestModel) {
         for (const model of input.model) {
             if (!await createModelObjects(model, assetVersionMap))
-                return { success: false };
+                return { success: false, message: 'failure to create model object' };
         }
     }
 
     if (ingestScene) {
         for (const scene of input.scene) {
             if (!await createSceneObjects(scene, assetVersionMap))
-                return { success: false };
+                return { success: false, message: 'failure to create scene object' };
         }
     }
 
     if (ingestOther) {
         for (const other of input.other) {
             if (!await createOtherObjects(other, assetVersionMap))
-                return { success: false };
+                return { success: false, message: 'failure to create other object' };
         }
     }
 
     // wire item to asset-owning objects
     if (itemDB) {
         if (!await wireItemToAssetOwners(itemDB, assetVersionMap))
-            return { success: false };
+            return { success: false, message: 'failure to wire item to asset owner' };
     }
 
     // next, promote asset into repository storage
@@ -105,7 +105,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
 
     // notify workflow engine about this ingestion:
     if (!await sendWorkflowIngestionEvent(ingestResMap, user!)) // eslint-disable-line @typescript-eslint/no-non-null-assertion
-        return { success: false };
+        return { success: false, message: 'failure to notify workflow engine about ingestion event' };
     return { success: true };
 }
 

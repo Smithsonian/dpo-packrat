@@ -34,7 +34,7 @@ function FileList(props: FileListProps): React.ReactElement {
     const onSelect = (id: FileId, selected: boolean): void => selectFile(id, selected);
 
     const getFileList = ({ id, name, size, status, selected, progress, type, idAsset }: IngestionFile, index: number) => {
-        const uploading = status === FileUploadStatus.UPLOADING || status === FileUploadStatus.PROCESSING;
+        const uploading = (status === FileUploadStatus.UPLOADING || status === FileUploadStatus.PROCESSING);
         const complete = status === FileUploadStatus.COMPLETE;
         const failed = status === FileUploadStatus.FAILED;
         const cancelled = status === FileUploadStatus.CANCELLED;
@@ -69,7 +69,11 @@ function FileList(props: FileListProps): React.ReactElement {
         );
     };
 
-    return <React.Fragment>{files.map(getFileList)}</React.Fragment>;
+    return (
+        <React.Fragment>
+            {files.map(getFileList)}
+        </React.Fragment>
+        );
 }
 
 export default FileList;

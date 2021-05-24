@@ -96,15 +96,22 @@ function Uploads(): React.ReactElement {
             await updateMetadataFolders();
 
             const queuedUploadedFiles = getSelectedFiles(completed, true);
+            console.log('queueduploadfiles', queuedUploadedFiles);
 
+            // This is where the logic for short circuiting the item/subject and metadata steps occur
+            // Make an array of all the queuedUploadedFiles that are of type photo, model, and scene
+            // if that array has length 0
+            // then proceed with the short circuiting
+            // otherwise manipulate the metadatas so that the first few are considered updated and only apply metadata steps for the ones in the back
+            // continue with the process until the finish is clicked
             if (updateMode && queuedUploadedFiles.every(file => file.type !== 86 && file.type !== 94 && file.type !== 97)) {
-                const success: boolean = await ingestionStart();
+                const { success, message } = await ingestionStart();
                 if (success) {
                     toast.success('Ingestion complete');
                     ingestionComplete();
                     setUpdateMode(false);
                 } else {
-                    toast.error('Ingestion failed, please try again later');
+                    toast.error(`Ingestion failed, please try again later. Error: ${message}`);
                 }
                 return;
             } else {
