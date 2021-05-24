@@ -17,9 +17,17 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     Ingested!: boolean | null;  // null means uploaded, not processed; false means uploaded and processed, true means uploaded, processed, and ingested
     BulkIngest!: boolean;
 
+    IngestedOrig: boolean | null;
+
     constructor(input: AssetVersionBase) {
         super(input);
+        this.IngestedOrig = this.Ingested;
     }
+
+    protected updateCachedValues(): void {
+        this.IngestedOrig = this.Ingested;
+    }
+
 
     public fetchTableName(): string { return 'AssetVersion'; }
     public fetchID(): number { return this.idAssetVersion; }
@@ -46,7 +54,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     protected async createWorker(): Promise<boolean> {
         try {
             const { DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest } = this;
-            const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset);
+            const Version: number = (Ingested) ? (await AssetVersion.computeNextVersionNumber(idAsset) || 1) : 0;   // only bump version number for Ingested asset versions
 
             ({ idAssetVersion: this.idAssetVersion, DateCreated: this.DateCreated, idAsset: this.idAsset,
                 FileName: this.FileName, idUserCreator: this.idUserCreator, StorageHash: this.StorageHash, StorageSize: this.StorageSize,
@@ -62,7 +70,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                         StorageKeyStaging,
                         Ingested,
                         BulkIngest,
-                        Version: nextVersion ? nextVersion : /* istanbul ignore next */ 1,
+                        Version,
                         SystemObject:       { create: { Retired: false }, },
                     },
                 }));
@@ -91,7 +99,6 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         */
     }
 
-    // TODO: remove this abhorent method and approach once we can call stored procedures from createWorker
     static async computeNextVersionNumber(idAsset: number): Promise<number | null> {
         if (!idAsset)
             return null;
@@ -110,7 +117,19 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAssetVersion, DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest, Version } = this;
+            const { idAssetVersion, DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest, IngestedOrig } = this;
+            let { Version } = this; // may be updated!
+
+            // if we're updating from not ingested to ingested, and if we don't have a version number, compute and use the next version number:
+            if (!IngestedOrig && Ingested && !Version) {
+                const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset);
+                if (!nextVersion) {
+                    LOG.error('DBAPI.AssetVersion.updateWorker failed to compute nextVersion', LOG.LS.eDB);
+                    return false;
+                }
+                Version = nextVersion;
+            }
+
             return await DBC.DBConnection.prisma.assetVersion.update({
                 where: { idAssetVersion, },
                 data: {
@@ -190,7 +209,8 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 FROM AssetVersion AS AV
                 JOIN SystemObject AS SO ON (AV.idAssetVersion = SO.idAssetVersion)
                 WHERE AV.idAsset = ${idAsset}
-                  AND SO.Retired = ${retired};`; //, AssetVersion);
+                  AND SO.Retired = ${retired}
+                ORDER BY AV.idAsset, AV.Ingested DESC, AV.Version;`; //, AssetVersion);
             /* istanbul ignore if */
             if (!assetVersions)
                 return null;
