@@ -43,7 +43,7 @@ import { nonNullValue } from '../../../utils/shared';
 type IngestionStartResult = {
     success: boolean;
     message: string;
-}
+};
 
 interface UseIngest {
     ingestionStart: () => Promise<IngestionStartResult>;

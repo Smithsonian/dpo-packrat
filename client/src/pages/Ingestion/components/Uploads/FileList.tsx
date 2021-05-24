@@ -73,7 +73,7 @@ function FileList(props: FileListProps): React.ReactElement {
         <React.Fragment>
             {files.map(getFileList)}
         </React.Fragment>
-        );
+    );
 }
 
 export default FileList;

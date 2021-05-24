@@ -217,8 +217,6 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 
             const uploadAssetInputs = urlParams.has('idAsset') ? { file, type, idAsset: Number(urlParams.get('idAsset')) } : { file, type };
 
-            console.log('file from start uploadtransfer', file);
-
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
                 variables: uploadAssetInputs,
