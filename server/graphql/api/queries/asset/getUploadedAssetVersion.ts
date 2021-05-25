@@ -16,6 +16,7 @@ const getUploadedAssetVersion = gql`
                     }
                 }
             }
+            idAssetVersionsUpdated
         }
     }
 `;

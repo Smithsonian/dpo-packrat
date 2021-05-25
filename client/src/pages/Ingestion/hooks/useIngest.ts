@@ -40,386 +40,248 @@ import {
 } from '../../../types/graphql';
 import { nonNullValue } from '../../../utils/shared';
 
+type IngestionStartResult = {
+    success: boolean;
+    message: string;
+};
+
 interface UseIngest {
-    ingestionStart: () => Promise<boolean>;
+    ingestionStart: () => Promise<IngestionStartResult>;
     ingestionComplete: () => void;
     ingestionReset: () => void;
 }
 
 function useIngest(): UseIngest {
-    const [removeSelectedUploads, resetUploads, updateMode] = useUploadStore(state => [state.removeSelectedUploads, state.reset, state.updateMode]);
+    const [removeSelectedUploads, resetUploads, getSelectedFiles, completed] = useUploadStore(state => [state.removeSelectedUploads, state.reset, state.getSelectedFiles, state.completed]);
     const [subjects, resetSubjects] = useSubjectStore(state => [state.subjects, state.reset]);
     const [getSelectedProject, resetProjects] = useProjectStore(state => [state.getSelectedProject, state.reset]);
     const [getSelectedItem, resetItems] = useItemStore(state => [state.getSelectedItem, state.reset]);
-    const [metadatas, getSelectedIdentifiers, resetMetadatas] = useMetadataStore(state => [state.metadatas, state.getSelectedIdentifiers, state.reset]);
+    const [metadatas, getSelectedIdentifiers, resetMetadatas, getMetadatas] = useMetadataStore(state => [state.metadatas, state.getSelectedIdentifiers, state.reset, state.getMetadatas]);
     const getAssetType = useVocabularyStore(state => state.getAssetType);
 
     const history = useHistory();
 
-    const ingestionStart = async (): Promise<boolean> => {
+    const ingestionStart = async (): Promise<IngestionStartResult> => {
         try {
+            // This hash will act as an easy check if a selected file contains an idAsset
+            const idToIdAssetMap: Map<string, number> = new Map<string, number>(); // map of file.id (idAssetVersion) -> file.idAsset
+            const selectedFiles = getSelectedFiles(completed, true);
+            selectedFiles.forEach(({ id, idAsset }) => {
+                if (idAsset)
+                    idToIdAssetMap.set(id, idAsset);
+            });
 
+            const ingestSubjects: IngestSubjectInput[] = subjects.map(subject => ({
+                ...subject,
+                id: subject.id || null
+            }));
 
-            if (updateMode) {
-                // NOTE: tentative default values for item and project if skipping Item and Subject step during update
-                // NOTE: lack of subjects will raise error 'ingestData called with no subjects'
-                const ingestSubjects: IngestSubjectInput[] = [];
-                const ingestItem: IngestItemInput = { name: '', entireSubject: true };
-                const ingestProject: IngestProjectInput = { id: 0, name: '' };
-                const ingestPhotogrammetry: IngestPhotogrammetryInput[] = [];
-                const ingestModel: IngestModelInput[] = [];
-                const ingestScene: IngestSceneInput[] = [];
-                const ingestOther: IngestOtherInput[] = [];
+            const project: StateProject = getSelectedProject() || { id: 0, name: '', selected: false };
 
-                lodash.forEach(metadatas, metadata => {
-                    const { file, photogrammetry, model, scene, other } = metadata;
-                    const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, other: isOther } = getAssetType(file.type);
+            const ingestProject: IngestProjectInput = {
+                id: project.id,
+                name: project.name
+            };
 
-                    if (isPhotogrammetry) {
-                        const {
-                            dateCaptured,
-                            datasetType,
-                            systemCreated,
-                            name,
-                            description,
-                            cameraSettingUniform,
-                            datasetFieldId,
-                            itemPositionType,
-                            itemPositionFieldId,
-                            itemArrangementFieldId,
-                            focusType,
-                            lightsourceType,
-                            backgroundRemovalMethod,
-                            clusterType,
-                            clusterGeometryFieldId,
-                            directory,
-                            identifiers,
-                            folders
-                        } = photogrammetry;
+            const item: StateItem = getSelectedItem() || { id: '', entireSubject: false, selected: false, name: '' };
 
-                        const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-                        const ingestFolders: IngestFolderInput[] = getIngestFolders(folders);
+            const isDefaultItem = item.id === defaultItem.id;
 
-                        const photogrammetryData: IngestPhotogrammetryInput = {
-                            idAssetVersion: parseFileId(file.id),
-                            name,
-                            dateCaptured: dateCaptured.toISOString(),
-                            datasetType: nonNullValue<number>('datasetType', datasetType),
-                            systemCreated,
-                            description,
-                            cameraSettingUniform,
-                            identifiers: ingestIdentifiers,
-                            folders: ingestFolders,
-                            datasetFieldId,
-                            itemPositionType,
-                            itemPositionFieldId,
-                            itemArrangementFieldId,
-                            focusType,
-                            lightsourceType,
-                            backgroundRemovalMethod,
-                            directory,
-                            clusterType,
-                            clusterGeometryFieldId
-                        };
+            let ingestItemId: number | null = null;
 
-                        ingestPhotogrammetry.push(photogrammetryData);
-                    }
+            if (!isDefaultItem || isNewItem(item.id)) {
+                ingestItemId = Number.parseInt(item.id, 10);
+            }
 
-                    if (isModel) {
-                        const {
-                            identifiers,
-                            sourceObjects,
-                            systemCreated,
-                            name,
-                            creationMethod,
-                            authoritative,
-                            modality,
-                            units,
-                            purpose,
-                            modelFileType,
-                            directory,
-                        } = model;
+            const ingestItem: IngestItemInput = {
+                id: ingestItemId,
+                name: item.name,
+                entireSubject: item.entireSubject
+            };
 
-                        let {
-                            dateCaptured
-                        } = model;
+            const ingestPhotogrammetry: IngestPhotogrammetryInput[] = [];
+            const ingestModel: IngestModelInput[] = [];
+            const ingestScene: IngestSceneInput[] = [];
+            const ingestOther: IngestOtherInput[] = [];
 
-                        if (!dateCaptured) {
-                            dateCaptured = '';
-                        } else if (typeof dateCaptured === 'object') {
-                            dateCaptured = nonNullValue<string>('datecaptured', dateCaptured.toISOString());
-                        }
+            const metadatasList = metadatas.length === 0 ? getMetadatas() : metadatas;
+            lodash.forEach(metadatasList, metadata => {
+                console.log('ingestionStart metadata', metadata);
+                const { file, photogrammetry, model, scene, other } = metadata;
+                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, other: isOther } = getAssetType(file.type);
 
-                        const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+                if (isPhotogrammetry) {
+                    const {
+                        dateCaptured,
+                        datasetType,
+                        systemCreated,
+                        name,
+                        description,
+                        cameraSettingUniform,
+                        datasetFieldId,
+                        itemPositionType,
+                        itemPositionFieldId,
+                        itemArrangementFieldId,
+                        focusType,
+                        lightsourceType,
+                        backgroundRemovalMethod,
+                        clusterType,
+                        clusterGeometryFieldId,
+                        directory,
+                        identifiers,
+                        folders
+                    } = photogrammetry;
 
-                        const modelData: IngestModelInput = {
-                            name,
-                            idAssetVersion: parseFileId(file.id),
-                            dateCaptured,
-                            identifiers: ingestIdentifiers,
-                            creationMethod: nonNullValue<number>('creationMethod', creationMethod),
-                            authoritative,
-                            modality: nonNullValue<number>('modality', modality),
-                            units: nonNullValue<number>('units', units),
-                            purpose: nonNullValue<number>('purpose', purpose),
-                            modelFileType: nonNullValue<number>('modelFileType', modelFileType),
-                            directory,
-                            systemCreated,
-                            sourceObjects,
-                        };
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+                    const ingestFolders: IngestFolderInput[] = getIngestFolders(folders);
 
-                        ingestModel.push(modelData);
-                    }
+                    const photogrammetryData: IngestPhotogrammetryInput = {
+                        idAssetVersion: parseFileId(file.id),
+                        name,
+                        dateCaptured: dateCaptured.toISOString(),
+                        datasetType: nonNullValue<number>('datasetType', datasetType),
+                        systemCreated,
+                        description,
+                        cameraSettingUniform,
+                        identifiers: ingestIdentifiers,
+                        folders: ingestFolders,
+                        datasetFieldId,
+                        itemPositionType,
+                        itemPositionFieldId,
+                        itemArrangementFieldId,
+                        focusType,
+                        lightsourceType,
+                        backgroundRemovalMethod,
+                        directory,
+                        clusterType,
+                        clusterGeometryFieldId
+                    };
 
-                    if (isScene) {
-                        const { identifiers, systemCreated, hasBeenQCd, isOriented, name } = scene;
-                        const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        photogrammetryData.idAsset = idAsset;
 
-                        const sceneData: IngestSceneInput = {
-                            idAssetVersion: parseFileId(file.id),
-                            identifiers: ingestIdentifiers,
-                            systemCreated,
-                            name,
-                            hasBeenQCd,
-                            isOriented
-                        };
-
-                        ingestScene.push(sceneData);
-                    }
-
-                    if (isOther) {
-                        const { identifiers, systemCreated } = other;
-
-                        const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-
-                        const otherData: IngestOtherInput = {
-                            idAssetVersion: parseFileId(file.id),
-                            identifiers: ingestIdentifiers,
-                            systemCreated
-                        };
-
-                        ingestOther.push(otherData);
-                    }
-                });
-
-                // NOTE: update's input passes an update truthy property
-                const input: IngestDataInput = {
-                    subjects: ingestSubjects,
-                    project: ingestProject,
-                    item: ingestItem,
-                    photogrammetry: ingestPhotogrammetry,
-                    model: ingestModel,
-                    scene: ingestScene,
-                    other: ingestOther,
-                };
-                const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
-                    mutation: IngestDataDocument,
-                    variables: { input },
-                    refetchQueries: ['getUploadedAssetVersion']
-                });
-                const { data } = ingestDataMutation;
-
-                if (data) {
-                    const { ingestData } = data;
-                    const { success } = ingestData;
-
-                    return success;
-                }
-            } else {
-                const ingestSubjects: IngestSubjectInput[] = subjects.map(subject => ({
-                    ...subject,
-                    id: subject.id || null
-                }));
-
-                const project: StateProject = nonNullValue<StateProject>('project', getSelectedProject());
-
-                const ingestProject: IngestProjectInput = {
-                    id: project.id,
-                    name: project.name
-                };
-
-                const item: StateItem = nonNullValue<StateItem>('item', getSelectedItem());
-
-                const isDefaultItem = item.id === defaultItem.id;
-
-                let ingestItemId: number | null = null;
-
-                if (!isDefaultItem || isNewItem(item.id)) {
-                    ingestItemId = Number.parseInt(item.id, 10);
+                    ingestPhotogrammetry.push(photogrammetryData);
                 }
 
-                const ingestItem: IngestItemInput = {
-                    id: ingestItemId,
-                    name: item.name,
-                    entireSubject: item.entireSubject
-                };
+                if (isModel) {
+                    const {
+                        identifiers,
+                        sourceObjects,
+                        systemCreated,
+                        name,
+                        creationMethod,
+                        authoritative,
+                        modality,
+                        units,
+                        purpose,
+                        modelFileType,
+                        directory,
+                    } = model;
 
-                const ingestPhotogrammetry: IngestPhotogrammetryInput[] = [];
-                const ingestModel: IngestModelInput[] = [];
-                const ingestScene: IngestSceneInput[] = [];
-                const ingestOther: IngestOtherInput[] = [];
+                    let {
+                        dateCaptured
+                    } = model;
 
-                lodash.forEach(metadatas, metadata => {
-                    const { file, photogrammetry, model, scene, other } = metadata;
-                    const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, other: isOther } = getAssetType(file.type);
-
-                    if (isPhotogrammetry) {
-                        const {
-                            dateCaptured,
-                            datasetType,
-                            systemCreated,
-                            name,
-                            description,
-                            cameraSettingUniform,
-                            datasetFieldId,
-                            itemPositionType,
-                            itemPositionFieldId,
-                            itemArrangementFieldId,
-                            focusType,
-                            lightsourceType,
-                            backgroundRemovalMethod,
-                            clusterType,
-                            clusterGeometryFieldId,
-                            directory,
-                            identifiers,
-                            folders
-                        } = photogrammetry;
-
-                        const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-                        const ingestFolders: IngestFolderInput[] = getIngestFolders(folders);
-
-                        const photogrammetryData: IngestPhotogrammetryInput = {
-                            idAssetVersion: parseFileId(file.id),
-                            name,
-                            dateCaptured: dateCaptured.toISOString(),
-                            datasetType: nonNullValue<number>('datasetType', datasetType),
-                            systemCreated,
-                            description,
-                            cameraSettingUniform,
-                            identifiers: ingestIdentifiers,
-                            folders: ingestFolders,
-                            datasetFieldId,
-                            itemPositionType,
-                            itemPositionFieldId,
-                            itemArrangementFieldId,
-                            focusType,
-                            lightsourceType,
-                            backgroundRemovalMethod,
-                            directory,
-                            clusterType,
-                            clusterGeometryFieldId
-                        };
-
-                        ingestPhotogrammetry.push(photogrammetryData);
+                    if (!dateCaptured) {
+                        dateCaptured = '';
+                    } else if (typeof dateCaptured === 'object') {
+                        dateCaptured = nonNullValue<string>('datecaptured', dateCaptured.toISOString());
                     }
 
-                    if (isModel) {
-                        const {
-                            identifiers,
-                            sourceObjects,
-                            systemCreated,
-                            name,
-                            creationMethod,
-                            authoritative,
-                            modality,
-                            units,
-                            purpose,
-                            modelFileType,
-                            directory,
-                        } = model;
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
-                        let {
-                            dateCaptured
-                        } = model;
+                    const modelData: IngestModelInput = {
+                        name,
+                        idAssetVersion: parseFileId(file.id),
+                        dateCaptured,
+                        identifiers: ingestIdentifiers,
+                        creationMethod: nonNullValue<number>('creationMethod', creationMethod),
+                        authoritative,
+                        modality: nonNullValue<number>('modality', modality),
+                        units: nonNullValue<number>('units', units),
+                        purpose: nonNullValue<number>('purpose', purpose),
+                        modelFileType: nonNullValue<number>('modelFileType', modelFileType),
+                        directory,
+                        systemCreated,
+                        sourceObjects,
+                    };
 
-                        if (!dateCaptured) {
-                            dateCaptured = '';
-                        } else if (typeof dateCaptured === 'object') {
-                            dateCaptured = nonNullValue<string>('datecaptured', dateCaptured.toISOString());
-                        }
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        modelData.idAsset = idAsset;
 
-                        const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-
-                        const modelData: IngestModelInput = {
-                            name,
-                            idAssetVersion: parseFileId(file.id),
-                            dateCaptured,
-                            identifiers: ingestIdentifiers,
-                            creationMethod: nonNullValue<number>('creationMethod', creationMethod),
-                            authoritative,
-                            modality: nonNullValue<number>('modality', modality),
-                            units: nonNullValue<number>('units', units),
-                            purpose: nonNullValue<number>('purpose', purpose),
-                            modelFileType: nonNullValue<number>('modelFileType', modelFileType),
-                            directory,
-                            systemCreated,
-                            sourceObjects,
-                        };
-
-                        ingestModel.push(modelData);
-                    }
-
-                    if (isScene) {
-                        const { identifiers, systemCreated, hasBeenQCd, isOriented, name } = scene;
-                        const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-
-                        const sceneData: IngestSceneInput = {
-                            idAssetVersion: parseFileId(file.id),
-                            identifiers: ingestIdentifiers,
-                            systemCreated,
-                            name,
-                            hasBeenQCd,
-                            isOriented
-                        };
-
-                        ingestScene.push(sceneData);
-                    }
-
-                    if (isOther) {
-                        const { identifiers, systemCreated } = other;
-
-                        const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-
-                        const otherData: IngestOtherInput = {
-                            idAssetVersion: parseFileId(file.id),
-                            identifiers: ingestIdentifiers,
-                            systemCreated
-                        };
-
-                        ingestOther.push(otherData);
-                    }
-                });
-
-                const input: IngestDataInput = {
-                    subjects: ingestSubjects,
-                    project: ingestProject,
-                    item: ingestItem,
-                    photogrammetry: ingestPhotogrammetry,
-                    model: ingestModel,
-                    scene: ingestScene,
-                    other: ingestOther
-                };
-
-                const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
-                    mutation: IngestDataDocument,
-                    variables: { input },
-                    refetchQueries: ['getUploadedAssetVersion']
-                });
-
-                const { data } = ingestDataMutation;
-                if (data) {
-                    const { ingestData } = data;
-                    const { success } = ingestData;
-
-                    return success;
+                    ingestModel.push(modelData);
                 }
+
+                if (isScene) {
+                    const { identifiers, systemCreated, hasBeenQCd, isOriented, name } = scene;
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+
+                    const sceneData: IngestSceneInput = {
+                        idAssetVersion: parseFileId(file.id),
+                        identifiers: ingestIdentifiers,
+                        systemCreated,
+                        name,
+                        hasBeenQCd,
+                        isOriented
+                    };
+
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        sceneData.idAsset = idAsset;
+
+                    ingestScene.push(sceneData);
+                }
+
+                if (isOther) {
+                    const { identifiers, systemCreated } = other;
+
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+                    const otherData: IngestOtherInput = {
+                        idAssetVersion: parseFileId(file.id),
+                        identifiers: ingestIdentifiers,
+                        systemCreated
+                    };
+
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        otherData.idAsset = idAsset;
+
+                    ingestOther.push(otherData);
+                }
+            });
+
+            const input: IngestDataInput = {
+                subjects: ingestSubjects,
+                project: ingestProject,
+                item: ingestItem,
+                photogrammetry: ingestPhotogrammetry,
+                model: ingestModel,
+                scene: ingestScene,
+                other: ingestOther
+            };
+            console.log('** IngestDataInput', input);
+
+            const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
+                mutation: IngestDataDocument,
+                variables: { input },
+                refetchQueries: ['getUploadedAssetVersion']
+            });
+
+            const { data } = ingestDataMutation;
+            if (data) {
+                const { ingestData } = data;
+                const { success, message } = ingestData;
+
+                return { success, message: message || '' };
             }
 
         } catch (error) {
             toast.error(error);
         }
 
-        return false;
+        return { success: false, message: 'unable to start ingestion process' };
     };
 
     const resetIngestionState = () => {

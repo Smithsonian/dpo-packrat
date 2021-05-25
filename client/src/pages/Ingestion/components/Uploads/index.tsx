@@ -18,6 +18,7 @@ import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, 
 import UploadCompleteList from './UploadCompleteList';
 import UploadFilesPicker from './UploadList';
 import useIngest from '../../hooks/useIngest';
+import { eVocabularySetID } from '../../../../types/server';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -67,7 +68,7 @@ function Uploads(): React.ReactElement {
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
 
-    const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
+    const [updateVocabularyEntries, getEntries] = useVocabularyStore(state => [state.updateVocabularyEntries, state.getEntries]);
     const [completed, discardFiles, setUpdateMode, setUpdateWorkflowFileType, updateMode, getSelectedFiles] = useUploadStore(state => [
         state.completed,
         state.discardFiles,
@@ -94,14 +95,35 @@ function Uploads(): React.ReactElement {
         try {
             await updateVocabularyEntries();
             await updateMetadataFolders();
-            const metadatas = getMetadatas();
-            const {
-                file: { id, type }
-            } = metadatas[0];
-            const { isLast } = getMetadataInfo(id);
-            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
-            toast.dismiss();
-            await history.push(nextRoute);
+
+            const queuedUploadedFiles = getSelectedFiles(completed, true);
+            const assetTypes = getEntries(eVocabularySetID.eAssetAssetType);
+            const metadataStepRequiredAssetTypesSet = new Set();
+            assetTypes.forEach(assetType => {
+                if (assetType.Term === 'Capture Data Set: Photogrammetry' || assetType.Term === 'Model' || assetType.Term === 'Scene')
+                    metadataStepRequiredAssetTypesSet.add(assetType.idVocabulary);
+            });
+
+            if (updateMode && queuedUploadedFiles.every(file => !metadataStepRequiredAssetTypesSet.has(file.type))) {
+                const { success, message } = await ingestionStart();
+                if (success) {
+                    toast.success('Ingestion complete');
+                    ingestionComplete();
+                    setUpdateMode(false);
+                } else {
+                    toast.error(`Ingestion failed, please try again later. Error: ${message}`);
+                }
+                return;
+            } else {
+                const metadatas = getMetadatas();
+                const {
+                    file: { id, type }
+                } = metadatas[0];
+                const { isLast } = getMetadataInfo(id);
+                const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
+                toast.dismiss();
+                await history.push(nextRoute);
+            }
         } catch (error) {
             toast.error(error);
             return;
@@ -110,7 +132,6 @@ function Uploads(): React.ReactElement {
 
     const onIngest = async (): Promise<void> => {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
-        // if looking through all of the readied files, we see that none of them are photogram, scene, or model, just run ingestStart()
         try {
             setGettingAssetDetails(true);
             const data = await updateMetadataSteps();
@@ -130,21 +151,7 @@ function Uploads(): React.ReactElement {
             }
             toast.dismiss();
 
-            // if updating and none of the selected files are photogrammetry, model, or scene, then immediately start the ingestion process
-            const queuedUploadedFiles = getSelectedFiles(completed, true);
-            if (updateMode && queuedUploadedFiles.every(file => file.type !== 86 && file.type !== 94 && file.type !== 97)) {
-                const success: boolean = await ingestionStart();
-                if (success) {
-                    toast.success('Ingestion complete');
-                    ingestionComplete();
-                    setUpdateMode(false);
-                } else {
-                    toast.error('Ingestion failed, please try again later');
-                }
-                return;
-            }
-
-            // otherwise either skip to Metadata or proceed to Subject/Item
+            // this should be reading the ready files, not the updateMode state
             updateMode ? onNext() : await history.push(nextStep);
         } catch {
             setGettingAssetDetails(false);

@@ -78,7 +78,7 @@ class Downloader {
             }
 
             case eDownloadMode.eSystemObject: {
-                const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSystemObject(this.idSystemObject!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(this.idSystemObject!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 if (!assetVersions) {
                     LOG.error(`/download?idSystemObject=${this.idSystemObject} unable to fetch asset versions`, LOG.LS.eHTTP);
                     this.response.status(404);

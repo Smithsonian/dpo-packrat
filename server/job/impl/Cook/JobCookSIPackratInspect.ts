@@ -616,7 +616,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         });
         const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
             idAsset,
-            Version: 1,
+            Version: 0,
             FileName,
             idUserCreator: 0,
             DateCreated: new Date(),

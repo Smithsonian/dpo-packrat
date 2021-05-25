@@ -113,4 +113,5 @@ input IngestDataInput {
 
 type IngestDataResult {
     success: Boolean!
+    message: String
 }
