@@ -307,7 +307,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 addSubjects(uniqueSubjects);
                 addProjects(projects);
                 addItems(uniqueItems);
-
                 set({ metadatas });
 
                 return {

@@ -6,6 +6,7 @@ export async function createAssetVersionTest(base: AssetVersionBase): Promise<DB
     const created: boolean = await assetVersion.create();
     expect(created).toBeTruthy();
     expect(assetVersion.idAssetVersion).toBeGreaterThan(0);
-    expect(assetVersion.Version).toBeGreaterThan(0);
+    if (assetVersion.Ingested)
+        expect(assetVersion.Version).toBeGreaterThan(0);
     return assetVersion;
 }

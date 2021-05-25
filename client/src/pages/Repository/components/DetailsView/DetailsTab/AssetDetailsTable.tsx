@@ -12,7 +12,7 @@ import React from 'react';
 import { EmptyTable, NewTabLink } from '../../../../../components';
 import { StateAssetDetail, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
-import { getDetailsUrlForObject, getDownloadAllAssetsUrlForObject, getDownloadAssetUrlForObject } from '../../../../../utils/repository';
+import { getDetailsUrlForObject, getDownloadAllAssetsUrlForObject, getDownloadAssetVersionUrlForObject } from '../../../../../utils/repository';
 import { formatDate } from '../../../../../utils/shared';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectAssets } from '../../../hooks/useDetailsView';
@@ -92,7 +92,7 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                     {assetDetails.map((assetDetail: StateAssetDetail, index: number) => (
                         <tr key={index}>
                             <td>
-                                <a href={getDownloadAssetUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, assetDetail.idAsset)} style={{ textDecoration: 'none', color: 'black' }}>
+                                <a href={getDownloadAssetVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, assetDetail.idAssetVersion)} style={{ textDecoration: 'none', color: 'black' }}>
                                     <GetAppIcon />
                                 </a>
                             </td>
