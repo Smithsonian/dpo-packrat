@@ -55,6 +55,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         try {
             const { DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest } = this;
             const Version: number = (Ingested) ? (await AssetVersion.computeNextVersionNumber(idAsset) || 1) : 0;   // only bump version number for Ingested asset versions
+            this.Version = Version;
 
             ({ idAssetVersion: this.idAssetVersion, DateCreated: this.DateCreated, idAsset: this.idAsset,
                 FileName: this.FileName, idUserCreator: this.idUserCreator, StorageHash: this.StorageHash, StorageSize: this.StorageSize,
@@ -128,6 +129,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                     return false;
                 }
                 Version = nextVersion;
+                this.Version = Version;
             }
 
             return await DBC.DBConnection.prisma.assetVersion.update({
