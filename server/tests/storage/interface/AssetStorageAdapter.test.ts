@@ -218,6 +218,7 @@ describe('AssetStorageAdapter getAssetVersionContents', () => {
 
 async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, fileSize: number, SOBased: DBAPI.SystemObjectBased | null,
     fileName: string | null = null, vocabulary: DBAPI.Vocabulary | null = null): Promise<AssetStorageAdapterTestCase> {
+    // LOG.info(`testCommitNewAsset ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     if (!vocabulary)
         vocabulary = vAssetTypePhoto;
     const BulkIngest: boolean = (vocabulary == vAssetTypeBulk);
@@ -228,7 +229,7 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         TestCase = { assets: [], assetVersions: [], SOBased };
 
         TestCase.assets.push(new DBAPI.Asset({ idAsset: 0, FileName: fileNameAsset, FilePath: H.Helpers.randomSlug(), idAssetGroup: null, idVAssetType: vocabulary.idVocabulary, idSystemObject: null, StorageKey: '' }));
-        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, Version: 1 }));
+        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, Version: 0 }));
         newAsset = true;
     } else {
         TestCase.SOBased = SOBased;
@@ -313,11 +314,12 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
 }
 
 async function testReadAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    // LOG.info(`testReadAsset ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     for (let index = 0; index < TestCase.assets.length; index++) {
         const asset: DBAPI.Asset = TestCase.assets[index];
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
-        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.readAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.readAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'}): ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
         if (!testReadAssetResults(RSR, assetVersion, expectSuccess, 'readAsset'))
             return false;
@@ -326,6 +328,7 @@ async function testReadAsset(TestCase: AssetStorageAdapterTestCase, expectSucces
 }
 
 async function testReadAssetResults(RSR: STORE.ReadStreamResult, assetVersion: DBAPI.AssetVersion, expectSuccess: boolean, errorContext: string): Promise<boolean> {
+    // LOG.info(`testReadAssetResults ${JSON.stringify(RSR, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     if (!RSR.success && expectSuccess)
         LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.${errorContext}: ${RSR.error}`, LOG.LS.eTEST);
     expect(RSR.success).toEqual(expectSuccess);
@@ -346,6 +349,7 @@ async function testReadAssetResults(RSR: STORE.ReadStreamResult, assetVersion: D
 }
 
 async function testReadAssetVersion(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    // LOG.info(`testReadAssetVersion ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     for (let index = 0; index < TestCase.assets.length; index++) {
         // const asset: DBAPI.Asset = TestCase.assets[index];
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
@@ -359,6 +363,7 @@ async function testReadAssetVersion(TestCase: AssetStorageAdapterTestCase, expec
 }
 
 async function testReadAssetVersionByID(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    // LOG.info(`testReadAssetVersionByID ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     for (let index = 0; index < TestCase.assets.length; index++) {
         // const asset: DBAPI.Asset = TestCase.assets[index];
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
@@ -372,6 +377,7 @@ async function testReadAssetVersionByID(TestCase: AssetStorageAdapterTestCase, e
 }
 
 async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    // LOG.info(`testIngestAsset ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     expect(TestCase.SOBased).toBeTruthy();
     if (!TestCase.SOBased)
         return false;
@@ -395,13 +401,13 @@ async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
         if (ISR.assets)
             assets = assets.concat(ISR.assets);
 
-        // LOG.info(`Ingest reports ${JSON.stringify(ISR.assetVersions)}`, LOG.LS.eTEST);
+        // LOG.info(`Ingest reports ${JSON.stringify(ISR.assetVersions, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
         expect(ISR.assetVersions).toBeTruthy();
         if (ISR.assetVersions)
             assetVersions = assetVersions.concat(ISR.assetVersions);
     }
 
-    // LOG.info(`Accumulated ${JSON.stringify(assetVersions)}`, LOG.LS.eTEST);
+    // LOG.info(`Accumulated ${JSON.stringify(assetVersions, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     for (const assetVersion of assetVersions) {
         expect(assetVersion.StorageKeyStaging).toEqual('');
         expect(assetVersion.Ingested).toBeTruthy();
@@ -413,6 +419,7 @@ async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
 }
 
 async function testRenameAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    // LOG.info(`testRenameAsset ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     expect(TestCase.SOBased).toBeTruthy();
     if (!TestCase.SOBased)
         return false;
@@ -443,6 +450,7 @@ async function testRenameAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
 }
 
 async function testHideAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    // LOG.info(`testHideAsset ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     expect(TestCase.SOBased).toBeTruthy();
     if (!TestCase.SOBased)
         return false;
@@ -476,6 +484,7 @@ async function testHideAsset(TestCase: AssetStorageAdapterTestCase, expectSucces
 }
 
 async function testReinstateAsset(TestCase: AssetStorageAdapterTestCase, version: number, expectSuccess: boolean): Promise<boolean> {
+    // LOG.info(`testReinstateAsset ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     expect(TestCase.SOBased).toBeTruthy();
     if (!TestCase.SOBased)
         return false;
@@ -521,6 +530,7 @@ async function testReinstateAsset(TestCase: AssetStorageAdapterTestCase, version
 }
 
 async function testCommitNewAssetFailure(TestCase: AssetStorageAdapterTestCase): Promise<boolean> {
+    // LOG.info(`testCommitNewAssetFailure ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
         storageKey: H.Helpers.randomSlug(),
         storageHash: H.Helpers.randomSlug(),
@@ -539,6 +549,7 @@ async function testCommitNewAssetFailure(TestCase: AssetStorageAdapterTestCase):
 }
 
 async function testIngestAssetFailure(TestCase: AssetStorageAdapterTestCase): Promise<boolean> {
+    // LOG.info(`testIngestAssetFailure ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     expect(TestCase.SOBased).toBeTruthy();
     if (!TestCase.SOBased)
         return false;
@@ -554,6 +565,7 @@ async function testIngestAssetFailure(TestCase: AssetStorageAdapterTestCase): Pr
 }
 
 async function testGetAssetVersionContents(TestCase: AssetStorageAdapterTestCase, expectedFiles: string[], expectedDirs: string[]): Promise<void> {
+    // LOG.info(`testGetAssetVersionContents ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     let observedFiles: string[] = [];
     let observedDirs: string[] = [];
     for (let index = 0; index < TestCase.assetVersions.length; index++) {
@@ -579,6 +591,7 @@ async function testGetAssetVersionContents(TestCase: AssetStorageAdapterTestCase
 }
 
 async function testDiscardAssetVersion(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    // LOG.info(`testDiscardAssetVersion ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     for (let index = 0; index < TestCase.assets.length; index++) {
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
@@ -601,6 +614,7 @@ async function testDiscardAssetVersion(TestCase: AssetStorageAdapterTestCase, ex
 }
 
 async function testExtractBulkIngestMetadata(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    // LOG.info(`testExtractBulkIngestMetadata ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     for (let index = 0; index < TestCase.assets.length; index++) {
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
@@ -615,6 +629,7 @@ async function testExtractBulkIngestMetadata(TestCase: AssetStorageAdapterTestCa
 }
 
 async function testCrackAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    // LOG.info(`testCrackAsset ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
     for (let index = 0; index < TestCase.assets.length; index++) {
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 

@@ -278,7 +278,7 @@ export class AssetStorageAdapter {
 
         const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
             idAsset: asset.idAsset,
-            Version: 1, /* ignored */
+            Version: 0, /* ignored */
             FileName: assetNameOverride ? assetNameOverride : asset.FileName,
             idUserCreator,
             DateCreated,
@@ -1023,7 +1023,7 @@ export class AssetStorageAdapter {
         // Create new AssetVersion
         const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
             idAsset: asset.idAsset,
-            Version: 1, /* ignored */
+            Version: 0, /* ignored */
             FileName: fileNameNew ? fileNameNew : assetVersionOld.FileName,
             idUserCreator: opInfo.idUser,
             DateCreated: new Date(),

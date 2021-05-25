@@ -1970,7 +1970,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (systemObjectSubject) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromSystemObject(systemObjectSubject.idSystemObject);
             if (assetVersionFetch)
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotProcessed]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
         }
         expect(assetVersionFetch).toBeTruthy();
     });
@@ -2000,7 +2000,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (systemObjectSubject) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromSystemObject(systemObjectSubject.idSystemObject);
             if (assetVersionFetch)
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotProcessed]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
         }
         expect(assetVersionFetch).toBeTruthy();
     });
@@ -2010,7 +2010,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(assetVersionNotProcessed);
+                expect(assetVersionFetch).toEqual(assetVersion);
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -2051,9 +2051,11 @@ describe('DB Fetch By ID Test Suite', () => {
             assetVersionFetch = await DBAPI.AssetVersion.fetchByAssetAndVersion(assetThumbnail.idAsset, 1);
             if (assetVersionFetch)
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
+            expect(assetVersionFetch).toBeTruthy();
+
             assetVersionFetch = await DBAPI.AssetVersion.fetchByAssetAndVersion(assetThumbnail.idAsset, 2);
             if (assetVersionFetch)
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion2]));
         }
         expect(assetVersionFetch).toBeTruthy();
     });
