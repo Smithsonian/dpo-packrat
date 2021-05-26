@@ -89,26 +89,22 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                             <Typography className={classes.value}>{formatBytes(version.size)}</Typography>
                         </td>
                         <td align='center'>
-                            <CheckboxNoPadding
-                                disabled
-                                checked={version.ingested ?? false}
-                            />
+                            <CheckboxNoPadding disabled checked={version.ingested ?? false} />
                         </td>
                     </tr>
                 ))}
+                <tr>
+                    <td colSpan={headers.length}>
+                        {!versions.length && (
+                            <Box my={2}>
+                                <Typography align='center' className={classes.value}>
+                                    No versions found
+                                </Typography>
+                            </Box>
+                        )}
+                    </td>
+                </tr>
             </tbody>
-
-            <tfoot>
-                <td colSpan={headers.length}>
-                    {!versions.length && (
-                        <Box my={2}>
-                            <Typography align='center' className={classes.value}>
-                                No versions found
-                            </Typography>
-                        </Box>
-                    )}
-                </td>
-            </tfoot>
         </table>
     );
 }

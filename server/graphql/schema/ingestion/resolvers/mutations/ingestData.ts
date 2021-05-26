@@ -576,7 +576,6 @@ async function createOtherObjects(other: IngestOtherInput, assetVersionMap: Map<
     // "other" means we're simply creating an asset version (and associated asset)
     // fetch the associated asset and use that for identifiers
     // BUT ... populate assetVersionMap with the system object that owns the specified asset ... or if none, the asset itself.
-
     let idAsset: number | null | undefined = other.idAsset;
     if (!idAsset) {
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(other.idAssetVersion);
