@@ -95,12 +95,12 @@ function BreadcrumbItem(props: BreadcrumbItemProps): React.ReactElement {
         );
     }
 
-    const [{ objectType, name }] = paths;
+    const [{ idSystemObject, objectType, name }] = paths;
     const renderValue = () => <Typography className={classes.selectIcon}>{getLabel(objectType, name)} (multiple)</Typography>;
 
     return (
         <BreadcrumbSelect
-            value={paths[0].idSystemObject}
+            value={idSystemObject}
             renderValue={renderValue}
             IconComponent={() => null}
             disableUnderline
