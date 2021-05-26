@@ -20,10 +20,10 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         color: palette.primary.dark
     },
     highlighted: {
-        backgroundColor: fade(palette.primary.main, 0.8),
+        backgroundColor: fade(palette.primary.main, 0.80),
         color: palette.background.paper,
         padding: '2.5px 10px',
-        borderRadius: 5
+        borderRadius: 5,
     },
     label: {
         [breakpoints.down('lg')]: {
@@ -55,6 +55,7 @@ function BreadcrumbsView(props: BreadcrumbsViewProps): React.ReactElement {
     const classes = useStyles();
 
     const renderBreadcrumbs = (paths: RepositoryPath[], index: number): JSX.Element => <BreadcrumbItem key={index} paths={paths} />;
+
     return (
         <Breadcrumbs className={clsx(classes.container, highlighted && classes.highlighted)} separator={<MdNavigateNext color='inherit' size={20} />}>
             {items.map(renderBreadcrumbs)}
@@ -68,7 +69,7 @@ const BreadcrumbSelect = withStyles(() => ({
         fontSize: '0.8em'
     },
     select: {
-        paddingRight: '0px !important'
+        paddingRight: '0px !important',
     }
 }))(Select);
 
@@ -98,7 +99,12 @@ function BreadcrumbItem(props: BreadcrumbItemProps): React.ReactElement {
     const renderValue = () => <Typography className={classes.selectIcon}>{getLabel(objectType, name)} (multiple)</Typography>;
 
     return (
-        <BreadcrumbSelect value={paths[0].idSystemObject} renderValue={renderValue} IconComponent={() => null} disableUnderline>
+        <BreadcrumbSelect
+            value={paths[0].idSystemObject}
+            renderValue={renderValue}
+            IconComponent={() => null}
+            disableUnderline
+        >
             {paths.map(({ idSystemObject, name, objectType }, index: number) => (
                 <MenuItem className={classes.menuItem} key={index} value={idSystemObject}>
                     <NewTabLink key={index} to={getDetailsUrlForObject(idSystemObject)} color={palette.primary.dark} className={classes.link}>
