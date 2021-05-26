@@ -13,7 +13,6 @@ import { RepositoryPath } from '../../types/graphql';
 import { eSystemObjectType } from '../../types/server';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../utils/repository';
 import NewTabLink from './NewTabLink';
-import { NavLink } from 'react-router-dom';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -102,9 +101,9 @@ function BreadcrumbItem(props: BreadcrumbItemProps): React.ReactElement {
         <BreadcrumbSelect value={paths[0].idSystemObject} renderValue={renderValue} IconComponent={() => null} disableUnderline>
             {paths.map(({ idSystemObject, name, objectType }, index: number) => (
                 <MenuItem className={classes.menuItem} key={index} value={idSystemObject}>
-                    <NavLink key={index} to={getDetailsUrlForObject(idSystemObject)} color={palette.primary.dark} className={classes.link}>
+                    <NewTabLink key={index} to={getDetailsUrlForObject(idSystemObject)} color={palette.primary.dark} className={classes.link}>
                         {getLabel(objectType, name)}
-                    </NavLink>
+                    </NewTabLink>
                 </MenuItem>
             ))}
         </BreadcrumbSelect>
