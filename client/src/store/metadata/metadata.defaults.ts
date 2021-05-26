@@ -95,7 +95,7 @@ const sourceObjectSchema = yup.object().shape({
 
 export const defaultModelFields: ModelFields = {
     name: '',
-    systemCreated: true,
+    systemCreated: false,
     identifiers: [],
     sourceObjects: [],
     dateCaptured: null,
@@ -144,7 +144,7 @@ export const modelFieldsSchema = yup.object().shape({
 });
 
 export const defaultSceneFields: SceneFields = {
-    systemCreated: true,
+    systemCreated: false,
     identifiers: [],
     referenceModels: [],
     hasBeenQCd: false,
@@ -175,7 +175,7 @@ export const sceneFieldsSchema = yup.object().shape({
 });
 
 export const defaultOtherFields: OtherFields = {
-    systemCreated: true,
+    systemCreated: false,
     identifiers: []
 };
 
