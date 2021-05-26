@@ -89,7 +89,10 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                             <Typography className={classes.value}>{formatBytes(version.size)}</Typography>
                         </td>
                         <td align='center'>
-                            <CheckboxNoPadding disabled checked={version.ingested ?? false} />
+                            <CheckboxNoPadding
+                                disabled
+                                checked={version.ingested ?? false}
+                            />
                         </td>
                     </tr>
                 ))}
