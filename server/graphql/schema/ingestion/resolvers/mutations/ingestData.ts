@@ -487,8 +487,7 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
         return false;
     }
 
-    // TODO: if we're updating an existing Model, we should update these records instead of creating new ones
-    const modelDB: DBAPI.Model = JCOutput.modelConstellation.Model;
+    let modelDB: DBAPI.Model = JCOutput.modelConstellation.Model;
     modelDB.Name = model.name;
     modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCaptured) || new Date();
     modelDB.Authoritative = model.authoritative;
@@ -511,19 +510,12 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
     const assetMap: Map<string, number> = new Map<string, number>();
     assetMap.set(asset.FileName, asset.idAsset);
 
-    /*
     // write entries to database
-    LOG.info(`ingestData createModelObjects model=${JSON.stringify(model, H.Helpers.saferStringify)} vs assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+    // LOG.info(`ingestData createModelObjects model=${JSON.stringify(model, H.Helpers.saferStringify)} vs asset=${JSON.stringify(asset, H.Helpers.saferStringify)}vs assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
     // Examine model.idAsset; if Asset.idVAssetType -> model or model geometry file, then
     // Lookup SystemObject from Asset.idSystemObject; if idModel is not null, then use that idModel
     let idModel: number = 0;
     if (model.idAsset) {
-        // const assetUpdate: DBAPI.Asset | null = await DBAPI.Asset.fetch(model.idAsset);
-        // if (!assetUpdate) {
-        //     LOG.error(`ingestData unable to fetch model's asset ${model.idAsset}`, LOG.LS.eGQL);
-        //     return false;
-        // }
-
         const assetType: CACHE.eVocabularyID | undefined = await asset.assetType();
         if (assetType === CACHE.eVocabularyID.eAssetAssetTypeModel ||
             assetType === CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile) {
@@ -539,12 +531,11 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
     }
 
     const res: H.IOResults = await JCOutput.persist(idModel, assetMap);
-    */
-    const res: H.IOResults = await JCOutput.persist(0, assetMap);
     if (!res.success) {
         LOG.error(`ingestData unable to create model constellation ${JSON.stringify(model)}: ${res.success}`, LOG.LS.eGQL);
         return false;
     }
+    modelDB = JCOutput.modelConstellation.Model; // retrieve again, as we may have swapped the object above, in JCOutput.persist
 
     if (!await handleIdentifiers(modelDB, model.systemCreated, model.identifiers))
         return false;
@@ -565,22 +556,59 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
 }
 
 async function createSceneObjects(scene: IngestSceneInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
-    // TODO: if we're updating an existing Scehe, we should update these records instead of creating new ones
     const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion);
     if (!sceneConstellation || !sceneConstellation.Scene)
         return false;
 
-    const sceneDB: DBAPI.Scene = sceneConstellation.Scene;
+    // Examine scene.idAsset; if Asset.idVAssetType -> scene then
+    // Lookup SystemObject from Asset.idSystemObject; if idScene is not null, then use that idScene
+    const updateMode: boolean = (scene.idAsset != null && scene.idAsset > 0);
+    let sceneDB: DBAPI.Scene | null = sceneConstellation.Scene;
+    if (updateMode) {
+        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(scene.idAsset!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        if (!asset) {
+            LOG.error(`ingestData createSceneObjects unable to fetch scene's asset for ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            return false;
+        }
+        const assetType: CACHE.eVocabularyID | undefined = await asset.assetType();
+        if (assetType === CACHE.eVocabularyID.eAssetAssetTypeScene) {
+            const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
+            if (!SO) {
+                LOG.error(`ingestData createSceneObjects unable to fetch scene's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                return false;
+            }
+
+            if (SO.idScene) {               // Is this a scene?  If so, use it!
+                sceneDB = await DBAPI.Scene.fetch(SO.idScene);
+                if (!sceneDB) {
+                    LOG.error(`ingestData createSceneObjects unable to fetch scene with ID ${SO.idScene} from ${JSON.stringify(SO, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    return false;
+                }
+            }
+        }
+    }
+
     sceneDB.Name = scene.name;
     sceneDB.HasBeenQCd = scene.hasBeenQCd;
     sceneDB.IsOriented = scene.isOriented;
-    let ret: boolean = await sceneDB.create();
+    let ret: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
 
     if (!await handleIdentifiers(sceneDB, scene.systemCreated, scene.identifiers))
         return false;
 
     // wire scene to reference models, including SystemObjectXref of 'scene as master' to 'models as derived'
     if (sceneConstellation.ModelSceneXref) {
+        if (updateMode) {
+            // remove existing ModelSceneXref's
+            const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(sceneDB.idScene);
+            if (MSXs) {
+                for (const MSX of MSXs)
+                    await MSX.delete();
+            }
+
+            // TODO: remove existing SystemObjectXref?
+        }
+
         for (const MSX of sceneConstellation.ModelSceneXref) {
             if (MSX.idModelSceneXref || MSX.idScene) {
                 LOG.error(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as record already was populated: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
