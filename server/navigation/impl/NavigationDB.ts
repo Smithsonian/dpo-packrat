@@ -281,7 +281,7 @@ export class NavigationDB implements NAV.INavigation {
 
         if (OG.model) {
             for (const model of OG.model) {
-                const vPurpose: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(model.idVPurpose);
+                const vPurpose: DBAPI.Vocabulary | undefined = model.idVPurpose ? await CACHE.VocabularyCache.vocabulary(model.idVPurpose) : undefined;
                 const oIDModel: ObjectIDAndType = { idObject: model.idModel, eObjectType: eSystemObjectType.eModel };
                 const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDModel); /* istanbul ignore else */
                 if (sID)

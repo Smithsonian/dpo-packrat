@@ -9,11 +9,11 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     Name!: string;
     DateCreated!: Date;
     Authoritative!: boolean;
-    idVCreationMethod!: number;
-    idVModality!: number;
-    idVPurpose!: number;
-    idVUnits!: number;
-    idVFileType!: number;
+    idVCreationMethod!: number | null;
+    idVModality!: number | null;
+    idVPurpose!: number | null;
+    idVUnits!: number | null;
+    idVFileType!: number | null;
     idAssetThumbnail!: number | null;
     CountAnimations!: number | null;
     CountCameras!: number | null;
@@ -51,11 +51,11 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                         Name,
                         DateCreated,
                         Authoritative,
-                        Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
-                        Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality }, },
-                        Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
-                        Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
-                        Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
+                        Vocabulary_Model_idVCreationMethodToVocabulary: idVCreationMethod ? { connect: { idVocabulary: idVCreationMethod }, } : undefined,
+                        Vocabulary_Model_idVModalityToVocabulary:       idVModality ? { connect: { idVocabulary: idVModality }, } : undefined,
+                        Vocabulary_Model_idVPurposeToVocabulary:        idVPurpose ? { connect: { idVocabulary: idVPurpose }, } : undefined,
+                        Vocabulary_Model_idVUnitsToVocabulary:          idVUnits ? { connect: { idVocabulary: idVUnits }, } : undefined,
+                        Vocabulary_Model_idVFileTypeToVocabulary:       idVFileType ? { connect: { idVocabulary: idVFileType }, } : undefined,
                         Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
                         CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
                         SystemObject:   { create: { Retired: false }, },
@@ -79,13 +79,13 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                     Name,
                     DateCreated,
                     Authoritative,
-                    Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
-                    Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality }, },
-                    Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
-                    Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
-                    Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
-                    CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
+                    Vocabulary_Model_idVCreationMethodToVocabulary: idVCreationMethod ? { connect: { idVocabulary: idVCreationMethod }, } : undefined,
+                    Vocabulary_Model_idVModalityToVocabulary:       idVModality ? { connect: { idVocabulary: idVModality }, } : undefined,
+                    Vocabulary_Model_idVPurposeToVocabulary:        idVPurpose ? { connect: { idVocabulary: idVPurpose }, } : undefined,
+                    Vocabulary_Model_idVUnitsToVocabulary:          idVUnits ? { connect: { idVocabulary: idVUnits }, } : undefined,
+                    Vocabulary_Model_idVFileTypeToVocabulary:       idVFileType ? { connect: { idVocabulary: idVFileType }, } : undefined,
                     Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
+                    CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

@@ -96,19 +96,18 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                         </td>
                     </tr>
                 ))}
+                <tr>
+                    <td colSpan={headers.length}>
+                        {!versions.length && (
+                            <Box my={2}>
+                                <Typography align='center' className={classes.value}>
+                                    No versions found
+                                </Typography>
+                            </Box>
+                        )}
+                    </td>
+                </tr>
             </tbody>
-
-            <tfoot>
-                <td colSpan={headers.length}>
-                    {!versions.length && (
-                        <Box my={2}>
-                            <Typography align='center' className={classes.value}>
-                                No versions found
-                            </Typography>
-                        </Box>
-                    )}
-                </td>
-            </tfoot>
         </table>
     );
 }
