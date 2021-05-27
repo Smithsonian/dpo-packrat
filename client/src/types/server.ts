@@ -201,3 +201,20 @@ export enum ePublishedState {
     eViewDownloadRestriction = 3,   // 'View and Download with usage restrictions',
     eViewDownloadCC0 = 4,           // 'View and Download CC0'
 }
+
+export enum eIdentifierIdentifierType {
+    eARK = 79,
+    eDOI = 80,
+    eUnitCMSID = 81
+}
+
+export const PublishedStateEnumToString = (eState: ePublishedState): string => {
+    switch (eState) {
+        case ePublishedState.eRestricted: return 'Restricted';
+        case ePublishedState.eViewOnly: return 'View Only';
+        case ePublishedState.eViewDownloadRestriction: return 'View and Download with usage restrictions';
+        case ePublishedState.eViewDownloadCC0: return 'View and Download CC0';
+        default:
+        case ePublishedState.eNotPublished: return 'Not Published';
+    }
+};

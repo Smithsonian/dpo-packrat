@@ -23,10 +23,11 @@ export type AssetStorageResult = {
 };
 
 export type IngestAssetResult = {
-    assets: DBAPI.Asset[] | null,
-    assetVersions: DBAPI.AssetVersion[] | null,
     success: boolean,
     error: string
+    assets?: DBAPI.Asset[] | null | undefined,
+    assetVersions?: DBAPI.AssetVersion[] | null | undefined,
+    systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined,
 };
 
 export type AssetStorageResultCommit = {
@@ -71,6 +72,7 @@ export type IngestStreamOrFileResult = {
     error: string;
     asset?: DBAPI.Asset | null | undefined;
     assetVersion?: DBAPI.AssetVersion | null | undefined;
+    systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined;
 };
 
 /**
@@ -278,7 +280,7 @@ export class AssetStorageAdapter {
 
         const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
             idAsset: asset.idAsset,
-            Version: 1, /* ignored */
+            Version: 0, /* ignored */
             FileName: assetNameOverride ? assetNameOverride : asset.FileName,
             idUserCreator,
             DateCreated,
@@ -365,7 +367,7 @@ export class AssetStorageAdapter {
         if (!SO) {
             const error: string = `Unable to fetch SystemObject for ${SO}`;
             LOG.error(error, LOG.LS.eSTR);
-            return { assets: null, assetVersions: null, success: false, error };
+            return { success: false, error };
         }
         return AssetStorageAdapter.ingestAssetWrapper(asset, assetVersion, SO.idSystemObject, opInfo);
     }
@@ -394,6 +396,7 @@ export class AssetStorageAdapter {
             LOG.error(`AssetStorageAdapter.ingestAssetWrapper failed to create new SystemObjectVersion for ${idSystemObject}`, LOG.LS.eSTR);
             return IAR;
         }
+        IAR.systemObjectVersion = SOV;
 
         return IAR;
     }
@@ -408,14 +411,14 @@ export class AssetStorageAdapter {
         if (!storage) {
             const error: string = 'AssetStorageAdapter.ingestAssetWorker: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
             LOG.error(error, LOG.LS.eSTR);
-            return { assets: null, assetVersions: null, success: false, error };
+            return { success: false, error };
         }
 
         const metadata: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors); /* istanbul ignore next */
         if (!await metadata.fetch()) {
             const error: string = `AssetStorageAdapter.ingestAssetWorker: Update to retrieve object ancestry for system object ${idSystemObject}`;
             LOG.error(error, LOG.LS.eSTR);
-            return { assets: null, assetVersions: null, success: false, error };
+            return { success: false, error };
         }
 
         const isZipFilename: boolean = (path.extname(assetVersion.FileName).toLowerCase() === '.zip');
@@ -428,16 +431,16 @@ export class AssetStorageAdapter {
             // Use bulkIngestReader to extract contents for assets in and below asset.FilePath
             const CAR: CrackAssetResult = await AssetStorageAdapter.crackAssetWorker(storage, asset, assetVersion); /* istanbul ignore next */
             if (!CAR.success || !CAR.zip)
-                return { assets: null, assetVersions: null, success: false, error: CAR.error };
+                return { success: false, error: CAR.error };
             const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAssetBulkZipWorker(storage, asset, assetVersion, metadata, opInfo, CAR.zip, assetVersion.BulkIngest);
             await CAR.zip.close();
             return ISR;
         } else {
             const ASR: AssetStorageResult = await AssetStorageAdapter.promoteAssetWorker(storage, asset, assetVersion, metadata, opInfo, null);
             if (!ASR.success || !ASR.asset || !ASR.assetVersion)
-                return { assets: null, assetVersions: null, success: false, error: ASR.error };
+                return { success: false, error: ASR.error };
             else
-                return { assets: [ASR.asset], assetVersions: [ASR.assetVersion], success: true, error: '' };
+                return { success: true, error: '', assets: [ASR.asset], assetVersions: [ASR.assetVersion], systemObjectVersion: null };
         }
     }
 
@@ -459,12 +462,12 @@ export class AssetStorageAdapter {
             if (!inputStream) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to stream entry ${entry} of AssetVersion ${JSON.stringify(assetVersion, H.Helpers.stringifyMapsAndBigints)}`;
                 LOG.error(error, LOG.LS.eSTR);
-                return { assets, assetVersions, success: false, error };
+                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
             }
             const hashResults: H.HashResults = await H.Helpers.computeHashFromStream(inputStream, ST.OCFLDigestAlgorithm); /* istanbul ignore next */
             if (!hashResults.success) {
                 LOG.error(hashResults.error, LOG.LS.eSTR);
-                return { assets, assetVersions, success: false, error: hashResults.error };
+                return { success: false, error: hashResults.error, assets, assetVersions, systemObjectVersion: null };
             }
 
             // Get a second readstream to that part of the zip, to reset stream position after computing the hash
@@ -472,7 +475,7 @@ export class AssetStorageAdapter {
             if (!inputStream) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to stream entry ${entry} of AssetVersion ${JSON.stringify(assetVersion, H.Helpers.stringifyMapsAndBigints)}`;
                 LOG.error(error, LOG.LS.eSTR);
-                return { assets, assetVersions, success: false, error };
+                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
             }
 
             // Determine asset type
@@ -515,7 +518,7 @@ export class AssetStorageAdapter {
             if (!idVAssetType) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to compute asset type of Asset ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`;
                 LOG.error(error, LOG.LS.eSTR);
-                return { assets, assetVersions, success: false, error };
+                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
             }
 
             // create asset and asset version
@@ -531,7 +534,7 @@ export class AssetStorageAdapter {
             if (!assetVersionComponent) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to create AssetVersion from Asset ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`;
                 LOG.error(error, LOG.LS.eSTR);
-                return { assets, assetVersions, success: false, error };
+                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
             }
 
             // Create a storage key, Promote the asset, Update the asset
@@ -539,7 +542,7 @@ export class AssetStorageAdapter {
             if (!ASR.success) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to promote Asset ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}: ${ASR.error}`;
                 LOG.error(error, LOG.LS.eSTR);
-                return { assets, assetVersions, success: false, error };
+                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
             }
 
             assets.push(assetComponent);
@@ -553,12 +556,12 @@ export class AssetStorageAdapter {
             if (!ASR.success) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker: ${ASR.error}`;
                 LOG.error(error, LOG.LS.eSTR);
-                return { assets, assetVersions, success: false, error };
+                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
             }
         } else /* istanbul ignore next */ if (!await DBAPI.SystemObject.retireSystemObject(assetVersion)) {  // otherwise just retire the asset version
             const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to retire AssetVersion ${JSON.stringify(assetVersion, H.Helpers.stringifyMapsAndBigints)}`;
             LOG.error(error, LOG.LS.eSTR);
-            return { assets, assetVersions, success: false, error };
+            return { success: false, error, assets, assetVersions, systemObjectVersion: null };
         }
 
         // clear StorageKeyStaging and updated Ingested flag from this retired asset version
@@ -567,7 +570,7 @@ export class AssetStorageAdapter {
         if (!await assetVersion.update()) /* istanbul ignore next */ {
             const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to clear staging storage key from AssetVersion ${JSON.stringify(assetVersion, H.Helpers.stringifyMapsAndBigints)}`;
             LOG.error(error, LOG.LS.eSTR);
-            return { assets, assetVersions, success: false, error };
+            return { success: false, error, assets, assetVersions, systemObjectVersion: null };
         }
 
         // Retire the asset that represented this piece of the bulk ingest
@@ -575,10 +578,10 @@ export class AssetStorageAdapter {
         if (!await DBAPI.SystemObject.retireSystemObject(asset)) {
             const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to retire Asset ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`;
             LOG.error(error, LOG.LS.eSTR);
-            return { assets, assetVersions, success: false, error };
+            return { success: false, error, assets, assetVersions, systemObjectVersion: null };
         }
 
-        return { assets, assetVersions, success: true, error: '' };
+        return { success: true, error: '', assets, assetVersions, systemObjectVersion: null };
     }
 
     private static async promoteAssetWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
@@ -700,7 +703,8 @@ export class AssetStorageAdapter {
             userEmailAddress: user?.EmailAddress ?? '', userName: user?.Name ?? '' };
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(comRes.assets[0], comRes.assetVersions[0], ISI.SOBased, opInfo);
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eSTR);
-        return { success: IAR.success, error: IAR.error, asset: comRes.assets[0] || null, assetVersion: comRes.assetVersions[0] || null };
+        return { success: IAR.success, error: IAR.error, asset: comRes.assets[0] || null,
+            assetVersion: comRes.assetVersions[0] || null, systemObjectVersion: IAR.systemObjectVersion };
     }
 
     static async renameAsset(asset: DBAPI.Asset, fileNameNew: string, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
@@ -1023,7 +1027,7 @@ export class AssetStorageAdapter {
         // Create new AssetVersion
         const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
             idAsset: asset.idAsset,
-            Version: 1, /* ignored */
+            Version: 0, /* ignored */
             FileName: fileNameNew ? fileNameNew : assetVersionOld.FileName,
             idUserCreator: opInfo.idUser,
             DateCreated: new Date(),

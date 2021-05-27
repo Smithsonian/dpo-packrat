@@ -245,9 +245,10 @@ function useIngest(): UseIngest {
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);
-                    if (idAsset)
+                    if (idAsset) {
                         otherData.idAsset = idAsset;
-
+                        otherData.systemCreated = false;
+                    }
                     ingestOther.push(otherData);
                 }
             });

@@ -38,6 +38,10 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     },
     menuItem: {
         fontSize: '0.8em'
+    },
+    link: {
+        color: palette.primary.dark,
+        textDecoration: 'none'
     }
 }));
 
@@ -92,7 +96,6 @@ function BreadcrumbItem(props: BreadcrumbItemProps): React.ReactElement {
     }
 
     const [{ idSystemObject, objectType, name }] = paths;
-
     const renderValue = () => <Typography className={classes.selectIcon}>{getLabel(objectType, name)} (multiple)</Typography>;
 
     return (
@@ -103,11 +106,11 @@ function BreadcrumbItem(props: BreadcrumbItemProps): React.ReactElement {
             disableUnderline
         >
             {paths.map(({ idSystemObject, name, objectType }, index: number) => (
-                <NewTabLink key={index} to={getDetailsUrlForObject(idSystemObject)} color={palette.primary.dark}>
-                    <MenuItem className={classes.menuItem} key={index} value={idSystemObject}>
+                <MenuItem className={classes.menuItem} key={index} value={idSystemObject}>
+                    <NewTabLink key={index} to={getDetailsUrlForObject(idSystemObject)} color={palette.primary.dark} className={classes.link}>
                         {getLabel(objectType, name)}
-                    </MenuItem>
-                </NewTabLink>
+                    </NewTabLink>
+                </MenuItem>
             ))}
         </BreadcrumbSelect>
     );

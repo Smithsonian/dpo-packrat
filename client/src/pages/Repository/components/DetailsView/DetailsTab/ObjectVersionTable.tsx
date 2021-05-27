@@ -6,7 +6,7 @@ import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repos
 import { extractISOMonthDateYear } from '../../../../../constants/helperfunctions';
 import { rollbackSystemObjectVersion } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetDetailsTable';
-import { PublishedStateEnumToString } from '../../../../../store/vocabulary';
+import { PublishedStateEnumToString } from '../../../../../types/server';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { SystemObjectVersion } from '../../../../../types/graphql';
 import { toast } from 'react-toastify';
@@ -83,19 +83,18 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                         </td>
                     </tr>
                 ))}
+                <tr>
+                    <td colSpan={headers.length}>
+                        {!objectVersions.length && (
+                            <Box my={2}>
+                                <Typography align='center' className={classes.value}>
+                                    No versions found
+                                </Typography>
+                            </Box>
+                        )}
+                    </td>
+                </tr>
             </tbody>
-
-            <tfoot>
-                <td colSpan={headers.length}>
-                    {!objectVersions.length && (
-                        <Box my={2}>
-                            <Typography align='center' className={classes.value}>
-                                No versions found
-                            </Typography>
-                        </Box>
-                    )}
-                </td>
-            </tfoot>
         </table>
     );
 }
