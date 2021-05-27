@@ -124,7 +124,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         // wire ModelSource to Scene
         const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, scene);
         if (!SOX) {
-            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.stringifyMapsAndBigints)} to Scene ${JSON.stringify(scene, H.Helpers.stringifyMapsAndBigints)}: database error`, LOG.LS.eJOB);
+            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Scene ${JSON.stringify(scene, H.Helpers.saferStringify)}: database error`, LOG.LS.eJOB);
             return { success: false, error: res.error };
         }
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ModelSource to Scene: ${JSON.stringify(SOX, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
@@ -173,7 +173,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                     // wire ModelSource to Model
                     const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, model);
                     if (!SOX1) {
-                        LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.stringifyMapsAndBigints)} to Model ${JSON.stringify(model, H.Helpers.stringifyMapsAndBigints)}: database error`, LOG.LS.eJOB);
+                        LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}: database error`, LOG.LS.eJOB);
                         return { success: false, error: res.error };
                     }
 
@@ -192,7 +192,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
                     const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
                     if (!SOX2) {
-                        const error: string = `JobCookSIVoyagerScene.createSystemObjects unable to wire Scene ${JSON.stringify(scene, H.Helpers.stringifyMapsAndBigints)} and Model ${JSON.stringify(model, H.Helpers.stringifyMapsAndBigints)} together: database error`;
+                        const error: string = `JobCookSIVoyagerScene.createSystemObjects unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together: database error`;
                         LOG.error(error, LOG.LS.eJOB);
                         return { success: false, error };
                     }
@@ -230,7 +230,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                             idSystemObjectVersionAssetVersionXref: 0
                         });
                         if (!await SOVAVX.create())
-                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
+                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
                     }
                 } else
                     LOG.error(`JobCookSIVoyagerScene.createSystemObjects skipping unnamed model ${JSON.stringify(MSX)}`, LOG.LS.eJOB);
