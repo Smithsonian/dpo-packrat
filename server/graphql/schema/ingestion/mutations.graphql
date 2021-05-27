@@ -54,12 +54,6 @@ input IngestPhotogrammetryInput {
     identifiers: [IngestIdentifierInput!]!
 }
 
-input IngestUVMapInput {
-    name: String!
-    edgeLength: Int!
-    mapType: Int!
-}
-
 input RelatedObjectInput {
     idSystemObject: Int!
     name: String!
