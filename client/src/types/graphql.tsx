@@ -2971,7 +2971,7 @@ export type GetSceneForAssetVersionQuery = (
           { __typename?: 'Model' }
           & { SystemObject?: Maybe<(
             { __typename?: 'SystemObject' }
-            & Pick<SystemObject, 'idSystemObject'>
+            & Pick<SystemObject, 'idSystemObject' | 'idAsset'>
           )> }
         )> }
       )>>> }
@@ -5101,6 +5101,7 @@ export const GetSceneForAssetVersionDocument = gql`
         Model {
           SystemObject {
             idSystemObject
+            idAsset
           }
         }
       }
