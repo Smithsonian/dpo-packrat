@@ -24,7 +24,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     const { input } = args;
     const { user } = context;
 
-    LOG.info(`ingestData: input=${JSON.stringify(input, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+    LOG.info(`ingestData: input=${JSON.stringify(input, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
     const { success, ingestNew } = validateInput(user, input);
     if (!success)
         return { success: false, message: 'failure to validate input' };
@@ -511,6 +511,35 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
     const assetMap: Map<string, number> = new Map<string, number>();
     assetMap.set(asset.FileName, asset.idAsset);
 
+    /*
+    // write entries to database
+    LOG.info(`ingestData createModelObjects model=${JSON.stringify(model, H.Helpers.saferStringify)} vs assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+    // Examine model.idAsset; if Asset.idVAssetType -> model or model geometry file, then
+    // Lookup SystemObject from Asset.idSystemObject; if idModel is not null, then use that idModel
+    let idModel: number = 0;
+    if (model.idAsset) {
+        // const assetUpdate: DBAPI.Asset | null = await DBAPI.Asset.fetch(model.idAsset);
+        // if (!assetUpdate) {
+        //     LOG.error(`ingestData unable to fetch model's asset ${model.idAsset}`, LOG.LS.eGQL);
+        //     return false;
+        // }
+
+        const assetType: CACHE.eVocabularyID | undefined = await asset.assetType();
+        if (assetType === CACHE.eVocabularyID.eAssetAssetTypeModel ||
+            assetType === CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile) {
+            const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
+            if (!SO) {
+                LOG.error(`ingestData unable to fetch model's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                return false;
+            }
+
+            if (SO.idModel)                 // Is this a model?
+                idModel = SO.idModel;       // Yes: Use it!
+        }
+    }
+
+    const res: H.IOResults = await JCOutput.persist(idModel, assetMap);
+    */
     const res: H.IOResults = await JCOutput.persist(0, assetMap);
     if (!res.success) {
         LOG.error(`ingestData unable to create model constellation ${JSON.stringify(model)}: ${res.success}`, LOG.LS.eGQL);
@@ -608,7 +637,7 @@ async function createOtherObjects(other: IngestOtherInput, assetVersionMap: Map<
         if (asset.idSystemObject) {
             const SOP: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(asset.idSystemObject);
             if (!SOP) {
-                LOG.error(`ingestData could not fetch system object paids from ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData could not fetch system object paids from ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                 return false;
             }
             SOOwner = SOP.SystemObjectBased;
@@ -807,7 +836,7 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
                     sceneAsset = asset;
                     sceneAssetVersion = assetVersionMap.get(asset.idAsset);
                 } else
-                    LOG.error(`ingestData handleComplexIngestionScene skipping unexpected scene ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene skipping unexpected scene ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                 break;
 
             case eVocabularyID.eAssetAssetTypeModel:
@@ -816,33 +845,33 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
                 modelAssetMap.set(asset.FileName.toLowerCase(), { asset, assetVersion });
             } break;
             case undefined:
-                LOG.error(`ingestData handleComplexIngestionScene unable to detect asset type for ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData handleComplexIngestionScene unable to detect asset type for ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                 break;
         }
     }
 
     if (!sceneAsset || !sceneAssetVersion) {
-        LOG.error(`ingestData handleComplexIngestionScene unable to identify asset and/or asset version for the ingested scene ${JSON.stringify(scene, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+        LOG.error(`ingestData handleComplexIngestionScene unable to identify asset and/or asset version for the ingested scene ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         return false;
     }
 
     // next, retrieve & parse the scene, extracting model references and transforms
     const RSR: ReadStreamResult = await AssetStorageAdapter.readAsset(sceneAsset, sceneAssetVersion);
     if (!RSR.success || !RSR.readStream) {
-        LOG.error(`ingestData handleComplexIngestionScene unable to fetch stream for scene asset ${JSON.stringify(sceneAsset, H.Helpers.stringifyMapsAndBigints)}: ${RSR.error}`, LOG.LS.eGQL);
+        LOG.error(`ingestData handleComplexIngestionScene unable to fetch stream for scene asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}: ${RSR.error}`, LOG.LS.eGQL);
         return false;
     }
 
     const svx: SvxReader = new SvxReader();
     const res: H.IOResults = await svx.loadFromStream(RSR.readStream);
     if (!res.success || !svx.SvxExtraction) {
-        LOG.error(`ingestData handleComplexIngestionScene unable to parse scene asset ${JSON.stringify(sceneAsset, H.Helpers.stringifyMapsAndBigints)}: ${res.error}`, LOG.LS.eGQL);
+        LOG.error(`ingestData handleComplexIngestionScene unable to parse scene asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eGQL);
         return false;
     }
 
     extractSceneMetrics(scene, svx.SvxExtraction);
     if (!await scene.update())
-        LOG.error(`ingestData handleComplexIngestionScene unable to update scene ${JSON.stringify(scene, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+        LOG.error(`ingestData handleComplexIngestionScene unable to update scene ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
 
     // finally, create Model and ModelSceneXref for each model reference:
     let retValue: boolean = true;
@@ -879,7 +908,7 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
 
             const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
             if (!SOX) {
-                LOG.error(`ingestData handleComplexIngestionScene unable to wire Scene ${JSON.stringify(scene, H.Helpers.stringifyMapsAndBigints)} and Model ${JSON.stringify(model, H.Helpers.stringifyMapsAndBigints)} together`, LOG.LS.eGQL);
+                LOG.error(`ingestData handleComplexIngestionScene unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together`, LOG.LS.eGQL);
                 retValue = false;
                 continue;
             }
@@ -887,13 +916,13 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
             // reassign asset to model; create SystemObjectVersion and SystemObjectVersionAssetVersionXref
             const SO: DBAPI.SystemObject | null = await model.fetchSystemObject();
             if (!SO) {
-                LOG.error(`ingestData handleComplexIngestionScene unable to fetch SystemObject for Model ${JSON.stringify(model, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData handleComplexIngestionScene unable to fetch SystemObject for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                 retValue = false;
                 continue;
             }
             assetPair.asset.idSystemObject = SO.idSystemObject;
             if (!await assetPair.asset.update()) {
-                LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.stringifyMapsAndBigints)} to Model ${JSON.stringify(model, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                 retValue = false;
                 continue;
             }
@@ -905,7 +934,7 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
                 idSystemObjectVersion: 0
             });
             if (!await SOV.create()) {
-                LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersion ${JSON.stringify(SOV, H.Helpers.stringifyMapsAndBigints)} for Model ${JSON.stringify(model, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersion ${JSON.stringify(SOV, H.Helpers.saferStringify)} for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                 retValue = false;
                 continue;
             }
@@ -916,7 +945,7 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
                 idSystemObjectVersionAssetVersionXref: 0,
             });
             if (!await SOVAVX.create()) {
-                LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.stringifyMapsAndBigints)} for Model ${JSON.stringify(model, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)} for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                 retValue = false;
                 continue;
             }

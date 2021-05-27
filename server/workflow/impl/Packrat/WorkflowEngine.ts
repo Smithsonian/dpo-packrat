@@ -168,7 +168,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
             const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(asset.idSystemObject);
             if (!oID) {
-                LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to compute system object owner of ${JSON.stringify(asset, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eWF);
+                LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to compute system object owner of ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eWF);
                 continue;
             }
 
@@ -203,7 +203,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         const SOGeometry: DBAPI.SystemObject| null = await assetVersionGeometry.fetchSystemObject();
         if (!SOGeometry) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to compute geometry file systemobject from ${JSON.stringify(assetVersionGeometry, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eWF);
+            LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to compute geometry file systemobject from ${JSON.stringify(assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
             return null;
         }
         const SODiffuse: DBAPI.SystemObject| null = assetVersionDiffuse ? await assetVersionDiffuse.fetchSystemObject() : null;
@@ -407,7 +407,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
         // If this is not a master model, skip post-ingestion workflow
         if (modelConstellation.Model.idVPurpose != vMaster.idVocabulary) {
-            LOG.info(`WorkflowEngine.computeModelInfo skipping non-master model ${JSON.stringify(modelConstellation.Model, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eWF);
+            LOG.info(`WorkflowEngine.computeModelInfo skipping non-master model ${JSON.stringify(modelConstellation.Model, H.Helpers.saferStringify)}`, LOG.LS.eWF);
             return { exitEarly: true };
         }
 
@@ -464,7 +464,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         const units: string | undefined = await COOK.JobCookSIVoyagerScene.convertModelUnitsVocabToCookUnits(modelConstellation.Model.idVUnits);
         const retValue = { exitEarly: false, assetVersionGeometry, assetVersionDiffuse, units };
-        LOG.info(`WorkflowEngine.computeModelInfo returning ${JSON.stringify(retValue, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eWF);
+        LOG.info(`WorkflowEngine.computeModelInfo returning ${JSON.stringify(retValue, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         return retValue;
     }
 }

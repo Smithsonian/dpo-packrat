@@ -114,7 +114,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (!mappedId) // try again, with just filename
                     mappedId = assetMap.get(path.basename(modelAsset.Asset.FileName));
                 if (!mappedId) {
-                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.stringifyMapsAndBigints)}`;
+                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.saferStringify)}`;
                     LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
@@ -164,6 +164,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 return { success: false, error: 'Model.create() failed' };
         }
 
+        // TODO: Update these objects when we're given idModel as input (i.e. we're in update mode)
         // Persist ModelObjects
         for (const modelObject of this.modelConstellation.ModelObjects) {
             const fakeId: number = modelObject.idModelObject;
