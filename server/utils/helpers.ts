@@ -486,7 +486,7 @@ export class Helpers {
     }
 
     /** Stringifies Maps and BigInts */
-    static stringifyMapsAndBigints(key: any, value: any): any {
+    static saferStringify(key: any, value: any): any {
         key;
         if (typeof value === 'bigint')
             return value.toString();
@@ -502,6 +502,6 @@ export class Helpers {
             if (key.endsWith('Orig'))
                 return undefined;
         }
-        return Helpers.stringifyMapsAndBigints(key, value);
+        return Helpers.saferStringify(key, value);
     }
 }

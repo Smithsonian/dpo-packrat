@@ -453,7 +453,7 @@ describe('Utils: Helpers', () => {
             valueOrig: 39
         };
 
-        const output1: string = JSON.stringify(testData, H.Helpers.stringifyMapsAndBigints);
+        const output1: string = JSON.stringify(testData, H.Helpers.saferStringify);
         LOG.info(`output: ${output1}`, LOG.LS.eTEST);
         expect(output1).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"valueOrig":39}');
 

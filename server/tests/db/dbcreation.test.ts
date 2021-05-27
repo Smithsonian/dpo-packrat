@@ -34,6 +34,7 @@ let assetVersion: DBAPI.AssetVersion | null;
 let assetVersion2: DBAPI.AssetVersion | null;
 let assetVersionModel: DBAPI.AssetVersion | null;
 let assetVersionNotIngested: DBAPI.AssetVersion | null;
+let assetVersionNotIngested2: DBAPI.AssetVersion | null;
 let assetVersionNotProcessed: DBAPI.AssetVersion | null;
 let audit: DBAPI.Audit | null;
 let auditNulls: DBAPI.Audit | null;
@@ -631,7 +632,7 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: AssetVersion Uploaded, Processed', async () => {
-        if (assetThumbnail && userActive)
+        if (assetThumbnail && userActive) {
             assetVersionNotIngested = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
                 Version: 0,
@@ -645,7 +646,22 @@ describe('DB Creation Test Suite', () => {
                 BulkIngest: true,
                 idAssetVersion: 0
             });
+            assetVersionNotIngested2 = await UTIL.createAssetVersionTest({
+                idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FilePath,
+                idUserCreator: userActive.idUser,
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum Not Ingested 2',
+                StorageSize: BigInt(50),
+                StorageKeyStaging: '',
+                Ingested: false,
+                BulkIngest: true,
+                idAssetVersion: 0
+            });
+        }
         expect(assetVersionNotIngested).toBeTruthy();
+        expect(assetVersionNotIngested2).toBeTruthy();
     });
 
     test('DB Creation: AssetVersion Uploaded, Not Processed', async () => {
@@ -1033,11 +1049,11 @@ describe('DB Creation Test Suite', () => {
                 Name: 'Test Model with Nulls',
                 Authoritative: true,
                 DateCreated: UTIL.nowCleansed(),
-                idVCreationMethod: vocabulary.idVocabulary,
-                idVModality: vocabulary.idVocabulary,
-                idVUnits: vocabulary.idVocabulary,
-                idVPurpose: vocabulary.idVocabulary,
-                idVFileType: vocabulary.idVocabulary,
+                idVCreationMethod: null,
+                idVModality: null,
+                idVUnits: null,
+                idVPurpose: null,
+                idVFileType: null,
                 idAssetThumbnail: null,
                 CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
                 CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false,
@@ -1914,7 +1930,7 @@ describe('DB Fetch By ID Test Suite', () => {
             versionCountMap = await DBAPI.Asset.computeVersionCountMap([assetThumbnail.idAsset]);
             if (versionCountMap) {
                 expect(versionCountMap.has(assetThumbnail.idAsset)).toBeTruthy();
-                expect(versionCountMap.get(assetThumbnail.idAsset)).toEqual(3);
+                expect(versionCountMap.get(assetThumbnail.idAsset)).toEqual(4);
             }
         }
         expect(versionCountMap).toBeTruthy();
@@ -1937,7 +1953,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersionNotIngested, assetVersionNotProcessed]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersionNotIngested, assetVersionNotIngested2, assetVersionNotProcessed]));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -1948,7 +1964,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromAsset(assetThumbnail.idAsset, false);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersionNotIngested, assetVersionNotProcessed]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersionNotIngested, assetVersionNotIngested2, assetVersionNotProcessed]));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -2087,7 +2103,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (userActive) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromUserByIngested(userActive.idUser, false, false);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested, assetVersionNotIngested2]));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -2109,7 +2125,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (userActive) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchByIngested(false);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested, assetVersionNotIngested2]));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -4366,7 +4382,7 @@ describe('DB Fetch Special Test Suite', () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
         assetVersionFetch = await DBAPI.AssetVersion.fetchAll();
         if (assetVersionFetch)
-            expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersion2, assetVersionNotIngested, assetVersionNotProcessed]));
+            expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersion2, assetVersionNotIngested, assetVersionNotIngested2, assetVersionNotProcessed]));
         expect(assetVersionFetch).toBeTruthy();
     });
 
@@ -4670,7 +4686,6 @@ describe('DB Fetch Special Test Suite', () => {
         }
         expect(modelConstellation2).toBeTruthy();
     });
-
 
     test('DB Fetch Special: ModelAsset', async () => {
         let modelAsset: DBAPI.ModelAsset | null = null;
@@ -5368,6 +5383,22 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: AssetVersion.update not ingested -> ingested', async () => {
+        let bUpdated: boolean = false;
+        if (assetVersionNotIngested2) {
+            const versionOrig: number = assetVersionNotIngested2.Version;
+            assetVersionNotIngested2.Ingested = true;
+            bUpdated            = await assetVersionNotIngested2.update();
+            expect(assetVersionNotIngested2.Version).toBeGreaterThan(versionOrig); // object's version should be updated by this
+
+            const assetVersionFetch: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(assetVersionNotIngested2.idAssetVersion);
+            expect(assetVersionFetch).toBeTruthy();
+            if (assetVersionFetch)
+                expect(assetVersionFetch.Version).toBeGreaterThan(versionOrig);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: CaptureData.update', async () => {
         let bUpdated: boolean = false;
         if (captureData && assetWithoutAG) {
@@ -5944,16 +5975,50 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: Model.update connect disconnected', async () => {
+        let bUpdated: boolean = false;
+        if (modelNulls && vocabulary) {
+            modelNulls.idVCreationMethod = vocabulary.idVocabulary;
+            modelNulls.idVFileType = vocabulary.idVocabulary;
+            modelNulls.idVModality = vocabulary.idVocabulary;
+            modelNulls.idVPurpose = vocabulary.idVocabulary;
+            modelNulls.idVUnits = vocabulary.idVocabulary;
+            bUpdated = await modelNulls.update();
+
+            const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
+            expect(modelFetch).toBeTruthy();
+            if (modelFetch) {
+                expect(modelFetch.idVCreationMethod).toEqual(vocabulary.idVocabulary);
+                expect(modelFetch.idVFileType).toEqual(vocabulary.idVocabulary);
+                expect(modelFetch.idVModality).toEqual(vocabulary.idVocabulary);
+                expect(modelFetch.idVPurpose).toEqual(vocabulary.idVocabulary);
+                expect(modelFetch.idVUnits).toEqual(vocabulary.idVocabulary);
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: Model.update disconnect', async () => {
         let bUpdated: boolean = false;
         if (modelNulls) {
             modelNulls.idAssetThumbnail = null;
+            modelNulls.idVCreationMethod = null;
+            modelNulls.idVFileType = null;
+            modelNulls.idVModality = null;
+            modelNulls.idVPurpose = null;
+            modelNulls.idVUnits = null;
+
             bUpdated = await modelNulls.update();
 
             const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
             expect(modelFetch).toBeTruthy();
             if (modelFetch) {
                 expect(modelFetch.idAssetThumbnail).toBeNull();
+                expect(modelFetch.idVCreationMethod).toBeNull();
+                expect(modelFetch.idVFileType).toBeNull();
+                expect(modelFetch.idVModality).toBeNull();
+                expect(modelFetch.idVPurpose).toBeNull();
+                expect(modelFetch.idVUnits).toBeNull();
             }
         }
         expect(bUpdated).toBeTruthy();
@@ -6790,6 +6855,74 @@ describe('DB Update Test Suite', () => {
 
 // #region DB Deletes
 describe('DB Delete Test', () => {
+    test('DB Delete: Identifier.delete', async () => {
+        if (identifierNull) {
+            expect(await identifierNull.delete()).toBeTruthy();
+
+            // try to fetch; should not be found
+            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifierNull.idIdentifier);
+            expect(idFetch).toBeFalsy();
+        }
+
+        if (identifierSubjectHookup) {
+            expect(await identifierSubjectHookup.delete()).toBeTruthy();
+
+            // try to fetch; should not be found
+            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifierSubjectHookup.idIdentifier);
+            expect(idFetch).toBeFalsy();
+        }
+
+        if (identifier2) {
+            expect(await identifier2.delete()).toBeTruthy();
+
+            // try to fetch; should not be found
+            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifier2.idIdentifier);
+            expect(idFetch).toBeFalsy();
+        }
+    });
+
+    test('DB Delete: ModelConstellation.deleteSupportObjects 1', async () => {
+        let modelConstellation: DBAPI.ModelConstellation | null = null;
+        if (model) {
+            modelConstellation = await DBAPI.ModelConstellation.fetch(model.idModel);
+            if (modelConstellation) {
+                expect(await modelConstellation.deleteSupportObjects()).toBeTruthy();
+                expect(modelConstellation.ModelMaterialChannels).toBeNull();
+                expect(modelConstellation.ModelMaterialUVMaps).toBeNull();
+                expect(modelConstellation.ModelMaterials).toBeNull();
+                expect(modelConstellation.ModelObjectModelMaterialXref).toBeNull();
+                expect(modelConstellation.ModelObjects).toBeNull();
+            }
+        }
+        expect(modelConstellation).toBeTruthy();
+    });
+
+    test('DB Delete: ModelConstellation.deleteSupportObjects 2', async () => {
+        let modelConstellation: DBAPI.ModelConstellation | null = null;
+        if (model) {
+            modelConstellation = await DBAPI.ModelConstellation.fetch(model.idModel);
+            if (modelConstellation) {
+                expect(await modelConstellation.deleteSupportObjects()).toBeTruthy();
+                expect(modelConstellation.ModelMaterialChannels).toBeNull();
+                expect(modelConstellation.ModelMaterialUVMaps).toBeNull();
+                expect(modelConstellation.ModelMaterials).toBeNull();
+                expect(modelConstellation.ModelObjectModelMaterialXref).toBeNull();
+                expect(modelConstellation.ModelObjects).toBeNull();
+            }
+        }
+        expect(modelConstellation).toBeTruthy();
+    });
+
+    test('DB Delete: ModelSceneXref', async () => {
+        if (modelSceneXrefNull) {
+            expect(await modelSceneXrefNull.delete()).toBeTruthy();
+
+            // try to fetch; should not be found
+            const fetcher: DBAPI.ModelSceneXref | null = await DBAPI.ModelSceneXref.fetch(modelSceneXrefNull.idModelSceneXref);
+            expect(fetcher).toBeFalsy();
+        }
+    });
+
     test('DB Delete: SystemObjectXref.delete and deleteIfAllowed', async () => {
         if (systemObjectXrefSubItem4) {
             const res: H.IOResults = await systemObjectXrefSubItem4.deleteIfAllowed();
@@ -6830,32 +6963,6 @@ describe('DB Delete Test', () => {
             expect(soxFetch).toBeFalsy();
         }
         expect((await DBAPI.SystemObjectXref.deleteIfAllowed(1000000000)).success).toBeFalsy();
-    });
-
-    test('DB Delete: Identifier.delete', async () => {
-        if (identifierNull) {
-            expect(await identifierNull.delete()).toBeTruthy();
-
-            // try to fetch; should not be found
-            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifierNull.idIdentifier);
-            expect(idFetch).toBeFalsy();
-        }
-
-        if (identifierSubjectHookup) {
-            expect(await identifierSubjectHookup.delete()).toBeTruthy();
-
-            // try to fetch; should not be found
-            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifierSubjectHookup.idIdentifier);
-            expect(idFetch).toBeFalsy();
-        }
-
-        if (identifier2) {
-            expect(await identifier2.delete()).toBeTruthy();
-
-            // try to fetch; should not be found
-            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifier2.idIdentifier);
-            expect(idFetch).toBeFalsy();
-        }
     });
 });
 // #endregion

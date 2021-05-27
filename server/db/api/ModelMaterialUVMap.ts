@@ -52,6 +52,18 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return false;
         }
     }
+    /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
+    protected async deleteWorker(): Promise<boolean> {
+        try {
+            const { idModelMaterialUVMap } = this;
+            return await DBC.DBConnection.prisma.modelMaterialUVMap.delete({
+                where: { idModelMaterialUVMap, },
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.ModelMaterialUVMap.delete', LOG.LS.eDB, error);
+            return false;
+        }
+    }
 
     static async fetch(idModelMaterialUVMap: number): Promise<ModelMaterialUVMap | null> {
         if (!idModelMaterialUVMap)
