@@ -830,12 +830,6 @@ export type IngestPhotogrammetryInput = {
   identifiers: Array<IngestIdentifierInput>;
 };
 
-export type IngestUvMapInput = {
-  name: Scalars['String'];
-  edgeLength: Scalars['Int'];
-  mapType: Scalars['Int'];
-};
-
 export type RelatedObjectInput = {
   idSystemObject: Scalars['Int'];
   name: Scalars['String'];
