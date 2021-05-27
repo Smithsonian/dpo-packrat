@@ -49,6 +49,18 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
             return false;
         }
     }
+    /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
+    protected async deleteWorker(): Promise<boolean> {
+        try {
+            const { idModelObjectModelMaterialXref } = this;
+            return await DBC.DBConnection.prisma.modelObjectModelMaterialXref.delete({
+                where: { idModelObjectModelMaterialXref, },
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.ModelObjectModelMaterialXref.delete', LOG.LS.eDB, error);
+            return false;
+        }
+    }
 
     static async fetch(idModelObjectModelMaterialXref: number): Promise<ModelObjectModelMaterialXref | null> {
         if (!idModelObjectModelMaterialXref)

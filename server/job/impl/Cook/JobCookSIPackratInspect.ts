@@ -101,11 +101,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             return { success: false, error };
         }
 
-        const modelSource: DBAPI.Model = this.modelConstellation.Model;
         const modelObjectIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
         const modelMaterialIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
         const modelMaterialUVMapIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
         const assetIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
+
+        // if we're updating, grab the *current* model constellation, so that we can delete support records after persisting new records
+        const origModelConstellation: DBAPI.ModelConstellation | null = (idModel > 0) ? await DBAPI.ModelConstellation.fetch(idModel) : null;
 
         // map and validate assets:
         if (this.modelConstellation.ModelAssets) {
@@ -132,6 +134,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 return { success: false, error };
             }
 
+            const modelSource: DBAPI.Model = this.modelConstellation.Model;
             if (modelSource.CountAnimations)
                 model.CountAnimations = modelSource.CountAnimations;
             if (modelSource.CountCameras)
@@ -155,6 +158,20 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             if (modelSource.IsDracoCompressed != null)
                 model.IsDracoCompressed = modelSource.IsDracoCompressed;
 
+            model.Name = modelSource.Name;
+            model.DateCreated = modelSource.DateCreated;
+            model.Authoritative = modelSource.Authoritative;
+            if (modelSource.idVCreationMethod)
+                model.idVCreationMethod = modelSource.idVCreationMethod;
+            if (modelSource.idVModality)
+                model.idVModality = modelSource.idVModality;
+            if (modelSource.idVPurpose)
+                model.idVPurpose = modelSource.idVPurpose;
+            if (modelSource.idVUnits)
+                model.idVUnits = modelSource.idVUnits;
+            if (modelSource.idVFileType)
+                model.idVFileType = modelSource.idVFileType;
+
             if (!await model.update())
                 return { success: false, error: 'Model.update() failed' };
             this.modelConstellation.Model = model;
@@ -164,7 +181,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 return { success: false, error: 'Model.create() failed' };
         }
 
-        // TODO: Update these objects when we're given idModel as input (i.e. we're in update mode)
         // Persist ModelObjects
         for (const modelObject of this.modelConstellation.ModelObjects) {
             const fakeId: number = modelObject.idModelObject;
@@ -262,6 +278,11 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (!await modelObjectModelMaterialXref.create())
                     return { success: false, error: 'ModelObjectModelMaterialXref.create() failed' };
             }
+        }
+
+        if (origModelConstellation) {
+            if (!await origModelConstellation.deleteSupportObjects())
+                LOG.error('JobCookSIPackratInspectOutput.persist unable to delete original model support objects', LOG.LS.eJOB);
         }
 
         // Send audit update for model, now that we've finished writing dependent objects, to help ensure full indexing of this model

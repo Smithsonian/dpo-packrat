@@ -50,8 +50,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
             return false;
         }
     }
-    /** Don't call this directly; instead, let DBObject.delete() call this.
-     * Code needing to delete a record should call this.delete(); */
+    /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
     protected async deleteWorker(): Promise<boolean> {
         try {
             // LOG.info(`SystemObjectXref.deleteWorker ${JSON.stringify(this)}`, LOG.LS.eDB);
