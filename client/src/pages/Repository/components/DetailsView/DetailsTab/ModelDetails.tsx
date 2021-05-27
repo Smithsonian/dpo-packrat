@@ -121,11 +121,11 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 if (typeof Authoritative === 'boolean') {
                     setFormField('authoritative', Authoritative);
                 }
-                setFormField('creationMethod', idVCreationMethod);
-                setFormField('modality', idVModality);
-                setFormField('purpose', idVPurpose);
-                setFormField('units', idVUnits);
-                setFormField('fileType', idVFileType);
+                if (idVCreationMethod) setFormField('creationMethod', idVCreationMethod);
+                if (idVModality) setFormField('modality', idVModality);
+                if (idVPurpose) setFormField('purpose', idVPurpose);
+                if (idVUnits) setFormField('units', idVUnits);
+                if (idVFileType) setFormField('fileType', idVFileType);
             }
         }
     }, [data, loading]);

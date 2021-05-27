@@ -360,8 +360,8 @@ export class IndexSolr {
             doc.ChildrenDateCreated = create ? OGDEH.childrenDateCreated : { 'add': OGDEH.childrenDateCreated };
     }
 
-    private async computeVocabulary(idVocabulary: number): Promise<string | undefined> {
-        const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabulary);
+    private async computeVocabulary(idVocabulary: number | null): Promise<string | undefined> {
+        const vocab: DBAPI.Vocabulary | undefined = idVocabulary ? await CACHE.VocabularyCache.vocabulary(idVocabulary) : undefined;
         return vocab ? vocab.Term : undefined;
     }
 
