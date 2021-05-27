@@ -27,3 +27,10 @@ ADD CONSTRAINT `fk_systemobjectversionassetversionxref_assetversion`
 -- 2021-05-18 Jon
 ALTER TABLE Model ADD COLUMN `IsDracoCompressed` boolean NULL;
 ALTER TABLE SystemObjectVersion ADD COLUMN `DateCreated` datetime NOT NULL;
+
+-- 2021-05-26 Jon
+ALTER TABLE Model MODIFY COLUMN `idVCreationMethod` int(11) NULL;
+ALTER TABLE Model MODIFY COLUMN `idVModality` int(11) NULL;
+ALTER TABLE Model MODIFY COLUMN `idVUnits` int(11) NULL;
+ALTER TABLE Model MODIFY COLUMN `idVPurpose` int(11) NULL;
+ALTER TABLE Model MODIFY COLUMN `idVFileType` int(11) NULL;

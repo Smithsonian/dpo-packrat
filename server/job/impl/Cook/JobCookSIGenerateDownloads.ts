@@ -84,16 +84,16 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const LS: LocalStore | undefined = ASL.getStore();
         const idUserCreator: number = LS?.idUser ?? 0;
         const ISI: STORE.IngestStreamOrFileInput = {
-            ReadStream: RSR.readStream,
+            ReadStream: null, // RSR.readStream,
             LocalFilePath: null,
             FileName: svxFile,
             FilePath: '',
             idAssetGroup: 0,
             idVAssetType: vModel.idVocabulary,
             idUserCreator,
-            SOBased: scene,
+            SOBased: modelSource, // scene,
         };
-        let ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
+        const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!ISR.success) {
             LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to ingest scene file ${svxFile}: ${ISR.error}`, LOG.LS.eJOB);
             return { success: false, error: ISR.error };
