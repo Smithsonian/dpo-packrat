@@ -606,11 +606,11 @@ type Model {
   Name: String!
   DateCreated: DateTime!
   Authoritative: Boolean!
-  idVCreationMethod: Int!
-  idVModality: Int!
-  idVPurpose: Int!
-  idVUnits: Int!
-  idVFileType: Int!
+  idVCreationMethod: Int
+  idVModality: Int
+  idVPurpose: Int
+  idVUnits: Int
+  idVFileType: Int
   idAssetThumbnail: Int
   CountAnimations: Int
   CountCameras: Int

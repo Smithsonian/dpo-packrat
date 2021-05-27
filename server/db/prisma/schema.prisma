@@ -357,11 +357,11 @@ model Model {
   Name                                           String                  @mariasql.VarChar(255)
   DateCreated                                    DateTime                @mariasql.DateTime(0)
   Authoritative                                  Boolean
-  idVCreationMethod                              Int
-  idVModality                                    Int
-  idVUnits                                       Int
-  idVPurpose                                     Int
-  idVFileType                                    Int
+  idVCreationMethod                              Int?
+  idVModality                                    Int?
+  idVUnits                                       Int?
+  idVPurpose                                     Int?
+  idVFileType                                    Int?
   idAssetThumbnail                               Int?
   CountAnimations                                Int?
   CountCameras                                   Int?
@@ -375,11 +375,11 @@ model Model {
   FileEncoding                                   String?                 @mariasql.VarChar(40)
   IsDracoCompressed                              Boolean?
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset])
-  Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary              @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary])
-  Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary              @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary])
-  Vocabulary_Model_idVModalityToVocabulary       Vocabulary              @relation("Model_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary])
-  Vocabulary_Model_idVPurposeToVocabulary        Vocabulary              @relation("Model_idVPurposeToVocabulary", fields: [idVPurpose], references: [idVocabulary])
-  Vocabulary_Model_idVUnitsToVocabulary          Vocabulary              @relation("Model_idVUnitsToVocabulary", fields: [idVUnits], references: [idVocabulary])
+  Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary?             @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary])
+  Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary?             @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary])
+  Vocabulary_Model_idVModalityToVocabulary       Vocabulary?             @relation("Model_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary])
+  Vocabulary_Model_idVPurposeToVocabulary        Vocabulary?             @relation("Model_idVPurposeToVocabulary", fields: [idVPurpose], references: [idVocabulary])
+  Vocabulary_Model_idVUnitsToVocabulary          Vocabulary?             @relation("Model_idVUnitsToVocabulary", fields: [idVUnits], references: [idVocabulary])
   ModelMaterialUVMap                             ModelMaterialUVMap[]
   ModelObject                                    ModelObject[]
   ModelProcessingAction                          ModelProcessingAction[]
