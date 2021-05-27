@@ -959,11 +959,11 @@ export type Model = {
   Name: Scalars['String'];
   DateCreated: Scalars['DateTime'];
   Authoritative: Scalars['Boolean'];
-  idVCreationMethod: Scalars['Int'];
-  idVModality: Scalars['Int'];
-  idVPurpose: Scalars['Int'];
-  idVUnits: Scalars['Int'];
-  idVFileType: Scalars['Int'];
+  idVCreationMethod?: Maybe<Scalars['Int']>;
+  idVModality?: Maybe<Scalars['Int']>;
+  idVPurpose?: Maybe<Scalars['Int']>;
+  idVUnits?: Maybe<Scalars['Int']>;
+  idVFileType?: Maybe<Scalars['Int']>;
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   CountAnimations?: Maybe<Scalars['Int']>;
   CountCameras?: Maybe<Scalars['Int']>;

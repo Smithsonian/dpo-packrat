@@ -96,7 +96,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch stream for scene file ${svxFile}: ${RSR.error}`, LOG.LS.eJOB);
             return { success: false, error: RSR.error };
         }
-        LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] retrieve svx.json`, LOG.LS.eJOB);
+        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] retrieve svx.json`, LOG.LS.eJOB);
 
         // // create cloneable stream wrapper, so that we can load the scene into memory for processing, and also stream it out to storage as an ingested asset
         // const clone = cloneable(new Readable().wrap(RSR.readStream));
@@ -110,7 +110,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to parse scene file ${svxFile}: ${res.error}`, LOG.LS.eJOB);
             return { success: false, error: res.error };
         }
-        LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] parse scene`, LOG.LS.eJOB);
+        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] parse scene`, LOG.LS.eJOB);
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects fetched scene:\n${JSON.stringify(svx.SvxExtraction, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
         // Create Scene
@@ -119,7 +119,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`, LOG.LS.eJOB);
             return { success: false, error: res.error };
         }
-        LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] create scene`, LOG.LS.eJOB);
+        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] create scene`, LOG.LS.eJOB);
 
         // wire ModelSource to Scene
         const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, scene);
@@ -155,6 +155,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to ingest scene file ${svxFile}: ${ISR.error}`, LOG.LS.eJOB);
             return { success: false, error: ISR.error };
         }
+        const SOV: DBAPI.SystemObjectVersion | null | undefined = ISR.systemObjectVersion;
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
         // Now extract (just) the models; per Jamie Cope 5/3/2021, each model has all textures embedded
@@ -219,6 +220,18 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                         LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to ingest model file ${MSX.Name}: ${ISR.error}`, LOG.LS.eJOB);
                         return { success: false, error: ISR.error };
                     }
+                    // if an asset version was created for ingestion of this model, and if a system object version was created for scene ingestion,
+                    // associate the asset version with that system object version (enabling a scene package to be downloaded, even if some assets
+                    // are owned by the ingested models)
+                    if (SOV && ISR.assetVersion) {
+                        const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref = new DBAPI.SystemObjectVersionAssetVersionXref({
+                            idSystemObjectVersion: SOV.idSystemObjectVersion,
+                            idAssetVersion: ISR.assetVersion.idAssetVersion,
+                            idSystemObjectVersionAssetVersionXref: 0
+                        });
+                        if (!await SOVAVX.create())
+                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
+                    }
                 } else
                     LOG.error(`JobCookSIVoyagerScene.createSystemObjects skipping unnamed model ${JSON.stringify(MSX)}`, LOG.LS.eJOB);
             }
@@ -239,17 +252,20 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             Name,
             DateCreated: new Date(),
             Authoritative: false,
-            idVCreationMethod: source?.idVCreationMethod ?? 0,
-            idVModality: source?.idVModality ?? 0,
-            idVPurpose: source?.idVPurpose ?? 0,
-            idVUnits: source?.idVUnits ?? 0,
-            idVFileType: vFileType ? vFileType.idVocabulary : 0,
+            idVCreationMethod: source?.idVCreationMethod ?? null,
+            idVModality: source?.idVModality ?? null,
+            idVPurpose: source?.idVPurpose ?? null, // should this be set to web-delivery?
+            idVUnits: source?.idVUnits ?? null,
+            idVFileType: vFileType ? vFileType.idVocabulary : null,
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null
         });
     }
 
-    static async convertModelUnitsVocabToCookUnits(idVUnits: number): Promise<string | undefined> {
+    static async convertModelUnitsVocabToCookUnits(idVUnits: number | null): Promise<string | undefined> {
+        if (!idVUnits)
+            return undefined;
+
         // acceptable units for Cook's si-voyager-scene, as of 5/3/2021:  "mm", "cm", "m", "in", "ft", "yd"
         const eModelUnits: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVUnits);
         switch (eModelUnits) {
