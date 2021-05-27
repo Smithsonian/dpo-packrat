@@ -103,6 +103,18 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return false;
         }
     }
+    /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
+    protected async deleteWorker(): Promise<boolean> {
+        try {
+            const { idModelMaterialChannel } = this;
+            return await DBC.DBConnection.prisma.modelMaterialChannel.delete({
+                where: { idModelMaterialChannel, },
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.ModelMaterialChannel.delete', LOG.LS.eDB, error);
+            return false;
+        }
+    }
 
     static async fetch(idModelMaterialChannel: number): Promise<ModelMaterialChannel | null> {
         if (!idModelMaterialChannel)

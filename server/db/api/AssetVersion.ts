@@ -54,7 +54,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     protected async createWorker(): Promise<boolean> {
         try {
             const { DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest } = this;
-            const Version: number = (Ingested) ? (await AssetVersion.computeNextVersionNumber(idAsset) || 1) : 0;   // only bump version number for Ingested asset versions
+            const Version: number = (Ingested) ? (await AssetVersion.computeNextVersionNumber(idAsset) || /* istanbul ignore next */ 1) : 0;   // only bump version number for Ingested asset versions
             this.Version = Version;
 
             ({ idAssetVersion: this.idAssetVersion, DateCreated: this.DateCreated, idAsset: this.idAsset,
@@ -123,7 +123,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
             // if we're updating from not ingested to ingested, and if we don't have a version number, compute and use the next version number:
             if (!IngestedOrig && Ingested && !Version) {
-                const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset);
+                const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset); /* istanbul ignore next*/
                 if (!nextVersion) {
                     LOG.error('DBAPI.AssetVersion.updateWorker failed to compute nextVersion', LOG.LS.eDB);
                     return false;
