@@ -325,7 +325,7 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
 
             normalizeOutput(JCOutput);
 
-            const JCOutputStr: string = JSON.stringify(JCOutput, H.Helpers.stringifyMapsAndBigints);
+            const JCOutputStr: string = JSON.stringify(JCOutput, H.Helpers.saferStringify);
 
             const MTC: TESTMODEL.ModelTestCase | undefined = MTS.getTestCase(jobData.testCase);
             expect(MTC).toBeTruthy();
@@ -344,13 +344,13 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
             const assetFileNameMap: Map<string, number> = MTC.assetFileNameMap();
             const res: H.IOResults = await JCOutput.persist(MTC.model.idModel, assetFileNameMap);
             if (!res.success)
-                LOG.error(`JobNS Persisting ${MTC.testCase} FAILED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyMapsAndBigints)}: ${res.error}`, LOG.LS.eTEST);
+                LOG.error(`JobNS Persisting ${MTC.testCase} FAILED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eTEST);
             else {
                 // expect(res.success).toBeTruthy();
                 expect(JCOutput.modelConstellation).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model?.idModel).toBeTruthy();
-                LOG.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
+                LOG.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
             }
             return JCOutputStr === inspectJSON;
         }

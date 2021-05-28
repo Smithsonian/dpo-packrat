@@ -66,6 +66,40 @@ export class ModelConstellation {
         this.ModelAssets = modelAsset;
     }
 
+    /** DELETES database records for ModelObjects, ModelMaterials, ModelMaterialChannels, ModelMaterialUVMaps, and ModelObjectModelMaterialXref.
+     * This may be useful when called before persisting an updated ModelConstellation via JobCookSIPackratInspectOutput.persist()
+     */
+    async deleteSupportObjects(): Promise<boolean> {
+        let retValue: boolean = true;
+
+        if (this.ModelObjectModelMaterialXref) {
+            for (const modelObjectModelMaterialXref of this.ModelObjectModelMaterialXref)
+                retValue = await modelObjectModelMaterialXref.delete() && retValue;
+            this.ModelObjectModelMaterialXref = null;
+        }
+        if (this.ModelMaterialUVMaps) {
+            for (const modelMaterialUVMap of this.ModelMaterialUVMaps)
+                retValue = await modelMaterialUVMap.delete() && retValue;
+            this.ModelMaterialUVMaps = null;
+        }
+        if (this.ModelMaterialChannels) {
+            for (const modelMaterialChannel of this.ModelMaterialChannels)
+                retValue = await modelMaterialChannel.delete() && retValue;
+            this.ModelMaterialChannels = null;
+        }
+        if (this.ModelMaterials) {
+            for (const modelMaterial of this.ModelMaterials)
+                retValue = await modelMaterial.delete() && retValue;
+            this.ModelMaterials = null;
+        }
+        if (this.ModelObjects) {
+            for (const modelObject of this.ModelObjects)
+                retValue = await modelObject.delete() && retValue;
+            this.ModelObjects = null;
+        }
+        return retValue;
+    }
+
     static async fetch(idModel: number): Promise<ModelConstellation | null> {
         const model: Model | null = await Model.fetch(idModel);
         if (!model) {
@@ -93,4 +127,5 @@ export class ModelConstellation {
         return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels,
             modelMaterialUVMaps, modelObjectModelMaterialXref, modelAssets.length > 0 ? modelAssets : null);
     }
+
 }
