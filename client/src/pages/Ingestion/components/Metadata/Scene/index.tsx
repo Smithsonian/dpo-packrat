@@ -100,6 +100,7 @@ function Scene(props: SceneProps): React.ReactElement {
         const { name, value } = target;
         updateMetadataField(metadataIndex, name, value, MetadataType.scene);
     };
+    console.log('idAssetVersion from Scene', idAssetVersion);
 
     return (
         <Box className={classes.container}>
@@ -111,7 +112,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 onUpdateIdentifer={onIdentifersChange}
                 onRemoveIdentifer={onIdentifersChange}
             />
-            <ReferenceModels referenceModels={referenceModels} />
+            <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
             <SceneDataGrid
                 sceneData={sceneData}
                 setCheckboxField={setCheckboxField}
