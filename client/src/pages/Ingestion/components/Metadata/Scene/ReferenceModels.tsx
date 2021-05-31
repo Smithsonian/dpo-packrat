@@ -9,12 +9,17 @@
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../../components';
 import { getDetailsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { updateSystemObjectUploadRedirect } from '../../../../../constants';
 import { eSystemObjectType } from '../../../../../types/server';
+// import { useModelDetails } from '../../../hooks/useIngestionDetails';
+import { apolloClient } from '../../../../../graphql';
+import { GetModelDocument, GetAssetDetailsForSystemObjectDocument } from '../../../../../types/graphql';
+// import { apolloClient } from '../../../../../graphql';
+// import { GetModelDocument, GetAssetDetailsForSystemObjectDocument } from '../../../../../types/graphql';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -100,6 +105,7 @@ function ReferenceModels(props: ReferenceModelsProps): React.ReactElement {
     const { referenceModels, idAssetVersion } = props;
     const classes = useStyles();
     const hasModels = !!referenceModels.length;
+    console.log('referenceModels', referenceModels);
 
     return (
         <Box className={classes.container}>
@@ -148,15 +154,52 @@ function Header(): React.ReactElement {
 
 function Item(props: ReferenceModelItemProps): React.ReactElement {
     const { referenceModel, idAssetVersion } = props;
-    const { Model, Name, FileSize, UVResolution, Quality, Usage } = referenceModel;
+    const { Name, FileSize, UVResolution, Quality, Usage, idModel } = referenceModel;
     const { BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z } = referenceModel;
+    const [idAsset, setIdAsset] = useState<null | number>(null);
     const classes = useStyles();
 
+    let idSystemObject: number | null = null;
     // const onAction = () => {
     //     alert(`TODO: KARAN: Handle ${action.toString()} action`);
     // };
-    console.log('referenceModel', referenceModel);
+
+    useEffect(() => {
+        const getModelDetails = async () => {
+            const { data } = await apolloClient.query({
+                query: GetModelDocument,
+                variables: {
+                    input: {
+                        idModel
+                    }
+                }
+            });
+            idSystemObject = data?.getModel.Model?.SystemObject?.idSystemObject;
+            console.log('modelDetail', idSystemObject, data);
+            if (idSystemObject) {
+                const assetDetail = await apolloClient.query({
+                    query: GetAssetDetailsForSystemObjectDocument,
+                    variables: {
+                        input: {
+                            idSystemObject
+                        }
+                    }
+                });
+                console.log('assetDetail', assetDetail);
+                setIdAsset(assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.idAsset);
+                console.log('idAsset', idAsset, 'idAssetVersion', idAssetVersion);
+            }
+        };
+
+        getModelDetails();
+    }, []);
+    // const { data } = useModelDetails(idModel);
+    // const idSystemObject = data?.getModel.Model?.SystemObject?.idSystemObject;
+    // console.log('idSystemObject', idSystemObject);
+
+    // leaving this empty for now
     const onUpdateModel = () => {};
+    const isModelInSystem = idModel > 0;
 
     let boundingBox: string = '';
     if (BoundingBoxP1X != null && BoundingBoxP1Y != null && BoundingBoxP1Z != null && BoundingBoxP2X != null && BoundingBoxP2Y != null && BoundingBoxP2Z != null)
@@ -166,13 +209,12 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
     return (
         <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
             <Box display='flex' flex={3}>
-                {Model ? (
-                    <NewTabLink to={getDetailsUrlForObject(Model?.SystemObject?.idSystemObject)}>
+                {isModelInSystem && idSystemObject && (
+                    <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
                         <Typography className={clsx(classes.label, classes.labelUnderline)}>{Name}</Typography>
                     </NewTabLink>
-                ) : (
-                    <Typography className={clsx(classes.label, classes.labelItalics)}>{Name}</Typography>
                 )}
+                {!isModelInSystem && <Typography className={clsx(classes.label, classes.labelItalics)}>{Name}</Typography>}
             </Box>
 
             <Box display='flex' flex={0.75} justifyContent='center'>
@@ -192,18 +234,14 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
                 <Typography className={classes.label}>{boundingBox}</Typography>
             </Box>
             <Box display='flex' flex={0.5} justifyContent='center'>
-                {/* rewrite the following codeto be a link that opens up a new tab instead */}
-                {/* <Typography onClick={onUpdateModel} className={clsx(classes.label, classes.labelUnderline)}>
-                    {Model ? 'Update' : 'Ingest'}
-                </Typography> */}
-                {!Model && (
+                {!isModelInSystem && (
                     <Typography onClick={onUpdateModel} className={clsx(classes.label, classes.labelUnderline)}>
-                        <NewTabLink to={'/'}>Ingest</NewTabLink>
+                        <NewTabLink to={updateSystemObjectUploadRedirect(idAsset, idAssetVersion, eSystemObjectType.eModel)}>Ingest</NewTabLink>
                     </Typography>
                 )}
-                {Model && (
+                {isModelInSystem && (
                     <Typography onClick={onUpdateModel} className={clsx(classes.label, classes.labelUnderline)}>
-                        <NewTabLink to={updateSystemObjectUploadRedirect(Model.SystemObject.idAsset, Number(idAssetVersion), eSystemObjectType.eModel)}>Update</NewTabLink>
+                        <NewTabLink to={updateSystemObjectUploadRedirect(idAsset, idAssetVersion, eSystemObjectType.eModel)}>Update</NewTabLink>
                     </Typography>
                 )}
             </Box>

@@ -91,6 +91,12 @@ function Uploads(): React.ReactElement {
         if (urlParams.has('fileType')) setUpdateWorkflowFileType(Number(urlParams.get('fileType')));
     }, [setUpdateMode, window.location.search]);
 
+    // we need a separate useEffect here
+    // if mode is indicates that we're ingesting something from Scene Ingestion
+    // we will take a look at the uploaded files and use something like Model.fetchByFileNameSizeAndAssetType
+    // if we can find it, immediately select that as the file
+    // go through the ingestion process
+
     const onNext = async (): Promise<void> => {
         try {
             await updateVocabularyEntries();

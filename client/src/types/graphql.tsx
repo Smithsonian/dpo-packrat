@@ -2800,6 +2800,10 @@ export type GetModelQuery = (
     & { Model?: Maybe<(
       { __typename?: 'Model' }
       & Pick<Model, 'idModel'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject' | 'idAsset' | 'idAssetVersion'>
+      )> }
     )> }
   ) }
 );
@@ -4696,6 +4700,11 @@ export const GetModelDocument = gql`
   getModel(input: $input) {
     Model {
       idModel
+      SystemObject {
+        idSystemObject
+        idAsset
+        idAssetVersion
+      }
     }
   }
 }
