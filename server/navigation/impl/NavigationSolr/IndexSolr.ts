@@ -484,7 +484,6 @@ export class IndexSolr {
         doc.ChildrenDateCreated = [model.DateCreated];
 
         doc.ModelCreationMethod = await this.computeVocabulary(model.idVCreationMethod);
-        doc.ModelAuthoritative = model.Authoritative;
         doc.ModelModality = await this.computeVocabulary(model.idVModality);
         doc.ModelUnits = await this.computeVocabulary(model.idVUnits);
         doc.ModelPurpose = await this.computeVocabulary(model.idVPurpose);

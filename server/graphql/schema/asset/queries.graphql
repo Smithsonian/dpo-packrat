@@ -60,7 +60,6 @@ type IngestModel {
     idAssetVersion: Int!
     systemCreated: Boolean!
     name: String!
-    authoritative: Boolean!
     creationMethod: Int!
     modality: Int!
     purpose: Int!

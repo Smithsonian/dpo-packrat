@@ -292,7 +292,6 @@ export class NavigationSolr implements NAV.INavigation {
                 case NAV.eMetadata.eCDCameraSettingsUniform:            metadata.push(this.computeMetadataFromBoolean(doc.CDCameraSettingsUniform)); break;
                 case NAV.eMetadata.eCDVariantType:                      metadata.push(this.computeMetadataFromStringArray(doc.CDVariantType)); break;
                 case NAV.eMetadata.eModelCreationMethod:                metadata.push(this.computeMetadataFromString(doc.ModelCreationMethod)); break;
-                case NAV.eMetadata.eModelAuthoritative:                 metadata.push(this.computeMetadataFromBoolean(doc.ModelAuthoritative)); break;
                 case NAV.eMetadata.eModelModality:                      metadata.push(this.computeMetadataFromString(doc.ModelModality)); break;
                 case NAV.eMetadata.eModelUnits:                         metadata.push(this.computeMetadataFromString(doc.ModelUnits)); break;
                 case NAV.eMetadata.eModelPurpose:                       metadata.push(this.computeMetadataFromString(doc.ModelPurpose)); break;

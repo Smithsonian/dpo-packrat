@@ -73,7 +73,6 @@ input CaptureDataDetailFieldsInput {
 
 input ModelDetailFieldsInput {
     Name: String
-    Authoritative: Boolean
     CreationMethod: Int
     Modality: Int
     Purpose: Int

@@ -130,7 +130,6 @@ export enum eMetadata {
     eCDCameraSettingsUniform,
     eCDVariantType,
     eModelCreationMethod,
-    eModelAuthoritative,
     eModelModality,
     eModelUnits,
     eModelPurpose,

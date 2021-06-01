@@ -8,7 +8,6 @@ const getModelConstellation = gql`
                     idModel
                     Name
                     DateCreated
-                    Authoritative
                     VCreationMethod {
                         Term
                     }

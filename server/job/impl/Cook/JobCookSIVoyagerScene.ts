@@ -251,7 +251,6 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             idModel: 0,
             Name,
             DateCreated: new Date(),
-            Authoritative: false,
             idVCreationMethod: source?.idVCreationMethod ?? null,
             idVModality: source?.idVModality ?? null,
             idVPurpose: source?.idVPurpose ?? null, // should this be set to web-delivery?
