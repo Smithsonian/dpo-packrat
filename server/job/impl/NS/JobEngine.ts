@@ -179,13 +179,11 @@ export class JobEngine implements JOB.IJobEngine {
                 if (parameters instanceof COOK.JobCookSIVoyagerSceneParameters) // confirm that parameters is of type JobCookSIVoyagerSceneParameters
                     job = new COOK.JobCookSIVoyagerScene(this, idAssetVersions, parameters, dbJobRun);
                 break;
-            /*
             case CACHE.eVocabularyID.eJobJobTypeCookSIGenerateDownloads:
                 expectedJob = 'JobCookSIGenerateDownloads';
                 if (parameters instanceof COOK.JobCookSIGenerateDownloadsParameters) // confirm that parameters is of type JobCookSIGenerateDownloadsParameters
-                    job = new COOK.JobCookSIGenerateDownloadsParameters(this, idAssetVersions, parameters, dbJobRun);
+                    job = new COOK.JobCookSIGenerateDownloads(this, idAssetVersions, parameters, dbJobRun);
                 break;
-            */
             default:
                 LOG.error(`JobEngine.createJobWorker unknown job type ${CACHE.eVocabularyID[eJobType]}`, LOG.LS.eJOB);
                 return null;
