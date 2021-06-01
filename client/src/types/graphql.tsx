@@ -523,7 +523,6 @@ export type IngestModel = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -845,7 +844,6 @@ export type IngestModelInput = {
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -952,7 +950,6 @@ export type Model = {
   idModel: Scalars['Int'];
   Name: Scalars['String'];
   DateCreated: Scalars['DateTime'];
-  Authoritative: Scalars['Boolean'];
   idVCreationMethod?: Maybe<Scalars['Int']>;
   idVModality?: Maybe<Scalars['Int']>;
   idVPurpose?: Maybe<Scalars['Int']>;
@@ -1326,7 +1323,6 @@ export type CaptureDataDetailFieldsInput = {
 
 export type ModelDetailFieldsInput = {
   Name?: Maybe<Scalars['String']>;
-  Authoritative?: Maybe<Scalars['Boolean']>;
   CreationMethod?: Maybe<Scalars['Int']>;
   Modality?: Maybe<Scalars['Int']>;
   Purpose?: Maybe<Scalars['Int']>;
@@ -2636,7 +2632,7 @@ export type GetAssetVersionsDetailsQuery = (
         )> }
       )>, Model?: Maybe<(
         { __typename?: 'IngestModel' }
-        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory'>
+        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
           & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -2817,7 +2813,7 @@ export type GetModelConstellationQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'Authoritative' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed'>
+        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed'>
         & { VCreationMethod?: Maybe<(
           { __typename?: 'Vocabulary' }
           & Pick<Vocabulary, 'Term'>
@@ -3021,7 +3017,7 @@ export type GetDetailsTabDataForObjectQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'DateCreated' | 'Authoritative' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'DateCreated' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
         & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
@@ -3234,7 +3230,7 @@ export type GetObjectsForItemQuery = (
       & Pick<CaptureData, 'idCaptureData' | 'DateCaptured' | 'Description'>
     )>, Model: Array<(
       { __typename?: 'Model' }
-      & Pick<Model, 'idModel' | 'Authoritative' | 'DateCreated'>
+      & Pick<Model, 'idModel' | 'DateCreated'>
     )>, Scene: Array<(
       { __typename?: 'Scene' }
       & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name'>
@@ -4307,7 +4303,6 @@ export const GetAssetVersionsDetailsDocument = gql`
         idAssetVersion
         systemCreated
         name
-        authoritative
         creationMethod
         modality
         purpose
@@ -4736,7 +4731,6 @@ export const GetModelConstellationDocument = gql`
         idModel
         Name
         DateCreated
-        Authoritative
         VCreationMethod {
           Term
         }
@@ -5247,7 +5241,6 @@ export const GetDetailsTabDataForObjectDocument = gql`
         IsDracoCompressed
         Name
         DateCreated
-        Authoritative
         idVCreationMethod
         idVModality
         idVUnits
@@ -5744,7 +5737,6 @@ export const GetObjectsForItemDocument = gql`
     }
     Model {
       idModel
-      Authoritative
       DateCreated
     }
     Scene {

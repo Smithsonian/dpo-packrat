@@ -1,7 +1,7 @@
 -- 2021-05-12 Jon
 UPDATE Model SET MASTER = 0 WHERE MASTER = 1 AND idVPurpose <> 45;
 UPDATE Model SET idVPurpose = 46 WHERE MASTER = 0 AND idVPurpose = 45;
-ALTER TABLE 'Model' DROP COLUMN 'Master';
+ALTER TABLE Model DROP COLUMN `Master`;
 
 ALTER TABLE Metadata MODIFY COLUMN `ValueExtended` longtext DEFAULT NULL;
 
@@ -34,3 +34,6 @@ ALTER TABLE Model MODIFY COLUMN `idVModality` int(11) NULL;
 ALTER TABLE Model MODIFY COLUMN `idVUnits` int(11) NULL;
 ALTER TABLE Model MODIFY COLUMN `idVPurpose` int(11) NULL;
 ALTER TABLE Model MODIFY COLUMN `idVFileType` int(11) NULL;
+
+-- 2021-06-01 Jon
+ALTER TABLE Model DROP COLUMN Authoritative;

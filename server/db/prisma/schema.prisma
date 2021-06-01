@@ -356,7 +356,6 @@ model Model {
   idModel                                        Int                     @id @default(autoincrement())
   Name                                           String                  @mariasql.VarChar(255)
   DateCreated                                    DateTime                @mariasql.DateTime(0)
-  Authoritative                                  Boolean
   idVCreationMethod                              Int?
   idVModality                                    Int?
   idVUnits                                       Int?

@@ -520,7 +520,6 @@ export type IngestModel = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -842,7 +841,6 @@ export type IngestModelInput = {
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -949,7 +947,6 @@ export type Model = {
   idModel: Scalars['Int'];
   Name: Scalars['String'];
   DateCreated: Scalars['DateTime'];
-  Authoritative: Scalars['Boolean'];
   idVCreationMethod?: Maybe<Scalars['Int']>;
   idVModality?: Maybe<Scalars['Int']>;
   idVPurpose?: Maybe<Scalars['Int']>;
@@ -1323,7 +1320,6 @@ export type CaptureDataDetailFieldsInput = {
 
 export type ModelDetailFieldsInput = {
   Name?: Maybe<Scalars['String']>;
-  Authoritative?: Maybe<Scalars['Boolean']>;
   CreationMethod?: Maybe<Scalars['Int']>;
   Modality?: Maybe<Scalars['Int']>;
   Purpose?: Maybe<Scalars['Int']>;

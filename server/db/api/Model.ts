@@ -8,7 +8,6 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     idModel!: number;
     Name!: string;
     DateCreated!: Date;
-    Authoritative!: boolean;
     idVCreationMethod!: number | null;
     idVModality!: number | null;
     idVPurpose!: number | null;
@@ -36,11 +35,11 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, DateCreated, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
+            const { Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose,
                 idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
                 CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed } = this;
             ({ idModel: this.idModel, Name: this.Name, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
-                Authoritative: this.Authoritative, idVModality: this.idVModality, idVUnits: this.idVUnits,
+                idVModality: this.idVModality, idVUnits: this.idVUnits,
                 idVPurpose: this.idVPurpose, idVFileType: this.idVFileType, idAssetThumbnail: this.idAssetThumbnail,
                 CountAnimations: this.CountAnimations, CountCameras: this.CountCameras, CountFaces: this.CountFaces,
                 CountLights: this.CountLights, CountMaterials: this.CountMaterials, CountMeshes: this.CountMeshes,
@@ -50,7 +49,6 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                     data: {
                         Name,
                         DateCreated,
-                        Authoritative,
                         Vocabulary_Model_idVCreationMethodToVocabulary: idVCreationMethod ? { connect: { idVocabulary: idVCreationMethod }, } : undefined,
                         Vocabulary_Model_idVModalityToVocabulary:       idVModality ? { connect: { idVocabulary: idVModality }, } : undefined,
                         Vocabulary_Model_idVPurposeToVocabulary:        idVPurpose ? { connect: { idVocabulary: idVPurpose }, } : undefined,
@@ -70,7 +68,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idModel, Name, DateCreated, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
+            const { idModel, Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose,
                 idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes,
                 CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
@@ -78,7 +76,6 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 data: {
                     Name,
                     DateCreated,
-                    Authoritative,
                     Vocabulary_Model_idVCreationMethodToVocabulary: idVCreationMethod ? { connect: { idVocabulary: idVCreationMethod }, } : { disconnect: true, },
                     Vocabulary_Model_idVModalityToVocabulary:       idVModality ? { connect: { idVocabulary: idVModality }, } : { disconnect: true, },
                     Vocabulary_Model_idVPurposeToVocabulary:        idVPurpose ? { connect: { idVocabulary: idVPurpose }, } : { disconnect: true, },

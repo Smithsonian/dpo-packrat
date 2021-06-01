@@ -160,7 +160,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
             model.Name = modelSource.Name;
             model.DateCreated = modelSource.DateCreated;
-            model.Authoritative = modelSource.Authoritative;
             if (modelSource.idVCreationMethod)
                 model.idVCreationMethod = modelSource.idVCreationMethod;
             if (modelSource.idVModality)
@@ -565,7 +564,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         // LOG.info(`JobCookPackratInspect createModel ${fileName} -> ${JSON.stringify(vFileType)}`, LOG.LS.eJOB);
         return new DBAPI.Model({
             Name: fileName || '',
-            Authoritative: true,
             DateCreated: dateCreated || new Date(),
             idVCreationMethod: 0,
             idVModality: 0,

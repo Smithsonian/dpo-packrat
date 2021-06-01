@@ -50,7 +50,6 @@
 
     <!-- Model, ModelObject, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap fields -->
     <field name="ModelCreationMethod" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="ModelAuthoritative" type="boolean" indexed="true" stored="true" multiValued="false" />
     <field name="ModelModality" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="ModelUnits" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="ModelPurpose" type="string" indexed="true" stored="true" multiValued="false" />

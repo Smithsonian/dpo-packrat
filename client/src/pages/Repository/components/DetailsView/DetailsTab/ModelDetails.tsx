@@ -6,7 +6,7 @@
  *
  * This component renders details tab for Model specific details used in DetailsTab component.
  */
-import { Typography, Box, makeStyles, Checkbox } from '@material-ui/core';
+import { Typography, Box, makeStyles } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { DateInputField, FieldType, Loader, SelectField, ReadOnlyRow } from '../../../../../components';
 import { useVocabularyStore, useRepositoryDetailsFormStore } from '../../../../../store';
@@ -93,11 +93,10 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
 
     const { ingestionModel, modelObjects } = extractModelConstellation(data?.getDetailsTabDataForObject?.Model);
     const [details] = useState({});
-    const [setFormField, setFormDateField, dateCaptured, authoritative, creationMethod, modality, purpose, units, fileType] = useRepositoryDetailsFormStore(state => [
+    const [setFormField, setFormDateField, dateCaptured, creationMethod, modality, purpose, units, fileType] = useRepositoryDetailsFormStore(state => [
         state.setFormField,
         state.setFormDateField,
         state.dateCaptured,
-        state.authoritative,
         state.creationMethod,
         state.modality,
         state.purpose,
@@ -113,13 +112,10 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
     useEffect(() => {
         if (data && !loading) {
             if (data.getDetailsTabDataForObject?.Model?.Model) {
-                const { DateCreated, Authoritative, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = data.getDetailsTabDataForObject.Model.Model;
+                const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = data.getDetailsTabDataForObject.Model.Model;
 
                 if (DateCreated) {
                     setFormDateField(new Date(DateCreated));
-                }
-                if (typeof Authoritative === 'boolean') {
-                    setFormField('authoritative', Authoritative);
                 }
                 if (idVCreationMethod) setFormField('creationMethod', idVCreationMethod);
                 if (idVModality) setFormField('modality', idVModality);
@@ -151,11 +147,6 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
         setFormField(name, idFieldValue);
     };
 
-    const setCheckboxField = ({ target }): void => {
-        const { name, checked } = target;
-        setFormField(name, checked);
-    };
-
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
     return (
@@ -169,10 +160,6 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                     <Box display='flex' flexDirection='column' className={classes.dataEntry}>
                         <FieldType required label='Date Created' direction='row' containerProps={rowFieldProps}>
                             <DateInputField value={dateCaptured} onChange={(_, value) => setDateField(value)} />
-                        </FieldType>
-
-                        <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox name='authoritative' checked={!!authoritative} color='primary' onChange={setCheckboxField} />
                         </FieldType>
 
                         <SelectField

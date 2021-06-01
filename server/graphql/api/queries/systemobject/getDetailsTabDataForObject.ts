@@ -72,7 +72,6 @@ const getDetailsTabDataForObject = gql`
                     IsDracoCompressed
                     Name
                     DateCreated
-                    Authoritative
                     idVCreationMethod
                     idVModality
                     idVUnits

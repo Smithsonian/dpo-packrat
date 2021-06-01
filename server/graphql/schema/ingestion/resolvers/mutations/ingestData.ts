@@ -494,7 +494,6 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
     let modelDB: DBAPI.Model = JCOutput.modelConstellation.Model;
     modelDB.Name = model.name;
     modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCaptured) || new Date();
-    modelDB.Authoritative = model.authoritative;
     modelDB.idVCreationMethod = model.creationMethod;
     modelDB.idVModality = model.modality;
     modelDB.idVPurpose = model.purpose;
@@ -1012,7 +1011,6 @@ async function transformModelSceneXrefIntoModel(MSX: DBAPI.ModelSceneXref): Prom
         idModel: 0,
         Name,
         DateCreated: new Date(),
-        Authoritative: false,
         idVCreationMethod: null,
         idVModality: null,
         idVPurpose: vPurpose ? vPurpose.idVocabulary : null,

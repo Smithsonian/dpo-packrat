@@ -370,7 +370,6 @@ export class BulkIngestReader {
             name: bagitModel.name,
             dateCaptured: bagitModel.date_created,
             creationMethod,
-            authoritative: bagitModel.authoritative != 0,
             modality,
             units,
             purpose,

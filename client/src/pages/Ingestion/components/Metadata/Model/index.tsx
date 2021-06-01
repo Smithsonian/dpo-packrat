@@ -6,7 +6,7 @@
  *
  * This component renders the metadata fields specific to model asset.
  */
-import { Box, Checkbox, makeStyles, Typography } from '@material-ui/core';
+import { Box, makeStyles, Typography } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
@@ -263,10 +263,6 @@ function Model(props: ModelProps): React.ReactElement {
 
                             <FieldType error={errors.model.dateCaptured} required label='Date Created' direction='row' containerProps={rowFieldProps}>
                                 <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
-                            </FieldType>
-
-                            <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
-                                <Checkbox name='authoritative' checked={model.authoritative} color='primary' onChange={setCheckboxField} />
                             </FieldType>
 
                             <SelectField
