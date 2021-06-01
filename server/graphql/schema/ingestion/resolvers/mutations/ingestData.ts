@@ -82,10 +82,14 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
         }
     }
 
+    let modelTransformUpdated: boolean = false;
     if (ingestScene) {
         for (const scene of input.scene) {
-            if (!await createSceneObjects(scene, assetVersionMap))
+            const { success, transformUpdated } = await createSceneObjects(scene, assetVersionMap);
+            if (!success)
                 return { success: false, message: 'failure to create scene object' };
+            if (transformUpdated)
+                modelTransformUpdated = true;
         }
     }
 
@@ -110,7 +114,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
         await createPhotogrammetryDerivedObjects(assetVersionMap, ingestPhotoMap, ingestResMap);
 
     // notify workflow engine about this ingestion:
-    if (!await sendWorkflowIngestionEvent(ingestResMap, user!)) // eslint-disable-line @typescript-eslint/no-non-null-assertion
+    if (!await sendWorkflowIngestionEvent(ingestResMap, user!, modelTransformUpdated)) // eslint-disable-line @typescript-eslint/no-non-null-assertion
         return { success: false, message: 'failure to notify workflow engine about ingestion event' };
     return { success: true };
 }
@@ -555,10 +559,12 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
     return true;
 }
 
-async function createSceneObjects(scene: IngestSceneInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
+async function createSceneObjects(scene: IngestSceneInput,
+    assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<{ success: boolean, transformUpdated?: boolean | undefined }> {
+
     const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion);
     if (!sceneConstellation || !sceneConstellation.Scene)
-        return false;
+        return { success: false };
 
     // Examine scene.idAsset; if Asset.idVAssetType -> scene then
     // Lookup SystemObject from Asset.idSystemObject; if idScene is not null, then use that idScene
@@ -568,21 +574,21 @@ async function createSceneObjects(scene: IngestSceneInput, assetVersionMap: Map<
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(scene.idAsset!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
         if (!asset) {
             LOG.error(`ingestData createSceneObjects unable to fetch scene's asset for ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-            return false;
+            return { success: false };
         }
         const assetType: CACHE.eVocabularyID | undefined = await asset.assetType();
         if (assetType === CACHE.eVocabularyID.eAssetAssetTypeScene) {
             const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
             if (!SO) {
                 LOG.error(`ingestData createSceneObjects unable to fetch scene's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                return false;
+                return { success: false };
             }
 
             if (SO.idScene) {               // Is this a scene?  If so, use it!
                 sceneDB = await DBAPI.Scene.fetch(SO.idScene);
                 if (!sceneDB) {
                     LOG.error(`ingestData createSceneObjects unable to fetch scene with ID ${SO.idScene} from ${JSON.stringify(SO, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                    return false;
+                    return { success: false };
                 }
             }
         }
@@ -594,20 +600,24 @@ async function createSceneObjects(scene: IngestSceneInput, assetVersionMap: Map<
     let ret: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
 
     if (!await handleIdentifiers(sceneDB, scene.systemCreated, scene.identifiers))
-        return false;
+        return { success: false };
 
     // wire scene to reference models, including SystemObjectXref of 'scene as master' to 'models as derived'
-    if (sceneConstellation.ModelSceneXref) {
+    let transformUpdated: boolean = false;
+    if (sceneConstellation.ModelSceneXref && sceneConstellation.ModelSceneXref.length > 0) {
         if (updateMode) {
             // remove existing ModelSceneXref's
             const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(sceneDB.idScene);
             if (MSXs) {
-                for (const MSX of MSXs)
+                for (const MSX of MSXs) {
+                    if (!sceneConstellation.ModelSceneXref[0].isTransformMatching(MSX))
+                        transformUpdated = true;
                     await MSX.delete();
+                }
             }
 
             // TODO: remove existing SystemObjectXref?
-        }
+        } else transformUpdated = true; // in create mode, treat the transform as updated
 
         for (const MSX of sceneConstellation.ModelSceneXref) {
             if (MSX.idModelSceneXref || MSX.idScene) {
@@ -632,7 +642,7 @@ async function createSceneObjects(scene: IngestSceneInput, assetVersionMap: Map<
 
     if (scene.idAssetVersion)
         assetVersionMap.set(scene.idAssetVersion, sceneDB);
-    return true;
+    return { success: true, transformUpdated };
 }
 
 async function createOtherObjects(other: IngestOtherInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
@@ -728,7 +738,7 @@ async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.Sy
     return res;
 }
 
-async function sendWorkflowIngestionEvent(ingestResMap: Map<number, IngestAssetResult | null>, user: User): Promise<boolean> {
+async function sendWorkflowIngestionEvent(ingestResMap: Map<number, IngestAssetResult | null>, user: User, modelTransformUpdated: boolean): Promise<boolean> {
     const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
     if (!workflowEngine) {
         LOG.error('ingestData sendWorkflowIngestionEvent could not load WorkflowEngine', LOG.LS.eGQL);
@@ -759,7 +769,7 @@ async function sendWorkflowIngestionEvent(ingestResMap: Map<number, IngestAssetR
             idSystemObject,
             idProject: null, // TODO: update with project ID
             idUserInitiator: user.idUser,
-            parameters: null
+            parameters: modelTransformUpdated ? { modelTransformUpdated } : null
         };
 
         // send workflow engine event, but don't wait for results
