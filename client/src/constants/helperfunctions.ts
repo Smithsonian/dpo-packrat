@@ -104,8 +104,7 @@ export function extractModelConstellation(data: any) {
 }
 
 
-export const updateSystemObjectUploadRedirect = (idAsset: number | undefined | null, idAssetVersion: number | undefined | null, ObjectType: number | undefined | null, uploadFileType: number | undefined | null = null) => {
-    console.log('updateSystemObjectUploadRedirect input', 'idAsset', idAsset, 'idAssetVersion', idAssetVersion, 'ObjectType', ObjectType, 'uploadFileType', uploadFileType);
+export const updateSystemObjectUploadRedirect = (idAsset: number | undefined | null, idAssetVersion: number | undefined | null, ObjectType: number | undefined | null, assetType: number | undefined | null = null) => {
     if (!idAsset || !ObjectType) return '/';
 
     let assetVersion = '';
@@ -114,12 +113,11 @@ export const updateSystemObjectUploadRedirect = (idAsset: number | undefined | n
 
     if (idAsset) asset = `idAsset=${idAsset}`;
     if (idAssetVersion) assetVersion = `&idAssetVersion=${idAssetVersion}`;
-    if (uploadFileType) fileType = `&fileType=${uploadFileType}`;
+    if (assetType) fileType = `&fileType=${assetType}`;
 
     return `/ingestion/uploads?${asset}${assetVersion}${fileType}&type=${ObjectType}&mode=1`;
 };
 
-export const ingestSystemObjectUploadRedirect = (fileName: string, fileSize: number, assetType: number) => {
-    console.log(fileName, fileSize, assetType);
-    return '/ingestion/uploads';
+export const ingestSystemObjectUploadRedirect = (fileName: string) => {
+    return `/ingestion/uploads?name=${fileName}&mode=2`;
 }
