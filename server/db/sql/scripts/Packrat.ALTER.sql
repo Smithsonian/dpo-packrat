@@ -37,3 +37,4 @@ ALTER TABLE Model MODIFY COLUMN `idVFileType` int(11) NULL;
 
 -- 2021-06-01 Jon
 ALTER TABLE Model DROP COLUMN Authoritative;
+UPDATE Vocabulary SET Term = 'Download' WHERE Term = 'Print Delivery';

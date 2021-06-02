@@ -69,7 +69,7 @@ export enum eVocabularyID {
     eModelUnitsAstronomicalUnit,
     eModelPurposeMaster,
     eModelPurposeWebDelivery,
-    eModelPurposePrintDelivery,
+    eModelPurposeDownload,
     eModelPurposeIntermediateProcessingStep,
     eModelFileTypeobj,
     eModelFileTypeply,

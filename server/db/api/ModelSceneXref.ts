@@ -136,5 +136,17 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return null;
         }
     }
+
+    static async fetchFromModelAndScene(idModel: number, idScene: number): Promise<ModelSceneXref[] | null> {
+        if (!idModel || !idScene)
+            return null;
+        try {
+            return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
+                await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel, idScene } }), ModelSceneXref);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.ModelSceneXref.fetchFromModel', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }
 
