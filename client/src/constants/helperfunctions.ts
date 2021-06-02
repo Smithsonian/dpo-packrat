@@ -120,4 +120,4 @@ export const updateSystemObjectUploadRedirect = (idAsset: number | undefined | n
 
 export const ingestSystemObjectUploadRedirect = (fileName: string) => {
     return `/ingestion/uploads?name=${fileName}&mode=2`;
-}
+};

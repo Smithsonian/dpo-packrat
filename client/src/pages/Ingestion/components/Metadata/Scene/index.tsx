@@ -13,6 +13,7 @@ import ReferenceModels from './ReferenceModels';
 import SceneDataGrid from './SceneDataGrid';
 import { apolloClient } from '../../../../../graphql/index';
 import { GetSceneForAssetVersionDocument } from '../../../../../types/graphql';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -22,10 +23,11 @@ const useStyles = makeStyles(() => ({
 
 interface SceneProps {
     readonly metadataIndex: number;
+    setInvalidMetadataStep: (valid: boolean) => void;
 }
 
 function Scene(props: SceneProps): React.ReactElement {
-    const { metadataIndex } = props;
+    const { metadataIndex, setInvalidMetadataStep } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { scene } = metadata;
@@ -82,10 +84,13 @@ function Scene(props: SceneProps): React.ReactElement {
             });
             setReferenceModels(data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref);
             setSceneData(data.getSceneForAssetVersion?.SceneConstellation?.Scene);
+            const invalidMetadataStep = data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref.some(reference => reference.idModel === 0);
+            setInvalidMetadataStep(invalidMetadataStep);
+            if (invalidMetadataStep) toast.warning('Unable to ingest scene because reference models cannot be found', { autoClose: false });
         }
 
         fetchSceneConstellation();
-    }, [idAssetVersion, metadataIndex]);
+    }, [idAssetVersion, metadataIndex, setInvalidMetadataStep]);
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
         updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.scene);

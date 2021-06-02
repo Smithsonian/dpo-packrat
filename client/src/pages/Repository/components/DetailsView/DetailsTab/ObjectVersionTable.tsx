@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 import { Box, Typography, Button } from '@material-ui/core';
 import clsx from 'clsx';
 import React from 'react';

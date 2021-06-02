@@ -103,7 +103,7 @@ function Uploads(): React.ReactElement {
         if (urlParams.has('name')) {
             let matchingUploadedFileId = -1;
             if (completed.length > 0) {
-                let matchingUploadedFileIndex = completed.findIndex(uploadedFile => uploadedFile.name === urlParams.get('name'));
+                const matchingUploadedFileIndex = completed.findIndex(uploadedFile => uploadedFile.name === urlParams.get('name'));
                 if (matchingUploadedFileIndex > -1) {
                     matchingUploadedFileId = +completed[matchingUploadedFileIndex].id;
                     await selectFile(matchingUploadedFileId.toString(), true);
