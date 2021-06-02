@@ -104,7 +104,6 @@ function ReferenceModels(props: ReferenceModelsProps): React.ReactElement {
     const { referenceModels, idAssetVersion } = props;
     const classes = useStyles();
     const hasModels = !!referenceModels.length;
-    console.log('referenceModels', referenceModels);
 
     return (
         <Box className={classes.container}>
@@ -171,7 +170,6 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
                 }
             });
             setIdSystemObject(data?.getModel.Model?.SystemObject?.idSystemObject);
-            console.log('modelDetail', idSystemObject, data);
             if (idSystemObject) {
                 const assetDetail = await apolloClient.query({
                     query: GetAssetDetailsForSystemObjectDocument,
@@ -181,10 +179,8 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
                         }
                     }
                 });
-                console.log('assetDetail', assetDetail);
                 setIdAsset(assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.idAsset);
                 setAssetType(assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.assetType);
-                console.log('idAsset', idAsset, 'idAssetVersion', idAssetVersion, 'assetType', assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.assetType);
             }
         };
 
