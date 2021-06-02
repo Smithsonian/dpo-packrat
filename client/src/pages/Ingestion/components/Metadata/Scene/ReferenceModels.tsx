@@ -187,8 +187,6 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
         getModelDetails();
     }, [idAsset, idAssetVersion, idModel, idSystemObject]);
 
-    // leaving this empty for now
-    const onUpdateModel = () => {};
     const isModelInSystem = idModel > 0;
 
     let boundingBox: string = '';
@@ -226,12 +224,12 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
             </Box>
             <Box display='flex' flex={0.5} justifyContent='center'>
                 {!isModelInSystem && (
-                    <Typography onClick={onUpdateModel} className={clsx(classes.label, classes.labelUnderline)}>
+                    <Typography className={clsx(classes.label, classes.labelUnderline)}>
                         <NewTabLink to={ingestSystemObjectUploadRedirect(Name)}>Ingest</NewTabLink>
                     </Typography>
                 )}
                 {isModelInSystem && (
-                    <Typography onClick={onUpdateModel} className={clsx(classes.label, classes.labelUnderline)}>
+                    <Typography className={clsx(classes.label, classes.labelUnderline)}>
                         <NewTabLink to={updateSystemObjectUploadRedirect(idAsset, idAssetVersion, eSystemObjectType.eModel, assetType)}>Update</NewTabLink>
                     </Typography>
                 )}
