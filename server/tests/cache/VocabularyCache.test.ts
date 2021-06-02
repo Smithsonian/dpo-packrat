@@ -139,7 +139,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
                     case eVocabularyID.eModelPurposeMaster: testVocabulary(vocabulary, 'Master'); break;
                     case eVocabularyID.eModelPurposeWebDelivery: testVocabulary(vocabulary, 'Web Delivery'); break;
-                    case eVocabularyID.eModelPurposePrintDelivery: testVocabulary(vocabulary, 'Print Delivery'); break;
+                    case eVocabularyID.eModelPurposeDownload: testVocabulary(vocabulary, 'Download'); break;
                     case eVocabularyID.eModelPurposeIntermediateProcessingStep: testVocabulary(vocabulary, 'Intermediate Processing Step'); break;
 
                     case eVocabularyID.eModelFileTypeobj: testVocabulary(vocabulary, 'obj - Alias Wavefront Object'); break;
@@ -387,7 +387,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Astronomical Unit');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Master');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Web Delivery');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Print Delivery');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Download');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Intermediate Processing Step');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'obj - Alias Wavefront Object');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'ply - Stanford Polygon File Format');
