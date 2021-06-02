@@ -130,9 +130,15 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         </TabPanel>
     );
 
-    const ObjectVersionTableTab = (index: number) => (
+    const ObjectVersionTableTab = (index: number, systemObjectType?: eSystemObjectType) => (
         <TabPanel value={tab} index={index}>
-            <ObjectVersionTable idSystemObject={idSystemObject} objectVersions={objectVersions} />
+            <ObjectVersionTable idSystemObject={idSystemObject} objectVersions={objectVersions} systemObjectType={systemObjectType} />
+        </TabPanel>
+    );
+
+    const AssetDetailsTableTab = (index: number, idSystemObject: number, systemObjectType?: eSystemObjectType) => (
+        <TabPanel value={tab} index={index}>
+            <AssetDetailsTable idSystemObject={idSystemObject} systemObjectType={systemObjectType} />
         </TabPanel>
     );
 
@@ -184,31 +190,24 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             );
             break;
         case eSystemObjectType.eSubject:
-            tabs = ['Assets', 'Details', 'Related'];
+            tabs = ['Details', 'Related'];
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        <AssetDetailsTable idSystemObject={idSystemObject} />
-                    </TabPanel>
-                    <TabPanel value={tab} index={1}>
                         <SubjectDetails {...detailsProps} />
                     </TabPanel>
-                    {RelatedTab(2)}
+                    {RelatedTab(1)}
                 </React.Fragment>
             );
             break;
         case eSystemObjectType.eItem:
-            tabs = ['Assets', 'Details', 'Related', 'Versions'];
+            tabs = ['Details', 'Related'];
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        <AssetDetailsTable idSystemObject={idSystemObject} />
-                    </TabPanel>
-                    <TabPanel value={tab} index={1}>
                         <ItemDetails {...detailsProps} />
                     </TabPanel>
-                    {RelatedTab(2)}
-                    {ObjectVersionTableTab(3)}
+                    {RelatedTab(1)}
                 </React.Fragment>
             );
             break;
@@ -216,14 +215,12 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Assets', 'Details', 'Related', 'Versions'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
-                        <AssetDetailsTable idSystemObject={idSystemObject} />
-                    </TabPanel>
+                    {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eCaptureData)}
                     <TabPanel value={tab} index={1}>
                         <CaptureDataDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
-                    {ObjectVersionTableTab(3)}
+                    {ObjectVersionTableTab(3, eSystemObjectType.eCaptureData)}
                 </React.Fragment>
             );
             break;
@@ -231,14 +228,12 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Assets', 'Details', 'Related', 'Versions'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
-                        <AssetDetailsTable idSystemObject={idSystemObject} />
-                    </TabPanel>
+                    {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eModel)}
                     <TabPanel value={tab} index={1}>
                         <ModelDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
-                    {ObjectVersionTableTab(3)}
+                    {ObjectVersionTableTab(3, eSystemObjectType.eModel)}
                 </React.Fragment>
             );
             break;
@@ -246,42 +241,38 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Assets', 'Details', 'Related', 'Versions'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
-                        <AssetDetailsTable idSystemObject={idSystemObject} />
-                    </TabPanel>
+                    {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eScene)}
                     <TabPanel value={tab} index={1}>
                         <SceneDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
-                    {ObjectVersionTableTab(3)}
+                    {ObjectVersionTableTab(3, eSystemObjectType.eScene)}
                 </React.Fragment>
             );
             break;
         case eSystemObjectType.eIntermediaryFile:
-            tabs = ['Assets', 'Details', 'Related'];
+            tabs = ['Assets', 'Details', 'Related', 'Versions'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
-                        <AssetDetailsTable idSystemObject={idSystemObject} />
-                    </TabPanel>
+                    {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eIntermediaryFile)}
                     <TabPanel value={tab} index={1}>
                         <IntermediaryFileDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
+                    {ObjectVersionTableTab(3, eSystemObjectType.eIntermediaryFile)}
                 </React.Fragment>
             );
             break;
         case eSystemObjectType.eProjectDocumentation:
-            tabs = ['Assets', 'Details', 'Related'];
+            tabs = ['Assets', 'Details', 'Related', 'Versions'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
-                        <AssetDetailsTable idSystemObject={idSystemObject} />
-                    </TabPanel>
+                    {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eProjectDocumentation)}
                     <TabPanel value={tab} index={1}>
                         <ProjectDocumentationDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
+                    {ObjectVersionTableTab(3, eSystemObjectType.eProjectDocumentation)}
                 </React.Fragment>
             );
             break;
