@@ -5,6 +5,8 @@
  * ReferenceModels
  *
  * This component renders the reference model list for Scene metadata ingestion component.
+ * The list also provides links to allow individual ingestion/update of models depending
+ * on whether they exist in system or not.
  */
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -13,13 +15,10 @@ import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../../components';
 import { getDetailsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
-import { updateSystemObjectUploadRedirect } from '../../../../../constants';
+import { updateSystemObjectUploadRedirect, ingestSystemObjectUploadRedirect } from '../../../../../constants';
 import { eSystemObjectType } from '../../../../../types/server';
-// import { useModelDetails } from '../../../hooks/useIngestionDetails';
 import { apolloClient } from '../../../../../graphql';
 import { GetModelDocument, GetAssetDetailsForSystemObjectDocument } from '../../../../../types/graphql';
-// import { apolloClient } from '../../../../../graphql';
-// import { GetModelDocument, GetAssetDetailsForSystemObjectDocument } from '../../../../../types/graphql';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -157,12 +156,9 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
     const { Name, FileSize, UVResolution, Quality, Usage, idModel } = referenceModel;
     const { BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z } = referenceModel;
     const [idAsset, setIdAsset] = useState<null | number>(null);
+    const [idSystemObject, setIdSystemObject] = useState<null | number>(null);
+    const [assetType, setAssetType] = useState<null | number>(null);
     const classes = useStyles();
-
-    let idSystemObject: number | null = null;
-    // const onAction = () => {
-    //     alert(`TODO: KARAN: Handle ${action.toString()} action`);
-    // };
 
     useEffect(() => {
         const getModelDetails = async () => {
@@ -174,7 +170,7 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
                     }
                 }
             });
-            idSystemObject = data?.getModel.Model?.SystemObject?.idSystemObject;
+            setIdSystemObject(data?.getModel.Model?.SystemObject?.idSystemObject);
             console.log('modelDetail', idSystemObject, data);
             if (idSystemObject) {
                 const assetDetail = await apolloClient.query({
@@ -187,15 +183,13 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
                 });
                 console.log('assetDetail', assetDetail);
                 setIdAsset(assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.idAsset);
-                console.log('idAsset', idAsset, 'idAssetVersion', idAssetVersion);
+                setAssetType(assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.assetType);
+                console.log('idAsset', idAsset, 'idAssetVersion', idAssetVersion, 'assetType', assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.assetType);
             }
         };
 
         getModelDetails();
-    }, []);
-    // const { data } = useModelDetails(idModel);
-    // const idSystemObject = data?.getModel.Model?.SystemObject?.idSystemObject;
-    // console.log('idSystemObject', idSystemObject);
+    }, [idAsset, idAssetVersion, idModel, idSystemObject]);
 
     // leaving this empty for now
     const onUpdateModel = () => {};
@@ -206,6 +200,7 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
         boundingBox = `(${roundBoundingBox(BoundingBoxP1X)}, ${roundBoundingBox(BoundingBoxP1Y)}, ${roundBoundingBox(BoundingBoxP1Z)}) - (${roundBoundingBox(
             BoundingBoxP2X
         )}, ${roundBoundingBox(BoundingBoxP2Y)}, ${roundBoundingBox(BoundingBoxP2Z)})`;
+
     return (
         <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
             <Box display='flex' flex={3}>
@@ -236,12 +231,12 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
             <Box display='flex' flex={0.5} justifyContent='center'>
                 {!isModelInSystem && (
                     <Typography onClick={onUpdateModel} className={clsx(classes.label, classes.labelUnderline)}>
-                        <NewTabLink to={updateSystemObjectUploadRedirect(idAsset, idAssetVersion, eSystemObjectType.eModel)}>Ingest</NewTabLink>
+                        <NewTabLink to={ingestSystemObjectUploadRedirect(Name)}>Ingest</NewTabLink>
                     </Typography>
                 )}
                 {isModelInSystem && (
                     <Typography onClick={onUpdateModel} className={clsx(classes.label, classes.labelUnderline)}>
-                        <NewTabLink to={updateSystemObjectUploadRedirect(idAsset, idAssetVersion, eSystemObjectType.eModel)}>Update</NewTabLink>
+                        <NewTabLink to={updateSystemObjectUploadRedirect(idAsset, idAssetVersion, eSystemObjectType.eModel, assetType)}>Update</NewTabLink>
                     </Typography>
                 )}
             </Box>
