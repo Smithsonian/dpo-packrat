@@ -557,6 +557,10 @@ export type IngestScene = {
   __typename?: 'IngestScene';
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
+  name: Scalars['String'];
+  hasBeenQCd: Scalars['Boolean'];
+  isOriented: Scalars['Boolean'];
+  directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   referenceModels: Array<ReferenceModel>;
 };
@@ -621,6 +625,7 @@ export type GetModelConstellationForAssetVersionResult = {
 
 export type GetSceneForAssetVersionInput = {
   idAssetVersion: Scalars['Int'];
+  directory?: Maybe<Scalars['String']>;
 };
 
 export type GetSceneForAssetVersionResult = {
@@ -859,6 +864,7 @@ export type IngestSceneInput = {
   name: Scalars['String'];
   hasBeenQCd: Scalars['Boolean'];
   isOriented: Scalars['Boolean'];
+  directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
 };
 

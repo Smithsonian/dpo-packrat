@@ -561,7 +561,7 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
 async function createSceneObjects(scene: IngestSceneInput,
     assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<{ success: boolean, transformUpdated?: boolean | undefined }> {
 
-    const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion);
+    const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion, scene.directory);
     if (!sceneConstellation || !sceneConstellation.Scene)
         return { success: false };
 

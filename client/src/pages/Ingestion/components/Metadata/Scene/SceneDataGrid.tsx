@@ -44,8 +44,10 @@ interface SceneDataProps {
 
 function SceneDataGrid(props: SceneDataProps): React.ReactElement {
     const { sceneData, setCheckboxField, setNameField, name, hasBeenQCd, isOriented } = props;
-    const { CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour } = sceneData;
     const classes = useStyles();
+    if (!sceneData)
+        return <Box></Box>;
+    const { CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour } = sceneData;
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (

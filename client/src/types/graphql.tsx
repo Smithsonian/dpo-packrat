@@ -560,6 +560,10 @@ export type IngestScene = {
   __typename?: 'IngestScene';
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
+  name: Scalars['String'];
+  hasBeenQCd: Scalars['Boolean'];
+  isOriented: Scalars['Boolean'];
+  directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   referenceModels: Array<ReferenceModel>;
 };
@@ -624,6 +628,7 @@ export type GetModelConstellationForAssetVersionResult = {
 
 export type GetSceneForAssetVersionInput = {
   idAssetVersion: Scalars['Int'];
+  directory?: Maybe<Scalars['String']>;
 };
 
 export type GetSceneForAssetVersionResult = {
@@ -862,6 +867,7 @@ export type IngestSceneInput = {
   name: Scalars['String'];
   hasBeenQCd: Scalars['Boolean'];
   isOriented: Scalars['Boolean'];
+  directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
 };
 
@@ -2639,7 +2645,7 @@ export type GetAssetVersionsDetailsQuery = (
         )> }
       )>, Scene?: Maybe<(
         { __typename?: 'IngestScene' }
-        & Pick<IngestScene, 'idAssetVersion'>
+        & Pick<IngestScene, 'idAssetVersion' | 'systemCreated' | 'name' | 'hasBeenQCd' | 'isOriented' | 'directory'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
           & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -4318,6 +4324,11 @@ export const GetAssetVersionsDetailsDocument = gql`
       }
       Scene {
         idAssetVersion
+        systemCreated
+        name
+        hasBeenQCd
+        isOriented
+        directory
         identifiers {
           identifier
           identifierType

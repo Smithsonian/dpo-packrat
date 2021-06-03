@@ -147,7 +147,8 @@ export const defaultSceneFields: SceneFields = {
     referenceModels: [],
     hasBeenQCd: false,
     isOriented: false,
-    name: ''
+    name: '',
+    directory: ''
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;
@@ -169,7 +170,8 @@ export const referenceModelSchema = yup.object().shape({
 export const sceneFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
-    referenceModels: yup.array().of(referenceModelSchema)
+    referenceModels: yup.array().of(referenceModelSchema),
+    directory: yup.string()
 });
 
 export const defaultOtherFields: OtherFields = {

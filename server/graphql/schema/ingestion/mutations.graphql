@@ -84,6 +84,7 @@ input IngestSceneInput {
     name: String!
     hasBeenQCd: Boolean!
     isOriented: Boolean!
+    directory: String!
     identifiers: [IngestIdentifierInput!]!
 }
 
