@@ -11,13 +11,14 @@ import clsx from 'clsx';
 import React from 'react';
 import { EmptyTable, NewTabLink } from '../../../../../components';
 import { StateAssetDetail, useVocabularyStore } from '../../../../../store';
-import { eVocabularySetID } from '../../../../../types/server';
+import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
 import { getDetailsUrlForObject, getDownloadAllAssetsUrlForObject, getDownloadAssetVersionUrlForObject } from '../../../../../utils/repository';
-import { formatDate } from '../../../../../utils/shared';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectAssets } from '../../../hooks/useDetailsView';
 import GetAppIcon from '@material-ui/icons/GetApp';
-import { sharedButtonProps } from '../../../../../utils/shared';
+import { sharedButtonProps, formatDate } from '../../../../../utils/shared';
+import { updateSystemObjectUploadRedirect } from '../../../../../constants';
+import { useHistory } from 'react-router-dom';
 
 export const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -53,14 +54,16 @@ export const useStyles = makeStyles(({ palette }) => ({
 
 interface AssetDetailsTableProps {
     idSystemObject: number;
+    systemObjectType?: eSystemObjectType;
 }
 
 function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
     const classes = useStyles();
-    const { idSystemObject } = props;
+    const { idSystemObject, systemObjectType } = props;
     const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
     const { data, loading } = useObjectAssets(idSystemObject);
     const getVocabularyTerm = useVocabularyStore(state => state.getVocabularyTerm);
+    const history = useHistory();
 
     const headers: string[] = ['Link', 'Name', 'Path', 'Asset Type', 'Version', 'Date Created', 'Size'];
 
@@ -69,6 +72,14 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
     }
 
     const { assetDetails } = data.getAssetDetailsForSystemObject;
+    let redirect = () => {};
+    if (data.getAssetDetailsForSystemObject?.assetDetails?.[0]) {
+        const { idAsset, idAssetVersion, assetType } = data.getAssetDetailsForSystemObject?.assetDetails?.[0];
+        redirect = () => {
+            const newEndpoint = updateSystemObjectUploadRedirect(idAsset, idAssetVersion, systemObjectType, assetType);
+            history.push(newEndpoint);
+        };
+    }
 
     return (
         <React.Fragment>
@@ -92,7 +103,10 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                     {assetDetails.map((assetDetail: StateAssetDetail, index: number) => (
                         <tr key={index}>
                             <td>
-                                <a href={getDownloadAssetVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, assetDetail.idAssetVersion)} style={{ textDecoration: 'none', color: 'black' }}>
+                                <a
+                                    href={getDownloadAssetVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, assetDetail.idAssetVersion)}
+                                    style={{ textDecoration: 'none', color: 'black' }}
+                                >
                                     <GetAppIcon />
                                 </a>
                             </td>
@@ -131,13 +145,18 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                     </tr>
                 </tbody>
             </table>
-            {assetDetails.length > 0 && (
-                <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
-                    <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ width: 'fit-content', whiteSpace: 'nowrap' }}>
-                        Download All
-                    </Button>
-                </a>
-            )}
+            <Box display='flex' flexDirection='row' alignItems='center'>
+                {assetDetails.length > 0 && (
+                    <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
+                        <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ width: 'fit-content', whiteSpace: 'nowrap' }}>
+                            Download All
+                        </Button>
+                    </a>
+                )}
+                <Button className={classes.btn} variant='contained' color='primary' style={{ width: 'fit-content', marginLeft: '2px' }} onClick={redirect}>
+                    Add Version
+                </Button>
+            </Box>
         </React.Fragment>
     );
 }

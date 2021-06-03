@@ -5,6 +5,11 @@ const getModel = gql`
         getModel(input: $input) {
             Model {
                 idModel
+                SystemObject {
+                    idSystemObject
+                    idAsset
+                    idAssetVersion
+                }
             }
         }
     }

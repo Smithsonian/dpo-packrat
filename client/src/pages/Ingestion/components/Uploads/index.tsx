@@ -69,13 +69,14 @@ function Uploads(): React.ReactElement {
     const [discardingFiles, setDiscardingFiles] = useState(false);
 
     const [updateVocabularyEntries, getEntries] = useVocabularyStore(state => [state.updateVocabularyEntries, state.getEntries]);
-    const [completed, discardFiles, setUpdateMode, setUpdateWorkflowFileType, updateMode, getSelectedFiles] = useUploadStore(state => [
+    const [completed, discardFiles, setUpdateMode, setUpdateWorkflowFileType, updateMode, getSelectedFiles, selectFile] = useUploadStore(state => [
         state.completed,
         state.discardFiles,
         state.setUpdateMode,
         state.setUpdateWorkflowFileType,
         state.updateMode,
-        state.getSelectedFiles
+        state.getSelectedFiles,
+        state.selectFile
     ]);
     const [updateMetadataSteps, updateMetadataFolders, getMetadataInfo, getMetadatas] = useMetadataStore(state => [
         state.updateMetadataSteps,
@@ -86,10 +87,31 @@ function Uploads(): React.ReactElement {
     const { ingestionStart, ingestionComplete } = useIngest();
 
     const urlParams = new URLSearchParams(window.location.search);
+
+    // Responsible for setting UpdateMode state and file type so that it files to be updated will have the appropriate file type
     useEffect(() => {
-        setUpdateMode(urlParams.has('mode'));
+        setUpdateMode(urlParams.get('mode') === '1');
         if (urlParams.has('fileType')) setUpdateWorkflowFileType(Number(urlParams.get('fileType')));
     }, [setUpdateMode, window.location.search]);
+
+    // Responsible for checking if there's an uploaded model with the same name as the one intended to be ingested. If there is, automatically select it and start the ingestion workflow
+    useEffect(() => {
+        automatedIngestionProcess();
+    }, [completed]);
+
+    const automatedIngestionProcess = async () => {
+        if (urlParams.has('name')) {
+            let matchingUploadedFileId = -1;
+            if (completed.length > 0) {
+                const matchingUploadedFileIndex = completed.findIndex(uploadedFile => uploadedFile.name === urlParams.get('name'));
+                if (matchingUploadedFileIndex > -1) {
+                    matchingUploadedFileId = +completed[matchingUploadedFileIndex].id;
+                    await selectFile(matchingUploadedFileId.toString(), true);
+                    await onIngest();
+                }
+            }
+        }
+    };
 
     const onNext = async (): Promise<void> => {
         try {
@@ -149,9 +171,8 @@ function Uploads(): React.ReactElement {
                 toast.warn('Please select valid combination of files');
                 return;
             }
-            toast.dismiss();
 
-            // this should be reading the ready files, not the updateMode state
+            toast.dismiss();
             updateMode ? onNext() : await history.push(nextStep);
         } catch {
             setGettingAssetDetails(false);

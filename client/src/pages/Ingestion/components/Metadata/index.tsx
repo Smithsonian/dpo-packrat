@@ -66,6 +66,7 @@ function Metadata(): React.ReactElement {
     const location = useLocation();
     const history = useHistory();
     const [ingestionLoading, setIngestionLoading] = useState(false);
+    const [invalidMetadataStep, setInvalidMetadataStep] = useState<boolean>(false);
 
     const getSelectedProject = useProjectStore(state => state.getSelectedProject);
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
@@ -141,7 +142,7 @@ function Metadata(): React.ReactElement {
         }
 
         if (assetType.scene) {
-            return <Scene metadataIndex={metadataIndex} />;
+            return <Scene metadataIndex={metadataIndex} setInvalidMetadataStep={setInvalidMetadataStep} />;
         }
 
         if (assetType.model) {
@@ -157,7 +158,14 @@ function Metadata(): React.ReactElement {
                 <BreadcrumbsHeader project={project} item={item} metadata={metadata} updateMode={updateMode} />
                 {getMetadataComponent(metadataIndex)}
             </Box>
-            <SidebarBottomNavigator rightLoading={ingestionLoading} leftLabel='Previous' onClickLeft={onPrevious} rightLabel={isLast ? 'Finish' : 'Next'} onClickRight={onNext} />
+            <SidebarBottomNavigator
+                rightLoading={ingestionLoading}
+                leftLabel='Previous'
+                onClickLeft={onPrevious}
+                rightLabel={isLast ? 'Finish' : 'Next'}
+                onClickRight={onNext}
+                invalidMetadataStep={invalidMetadataStep}
+            />
         </Box>
     );
 }

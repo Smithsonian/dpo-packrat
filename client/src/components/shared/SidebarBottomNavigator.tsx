@@ -55,10 +55,11 @@ interface SidebarBottomNavigatorProps {
     rightLoading?: boolean;
     rightRoute?: string;
     onClickRight?: () => void;
+    invalidMetadataStep?: boolean;
 }
 
 function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.ReactElement {
-    const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading, uploadVersion } = props;
+    const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading, uploadVersion, invalidMetadataStep } = props;
     const classes = useStyles();
 
     let leftButton = (
@@ -88,6 +89,15 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
             </Link>
         );
     }
+
+    if (invalidMetadataStep) {
+        rightButton = (
+            <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={rightLoading || false} onClick={onClickRight} disabled>
+                {rightLabel}
+            </LoadingButton>
+        );
+    }
+
     const containerType = uploadVersion ? classes.uploadContainer : classes.container;
 
     return (
