@@ -2800,6 +2800,10 @@ export type GetModelQuery = (
     & { Model?: Maybe<(
       { __typename?: 'Model' }
       & Pick<Model, 'idModel'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject' | 'idAsset' | 'idAssetVersion'>
+      )> }
     )> }
   ) }
 );
@@ -2965,7 +2969,7 @@ export type GetSceneForAssetVersionQuery = (
           { __typename?: 'Model' }
           & { SystemObject?: Maybe<(
             { __typename?: 'SystemObject' }
-            & Pick<SystemObject, 'idSystemObject'>
+            & Pick<SystemObject, 'idSystemObject' | 'idAsset'>
           )> }
         )> }
       )>>> }
@@ -4696,6 +4700,11 @@ export const GetModelDocument = gql`
   getModel(input: $input) {
     Model {
       idModel
+      SystemObject {
+        idSystemObject
+        idAsset
+        idAssetVersion
+      }
     }
   }
 }
@@ -5095,6 +5104,7 @@ export const GetSceneForAssetVersionDocument = gql`
         Model {
           SystemObject {
             idSystemObject
+            idAsset
           }
         }
       }

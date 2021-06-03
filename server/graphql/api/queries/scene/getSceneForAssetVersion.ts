@@ -38,6 +38,7 @@ const getSceneForAssetVersion = gql`
                     Model {
                         SystemObject {
                             idSystemObject
+                            idAsset
                         }
                     }
                 }

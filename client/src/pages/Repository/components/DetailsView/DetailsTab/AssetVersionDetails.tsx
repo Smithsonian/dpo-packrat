@@ -78,7 +78,6 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
                 query: GetAssetDocument,
                 variables: { input: { idAsset: assetVersionData.idAsset } }
             });
-
             const newEndpoint = updateSystemObjectUploadRedirect(assetVersionData.idAsset, assetVersionData.idAssetVersion, eSystemObjectType.eAssetVersion, idVAssetType);
             history.push(newEndpoint);
         };
