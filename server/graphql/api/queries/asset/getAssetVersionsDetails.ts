@@ -68,6 +68,11 @@ const getAssetVersionsDetails = gql`
                 }
                 Scene {
                     idAssetVersion
+                    systemCreated
+                    name
+                    hasBeenQCd
+                    isOriented
+                    directory
                     identifiers {
                         identifier
                         identifierType

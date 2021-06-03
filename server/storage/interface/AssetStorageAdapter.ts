@@ -235,19 +235,21 @@ export class AssetStorageAdapter {
             const assetClone: DBAPI.Asset = new DBAPI.Asset({ ...asset });
             assetClone.FilePath = ingestedObject.directory || /* istanbul ignore next */ '';
 
-            let eVocabID: eVocabularyID = eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry; /* istanbul ignore else */
             let ingested: boolean | null = false;
+            let eVocabID: eVocabularyID = eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry; /* istanbul ignore else */
             if (BulkIngestReader.ingestedObjectIsPhotogrammetry(ingestedObject))
                 eVocabID = eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry;
             else if (BulkIngestReader.ingestedObjectIsModel(ingestedObject)) {
                 eVocabID = eVocabularyID.eAssetAssetTypeModel;
                 ingested = null;
-            }
+            } else if (BulkIngestReader.ingestedObjectIsScene(ingestedObject))
+                eVocabID = eVocabularyID.eAssetAssetTypeScene;
+
             /* istanbul ignore next */
             if (!await assetClone.setAssetType(eVocabID))
                 return { assets: null, assetVersions: null, success: false, error: 'AssetStorageAdapter.commitNewAssetVersionBulk unable to create assets & asset versions' };
 
-            const assetNameOverride: string = asset.FileName + ' Set ' + objectNumber;
+            const assetNameOverride: string = `Part ${objectNumber} of bulk ${asset.FileName}`;
             objectNumber++;
             const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(assetClone, idUserCreator,
                 DateCreated, resStorage, commitWriteStreamInput.storageKey, true, ingestedObject, assetNameOverride, ingested); /* istanbul ignore else */
@@ -834,7 +836,7 @@ export class AssetStorageAdapter {
 
         let reader: IZip | null = null;
         try {
-            LOG.info(`AssetStorageAdapter.crackAssetWorker fileName ${assetVersion.FileName} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`, LOG.LS.eSTR);
+            LOG.info(`AssetStorageAdapter.crackAssetWorker fileName ${assetVersion.FileName} extension ${path.extname(assetVersion.FileName).toLowerCase()} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`, LOG.LS.eSTR);
 
             if (ingested) {
                 // ingested content lives on remote storage; we'll need to stream it back to the server for processing
@@ -886,7 +888,7 @@ export class AssetStorageAdapter {
         };
 
         const ASC: CrackAssetResult = await AssetStorageAdapter.crackAsset(assetVersion); /* istanbul ignore next */
-        LOG.info(`AssetStorageAdapter.getAssetVersionContents idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}, ASC.success ${ASC.success}, ASC.zip ${ASC.zip}`, LOG.LS.eSTR);
+        LOG.info(`AssetStorageAdapter.getAssetVersionContents idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}, ASC.success ${ASC.success}, ASC.zip ${ASC.zip != null}`, LOG.LS.eSTR);
         if (!ASC.zip) {     // if our file is not a zip, just return it
             retValue.all.push(assetVersion.FileName);
             return retValue;

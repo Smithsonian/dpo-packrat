@@ -108,6 +108,7 @@ export type SceneFields = {
     hasBeenQCd: boolean;
     isOriented: boolean;
     name: string;
+    directory: string;
     idAsset?: number;
 };
 

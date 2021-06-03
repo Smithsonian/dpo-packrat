@@ -5,9 +5,9 @@ import * as LOG from '../../../../../utils/logger';
 
 export default async function getSceneForAssetVersion(_: Parent, args: QueryGetSceneForAssetVersionArgs,
     __: Context): Promise<GetSceneForAssetVersionResult> {
-    const { idAssetVersion } = args.input;
+    const { idAssetVersion, directory } = args.input;
 
-    const SceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(idAssetVersion);
+    const SceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(idAssetVersion, directory ?? undefined);
     if (!SceneConstellation)
         LOG.error(`getSceneForAssetVersion unable to load SceneContellation from idAssetVersion ${idAssetVersion}`, LOG.LS.eGQL);
 
