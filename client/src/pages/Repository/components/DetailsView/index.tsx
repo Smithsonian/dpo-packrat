@@ -253,10 +253,9 @@ function DetailsView(): React.ReactElement {
         }
         try {
             if (objectType === eSystemObjectType.eModel) {
-                const { dateCaptured, authoritative, creationMethod, modality, purpose, units, fileType } = getModelFormState();
+                const { dateCaptured, creationMethod, modality, purpose, units, fileType } = getModelFormState();
                 updatedData.Model = {
                     Name: updatedData?.Name,
-                    Authoritative: authoritative,
                     CreationMethod: creationMethod,
                     Modality: modality,
                     Purpose: purpose,

@@ -66,7 +66,6 @@ input IngestModelInput {
     idAsset: Int
     systemCreated: Boolean!
     name: String!
-    authoritative: Boolean!
     creationMethod: Int!
     modality: Int!
     purpose: Int!
@@ -85,6 +84,7 @@ input IngestSceneInput {
     name: String!
     hasBeenQCd: Boolean!
     isOriented: Boolean!
+    directory: String!
     identifiers: [IngestIdentifierInput!]!
 }
 

@@ -78,7 +78,8 @@ function Scene(props: SceneProps): React.ReactElement {
                 query: GetSceneForAssetVersionDocument,
                 variables: {
                     input: {
-                        idAssetVersion: Number(idAssetVersion)
+                        idAssetVersion: Number(idAssetVersion),
+                        directory: scene.directory
                     }
                 }
             });
@@ -90,7 +91,7 @@ function Scene(props: SceneProps): React.ReactElement {
         }
 
         fetchSceneConstellation();
-    }, [idAssetVersion, metadataIndex, setInvalidMetadataStep]);
+    }, [idAssetVersion, metadataIndex, setInvalidMetadataStep, scene.directory]);
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
         updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.scene);

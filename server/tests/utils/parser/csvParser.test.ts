@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { join } from 'path';
 import * as H from '../../../utils/helpers';
-import { CSVParser, CSVTypes, ModelsCSVFields, CaptureDataPhotoCSVFields } from '../../../utils/parser';
+import { CSVParser, CSVTypes, CaptureDataPhotoCSVFields, ModelsCSVFields, ScenesCSVFields } from '../../../utils/parser';
 
 const mockPath = (type: CSVTypes) => join(__dirname, `../../mock/utils/parser/mock.${type}.csv`);
 const mockPathJunk: string = join(__dirname, '../../mock/utils/parser/mock.junk.csv');
@@ -12,6 +12,18 @@ afterAll(async done => {
 });
 */
 describe('CSVParser', () => {
+    test('CSVParser.parse type capture data', async () => {
+        const path = mockPath(CSVTypes.captureDataPhoto);
+        const fileStream = fs.createReadStream(path);
+
+        try {
+            const result = await CSVParser.parse<CaptureDataPhotoCSVFields>(fileStream, CSVTypes.captureDataPhoto);
+            expect(result).toBeTruthy();
+        } catch {
+            expect('Exception not expected!').toBeFalsy();
+        }
+    });
+
     test('CSVParser.parse type models', async () => {
         const path = mockPath(CSVTypes.models);
         const fileStream = fs.createReadStream(path);
@@ -24,12 +36,12 @@ describe('CSVParser', () => {
         }
     });
 
-    test('CSVParser.parse type capture data', async () => {
-        const path = mockPath(CSVTypes.captureDataPhoto);
+    test('CSVParser.parse type scenes', async () => {
+        const path = mockPath(CSVTypes.scenes);
         const fileStream = fs.createReadStream(path);
 
         try {
-            const result = await CSVParser.parse<CaptureDataPhotoCSVFields>(fileStream, CSVTypes.captureDataPhoto);
+            const result = await CSVParser.parse<ScenesCSVFields>(fileStream, CSVTypes.scenes);
             expect(result).toBeTruthy();
         } catch {
             expect('Exception not expected!').toBeFalsy();

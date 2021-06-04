@@ -272,7 +272,6 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `idModel` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `DateCreated` datetime NOT NULL,
-  `Authoritative` boolean NOT NULL,
   `idVCreationMethod` int(11) NULL,
   `idVModality` int(11) NULL,
   `idVUnits` int(11) NULL,

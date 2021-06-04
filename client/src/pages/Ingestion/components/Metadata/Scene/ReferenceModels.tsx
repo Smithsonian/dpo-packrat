@@ -103,7 +103,7 @@ const roundBoundingBox = (BB: number) => {
 function ReferenceModels(props: ReferenceModelsProps): React.ReactElement {
     const { referenceModels, idAssetVersion } = props;
     const classes = useStyles();
-    const hasModels = !!referenceModels.length;
+    const hasModels = !!(referenceModels?.length ?? 0);
 
     return (
         <Box className={classes.container}>

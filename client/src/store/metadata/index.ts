@@ -315,8 +315,9 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     error: false
                 };
             }
-        } catch {
+        } catch (error) {
             toast.error('Failed to ingest selected files, please try again later');
+            console.log(`Failed to ingest selected files, please try again later: ${JSON.stringify(error)}`);
         }
 
         return {

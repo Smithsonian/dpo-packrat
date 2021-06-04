@@ -171,7 +171,6 @@ function useIngest(): UseIngest {
                         systemCreated,
                         name,
                         creationMethod,
-                        authoritative,
                         modality,
                         units,
                         purpose,
@@ -197,7 +196,6 @@ function useIngest(): UseIngest {
                         dateCaptured,
                         identifiers: ingestIdentifiers,
                         creationMethod: nonNullValue<number>('creationMethod', creationMethod),
-                        authoritative,
                         modality: nonNullValue<number>('modality', modality),
                         units: nonNullValue<number>('units', units),
                         purpose: nonNullValue<number>('purpose', purpose),
@@ -215,7 +213,7 @@ function useIngest(): UseIngest {
                 }
 
                 if (isScene) {
-                    const { identifiers, systemCreated, hasBeenQCd, isOriented, name } = scene;
+                    const { identifiers, systemCreated, hasBeenQCd, isOriented, name, directory } = scene;
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const sceneData: IngestSceneInput = {
@@ -224,7 +222,8 @@ function useIngest(): UseIngest {
                         systemCreated,
                         name,
                         hasBeenQCd,
-                        isOriented
+                        isOriented,
+                        directory
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);

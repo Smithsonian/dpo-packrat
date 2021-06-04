@@ -80,7 +80,7 @@ export enum eVocabularyID {
     eModelUnitsAstronomicalUnit,
     eModelPurposeMaster,
     eModelPurposeWebDelivery,
-    eModelPurposePrintDelivery,
+    eModelPurposeDownload,
     eModelPurposeIntermediateProcessingStep,
     eModelFileTypeobj,
     eModelFileTypeply,
@@ -318,7 +318,7 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Master':                          eVocabEnum = eVocabularyID.eModelPurposeMaster; break;
                         case 'Web Delivery':                    eVocabEnum = eVocabularyID.eModelPurposeWebDelivery; break;
-                        case 'Print Delivery':                  eVocabEnum = eVocabularyID.eModelPurposePrintDelivery; break;
+                        case 'Download':                        eVocabEnum = eVocabularyID.eModelPurposeDownload; break;
                         case 'Intermediate Processing Step':    eVocabEnum = eVocabularyID.eModelPurposeIntermediateProcessingStep; break;
                     }
                 } break;
