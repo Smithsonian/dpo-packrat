@@ -5,7 +5,7 @@
  */
 import { Box, Typography, Button } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
 import { Link, useHistory, useLocation } from 'react-router-dom';
@@ -92,7 +92,8 @@ function Header(): React.ReactElement {
     const history = useHistory();
     const { pathname } = useLocation();
     const { user, logout } = useUserStore();
-    const [keyword, updateSearch, getFilterState, initializeTree, resetRepositoryFilter, updateRepositoryFilter, resetKeywordSearch] = useRepositoryStore(state => [
+    const [search, keyword, updateSearch, getFilterState, initializeTree, resetRepositoryFilter, updateRepositoryFilter, resetKeywordSearch] = useRepositoryStore(state => [
+        state.search,
         state.keyword,
         state.updateSearch,
         state.getFilterState,
@@ -101,6 +102,10 @@ function Header(): React.ReactElement {
         state.updateRepositoryFilter,
         state.resetKeywordSearch
     ]);
+
+    useEffect(() => {
+        updateSearch(search);
+    }, [search]);
 
     const onLogout = async (): Promise<void> => {
         const isConfirmed = global.confirm('Are you sure you want to logout?');
