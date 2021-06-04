@@ -1028,7 +1028,6 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary && assetThumbnail)
             model = await UTIL.createModelTest({
                 Name: 'Test Model',
-                Authoritative: true,
                 DateCreated: UTIL.nowCleansed(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 idVModality: vocabulary.idVocabulary,
@@ -1047,7 +1046,6 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary)
             modelNulls = await UTIL.createModelTest({
                 Name: 'Test Model with Nulls',
-                Authoritative: true,
                 DateCreated: UTIL.nowCleansed(),
                 idVCreationMethod: null,
                 idVModality: null,
@@ -2614,9 +2612,8 @@ describe('DB Fetch By ID Test Suite', () => {
         if (model) {
             modelSceneXrefFetch = await DBAPI.ModelSceneXref.fetchFromModel(model.idModel);
             if (modelSceneXrefFetch) {
-                if (modelSceneXref) {
+                if (modelSceneXref)
                     expect(modelSceneXrefFetch).toEqual(expect.arrayContaining([modelSceneXref]));
-                }
             }
         }
         expect(modelSceneXrefFetch).toBeTruthy();
@@ -2626,9 +2623,18 @@ describe('DB Fetch By ID Test Suite', () => {
         let modelSceneXrefFetch: DBAPI.ModelSceneXref[] | null = null;
         if (scene) {
             modelSceneXrefFetch = await DBAPI.ModelSceneXref.fetchFromScene(scene.idScene);
-            if (modelSceneXrefFetch) {
+            if (modelSceneXrefFetch)
                 expect(modelSceneXrefFetch).toEqual(expect.arrayContaining([modelSceneXref]));
-            }
+        }
+        expect(modelSceneXrefFetch).toBeTruthy();
+    });
+
+    test('DB Fetch ModelSceneXref: ModelSceneXref.fetchFromModelAndScene', async () => {
+        let modelSceneXrefFetch: DBAPI.ModelSceneXref[] | null = null;
+        if (model && scene) {
+            modelSceneXrefFetch = await DBAPI.ModelSceneXref.fetchFromModelAndScene(model.idModel, scene.idScene);
+            if (modelSceneXrefFetch)
+                expect(modelSceneXrefFetch).toEqual(expect.arrayContaining([modelSceneXref]));
         }
         expect(modelSceneXrefFetch).toBeTruthy();
     });
@@ -4844,6 +4850,31 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(modelObjectModelMaterialXrefs).toBeTruthy();
+    });
+
+    test('DB Update: ModelSceneXref.isTransformMatching', async () => {
+        let modelSceneXrefClone: DBAPI.ModelSceneXref | null = null;
+        if (modelSceneXref) {
+            modelSceneXrefClone = new DBAPI.ModelSceneXref(modelSceneXref);
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeTruthy();
+
+            modelSceneXrefClone.R3 = (modelSceneXref.R3 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            modelSceneXrefClone.R2 = (modelSceneXref.R2 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            modelSceneXrefClone.R1 = (modelSceneXref.R1 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            modelSceneXrefClone.R0 = (modelSceneXref.R0 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            modelSceneXrefClone.TS2 = (modelSceneXref.TS2 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            modelSceneXrefClone.TS1 = (modelSceneXref.TS1 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            modelSceneXrefClone.TS0 = (modelSceneXref.TS0 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            // LOG.info(`clone = ${JSON.stringify(modelSceneXrefClone, H.Helpers.saferStringify)} vs ${JSON.stringify(modelSceneXref, H.Helpers.saferStringify)}}`, LOG.LS.eTEST);
+        }
+        expect(modelSceneXrefClone).toBeTruthy();
     });
 
     test('DB Fetch Special: Project.fetchMasterFromSubjects', async () => {
@@ -7069,6 +7100,8 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ModelSceneXref.fetch(0)).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromScene(0)).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModelAndScene(0, -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModelAndScene(-1, 0)).toBeNull();
         expect(await DBAPI.Project.fetch(0)).toBeNull();
         expect(await DBAPI.Project.fetchDerivedFromUnits([])).toBeNull();
         expect(await DBAPI.Project.fetchMasterFromSubjects([])).toBeNull();

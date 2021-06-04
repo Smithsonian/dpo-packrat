@@ -60,7 +60,6 @@ type IngestModel {
     idAssetVersion: Int!
     systemCreated: Boolean!
     name: String!
-    authoritative: Boolean!
     creationMethod: Int!
     modality: Int!
     purpose: Int!
@@ -96,6 +95,10 @@ type ReferenceModel {
 type IngestScene {
     idAssetVersion: Int!
     systemCreated: Boolean!
+    name: String!
+    hasBeenQCd: Boolean!
+    isOriented: Boolean!
+    directory: String!
     identifiers: [IngestIdentifier!]!
     referenceModels: [ReferenceModel!]!
 }
@@ -153,6 +156,7 @@ type GetModelConstellationForAssetVersionResult {
 
 input GetSceneForAssetVersionInput {
     idAssetVersion: Int!
+    directory: String
 }
 
 type GetSceneForAssetVersionResult {

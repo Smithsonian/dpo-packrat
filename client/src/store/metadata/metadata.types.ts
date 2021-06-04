@@ -93,7 +93,6 @@ export type ModelFields = {
     sourceObjects: StateRelatedObject[];
     dateCaptured: Date | string | null;
     creationMethod: number | null;
-    authoritative: boolean;
     modality: number | null;
     units: number | null;
     purpose: number | null;
@@ -109,6 +108,7 @@ export type SceneFields = {
     hasBeenQCd: boolean;
     isOriented: boolean;
     name: string;
+    directory: string;
     idAsset?: number;
 };
 

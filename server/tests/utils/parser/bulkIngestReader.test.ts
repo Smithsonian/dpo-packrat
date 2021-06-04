@@ -13,9 +13,11 @@ import { createItemAndIDsForBagitTesting } from '../../db/api/Item.util';
 
 const mockPathBagit1: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestValidMultiHash.zip');
 const mockPathBagit2: string = path.join(__dirname, '../../mock/utils/zip/PackratTest.zip');
-const mockPathBagitInvalid1: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitInvalidModel.zip');
-const mockPathBagitInvalid2: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitInvalidPhoto.zip');
-const mockPathBagitInvalid3: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitNoMetadata.zip');
+const mockPathBagitScene: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBulkIngest.Scene.zip');
+const mockPathBagitInvalidModel: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitInvalidModel.zip');
+const mockPathBagitInvalidPhoto: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitInvalidPhoto.zip');
+const mockPathBagitInvalidScene: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitInvalidScene.zip');
+const mockPathBagitInvalidNoMeta: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitNoMetadata.zip');
 
 type BulkIngestReaderTestCase = {
     assets: DBAPI.Asset[],
@@ -92,6 +94,8 @@ describe('BulkIngestReader Methods', () => {
         await testLoad(mockPathBagit1, null, false, true, OHTS.subject1);
         await testLoad(mockPathBagit2, null, true, true);
         await testLoad(mockPathBagit2, null, false, true, OHTS.subject2);
+        await testLoad(mockPathBagitScene, null, true, true);
+        await testLoad(mockPathBagitScene, null, false, true, OHTS.subject3);
     });
 
     test('BulkIngestReader.loadFromAssetVersion', async() => {
@@ -108,6 +112,13 @@ describe('BulkIngestReader Methods', () => {
             await testLoad(null, tcBagit2.assetVersions[0], true, true);
             await testLoad(null, tcBagit2.assetVersions[0], false, true, OHTS.subject4);
         }
+
+        const tcBagitScene: BulkIngestReaderTestCase = await testCommitNewAsset(null, 0, OHTS.scene1, mockPathBagitScene, vAssetTypeBulk);
+        expect(tcBagitScene.assetVersions.length).toBeGreaterThan(0);
+        if (tcBagitScene.assetVersions.length > 0) {
+            await testLoad(null, tcBagitScene.assetVersions[0], true, true);
+            await testLoad(null, tcBagitScene.assetVersions[0], false, true, OHTS.subject4);
+        }
     });
 
     test('BulkIngestReader Expected Failures', async() => {
@@ -119,9 +130,10 @@ describe('BulkIngestReader Methods', () => {
         expect(tcOther.assetVersions.length).toBeGreaterThan(0);
         expect((await BIR.loadFromAssetVersion(tcOther.assetVersions[0].idAssetVersion, true)).success).toBeFalsy(); // idAssetVersion of 0 doesn't exist
 
-        await testLoad(mockPathBagitInvalid1, null, true, false);
-        await testLoad(mockPathBagitInvalid2, null, true, false);
-        await testLoad(mockPathBagitInvalid3, null, true, false);
+        await testLoad(mockPathBagitInvalidModel, null, true, false);
+        await testLoad(mockPathBagitInvalidPhoto, null, true, false);
+        await testLoad(mockPathBagitInvalidScene, null, true, false);
+        await testLoad(mockPathBagitInvalidNoMeta, null, true, false);
     });
 });
 
@@ -137,7 +149,6 @@ async function testLoad(fileName: string | null, assetVersion: DBAPI.AssetVersio
     } else if (assetVersion)
         ioResults = await BIR.loadFromAssetVersion(assetVersion.idAssetVersion, autoClose);
 
-    LOG.error(ioResults.error, LOG.LS.eTEST);
     if (!ioResults.success && expectSuccess)
         LOG.error(ioResults.error, LOG.LS.eTEST);
     expect(ioResults.success).toEqual(expectSuccess);

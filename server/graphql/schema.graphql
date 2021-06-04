@@ -198,7 +198,6 @@ type IngestModel {
   idAssetVersion: Int!
   systemCreated: Boolean!
   name: String!
-  authoritative: Boolean!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
@@ -234,6 +233,10 @@ type ReferenceModel {
 type IngestScene {
   idAssetVersion: Int!
   systemCreated: Boolean!
+  name: String!
+  hasBeenQCd: Boolean!
+  isOriented: Boolean!
+  directory: String!
   identifiers: [IngestIdentifier!]!
   referenceModels: [ReferenceModel!]!
 }
@@ -291,6 +294,7 @@ type GetModelConstellationForAssetVersionResult {
 
 input GetSceneForAssetVersionInput {
   idAssetVersion: Int!
+  directory: String
 }
 
 type GetSceneForAssetVersionResult {
@@ -500,7 +504,6 @@ input IngestModelInput {
   idAsset: Int
   systemCreated: Boolean!
   name: String!
-  authoritative: Boolean!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
@@ -519,6 +522,7 @@ input IngestSceneInput {
   name: String!
   hasBeenQCd: Boolean!
   isOriented: Boolean!
+  directory: String!
   identifiers: [IngestIdentifierInput!]!
 }
 
@@ -599,7 +603,6 @@ type Model {
   idModel: Int!
   Name: String!
   DateCreated: DateTime!
-  Authoritative: Boolean!
   idVCreationMethod: Int
   idVModality: Int
   idVPurpose: Int
@@ -953,7 +956,6 @@ input CaptureDataDetailFieldsInput {
 
 input ModelDetailFieldsInput {
   Name: String
-  Authoritative: Boolean
   CreationMethod: Int
   Modality: Int
   Purpose: Int

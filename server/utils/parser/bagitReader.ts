@@ -399,8 +399,8 @@ export class BagitReader implements IZip {
         }
 
         // parse into map of file -> hash
-        const directoryMap: Map<string, boolean> = new Map<string, boolean>();
-        const fileMap: Map<string, boolean> = new Map<string, boolean>();
+        const directorySet: Set<string> = new Set<string>();
+        const fileSet: Set<string> = new Set<string>();
 
         const manifestLines: string[] = manifestData.split(/[\r\n]+/);
         for (const line of manifestLines) {
@@ -439,8 +439,8 @@ export class BagitReader implements IZip {
                 // strip of "data/" ... then split results into folder names and file names
                 const { dirname, basename } = this.extractDirectoryAndBasename(fileName, false);
                 if (dirname)
-                    directoryMap.set(dirname, true);
-                fileMap.set(basename, true);
+                    directorySet.add(dirname);
+                fileSet.add(basename);
             }
 
             // File exists and has a valid hash; record it in our local validation this._fileMap, and record data in our persistent dataFileMap
@@ -449,13 +449,11 @@ export class BagitReader implements IZip {
         }
 
         if (this._dataDirectories.length == 0)
-            for (const [directory, flag] of directoryMap) {
-                this._dataDirectories.push(directory); flag;
-            }
+            for (const directory of directorySet)
+                this._dataDirectories.push(directory);
         if (this._dataFiles.length == 0)
-            for (const [file, flag] of fileMap) {
-                this._dataFiles.push(file); flag;
-            }
+            for (const file of fileSet)
+                this._dataFiles.push(file);
 
         return { success: true, error: '' };
     }

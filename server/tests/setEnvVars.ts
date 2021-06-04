@@ -4,7 +4,7 @@ process.env.PACKRAT_SESSION_SECRET = 'test-secret';
 if (!process.env.PACKRAT_EDAN_AUTH_KEY)
     process.env.PACKRAT_EDAN_AUTH_KEY = 'testing1234';
 if (!process.env.PACKRAT_EDAN_SERVER)
-    process.env.PACKRAT_EDAN_SERVER = 'http://edan.si.edu/';
+    process.env.PACKRAT_EDAN_SERVER = 'https://edan.si.edu/';
 if (!process.env.PACKRAT_EDAN_APPID)
     process.env.PACKRAT_EDAN_APPID = 'OCIO3D';
 if (!process.env.PACKRAT_OCFL_STORAGE_ROOT)

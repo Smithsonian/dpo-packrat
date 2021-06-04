@@ -11,7 +11,6 @@ const getObjectsForItem = gql`
 
             Model {
                 idModel
-                Authoritative
                 DateCreated
             }
 

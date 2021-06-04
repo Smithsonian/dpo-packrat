@@ -7,7 +7,6 @@ import create, { GetState, SetState } from 'zustand';
 
 interface ModelFormFields {
     dateCaptured?: Date | null;
-    authoritative?: boolean | null;
     creationMethod?: number | null;
     modality?: number | null;
     purpose?: number | null;
@@ -27,7 +26,6 @@ interface SubjectFormFields {
 
 type RepositoryDetailsFormStore = {
     dateCaptured: Date | null;
-    authoritative: boolean | null;
     creationMethod: number | null;
     modality: number | null;
     purpose: number | null;
@@ -51,7 +49,6 @@ type RepositoryDetailsFormStore = {
 
 export const useRepositoryDetailsFormStore = create<RepositoryDetailsFormStore>((set: SetState<RepositoryDetailsFormStore>, get: GetState<RepositoryDetailsFormStore>) => ({
     dateCaptured: null,
-    authoritative: null,
     creationMethod: null,
     modality: null,
     purpose: null,
@@ -70,7 +67,6 @@ export const useRepositoryDetailsFormStore = create<RepositoryDetailsFormStore>(
     getModelFormState: () => {
         const {
             dateCaptured,
-            authoritative,
             creationMethod,
             modality,
             purpose,
@@ -80,7 +76,6 @@ export const useRepositoryDetailsFormStore = create<RepositoryDetailsFormStore>(
 
         return {
             dateCaptured,
-            authoritative,
             creationMethod,
             modality,
             purpose,

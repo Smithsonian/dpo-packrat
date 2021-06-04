@@ -32,6 +32,15 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
 
     public fetchTableName(): string { return 'ModelSceneXref'; }
     public fetchID(): number { return this.idModelSceneXref; }
+    public isTransformMatching(MSX: ModelSceneXref): boolean {
+        return this.TS0 === MSX.TS0
+            && this.TS1 === MSX.TS1
+            && this.TS1 === MSX.TS1
+            && this.R0 === MSX.R0
+            && this.R1 === MSX.R1
+            && this.R2 === MSX.R2
+            && this.R3 === MSX.R3;
+    }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -122,6 +131,18 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
         try {
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel } }), ModelSceneXref);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.ModelSceneXref.fetchFromModel', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchFromModelAndScene(idModel: number, idScene: number): Promise<ModelSceneXref[] | null> {
+        if (!idModel || !idScene)
+            return null;
+        try {
+            return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
+                await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel, idScene } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.ModelSceneXref.fetchFromModel', LOG.LS.eDB, error);
             return null;

@@ -29,14 +29,16 @@ export class SceneConstellation {
         return new SceneConstellation(scene, modelSceneXref);
     }
 
-    static async fetchFromAssetVersion(idAssetVersion: number): Promise<SceneConstellation | null> {
+    static async fetchFromAssetVersion(idAssetVersion: number, directory?: string | undefined): Promise<SceneConstellation | null> {
+        LOG.info(`SceneConstellation.fetchFromAssetVersion(${idAssetVersion}, ${directory})`, LOG.LS.eDB);
         let zip: IZip | null = null;
+        let isBagit: boolean = false;
         try {
             // Attempt to read idAssetVersion from storage sytem
             let readStream: NodeJS.ReadableStream | null = null;
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion);
             if (!RSR.success || !RSR.fileName || !RSR.readStream) {
-                LOG.error(`SceneConstellation.fetchFromAssetVersion(${idAssetVersion}): ${RSR.error}`, LOG.LS.eDB);
+                LOG.error(`SceneConstellation.fetchFromAssetVersion(${idAssetVersion}, ${directory}): ${RSR.error}`, LOG.LS.eDB);
                 return null;
             }
 
@@ -49,18 +51,14 @@ export class SceneConstellation {
                     return null;
                 }
                 zip = CAR.zip;
+                isBagit = CAR.isBagit;
 
-                // TODO: handle bulk ingest of scenes, which may include multiple scene definitions!
-                if (CAR.isBagit) {
-                    LOG.error('SceneConstellation.fetchFromAssetVersion cracked zipfile ${RSR.fileName} for idAssetVersion ${idAssetVersion} and encountered unexpected Bagit file', LOG.LS.eDB);
-                    return null;
-                }
-
-                const files: string[] = await zip.getJustFiles('.svx.json');
+                const files: string[] = await SceneConstellation.fetchFileFromZip(zip, isBagit, '.svx.json', directory) ?? [];
                 if (files.length == 0) {
                     LOG.error(`SceneConstellation.fetchFromAssetVersion unable to locate scene file with .svx.json extension in zipfile ${RSR.fileName} for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
                     return null;
-                }
+                } else
+                    LOG.info(`SceneConstellation.fetchFromAssetVersion found scene json in ${JSON.stringify(files)}`, LOG.LS.eDB);
 
                 fileName += `/${files[0]}`;
                 readStream = await zip.streamContent(files[0]);
@@ -97,7 +95,7 @@ export class SceneConstellation {
                 for (const MSX of svx.SvxExtraction.modelDetails) {
                     // if we have a zip, look for our model within that zip by name
                     if (zip) {
-                        const files: string[] = await zip.getJustFiles(MSX.Name);
+                        const files: string[] = await SceneConstellation.fetchFileFromZip(zip, isBagit, MSX.Name, directory) ?? [];
                         if (files.length == 1) {    // found it ... record it as found but not ingested (i.e. MSX.idModel === -1)
                             MSX.idModel = -1;   // non-zero value, but invalid...
                             modelSceneXrefs.push(MSX);
@@ -119,5 +117,20 @@ export class SceneConstellation {
             if (zip)
                 await zip.close();
         }
+    }
+
+    static async fetchFileFromZip(zip: IZip, isBagit: boolean, filter: string | null, directory: string | undefined): Promise<string[] | null> {
+        if (!isBagit)
+            return await zip.getJustFiles(filter);
+
+        const allEntries: string[] = await zip.getAllEntries(filter);
+        if (!directory)
+            return allEntries;
+
+        const retValue: string[] = [];
+        for (const fileName of allEntries)
+            if (fileName.includes(directory))
+                retValue.push(fileName);
+        return retValue;
     }
 }

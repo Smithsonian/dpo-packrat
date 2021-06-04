@@ -53,7 +53,6 @@ const getAssetVersionsDetails = gql`
                     idAssetVersion
                     systemCreated
                     name
-                    authoritative
                     creationMethod
                     modality
                     purpose
@@ -69,6 +68,11 @@ const getAssetVersionsDetails = gql`
                 }
                 Scene {
                     idAssetVersion
+                    systemCreated
+                    name
+                    hasBeenQCd
+                    isOriented
+                    directory
                     identifiers {
                         identifier
                         identifierType
