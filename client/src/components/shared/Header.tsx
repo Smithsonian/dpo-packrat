@@ -105,7 +105,7 @@ function Header(): React.ReactElement {
 
     useEffect(() => {
         updateSearch(search);
-    }, [search]);
+    }, [search, updateSearch]);
 
     const onLogout = async (): Promise<void> => {
         const isConfirmed = global.confirm('Are you sure you want to logout?');
