@@ -373,6 +373,7 @@ model Model {
   CountLinkedTextures                            Int?
   FileEncoding                                   String?                 @mariasql.VarChar(40)
   IsDracoCompressed                              Boolean?
+  AutomationTag                                  String?                 @mariasql.VarChar(256)
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset])
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary?             @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary])
   Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary?             @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary])

@@ -41,6 +41,9 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             && this.R2 === MSX.R2
             && this.R3 === MSX.R3;
     }
+    public computeModelAutomationTag(): string {
+        return `scene-${this.Usage}-${this.Quality}-${this.UVResolution}`;
+    }
 
     protected async createWorker(): Promise<boolean> {
         try {
