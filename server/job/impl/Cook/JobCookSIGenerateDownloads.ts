@@ -160,7 +160,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
             if (model) {
                 // if we already have a model, look for the asset that we are likely updating:
-                const modelSO: DBAPI.SystemObject | null = await modelSource.fetchSystemObject();
+                const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
                 if (modelSO) {
                     const modelAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(modelSO.idSystemObject);
                     if (modelAssets) {
