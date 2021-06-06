@@ -429,6 +429,7 @@ export class AssetStorageAdapter {
         const unzipAssets: boolean = isZipFilename &&
             (eAssetType == CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry ||
              eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModel ||
+             eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile ||
              eAssetType == CACHE.eVocabularyID.eAssetAssetTypeScene);
         if (assetVersion.BulkIngest || unzipAssets) {
             // Use bulkIngestReader to extract contents for assets in and below asset.FilePath
