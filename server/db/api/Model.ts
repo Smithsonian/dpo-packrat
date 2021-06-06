@@ -181,4 +181,22 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return null;
         }
     }
+
+    /** fetches models which are chilren of either the specified idModelParent or idSceneParent, and have matching AutomationTag values */
+    static async fetchChildrenModels(idModelParent: number | null, idSceneParent: number | null, AutomationTag: string): Promise<Model[] | null> {
+        try {
+            return DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.$queryRaw<Model[]>`
+                SELECT DISTINCT M.*
+                FROM Model AS M
+                JOIN SystemObject AS SOD ON (M.idModel = SOD.idModel)
+                JOIN SystemObjectXref AS SOX ON (SOD.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOM ON (SOX.idSystemObjectMaster = SOM.idSystemObject)
+                WHERE (SOM.idModel = ${idModelParent ?? -1} OR SOM.idScene = ${idSceneParent ?? -1})
+                  AND M.AutomationTag = ${AutomationTag}`, Model);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchChildrenModels', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }

@@ -339,6 +339,7 @@ export class ModelTestSetup {
         const ISI: STORE.IngestStreamOrFileInput = {
             ReadStream: null,
             LocalFilePath,
+            Asset: null,
             FileName: MTD.fileName,
             FilePath: MTD.directory,
             idAssetGroup: 0,
