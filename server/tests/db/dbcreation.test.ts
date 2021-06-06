@@ -32,6 +32,7 @@ let assetWithoutAG: DBAPI.Asset | null;
 let assetBulkIngest: DBAPI.Asset | null;
 let assetVersion: DBAPI.AssetVersion | null;
 let assetVersion2: DBAPI.AssetVersion | null;
+let assetVersion3: DBAPI.AssetVersion | null;
 let assetVersionModel: DBAPI.AssetVersion | null;
 let assetVersionNotIngested: DBAPI.AssetVersion | null;
 let assetVersionNotIngested2: DBAPI.AssetVersion | null;
@@ -2030,7 +2031,7 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetVersionFetch).toBeTruthy();
     });
 
-    test('DB Creation: AssetVersion 2', async () => {
+    test('DB Creation: AssetVersion 2 & 3', async () => {
         if (assetThumbnail && userActive)
             assetVersion2 = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
@@ -2038,7 +2039,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 FileName: assetThumbnail.FileName,
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
-                StorageHash: 'Asset Checksum',
+                StorageHash: 'Asset Checksum 2',
                 StorageSize: BigInt(50),
                 StorageKeyStaging: '',
                 Ingested: true,
@@ -2046,6 +2047,22 @@ describe('DB Fetch By ID Test Suite', () => {
                 idAssetVersion: 0
             });
         expect(assetVersion2).toBeTruthy();
+
+        if (assetThumbnail && userActive)
+            assetVersion3 = await UTIL.createAssetVersionTest({
+                idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FileName,
+                idUserCreator: userActive.idUser,
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum 3',
+                StorageSize: BigInt(50),
+                StorageKeyStaging: '',
+                Ingested: true,
+                BulkIngest: false,
+                idAssetVersion: 0
+            });
+        expect(assetVersion3).toBeTruthy();
     });
 
     test('DB Fetch AssetVersion: AssetVersion.fetchLatestFromAsset Ingested', async () => {
@@ -2053,7 +2070,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(assetVersion2);
+                expect(assetVersionFetch).toEqual(assetVersion3);
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -2639,6 +2656,16 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(modelSceneXrefFetch).toBeTruthy();
     });
 
+    test('DB Fetch ModelSceneXref: ModelSceneXref.fetchFromModelSceneAndName', async () => {
+        let modelSceneXrefFetch: DBAPI.ModelSceneXref[] | null = null;
+        if (model && scene && modelSceneXref) {
+            modelSceneXrefFetch = await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(model.idModel, scene.idScene, modelSceneXref.Name ?? '');
+            if (modelSceneXrefFetch)
+                expect(modelSceneXrefFetch).toEqual(expect.arrayContaining([modelSceneXref]));
+        }
+        expect(modelSceneXrefFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: Project', async () => {
         let projectFetch: DBAPI.Project | null = null;
         if (project) {
@@ -2833,6 +2860,17 @@ describe('DB Fetch By ID Test Suite', () => {
             systemObjectVersionAssetVersionXrefFetch = await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromAssetVersion(assetVersion.idAssetVersion);
             if (systemObjectVersionAssetVersionXrefFetch) {
                 expect(systemObjectVersionAssetVersionXrefFetch).toEqual(expect.arrayContaining([systemObjectVersionAssetVersionXref]));
+            }
+        }
+        expect(systemObjectVersionAssetVersionXrefFetch).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectVersionAssetVersionXref: SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset', async () => {
+        let systemObjectVersionAssetVersionXrefFetch: DBAPI.SystemObjectVersionAssetVersionXref | null = null;
+        if (systemObjectVersion && assetVersion) {
+            systemObjectVersionAssetVersionXrefFetch = await DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset(systemObjectVersion.idSystemObjectVersion, assetVersion.idAsset);
+            if (systemObjectVersionAssetVersionXrefFetch) {
+                expect(systemObjectVersionAssetVersionXrefFetch).toEqual(systemObjectVersionAssetVersionXref);
             }
         }
         expect(systemObjectVersionAssetVersionXrefFetch).toBeTruthy();
@@ -4651,6 +4689,18 @@ describe('DB Fetch Special Test Suite', () => {
             expect(modelFetch.length).toEqual(0);
     });
 
+    test('DB Fetch Special: Model.fetchChildrenModels', async () => {
+        const modelFetch1: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(-1, null, 'zzzOBVIOUSLY_INVALID_NAMEzzz');
+        expect(modelFetch1).toBeTruthy();
+        if (modelFetch1)
+            expect(modelFetch1.length).toEqual(0);
+
+        const modelFetch2: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(null, -1, 'zzzOBVIOUSLY_INVALID_NAMEzzz');
+        expect(modelFetch2).toBeTruthy();
+        if (modelFetch2)
+            expect(modelFetch2.length).toEqual(0);
+    });
+
     test('DB Fetch Special: ModelConstellation', async () => {
         let modelConstellation1: DBAPI.ModelConstellation | null = null;
         let modelConstellation2: DBAPI.ModelConstellation | null = null;
@@ -4991,6 +5041,16 @@ describe('DB Fetch Special Test Suite', () => {
                     IDs.push(S.idScene);
                 expect(IDs).toEqual(expect.arrayContaining([scene.idScene, sceneNulls.idScene]));
             }
+        }
+        expect(sceneFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Scene.fetchChildrenScenes', async () => {
+        let sceneFetch: DBAPI.Scene[] | null = null;
+        if (model) {
+            sceneFetch = await DBAPI.Scene.fetchChildrenScenes(model.idModel);
+            if (sceneFetch)
+                expect(sceneFetch.length).toEqual(0);
         }
         expect(sceneFetch).toBeTruthy();
     });
@@ -6502,6 +6562,32 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: SystemObjectVersionAssetVersionXref.addOrUpdate update', async () => {
+        let xref: DBAPI.SystemObjectVersionAssetVersionXref | null = null;
+        if (systemObjectVersionAssetVersionXref && assetVersion3) {
+            xref = await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(systemObjectVersionAssetVersionXref.idSystemObjectVersion,
+                assetVersion3.idAsset, assetVersion3.idAssetVersion);
+            if (xref) {
+                expect(xref.idSystemObjectVersionAssetVersionXref).toEqual(systemObjectVersionAssetVersionXref.idSystemObjectVersionAssetVersionXref);
+                expect(xref.idAssetVersion).toEqual(assetVersion3.idAssetVersion);
+            }
+        }
+        expect(xref).toBeTruthy();
+    });
+
+    test('DB Update: SystemObjectVersionAssetVersionXref.addOrUpdate add', async () => {
+        let xref: DBAPI.SystemObjectVersionAssetVersionXref | null = null;
+        if (systemObjectVersionAssetVersionXref && assetVersionModel) {
+            xref = await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(systemObjectVersionAssetVersionXref.idSystemObjectVersion,
+                assetVersionModel.idAsset, assetVersionModel.idAssetVersion);
+            if (xref) {
+                expect(xref.idSystemObjectVersionAssetVersionXref).toBeGreaterThan(systemObjectVersionAssetVersionXref.idSystemObjectVersionAssetVersionXref);
+                expect(xref.idAssetVersion).toEqual(assetVersionModel.idAssetVersion);
+            }
+        }
+        expect(xref).toBeTruthy();
+    });
+
     test('DB Update: SystemObjectXref.update', async () => {
         let bUpdated: boolean = false;
         if (systemObjectXref && systemObjectAsset) {
@@ -7106,6 +7192,9 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ModelSceneXref.fetchFromModel(0)).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromModelAndScene(0, -1)).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromModelAndScene(-1, 0)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(0, -1, 'foo')).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(-1, 0, 'foo')).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(-1, -1, '')).toBeNull();
         expect(await DBAPI.Project.fetch(0)).toBeNull();
         expect(await DBAPI.Project.fetchDerivedFromUnits([])).toBeNull();
         expect(await DBAPI.Project.fetchMasterFromSubjects([])).toBeNull();
@@ -7120,6 +7209,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Scene.fetch(0)).toBeNull();
         expect(await DBAPI.Scene.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.Scene.fetchDerivedFromItems([])).toBeNull();
+        expect(await DBAPI.Scene.fetchChildrenScenes(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();
         expect(await DBAPI.Subject.clearPreferredIdentifier(0)).toBeFalsy();
@@ -7181,8 +7271,13 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromSystemObjectVersion(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromAssetVersion(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset(0, -1)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset(-1, 0)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(0, -1, -1)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(-1, 0, -1)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(-1, -1, 0)).toBeNull();
         expect(await DBAPI.SystemObjectXref.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectXref.fetchXref(0, 1)).toBeNull();
         expect(await DBAPI.SystemObjectXref.fetchXref(1, 0)).toBeNull();

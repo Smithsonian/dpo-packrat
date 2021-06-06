@@ -147,7 +147,19 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel, idScene } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelSceneXref.fetchFromModel', LOG.LS.eDB, error);
+            LOG.error('DBAPI.ModelSceneXref.fetchFromModelAndScene', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchFromModelSceneAndName(idModel: number, idScene: number, Name: string): Promise<ModelSceneXref[] | null> {
+        if (!idModel || !idScene || !Name)
+            return null;
+        try {
+            return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
+                await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel, idScene, Name } }), ModelSceneXref);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.ModelSceneXref.fetchFromModelSceneAndName', LOG.LS.eDB, error);
             return null;
         }
     }
