@@ -582,6 +582,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             CountLinkedTextures: modelStats ? maybe<number>(modelStats?.numLinkedTextures) : null,
             FileEncoding: modelStats ? maybe<string>(modelStats?.fileEncoding) : null,
             IsDracoCompressed: modelStats ? maybe<boolean>(modelStats?.isDracoCompressed) : null,
+            AutomationTag: null,
             idModel
         });
     }

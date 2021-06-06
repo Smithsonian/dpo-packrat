@@ -85,6 +85,29 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
         }
     }
 
+    static async fetchLatestFromSystemObjectVersionAndAsset(idSystemObjectVersion: number, idAsset: number): Promise<SystemObjectVersionAssetVersionXref | null> {
+        if (!idSystemObjectVersion || !idAsset)
+            return null;
+        try {
+            const xrefs: SystemObjectVersionAssetVersionXref[] | null =
+                DBC.CopyArray<SystemObjectVersionAssetVersionXrefBase, SystemObjectVersionAssetVersionXref>(
+                    await DBC.DBConnection.prisma.$queryRaw<SystemObjectVersionAssetVersionXref[]>`
+                    SELECT DISTINCT X.*
+                    FROM SystemObjectVersionAssetVersionXref AS X
+                    JOIN SystemObjectVersion AS SOV ON (X.idSystemObjectVersion = SOV.idSystemObjectVersion)
+                    JOIN AssetVersion AS AV ON (X.idAssetVersion = AV.idAssetVersion)
+                    WHERE SOV.idSystemObjectVersion = ${idSystemObjectVersion}
+                      AND AV.idAsset = ${idAsset}
+                    ORDER BY X.idSystemObjectVersionAssetVersionXref DESC
+                    LIMIT 1`, SystemObjectVersionAssetVersionXref);
+
+            return (xrefs && xrefs.length > 0) ? xrefs[0] : null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
     /** Computes the map of idAsset -> idAssetVersion for the specified idSystemObjectVersion */
     static async fetchAssetVersionMap(idSystemObjectVersion: number): Promise<Map<number, number> | null> {
         LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(${idSystemObjectVersion})`, LOG.LS.eDB);
@@ -115,7 +138,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
 
     /** Computes the map of idAsset -> idAssetVersion for the most recent system object version for the specified idSystemObject */
     static async fetchLatestAssetVersionMap(idSystemObject: number): Promise<Map<number, number> | null> {
-        LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(${idSystemObject})`, LOG.LS.eDB);
+        // LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(${idSystemObject})`, LOG.LS.eDB);
         if (!idSystemObject)
             return null;
         try {
@@ -139,6 +162,34 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
             return assetVersionMap;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async addOrUpdate(idSystemObjectVersion: number, idAsset: number, idAssetVersion: number): Promise<SystemObjectVersionAssetVersionXref | null> {
+        if (!idSystemObjectVersion || !idAsset || !idAssetVersion)
+            return null;
+
+        let xref: SystemObjectVersionAssetVersionXref | null = await SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset(idSystemObjectVersion, idAsset);
+        if (xref) {
+            xref.idAssetVersion = idAssetVersion; /* istanbul ignore else */
+            if (await xref.update())
+                return xref;
+            else {
+                LOG.error(`DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate failed to update ${JSON.stringify(xref)}`, LOG.LS.eDB);
+                return null;
+            }
+        }
+
+        xref = new SystemObjectVersionAssetVersionXref({
+            idSystemObjectVersion,
+            idAssetVersion,
+            idSystemObjectVersionAssetVersionXref: 0
+        }); /* istanbul ignore else */
+        if (await xref.create())
+            return xref;
+        else {
+            LOG.error(`DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate failed to create ${JSON.stringify(xref)}`, LOG.LS.eDB);
             return null;
         }
     }

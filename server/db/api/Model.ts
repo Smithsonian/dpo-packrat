@@ -25,6 +25,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     CountLinkedTextures!: number | null;
     FileEncoding!: string | null;
     IsDracoCompressed!: boolean | null;
+    AutomationTag!: string | null;
 
     constructor(input: ModelBase) {
         super(input);
@@ -37,14 +38,14 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         try {
             const { Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose,
                 idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
-                CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed } = this;
+                CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag } = this;
             ({ idModel: this.idModel, Name: this.Name, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
                 idVModality: this.idVModality, idVUnits: this.idVUnits,
                 idVPurpose: this.idVPurpose, idVFileType: this.idVFileType, idAssetThumbnail: this.idAssetThumbnail,
                 CountAnimations: this.CountAnimations, CountCameras: this.CountCameras, CountFaces: this.CountFaces,
                 CountLights: this.CountLights, CountMaterials: this.CountMaterials, CountMeshes: this.CountMeshes,
                 CountVertices: this.CountVertices, CountEmbeddedTextures: this.CountEmbeddedTextures, CountLinkedTextures: this.CountLinkedTextures,
-                FileEncoding: this.FileEncoding, IsDracoCompressed: this.IsDracoCompressed } =
+                FileEncoding: this.FileEncoding, IsDracoCompressed: this.IsDracoCompressed, AutomationTag: this.AutomationTag } =
                 await DBC.DBConnection.prisma.model.create({
                     data: {
                         Name,
@@ -55,7 +56,8 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                         Vocabulary_Model_idVUnitsToVocabulary:          idVUnits ? { connect: { idVocabulary: idVUnits }, } : undefined,
                         Vocabulary_Model_idVFileTypeToVocabulary:       idVFileType ? { connect: { idVocabulary: idVFileType }, } : undefined,
                         Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                        CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
+                        CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures,
+                        CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag,
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
@@ -70,7 +72,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         try {
             const { idModel, Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose,
                 idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes,
-                CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed } = this;
+                CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
                 where: { idModel, },
                 data: {
@@ -82,7 +84,8 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                     Vocabulary_Model_idVUnitsToVocabulary:          idVUnits ? { connect: { idVocabulary: idVUnits }, } : { disconnect: true, },
                     Vocabulary_Model_idVFileTypeToVocabulary:       idVFileType ? { connect: { idVocabulary: idVFileType }, } : { disconnect: true, },
                     Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
-                    CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
+                    CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures,
+                    CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -175,6 +178,24 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                   AND ASS.idVAssetType IN (${Prisma.join(idVAssetTypes)})`, Model);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Model.fetchByFileNameSizeAndAssetType', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** fetches models which are chilren of either the specified idModelParent or idSceneParent, and have matching AutomationTag values */
+    static async fetchChildrenModels(idModelParent: number | null, idSceneParent: number | null, AutomationTag: string): Promise<Model[] | null> {
+        try {
+            return DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.$queryRaw<Model[]>`
+                SELECT DISTINCT M.*
+                FROM Model AS M
+                JOIN SystemObject AS SOD ON (M.idModel = SOD.idModel)
+                JOIN SystemObjectXref AS SOX ON (SOD.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOM ON (SOX.idSystemObjectMaster = SOM.idSystemObject)
+                WHERE (SOM.idModel = ${idModelParent ?? -1} OR SOM.idScene = ${idSceneParent ?? -1})
+                  AND M.AutomationTag = ${AutomationTag}`, Model);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchChildrenModels', LOG.LS.eDB, error);
             return null;
         }
     }

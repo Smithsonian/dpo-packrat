@@ -59,6 +59,7 @@ export type CrackAssetResult = {
 export type IngestStreamOrFileInput = {
     ReadStream: NodeJS.ReadableStream | null;
     LocalFilePath: string | null;
+    Asset: DBAPI.Asset | null;
     FileName: string;
     FilePath: string;
     idAssetGroup: number;
@@ -428,6 +429,7 @@ export class AssetStorageAdapter {
         const unzipAssets: boolean = isZipFilename &&
             (eAssetType == CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry ||
              eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModel ||
+             eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile ||
              eAssetType == CACHE.eVocabularyID.eAssetAssetTypeScene);
         if (assetVersion.BulkIngest || unzipAssets) {
             // Use bulkIngestReader to extract contents for assets in and below asset.FilePath
@@ -682,20 +684,25 @@ export class AssetStorageAdapter {
             return { success: false, error };
         }
 
-        const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
-            storageKey: wsRes.storageKey,
-            storageHash: null,
-            FileName: ISI.FileName,
-            FilePath: ISI.FilePath,
-            idAssetGroup: 0,
-            idVAssetType: ISI.idVAssetType,
-            idUserCreator: ISI.idUserCreator,
-            DateCreated: new Date()
-        };
+        let comRes: STORE.AssetStorageResultCommit | null = null;
+        if (!ISI.Asset) {
+            const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
+                storageKey: wsRes.storageKey,
+                storageHash: null,
+                FileName: ISI.FileName,
+                FilePath: ISI.FilePath,
+                idAssetGroup: 0,
+                idVAssetType: ISI.idVAssetType,
+                idUserCreator: ISI.idUserCreator,
+                DateCreated: new Date()
+            };
+            comRes = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
+        } else
+            comRes = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: wsRes.storageKey, storageHash: null },
+                ISI.Asset, ISI.idUserCreator, new Date(), null);
 
-        const comRes: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
-        if (!comRes.success || !comRes.assets || comRes.assets.length != 1 || !comRes.assetVersions || comRes.assetVersions.length != 1) {
-            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to commit asset: ${comRes.error}`;
+        if (!comRes || !comRes.success || !comRes.assets || comRes.assets.length != 1 || !comRes.assetVersions || comRes.assetVersions.length != 1) {
+            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to commit asset: ${comRes ? comRes.error : ''}`;
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };
         }
