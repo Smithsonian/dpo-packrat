@@ -1036,7 +1036,7 @@ describe('DB Creation Test Suite', () => {
                 idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: assetThumbnail.idAsset,
                 CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
-                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false,
+                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
                 idModel: 0
             });
         expect(model).toBeTruthy();
@@ -1054,7 +1054,7 @@ describe('DB Creation Test Suite', () => {
                 idVFileType: null,
                 idAssetThumbnail: null,
                 CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
-                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false,
+                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
                 idModel: 0
             });
         expect(modelNulls).toBeTruthy();
@@ -4873,6 +4873,10 @@ describe('DB Fetch Special Test Suite', () => {
             modelSceneXrefClone.TS0 = (modelSceneXref.TS0 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
             // LOG.info(`clone = ${JSON.stringify(modelSceneXrefClone, H.Helpers.saferStringify)} vs ${JSON.stringify(modelSceneXref, H.Helpers.saferStringify)}}`, LOG.LS.eTEST);
+
+            const modelAutomationTag: string = modelSceneXrefClone.computeModelAutomationTag();
+            expect(modelAutomationTag.includes(modelSceneXrefClone.Usage ?? '')).toBeTruthy();
+            expect(modelAutomationTag.includes(modelSceneXrefClone.Quality ?? '')).toBeTruthy();
         }
         expect(modelSceneXrefClone).toBeTruthy();
     });

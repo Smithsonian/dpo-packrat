@@ -213,7 +213,7 @@ export class ModelTestSetup {
                     idVFileType: vocabMFileType.idVocabulary,
                     idAssetThumbnail: null,
                     CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
-                    CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false,
+                    CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
                     idModel: 0
                 });
             } else {

@@ -38,6 +38,26 @@ export class JobCookSIGenerateDownloadsParameters {
     outputFileBaseName?: string | undefined;
 }
 
+export class JobCookSIGenerateDownloadsOutput {
+    /** Pass in JSON.Parse(JobRun.Output || ''); returns a map of download type -> download filename */
+    static async extractDownloads(output: any): Promise<Map<string, string>> {
+        const downloadMap: Map<string, string> = new Map<string, string>(); // map from download type -> download filename
+        /*
+        const steps: any = output?.steps;
+        const delivery: any = steps ? steps['delivery'] : undefined;
+        const deliveryResult: any = delivery ? delivery['result'] : undefined;
+        const deliveryResultFiles: any = deliveryResult ? deliveryResult['files'] : undefined;
+        */
+        const downloadFiles: any = output?.steps?.delivery?.result?.files;
+        if (downloadFiles) {
+            for (const downloadType of Object.keys(downloadFiles))
+                downloadMap.set(downloadType, downloadFiles[downloadType]);
+        }
+
+        return downloadMap;
+    }
+}
+
 export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloadsParameters> {
     private parameters: JobCookSIGenerateDownloadsParameters;
     private idScene: number | null;
@@ -121,16 +141,25 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         }
 
         // Retrieve generated files
-        const generatedDownloads: string[] = [];
-        for (const generatedDownload of generatedDownloads) {
-            const RSR: STORE.ReadStreamResult = await this.fetchFile(generatedDownload);
+        let downloadMap: Map<string, string> = new Map<string, string>(); // map from download type -> download filename
+        try {
+            downloadMap = await JobCookSIGenerateDownloadsOutput.extractDownloads(JSON.parse(this._dbJobRun.Output || ''));
+        } catch (err) {
+            const error: string = 'JobCookSIGenerateDownloadsOutput.extractDownloads failed';
+            LOG.error('JobCookSIGenerateDownloadsOutput.extractDownloads failed', LOG.LS.eJOB, err);
+            return { success: false, error };
+        }
+        LOG.info(`JobCookSIGenerateDownloads extracted download files ${JSON.stringify(downloadMap, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+
+        for (const [downloadType, downloadFile] of downloadMap) {
+            const RSR: STORE.ReadStreamResult = await this.fetchFile(downloadFile);
             if (!RSR.success || !RSR.readStream) {
-                LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to fetch stream for generated download ${generatedDownload}: ${RSR.error}`, LOG.LS.eJOB);
+                LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to fetch stream for generated download ${downloadFile}: ${RSR.error}`, LOG.LS.eJOB);
                 return { success: false, error: RSR.error };
             }
 
             // create Model for each download generated
-            const model: DBAPI.Model = await this.createModel(generatedDownload);
+            const model: DBAPI.Model = await this.createModel(downloadFile, downloadType);
             if (!await model.create()) {
                 const error: string = `JobCookSIGenerateDownloads.createSystemObjects unable to create model ${JSON.stringify(model, H.Helpers.saferStringify)}`;
                 LOG.error(error, LOG.LS.eJOB);
@@ -158,7 +187,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             const ISI: STORE.IngestStreamOrFileInput = {
                 ReadStream: RSR.readStream,
                 LocalFilePath: null,
-                FileName: generatedDownload,
+                FileName: downloadFile,
                 FilePath: '',
                 idAssetGroup: 0,
                 idVAssetType: vModel.idVocabulary,
@@ -167,7 +196,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             };
             const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
             if (!ISR.success) {
-                LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to ingest generated download model ${generatedDownload}: ${ISR.error}`, LOG.LS.eJOB);
+                LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to ingest generated download model ${downloadFile}: ${ISR.error}`, LOG.LS.eJOB);
                 return { success: false, error: ISR.error };
             }
 
@@ -226,7 +255,11 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         return this.parameters;
     }
 
-    private async createModel(Name: string): Promise<DBAPI.Model> {
+    protected computeModelAutomationTag(downloadType: string): string {
+        return `download-${downloadType}`;
+    }
+
+    private async createModel(Name: string, downloadType: string): Promise<DBAPI.Model> {
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
         const vPurpose: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeDownload);
         return new DBAPI.Model({
@@ -239,7 +272,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             idVUnits: null,
             idVFileType: vFileType ? vFileType.idVocabulary : null,
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
-            CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null
+            CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
+            AutomationTag: this.computeModelAutomationTag(downloadType)
         });
     }
 }

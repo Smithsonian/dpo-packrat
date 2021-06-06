@@ -46,3 +46,6 @@ SELECT idVocabulary INTO @idVocabCMSUnitID FROM Vocabulary
 WHERE Term = 'Unit CMS ID' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
 
 INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELECT 'ITEM_GUID_4', @idVocabARK, idSystemObject FROM SystemObject WHERE idItem = (SELECT idItem FROM Item WHERE NAME = 'NMAH Baseball Bat');
+
+-- 2021-06-05 Jon
+ALTER TABLE Model ADD COLUMN AutomationTag varchar(256) NULL;
