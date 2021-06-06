@@ -49,3 +49,5 @@ INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELE
 
 -- 2021-06-05 Jon
 ALTER TABLE Model ADD COLUMN AutomationTag varchar(256) NULL;
+
+-- 2021-06-06 Deployed to Staging
