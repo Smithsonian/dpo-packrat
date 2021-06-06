@@ -113,21 +113,49 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] parse scene`, LOG.LS.eJOB);
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects fetched scene:\n${JSON.stringify(svx.SvxExtraction, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
-        // Create Scene
-        const scene: DBAPI.Scene = svx.SvxExtraction.extractScene();
-        if (!await scene.create()) {
-            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`, LOG.LS.eJOB);
+        // Look for an existing scene, which is a child of modelSource
+        // TODO: what if there are multiple?
+        const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(modelSource.idModel);
+        if (!scenes) {
+            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch children scenes of model ${modelSource.idModel}`, LOG.LS.eJOB);
             return { success: false, error: res.error };
         }
-        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] create scene`, LOG.LS.eJOB);
 
-        // wire ModelSource to Scene
-        const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, scene);
-        if (!SOX) {
-            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Scene ${JSON.stringify(scene, H.Helpers.saferStringify)}: database error`, LOG.LS.eJOB);
-            return { success: false, error: res.error };
+        // If needed, create a new scene (if we have no scenes, or if we have multiple scenes, then create a new one)
+        const createScene: boolean = (scenes.length !== 1);
+        const scene: DBAPI.Scene = createScene ? svx.SvxExtraction.extractScene() : scenes[0];
+        let Asset: DBAPI.Asset | null = null;
+        if (createScene) {
+            if (!await scene.create()) {
+                LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`, LOG.LS.eJOB);
+                return { success: false, error: res.error };
+            }
+            // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] create scene`, LOG.LS.eJOB);
+
+            // wire ModelSource to Scene
+            const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, scene);
+            if (!SOX) {
+                LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Scene ${JSON.stringify(scene, H.Helpers.saferStringify)}: database error`, LOG.LS.eJOB);
+                return { success: false, error: res.error };
+            }
+            // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ModelSource to Scene: ${JSON.stringify(SOX, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
+        } else {
+            // determine if we are updating an existing scene with an existing scene asset:
+            const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
+            if (sceneSO) {
+                const sceneAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(sceneSO.idSystemObject);
+                if (sceneAssets) {
+                    for (const sceneAsset of sceneAssets) {
+                        if (await sceneAsset.assetType() === CACHE.eVocabularyID.eAssetAssetTypeScene) {
+                            Asset = sceneAsset;
+                            break;
+                        }
+                    }
+                } else
+                    LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch assets for scene systemobject ${JSON.stringify(sceneSO, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+            } else
+                LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch system object for ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
         }
-        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ModelSource to Scene: ${JSON.stringify(SOX, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
         // Scene owns this ingested asset of the SVX File
         // Read file a second time ... cloneStream isn't available
@@ -143,6 +171,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         const ISI: STORE.IngestStreamOrFileInput = {
             ReadStream: RSR.readStream,
             LocalFilePath: null,
+            Asset,
             FileName: svxFile,
             FilePath: '',
             idAssetGroup: 0,
@@ -155,7 +184,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to ingest scene file ${svxFile}: ${ISR.error}`, LOG.LS.eJOB);
             return { success: false, error: ISR.error };
         }
-        const SOV: DBAPI.SystemObjectVersion | null | undefined = ISR.systemObjectVersion;
+        const SOV: DBAPI.SystemObjectVersion | null | undefined = ISR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
         // Now extract (just) the models; per Jamie Cope 5/3/2021, each model has all textures embedded
@@ -163,38 +192,64 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         if (svx.SvxExtraction.modelDetails) {
             for (const MSX of svx.SvxExtraction.modelDetails) {
                 if (MSX.Name) {
-                    const model: DBAPI.Model = await this.transformModelSceneXrefIntoModel(MSX, modelSource);
-                    if (!await model.create()) {
-                        const error: string = `JobCookSIVoyagerScene.createSystemObjects unable to create Model from referenced model ${MSX.Name}: database error`;
-                        LOG.error(error, LOG.LS.eJOB);
-                        return { success: false, error };
-                    }
+                    // look for existing models, children of our scene, that match this model's purpose
+                    let model: DBAPI.Model | null = await this.findMatchingModel(scene, MSX.computeModelAutomationTag());
+                    let Asset: DBAPI.Asset | null = null;
 
-                    // wire ModelSource to Model
-                    const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, model);
-                    if (!SOX1) {
-                        LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}: database error`, LOG.LS.eJOB);
-                        return { success: false, error: res.error };
-                    }
-
-                    // Create ModelSceneXref for new model and parent scene
-                    /* istanbul ignore else */
-                    if (!MSX.idModelSceneXref) { // should always be true
-                        MSX.idModel = model.idModel;
-                        MSX.idScene = scene.idScene;
-                        if (!await MSX.create()) {
-                            const error: string = `JobCookSIVoyagerScene.createSystemObjects unable to create ModelSceneXref for model xref ${JSON.stringify(MSX)}: database error`;
+                    if (model) {
+                        // if we already have a model, look for the asset that we are likely updating:
+                        const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
+                        if (modelSO) {
+                            const modelAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(modelSO.idSystemObject);
+                            if (modelAssets) {
+                                for (const modelAsset of modelAssets) {
+                                    switch (await modelAsset.assetType()) {
+                                        case CACHE.eVocabularyID.eAssetAssetTypeModel:
+                                        case CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile:
+                                            Asset = modelAsset;
+                                            break;
+                                    }
+                                    if (Asset)
+                                        break;
+                                }
+                            } else
+                                LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch assets for model systemobject ${JSON.stringify(modelSO, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                        } else
+                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch system object for ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                    } else { // create model and related records
+                        model = await this.transformModelSceneXrefIntoModel(MSX, modelSource);
+                        if (!await model.create()) {
+                            const error: string = `JobCookSIVoyagerScene.createSystemObjects unable to create Model from referenced model ${MSX.Name}: database error`;
                             LOG.error(error, LOG.LS.eJOB);
                             return { success: false, error };
                         }
-                    } else
-                        LOG.error(`JobCookSIVoyagerScene.createSystemObjects unexpected non-null ModelSceneXref for model xref ${JSON.stringify(MSX)}: database error`, LOG.LS.eJOB);
 
-                    const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
-                    if (!SOX2) {
-                        const error: string = `JobCookSIVoyagerScene.createSystemObjects unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together: database error`;
-                        LOG.error(error, LOG.LS.eJOB);
-                        return { success: false, error };
+                        // wire ModelSource to Model
+                        const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, model);
+                        if (!SOX1) {
+                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}: database error`, LOG.LS.eJOB);
+                            return { success: false, error: res.error };
+                        }
+
+                        // Create ModelSceneXref for new model and parent scene
+                        /* istanbul ignore else */
+                        if (!MSX.idModelSceneXref) { // should always be true
+                            MSX.idModel = model.idModel;
+                            MSX.idScene = scene.idScene;
+                            if (!await MSX.create()) {
+                                const error: string = `JobCookSIVoyagerScene.createSystemObjects unable to create ModelSceneXref for model xref ${JSON.stringify(MSX)}: database error`;
+                                LOG.error(error, LOG.LS.eJOB);
+                                return { success: false, error };
+                            }
+                        } else
+                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unexpected non-null ModelSceneXref for model xref ${JSON.stringify(MSX)}: database error`, LOG.LS.eJOB);
+
+                        const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
+                        if (!SOX2) {
+                            const error: string = `JobCookSIVoyagerScene.createSystemObjects unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together: database error`;
+                            LOG.error(error, LOG.LS.eJOB);
+                            return { success: false, error };
+                        }
                     }
 
                     const RSRModel: STORE.ReadStreamResult = await this.fetchFile(MSX.Name);
@@ -208,6 +263,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                     const ISIModel: STORE.IngestStreamOrFileInput = {
                         ReadStream: RSRModel.readStream,
                         LocalFilePath: null,
+                        Asset,
                         FileName,
                         FilePath,
                         idAssetGroup: 0,
@@ -220,17 +276,16 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                         LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to ingest model file ${MSX.Name}: ${ISR.error}`, LOG.LS.eJOB);
                         return { success: false, error: ISR.error };
                     }
+
                     // if an asset version was created for ingestion of this model, and if a system object version was created for scene ingestion,
-                    // associate the asset version with that system object version (enabling a scene package to be downloaded, even if some assets
-                    // are owned by the ingested models)
+                    // associate the asset version with the scene's system object version (enabling a scene package to be downloaded, even if some assets
+                    // are owned by the ingested models). Note that if we *updated* models, we will be update the original models'
+                    // SystemObjectVersionAssetVersionXref with records pointing to the new model asset versions
                     if (SOV && ISR.assetVersion) {
-                        const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref = new DBAPI.SystemObjectVersionAssetVersionXref({
-                            idSystemObjectVersion: SOV.idSystemObjectVersion,
-                            idAssetVersion: ISR.assetVersion.idAssetVersion,
-                            idSystemObjectVersionAssetVersionXref: 0
-                        });
-                        if (!await SOVAVX.create())
-                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                        const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref | null =
+                            await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(SOV.idSystemObjectVersion, ISR.assetVersion.idAsset, ISR.assetVersion.idAssetVersion);
+                        if (!SOVAVX)
+                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable create/update SystemObjectVersionAssetVersionXref for ${JSON.stringify(SOV, H.Helpers.saferStringify)}, ${JSON.stringify(ISR.assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
                     }
                 } else
                     LOG.error(`JobCookSIVoyagerScene.createSystemObjects skipping unnamed model ${JSON.stringify(MSX)}`, LOG.LS.eJOB);
@@ -257,7 +312,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             idVUnits: source?.idVUnits ?? null,
             idVFileType: vFileType ? vFileType.idVocabulary : null,
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
-            CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null
+            CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
+            AutomationTag: MSX.computeModelAutomationTag()
         });
     }
 
@@ -283,6 +339,11 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             default:
                 return undefined;
         }
+    }
+
+    private async findMatchingModel(sceneSource: DBAPI.Scene, automationTag: string): Promise<DBAPI.Model | null> {
+        const matches: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(null, sceneSource.idScene, automationTag);
+        return matches && matches.length > 0 ? matches[0] : null;
     }
 }
 
