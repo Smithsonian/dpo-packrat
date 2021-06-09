@@ -37,6 +37,7 @@ export type Query = {
   getItem: GetItemResult;
   getItemsForSubject: GetItemsForSubjectResult;
   getLicense: GetLicenseResult;
+  getLicenseList: GetLicenseListResult;
   getModel: GetModelResult;
   getModelConstellation: GetModelConstellationResult;
   getModelConstellationForAssetVersion: GetModelConstellationForAssetVersionResult;
@@ -140,6 +141,11 @@ export type QueryGetItemsForSubjectArgs = {
 
 export type QueryGetLicenseArgs = {
   input: GetLicenseInput;
+};
+
+
+export type QueryGetLicenseListArgs = {
+  input: GetLicenseListInput;
 };
 
 
@@ -316,6 +322,7 @@ export type Mutation = {
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
   createItem: CreateItemResult;
+  createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
   createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
@@ -329,6 +336,7 @@ export type Mutation = {
   ingestData: IngestDataResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
+  updateLicense: CreateLicenseResult;
   updateObjectDetails: UpdateObjectDetailsResult;
   updateSourceObjects: UpdateSourceObjectsResult;
   updateUser: CreateUserResult;
@@ -348,6 +356,11 @@ export type MutationCreateCaptureDataPhotoArgs = {
 
 export type MutationCreateItemArgs = {
   input: CreateItemInput;
+};
+
+
+export type MutationCreateLicenseArgs = {
+  input: CreateLicenseInput;
 };
 
 
@@ -413,6 +426,11 @@ export type MutationRollbackSystemObjectVersionArgs = {
 
 export type MutationUpdateDerivedObjectsArgs = {
   input: UpdateDerivedObjectsInput;
+};
+
+
+export type MutationUpdateLicenseArgs = {
+  input: UpdateLicenseInput;
 };
 
 
@@ -899,6 +917,22 @@ export type AreCameraSettingsUniformResult = {
   isUniform: Scalars['Boolean'];
 };
 
+export type CreateLicenseInput = {
+  Name: Scalars['String'];
+  Description: Scalars['String'];
+};
+
+export type CreateLicenseResult = {
+  __typename?: 'CreateLicenseResult';
+  License?: Maybe<License>;
+};
+
+export type UpdateLicenseInput = {
+  idLicense: Scalars['Int'];
+  Name: Scalars['String'];
+  Description: Scalars['String'];
+};
+
 export type GetLicenseInput = {
   idLicense: Scalars['Int'];
 };
@@ -906,6 +940,15 @@ export type GetLicenseInput = {
 export type GetLicenseResult = {
   __typename?: 'GetLicenseResult';
   License?: Maybe<License>;
+};
+
+export type GetLicenseListInput = {
+  search?: Maybe<Scalars['String']>;
+};
+
+export type GetLicenseListResult = {
+  __typename?: 'GetLicenseListResult';
+  Licenses: Array<License>;
 };
 
 export type License = {
@@ -2340,6 +2383,38 @@ export type IngestDataMutation = (
   ) }
 );
 
+export type CreateLicenseMutationVariables = Exact<{
+  input: CreateLicenseInput;
+}>;
+
+
+export type CreateLicenseMutation = (
+  { __typename?: 'Mutation' }
+  & { createLicense: (
+    { __typename?: 'CreateLicenseResult' }
+    & { License?: Maybe<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Name' | 'Description'>
+    )> }
+  ) }
+);
+
+export type UpdateLicenseMutationVariables = Exact<{
+  input: UpdateLicenseInput;
+}>;
+
+
+export type UpdateLicenseMutation = (
+  { __typename?: 'Mutation' }
+  & { updateLicense: (
+    { __typename?: 'CreateLicenseResult' }
+    & { License?: Maybe<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Name' | 'Description'>
+    )> }
+  ) }
+);
+
 export type CreateSceneMutationVariables = Exact<{
   input: CreateSceneInput;
 }>;
@@ -2783,7 +2858,23 @@ export type GetLicenseQuery = (
     { __typename?: 'GetLicenseResult' }
     & { License?: Maybe<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense'>
+      & Pick<License, 'idLicense' | 'Description' | 'Name'>
+    )> }
+  ) }
+);
+
+export type GetLicenseListQueryVariables = Exact<{
+  input: GetLicenseListInput;
+}>;
+
+
+export type GetLicenseListQuery = (
+  { __typename?: 'Query' }
+  & { getLicenseList: (
+    { __typename?: 'GetLicenseListResult' }
+    & { Licenses: Array<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Description' | 'Name'>
     )> }
   ) }
 );
@@ -3649,6 +3740,80 @@ export function useIngestDataMutation(baseOptions?: Apollo.MutationHookOptions<I
 export type IngestDataMutationHookResult = ReturnType<typeof useIngestDataMutation>;
 export type IngestDataMutationResult = Apollo.MutationResult<IngestDataMutation>;
 export type IngestDataMutationOptions = Apollo.BaseMutationOptions<IngestDataMutation, IngestDataMutationVariables>;
+export const CreateLicenseDocument = gql`
+    mutation createLicense($input: CreateLicenseInput!) {
+  createLicense(input: $input) {
+    License {
+      idLicense
+      Name
+      Description
+    }
+  }
+}
+    `;
+export type CreateLicenseMutationFn = Apollo.MutationFunction<CreateLicenseMutation, CreateLicenseMutationVariables>;
+
+/**
+ * __useCreateLicenseMutation__
+ *
+ * To run a mutation, you first call `useCreateLicenseMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateLicenseMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createLicenseMutation, { data, loading, error }] = useCreateLicenseMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateLicenseMutation(baseOptions?: Apollo.MutationHookOptions<CreateLicenseMutation, CreateLicenseMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateLicenseMutation, CreateLicenseMutationVariables>(CreateLicenseDocument, options);
+      }
+export type CreateLicenseMutationHookResult = ReturnType<typeof useCreateLicenseMutation>;
+export type CreateLicenseMutationResult = Apollo.MutationResult<CreateLicenseMutation>;
+export type CreateLicenseMutationOptions = Apollo.BaseMutationOptions<CreateLicenseMutation, CreateLicenseMutationVariables>;
+export const UpdateLicenseDocument = gql`
+    mutation updateLicense($input: UpdateLicenseInput!) {
+  updateLicense(input: $input) {
+    License {
+      idLicense
+      Name
+      Description
+    }
+  }
+}
+    `;
+export type UpdateLicenseMutationFn = Apollo.MutationFunction<UpdateLicenseMutation, UpdateLicenseMutationVariables>;
+
+/**
+ * __useUpdateLicenseMutation__
+ *
+ * To run a mutation, you first call `useUpdateLicenseMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateLicenseMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateLicenseMutation, { data, loading, error }] = useUpdateLicenseMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateLicenseMutation(baseOptions?: Apollo.MutationHookOptions<UpdateLicenseMutation, UpdateLicenseMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateLicenseMutation, UpdateLicenseMutationVariables>(UpdateLicenseDocument, options);
+      }
+export type UpdateLicenseMutationHookResult = ReturnType<typeof useUpdateLicenseMutation>;
+export type UpdateLicenseMutationResult = Apollo.MutationResult<UpdateLicenseMutation>;
+export type UpdateLicenseMutationOptions = Apollo.BaseMutationOptions<UpdateLicenseMutation, UpdateLicenseMutationVariables>;
 export const CreateSceneDocument = gql`
     mutation createScene($input: CreateSceneInput!) {
   createScene(input: $input) {
@@ -4663,6 +4828,8 @@ export const GetLicenseDocument = gql`
   getLicense(input: $input) {
     License {
       idLicense
+      Description
+      Name
     }
   }
 }
@@ -4695,6 +4862,45 @@ export function useGetLicenseLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions
 export type GetLicenseQueryHookResult = ReturnType<typeof useGetLicenseQuery>;
 export type GetLicenseLazyQueryHookResult = ReturnType<typeof useGetLicenseLazyQuery>;
 export type GetLicenseQueryResult = Apollo.QueryResult<GetLicenseQuery, GetLicenseQueryVariables>;
+export const GetLicenseListDocument = gql`
+    query getLicenseList($input: GetLicenseListInput!) {
+  getLicenseList(input: $input) {
+    Licenses {
+      idLicense
+      Description
+      Name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetLicenseListQuery__
+ *
+ * To run a query within a React component, call `useGetLicenseListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLicenseListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLicenseListQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetLicenseListQuery(baseOptions: Apollo.QueryHookOptions<GetLicenseListQuery, GetLicenseListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLicenseListQuery, GetLicenseListQueryVariables>(GetLicenseListDocument, options);
+      }
+export function useGetLicenseListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLicenseListQuery, GetLicenseListQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLicenseListQuery, GetLicenseListQueryVariables>(GetLicenseListDocument, options);
+        }
+export type GetLicenseListQueryHookResult = ReturnType<typeof useGetLicenseListQuery>;
+export type GetLicenseListLazyQueryHookResult = ReturnType<typeof useGetLicenseListLazyQuery>;
+export type GetLicenseListQueryResult = Apollo.QueryResult<GetLicenseListQuery, GetLicenseListQueryVariables>;
 export const GetModelDocument = gql`
     query getModel($input: GetModelInput!) {
   getModel(input: $input) {

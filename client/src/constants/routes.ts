@@ -50,18 +50,20 @@ export const REPOSITORY_ROUTE = {
     ROUTES: REPOSITORY_ROUTES_TYPE
 };
 
-export const ADMIN_EDIT_USER = {
-    USER: 'user/:idUser'
+export const ADMIN_EDIT = {
+    USER: 'user/:idUser',
+    LICENSE: 'licenses/:idLicense'
 };
 
 export const ADMIN_ROUTES_TYPE = {
     USERS: 'users',
-    EDIT: ADMIN_EDIT_USER,
+    EDIT: ADMIN_EDIT,
     USER: 'user',
     PROJECTS: 'projects',
     UNITS: 'units',
     CREATEPROJECT: 'projects/create',
-    CREATEUNIT: 'units/create'
+    CREATEUNIT: 'units/create',
+    LICENSES: 'licenses'
 };
 
 export const ADMIN_ROUTE = {

@@ -5,6 +5,8 @@ const getLicense = gql`
         getLicense(input: $input) {
             License {
                 idLicense
+                Description
+                Name
             }
         }
     }

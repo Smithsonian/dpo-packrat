@@ -34,6 +34,7 @@ export type Query = {
   getItem: GetItemResult;
   getItemsForSubject: GetItemsForSubjectResult;
   getLicense: GetLicenseResult;
+  getLicenseList: GetLicenseListResult;
   getModel: GetModelResult;
   getModelConstellation: GetModelConstellationResult;
   getModelConstellationForAssetVersion: GetModelConstellationForAssetVersionResult;
@@ -137,6 +138,11 @@ export type QueryGetItemsForSubjectArgs = {
 
 export type QueryGetLicenseArgs = {
   input: GetLicenseInput;
+};
+
+
+export type QueryGetLicenseListArgs = {
+  input: GetLicenseListInput;
 };
 
 
@@ -313,6 +319,7 @@ export type Mutation = {
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
   createItem: CreateItemResult;
+  createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
   createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
@@ -326,6 +333,7 @@ export type Mutation = {
   ingestData: IngestDataResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
+  updateLicense: CreateLicenseResult;
   updateObjectDetails: UpdateObjectDetailsResult;
   updateSourceObjects: UpdateSourceObjectsResult;
   updateUser: CreateUserResult;
@@ -345,6 +353,11 @@ export type MutationCreateCaptureDataPhotoArgs = {
 
 export type MutationCreateItemArgs = {
   input: CreateItemInput;
+};
+
+
+export type MutationCreateLicenseArgs = {
+  input: CreateLicenseInput;
 };
 
 
@@ -410,6 +423,11 @@ export type MutationRollbackSystemObjectVersionArgs = {
 
 export type MutationUpdateDerivedObjectsArgs = {
   input: UpdateDerivedObjectsInput;
+};
+
+
+export type MutationUpdateLicenseArgs = {
+  input: UpdateLicenseInput;
 };
 
 
@@ -896,6 +914,22 @@ export type AreCameraSettingsUniformResult = {
   isUniform: Scalars['Boolean'];
 };
 
+export type CreateLicenseInput = {
+  Name: Scalars['String'];
+  Description: Scalars['String'];
+};
+
+export type CreateLicenseResult = {
+  __typename?: 'CreateLicenseResult';
+  License?: Maybe<License>;
+};
+
+export type UpdateLicenseInput = {
+  idLicense: Scalars['Int'];
+  Name: Scalars['String'];
+  Description: Scalars['String'];
+};
+
 export type GetLicenseInput = {
   idLicense: Scalars['Int'];
 };
@@ -903,6 +937,15 @@ export type GetLicenseInput = {
 export type GetLicenseResult = {
   __typename?: 'GetLicenseResult';
   License?: Maybe<License>;
+};
+
+export type GetLicenseListInput = {
+  search?: Maybe<Scalars['String']>;
+};
+
+export type GetLicenseListResult = {
+  __typename?: 'GetLicenseListResult';
+  Licenses: Array<License>;
 };
 
 export type License = {

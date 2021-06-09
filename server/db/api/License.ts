@@ -51,4 +51,27 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
             return null;
         }
     }
+
+    static async fetchAll(): Promise<License[] | null> {
+        try {
+            return DBC.CopyArray<LicenseBase, License>(
+                await DBC.DBConnection.prisma.license.findMany(), License);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.License.fetchAll', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchLicenseList(search: string): Promise<License[] | null> {
+        if (!search)
+            return this.fetchAll();
+        try {
+            return DBC.CopyArray<LicenseBase, License>(await DBC.DBConnection.prisma.license.findMany({
+                where: { Name: { contains: search }, },
+            }), License);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.License.fetchLicenseList', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }

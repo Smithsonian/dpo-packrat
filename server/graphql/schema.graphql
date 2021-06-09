@@ -17,6 +17,7 @@ type Query {
   getItem(input: GetItemInput!): GetItemResult!
   getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
+  getLicenseList(input: GetLicenseListInput!): GetLicenseListResult!
   getModel(input: GetModelInput!): GetModelResult!
   getModelConstellation(input: GetModelConstellationInput!): GetModelConstellationResult!
   getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput!): GetModelConstellationForAssetVersionResult!
@@ -101,6 +102,7 @@ type Mutation {
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
   createItem(input: CreateItemInput!): CreateItemResult!
+  createLicense(input: CreateLicenseInput!): CreateLicenseResult!
   createProject(input: CreateProjectInput!): CreateProjectResult!
   createScene(input: CreateSceneInput!): CreateSceneResult!
   createSubject(input: CreateSubjectInput!): CreateSubjectResult!
@@ -114,6 +116,7 @@ type Mutation {
   ingestData(input: IngestDataInput!): IngestDataResult!
   rollbackSystemObjectVersion(input: RollbackSystemObjectVersionInput!): RollbackSystemObjectVersionResult!
   updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
+  updateLicense(input: UpdateLicenseInput!): CreateLicenseResult!
   updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
   updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
   updateUser(input: UpdateUserInput!): CreateUserResult!
@@ -552,12 +555,35 @@ type AreCameraSettingsUniformResult {
   isUniform: Boolean!
 }
 
+input CreateLicenseInput {
+  Name: String!
+  Description: String!
+}
+
+type CreateLicenseResult {
+  License: License
+}
+
+input UpdateLicenseInput {
+  idLicense: Int!
+  Name: String!
+  Description: String!
+}
+
 input GetLicenseInput {
   idLicense: Int!
 }
 
 type GetLicenseResult {
   License: License
+}
+
+input GetLicenseListInput {
+  search: String
+}
+
+type GetLicenseListResult {
+  Licenses: [License!]!
 }
 
 type License {
