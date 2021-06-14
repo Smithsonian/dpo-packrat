@@ -63,10 +63,10 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
 
     useEffect(() => {
         const fetchInitialLicenseList = async () => {
-            let { data } = await getLicenseList();
-            let fetchedLicenses = [...data?.getLicenseList?.Licenses];
+            const { data } = await getLicenseList();
+            const fetchedLicenses = [...data?.getLicenseList?.Licenses];
             if (fetchedLicenses && fetchedLicenses.length) {
-                fetchedLicenses.sort((a, b) => a.Name.localeCompare(b.Name));
+                fetchedLicenses.sort((a, b) => a.Name.toLowerCase() - b.Name.toLowerCase());
             }
             setLicenseList(fetchedLicenses);
         };
@@ -76,11 +76,13 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
 
     /*
         TODO
+        Create a proper state to hold the license
+        Create a function to handle Select's onChange
         Complete clearAssignment function
         Get the correct data shape to pass into select
-        Write the compomonent to include hyperlink to appropriate license object
+        Write the component to include hyperlink to appropriate license object
         Figure out which kinds of system object have licenses
-        Figure out how to inheirt license from parent
+        Figure out how to inherit license from parent
     */
 
     const clearLicenseAssignment = () => {

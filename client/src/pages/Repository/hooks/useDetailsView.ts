@@ -18,7 +18,8 @@ import {
     UpdateDerivedObjectsDocument,
     DeleteObjectConnectionDocument,
     DeleteIdentifierDocument,
-    RollbackSystemObjectVersionDocument
+    RollbackSystemObjectVersionDocument,
+    GetLicenseListDocument
 } from '../../../types/graphql';
 import { eSystemObjectType } from '../../../types/server';
 
@@ -155,5 +156,16 @@ export async function rollbackSystemObjectVersion(idSystemObjectVersion: number)
             }
         },
         refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+    });
+}
+
+export async function getLicenseList() {
+    return await apolloClient.query({
+        query: GetLicenseListDocument,
+        variables: {
+            input: {
+                search: ''
+            }
+        }
     });
 }

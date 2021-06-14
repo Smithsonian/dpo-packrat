@@ -1914,6 +1914,7 @@ export type GetObjectsForItemResult = {
 
 export type SearchIngestionSubjectsInput = {
   query: Scalars['String'];
+  EdanOnly?: Maybe<Scalars['Boolean']>;
 };
 
 export type SearchIngestionSubjectsResult = {

@@ -37,7 +37,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     }
 }));
 
-function SearchList(): React.ReactElement {
+type SearchListProps = {
+    EdanOnly?: boolean
+};
+
+function SearchList(props: SearchListProps): React.ReactElement {
+    const { EdanOnly } = props;
     const classes = useStyles();
     const [query, setQuery] = useState('');
     const [searchSubject, { data, called, loading, error }] = useLazyQuery(SearchIngestionSubjectsDocument);
@@ -64,7 +69,8 @@ function SearchList(): React.ReactElement {
             return;
         }
 
-        const variables = { input: { query: trimmedQuery } };
+        const variables: any = { input: { query: trimmedQuery } };
+        variables.input.EdanOnly = EdanOnly;
         searchSubject({ variables });
     };
 

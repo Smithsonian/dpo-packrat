@@ -63,7 +63,9 @@ export const ADMIN_ROUTES_TYPE = {
     UNITS: 'units',
     CREATEPROJECT: 'projects/create',
     CREATEUNIT: 'units/create',
-    LICENSES: 'licenses'
+    LICENSES: 'licenses',
+    SUBJECTS: 'subjects',
+    CREATESUBJECT: 'subjects/create'
 };
 
 export const ADMIN_ROUTE = {
