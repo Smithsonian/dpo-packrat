@@ -53,6 +53,7 @@ type GetObjectsForItemResult {
 
 input SearchIngestionSubjectsInput {
     query: String!
+    EdanOnly: Boolean
 }
 
 type SearchIngestionSubjectsResult {

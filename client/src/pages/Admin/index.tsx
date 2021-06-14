@@ -35,6 +35,7 @@ import AddUnitForm from './components/AddUnitForm';
 import AddProjectForm from './components/AddProjectForm';
 import LicenseView from './components/License/LicenseView';
 import LicenseForm from './components/License/LicenseForm';
+import SubjectForm from './components/Subject/SubjectForm';
 
 const useStyles = makeStyles({
     AdminPageContainer: {
@@ -70,6 +71,9 @@ function Admin(): React.ReactElement {
                     </PrivateRoute>
                     <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.LICENSES)}>
                         <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.EDIT.LICENSE)} component={LicenseForm} />
+                    </PrivateRoute>
+                    <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.SUBJECTS)}>
+                        <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.CREATESUBJECT)} component={SubjectForm} />
                     </PrivateRoute>
                     <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.PROJECTS)} component={AdminProjectsView} />
                     <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.UNITS)} component={AdminUnitsView} />
