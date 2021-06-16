@@ -153,6 +153,7 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
     };
 
     const search = () => {
+        console.log('searchFiler', searchFilter);
         queryByFilter(searchFilter);
     };
 
@@ -191,7 +192,7 @@ function LicenseView(): React.ReactElement {
             setLicenseList(initialLicenseListQuery?.data?.getLicenseList?.Licenses);
         }
         fetchInitialUnitList();
-    });
+    }, []);
 
     const queryByFilter = async newSearchText => {
         const newFilterQuery = await apolloClient.query({

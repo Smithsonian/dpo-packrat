@@ -4,15 +4,15 @@ import { Box, Button, Select, MenuItem } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { FieldType, InputField } from '../../../../components';
-import { useSubjectStore } from '../../../../store';
+import { useSubjectStore, StateIdentifier, useVocabularyStore } from '../../../../store';
 import SearchList from '../../../Ingestion/components/SubjectItem/SearchList';
-import SubjectList from '../../../Ingestion/components/SubjectItem/SubjectList';
 import { RotationOriginInput, RotationQuaternionInput } from '../../../Repository/components/DetailsView/DetailsTab/SubjectDetails';
-import { getUnitsList } from '../../hooks/useAdminview';
+import { getUnitsList, getUnitFromEdanAbbreviation, createLocation, createSubject } from '../../hooks/useAdminview';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
-// import IdentifierList from '../../../../components/shared/IdentifierList';
-// import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
+import { eVocabularySetID } from '../../../../types/server';
+import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -50,7 +50,7 @@ const useStyles = makeStyles(({ palette }) => ({
     Create state for:
         xName
         xUnit
-        Identifiers (gotta fetch the correct ones)
+        xIdentifiers (gotta fetch the correct ones)
         xLatitude
         xLongitude
         xAltitude
@@ -74,34 +74,69 @@ const useStyles = makeStyles(({ palette }) => ({
     Validation:
         xName
         xUnit
-        Identifier
+        xIdentifier
 */
+
+export type CoordinateValues = {
+    Latitude: number | null;
+    Longitude: number | null;
+    Altitude: number | null;
+    TS0: number | null;
+    TS1: number | null;
+    TS2: number | null;
+    R0: number | null;
+    R1: number | null;
+    R2: number | null;
+    R3: number | null;
+};
 
 function SubjectForm(): React.ReactElement {
     const classes = useStyles();
-
-    const [subjectError, setSubjectError] = useState(false);
+    const history = useHistory();
     const [subjectName, setSubjectName] = useState('');
     const [subjectUnit, setSubjectUnit] = useState(0);
     const [unitList, setUnitList] = useState<any>([]);
-    const [coordinateValues, setCoordinateValues] = useState({ Latitude: 0, Longitude: 0, Altitude: 0, TS0: 0, TS1: 0, TS2: 0, R0: 0, R1: 0, R2: 0, R3: 0 });
+    const [subjectIdentifiers, setSubjectIdentifiers] = useState<StateIdentifier[]>([]);
+    const [coordinateValues, setCoordinateValues] = useState<CoordinateValues>({
+        Latitude: null,
+        Longitude: null,
+        Altitude: null,
+        TS0: null,
+        TS1: null,
+        TS2: null,
+        R0: null,
+        R1: null,
+        R2: null,
+        R3: null
+    });
+    const [systemCreated, setSystemCreated] = useState(false);
     const [validName, setValidName] = useState(true);
     const [validUnit, setValidUnit] = useState(true);
-    // const [validIdentifiers, setValidIdentifiers] = useState(true);
 
     const subjects = useSubjectStore(state => state.subjects);
+    const [getEntries] = useVocabularyStore(state => [state.getEntries]);
 
     const schema = yup.object().shape({
         subjectName: yup.string().min(1),
-        subjectUnit: yup.number().positive()
-        // subjectIdentifiers: yup.array().min(1)
+        subjectUnit: yup.number().positive(),
+        subjectIdentifiers: yup
+            .array()
+            .min(1)
+            .of(
+                yup.object().shape({
+                    id: yup.number(),
+                    identifier: yup.string().min(1),
+                    identifierType: yup.number().nullable(),
+                    selected: yup.boolean(),
+                    idIdentifier: yup.number()
+                })
+            )
     });
 
     useEffect(() => {
         const fetchUnitList = async () => {
             const { data } = await getUnitsList();
             if (data?.getUnitsFromNameSearch.Units && data?.getUnitsFromNameSearch.Units.length) {
-                // manipulate the data and then set it to state
                 const fetchedUnitList = data?.getUnitsFromNameSearch.Units.slice();
                 if (fetchedUnitList && fetchedUnitList.length) fetchedUnitList.sort((a, b) => a.Name.localeCompare(b.Name));
                 setUnitList(fetchedUnitList);
@@ -110,44 +145,79 @@ function SubjectForm(): React.ReactElement {
         fetchUnitList();
     }, []);
 
-    // console.log('unitList', unitList);
     useEffect(() => {
-        if (subjects.length > 0) {
-            const { name, unit } = subjects[subjects.length - 1];
-            setSubjectName(name);
-            console.log('unit', unit);
-            // setSubjectUnit(unit);
-            // setSubjectIdentifiers(arkId);
-        }
-    }, [subjects]);
+        const extractSubjectData = async () => {
+            if (subjects.length > 0) {
+                const { name, unit, arkId, collectionId } = subjects[subjects.length - 1];
+                setSubjectName(name);
+                const { data } = await getUnitFromEdanAbbreviation(unit);
+                setSubjectUnit(data?.getUnitsFromEdanAbbreviation?.Units[0]?.idUnit);
+                const newIdentifiers: StateIdentifier[] = [];
 
-    useEffect(() => {
-        if (subjects.length > 0) {
-            setSubjectError(false);
-        }
-    }, [subjects]);
+                if (arkId) {
+                    newIdentifiers.push({
+                        id: newIdentifiers.length,
+                        identifier: arkId || '',
+                        identifierType: getEntries(eVocabularySetID.eIdentifierIdentifierType)[0].idVocabulary,
+                        selected: true,
+                        idIdentifier: 0
+                    });
+                }
+
+                if (collectionId) {
+                    newIdentifiers.push({
+                        id: newIdentifiers.length,
+                        identifier: collectionId || '',
+                        identifierType: getEntries(eVocabularySetID.eIdentifierIdentifierType)[2].idVocabulary,
+                        selected: true,
+                        idIdentifier: 0
+                    });
+                }
+
+                setSubjectIdentifiers(newIdentifiers);
+            }
+        };
+
+        extractSubjectData();
+    }, [subjects, getEntries]);
+
+    const onIdentifierChange = (identifiers: StateIdentifier[]) => {
+        setSubjectIdentifiers(identifiers);
+    };
 
     const validateFields = async (): Promise<boolean | void> => {
+        toast.dismiss();
         try {
             const isValidName = await schema.isValid({ subjectName });
             setValidName(isValidName);
-            if (!isValidName) toast.warn('Creation Failed: Name Cannot Be Empty');
+            if (!isValidName) toast.error('Creation Failed: Name Cannot Be Empty', { autoClose: false });
 
             const isValidUnit = await schema.isValid({ subjectUnit });
             setValidUnit(isValidUnit);
-            if (!isValidUnit) toast.warn('Create Failed: Unit Cannot Be Empty');
+            if (!isValidUnit) toast.error('Creation Failed: Must Select A Unit', { autoClose: false });
 
-            // TODO validate identifiers
+            const isValidIdentifiers = (await schema.isValid({ subjectIdentifiers })) || systemCreated;
+            if (!isValidIdentifiers) toast.error('Creation Failed: Must Either Include Identifier Or Have System Create One', { autoClose: false });
 
-            return isValidName && isValidUnit;
+            return isValidName && isValidUnit && isValidIdentifiers;
         } catch (error) {
-            toast.warn(error);
+            toast.error(error);
         }
+    };
+
+    const validateCoordinateValues = (): boolean => {
+        let result = false;
+
+        for (const coordinate in coordinateValues) {
+            if (coordinateValues[coordinate] !== null) result = true;
+        }
+
+        return result;
     };
 
     const handleCoordinateChange = ({ target }) => {
         const name = target.name;
-        const value = target.value;
+        const value = Number(target.value);
         setCoordinateValues({ ...coordinateValues, [name]: value });
     };
 
@@ -155,32 +225,41 @@ function SubjectForm(): React.ReactElement {
         setSubjectUnit(target.value);
     };
 
+    const handleSystemCreatedChange = () => setSystemCreated(!systemCreated);
+
     const onCreateSubject = async () => {
         const validFields = await validateFields();
         if (!validFields) return;
-        // start by validating the fields
-        // create the geolocation
-        // creat the subject
 
-        // try {
-
-        // } catch (error) {
-
-        // } finally {
-
-        // }
+        try {
+            const hasValidCoordinate = validateCoordinateValues();
+            let idGeoLocation: number | null = null;
+            if (hasValidCoordinate) {
+                const { data } = await createLocation(coordinateValues);
+                idGeoLocation = data?.createGeoLocation?.GeoLocation?.idGeoLocation;
+                if (!idGeoLocation) {
+                    toast.error('Error: Failure To Create GeoLocation');
+                    return;
+                }
+            }
+            const createSubjectInput = { idUnit: subjectUnit, idGeoLocation, Name: subjectName };
+            const { data: createSubjectData } = await createSubject(createSubjectInput);
+            if (createSubjectData?.createSubject?.Subject?.idSubject) {
+                toast.success('Subject Successfully Created!');
+                history.push('/admin/subjects');
+            }
+        } catch (error) {
+            toast.error(error);
+        }
     };
 
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
                 <SearchList EdanOnly />
-                <FieldType error={subjectError} required label='Subject(s) Selected' marginTop={2}>
-                    <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
-                </FieldType>
                 <Box style={{ marginTop: '10px', marginBottom: '10px', width: '600px' }}>
                     <InputField viewMode required label='Name' value={subjectName} name='Name' onChange={({ target }) => setSubjectName(target.value)} updated={!validName} />
-                    <FieldType width='auto' direction='row' label='Unit' required containerProps={{ justifyContent: 'space-between' }}>
+                    <FieldType width='auto' direction='row' label='Unit' required containerProps={{ justifyContent: 'space-between', marginBottom: '10px' }}>
                         <Select value={subjectUnit} onChange={handleUnitSelectChange} error={!validUnit}>
                             <MenuItem value={0} key={0}>
                                 None
@@ -192,7 +271,6 @@ function SubjectForm(): React.ReactElement {
                             ))}
                         </Select>
                     </FieldType>
-                    {/* {validUnit === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>} */}
                     <InputField viewMode required type='number' label='Latitude' value={coordinateValues.Latitude} name='Latitude' onChange={handleCoordinateChange} />
                     <InputField viewMode required type='number' label='Longitude' value={coordinateValues.Longitude} name='Longitude' onChange={handleCoordinateChange} />
                     <InputField viewMode required type='number' label='Altitude' value={coordinateValues.Altitude} name='Altitude' onChange={handleCoordinateChange} />
@@ -206,9 +284,14 @@ function SubjectForm(): React.ReactElement {
                         ignoreUpdate
                     />
                 </Box>
-                {/* Identifier grid */}
-                {/* <IdentifierList /> */}
-                {/* <AssetIdentifiers /> */}
+                <AssetIdentifiers
+                    systemCreated={systemCreated}
+                    identifiers={subjectIdentifiers}
+                    onSystemCreatedChange={handleSystemCreatedChange}
+                    onAddIdentifer={onIdentifierChange}
+                    onUpdateIdentifer={onIdentifierChange}
+                    onRemoveIdentifer={onIdentifierChange}
+                />
                 <Button className={classes.btn} onClick={onCreateSubject}>
                     Create
                 </Button>

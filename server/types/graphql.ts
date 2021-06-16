@@ -50,6 +50,7 @@ export type Query = {
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
+  getUnitsFromEdanAbbreviation: GetUnitsFromEdanAbbreviationResult;
   getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
@@ -221,6 +222,11 @@ export type QueryGetUnitArgs = {
 };
 
 
+export type QueryGetUnitsFromEdanAbbreviationArgs = {
+  input: GetUnitsFromEdanAbbreviationInput;
+};
+
+
 export type QueryGetUnitsFromNameSearchArgs = {
   input: GetUnitsFromNameSearchInput;
 };
@@ -318,6 +324,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
+  createGeoLocation: CreateGeoLocationResult;
   createItem: CreateItemResult;
   createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
@@ -348,6 +355,11 @@ export type MutationCreateCaptureDataArgs = {
 
 export type MutationCreateCaptureDataPhotoArgs = {
   input: CreateCaptureDataPhotoInput;
+};
+
+
+export type MutationCreateGeoLocationArgs = {
+  input: CreateGeoLocationInput;
 };
 
 
@@ -1867,6 +1879,24 @@ export type CreateItemResult = {
   Item?: Maybe<Item>;
 };
 
+export type CreateGeoLocationInput = {
+  Latitude?: Maybe<Scalars['Int']>;
+  Longitude?: Maybe<Scalars['Int']>;
+  Altitude?: Maybe<Scalars['Int']>;
+  TS0?: Maybe<Scalars['Int']>;
+  TS1?: Maybe<Scalars['Int']>;
+  TS2?: Maybe<Scalars['Int']>;
+  R0?: Maybe<Scalars['Int']>;
+  R1?: Maybe<Scalars['Int']>;
+  R2?: Maybe<Scalars['Int']>;
+  R3?: Maybe<Scalars['Int']>;
+};
+
+export type CreateGeoLocationResult = {
+  __typename?: 'CreateGeoLocationResult';
+  GeoLocation?: Maybe<GeoLocation>;
+};
+
 export type GetSubjectsForUnitInput = {
   idUnit: Scalars['Int'];
   pagination?: Maybe<PaginationInput>;
@@ -1989,6 +2019,15 @@ export type GetUnitsFromNameSearchResult = {
 
 export type GetUnitsFromNameSearchInput = {
   search: Scalars['String'];
+};
+
+export type GetUnitsFromEdanAbbreviationResult = {
+  __typename?: 'GetUnitsFromEdanAbbreviationResult';
+  Units: Array<Unit>;
+};
+
+export type GetUnitsFromEdanAbbreviationInput = {
+  abbreviation: Scalars['String'];
 };
 
 export type Unit = {

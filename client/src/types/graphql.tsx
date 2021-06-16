@@ -53,6 +53,7 @@ export type Query = {
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
+  getUnitsFromEdanAbbreviation: GetUnitsFromEdanAbbreviationResult;
   getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
@@ -224,6 +225,11 @@ export type QueryGetUnitArgs = {
 };
 
 
+export type QueryGetUnitsFromEdanAbbreviationArgs = {
+  input: GetUnitsFromEdanAbbreviationInput;
+};
+
+
 export type QueryGetUnitsFromNameSearchArgs = {
   input: GetUnitsFromNameSearchInput;
 };
@@ -321,6 +327,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
+  createGeoLocation: CreateGeoLocationResult;
   createItem: CreateItemResult;
   createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
@@ -351,6 +358,11 @@ export type MutationCreateCaptureDataArgs = {
 
 export type MutationCreateCaptureDataPhotoArgs = {
   input: CreateCaptureDataPhotoInput;
+};
+
+
+export type MutationCreateGeoLocationArgs = {
+  input: CreateGeoLocationInput;
 };
 
 
@@ -1870,6 +1882,24 @@ export type CreateItemResult = {
   Item?: Maybe<Item>;
 };
 
+export type CreateGeoLocationInput = {
+  Latitude?: Maybe<Scalars['Int']>;
+  Longitude?: Maybe<Scalars['Int']>;
+  Altitude?: Maybe<Scalars['Int']>;
+  TS0?: Maybe<Scalars['Int']>;
+  TS1?: Maybe<Scalars['Int']>;
+  TS2?: Maybe<Scalars['Int']>;
+  R0?: Maybe<Scalars['Int']>;
+  R1?: Maybe<Scalars['Int']>;
+  R2?: Maybe<Scalars['Int']>;
+  R3?: Maybe<Scalars['Int']>;
+};
+
+export type CreateGeoLocationResult = {
+  __typename?: 'CreateGeoLocationResult';
+  GeoLocation?: Maybe<GeoLocation>;
+};
+
 export type GetSubjectsForUnitInput = {
   idUnit: Scalars['Int'];
   pagination?: Maybe<PaginationInput>;
@@ -1992,6 +2022,15 @@ export type GetUnitsFromNameSearchResult = {
 
 export type GetUnitsFromNameSearchInput = {
   search: Scalars['String'];
+};
+
+export type GetUnitsFromEdanAbbreviationResult = {
+  __typename?: 'GetUnitsFromEdanAbbreviationResult';
+  Units: Array<Unit>;
+};
+
+export type GetUnitsFromEdanAbbreviationInput = {
+  abbreviation: Scalars['String'];
 };
 
 export type Unit = {
@@ -2507,6 +2546,22 @@ export type UpdateSourceObjectsMutation = (
   & { updateSourceObjects: (
     { __typename?: 'UpdateSourceObjectsResult' }
     & Pick<UpdateSourceObjectsResult, 'success'>
+  ) }
+);
+
+export type CreateGeoLocationMutationVariables = Exact<{
+  input: CreateGeoLocationInput;
+}>;
+
+
+export type CreateGeoLocationMutation = (
+  { __typename?: 'Mutation' }
+  & { createGeoLocation: (
+    { __typename?: 'CreateGeoLocationResult' }
+    & { GeoLocation?: Maybe<(
+      { __typename?: 'GeoLocation' }
+      & Pick<GeoLocation, 'idGeoLocation'>
+    )> }
   ) }
 );
 
@@ -3432,6 +3487,22 @@ export type GetUnitQuery = (
   ) }
 );
 
+export type GetUnitsFromEdanAbbreviationQueryVariables = Exact<{
+  input: GetUnitsFromEdanAbbreviationInput;
+}>;
+
+
+export type GetUnitsFromEdanAbbreviationQuery = (
+  { __typename?: 'Query' }
+  & { getUnitsFromEdanAbbreviation: (
+    { __typename?: 'GetUnitsFromEdanAbbreviationResult' }
+    & { Units: Array<(
+      { __typename?: 'Unit' }
+      & Pick<Unit, 'idUnit' | 'Name'>
+    )> }
+  ) }
+);
+
 export type GetUnitsFromNameSearchQueryVariables = Exact<{
   input: GetUnitsFromNameSearchInput;
 }>;
@@ -4051,6 +4122,41 @@ export function useUpdateSourceObjectsMutation(baseOptions?: Apollo.MutationHook
 export type UpdateSourceObjectsMutationHookResult = ReturnType<typeof useUpdateSourceObjectsMutation>;
 export type UpdateSourceObjectsMutationResult = Apollo.MutationResult<UpdateSourceObjectsMutation>;
 export type UpdateSourceObjectsMutationOptions = Apollo.BaseMutationOptions<UpdateSourceObjectsMutation, UpdateSourceObjectsMutationVariables>;
+export const CreateGeoLocationDocument = gql`
+    mutation createGeoLocation($input: CreateGeoLocationInput!) {
+  createGeoLocation(input: $input) {
+    GeoLocation {
+      idGeoLocation
+    }
+  }
+}
+    `;
+export type CreateGeoLocationMutationFn = Apollo.MutationFunction<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>;
+
+/**
+ * __useCreateGeoLocationMutation__
+ *
+ * To run a mutation, you first call `useCreateGeoLocationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateGeoLocationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createGeoLocationMutation, { data, loading, error }] = useCreateGeoLocationMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateGeoLocationMutation(baseOptions?: Apollo.MutationHookOptions<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>(CreateGeoLocationDocument, options);
+      }
+export type CreateGeoLocationMutationHookResult = ReturnType<typeof useCreateGeoLocationMutation>;
+export type CreateGeoLocationMutationResult = Apollo.MutationResult<CreateGeoLocationMutation>;
+export type CreateGeoLocationMutationOptions = Apollo.BaseMutationOptions<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>;
 export const CreateItemDocument = gql`
     mutation createItem($input: CreateItemInput!) {
   createItem(input: $input) {
@@ -6202,6 +6308,44 @@ export function useGetUnitLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ge
 export type GetUnitQueryHookResult = ReturnType<typeof useGetUnitQuery>;
 export type GetUnitLazyQueryHookResult = ReturnType<typeof useGetUnitLazyQuery>;
 export type GetUnitQueryResult = Apollo.QueryResult<GetUnitQuery, GetUnitQueryVariables>;
+export const GetUnitsFromEdanAbbreviationDocument = gql`
+    query getUnitsFromEdanAbbreviation($input: GetUnitsFromEdanAbbreviationInput!) {
+  getUnitsFromEdanAbbreviation(input: $input) {
+    Units {
+      idUnit
+      Name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetUnitsFromEdanAbbreviationQuery__
+ *
+ * To run a query within a React component, call `useGetUnitsFromEdanAbbreviationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUnitsFromEdanAbbreviationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUnitsFromEdanAbbreviationQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetUnitsFromEdanAbbreviationQuery(baseOptions: Apollo.QueryHookOptions<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>(GetUnitsFromEdanAbbreviationDocument, options);
+      }
+export function useGetUnitsFromEdanAbbreviationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>(GetUnitsFromEdanAbbreviationDocument, options);
+        }
+export type GetUnitsFromEdanAbbreviationQueryHookResult = ReturnType<typeof useGetUnitsFromEdanAbbreviationQuery>;
+export type GetUnitsFromEdanAbbreviationLazyQueryHookResult = ReturnType<typeof useGetUnitsFromEdanAbbreviationLazyQuery>;
+export type GetUnitsFromEdanAbbreviationQueryResult = Apollo.QueryResult<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>;
 export const GetUnitsFromNameSearchDocument = gql`
     query getUnitsFromNameSearch($input: GetUnitsFromNameSearchInput!) {
   getUnitsFromNameSearch(input: $input) {

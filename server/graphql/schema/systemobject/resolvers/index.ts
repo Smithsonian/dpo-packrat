@@ -22,7 +22,7 @@ const resolvers = {
         getAssetDetailsForSystemObject,
         getVersionsForAsset,
         getDetailsTabDataForObject,
-        getProjectList,
+        getProjectList
     },
     Mutation: {
         updateObjectDetails,
