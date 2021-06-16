@@ -136,12 +136,12 @@ function DetailsView(): React.ReactElement {
         addNewIdentifier();
     };
 
-    const removeIdentifier = (idIdentifier: number, id: number) => {
+    const removeIdentifier = async (idIdentifier: number, id: number) => {
         // handles deleting exisiting identifiers and newly added ones
         if (idIdentifier) {
             const confirm = window.confirm('Are you sure you wish to remove this?');
             if (!confirm) return;
-            const deleteIdentifierSuccess = deleteIdentifier(idIdentifier);
+            const deleteIdentifierSuccess = await deleteIdentifier(idIdentifier);
             if (deleteIdentifierSuccess) {
                 removeTargetIdentifier(idIdentifier);
                 toast.success('Identifier removed');

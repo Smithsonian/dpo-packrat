@@ -33,6 +33,7 @@ type Query {
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
   getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
+  getUnitsFromEdanAbbreviation(input: GetUnitsFromEdanAbbreviationInput!): GetUnitsFromEdanAbbreviationResult!
   getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput!): GetUnitsFromNameSearchResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
@@ -101,6 +102,7 @@ scalar Upload
 type Mutation {
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
+  createGeoLocation(input: CreateGeoLocationInput!): CreateGeoLocationResult!
   createItem(input: CreateItemInput!): CreateItemResult!
   createLicense(input: CreateLicenseInput!): CreateLicenseResult!
   createProject(input: CreateProjectInput!): CreateProjectResult!
@@ -1444,6 +1446,23 @@ type CreateItemResult {
   Item: Item
 }
 
+input CreateGeoLocationInput {
+  Latitude: Int
+  Longitude: Int
+  Altitude: Int
+  TS0: Int
+  TS1: Int
+  TS2: Int
+  R0: Int
+  R1: Int
+  R2: Int
+  R3: Int
+}
+
+type CreateGeoLocationResult {
+  GeoLocation: GeoLocation
+}
+
 input GetSubjectsForUnitInput {
   idUnit: Int!
   pagination: PaginationInput = {}
@@ -1553,6 +1572,14 @@ type GetUnitsFromNameSearchResult {
 
 input GetUnitsFromNameSearchInput {
   search: String!
+}
+
+type GetUnitsFromEdanAbbreviationResult {
+  Units: [Unit!]!
+}
+
+input GetUnitsFromEdanAbbreviationInput {
+  abbreviation: String!
 }
 
 type Unit {
