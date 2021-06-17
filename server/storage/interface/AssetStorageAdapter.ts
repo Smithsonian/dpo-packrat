@@ -22,6 +22,15 @@ export type AssetStorageResult = {
     error: string
 };
 
+export type IngestAssetInput = {
+    asset: DBAPI.Asset,
+    assetVersion: DBAPI.AssetVersion,
+    allowZipCracking: boolean;
+    SOBased: DBAPI.SystemObjectBased | null;    // supply either SOBased or idSystemObject
+    idSystemObject: number | null;              // supply either SOBased or idSystemObject
+    opInfo: STORE.OperationInfo;
+};
+
 export type IngestAssetResult = {
     success: boolean,
     error: string
@@ -48,6 +57,15 @@ export type AssetStorageCommitNewAssetInput = {
     DateCreated: Date;
 };
 
+export type AssetStorageCommitNewAssetVersionInput = {
+    storageKey: string;
+    storageHash: string | null;
+    asset: DBAPI.Asset;
+    assetNameOverride: string | null;
+    idUserCreator: number;
+    DateCreated: Date;
+};
+
 export type CrackAssetResult = {
     success: boolean;
     error: string;
@@ -57,13 +75,14 @@ export type CrackAssetResult = {
 };
 
 export type IngestStreamOrFileInput = {
-    ReadStream: NodeJS.ReadableStream | null;
-    LocalFilePath: string | null;
-    Asset: DBAPI.Asset | null;
+    readStream: NodeJS.ReadableStream | null;
+    localFilePath: string | null;
+    asset: DBAPI.Asset | null;
     FileName: string;
     FilePath: string;
     idAssetGroup: number;
     idVAssetType: number;
+    allowZipCracking: boolean;
     idUserCreator: number;
     SOBased: DBAPI.SystemObjectBased;
 };
@@ -155,16 +174,17 @@ export class AssetStorageAdapter {
             idAsset: 0
         });
 
-        return await AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash }, asset, idUserCreator, DateCreated, null);
+        return await AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash, asset, assetNameOverride: null, idUserCreator, DateCreated });
     }
 
     /**
      * Commits Storage WriteStream
      * Creates and persists AssetVersion (and Asset if Asset.idAsset is 0)
      */
-    static async commitNewAssetVersion(commitWriteStreamInput: STORE.CommitWriteStreamInput,
-        asset: DBAPI.Asset, idUserCreator: number, DateCreated: Date, assetNameOverride: string | null):
-        Promise<AssetStorageResultCommit> {
+    static async commitNewAssetVersion(commitNewAssetVersionInput: AssetStorageCommitNewAssetVersionInput): Promise<AssetStorageResultCommit> {
+        const { storageKey, storageHash, asset, assetNameOverride, idUserCreator, DateCreated } = commitNewAssetVersionInput;
+        const commitWriteStreamInput: STORE.CommitWriteStreamInput = { storageKey, storageHash };
+
         LOG.info(`AssetStorageAdapter.commitNewAssetVersion idAsset ${asset.idAsset}: ${commitWriteStreamInput.storageKey}`, LOG.LS.eSTR);
 
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
@@ -363,27 +383,27 @@ export class AssetStorageAdapter {
         return null;
     }
 
-    static async ingestAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
-        SOBased: DBAPI.SystemObjectBased, opInfo: STORE.OperationInfo): Promise<IngestAssetResult> {
-        const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
-        /* istanbul ignore if */
-        if (!SO) {
-            const error: string = `Unable to fetch SystemObject for ${SO}`;
+    static async ingestAsset(ingestAssetInput: IngestAssetInput): Promise<IngestAssetResult> {
+        const { SOBased, idSystemObject } = ingestAssetInput;
+        if (!idSystemObject && !SOBased) {
+            const error: string = 'ingestAsset called without system object information';
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };
         }
-        return AssetStorageAdapter.ingestAssetWrapper(asset, assetVersion, SO.idSystemObject, opInfo);
-    }
 
-    static async ingestAssetForSystemObjectID(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
-        idSystemObject: number, opInfo: STORE.OperationInfo): Promise<IngestAssetResult> {
-        return AssetStorageAdapter.ingestAssetWrapper(asset, assetVersion, idSystemObject, opInfo);
-    }
+        if (!idSystemObject && SOBased) {
+            const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
+            /* istanbul ignore if */
+            if (!SO) {
+                const error: string = `Unable to fetch SystemObject for ${SO}`;
+                LOG.error(error, LOG.LS.eSTR);
+                return { success: false, error };
+            }
+            ingestAssetInput.idSystemObject = SO.idSystemObject;
+        }
 
-    private static async ingestAssetWrapper(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
-        idSystemObject: number, opInfo: STORE.OperationInfo): Promise<IngestAssetResult> {
-        const IAR: IngestAssetResult = await AssetStorageAdapter.ingestAssetWorker(asset, assetVersion, idSystemObject, opInfo);
-        if (!IAR.success)
+        const IAR: IngestAssetResult = await AssetStorageAdapter.ingestAssetWorker(ingestAssetInput);
+        if (!IAR.success || !ingestAssetInput.idSystemObject)
             return IAR;
 
         const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
@@ -392,11 +412,11 @@ export class AssetStorageAdapter {
                 assetVersionOverrideMap.set(assetVersion.idAsset, assetVersion.idAssetVersion);
         }
 
-        const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, assetVersionOverrideMap);
+        const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(ingestAssetInput.idSystemObject, null, assetVersionOverrideMap);
         if (!SOV) {
             IAR.success = false;
             IAR.error = 'DB Failure creating SystemObjectVersion';
-            LOG.error(`AssetStorageAdapter.ingestAssetWrapper failed to create new SystemObjectVersion for ${idSystemObject}`, LOG.LS.eSTR);
+            LOG.error(`AssetStorageAdapter.ingestAssetWrapper failed to create new SystemObjectVersion for ${ingestAssetInput.idSystemObject}`, LOG.LS.eSTR);
             return IAR;
         }
         IAR.systemObjectVersion = SOV;
@@ -404,9 +424,15 @@ export class AssetStorageAdapter {
         return IAR;
     }
 
-    private static async ingestAssetWorker(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
-        idSystemObject: number, opInfo: STORE.OperationInfo): Promise<IngestAssetResult> {
-        LOG.info(`AssetStorageAdapter.ingestAssetWorker idAsset ${asset.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}, idSystemObject ${idSystemObject}`, LOG.LS.eSTR);
+    private static async ingestAssetWorker(ingestAssetInput: IngestAssetInput): Promise<IngestAssetResult> {
+        const { asset, assetVersion, allowZipCracking, idSystemObject, opInfo } = ingestAssetInput;
+        LOG.info(`AssetStorageAdapter.ingestAssetWorker idAsset ${asset.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}, idSystemObject ${idSystemObject}, allowZipCracking ${allowZipCracking}`, LOG.LS.eSTR);
+        if (!idSystemObject) {
+            const error: string = 'AssetStorageAdapter.ingestAssetWorker called with missing value for idSystemObject';
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+
         // Call IStorage.promote
         // Update asset.StorageKey, if needed
         // Update assetVersion.Ingested to true
@@ -426,7 +452,7 @@ export class AssetStorageAdapter {
 
         const isZipFilename: boolean = (path.extname(assetVersion.FileName).toLowerCase() === '.zip');
         const eAssetType: CACHE.eVocabularyID | undefined = await asset.assetType();
-        const unzipAssets: boolean = isZipFilename &&
+        const unzipAssets: boolean = allowZipCracking && isZipFilename &&
             (eAssetType == CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry ||
              eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModel ||
              eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile ||
@@ -492,6 +518,7 @@ export class AssetStorageAdapter {
                     break;
 
                 case eVocabularyID.eAssetAssetTypeModel:
+                case eVocabularyID.eAssetAssetTypeModelGeometryFile:
                     ingested = null;
                     if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
                         eAssetType = eVocabularyID.eAssetAssetTypeModelGeometryFile;
@@ -514,7 +541,7 @@ export class AssetStorageAdapter {
                     break; /* istanbul ignore next */
 
                 default:
-                    LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker encountered unxpected asset type id for Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker encountered unexpected asset type id for Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
                     eAssetType = eVocabularyID.eAssetAssetTypeOther;
                     break;
             }
@@ -668,16 +695,16 @@ export class AssetStorageAdapter {
             return { success: false, error };
         }
 
-        if (!ISI.ReadStream) {
-            if (!ISI.LocalFilePath) {
+        if (!ISI.readStream) {
+            if (!ISI.localFilePath) {
                 const error: string = 'AssetStorageAdapter.ingestStreamOrFile called without either ReadStream or LocalFilePath specified';
                 LOG.error(error, LOG.LS.eSTR);
                 return { success: false, error };
             }
-            ISI.ReadStream = fs.createReadStream(ISI.LocalFilePath);
+            ISI.readStream = fs.createReadStream(ISI.localFilePath);
         }
 
-        const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.ReadStream, wsRes.writeStream);
+        const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.readStream, wsRes.writeStream);
         if (!wrRes.success) {
             const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to write to stream: ${wrRes.error}`;
             LOG.error(error, LOG.LS.eSTR);
@@ -685,7 +712,7 @@ export class AssetStorageAdapter {
         }
 
         let comRes: STORE.AssetStorageResultCommit | null = null;
-        if (!ISI.Asset) {
+        if (!ISI.asset) {
             const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
                 storageKey: wsRes.storageKey,
                 storageHash: null,
@@ -698,8 +725,10 @@ export class AssetStorageAdapter {
             };
             comRes = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
         } else
-            comRes = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: wsRes.storageKey, storageHash: null },
-                ISI.Asset, ISI.idUserCreator, new Date(), null);
+            comRes = await STORE.AssetStorageAdapter.commitNewAssetVersion({
+                storageKey: wsRes.storageKey, storageHash: null, asset: ISI.asset, assetNameOverride: null,
+                idUserCreator: ISI.idUserCreator, DateCreated: new Date()
+            });
 
         if (!comRes || !comRes.success || !comRes.assets || comRes.assets.length != 1 || !comRes.assetVersions || comRes.assetVersions.length != 1) {
             const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to commit asset: ${comRes ? comRes.error : ''}`;
@@ -710,7 +739,15 @@ export class AssetStorageAdapter {
         const user: DBAPI.User | undefined = await CACHE.UserCache.getUser(ISI.idUserCreator);
         const opInfo: STORE.OperationInfo = { message: 'Ingesting asset', idUser: ISI.idUserCreator,
             userEmailAddress: user?.EmailAddress ?? '', userName: user?.Name ?? '' };
-        const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(comRes.assets[0], comRes.assetVersions[0], ISI.SOBased, opInfo);
+        const ingestAssetInput: IngestAssetInput = {
+            asset: comRes.assets[0],
+            assetVersion: comRes.assetVersions[0],
+            allowZipCracking: ISI.allowZipCracking,
+            SOBased: ISI.SOBased,
+            idSystemObject: null,
+            opInfo,
+        };
+        const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
         return { success: IAR.success, error: IAR.error, asset: comRes.assets[0] || null,
             assetVersion: comRes.assetVersions[0] || null, systemObjectVersion: IAR.systemObjectVersion };

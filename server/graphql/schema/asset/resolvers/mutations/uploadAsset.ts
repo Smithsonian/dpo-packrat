@@ -78,7 +78,15 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
                         resolve({ status: UploadStatus.Failed, error });
                         return;
                     }
-                    commitResult = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash: null }, asset, user.idUser, new Date(), filename);
+                    const ASCNAVI: STORE.AssetStorageCommitNewAssetVersionInput = {
+                        storageKey,
+                        storageHash: null,
+                        asset,
+                        assetNameOverride: filename,
+                        idUserCreator: user.idUser,
+                        DateCreated: new Date()
+                    };
+                    commitResult = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAVI);
                 }
 
                 if (!commitResult.success) {

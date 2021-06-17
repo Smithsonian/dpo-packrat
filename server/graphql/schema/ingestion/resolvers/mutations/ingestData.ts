@@ -11,7 +11,7 @@ import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 import { SvxReader, SvxExtraction } from '../../../../../utils/parser';
 import * as WF from '../../../../../workflow/interface';
-import { AssetStorageAdapter, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
+import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 
@@ -722,7 +722,15 @@ async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.Sy
             userEmailAddress: user.EmailAddress,
             userName: user.Name
         };
-        const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(assetDB, assetVersionDB, SOBased, opInfo);
+        const ingestAssetInput: IngestAssetInput = {
+            asset: assetDB,
+            assetVersion: assetVersionDB,
+            allowZipCracking: true,
+            SOBased,
+            idSystemObject: null,
+            opInfo,
+        };
+        const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
         if (!ISR.success)
             LOG.error(`ingestData unable to ingest assetVersion ${idAssetVersion}: ${ISR.error}`, LOG.LS.eGQL);
         else if (ISR.assets) {
