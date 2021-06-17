@@ -36,6 +36,7 @@ import AddProjectForm from './components/AddProjectForm';
 import LicenseView from './components/License/LicenseView';
 import LicenseForm from './components/License/LicenseForm';
 import SubjectForm from './components/Subject/SubjectForm';
+import SubjectView from './components/Subject/SubjectView';
 
 const useStyles = makeStyles({
     AdminPageContainer: {
@@ -56,11 +57,11 @@ function Admin(): React.ReactElement {
                     <PrivateRoute exact path={resolveRoute(ADMIN_ROUTE.TYPE)}>
                         <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.LICENSES)} />
                     </PrivateRoute>
-                    <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.USER)}>
+                    <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.USERS)}>
                         <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />
                     </PrivateRoute>
                     <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} component={AdminUsersView} />
-                    <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.USER)}>
+                    <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.USERS)}>
                         <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_EDIT.USER)} component={AdminUserForm} />
                     </PrivateRoute>
                     <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.PROJECTS)}>
@@ -78,6 +79,7 @@ function Admin(): React.ReactElement {
                     <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.PROJECTS)} component={AdminProjectsView} />
                     <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.UNITS)} component={AdminUnitsView} />
                     <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.LICENSES)} component={LicenseView} />
+                    <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.SUBJECTS)} component={SubjectView} />
                 </PrivateRoute>
             </Box>
         </React.Fragment>
