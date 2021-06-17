@@ -51,14 +51,13 @@ export const REPOSITORY_ROUTE = {
 };
 
 export const ADMIN_EDIT = {
-    USER: 'user/:idUser',
+    USER: 'users/:idUser',
     LICENSE: 'licenses/:idLicense'
 };
 
 export const ADMIN_ROUTES_TYPE = {
     USERS: 'users',
     EDIT: ADMIN_EDIT,
-    USER: 'user',
     PROJECTS: 'projects',
     UNITS: 'units',
     CREATEPROJECT: 'projects/create',

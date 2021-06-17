@@ -1,16 +1,14 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+
 import { apolloClient } from '../../../graphql';
 import {
     GetUnitsFromNameSearchDocument,
     GetUnitsFromEdanAbbreviationDocument,
     CreateGeoLocationDocument,
     CreateSubjectDocument,
-    CreateSubjectInput
+    CreateSubjectInput,
 } from '../../../types/graphql';
 import { CoordinateValues } from '../components/Subject/SubjectForm';
-
-// export function useUnitList(): GetUnitsFromNameSearchQueryResult {
-//     return useQuery(GetUnitsFromNameSearchDocument, { variables: { input: { search: '' } } });
-// }
 
 export async function getUnitsList() {
     return await apolloClient.query({
