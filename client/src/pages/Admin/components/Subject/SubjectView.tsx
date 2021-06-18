@@ -1,110 +1,180 @@
 /* eslint-disable react/display-name */
-import React, { useState } from 'react';
-import DataGridWithPagination, { Search, PaginationSettings, DropDown } from '../../../../components/shared/DataGridWithPagination';
-import { Tooltip } from '@material-ui/core';
-import { Columns } from '@material-ui/data-grid';
+import React, { useState, useEffect } from 'react';
+import DataGridWithPagination, { Search, DropDown, PaginationSettings, SortSettings } from '../../../../components/shared/DataGridWithPagination';
+import { Tooltip, Box } from '@material-ui/core';
+import { Columns, PageChangeParams, SortModelParams } from '@material-ui/data-grid';
+import { makeStyles } from '@material-ui/core/styles';
+import { useLocation } from 'react-router';
+import { Link } from 'react-router-dom';
+import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
+import { getUnitsList, getSubjectList } from '../../hooks/useAdminview';
+import { resolveSubRoute, ADMIN_ROUTE, ADMIN_ROUTES_TYPE } from '../../../../constants/routes';
+import { toast } from 'react-toastify';
+
+const columnHeader: Columns = [
+    {
+        field: 'Unit',
+        headerName: 'Unit',
+        flex: 1,
+        headerAlign: 'center',
+        renderCell: params => (
+            <Tooltip placement='left' title={`${params.getValue('Unit')}`} arrow>
+                <div>{`${params.getValue('Unit')}`}</div>
+            </Tooltip>
+        )
+    },
+    {
+        field: 'Name',
+        headerName: 'Name',
+        flex: 1.7,
+        renderCell: params => (
+            <Tooltip placement='left' title={`${params.getValue('Name')}`} arrow>
+                <div>{`${params.getValue('Name')}`}</div>
+            </Tooltip>
+        )
+    },
+    {
+        field: 'Identifier',
+        headerName: 'Identifier',
+        flex: 1.7,
+        renderCell: params => <div>{`${params.getValue('Identifier')}`}</div>
+    },
+    {
+        field: 'Action',
+        headerName: 'Action',
+        flex: 1,
+        sortable: false,
+        renderCell: params => <Link to={`/repository/details/${[params.row.idSystemObject]}`}>Edit</Link>
+    }
+];
+
+const useStyles = makeStyles({
+    AdminViewContainer: {
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'column',
+        overflow: 'auto',
+        maxHeight: 'calc(100vh - 60px)',
+        paddingLeft: '1%',
+        width: '1200px',
+        margin: '0 auto'
+    },
+    AdminBreadCrumbsContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '46px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        background: '#0079C482',
+        color: '#3F536E',
+        marginBottom: '2%',
+        width: 'fit-content'
+    }
+});
 
 function SubjectView(): React.ReactElement {
-    const [paginationState] = useState<PaginationSettings>({ pageNumber: 0, rowCount: 2, sortOrder: 'asc', sortBy: [{ field: 'unit', sort: 'asc' }], rowsPerPage: [1, 2, 3] });
-    const [searchState] = useState<Search>({ text: '', onChange: () => {}, onSearch: () => {} });
-    const [dropDownState] = useState<DropDown>({ name: '', value: 1, options: [{ value: 1, label: 'hi' }], onChange: () => {} });
-    const [loading] = useState(false);
-    /* Create state for
-        pagination: {pagenumber, rowcount, sortby, sortorder}
-        search: {value}
-        dropDown: {options}
-        queryResult: {}
-    */
+    const classes = useStyles();
+    const location = useLocation();
+    const [paginationState, setPaginationState] = useState<PaginationSettings>({
+        pageNumber: 0,
+        rowCount: 25,
+        rowsPerPage: [25, 50, 100]
+    });
+    const [searchState, setSearchState] = useState<Search>({
+        text: '',
+        placeholderText: 'Search Subject'
+    });
+    const [dropDownState, setDropDownState] = useState<DropDown>({
+        name: 'Units',
+        value: 2,
+        options: [{ value: 2, label: '' }]
+    });
+    const [sortState, setSortState] = useState<SortSettings>({
+        sortModel: []
+    });
+    const [loading, setLoading] = useState(false);
+    const [subjectListState, setSubjectListState] = useState([]);
 
-    /*
-        Component Workflow
-            useEffect for fetching query and setting it to state
-            pass the results down to DataGrid
+    useEffect(() => {
+        const fetchUnitList = async () => {
+            const { data } = await getUnitsList();
+            if (data?.getUnitsFromNameSearch.Units && data?.getUnitsFromNameSearch.Units.length) {
+                const fetchedUnitList = data?.getUnitsFromNameSearch.Units.slice();
+                if (fetchedUnitList && fetchedUnitList.length) fetchedUnitList.sort((a, b) => a.Name.localeCompare(b.Name));
+                const unitListOptions = fetchedUnitList.map(unit => {
+                    return { value: unit.idUnit, label: unit.Name };
+                });
+                setDropDownState({ ...dropDownState, options: unitListOptions });
+            }
+        };
+        fetchUnitList();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-    */
+    useEffect(() => {
+        fetchSubjectList();
+    }, []);
 
-    const rows = [
-        {
-            id: 1,
-            EmailAddress: 'tysonj@si.edu',
-            Name: 'Jon Tyson',
-            DateDisabled: null,
-            DateActivated: '2021-06-02T18:17:43.000Z',
-            Active: true
-        },
-        {
-            id: 2,
-            EmailAddress: 'blundellj@si.edu',
-            Name: 'Jon Blundell',
-            DateDisabled: null,
-            DateActivated: '2021-06-02T18:17:43.000Z',
-            Active: true
-        },
-        {
-            id: 3,
-            EmailAddress: 'rossiv@si.edu',
-            Name: 'Vince Rossi',
-            DateDisabled: null,
-            DateActivated: '2021-06-02T18:17:43.000Z',
-            Active: true
-        },
-        {
-            id: 4,
-            EmailAddress: 'copeg@si.edu',
-            Name: 'Jamie Cope',
-            DateDisabled: null,
-            DateActivated: '2021-06-02T18:17:43.000Z',
-            Active: true
-        },
-        {
-            id: 5,
-            EmailAddress: 'tungh@si.edu',
-            Name: 'Hsin Tung',
-            DateDisabled: null,
-            DateActivated: '2021-06-02T18:17:43.000Z',
-            Active: true
+    const fetchSubjectList = async () => {
+        setLoading(true);
+        const getSubjectListInput = {
+            search: searchState.text,
+            idUnit: dropDownState.value,
+            pageNumber: paginationState.pageNumber,
+            rowCount: paginationState.rowCount,
+            sortBy: sortState.sortModel?.[0]?.field,
+            sortOrder: sortState.sortModel?.[0]?.sort
+        };
+        const { data } = await getSubjectList(getSubjectListInput);
+        if (data?.getSubjectList.subjects && data?.getSubjectList.subjects.length) {
+            const subjectListWithId = data.getSubjectList.subjects.map(subject => {
+                const { idSubject, idUnit, Name, IdentifierPreferred, SystemObject } = subject;
+                const unitOption = dropDownState.options.find(option => option.value === idUnit);
+                return {
+                    Name,
+                    idSystemObject: SystemObject.idSystemObject,
+                    Identifier: IdentifierPreferred.IdentifierValue,
+                    idSubject,
+                    Unit: unitOption?.label,
+                    id: idSubject
+                };
+            });
+            setSubjectListState(subjectListWithId);
+        } else {
+            toast.error('Unable to fetch subjects. Please try again.');
         }
-    ];
+        setLoading(false);
+    };
 
-    const columnHeader: Columns = [
-        {
-            field: 'Active',
-            headerName: 'Active',
-            flex: 1,
-            headerAlign: 'center',
-            renderCell: params => (params.getValue('Active') ? <span>Active</span> : <span>Inactive</span>)
-        },
-        {
-            field: 'Name',
-            headerName: 'Name',
-            flex: 1.7,
-            renderCell: params => (
-                <Tooltip placement='left' title={`${params.getValue('Name')}`} arrow>
-                    <div>{`${params.getValue('Name')}`}</div>
-                </Tooltip>
-            )
-        },
-        {
-            field: 'EmailAddress',
-            headerName: 'Email',
-            flex: 1.7,
-            renderCell: params => (
-                <Tooltip placement='left' title={`${params.getValue('EmailAddress')}`} arrow>
-                    <div>{`${params.getValue('EmailAddress')}`}</div>
-                </Tooltip>
-            )
-        }
-    ];
+    const handlePaginationChange = async (params: PageChangeParams) => setPaginationState({ ...paginationState, pageNumber: params.page, rowCount: params.pageSize });
+
+    const handleSortChange = (params: SortModelParams) => setSortState({ sortModel: params.sortModel });
+
+    const handleDropDownChange = value => setDropDownState({ ...dropDownState, value });
+
+    const handleSearchKeywordChange = value => setSearchState({ ...searchState, text: value });
+
     return (
-        <DataGridWithPagination
-            loading={loading}
-            PaginationSettings={paginationState}
-            ExtraBtn={{ link: '/', btnText: 'Create' }}
-            rows={rows}
-            columnHeader={columnHeader}
-            Search={searchState}
-            DropDown={dropDownState}
-        />
+        <Box className={classes.AdminViewContainer}>
+            <Box className={classes.AdminBreadCrumbsContainer}>
+                <GenericBreadcrumbsView items={location.pathname.slice(1)} />
+            </Box>
+            <DataGridWithPagination
+                loading={loading}
+                PaginationSettings={paginationState}
+                SortSettings={sortState}
+                Search={searchState}
+                DropDown={dropDownState}
+                ExtraBtn={{ link: resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.CREATESUBJECT), btnText: 'Create' }}
+                rows={subjectListState}
+                columnHeader={columnHeader}
+                handlePaginationChange={handlePaginationChange}
+                handleDropDownChange={handleDropDownChange}
+                handleSortChange={handleSortChange}
+                handleSearchKeywordChange={handleSearchKeywordChange}
+                handleSearch={fetchSubjectList}
+            />
+        </Box>
     );
 }
 

@@ -133,6 +133,7 @@ function SubjectForm(): React.ReactElement {
             )
     });
 
+    // Fetches initial unit list for drop down
     useEffect(() => {
         const fetchUnitList = async () => {
             const { data } = await getUnitsList();
@@ -145,6 +146,7 @@ function SubjectForm(): React.ReactElement {
         fetchUnitList();
     }, []);
 
+    // Responsible for autofilling when a subject is selected
     useEffect(() => {
         const extractSubjectData = async () => {
             if (subjects.length > 0) {

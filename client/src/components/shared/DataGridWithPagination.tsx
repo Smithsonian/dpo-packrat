@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Box, TextField, Button, FormControl, Select, MenuItem } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { DataGrid, Columns, SortModel, SortModelParams } from '@material-ui/data-grid';
+import { DataGrid, Columns, SortModel, SortModelParams, PageChangeParams } from '@material-ui/data-grid';
 
 const useStyles = makeStyles({
     Container: {
@@ -79,30 +79,30 @@ type DropDownOption = {
 
 export type DropDown = {
     name: string;
-    value: string | number;
+    value: number;
     options: DropDownOption[];
-    onChange: () => void;
 };
 
 export type Search = {
     text: string;
     placeholderText?: string;
-    onChange: () => void;
-    onSearch: () => void;
     btnText?: string;
 };
 
 export type ExtraBtn = {
     link: string;
     btnText?: string;
+    target?: string;
 };
 
 export type PaginationSettings = {
     pageNumber: number;
     rowCount: number;
-    sortBy: SortModel;
-    sortOrder: string;
     rowsPerPage?: number[];
+};
+
+export type SortSettings = {
+    sortModel: SortModel;
 };
 
 type DataGridWithPaginationProps = {
@@ -110,21 +110,42 @@ type DataGridWithPaginationProps = {
     ExtraBtn?: ExtraBtn;
     Search: Search;
     PaginationSettings: PaginationSettings;
+    SortSettings: SortSettings;
     rows: any[];
     columnHeader: Columns;
     loading: boolean;
+    handlePaginationChange: (params: PageChangeParams) => void;
+    handleDropDownChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleSortChange: (params: SortModelParams) => void;
+    handleSearchKeywordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleSearch: () => void;
 };
 
 function DataGridWithPagination(props: DataGridWithPaginationProps): React.ReactElement {
-    const { DropDown, ExtraBtn, Search, PaginationSettings, rows, columnHeader, loading } = props;
+    const {
+        DropDown,
+        ExtraBtn,
+        Search,
+        PaginationSettings,
+        SortSettings,
+        rows,
+        columnHeader,
+        loading,
+        handlePaginationChange,
+        handleDropDownChange,
+        handleSortChange,
+        handleSearchKeywordChange,
+        handleSearch
+    } = props;
     const classes = useStyles();
 
-    const handleSortModelChange = (params: SortModelParams) => {
-        // if (params.sortModel !== sortModel) {
-        //     setSortModel(params.sortModel);
-        // }
-        console.log('params from handleSortModelChange', params);
-    };
+    const handleDropDown = handleDropDownChange
+        ? ({ target }) => {
+            handleDropDownChange(target.value);
+        }
+        : () => {};
+
+    const handleSearchKeyword = ({ target }) => handleSearchKeywordChange(target.value);
 
     return (
         <Box className={classes.Container}>
@@ -136,13 +157,13 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                         type='search'
                         value={Search.text}
                         id='searchFilter'
-                        onChange={Search.onChange}
+                        onChange={handleSearchKeyword}
                     />
                     {DropDown && (
                         <React.Fragment>
                             <p>{DropDown.name}</p>
                             <FormControl variant='outlined' style={{ right: '25px' }}>
-                                <Select value={DropDown.value} className={classes.formField} style={{ height: '30px', width: '100px' }} onChange={DropDown.onChange}>
+                                <Select value={DropDown.value} className={classes.formField} style={{ height: '30px', width: '100px' }} onChange={handleDropDown}>
                                     {DropDown.options.map(option => (
                                         <MenuItem value={option.value} key={option.value}>
                                             {option.label}
@@ -152,13 +173,13 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                             </FormControl>
                         </React.Fragment>
                     )}
-                    <Button className={classes.FilterBtn} style={{ right: '25px' }} onClick={Search.onSearch}>
+                    <Button className={classes.FilterBtn} style={{ right: '25px' }} onClick={handleSearch}>
                         {Search.btnText || 'Search'}
                     </Button>
                 </Box>
                 {ExtraBtn && (
                     <Box className={classes.searchFilterSettingsContainer2}>
-                        <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to={ExtraBtn.link}>
+                        <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to={ExtraBtn.link} target={ExtraBtn.target || '_self'}>
                             <Button className={classes.FilterBtn}>{ExtraBtn.btnText || 'Create'}</Button>
                         </Link>
                     </Box>
@@ -177,19 +198,14 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                     disableColumnResize={undefined}
                     sortingMode='server'
                     paginationMode='server'
-                    sortingOrder={['asc', 'desc']}
                     rowsPerPageOptions={PaginationSettings.rowsPerPage}
                     pageSize={PaginationSettings.rowCount}
                     page={PaginationSettings.pageNumber}
                     loading={loading}
-                    sortModel={PaginationSettings.sortBy}
-                    onSortModelChange={handleSortModelChange}
-                    onPageSizeChange={params => {
-                        console.log('params from onPageSizeChange', params);
-                    }}
-                    onPageChange={params => {
-                        console.log('params from onPageChange', params);
-                    }}
+                    sortModel={SortSettings.sortModel}
+                    onSortModelChange={handleSortChange}
+                    onPageSizeChange={handlePaginationChange}
+                    onPageChange={handlePaginationChange}
                 />
             </Box>
         </Box>

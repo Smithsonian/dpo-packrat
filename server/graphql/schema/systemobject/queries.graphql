@@ -7,6 +7,7 @@ type Query {
     getVersionsForAsset(input: GetVersionsForAssetInput!): GetVersionsForAssetResult!
     getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
     getProjectList(input: GetProjectListInput!): GetProjectListResult!
+    getSubjectList(input: GetSubjectListInput!): GetSubjectListResult!
 }
 
 input GetDetailsTabDataForObjectInput {
@@ -228,4 +229,17 @@ type GetProjectListResult {
 
 input GetProjectListInput {
     search: String!
+}
+
+type GetSubjectListResult {
+    subjects: [Subject!]!
+}
+
+input GetSubjectListInput {
+    search: String!
+    idUnit: Int!
+    pageNumber: Int
+    rowCount: Int
+    sortBy: String
+    sortOrder: String
 }

@@ -47,6 +47,7 @@ export type Query = {
   getSceneForAssetVersion: GetSceneForAssetVersionResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
+  getSubjectList: GetSubjectListResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
@@ -204,6 +205,11 @@ export type QueryGetSourceObjectIdentiferArgs = {
 
 export type QueryGetSubjectArgs = {
   input: GetSubjectInput;
+};
+
+
+export type QueryGetSubjectListArgs = {
+  input: GetSubjectListInput;
 };
 
 
@@ -1751,6 +1757,20 @@ export type GetProjectListResult = {
 
 export type GetProjectListInput = {
   search: Scalars['String'];
+};
+
+export type GetSubjectListResult = {
+  __typename?: 'GetSubjectListResult';
+  subjects: Array<Subject>;
+};
+
+export type GetSubjectListInput = {
+  search: Scalars['String'];
+  idUnit: Scalars['Int'];
+  pageNumber?: Maybe<Scalars['Int']>;
+  rowCount?: Maybe<Scalars['Int']>;
+  sortBy?: Maybe<Scalars['String']>;
+  sortOrder?: Maybe<Scalars['String']>;
 };
 
 export type SystemObject = {
