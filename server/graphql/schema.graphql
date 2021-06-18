@@ -30,6 +30,7 @@ type Query {
   getSceneForAssetVersion(input: GetSceneForAssetVersionInput!): GetSceneForAssetVersionResult!
   getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
+  getSubjectList(input: GetSubjectListInput!): GetSubjectListResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
   getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
@@ -1326,6 +1327,19 @@ type GetProjectListResult {
 
 input GetProjectListInput {
   search: String!
+}
+
+type GetSubjectListResult {
+  subjects: [Subject!]!
+}
+
+input GetSubjectListInput {
+  search: String!
+  idUnit: Int!
+  pageNumber: Int
+  rowCount: Int
+  sortBy: String
+  sortOrder: String
 }
 
 type SystemObject {

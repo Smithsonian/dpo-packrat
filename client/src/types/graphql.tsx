@@ -50,6 +50,7 @@ export type Query = {
   getSceneForAssetVersion: GetSceneForAssetVersionResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
+  getSubjectList: GetSubjectListResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
@@ -207,6 +208,11 @@ export type QueryGetSourceObjectIdentiferArgs = {
 
 export type QueryGetSubjectArgs = {
   input: GetSubjectInput;
+};
+
+
+export type QueryGetSubjectListArgs = {
+  input: GetSubjectListInput;
 };
 
 
@@ -1756,6 +1762,20 @@ export type GetProjectListInput = {
   search: Scalars['String'];
 };
 
+export type GetSubjectListResult = {
+  __typename?: 'GetSubjectListResult';
+  subjects: Array<Subject>;
+};
+
+export type GetSubjectListInput = {
+  search: Scalars['String'];
+  idUnit: Scalars['Int'];
+  pageNumber?: Maybe<Scalars['Int']>;
+  rowCount?: Maybe<Scalars['Int']>;
+  sortBy?: Maybe<Scalars['String']>;
+  sortOrder?: Maybe<Scalars['String']>;
+};
+
 export type SystemObject = {
   __typename?: 'SystemObject';
   idSystemObject: Scalars['Int'];
@@ -3246,6 +3266,29 @@ export type GetSourceObjectIdentiferQuery = (
     & { sourceObjectIdentifiers: Array<(
       { __typename?: 'SourceObjectIdentifier' }
       & Pick<SourceObjectIdentifier, 'idSystemObject' | 'identifier'>
+    )> }
+  ) }
+);
+
+export type GetSubjectListQueryVariables = Exact<{
+  input: GetSubjectListInput;
+}>;
+
+
+export type GetSubjectListQuery = (
+  { __typename?: 'Query' }
+  & { getSubjectList: (
+    { __typename?: 'GetSubjectListResult' }
+    & { subjects: Array<(
+      { __typename?: 'Subject' }
+      & Pick<Subject, 'idSubject' | 'idUnit' | 'Name'>
+      & { IdentifierPreferred?: Maybe<(
+        { __typename?: 'Identifier' }
+        & Pick<Identifier, 'IdentifierValue' | 'idIdentifier'>
+      )>, SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -5772,6 +5815,52 @@ export function useGetSourceObjectIdentiferLazyQuery(baseOptions?: Apollo.LazyQu
 export type GetSourceObjectIdentiferQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferQuery>;
 export type GetSourceObjectIdentiferLazyQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferLazyQuery>;
 export type GetSourceObjectIdentiferQueryResult = Apollo.QueryResult<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>;
+export const GetSubjectListDocument = gql`
+    query getSubjectList($input: GetSubjectListInput!) {
+  getSubjectList(input: $input) {
+    subjects {
+      idSubject
+      idUnit
+      Name
+      IdentifierPreferred {
+        IdentifierValue
+        idIdentifier
+      }
+      SystemObject {
+        idSystemObject
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSubjectListQuery__
+ *
+ * To run a query within a React component, call `useGetSubjectListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSubjectListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSubjectListQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSubjectListQuery(baseOptions: Apollo.QueryHookOptions<GetSubjectListQuery, GetSubjectListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSubjectListQuery, GetSubjectListQueryVariables>(GetSubjectListDocument, options);
+      }
+export function useGetSubjectListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSubjectListQuery, GetSubjectListQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSubjectListQuery, GetSubjectListQueryVariables>(GetSubjectListDocument, options);
+        }
+export type GetSubjectListQueryHookResult = ReturnType<typeof useGetSubjectListQuery>;
+export type GetSubjectListLazyQueryHookResult = ReturnType<typeof useGetSubjectListLazyQuery>;
+export type GetSubjectListQueryResult = Apollo.QueryResult<GetSubjectListQuery, GetSubjectListQueryVariables>;
 export const GetSystemObjectDetailsDocument = gql`
     query getSystemObjectDetails($input: GetSystemObjectDetailsInput!) {
   getSystemObjectDetails(input: $input) {

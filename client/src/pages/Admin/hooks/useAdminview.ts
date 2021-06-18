@@ -7,6 +7,8 @@ import {
     CreateGeoLocationDocument,
     CreateSubjectDocument,
     CreateSubjectInput,
+    GetSubjectListDocument,
+    GetSubjectListInput
 } from '../../../types/graphql';
 import { CoordinateValues } from '../components/Subject/SubjectForm';
 
@@ -49,6 +51,17 @@ export async function createSubject(subjectInput: CreateSubjectInput) {
         variables: {
             input: {
                 ...subjectInput
+            }
+        }
+    });
+}
+
+export async function getSubjectList(input: GetSubjectListInput) {
+    return await apolloClient.query({
+        query: GetSubjectListDocument,
+        variables: {
+            input: {
+                ...input
             }
         }
     });
