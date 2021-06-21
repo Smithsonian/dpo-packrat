@@ -89,7 +89,7 @@ export type Search = {
     btnText?: string;
 };
 
-export type ExtraBtn = {
+export type LinkBtn = {
     link: string;
     btnText?: string;
     target?: string;
@@ -105,9 +105,10 @@ export type SortSettings = {
     sortModel: SortModel;
 };
 
+// TODO: include additional prop for styling
 type DataGridWithPaginationProps = {
     DropDown?: DropDown;
-    ExtraBtn?: ExtraBtn;
+    LinkBtn?: LinkBtn;
     Search: Search;
     PaginationSettings: PaginationSettings;
     SortSettings: SortSettings;
@@ -124,7 +125,7 @@ type DataGridWithPaginationProps = {
 function DataGridWithPagination(props: DataGridWithPaginationProps): React.ReactElement {
     const {
         DropDown,
-        ExtraBtn,
+        LinkBtn,
         Search,
         PaginationSettings,
         SortSettings,
@@ -177,10 +178,10 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                         {Search.btnText || 'Search'}
                     </Button>
                 </Box>
-                {ExtraBtn && (
+                {LinkBtn && (
                     <Box className={classes.searchFilterSettingsContainer2}>
-                        <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to={ExtraBtn.link} target={ExtraBtn.target || '_self'}>
-                            <Button className={classes.FilterBtn}>{ExtraBtn.btnText || 'Create'}</Button>
+                        <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to={LinkBtn.link} target={LinkBtn.target || '_self'}>
+                            <Button className={classes.FilterBtn}>{LinkBtn.btnText || 'Create'}</Button>
                         </Link>
                     </Box>
                 )}
