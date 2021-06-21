@@ -232,7 +232,7 @@ describe('DB Creation Test Suite', () => {
         if (assetGroup && vocabulary)
             assetThumbnail = await UTIL.createAssetTest({
                 FileName: 'Test Asset Thumbnail',
-                FilePath: '/test/asset/path',
+                FilePath: '/test/asset/path/thumbnail',
                 idAssetGroup: assetGroup.idAssetGroup,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: null,
@@ -247,8 +247,8 @@ describe('DB Creation Test Suite', () => {
         expect(vocabBulkIngest).toBeTruthy();
         if (vocabBulkIngest)
             assetBulkIngest = await UTIL.createAssetTest({
-                FileName: 'Test Asset Thumbnail',
-                FilePath: '/test/asset/path',
+                FileName: 'Test Asset Bulk Ingest',
+                FilePath: '/test/asset/path/bulkingest',
                 idAssetGroup: null,
                 idVAssetType: vocabBulkIngest.idVocabulary,
                 idSystemObject: null,
@@ -597,8 +597,8 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Asset Without Asset Group', async () => {
         if (vocabulary&& systemObjectSubject)
             assetWithoutAG = await UTIL.createAssetTest({
-                FileName: 'Test Asset 2',
-                FilePath: '/test/asset/path2',
+                FileName: 'Test Asset Without AG',
+                FilePath: '/test/asset/path/without-ag',
                 idAssetGroup: null,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectSubject.idSystemObject,
@@ -1070,8 +1070,8 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Asset For Model', async () => {
         if (vocabulary&& systemObjectModel)
             assetModel = await UTIL.createAssetTest({
-                FileName: 'Test Asset 2',
-                FilePath: '/test/asset/path2',
+                FileName: 'Test Asset Model',
+                FilePath: '/test/asset/path/model',
                 idAssetGroup: null,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectModel.idSystemObject,
@@ -6588,6 +6588,19 @@ describe('DB Update Test Suite', () => {
         expect(xref).toBeTruthy();
     });
 
+    // Placed this test here after various updates above ... it's a wonky test case and could be improved
+    test('DB Fetch Asset: Asset.fetchMatching', async () => {
+        let assetFetch: DBAPI.Asset | null = null;
+        if (systemObjectScene && assetWithoutAG && assetVersion) {
+            // LOG.info(`*** DBAPI.Asset.fetchMatching(${systemObjectScene.idSystemObject}, '${assetWithoutAG.FileName}', '${assetWithoutAG.FilePath}', ${assetWithoutAG.idVAssetType}, '${assetVersion.StorageHash}');`, LOG.LS.eTEST);
+            assetFetch = await DBAPI.Asset.fetchMatching(systemObjectScene.idSystemObject,
+                assetWithoutAG.FileName, assetWithoutAG.FilePath, assetWithoutAG.idVAssetType,
+                assetVersion.StorageHash);
+            expect(assetFetch).toEqual(assetWithoutAG);
+        }
+        expect(assetFetch).toBeTruthy();
+    });
+
     test('DB Update: SystemObjectXref.update', async () => {
         let bUpdated: boolean = false;
         if (systemObjectXref && systemObjectAsset) {
@@ -7109,6 +7122,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Asset.fetchByStorageKey('')).toBeNull();
         expect(await DBAPI.Asset.fetchFromAssetGroup(0)).toBeNull();
         expect(await DBAPI.Asset.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.Asset.fetchMatching(0, '', '', 0, '')).toBeNull();
         expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();

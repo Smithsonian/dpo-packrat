@@ -552,16 +552,39 @@ export class AssetStorageAdapter {
                 return { success: false, error, assets, assetVersions, systemObjectVersion: null };
             }
 
-            // create asset and asset version
+            // find/create asset and asset version
             const FileName: string = path.basename(entry);
             let FilePath: string = path.dirname(entry);
             if (FilePath === '.')
                 FilePath = '';
-            const assetComponent: DBAPI.Asset = new DBAPI.Asset({ FileName, FilePath, idAssetGroup: 0, idVAssetType, idSystemObject: asset.idSystemObject, StorageKey: null, idAsset: 0 });
-            const CWSR: STORE.CommitWriteStreamResult = { storageHash: hashResults.hash, storageSize: hashResults.dataLength, success: true, error: '' };
-            const assetVersionComponent: DBAPI.AssetVersion | null =
-                await AssetStorageAdapter.createAssetConstellation(assetComponent, assetVersion.idUserCreator,
+
+            let promoteAssetNeeded: boolean = false;
+            let assetVersionComponent: DBAPI.AssetVersion | null = null;
+            let assetComponent: DBAPI.Asset | null = asset.idSystemObject ?
+                await DBAPI.Asset.fetchMatching(asset.idSystemObject, FileName, FilePath, idVAssetType, hashResults.hash) : null;
+            LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker idSystemObject=${asset.idSystemObject}; FileName=${FileName}; FilePath=${FilePath}; idVAssetType=${idVAssetType}; assetComponent=${JSON.stringify(assetComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+
+            if (assetComponent) {
+                // examine most recent asset version, if any; if the hash matches, avoid creating a new version
+                assetVersionComponent = await DBAPI.AssetVersion.fetchLatestFromAsset(assetComponent.idAsset);
+                if (assetVersionComponent && assetVersionComponent.StorageHash === hashResults.hash) {
+                    if (assetVersionComponent.FileName !== FileName) {  // Found the right asset version!  If necessary, update the filename
+                        assetVersionComponent.FileName = FileName;
+                        if (!await assetVersionComponent.update())
+                            LOG.error(`AssetStorageAdapter.ingestAssetBulkZipWorker unable to update AssetVersion name for ${JSON.stringify(assetVersionComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    }
+                }
+
+            } else
+                assetComponent = new DBAPI.Asset({ FileName, FilePath, idAssetGroup: 0, idVAssetType, idSystemObject: asset.idSystemObject, StorageKey: null, idAsset: 0 });
+
+            if (!assetVersionComponent) {
+                const CWSR: STORE.CommitWriteStreamResult = { storageHash: hashResults.hash, storageSize: hashResults.dataLength, success: true, error: '' };
+                assetVersionComponent = await AssetStorageAdapter.createAssetConstellation(assetComponent, assetVersion.idUserCreator,
                     assetVersion.DateCreated, CWSR, '', false, null, null, ingested); /* istanbul ignore next */
+                promoteAssetNeeded = true;
+            }
+
             if (!assetVersionComponent) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to create AssetVersion from Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
                 LOG.error(error, LOG.LS.eSTR);
@@ -569,11 +592,13 @@ export class AssetStorageAdapter {
             }
 
             // Create a storage key, Promote the asset, Update the asset
-            const ASR: AssetStorageResult = await AssetStorageAdapter.promoteAssetWorker(storage, assetComponent, assetVersionComponent, metadata, opInfo, inputStream); /* istanbul ignore next */
-            if (!ASR.success) {
-                const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to promote Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${ASR.error}`;
-                LOG.error(error, LOG.LS.eSTR);
-                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
+            if (promoteAssetNeeded) {
+                const ASR: AssetStorageResult = await AssetStorageAdapter.promoteAssetWorker(storage, assetComponent, assetVersionComponent, metadata, opInfo, inputStream); /* istanbul ignore next */
+                if (!ASR.success) {
+                    const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to promote Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${ASR.error}`;
+                    LOG.error(error, LOG.LS.eSTR);
+                    return { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                }
             }
 
             assets.push(assetComponent);
