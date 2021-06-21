@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/display-name */
 import React, { useState, useEffect } from 'react';
 import DataGridWithPagination, { Search, DropDown, PaginationSettings, SortSettings } from '../../../../components/shared/DataGridWithPagination';
@@ -9,44 +10,8 @@ import { Link } from 'react-router-dom';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { getUnitsList, getSubjectList } from '../../hooks/useAdminview';
 import { resolveSubRoute, ADMIN_ROUTE, ADMIN_ROUTES_TYPE } from '../../../../constants/routes';
+import { Subject } from '../../../../types/graphql';
 import { toast } from 'react-toastify';
-
-const columnHeader: Columns = [
-    {
-        field: 'Unit',
-        headerName: 'Unit',
-        flex: 1,
-        headerAlign: 'center',
-        renderCell: params => (
-            <Tooltip placement='left' title={`${params.getValue('Unit')}`} arrow>
-                <div>{`${params.getValue('Unit')}`}</div>
-            </Tooltip>
-        )
-    },
-    {
-        field: 'Name',
-        headerName: 'Name',
-        flex: 1.7,
-        renderCell: params => (
-            <Tooltip placement='left' title={`${params.getValue('Name')}`} arrow>
-                <div>{`${params.getValue('Name')}`}</div>
-            </Tooltip>
-        )
-    },
-    {
-        field: 'Identifier',
-        headerName: 'Identifier',
-        flex: 1.7,
-        renderCell: params => <div>{`${params.getValue('Identifier')}`}</div>
-    },
-    {
-        field: 'Action',
-        headerName: 'Action',
-        flex: 1,
-        sortable: false,
-        renderCell: params => <Link to={`/repository/details/${[params.row.idSystemObject]}`}>Edit</Link>
-    }
-];
 
 const useStyles = makeStyles({
     AdminViewContainer: {
@@ -93,7 +58,44 @@ function SubjectView(): React.ReactElement {
         sortModel: []
     });
     const [loading, setLoading] = useState(false);
-    const [subjectListState, setSubjectListState] = useState([]);
+    const [subjectListState, setSubjectListState] = useState<Subject[]>([]);
+
+    const columnHeader: Columns = [
+        {
+            field: 'Unit',
+            headerName: 'Unit',
+            flex: 1,
+            headerAlign: 'center',
+            renderCell: params => (
+                <Tooltip placement='left' title={`${params.getValue('Unit')}`} arrow>
+                    <div>{`${params.getValue('Unit')}`}</div>
+                </Tooltip>
+            )
+        },
+        {
+            field: 'Name',
+            headerName: 'Name',
+            flex: 1.7,
+            renderCell: params => (
+                <Tooltip placement='left' title={`${params.getValue('Name')}`} arrow>
+                    <div>{`${params.getValue('Name')}`}</div>
+                </Tooltip>
+            )
+        },
+        {
+            field: 'Identifier',
+            headerName: 'Identifier',
+            flex: 1.7,
+            renderCell: params => <div>{`${params.getValue('Identifier')}`}</div>
+        },
+        {
+            field: 'Action',
+            headerName: 'Action',
+            flex: 1,
+            sortable: false,
+            renderCell: params => <Link to={`/repository/details/${[params.row.idSystemObject]}`}>Edit</Link>
+        }
+    ];
 
     useEffect(() => {
         const fetchUnitList = async () => {
@@ -108,7 +110,6 @@ function SubjectView(): React.ReactElement {
             }
         };
         fetchUnitList();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -165,7 +166,7 @@ function SubjectView(): React.ReactElement {
                 SortSettings={sortState}
                 Search={searchState}
                 DropDown={dropDownState}
-                ExtraBtn={{ link: resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.CREATESUBJECT), btnText: 'Create' }}
+                LinkBtn={{ link: resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.CREATESUBJECT), btnText: 'Create' }}
                 rows={subjectListState}
                 columnHeader={columnHeader}
                 handlePaginationChange={handlePaginationChange}
