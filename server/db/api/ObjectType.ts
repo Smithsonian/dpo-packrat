@@ -46,6 +46,7 @@ export enum eNonSystemObjectType {
     eModelSceneXref = 47,
     eSystemObject = 48,
     eSystemObjectVersion = 49,
+    eSystemObjectVersionAssetVersionXref = 60,
     eSystemObjectXref = 50,
     eUnitEdan = 51,
     eUser = 52,
@@ -138,45 +139,46 @@ export function DBObjectTypeToName(dbType: eDBObjectType | null): string {
         case eSystemObjectType.eUnknown:
             return SystemObjectTypeToName(dbType);
 
-        case eNonSystemObjectType.eAccessAction:                    return 'AccessAction';
-        case eNonSystemObjectType.eAccessContext:                   return 'AccessContext';
-        case eNonSystemObjectType.eAccessContextObject:             return 'AccessContextObject';
-        case eNonSystemObjectType.eAccessPolicy:                    return 'AccessPolicy';
-        case eNonSystemObjectType.eAccessRole:                      return 'AccessRole';
-        case eNonSystemObjectType.eAccessRoleAccessActionXref:      return 'AccessRoleAccessActionXref';
-        case eNonSystemObjectType.eAssetGroup:                      return 'AssetGroup';
-        case eNonSystemObjectType.eAudit:                           return 'Audit';
-        case eNonSystemObjectType.eCaptureDataFile:                 return 'CaptureDataFile';
-        case eNonSystemObjectType.eCaptureDataGroup:                return 'CaptureDataGroup';
-        case eNonSystemObjectType.eCaptureDataGroupCaptureDataXref: return 'CaptureDataGroupCaptureDataXref';
-        case eNonSystemObjectType.eCaptureDataPhoto:                return 'CaptureDataPhoto';
-        case eNonSystemObjectType.eGeoLocation:                     return 'GeoLocation';
-        case eNonSystemObjectType.eIdentifier:                      return 'Identifier';
-        case eNonSystemObjectType.eJob:                             return 'Job';
-        case eNonSystemObjectType.eJobRun:                          return 'JobRun';
-        case eNonSystemObjectType.eLicense:                         return 'License';
-        case eNonSystemObjectType.eLicenseAssignment:               return 'LicenseAssignment';
-        case eNonSystemObjectType.eMetadata:                        return 'Metadata';
-        case eNonSystemObjectType.eModelMaterial:                   return 'ModelMaterial';
-        case eNonSystemObjectType.eModelMaterialChannel:            return 'ModelMaterialChannel';
-        case eNonSystemObjectType.eModelMaterialUVMap:              return 'ModelMaterialUVMap';
-        case eNonSystemObjectType.eModelObject:                     return 'ModelObject';
-        case eNonSystemObjectType.eModelObjectModelMaterialXref:    return 'ModelObjectModelMaterialXref';
-        case eNonSystemObjectType.eModelProcessingAction:           return 'ModelProcessingAction';
-        case eNonSystemObjectType.eModelProcessingActionStep:       return 'ModelProessingActionStep';
-        case eNonSystemObjectType.eModelSceneXref:                  return 'ModelSceneXref';
-        case eNonSystemObjectType.eSystemObject:                    return 'SystemObject';
-        case eNonSystemObjectType.eSystemObjectVersion:             return 'SystemObjectVersion';
-        case eNonSystemObjectType.eSystemObjectXref:                return 'SystemObjectXref';
-        case eNonSystemObjectType.eUnitEdan:                        return 'UnitEdan';
-        case eNonSystemObjectType.eUser:                            return 'User';
-        case eNonSystemObjectType.eUserPersonalizationSystemObject: return 'UserPersonalizationSystemObject';
-        case eNonSystemObjectType.eUserPersonalizationUrl:          return 'UserPersonalizationUrl';
-        case eNonSystemObjectType.eVocabulary:                      return 'Vocabulary';
-        case eNonSystemObjectType.eVocabularySet:                   return 'VocabularySet';
-        case eNonSystemObjectType.eWorkflow:                        return 'Workflow';
-        case eNonSystemObjectType.eWorkflowStep:                    return 'WorkflowStep';
-        case eNonSystemObjectType.eWorkflowStepSystemObjectXref:    return 'WorkflowStepSystemObjectXref';
+        case eNonSystemObjectType.eAccessAction:                        return 'AccessAction';
+        case eNonSystemObjectType.eAccessContext:                       return 'AccessContext';
+        case eNonSystemObjectType.eAccessContextObject:                 return 'AccessContextObject';
+        case eNonSystemObjectType.eAccessPolicy:                        return 'AccessPolicy';
+        case eNonSystemObjectType.eAccessRole:                          return 'AccessRole';
+        case eNonSystemObjectType.eAccessRoleAccessActionXref:          return 'AccessRoleAccessActionXref';
+        case eNonSystemObjectType.eAssetGroup:                          return 'AssetGroup';
+        case eNonSystemObjectType.eAudit:                               return 'Audit';
+        case eNonSystemObjectType.eCaptureDataFile:                     return 'CaptureDataFile';
+        case eNonSystemObjectType.eCaptureDataGroup:                    return 'CaptureDataGroup';
+        case eNonSystemObjectType.eCaptureDataGroupCaptureDataXref:     return 'CaptureDataGroupCaptureDataXref';
+        case eNonSystemObjectType.eCaptureDataPhoto:                    return 'CaptureDataPhoto';
+        case eNonSystemObjectType.eGeoLocation:                         return 'GeoLocation';
+        case eNonSystemObjectType.eIdentifier:                          return 'Identifier';
+        case eNonSystemObjectType.eJob:                                 return 'Job';
+        case eNonSystemObjectType.eJobRun:                              return 'JobRun';
+        case eNonSystemObjectType.eLicense:                             return 'License';
+        case eNonSystemObjectType.eLicenseAssignment:                   return 'LicenseAssignment';
+        case eNonSystemObjectType.eMetadata:                            return 'Metadata';
+        case eNonSystemObjectType.eModelMaterial:                       return 'ModelMaterial';
+        case eNonSystemObjectType.eModelMaterialChannel:                return 'ModelMaterialChannel';
+        case eNonSystemObjectType.eModelMaterialUVMap:                  return 'ModelMaterialUVMap';
+        case eNonSystemObjectType.eModelObject:                         return 'ModelObject';
+        case eNonSystemObjectType.eModelObjectModelMaterialXref:        return 'ModelObjectModelMaterialXref';
+        case eNonSystemObjectType.eModelProcessingAction:               return 'ModelProcessingAction';
+        case eNonSystemObjectType.eModelProcessingActionStep:           return 'ModelProessingActionStep';
+        case eNonSystemObjectType.eModelSceneXref:                      return 'ModelSceneXref';
+        case eNonSystemObjectType.eSystemObject:                        return 'SystemObject';
+        case eNonSystemObjectType.eSystemObjectVersion:                 return 'SystemObjectVersion';
+        case eNonSystemObjectType.eSystemObjectVersionAssetVersionXref: return 'SystemObjectVersionAssetVersionXref';
+        case eNonSystemObjectType.eSystemObjectXref:                    return 'SystemObjectXref';
+        case eNonSystemObjectType.eUnitEdan:                            return 'UnitEdan';
+        case eNonSystemObjectType.eUser:                                return 'User';
+        case eNonSystemObjectType.eUserPersonalizationSystemObject:     return 'UserPersonalizationSystemObject';
+        case eNonSystemObjectType.eUserPersonalizationUrl:              return 'UserPersonalizationUrl';
+        case eNonSystemObjectType.eVocabulary:                          return 'Vocabulary';
+        case eNonSystemObjectType.eVocabularySet:                       return 'VocabularySet';
+        case eNonSystemObjectType.eWorkflow:                            return 'Workflow';
+        case eNonSystemObjectType.eWorkflowStep:                        return 'WorkflowStep';
+        case eNonSystemObjectType.eWorkflowStepSystemObjectXref:        return 'WorkflowStepSystemObjectXref';
 
         default: return 'Unknown';
     }
@@ -242,6 +244,8 @@ export function DBObjectNameToType(objectTypeName: string | null): eDBObjectType
         case 'System Object Version': return eNonSystemObjectType.eSystemObjectVersion;
         case 'SystemObjectXref': return eNonSystemObjectType.eSystemObjectXref;
         case 'System Object Xref': return eNonSystemObjectType.eSystemObjectXref;
+        case 'SystemObjectVersionAssetVersionXref': return eNonSystemObjectType.eSystemObjectVersionAssetVersionXref;
+        case 'System Object Version Asset Version Xref': return eNonSystemObjectType.eSystemObjectVersionAssetVersionXref;
         case 'UnitEdan': return eNonSystemObjectType.eUnitEdan;
         case 'Unit Edan': return eNonSystemObjectType.eUnitEdan;
         case 'User': return eNonSystemObjectType.eUser;
