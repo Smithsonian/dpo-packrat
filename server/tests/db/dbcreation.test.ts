@@ -6594,8 +6594,7 @@ describe('DB Update Test Suite', () => {
         if (systemObjectScene && assetWithoutAG && assetVersion) {
             // LOG.info(`*** DBAPI.Asset.fetchMatching(${systemObjectScene.idSystemObject}, '${assetWithoutAG.FileName}', '${assetWithoutAG.FilePath}', ${assetWithoutAG.idVAssetType}, '${assetVersion.StorageHash}');`, LOG.LS.eTEST);
             assetFetch = await DBAPI.Asset.fetchMatching(systemObjectScene.idSystemObject,
-                assetWithoutAG.FileName, assetWithoutAG.FilePath, assetWithoutAG.idVAssetType,
-                assetVersion.StorageHash);
+                assetWithoutAG.FileName, assetWithoutAG.FilePath, assetWithoutAG.idVAssetType);
             expect(assetFetch).toEqual(assetWithoutAG);
         }
         expect(assetFetch).toBeTruthy();
@@ -7122,7 +7121,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Asset.fetchByStorageKey('')).toBeNull();
         expect(await DBAPI.Asset.fetchFromAssetGroup(0)).toBeNull();
         expect(await DBAPI.Asset.fetchFromSystemObject(0)).toBeNull();
-        expect(await DBAPI.Asset.fetchMatching(0, '', '', 0, '')).toBeNull();
+        expect(await DBAPI.Asset.fetchMatching(0, '', '', 0)).toBeNull();
         expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
