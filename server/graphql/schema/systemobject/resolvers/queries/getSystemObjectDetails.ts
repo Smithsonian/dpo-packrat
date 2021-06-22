@@ -49,6 +49,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const name: string = await resolveNameForObjectType(systemObject, oID.eObjectType);
 
     return {
+        idSystemObject,
         idObject,
         name,
         retired: systemObject.Retired,

@@ -7,12 +7,13 @@ import { FieldType, InputField } from '../../../../components';
 import { useSubjectStore, StateIdentifier, useVocabularyStore } from '../../../../store';
 import SearchList from '../../../Ingestion/components/SubjectItem/SearchList';
 import { RotationOriginInput, RotationQuaternionInput } from '../../../Repository/components/DetailsView/DetailsTab/SubjectDetails';
-import { getUnitsList, getUnitFromEdanAbbreviation, createLocation, createSubject } from '../../hooks/useAdminview';
+import { getUnitsList, getUnitFromEdanAbbreviation, createLocation, createSubjectWithIdentifiers } from '../../hooks/useAdminview';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
 import { eVocabularySetID } from '../../../../types/server';
 import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
 import { useHistory } from 'react-router-dom';
+import { CreateSubjectWithIdentifiersInput } from '../../../../types/graphql';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -68,13 +69,17 @@ const useStyles = makeStyles(({ palette }) => ({
     Methods/Functions
         xUpdating state
         xSelecting the correct unit
-        Creating the subject and geolocation
+        xCreating the geolocation, identifiers, and the subject
         xRevising the searchIngestionSubject
 
     Validation:
         xName
         xUnit
         xIdentifier
+
+    Creating Identifiers:
+        Pop the identifiers into the createIdentifiers mutation and get them back
+        Find the one that's preferred and that'll be the idIdentifierPreferred for subject
 */
 
 export type CoordinateValues = {
@@ -236,6 +241,7 @@ function SubjectForm(): React.ReactElement {
         try {
             const hasValidCoordinate = validateCoordinateValues();
             let idGeoLocation: number | null = null;
+
             if (hasValidCoordinate) {
                 const { data } = await createLocation(coordinateValues);
                 idGeoLocation = data?.createGeoLocation?.GeoLocation?.idGeoLocation;
@@ -244,11 +250,27 @@ function SubjectForm(): React.ReactElement {
                     return;
                 }
             }
-            const createSubjectInput = { idUnit: subjectUnit, idGeoLocation, Name: subjectName };
-            const { data: createSubjectData } = await createSubject(createSubjectInput);
-            if (createSubjectData?.createSubject?.Subject?.idSubject) {
+
+            const identifierList = subjectIdentifiers.map(({ identifier, identifierType, selected }) => {
+                return { identifierValue: identifier, identifierType: identifierType || getEntries(eVocabularySetID.eIdentifierIdentifierType)[0].idVocabulary, selected };
+            });
+
+            const createSubjectWithIdentifiersInput: CreateSubjectWithIdentifiersInput = {
+                identifiers: identifierList,
+                subject: { idUnit: subjectUnit, Name: subjectName, idGeoLocation },
+                systemCreated
+            };
+
+            const {
+                data: {
+                    createSubjectWithIdentifiers: { success, message }
+                }
+            } = await createSubjectWithIdentifiers(createSubjectWithIdentifiersInput);
+            if (success) {
                 toast.success('Subject Successfully Created!');
                 history.push('/admin/subjects');
+            } else {
+                toast.error(`Error: Failure To Create Subject - ${message}`);
             }
         } catch (error) {
             toast.error(error);

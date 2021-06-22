@@ -15,6 +15,7 @@ import updateDerivedObjects from './mutations/updateDerivedObjects';
 import deleteObjectConnection from './mutations/deleteObjectConnection';
 import deleteIdentifier from './mutations/deleteIdentifier';
 import rollbackSystemObjectVersion from './mutations/rollbackSystemObjectVersion';
+import createSubjectWithIdentifiers from './mutations/createSubjectWithIdentifiers';
 
 const resolvers = {
     Query: {
@@ -32,7 +33,8 @@ const resolvers = {
         updateDerivedObjects,
         deleteObjectConnection,
         deleteIdentifier,
-        rollbackSystemObjectVersion
+        rollbackSystemObjectVersion,
+        createSubjectWithIdentifiers
     },
     SystemObject,
     SystemObjectVersion,

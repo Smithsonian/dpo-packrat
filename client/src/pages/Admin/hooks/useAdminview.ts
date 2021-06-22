@@ -8,7 +8,9 @@ import {
     CreateSubjectDocument,
     CreateSubjectInput,
     GetSubjectListDocument,
-    GetSubjectListInput
+    GetSubjectListInput,
+    CreateSubjectWithIdentifiersInput,
+    CreateSubjectWithIdentifiersDocument,
 } from '../../../types/graphql';
 import { CoordinateValues } from '../components/Subject/SubjectForm';
 
@@ -59,6 +61,17 @@ export async function createSubject(subjectInput: CreateSubjectInput) {
 export async function getSubjectList(input: GetSubjectListInput) {
     return await apolloClient.query({
         query: GetSubjectListDocument,
+        variables: {
+            input: {
+                ...input
+            }
+        }
+    });
+}
+
+export async function createSubjectWithIdentifiers(input: CreateSubjectWithIdentifiersInput) {
+    return await apolloClient.mutate({
+        mutation: CreateSubjectWithIdentifiersDocument,
         variables: {
             input: {
                 ...input
