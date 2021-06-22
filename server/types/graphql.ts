@@ -336,6 +336,7 @@ export type Mutation = {
   createProject: CreateProjectResult;
   createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
+  createSubjectWithIdentifiers: CreateSubjectWithIdentifiersResult;
   createUnit: CreateUnitResult;
   createUser: CreateUserResult;
   createVocabulary: CreateVocabularyResult;
@@ -391,6 +392,11 @@ export type MutationCreateSceneArgs = {
 
 export type MutationCreateSubjectArgs = {
   input: CreateSubjectInput;
+};
+
+
+export type MutationCreateSubjectWithIdentifiersArgs = {
+  input: CreateSubjectWithIdentifiersInput;
 };
 
 
@@ -1515,6 +1521,25 @@ export type RollbackSystemObjectVersionInput = {
   idSystemObjectVersion: Scalars['Int'];
 };
 
+export type CreateSubjectWithIdentifiersResult = {
+  __typename?: 'CreateSubjectWithIdentifiersResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type CreateSubjectWithIdentifiersInput = {
+  identifiers: Array<CreateIdentifierInput>;
+  subject: CreateSubjectInput;
+  systemCreated: Scalars['Boolean'];
+};
+
+export type CreateIdentifierInput = {
+  identifierValue: Scalars['String'];
+  identifierType: Scalars['Int'];
+  idSystemObject?: Maybe<Scalars['Int']>;
+  selected: Scalars['Boolean'];
+};
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -1674,6 +1699,7 @@ export type RepositoryPath = {
 
 export type GetSystemObjectDetailsResult = {
   __typename?: 'GetSystemObjectDetailsResult';
+  idSystemObject: Scalars['Int'];
   idObject: Scalars['Int'];
   name: Scalars['String'];
   retired: Scalars['Boolean'];

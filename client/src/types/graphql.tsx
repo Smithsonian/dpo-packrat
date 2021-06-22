@@ -339,6 +339,7 @@ export type Mutation = {
   createProject: CreateProjectResult;
   createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
+  createSubjectWithIdentifiers: CreateSubjectWithIdentifiersResult;
   createUnit: CreateUnitResult;
   createUser: CreateUserResult;
   createVocabulary: CreateVocabularyResult;
@@ -394,6 +395,11 @@ export type MutationCreateSceneArgs = {
 
 export type MutationCreateSubjectArgs = {
   input: CreateSubjectInput;
+};
+
+
+export type MutationCreateSubjectWithIdentifiersArgs = {
+  input: CreateSubjectWithIdentifiersInput;
 };
 
 
@@ -1518,6 +1524,25 @@ export type RollbackSystemObjectVersionInput = {
   idSystemObjectVersion: Scalars['Int'];
 };
 
+export type CreateSubjectWithIdentifiersResult = {
+  __typename?: 'CreateSubjectWithIdentifiersResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type CreateSubjectWithIdentifiersInput = {
+  identifiers: Array<CreateIdentifierInput>;
+  subject: CreateSubjectInput;
+  systemCreated: Scalars['Boolean'];
+};
+
+export type CreateIdentifierInput = {
+  identifierValue: Scalars['String'];
+  identifierType: Scalars['Int'];
+  idSystemObject?: Maybe<Scalars['Int']>;
+  selected: Scalars['Boolean'];
+};
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -1677,6 +1702,7 @@ export type RepositoryPath = {
 
 export type GetSystemObjectDetailsResult = {
   __typename?: 'GetSystemObjectDetailsResult';
+  idSystemObject: Scalars['Int'];
   idObject: Scalars['Int'];
   name: Scalars['String'];
   retired: Scalars['Boolean'];
@@ -2491,6 +2517,19 @@ export type CreateSceneMutation = (
   ) }
 );
 
+export type CreateSubjectWithIdentifiersMutationVariables = Exact<{
+  input: CreateSubjectWithIdentifiersInput;
+}>;
+
+
+export type CreateSubjectWithIdentifiersMutation = (
+  { __typename?: 'Mutation' }
+  & { createSubjectWithIdentifiers: (
+    { __typename?: 'CreateSubjectWithIdentifiersResult' }
+    & Pick<CreateSubjectWithIdentifiersResult, 'success' | 'message'>
+  ) }
+);
+
 export type DeleteIdentifierMutationVariables = Exact<{
   input: DeleteIdentifierInput;
 }>;
@@ -3302,7 +3341,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3964,6 +4003,40 @@ export function useCreateSceneMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateSceneMutationHookResult = ReturnType<typeof useCreateSceneMutation>;
 export type CreateSceneMutationResult = Apollo.MutationResult<CreateSceneMutation>;
 export type CreateSceneMutationOptions = Apollo.BaseMutationOptions<CreateSceneMutation, CreateSceneMutationVariables>;
+export const CreateSubjectWithIdentifiersDocument = gql`
+    mutation createSubjectWithIdentifiers($input: CreateSubjectWithIdentifiersInput!) {
+  createSubjectWithIdentifiers(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type CreateSubjectWithIdentifiersMutationFn = Apollo.MutationFunction<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>;
+
+/**
+ * __useCreateSubjectWithIdentifiersMutation__
+ *
+ * To run a mutation, you first call `useCreateSubjectWithIdentifiersMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateSubjectWithIdentifiersMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createSubjectWithIdentifiersMutation, { data, loading, error }] = useCreateSubjectWithIdentifiersMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateSubjectWithIdentifiersMutation(baseOptions?: Apollo.MutationHookOptions<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>(CreateSubjectWithIdentifiersDocument, options);
+      }
+export type CreateSubjectWithIdentifiersMutationHookResult = ReturnType<typeof useCreateSubjectWithIdentifiersMutation>;
+export type CreateSubjectWithIdentifiersMutationResult = Apollo.MutationResult<CreateSubjectWithIdentifiersMutation>;
+export type CreateSubjectWithIdentifiersMutationOptions = Apollo.BaseMutationOptions<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>;
 export const DeleteIdentifierDocument = gql`
     mutation deleteIdentifier($input: DeleteIdentifierInput!) {
   deleteIdentifier(input: $input) {
@@ -5864,6 +5937,7 @@ export type GetSubjectListQueryResult = Apollo.QueryResult<GetSubjectListQuery, 
 export const GetSystemObjectDetailsDocument = gql`
     query getSystemObjectDetails($input: GetSystemObjectDetailsInput!) {
   getSystemObjectDetails(input: $input) {
+    idSystemObject
     idObject
     name
     retired

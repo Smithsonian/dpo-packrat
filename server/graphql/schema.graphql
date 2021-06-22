@@ -109,6 +109,7 @@ type Mutation {
   createProject(input: CreateProjectInput!): CreateProjectResult!
   createScene(input: CreateSceneInput!): CreateSceneResult!
   createSubject(input: CreateSubjectInput!): CreateSubjectResult!
+  createSubjectWithIdentifiers(input: CreateSubjectWithIdentifiersInput!): CreateSubjectWithIdentifiersResult!
   createUnit(input: CreateUnitInput!): CreateUnitResult!
   createUser(input: CreateUserInput!): CreateUserResult!
   createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
@@ -1107,6 +1108,24 @@ input RollbackSystemObjectVersionInput {
   idSystemObjectVersion: Int!
 }
 
+type CreateSubjectWithIdentifiersResult {
+  success: Boolean!
+  message: String!
+}
+
+input CreateSubjectWithIdentifiersInput {
+  identifiers: [CreateIdentifierInput!]!
+  subject: CreateSubjectInput!
+  systemCreated: Boolean!
+}
+
+input CreateIdentifierInput {
+  identifierValue: String!
+  identifierType: Int!
+  idSystemObject: Int
+  selected: Boolean!
+}
+
 input GetDetailsTabDataForObjectInput {
   idSystemObject: Int!
   objectType: Int!
@@ -1251,6 +1270,7 @@ type RepositoryPath {
 }
 
 type GetSystemObjectDetailsResult {
+  idSystemObject: Int!
   idObject: Int!
   name: String!
   retired: Boolean!
