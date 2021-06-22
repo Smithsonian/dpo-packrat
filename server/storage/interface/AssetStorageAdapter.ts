@@ -434,8 +434,7 @@ export class AssetStorageAdapter {
         }
 
         // Call IStorage.promote
-        // Update asset.StorageKey, if needed
-        // Update assetVersion.Ingested to true
+        // Update asset.StorageKey and assetVersion.Ingested to true, if needed (may not be needed for bulk ingests and zips)
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             const error: string = 'AssetStorageAdapter.ingestAssetWorker: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
@@ -561,22 +560,27 @@ export class AssetStorageAdapter {
             let promoteAssetNeeded: boolean = false;
             let assetVersionComponent: DBAPI.AssetVersion | null = null;
             let assetComponent: DBAPI.Asset | null = asset.idSystemObject ?
-                await DBAPI.Asset.fetchMatching(asset.idSystemObject, FileName, FilePath, idVAssetType, hashResults.hash) : null;
-            LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker idSystemObject=${asset.idSystemObject}; FileName=${FileName}; FilePath=${FilePath}; idVAssetType=${idVAssetType}; assetComponent=${JSON.stringify(assetComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                await DBAPI.Asset.fetchMatching(asset.idSystemObject, FileName, FilePath, idVAssetType) : null;
 
             if (assetComponent) {
+                LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker FOUND matching idSystemObject=${asset.idSystemObject}; FileName=${FileName}; FilePath=${FilePath}; idVAssetType=${idVAssetType}; assetComponent=${JSON.stringify(assetComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
                 // examine most recent asset version, if any; if the hash matches, avoid creating a new version
                 assetVersionComponent = await DBAPI.AssetVersion.fetchLatestFromAsset(assetComponent.idAsset);
                 if (assetVersionComponent && assetVersionComponent.StorageHash === hashResults.hash) {
+                    LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker FOUND matching assetVersion=${JSON.stringify(assetVersionComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
                     if (assetVersionComponent.FileName !== FileName) {  // Found the right asset version!  If necessary, update the filename
                         assetVersionComponent.FileName = FileName;
                         if (!await assetVersionComponent.update())
                             LOG.error(`AssetStorageAdapter.ingestAssetBulkZipWorker unable to update AssetVersion name for ${JSON.stringify(assetVersionComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
                     }
+                } else {
+                    LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker did NOT find assetVersion for hash=${JSON.stringify(hashResults.hash)}; assetVersion=${JSON.stringify(assetVersionComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    assetVersionComponent = null;
                 }
-
-            } else
+            } else {
+                LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker did NOT find asset idSystemObject=${asset.idSystemObject}; FileName=${FileName}; FilePath=${FilePath}; idVAssetType=${idVAssetType}; creating new`, LOG.LS.eSTR);
                 assetComponent = new DBAPI.Asset({ FileName, FilePath, idAssetGroup: 0, idVAssetType, idSystemObject: asset.idSystemObject, StorageKey: null, idAsset: 0 });
+            }
 
             if (!assetVersionComponent) {
                 const CWSR: STORE.CommitWriteStreamResult = { storageHash: hashResults.hash, storageSize: hashResults.dataLength, success: true, error: '' };
@@ -620,18 +624,28 @@ export class AssetStorageAdapter {
             return { success: false, error, assets, assetVersions, systemObjectVersion: null };
         }
 
-        // clear StorageKeyStaging and updated Ingested flag from this retired asset version
+        // clear StorageKeyStaging from this retired asset version
         assetVersion.StorageKeyStaging = '';
-        assetVersion.Ingested = true;
+        // assetVersion.Ingested = true;
         if (!await assetVersion.update()) /* istanbul ignore next */ {
             const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to clear staging storage key from AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error, assets, assetVersions, systemObjectVersion: null };
         }
 
-        // Retire the asset that represented this piece of the bulk ingest
+        // Retire the asset that represented this piece of the bulk ingest ... if and only if all versions are also retired
+        // We have a wacky flow when updating an existing system object, which is represented as a package of files in a zip (such as a scene or model)
+        // In that case, the zip file gets added as a new version of the existing asset.  We will discard that asset version (above) ...
+        // but we don't want to retire the asset -- that asset remains the "master asset" for the system object in question.
         /* istanbul ignore next */
-        if (!await DBAPI.SystemObject.retireSystemObject(asset)) {
+        const assetVersionsNotRetired: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromAsset(asset.idAsset, false);
+        let retireAsset: boolean = false;
+        if (assetVersionsNotRetired)
+            retireAsset = (assetVersionsNotRetired.length === 0);
+        else
+            LOG.error(`AssetStorageAdapter.ingestAssetBulkZipWorker unable to compute non-retired asset versions from asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+
+        if (retireAsset && !await DBAPI.SystemObject.retireSystemObject(asset)) {
             const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to retire Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error, assets, assetVersions, systemObjectVersion: null };

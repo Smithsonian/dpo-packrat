@@ -148,9 +148,8 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
     }
 
     /** Fetches assets that are connected to the specified idSystemObject (via that object's last SystemObjectVersion,
-     * and that SystemObjectVersionAssetVersionXref's records). For those assets, we look for a match on FileName, FilePath,
-     * and the associated asset version's StorageHash */
-    static async fetchMatching(idSystemObject: number, FileName: string, FilePath: string, idVAssetType: number, StorageHash: string): Promise<Asset | null> {
+     * and that SystemObjectVersionAssetVersionXref's records). For those assets, we look for a match on FileName, FilePath */
+    static async fetchMatching(idSystemObject: number, FileName: string, FilePath: string, idVAssetType: number): Promise<Asset | null> {
         if (!idSystemObject)
             return null;
         try {
@@ -162,13 +161,12 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                 JOIN AssetVersion AS AV ON (XREF.idAssetVersion = AV.idAssetVersion)
                 JOIN Asset AS A ON (AV.idAsset = A.idAsset)
                 WHERE SOV.idSystemObject = ${idSystemObject}
-                  AND A.FileName = ${FileName} 
-                  AND A.FilePath = ${FilePath}
-                  AND A.idVAssetType = ${idVAssetType}
-                  AND AV.StorageHash = ${StorageHash}
                   AND SOV.idSystemObjectVersion = (SELECT MAX(idSystemObjectVersion)
                                                    FROM SystemObjectVersion
                                                    WHERE idSystemObject = ${idSystemObject})
+                  AND A.FileName = ${FileName} 
+                  AND A.FilePath = ${FilePath}
+                  AND A.idVAssetType = ${idVAssetType}
                 ORDER BY SOV.idSystemObjectVersion DESC
                 LIMIT 1;`; //, Asset);
             /* istanbul ignore if */

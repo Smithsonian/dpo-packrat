@@ -716,6 +716,7 @@ async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.Sy
             continue;
         }
 
+        // LOG.info(`ingestData.promoteAssetsIntoRepository AssetVersion=${JSON.stringify(assetVersionDB, H.Helpers.saferStringify)}; Asset=${JSON.stringify(assetDB, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         const opInfo: OperationInfo = {
             message: 'Ingesting asset',
             idUser: user.idUser,
