@@ -262,6 +262,14 @@ export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | un
     return `${serverEndPoint}/download?idSystemObjectVersion=${idSystemObjectVersion}`;
 }
 
+export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number): string {
+    return `${serverEndPoint}/download/idSystemObject-${idSystemObject}`;
+}
+
+export function getDocumentSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number, document: string): string {
+    return `${serverEndPoint}/download/idSystemObject-${idSystemObject}/${document}`;
+}
+
 // prettier-ignore
 export function getTreeViewStyleHeight(isExpanded: boolean, isModal: boolean, breakpoint: Breakpoint): string {
     const isSmallScreen: boolean = breakpoint === 'lg';
