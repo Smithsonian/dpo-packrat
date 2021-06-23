@@ -15,14 +15,14 @@ declare global {
     }
 }
 
-type ScenePreviewProps = {
+type VoyagerExplorerProps = {
     root: string;
     document: string;
     width?: string;
     height?: string;
 };
 
-function ScenePreview(props: ScenePreviewProps): React.ReactElement {
+function VoyagerExplorer(props: VoyagerExplorerProps): React.ReactElement {
     const { root, document, width, height } = props;
 
     // this is the script required to run voyager-explorer component
@@ -31,4 +31,4 @@ function ScenePreview(props: ScenePreviewProps): React.ReactElement {
     return <voyager-explorer root={root} document={document} style={{ width: width || '300px', height: height || '300px', display: 'block', position: 'relative' }} />;
 }
 
-export default ScenePreview;
+export default VoyagerExplorer;

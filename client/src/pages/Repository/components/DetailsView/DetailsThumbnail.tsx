@@ -8,7 +8,7 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import DefaultThumbnail from '../../../../assets/images/default-thumbnail.png';
-import ScenePreview from './DetailsTab/ScenePreview';
+import VoyagerExplorer from './DetailsTab/VoyagerExplorer';
 import { eSystemObjectType } from '../../../../types/server';
 import { getObjectAssets } from '../../hooks/useDetailsView';
 import { getRootSceneDownloadUrlForVoyager, getDocumentSceneDownloadUrlForVoyager } from '../../../../utils/repository';
@@ -57,7 +57,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
         <Box display='flex' flex={1} flexDirection='column' alignItems='center'>
             {objectType !== eSystemObjectType.eScene && <img className={classes.thumbnail} src={thumbnail || DefaultThumbnail} loading='lazy' alt='asset thumbnail' />}
             {objectType === eSystemObjectType.eScene && rootLink.length > 0 && documentLink.length > 0 && (
-                <ScenePreview root={rootLink} document={documentLink} height='500px' width='100%' />
+                <VoyagerExplorer root={rootLink} document={documentLink} height='500px' width='100%' />
             )}
         </Box>
     );
