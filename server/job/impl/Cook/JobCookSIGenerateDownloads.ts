@@ -203,13 +203,14 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             const LS: LocalStore | undefined = ASL.getStore();
             const idUserCreator: number = LS?.idUser ?? 0;
             const ISI: STORE.IngestStreamOrFileInput = {
-                ReadStream: RSR.readStream,
-                LocalFilePath: null,
-                Asset,
+                readStream: RSR.readStream,
+                localFilePath: null,
+                asset: Asset,
                 FileName: downloadFile,
                 FilePath: '',
                 idAssetGroup: 0,
                 idVAssetType: vModel.idVocabulary,
+                allowZipCracking: false,
                 idUserCreator,
                 SOBased: model,
             };

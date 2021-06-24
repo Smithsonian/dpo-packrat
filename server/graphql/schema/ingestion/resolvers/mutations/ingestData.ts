@@ -11,7 +11,7 @@ import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 import { SvxReader, SvxExtraction } from '../../../../../utils/parser';
 import * as WF from '../../../../../workflow/interface';
-import { AssetStorageAdapter, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
+import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 
@@ -107,7 +107,9 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     }
 
     // next, promote asset into repository storage
-    const ingestResMap: Map<number, IngestAssetResult | null> = await promoteAssetsIntoRepository(assetVersionMap, user!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+    const { ingestResMap, transformUpdated } = await promoteAssetsIntoRepository(assetVersionMap, user!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+    if (transformUpdated)
+        modelTransformUpdated = true;
 
     // use results to create/update derived objects
     if (ingestPhotogrammetry)
@@ -596,7 +598,8 @@ async function createSceneObjects(scene: IngestSceneInput,
     sceneDB.Name = scene.name;
     sceneDB.HasBeenQCd = scene.hasBeenQCd;
     sceneDB.IsOriented = scene.isOriented;
-    let ret: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
+    LOG.info(`ingestData createSceneObjects, updateMode=${updateMode}, sceneDB=${JSON.stringify(sceneDB, H.Helpers.saferStringify)}, sceneConstellation=${JSON.stringify(sceneConstellation, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+    let success: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
 
     if (!await handleIdentifiers(sceneDB, scene.systemCreated, scene.identifiers))
         return { success: false };
@@ -604,19 +607,8 @@ async function createSceneObjects(scene: IngestSceneInput,
     // wire scene to reference models, including SystemObjectXref of 'scene as master' to 'models as derived'
     let transformUpdated: boolean = false;
     if (sceneConstellation.ModelSceneXref && sceneConstellation.ModelSceneXref.length > 0) {
-        if (updateMode) {
-            // remove existing ModelSceneXref's
-            const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(sceneDB.idScene);
-            if (MSXs) {
-                for (const MSX of MSXs) {
-                    if (!sceneConstellation.ModelSceneXref[0].isTransformMatching(MSX))
-                        transformUpdated = true;
-                    await MSX.delete();
-                }
-            }
-
-            // TODO: remove existing SystemObjectXref?
-        } else transformUpdated = true; // in create mode, treat the transform as updated
+        if (!updateMode)
+            transformUpdated = true; // in create mode, treat the transform as updated
 
         for (const MSX of sceneConstellation.ModelSceneXref) {
             if (MSX.idModelSceneXref || MSX.idScene) {
@@ -627,13 +619,25 @@ async function createSceneObjects(scene: IngestSceneInput,
                 LOG.error(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                 continue;
             }
-            MSX.idScene = sceneDB.idScene;
-            ret = await MSX.create() && ret;
 
-            const modelDB: DBAPI.Model | null = await DBAPI.Model.fetch(MSX.idModel);
+            // look for existing xref:
+            const MSXExisting: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromModelAndScene(MSX.idModel, sceneDB.idScene);
+            let MSXUpdate: DBAPI.ModelSceneXref | null = (MSXExisting && MSXExisting.length > 0) ? MSXExisting[0] : null;
+            if (MSXUpdate) {
+                if (MSXUpdate.updateTransformIfNeeded(MSX)) {
+                    success = await MSXUpdate.update();
+                    transformUpdated = true;
+                }
+            } else {
+                MSX.idScene = sceneDB.idScene;
+                success = await MSX.create() && success;
+                MSXUpdate = MSX;
+            }
+
+            const modelDB: DBAPI.Model | null = await DBAPI.Model.fetch(MSXUpdate.idModel);
             if (!modelDB || !await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneDB, modelDB)) {
-                LOG.error(`ingestData could not create SystemObjectXref for Scene ${sceneDB.idScene} using: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-                ret = false;
+                LOG.error(`ingestData could not create SystemObjectXref for Scene ${sceneDB.idScene} using: ${JSON.stringify(MSXUpdate)}`, LOG.LS.eGQL);
+                success = false;
                 continue;
             }
         }
@@ -641,7 +645,7 @@ async function createSceneObjects(scene: IngestSceneInput,
 
     if (scene.idAssetVersion)
         assetVersionMap.set(scene.idAssetVersion, sceneDB);
-    return { success: true, transformUpdated };
+    return { success, transformUpdated };
 }
 
 async function createOtherObjects(other: IngestOtherInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
@@ -697,44 +701,58 @@ async function wireItemToAssetOwners(itemDB: DBAPI.Item, assetVersionMap: Map<nu
     return true;
 }
 
-async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.SystemObjectBased>, user: User): Promise<Map<number, IngestAssetResult | null>> {
+async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.SystemObjectBased>, user: User):
+Promise<{ ingestResMap: Map<number, IngestAssetResult | null>, transformUpdated: boolean }> {
     // map from idAssetVersion -> object that "owns" the asset
-    const res: Map<number, IngestAssetResult | null> = new Map<number, IngestAssetResult | null>();
+    const ingestResMap: Map<number, IngestAssetResult | null> = new Map<number, IngestAssetResult | null>();
+    let transformUpdated: boolean = false;
     for (const [idAssetVersion, SOBased] of assetVersionMap) {
         // LOG.info(`ingestData.promoteAssetsIntoRepository ${idAssetVersion} -> ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
         const assetVersionDB: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
         if (!assetVersionDB) {
             LOG.error(`ingestData unable to load assetVersion for ${idAssetVersion}`, LOG.LS.eGQL);
-            res.set(idAssetVersion, null);
+            ingestResMap.set(idAssetVersion, null);
             continue;
         }
 
         const assetDB: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersionDB.idAsset);
         if (!assetDB) {
             LOG.error(`ingestData unable to load asset for ${assetVersionDB.idAsset}`, LOG.LS.eGQL);
-            res.set(idAssetVersion, null);
+            ingestResMap.set(idAssetVersion, null);
             continue;
         }
 
+        // LOG.info(`ingestData.promoteAssetsIntoRepository AssetVersion=${JSON.stringify(assetVersionDB, H.Helpers.saferStringify)}; Asset=${JSON.stringify(assetDB, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         const opInfo: OperationInfo = {
             message: 'Ingesting asset',
             idUser: user.idUser,
             userEmailAddress: user.EmailAddress,
             userName: user.Name
         };
-        const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(assetDB, assetVersionDB, SOBased, opInfo);
+        const ingestAssetInput: IngestAssetInput = {
+            asset: assetDB,
+            assetVersion: assetVersionDB,
+            allowZipCracking: true,
+            SOBased,
+            idSystemObject: null,
+            opInfo,
+        };
+        const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
         if (!ISR.success)
             LOG.error(`ingestData unable to ingest assetVersion ${idAssetVersion}: ${ISR.error}`, LOG.LS.eGQL);
         else if (ISR.assets) {
             // Handle complex ingestion, such as ingestion of a scene package as a zip file.
             // In this case, we will receive the scene .svx.json file, supporting HTML, images, CSS, as well as models.
             // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
-            if (SOBased instanceof DBAPI.Scene)
-                await handleComplexIngestionScene(SOBased, ISR);
+            if (SOBased instanceof DBAPI.Scene) {
+                const { success, transformUpdated: modelTransformUpdated } = await handleComplexIngestionScene(SOBased, ISR);
+                if (success && modelTransformUpdated)
+                    transformUpdated = true;
+            }
         }
-        res.set(idAssetVersion, ISR);
+        ingestResMap.set(idAssetVersion, ISR);
     }
-    return res;
+    return { ingestResMap, transformUpdated };
 }
 
 async function sendWorkflowIngestionEvent(ingestResMap: Map<number, IngestAssetResult | null>, user: User, modelTransformUpdated: boolean): Promise<boolean> {
@@ -852,9 +870,9 @@ function validateInput(user: User | undefined, input: IngestDataInput): { succes
     return { success: true, ingestNew };
 }
 
-async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetResult): Promise<boolean> {
+async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetResult): Promise<{ success: boolean, transformUpdated: boolean }> {
     if (!ISR.assets || !ISR.assetVersions)
-        return false;
+        return { success: false, transformUpdated: false };
 
     // first, identify assets and asset versions for the scene and models
     let sceneAsset: DBAPI.Asset | null = null;
@@ -888,64 +906,92 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
 
     if (!sceneAsset || !sceneAssetVersion) {
         LOG.error(`ingestData handleComplexIngestionScene unable to identify asset and/or asset version for the ingested scene ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-        return false;
+        return { success: false, transformUpdated: false };
     }
 
     // next, retrieve & parse the scene, extracting model references and transforms
     const RSR: ReadStreamResult = await AssetStorageAdapter.readAsset(sceneAsset, sceneAssetVersion);
     if (!RSR.success || !RSR.readStream) {
         LOG.error(`ingestData handleComplexIngestionScene unable to fetch stream for scene asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}: ${RSR.error}`, LOG.LS.eGQL);
-        return false;
+        return { success: false, transformUpdated: false };
     }
 
     const svx: SvxReader = new SvxReader();
     const res: H.IOResults = await svx.loadFromStream(RSR.readStream);
     if (!res.success || !svx.SvxExtraction) {
         LOG.error(`ingestData handleComplexIngestionScene unable to parse scene asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eGQL);
-        return false;
+        return { success: false, transformUpdated: false };
     }
 
     extractSceneMetrics(scene, svx.SvxExtraction);
     if (!await scene.update())
         LOG.error(`ingestData handleComplexIngestionScene unable to update scene ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
 
-    // finally, create Model and ModelSceneXref for each model reference:
-    let retValue: boolean = true;
+    // finally, create/update Model and ModelSceneXref for each model reference:
+    let success: boolean = true;
+    let transformUpdated: boolean = false;
     if (svx.SvxExtraction.modelDetails) {
         for (const MSX of svx.SvxExtraction.modelDetails) {
             if (!MSX.Name)
                 continue;
-            const assetPair: AssetPair | undefined = modelAssetMap.get(MSX.Name.toLowerCase());
-            if (!assetPair || !assetPair.asset || !assetPair.assetVersion) {
-                LOG.error(`ingestData handleComplexIngestionScene unable to locate assets for SVX model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-                retValue = false;
-                continue;
-            }
+            let model: DBAPI.Model | null = null;
 
-            const model: DBAPI.Model = await transformModelSceneXrefIntoModel(MSX);
-            if (!await model.create()) {
-                LOG.error(`ingestData handleComplexIngestionScene unable to create Model from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-                retValue = false;
-                continue;
-            }
+            // look for matching ModelSceneXref
+            // scene.idScene, MSX.Name, .Usage, .Quality, .UVResolution
+            // if not found, create model and MSX
+            // if found, determine if MSX transform has changed; if so, update MSX, and return a status that can be used to kick off download generation workflow
+            const MSXSources: DBAPI.ModelSceneXref[] | null =
+                await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(scene.idScene, MSX.Name, MSX.Usage, MSX.Quality, MSX.UVResolution);
+            const MSXSource: DBAPI.ModelSceneXref | null = (MSXSources && MSXSources.length > 0) ? MSXSources[0] : null;
+            if (MSXSource) {
+                if (MSXSource.updateTransformIfNeeded(MSX)) {
+                    if (!await MSXSource.update()) {
+                        LOG.error(`ingestData handleComplexIngestionScene unable to update ModelSceneXref ${JSON.stringify(MSXSource, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                        success = false;
+                    }
+                    transformUpdated = true;
+                }
 
-            // Create ModelSceneXref for model and scene
-            /* istanbul ignore else */
-            if (!MSX.idModelSceneXref) { // should always be true
-                MSX.idModel = model.idModel;
-                MSX.idScene = scene.idScene;
-                if (!await MSX.create()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to create ModelSceneXref for model xref ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-                    retValue = false;
+                model = await DBAPI.Model.fetch(MSXSource.idModel);
+                if (!model) {
+                    LOG.error(`ingestData handleComplexIngestionScene unable to load model ${MSXSource.idModel}`, LOG.LS.eGQL);
+                    success = false;
                     continue;
                 }
-            } else
-                LOG.error(`ingestData handleComplexIngestionScene unexpected non-null ModelSceneXref for model xref ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                LOG.info(`ingestData handleComplexIngestionScene found existing ModelSceneXref=${JSON.stringify(MSXSource, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+            } else {
+                model = await transformModelSceneXrefIntoModel(MSX);
+                if (!await model.create()) {
+                    LOG.error(`ingestData handleComplexIngestionScene unable to create Model from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                    success = false;
+                    continue;
+                }
+                LOG.info(`ingestData handleComplexIngestionScene created model=${JSON.stringify(model, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
 
-            const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
-            if (!SOX) {
-                LOG.error(`ingestData handleComplexIngestionScene unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together`, LOG.LS.eGQL);
-                retValue = false;
+                // Create ModelSceneXref for model and scene
+                /* istanbul ignore else */
+                if (!MSX.idModelSceneXref) { // should always be true
+                    MSX.idModel = model.idModel;
+                    MSX.idScene = scene.idScene;
+                    if (!await MSX.create()) {
+                        LOG.error(`ingestData handleComplexIngestionScene unable to create ModelSceneXref for model xref ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                        success = false;
+                        continue;
+                    }
+                } else
+                    LOG.error(`ingestData handleComplexIngestionScene unexpected non-null ModelSceneXref for model xref ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+
+                const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
+                if (!SOX) {
+                    LOG.error(`ingestData handleComplexIngestionScene unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together`, LOG.LS.eGQL);
+                    success = false;
+                    continue;
+                }
+            }
+
+            const assetPair: AssetPair | undefined = modelAssetMap.get(MSX.Name.toLowerCase());
+            if (!assetPair || !assetPair.asset || !assetPair.assetVersion) {
+                LOG.info(`ingestData handleComplexIngestionScene unable to locate assets for SVX model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                 continue;
             }
 
@@ -953,13 +999,14 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
             const SO: DBAPI.SystemObject | null = await model.fetchSystemObject();
             if (!SO) {
                 LOG.error(`ingestData handleComplexIngestionScene unable to fetch SystemObject for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                retValue = false;
+                success = false;
                 continue;
             }
+
             assetPair.asset.idSystemObject = SO.idSystemObject;
             if (!await assetPair.asset.update()) {
                 LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                retValue = false;
+                success = false;
                 continue;
             }
 
@@ -971,7 +1018,7 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
             });
             if (!await SOV.create()) {
                 LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersion ${JSON.stringify(SOV, H.Helpers.saferStringify)} for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                retValue = false;
+                success = false;
                 continue;
             }
 
@@ -982,13 +1029,13 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
             });
             if (!await SOVAVX.create()) {
                 LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)} for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                retValue = false;
+                success = false;
                 continue;
             }
         }
     }
 
-    return retValue;
+    return { success, transformUpdated };
 }
 
 function extractSceneMetrics(scene: DBAPI.Scene, svxExtraction: SvxExtraction): void {
