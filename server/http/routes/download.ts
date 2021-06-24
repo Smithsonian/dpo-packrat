@@ -271,6 +271,7 @@ class Downloader {
         return true;
     }
 
+
     private sendError(statusCode: number, message?: string | undefined): boolean {
         this.response.status(statusCode);
         this.response.send(message ?? '');
