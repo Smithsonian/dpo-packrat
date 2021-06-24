@@ -35,11 +35,23 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
     public isTransformMatching(MSX: ModelSceneXref): boolean {
         return this.TS0 === MSX.TS0
             && this.TS1 === MSX.TS1
-            && this.TS1 === MSX.TS1
+            && this.TS2 === MSX.TS2
             && this.R0 === MSX.R0
             && this.R1 === MSX.R1
             && this.R2 === MSX.R2
             && this.R3 === MSX.R3;
+    }
+    /** return true if transform is updated */
+    public updateTransformIfNeeded(MSX: ModelSceneXref): boolean {
+        let retValue: boolean = false;
+        if (this.TS0 !== MSX.TS0) { this.TS0 = MSX.TS0; retValue = true; }
+        if (this.TS1 !== MSX.TS1) { this.TS1 = MSX.TS1; retValue = true; }
+        if (this.TS2 !== MSX.TS2) { this.TS2 = MSX.TS2; retValue = true; }
+        if (this.R0  !== MSX.R0)  { this.R0  = MSX.R0;  retValue = true; }
+        if (this.R1  !== MSX.R1)  { this.R1  = MSX.R1;  retValue = true; }
+        if (this.R2  !== MSX.R2)  { this.R2  = MSX.R2;  retValue = true; }
+        if (this.R3  !== MSX.R3)  { this.R3  = MSX.R3;  retValue = true; }
+        return retValue;
     }
     public computeModelAutomationTag(): string {
         return `scene-${this.Usage}-${this.Quality}-${this.UVResolution}`;
@@ -160,6 +172,19 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
                 await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel, idScene, Name } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.ModelSceneXref.fetchFromModelSceneAndName', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchFromSceneNameUsageQualityUVResolution(idScene: number, Name: string | null,
+        Usage: string | null, Quality: string | null, UVResolution: number | null): Promise<ModelSceneXref[] | null> {
+        if (!idScene || !Name || !Usage || !Quality || !UVResolution)
+            return null;
+        try {
+            return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
+                await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idScene, Name, Usage, Quality, UVResolution } }), ModelSceneXref);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution', LOG.LS.eDB, error);
             return null;
         }
     }
