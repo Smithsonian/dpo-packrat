@@ -51,14 +51,14 @@ const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
 interface ObjectSelectModalProps {
     open: boolean;
     selectedObjects: StateRelatedObject[];
-    onSelectedObjects: (newSourceObjects: StateRelatedObject[]) => void;
+    onSelectedObjects?: (newSourceObjects: StateRelatedObject[]) => void;
     onModalClose: () => void;
     relationship?: string;
     idSystemObject?: number;
 }
 
 function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
-    const { open /*, onSelectedObjects */, selectedObjects, onModalClose, idSystemObject } = props;
+    const { open, onSelectedObjects, selectedObjects, onModalClose, idSystemObject } = props;
     const classes = useStyles();
     const [selected, setSelected] = useState<StateRelatedObject[]>([]);
     const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -127,6 +127,19 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
         setSelected(updatedSelected);
     };
 
+    // onSelectedObjects will be passed when in Ingestion view
+    // otherwise, we'll use onSaveClick when in Repository Details view
+    const onClick = async () => {
+        setIsSaving(true);
+        if (onSelectedObjects) {
+            onSelectedObjects(selected);
+            setSelected([]);
+        } else {
+            await onSaveClick();
+        }
+        setIsSaving(false);
+    };
+
     return (
         <Dialog
             open={open}
@@ -144,7 +157,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                     <Typography variant='h6' className={classes.title}>
                         Select {props?.relationship} Objects
                     </Typography>
-                    <Button autoFocus color='inherit' onClick={onSaveClick}>
+                    <Button autoFocus color='inherit' onClick={onClick}>
                         {isSaving ? 'Saving...' : 'Save'}
                     </Button>
                 </Toolbar>
