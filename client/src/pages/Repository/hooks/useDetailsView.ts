@@ -42,6 +42,17 @@ export function useObjectAssets(idSystemObject: number): GetAssetDetailsForSyste
     });
 }
 
+export async function getObjectAssets(idSystemObject: number) {
+    return await apolloClient.query({
+        query: GetAssetDetailsForSystemObjectDocument,
+        variables: {
+            input: {
+                idSystemObject
+            }
+        }
+    });
+}
+
 export function useObjectVersions(idSystemObject: number): GetVersionsForAssetQueryResult {
     return useQuery(GetVersionsForAssetDocument, {
         variables: {
