@@ -7,13 +7,16 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { AssetIdentifiers } from '../../../../../components';
-import { StateIdentifier, useMetadataStore } from '../../../../../store';
+import { StateIdentifier, useMetadataStore, StateRelatedObject, useRepositoryStore, useSubjectStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import ReferenceModels from './ReferenceModels';
 import SceneDataGrid from './SceneDataGrid';
 import { apolloClient } from '../../../../../graphql/index';
-import { GetSceneForAssetVersionDocument } from '../../../../../types/graphql';
+import { GetSceneForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
+import { eSystemObjectType } from '../../../../../types/server';
 import { toast } from 'react-toastify';
+import RelatedObjectsList from '../Model/RelatedObjectsList';
+import ObjectSelectModal from '../Model/ObjectSelectModal';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -32,6 +35,8 @@ function Scene(props: SceneProps): React.ReactElement {
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { scene } = metadata;
     const updateMetadataField = useMetadataStore(state => state.updateMetadataField);
+    const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
+    const [subjects] = useSubjectStore(state => [state.subjects]);
     // state responsible for ReferenceModels
     const [referenceModels, setReferenceModels] = useState([
         {
@@ -68,6 +73,8 @@ function Scene(props: SceneProps): React.ReactElement {
         CountSetup: 0,
         CountTour: 0
     });
+    const [modalOpen, setModalOpen] = useState(false);
+    const [objectRelationship, setObjectRelationship] = useState('');
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
@@ -93,6 +100,15 @@ function Scene(props: SceneProps): React.ReactElement {
         fetchSceneConstellation();
     }, [idAssetVersion, metadataIndex, setInvalidMetadataStep, scene.directory]);
 
+    const subjectIdSystemObject = useGetSubjectQuery({
+        variables: {
+            input: {
+                idSubject: subjects[0]?.id
+            }
+        }
+    });
+    const idSystemObject: number | undefined = subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject;
+
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
         updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.scene);
     };
@@ -108,6 +124,43 @@ function Scene(props: SceneProps): React.ReactElement {
     };
     console.log('idAssetVersion from Scene', idAssetVersion);
 
+    //
+    const openSourceObjectModal = async () => {
+        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setObjectRelationship('Source');
+        await setModalOpen(true);
+    };
+
+    const openDerivedObjectModal = async () => {
+        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setObjectRelationship('Derived');
+        await setModalOpen(true);
+    };
+
+    const onRemoveSourceObject = (idSystemObject: number): void => {
+        const { sourceObjects } = scene;
+        const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
+        updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.scene);
+    };
+
+    const onRemoveDerivedObject = (idSystemObject: number): void => {
+        const { derivedObjects } = scene;
+        const updatedDerivedObjects = derivedObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
+        updateMetadataField(metadataIndex, 'derivedObjects', updatedDerivedObjects, MetadataType.scene);
+    };
+
+    const onModalClose = () => {
+        setModalOpen(false);
+        setObjectRelationship('');
+        closeRepositoryBrowser();
+    };
+
+    const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
+        updateMetadataField(metadataIndex, objectRelationship === 'Source' ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.scene);
+        onModalClose();
+    };
+    //
+
     return (
         <Box className={classes.container}>
             <AssetIdentifiers
@@ -118,6 +171,12 @@ function Scene(props: SceneProps): React.ReactElement {
                 onUpdateIdentifer={onIdentifersChange}
                 onRemoveIdentifer={onIdentifersChange}
             />
+            <Box mb={2}>
+                <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={scene.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+            </Box>
+            <Box mb={2}>
+                <RelatedObjectsList type={RelatedObjectType.Derived} relatedObjects={scene.derivedObjects} onAdd={openDerivedObjectModal} onRemove={onRemoveDerivedObject} />
+            </Box>
             <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
             <SceneDataGrid
                 sceneData={sceneData}
@@ -126,6 +185,13 @@ function Scene(props: SceneProps): React.ReactElement {
                 name={scene.name}
                 hasBeenQCd={scene.hasBeenQCd}
                 isOriented={scene.isOriented}
+            />
+            <ObjectSelectModal
+                open={modalOpen}
+                onSelectedObjects={onSelectedObjects}
+                onModalClose={onModalClose}
+                selectedObjects={objectRelationship === 'Source' ? scene.sourceObjects : scene.derivedObjects}
+                relationship={objectRelationship}
             />
         </Box>
     );

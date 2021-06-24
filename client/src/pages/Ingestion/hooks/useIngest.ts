@@ -168,6 +168,7 @@ function useIngest(): UseIngest {
                     const {
                         identifiers,
                         sourceObjects,
+                        // derivedObjects,
                         systemCreated,
                         name,
                         creationMethod,
@@ -203,6 +204,7 @@ function useIngest(): UseIngest {
                         directory,
                         systemCreated,
                         sourceObjects,
+                        // derivedObjects
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);
