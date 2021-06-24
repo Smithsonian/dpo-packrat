@@ -41,7 +41,7 @@ jobs:
     services:
       # MariaDB service for test database
       mariadb:
-        image: mariadb:10.5
+        image: mariadb:10.6
         env:
           MYSQL_ROOT_PASSWORD: test
           MYSQL_DATABASE: Packrat
