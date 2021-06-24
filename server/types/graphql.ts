@@ -832,6 +832,8 @@ export type IngestPhotogrammetryInput = {
   directory: Scalars['String'];
   folders: Array<IngestFolderInput>;
   identifiers: Array<IngestIdentifierInput>;
+  sourceObjects: Array<RelatedObjectInput>;
+  derivedObjects: Array<RelatedObjectInput>;
 };
 
 export type RelatedObjectInput = {
@@ -855,6 +857,7 @@ export type IngestModelInput = {
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
+  derivedObjects: Array<RelatedObjectInput>;
 };
 
 export type IngestSceneInput = {
@@ -866,6 +869,8 @@ export type IngestSceneInput = {
   isOriented: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
+  sourceObjects: Array<RelatedObjectInput>;
+  derivedObjects: Array<RelatedObjectInput>;
 };
 
 export type IngestOtherInput = {
