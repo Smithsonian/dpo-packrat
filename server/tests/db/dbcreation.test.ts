@@ -2666,6 +2666,17 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(modelSceneXrefFetch).toBeTruthy();
     });
 
+    test('DB Fetch ModelSceneXref: ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution', async () => {
+        let modelSceneXrefFetch: DBAPI.ModelSceneXref[] | null = null;
+        if (scene && modelSceneXref) {
+            modelSceneXrefFetch = await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(scene.idScene, modelSceneXref.Name,
+                modelSceneXref.Usage, modelSceneXref.Quality, modelSceneXref.UVResolution);
+            if (modelSceneXrefFetch)
+                expect(modelSceneXrefFetch).toEqual(expect.arrayContaining([modelSceneXref]));
+        }
+        expect(modelSceneXrefFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: Project', async () => {
         let projectFetch: DBAPI.Project | null = null;
         if (project) {
@@ -4149,6 +4160,8 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectNameToType('System Object Version')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersion);
         expect(DBAPI.DBObjectNameToType('SystemObjectXref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectXref);
         expect(DBAPI.DBObjectNameToType('System Object Xref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectXref);
+        expect(DBAPI.DBObjectNameToType('SystemObjectVersionAssetVersionXref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersionAssetVersionXref);
+        expect(DBAPI.DBObjectNameToType('System Object Version Asset Version Xref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersionAssetVersionXref);
         expect(DBAPI.DBObjectNameToType('UnitEdan')).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
         expect(DBAPI.DBObjectNameToType('Unit Edan')).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
         expect(DBAPI.DBObjectNameToType('User')).toEqual(DBAPI.eNonSystemObjectType.eUser);
@@ -4907,21 +4920,35 @@ describe('DB Fetch Special Test Suite', () => {
         if (modelSceneXref) {
             modelSceneXrefClone = new DBAPI.ModelSceneXref(modelSceneXref);
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeTruthy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeFalsy();
 
             modelSceneXrefClone.R3 = (modelSceneXref.R3 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.R2 = (modelSceneXref.R2 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.R1 = (modelSceneXref.R1 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.R0 = (modelSceneXref.R0 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.TS2 = (modelSceneXref.TS2 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.TS1 = (modelSceneXref.TS1 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.TS0 = (modelSceneXref.TS0 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
             // LOG.info(`clone = ${JSON.stringify(modelSceneXrefClone, H.Helpers.saferStringify)} vs ${JSON.stringify(modelSceneXref, H.Helpers.saferStringify)}}`, LOG.LS.eTEST);
 
             const modelAutomationTag: string = modelSceneXrefClone.computeModelAutomationTag();
@@ -7208,6 +7235,11 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(0, -1, 'foo')).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(-1, 0, 'foo')).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(-1, -1, '')).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(0, 'foo', 'foo', 'foo', -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, null, 'foo', 'foo', -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', null, 'foo', -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', 'foo', null, -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', 'foo', 'foo', null)).toBeNull();
         expect(await DBAPI.Project.fetch(0)).toBeNull();
         expect(await DBAPI.Project.fetchDerivedFromUnits([])).toBeNull();
         expect(await DBAPI.Project.fetchMasterFromSubjects([])).toBeNull();
