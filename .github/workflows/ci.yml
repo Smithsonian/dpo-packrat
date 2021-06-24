@@ -41,7 +41,7 @@ jobs:
     services:
       # MariaDB service for test database
       mariadb:
-        image: mariadb:10.6
+        image: mariadb:10.5
         env:
           MYSQL_ROOT_PASSWORD: test
           MYSQL_DATABASE: Packrat
@@ -82,7 +82,7 @@ jobs:
         run: yarn test
         env:
           PACKRAT_EDAN_AUTH_KEY: ${{ secrets.PACKRAT_EDAN_AUTH_KEY }}
-          PACKRAT_DATABASE_URL: mysql://root:test@localhost:3306/Packrat
+          PACKRAT_DATABASE_URL: mysql://root:test@127.0.0.1:3306/Packrat
 
   build:
     # Only run this step on pull_request or push to specified branches (PR merge counts as push too)
