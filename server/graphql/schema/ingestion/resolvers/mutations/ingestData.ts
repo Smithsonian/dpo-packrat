@@ -934,13 +934,6 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
         for (const MSX of svx.SvxExtraction.modelDetails) {
             if (!MSX.Name)
                 continue;
-            const assetPair: AssetPair | undefined = modelAssetMap.get(MSX.Name.toLowerCase());
-            if (!assetPair || !assetPair.asset || !assetPair.assetVersion) {
-                LOG.error(`ingestData handleComplexIngestionScene unable to locate assets for SVX model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-                success = false;
-                continue;
-            }
-
             let model: DBAPI.Model | null = null;
 
             // look for matching ModelSceneXref
@@ -996,6 +989,12 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
                 }
             }
 
+            const assetPair: AssetPair | undefined = modelAssetMap.get(MSX.Name.toLowerCase());
+            if (!assetPair || !assetPair.asset || !assetPair.assetVersion) {
+                LOG.info(`ingestData handleComplexIngestionScene unable to locate assets for SVX model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                continue;
+            }
+
             // reassign asset to model; create SystemObjectVersion and SystemObjectVersionAssetVersionXref
             const SO: DBAPI.SystemObject | null = await model.fetchSystemObject();
             if (!SO) {
@@ -1003,6 +1002,7 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
                 success = false;
                 continue;
             }
+
             assetPair.asset.idSystemObject = SO.idSystemObject;
             if (!await assetPair.asset.update()) {
                 LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
