@@ -67,6 +67,8 @@ export type StateFolder = {
 export type PhotogrammetryFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    sourceObjects: StateRelatedObject[];
+    derivedObjects: StateRelatedObject[];
     folders: StateFolder[];
     name: string;
     description: string;

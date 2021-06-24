@@ -39,6 +39,8 @@ const identifiersWhenValidation = {
 export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     systemCreated: true,
     identifiers: [],
+    sourceObjects: [],
+    derivedObjects: [],
     folders: [],
     name: '',
     description: '',

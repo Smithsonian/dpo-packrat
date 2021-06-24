@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-max-props-per-line */
 /* eslint-disable react-hooks/exhaustive-deps */
 /**
  * Metadata - Photogrammetry
@@ -6,18 +7,21 @@
  */
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useState } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField } from '../../../../../components';
-import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore } from '../../../../../store';
-import { eVocabularySetID } from '../../../../../types/server';
+import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore, useRepositoryStore, useSubjectStore, StateRelatedObject } from '../../../../../store';
+import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from './AssetContents';
 import Description from './Description';
+import RelatedObjectsList from '../Model/RelatedObjectsList';
+import ObjectSelectModal from '../Model/ObjectSelectModal';
+import { RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
 
 const useStyles = makeStyles(() => ({
     container: {
         marginTop: 20
-    },
+    }
 }));
 
 interface PhotogrammetryProps {
@@ -30,11 +34,23 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const [getFieldErrors, updateMetadataField] = useMetadataStore(state => [state.getFieldErrors, state.updateMetadataField]);
     const metadata: StateMetadata = useMetadataStore(state => state.metadatas[metadataIndex]);
+    const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
+    const [subjects] = useSubjectStore(state => [state.subjects]);
+    const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [objectRelationship, setObjectRelationship] = useState('');
+    const { photogrammetry } = metadata;
     const errors = getFieldErrors(metadata);
 
-    const { photogrammetry } = metadata;
-    const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
+    const subjectIdSystemObject = useGetSubjectQuery({
+        variables: {
+            input: {
+                idSubject: subjects[0]?.id
+            }
+        }
+    });
 
+    const idSystemObject: number | undefined = subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject;
     const setField = ({ target }): void => {
         const { name, value } = target;
         updateMetadataField(metadataIndex, name, value, MetadataType.photogrammetry);
@@ -60,8 +76,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const setNameField = ({ target }): void => {
         const { name, value } = target;
-        if (value)
-            updateMetadataField(metadataIndex, name, value, MetadataType.photogrammetry);
+        if (value) updateMetadataField(metadataIndex, name, value, MetadataType.photogrammetry);
     };
 
     const setCheckboxField = ({ target }): void => {
@@ -87,6 +102,40 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         updateMetadataField(metadataIndex, 'folders', updatedFolders, MetadataType.photogrammetry);
     };
 
+    const openSourceObjectModal = async () => {
+        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setObjectRelationship('Source');
+        await setModalOpen(true);
+    };
+
+    const openDerivedObjectModal = async () => {
+        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setObjectRelationship('Derived');
+        await setModalOpen(true);
+    };
+
+    const onRemoveSourceObject = (idSystemObject: number): void => {
+        const { sourceObjects } = photogrammetry;
+        const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
+        updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.photogrammetry);
+    };
+
+    const onRemoveDerivedObject = (idSystemObject: number): void => {
+        const { derivedObjects } = photogrammetry;
+        const updatedDerivedObjects = derivedObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
+        updateMetadataField(metadataIndex, 'derivedObjects', updatedDerivedObjects, MetadataType.photogrammetry);
+    };
+
+    const onModalClose = () => {
+        setModalOpen(false);
+        setObjectRelationship('');
+        closeRepositoryBrowser();
+    };
+
+    const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
+        updateMetadataField(metadataIndex, objectRelationship === 'Source' ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.photogrammetry);
+        onModalClose();
+    };
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
@@ -99,21 +148,23 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                 onUpdateIdentifer={onIdentifersChange}
                 onRemoveIdentifer={onIdentifersChange}
             />
-
+            <Box mb={2}>
+                <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={photogrammetry.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+            </Box>
+            <Box mb={2}>
+                <RelatedObjectsList
+                    type={RelatedObjectType.Derived}
+                    relatedObjects={photogrammetry.derivedObjects}
+                    onAdd={openDerivedObjectModal}
+                    onRemove={onRemoveDerivedObject}
+                />
+            </Box>
             <Description value={photogrammetry.description} onChange={setField} />
 
             <Box display='flex' flexDirection='row' mt={1}>
                 <Box display='flex' flex={1} flexDirection='column'>
-                    <InputField required type='string' label='Name'
-                        name='name' value={photogrammetry.name} onChange={setNameField}
-                    />
-                    <FieldType
-                        error={errors.photogrammetry.dateCaptured}
-                        required
-                        label='Date Captured'
-                        direction='row'
-                        containerProps={rowFieldProps}
-                    >
+                    <InputField required type='string' label='Name' name='name' value={photogrammetry.name} onChange={setNameField} />
+                    <FieldType error={errors.photogrammetry.dateCaptured} required label='Date Captured' direction='row' containerProps={rowFieldProps}>
                         <DateInputField value={photogrammetry.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
                     </FieldType>
 
@@ -133,13 +184,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     />
                 </Box>
                 <Box display='flex' flex={1} flexDirection='column' ml='30px'>
-                    <InputField
-                        type='number'
-                        label='Dataset Field ID'
-                        value={photogrammetry.datasetFieldId}
-                        name='datasetFieldId'
-                        onChange={setIdField}
-                    />
+                    <InputField type='number' label='Dataset Field ID' value={photogrammetry.datasetFieldId} name='datasetFieldId' onChange={setIdField} />
                     <SelectField
                         label='Item Position Type'
                         value={withDefaultValueNumber(photogrammetry.itemPositionType, getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType))}
@@ -147,20 +192,8 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eCaptureDataItemPositionType)}
                     />
-                    <InputField
-                        type='number'
-                        label='Item Position Field ID'
-                        value={photogrammetry.itemPositionFieldId}
-                        name='itemPositionFieldId'
-                        onChange={setIdField}
-                    />
-                    <InputField
-                        type='number'
-                        label='Item Arrangement Field ID'
-                        value={photogrammetry.itemArrangementFieldId}
-                        name='itemArrangementFieldId'
-                        onChange={setIdField}
-                    />
+                    <InputField type='number' label='Item Position Field ID' value={photogrammetry.itemPositionFieldId} name='itemPositionFieldId' onChange={setIdField} />
+                    <InputField type='number' label='Item Arrangement Field ID' value={photogrammetry.itemArrangementFieldId} name='itemArrangementFieldId' onChange={setIdField} />
                     <SelectField
                         label='Focus Type'
                         value={withDefaultValueNumber(photogrammetry.focusType, getInitialEntry(eVocabularySetID.eCaptureDataFocusType))}
@@ -193,24 +226,19 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                         options={getEntries(eVocabularySetID.eCaptureDataClusterType)}
                     />
 
-                    <InputField
-                        type='number'
-                        label='Cluster Geometry Field ID'
-                        value={photogrammetry.clusterGeometryFieldId}
-                        name='clusterGeometryFieldId'
-                        onChange={setIdField}
-                    />
+                    <InputField type='number' label='Cluster Geometry Field ID' value={photogrammetry.clusterGeometryFieldId} name='clusterGeometryFieldId' onChange={setIdField} />
                     <FieldType required={false} label='Camera Settings Uniform?' direction='row' containerProps={rowFieldProps}>
-                        <CustomCheckbox
-                            disabled
-                            name='cameraSettingUniform'
-                            checked={photogrammetry.cameraSettingUniform}
-                            onChange={setCheckboxField}
-                            color='primary'
-                        />
+                        <CustomCheckbox disabled name='cameraSettingUniform' checked={photogrammetry.cameraSettingUniform} onChange={setCheckboxField} color='primary' />
                     </FieldType>
                 </Box>
             </Box>
+            <ObjectSelectModal
+                open={modalOpen}
+                onSelectedObjects={onSelectedObjects}
+                onModalClose={onModalClose}
+                selectedObjects={objectRelationship === 'Source' ? photogrammetry.sourceObjects : photogrammetry.derivedObjects}
+                relationship={objectRelationship}
+            />
         </Box>
     );
 }
@@ -219,10 +247,10 @@ const checkboxStyles = ({ palette }) => ({
     root: {
         color: palette.primary.main,
         '&$checked': {
-            color: palette.primary.main,
+            color: palette.primary.main
         },
         '&$disabled': {
-            color: palette.primary.main,
+            color: palette.primary.main
         }
     },
     checked: {},
