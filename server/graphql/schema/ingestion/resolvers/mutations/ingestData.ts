@@ -413,6 +413,26 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetryI
     if (!await handleIdentifiers(captureDataDB, photogrammetry.systemCreated, photogrammetry.identifiers))
         return false;
 
+    // wire photogrammetry to sourceObjects
+    if (photogrammetry.sourceObjects && photogrammetry.sourceObjects.length > 0) {
+        for (const sourceObject of photogrammetry.sourceObjects) {
+            if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, captureDataDB)) {
+                LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
+                continue;
+            }
+        }
+    }
+
+    // wire photogrammetry to derivedObjects
+    if (photogrammetry.derivedObjects && photogrammetry.derivedObjects.length > 0) {
+        for (const derivedObject of photogrammetry.derivedObjects) {
+            if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(captureDataDB, derivedObject.idSystemObject)) {
+                LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
+                continue;
+            }
+        }
+    }
+
     if (photogrammetry.idAssetVersion) {
         assetVersionMap.set(photogrammetry.idAssetVersion, captureDataDB);
         ingestPhotoMap.set(photogrammetry.idAssetVersion, photogrammetry);
@@ -553,6 +573,16 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
         }
     }
 
+    // wire model to derivedObjects
+    if (model.derivedObjects && model.derivedObjects.length > 0) {
+        for (const derivedObject of model.derivedObjects) {
+            if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelDB, derivedObject.idSystemObject)) {
+                LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
+                continue;
+            }
+        }
+    }
+
     if (model.idAssetVersion)
         assetVersionMap.set(model.idAssetVersion, modelDB);
     return true;
@@ -638,6 +668,27 @@ async function createSceneObjects(scene: IngestSceneInput,
             }
         }
     }
+
+    // wire scene to sourceObjects
+    if (scene.sourceObjects && scene.sourceObjects.length > 0) {
+        for (const sourceObject of scene.sourceObjects) {
+            if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, sceneDB)) {
+                LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
+                continue;
+            }
+        }
+    }
+
+    // wire scene to derivedObjects
+    if (scene.derivedObjects && scene.derivedObjects.length > 0) {
+        for (const derivedObject of scene.derivedObjects) {
+            if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneDB, derivedObject.idSystemObject)) {
+                LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
+                continue;
+            }
+        }
+    }
+
 
     if (scene.idAssetVersion)
         assetVersionMap.set(scene.idAssetVersion, sceneDB);
@@ -993,14 +1044,14 @@ async function handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetR
 
 function extractSceneMetrics(scene: DBAPI.Scene, svxExtraction: SvxExtraction): void {
     const sceneExtract: DBAPI.Scene = svxExtraction.extractScene();
-    scene.CountScene    = sceneExtract.CountScene;
-    scene.CountNode     = sceneExtract.CountNode;
-    scene.CountCamera   = sceneExtract.CountCamera;
-    scene.CountLight    = sceneExtract.CountLight;
-    scene.CountModel    = sceneExtract.CountModel;
-    scene.CountMeta     = sceneExtract.CountMeta;
-    scene.CountSetup    = sceneExtract.CountSetup;
-    scene.CountTour     = sceneExtract.CountTour;
+    scene.CountScene = sceneExtract.CountScene;
+    scene.CountNode = sceneExtract.CountNode;
+    scene.CountCamera = sceneExtract.CountCamera;
+    scene.CountLight = sceneExtract.CountLight;
+    scene.CountModel = sceneExtract.CountModel;
+    scene.CountMeta = sceneExtract.CountMeta;
+    scene.CountSetup = sceneExtract.CountSetup;
+    scene.CountTour = sceneExtract.CountTour;
 }
 
 async function transformModelSceneXrefIntoModel(MSX: DBAPI.ModelSceneXref): Promise<DBAPI.Model> {
@@ -1016,7 +1067,7 @@ async function transformModelSceneXrefIntoModel(MSX: DBAPI.ModelSceneXref): Prom
         idVPurpose: vPurpose ? vPurpose.idVocabulary : null,
         idVUnits: null,
         idVFileType: vFileType ? vFileType.idVocabulary : null,
-        idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
+        idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null, CountMaterials: null,
         CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
         AutomationTag: MSX.computeModelAutomationTag()
     });

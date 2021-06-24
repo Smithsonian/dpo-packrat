@@ -52,6 +52,8 @@ input IngestPhotogrammetryInput {
     directory: String!
     folders: [IngestFolderInput!]!
     identifiers: [IngestIdentifierInput!]!
+    sourceObjects: [RelatedObjectInput!]!
+    derivedObjects: [RelatedObjectInput!]!
 }
 
 input RelatedObjectInput {
@@ -75,6 +77,7 @@ input IngestModelInput {
     directory: String!
     identifiers: [IngestIdentifierInput!]!
     sourceObjects: [RelatedObjectInput!]!
+    derivedObjects: [RelatedObjectInput!]!
 }
 
 input IngestSceneInput {
@@ -86,6 +89,8 @@ input IngestSceneInput {
     isOriented: Boolean!
     directory: String!
     identifiers: [IngestIdentifierInput!]!
+    sourceObjects: [RelatedObjectInput!]!
+    derivedObjects: [RelatedObjectInput!]!
 }
 
 input IngestOtherInput {
