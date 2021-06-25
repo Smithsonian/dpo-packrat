@@ -29,7 +29,66 @@ export class SubjectUnitIdentifier {
             }
 
             query = `%${query}%`;
-            return await DBC.DBConnection.prisma.$queryRaw<SubjectUnitIdentifier[] | null>`CALL SubjectUnitIdentifierQuery(${query}, ${SubjectUnitIdentifier.idVocabARK}, ${SubjectUnitIdentifier.idVocabUnitCMSID}, ${maxResults})`;
+            // The use of the SubjectUnitIdentifierQuery proc is failing due to a prisma bug: https://github.com/prisma/prisma/issues/6173
+            // Note that the SQL below uses common table expressions, which are only supported in MariaDB v10.2.1 and later
+            // TODO: replace extensive SQL below with commented code once prisma addresses this defect
+            // return await DBC.DBConnection.prisma.$queryRaw<SubjectUnitIdentifier[] | null>`CALL SubjectUnitIdentifierQuery(${query}, ${SubjectUnitIdentifier.idVocabARK}, ${SubjectUnitIdentifier.idVocabUnitCMSID}, ${maxResults})`;
+            return await DBC.DBConnection.prisma.$queryRaw<SubjectUnitIdentifier[] | null>`
+            WITH
+            _IDMatches (idSystemObject) AS (
+                SELECT idSystemObject
+                FROM Identifier
+                WHERE (idVIdentifierType = ${SubjectUnitIdentifier.idVocabARK} OR
+                       idVIdentifierType = ${SubjectUnitIdentifier.idVocabUnitCMSID})
+                  AND IdentifierValue LIKE ${query}
+                  
+                UNION
+                
+                SELECT SO.idSystemObject
+                FROM Subject AS S
+                JOIN Unit AS U ON (S.idUnit = U.idUnit)
+                JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
+                WHERE (S.Name LIKE ${query}
+                    OR U.Abbreviation LIKE ${query})	
+            ),
+            _ARKIDs (idSystemObject, IdentifierValue) AS (
+                SELECT ID.idSystemObject, ID.IdentifierValue
+                FROM Identifier AS ID
+                JOIN _IDMatches AS IDM ON (ID.idSystemObject = IDM.idSystemObject)
+                WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabARK}
+            ),
+            _UnitCMSIDs (idSystemObject, IdentifierValue) AS (
+                SELECT ID.idSystemObject, ID.IdentifierValue
+                FROM Identifier AS ID
+                JOIN _IDMatches AS IDM ON (ID.idSystemObject = IDM.idSystemObject)
+                WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabUnitCMSID}
+            ),
+            _IDs (idSystemObject, IdentifierPublic, IdentifierCollection) AS (
+                SELECT IFNULL(A.idSystemObject, U.idSystemObject) AS idSystemObject,
+                    A.IdentifierValue AS 'IdentifierPublic',
+                    U.IdentifierValue AS 'IdentifierCollection'
+                FROM _ARKIDs AS A
+                LEFT JOIN _UnitCMSIDs AS U ON (A.idSystemObject = U.idSystemObject)
+                
+                UNION
+                
+                SELECT IFNULL(A.idSystemObject, U.idSystemObject) AS idSystemObject,
+                    A.IdentifierValue AS 'IdentifierPublic',
+                    U.IdentifierValue AS 'IdentifierCollection'
+                FROM _ARKIDs AS A
+                RIGHT JOIN _UnitCMSIDs AS U ON (A.idSystemObject = U.idSystemObject)
+                WHERE A.idSystemObject IS NULL
+            )
+            
+            SELECT S.idSubject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation', 
+                ID.IdentifierPublic, ID.IdentifierCollection
+            FROM Subject AS S
+            JOIN Unit AS U ON (S.idUnit = U.idUnit)
+            JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
+            JOIN _IDMatches AS IDM ON (SO.idSystemObject = IDM.idSystemObject)
+            LEFT JOIN _IDs AS ID ON (SO.idSystemObject = ID.idSystemObject)
+            ORDER BY S.idSubject
+            LIMIT ${maxResults};`;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SubjectUnitIdentifier.fetch', LOG.LS.eDB, error);
             return null;
