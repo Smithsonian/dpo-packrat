@@ -17,7 +17,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -25,7 +25,7 @@ jobs:
       - name: Setup node version
         uses: actions/setup-node@v1
         with:
-          node-version: 14.16.0
+          node-version: 14.17.1
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -37,7 +37,7 @@ jobs:
         run: yarn lint
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     services:
       # MariaDB service for test database
       mariadb:
@@ -67,7 +67,7 @@ jobs:
       - name: Setup node version
         uses: actions/setup-node@v1
         with:
-          node-version: 14.16.0
+          node-version: 14.17.1
 
       # Install dependencies in CI mode
       - name: Install dependencies
