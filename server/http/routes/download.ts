@@ -21,7 +21,12 @@ import path from 'path';
  */
 export async function download(request: Request, response: Response): Promise<boolean> {
     const DL: Downloader = new Downloader(request, response);
-    return await DL.execute();
+    try {
+        return await DL.execute();
+    } catch (error) {
+        LOG.error('/download', LOG.LS.eHTTP, error);
+        return false;
+    }
 }
 
 enum eDownloadMode {
@@ -58,7 +63,7 @@ class Downloader {
         }
 
         if (!this.parseArguments())
-            return this.sendError(404);
+            return false;
 
         switch (this.eMode) {
             case eDownloadMode.eAssetVersion: {
