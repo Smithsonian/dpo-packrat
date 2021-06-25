@@ -96,18 +96,22 @@ class Downloader {
 
                 // otherwise, find the specified asset by path
                 const pathToMatch: string = this.systemObjectPath.toLowerCase();
+                let pathsConsidered: string = '\n';
                 for (const assetVersion of assetVersions) {
                     const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
                     if (!asset) {
                         LOG.error(`${this.reconstructSystemObjectLink()} unable to fetch asset from assetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eHTTP);
                         return this.sendError(404);
                     }
-                    const pathAssetVersion: string = (`/${asset.FilePath}/${assetVersion.FileName}`).toLowerCase();
+                    const pathAssetVersion: string = (((asset.FilePath !== '' && asset.FilePath !== '.') ? `/${asset.FilePath}` : '')
+                        + `/${assetVersion.FileName}`).toLowerCase();
                     if (pathToMatch === pathAssetVersion)
                         return this.emitDownload(assetVersion);
+                    else
+                        pathsConsidered += `${pathAssetVersion}\n`;
                 }
 
-                LOG.error(`${this.reconstructSystemObjectLink()} unable to find assetVersion with path ${pathToMatch} from ${JSON.stringify(assetVersions, H.Helpers.saferStringify)}`, LOG.LS.eHTTP);
+                LOG.error(`${this.reconstructSystemObjectLink()} unable to find assetVersion with path ${pathToMatch} from ${pathsConsidered}`, LOG.LS.eHTTP);
                 return this.sendError(404);
             }
 
