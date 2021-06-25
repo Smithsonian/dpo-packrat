@@ -503,6 +503,8 @@ export type IngestPhotogrammetry = {
   directory: Scalars['String'];
   folders: Array<IngestFolder>;
   identifiers: Array<IngestIdentifier>;
+  sourceObjects: Array<RelatedObject>;
+  derivedObjects: Array<RelatedObject>;
 };
 
 export enum RelatedObjectType {
@@ -532,6 +534,7 @@ export type IngestModel = {
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   sourceObjects: Array<RelatedObject>;
+  derivedObjects: Array<RelatedObject>;
 };
 
 export enum ReferenceModelAction {
@@ -566,6 +569,8 @@ export type IngestScene = {
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   referenceModels: Array<ReferenceModel>;
+  sourceObjects: Array<RelatedObject>;
+  derivedObjects: Array<RelatedObject>;
 };
 
 export type GetAssetVersionDetailResult = {
