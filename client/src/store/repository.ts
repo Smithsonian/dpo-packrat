@@ -194,7 +194,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             dateCreatedFrom: null,
             dateCreatedTo: null,
         };
-        set(stateValues);
+        set({ ...stateValues, loading: true });
         if (modifyCookie) {
             setCookieToState();
         }
@@ -269,7 +269,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelPurpose,
             modelFileType,
             dateCreatedFrom,
-            dateCreatedTo,
+            dateCreatedTo
         };
         // 20 years
         document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};path=/;max-age=630700000`;
