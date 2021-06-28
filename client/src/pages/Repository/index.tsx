@@ -91,6 +91,7 @@ function TreeViewPage(): React.ReactElement {
         updateRepositoryFilter
     } = useRepositoryStore();
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
+    const isRepository = location.pathname.includes('/repository');
 
     const setDefaultFilterSelectionsCookie = () => {
         document.cookie = `filterSelections=${JSON.stringify({
@@ -117,13 +118,12 @@ function TreeViewPage(): React.ReactElement {
     */
     let cookieFilterSelections;
     (function setRepositoryViewCookies() {
-        if (!document.cookie.length || document.cookie.indexOf('filterSelections') === -1) {
+        if ((!document.cookie.length || document.cookie.indexOf('filterSelections') === -1) && isRepository) {
             setDefaultFilterSelectionsCookie();
         }
         cookieFilterSelections = document.cookie.split(';');
         cookieFilterSelections = cookieFilterSelections.find(entry => entry.trim().startsWith('filterSelections'));
-        if (cookieFilterSelections)
-            cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
+        if (cookieFilterSelections) cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
     })();
 
     const initialFilterState = Object.keys(queries).length ? queries : cookieFilterSelections;
