@@ -50,43 +50,14 @@ export class SubjectUnitIdentifier {
                 JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
                 WHERE (S.Name LIKE ${query}
                     OR U.Abbreviation LIKE ${query})	
-            ),
-            _ARKIDs (idSystemObject, IdentifierValue) AS (
-                SELECT ID.idSystemObject, ID.IdentifierValue
-                FROM Identifier AS ID
-                JOIN _IDMatches AS IDM ON (ID.idSystemObject = IDM.idSystemObject)
-                WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabARK}
-            ),
-            _UnitCMSIDs (idSystemObject, IdentifierValue) AS (
-                SELECT ID.idSystemObject, ID.IdentifierValue
-                FROM Identifier AS ID
-                JOIN _IDMatches AS IDM ON (ID.idSystemObject = IDM.idSystemObject)
-                WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabUnitCMSID}
-            ),
-            _IDs (idSystemObject, IdentifierPublic, IdentifierCollection) AS (
-                SELECT IFNULL(A.idSystemObject, U.idSystemObject) AS idSystemObject,
-                    A.IdentifierValue AS 'IdentifierPublic',
-                    U.IdentifierValue AS 'IdentifierCollection'
-                FROM _ARKIDs AS A
-                LEFT JOIN _UnitCMSIDs AS U ON (A.idSystemObject = U.idSystemObject)
-                
-                UNION
-                
-                SELECT IFNULL(A.idSystemObject, U.idSystemObject) AS idSystemObject,
-                    A.IdentifierValue AS 'IdentifierPublic',
-                    U.IdentifierValue AS 'IdentifierCollection'
-                FROM _ARKIDs AS A
-                RIGHT JOIN _UnitCMSIDs AS U ON (A.idSystemObject = U.idSystemObject)
-                WHERE A.idSystemObject IS NULL
             )
-            
+
             SELECT S.idSubject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation', 
-                ID.IdentifierPublic, ID.IdentifierCollection
+                '' AS IdentifierPublic, '' AS IdentifierCollection
             FROM Subject AS S
             JOIN Unit AS U ON (S.idUnit = U.idUnit)
             JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
             JOIN _IDMatches AS IDM ON (SO.idSystemObject = IDM.idSystemObject)
-            LEFT JOIN _IDs AS ID ON (SO.idSystemObject = ID.idSystemObject)
             ORDER BY S.idSubject
             LIMIT ${maxResults};`;
         } catch (error) /* istanbul ignore next */ {
