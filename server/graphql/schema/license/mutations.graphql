@@ -1,0 +1,19 @@
+type Mutation {
+    createLicense(input: CreateLicenseInput!): CreateLicenseResult!
+    updateLicense(input: UpdateLicenseInput!): CreateLicenseResult!
+}
+
+input CreateLicenseInput {
+    Name: String!
+    Description: String!
+}
+
+type CreateLicenseResult {
+    License: License
+}
+
+input UpdateLicenseInput {
+    idLicense: Int!
+    Name: String!
+    Description: String!
+}
