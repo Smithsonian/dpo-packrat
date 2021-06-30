@@ -5,10 +5,10 @@ import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
 
 export enum eSubjectUnitIdentifierSortColumns {
-    eUnitAbbreviation,
-    eSubjectName,
-    eIdentifierValue,
-    eDefault
+    eUnitAbbreviation = 1,
+    eSubjectName = 2,
+    eIdentifierValue = 3,
+    eDefault = 0
 }
 
 export class SubjectUnitIdentifier {
@@ -129,7 +129,8 @@ export class SubjectUnitIdentifier {
             queryRawParams.push(`${rowStart}`);
             queryRawParams.push(`${rowCount}`);
 
-            const sql: string = `SELECT S.idSubject, SO.idSystemObject, S.Name AS 'SubjectName', U.Abbreviation, ID.IdentifierValue AS 'IdentifierPublic', '' AS 'IdentifierCollection'
+            const sql: string = `SELECT S.idSubject, SO.idSystemObject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation',
+                    ID.IdentifierValue AS 'IdentifierPublic', '' AS 'IdentifierCollection'
                 FROM Subject AS S
                 JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
                 LEFT JOIN Identifier AS ID ON (S.idIdentifierPreferred = ID.idIdentifier)

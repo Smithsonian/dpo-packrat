@@ -1792,16 +1792,16 @@ export type GetProjectListInput = {
 
 export type GetSubjectListResult = {
   __typename?: 'GetSubjectListResult';
-  subjects: Array<Subject>;
+  subjects: Array<SubjectUnitIdentifier>;
 };
 
 export type GetSubjectListInput = {
   search: Scalars['String'];
-  idUnit: Scalars['Int'];
+  idUnit?: Maybe<Scalars['Int']>;
   pageNumber?: Maybe<Scalars['Int']>;
   rowCount?: Maybe<Scalars['Int']>;
-  sortBy?: Maybe<Scalars['String']>;
-  sortOrder?: Maybe<Scalars['String']>;
+  sortBy?: Maybe<Scalars['Int']>;
+  sortOrder?: Maybe<Scalars['Boolean']>;
 };
 
 export type SystemObject = {
@@ -1971,6 +1971,7 @@ export type GetItemsForSubjectResult = {
 export type SubjectUnitIdentifier = {
   __typename?: 'SubjectUnitIdentifier';
   idSubject: Scalars['Int'];
+  idSystemObject: Scalars['Int'];
   SubjectName: Scalars['String'];
   UnitAbbreviation: Scalars['String'];
   IdentifierPublic?: Maybe<Scalars['String']>;
@@ -2809,7 +2810,7 @@ export type GetAssetVersionsDetailsQuery = (
       & Pick<GetAssetVersionDetailResult, 'idAssetVersion'>
       & { SubjectUnitIdentifier?: Maybe<(
         { __typename?: 'SubjectUnitIdentifier' }
-        & Pick<SubjectUnitIdentifier, 'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
+        & Pick<SubjectUnitIdentifier, 'idSubject' | 'idSystemObject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
       )>, Project?: Maybe<Array<(
         { __typename?: 'Project' }
         & Pick<Project, 'idProject' | 'Name'>
@@ -3321,15 +3322,8 @@ export type GetSubjectListQuery = (
   & { getSubjectList: (
     { __typename?: 'GetSubjectListResult' }
     & { subjects: Array<(
-      { __typename?: 'Subject' }
-      & Pick<Subject, 'idSubject' | 'idUnit' | 'Name'>
-      & { IdentifierPreferred?: Maybe<(
-        { __typename?: 'Identifier' }
-        & Pick<Identifier, 'IdentifierValue' | 'idIdentifier'>
-      )>, SystemObject?: Maybe<(
-        { __typename?: 'SystemObject' }
-        & Pick<SystemObject, 'idSystemObject'>
-      )> }
+      { __typename?: 'SubjectUnitIdentifier' }
+      & Pick<SubjectUnitIdentifier, 'idSubject' | 'idSystemObject' | 'UnitAbbreviation' | 'SubjectName' | 'IdentifierPublic'>
     )> }
   ) }
 );
@@ -3618,7 +3612,7 @@ export type SearchIngestionSubjectsQuery = (
     { __typename?: 'SearchIngestionSubjectsResult' }
     & { SubjectUnitIdentifier: Array<(
       { __typename?: 'SubjectUnitIdentifier' }
-      & Pick<SubjectUnitIdentifier, 'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
+      & Pick<SubjectUnitIdentifier, 'idSubject' | 'idSystemObject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
     )> }
   ) }
 );
@@ -4656,6 +4650,7 @@ export const GetAssetVersionsDetailsDocument = gql`
       idAssetVersion
       SubjectUnitIdentifier {
         idSubject
+        idSystemObject
         SubjectName
         UnitAbbreviation
         IdentifierPublic
@@ -5897,15 +5892,10 @@ export const GetSubjectListDocument = gql`
   getSubjectList(input: $input) {
     subjects {
       idSubject
-      idUnit
-      Name
-      IdentifierPreferred {
-        IdentifierValue
-        idIdentifier
-      }
-      SystemObject {
-        idSystemObject
-      }
+      idSystemObject
+      UnitAbbreviation
+      SubjectName
+      IdentifierPublic
     }
   }
 }
@@ -6559,6 +6549,7 @@ export const SearchIngestionSubjectsDocument = gql`
   searchIngestionSubjects(input: $input) {
     SubjectUnitIdentifier {
       idSubject
+      idSystemObject
       SubjectName
       UnitAbbreviation
       IdentifierPublic

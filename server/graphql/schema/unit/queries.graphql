@@ -34,6 +34,7 @@ type GetItemsForSubjectResult {
 
 type SubjectUnitIdentifier {
     idSubject: Int!
+    idSystemObject: Int!
     SubjectName: String!
     UnitAbbreviation: String!
     IdentifierPublic: String

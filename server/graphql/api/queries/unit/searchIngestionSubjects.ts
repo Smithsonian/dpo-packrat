@@ -5,6 +5,7 @@ const searchIngestionSubjects = gql`
         searchIngestionSubjects(input: $input) {
             SubjectUnitIdentifier {
                 idSubject
+                idSystemObject
                 SubjectName
                 UnitAbbreviation
                 IdentifierPublic
