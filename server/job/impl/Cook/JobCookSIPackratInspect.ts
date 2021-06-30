@@ -694,8 +694,13 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
 
         const files: string[] = await ZS.getJustFiles(null);
+        const RSRs: STORE.ReadStreamResult[] = [];
         for (const file of files) {
-            if (await CACHE.VocabularyCache.mapModelFileByExtension(file) === undefined)
+            const eVocabID: CACHE.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
+            const extension: string = path.extname(file).toLowerCase() || file.toLowerCase();
+
+            // for the time being, only handle model geometry files, OBJ .mtl files, and GLTF .bin files
+            if (eVocabID === undefined && extension !== '.mtl' && extension !== '.bin')
                 continue;
 
             const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(file);
@@ -704,16 +709,24 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 return false;
             }
 
-            this.parameters.sourceMeshFile = path.basename(file);
-            this._streamOverrideMap.set(this._idAssetVersions[0], {
+            RSRs.push({
                 readStream,
                 fileName: file,
                 storageHash: null,
                 success: true,
                 error: ''
             });
+            this.parameters.sourceMeshFile = path.basename(file);
+            this._dbJobRun.Parameters = JSON.stringify(this.parameters, H.Helpers.saferStringify);
+            if (!await this._dbJobRun.update())
+                LOG.error(`JobCookSIPackratInspect.testForZip failed to update JobRun.parameters for ${JSON.stringify(this._dbJobRun, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+        }
+
+        if (RSRs.length > 0) {
+            this._streamOverrideMap.set(this._idAssetVersions[0], RSRs);
             return true;
         }
+
         return false;
     }
 }
