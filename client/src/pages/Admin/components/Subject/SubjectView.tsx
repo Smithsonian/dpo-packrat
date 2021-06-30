@@ -12,6 +12,7 @@ import { getUnitsList, getSubjectList } from '../../hooks/useAdminview';
 import { resolveSubRoute, ADMIN_ROUTE, ADMIN_ROUTES_TYPE } from '../../../../constants/routes';
 import { Subject } from '../../../../types/graphql';
 import { toast } from 'react-toastify';
+import { eSubjectUnitIdentifierSortColumns } from '../../../../types/server';
 
 const useStyles = makeStyles({
     AdminViewContainer: {
@@ -123,20 +124,19 @@ function SubjectView(): React.ReactElement {
             idUnit: dropDownState.value,
             pageNumber: paginationState.pageNumber,
             rowCount: paginationState.rowCount,
-            sortBy: sortState.sortModel?.[0]?.field,
-            sortOrder: sortState.sortModel?.[0]?.sort
+            sortBy: eSubjectUnitIdentifierSortColumns.eDefault /* sortState.sortModel?.[0]?.field */,
+            sortOrder: true /* sortState.sortModel?.[0]?.sort */
         };
         const { data } = await getSubjectList(getSubjectListInput);
         if (data?.getSubjectList.subjects && data?.getSubjectList.subjects.length) {
             const subjectListWithId = data.getSubjectList.subjects.map(subject => {
-                const { idSubject, idUnit, Name, IdentifierPreferred, SystemObject } = subject;
-                const unitOption = dropDownState.options.find(option => option.value === idUnit);
+                const { idSubject, idSystemObject, SubjectName, UnitAbbreviation, IdentifierPublic } = subject;
                 return {
-                    Name,
-                    idSystemObject: SystemObject.idSystemObject,
-                    Identifier: IdentifierPreferred.IdentifierValue,
+                    Name: SubjectName,
+                    idSystemObject,
+                    Identifier: IdentifierPublic,
                     idSubject,
-                    Unit: unitOption?.label,
+                    Unit: UnitAbbreviation,
                     id: idSubject
                 };
             });

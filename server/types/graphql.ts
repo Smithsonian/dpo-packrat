@@ -1789,16 +1789,16 @@ export type GetProjectListInput = {
 
 export type GetSubjectListResult = {
   __typename?: 'GetSubjectListResult';
-  subjects: Array<Subject>;
+  subjects: Array<SubjectUnitIdentifier>;
 };
 
 export type GetSubjectListInput = {
   search: Scalars['String'];
-  idUnit: Scalars['Int'];
+  idUnit?: Maybe<Scalars['Int']>;
   pageNumber?: Maybe<Scalars['Int']>;
   rowCount?: Maybe<Scalars['Int']>;
-  sortBy?: Maybe<Scalars['String']>;
-  sortOrder?: Maybe<Scalars['String']>;
+  sortBy?: Maybe<Scalars['Int']>;
+  sortOrder?: Maybe<Scalars['Boolean']>;
 };
 
 export type SystemObject = {
@@ -1968,6 +1968,7 @@ export type GetItemsForSubjectResult = {
 export type SubjectUnitIdentifier = {
   __typename?: 'SubjectUnitIdentifier';
   idSubject: Scalars['Int'];
+  idSystemObject: Scalars['Int'];
   SubjectName: Scalars['String'];
   UnitAbbreviation: Scalars['String'];
   IdentifierPublic?: Maybe<Scalars['String']>;

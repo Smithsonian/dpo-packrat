@@ -69,7 +69,7 @@ function SearchList(props: SearchListProps): React.ReactElement {
             return;
         }
 
-        const variables: any = { input: { query: trimmedQuery } };
+        const variables: any = { input: { query: trimmedQuery } }; // eslint-disable-line @typescript-eslint/no-explicit-any
         variables.input.EdanOnly = EdanOnly;
         searchSubject({ variables });
     };

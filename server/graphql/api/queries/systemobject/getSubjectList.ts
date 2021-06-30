@@ -5,15 +5,10 @@ const getSubjectList = gql`
         getSubjectList(input: $input) {
             subjects {
                 idSubject
-                idUnit
-                Name
-                IdentifierPreferred {
-                    IdentifierValue
-                    idIdentifier
-                }
-                SystemObject {
-                    idSystemObject
-                }
+                idSystemObject
+                UnitAbbreviation
+                SubjectName
+                IdentifierPublic
             }
         }
     }

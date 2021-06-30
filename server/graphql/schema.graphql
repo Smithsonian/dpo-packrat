@@ -1352,16 +1352,16 @@ input GetProjectListInput {
 }
 
 type GetSubjectListResult {
-  subjects: [Subject!]!
+  subjects: [SubjectUnitIdentifier!]!
 }
 
 input GetSubjectListInput {
   search: String!
-  idUnit: Int!
+  idUnit: Int
   pageNumber: Int
   rowCount: Int
-  sortBy: String
-  sortOrder: String
+  sortBy: Int
+  sortOrder: Boolean
 }
 
 type SystemObject {
@@ -1519,6 +1519,7 @@ type GetItemsForSubjectResult {
 
 type SubjectUnitIdentifier {
   idSubject: Int!
+  idSystemObject: Int!
   SubjectName: String!
   UnitAbbreviation: String!
   IdentifierPublic: String

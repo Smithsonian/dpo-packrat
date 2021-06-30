@@ -8,6 +8,7 @@ const getAssetVersionsDetails = gql`
                 idAssetVersion
                 SubjectUnitIdentifier {
                     idSubject
+                    idSystemObject
                     SubjectName
                     UnitAbbreviation
                     IdentifierPublic
