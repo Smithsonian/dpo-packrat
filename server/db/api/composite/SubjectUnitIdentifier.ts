@@ -56,12 +56,6 @@ export class SubjectUnitIdentifier {
                 FROM Identifier AS ID
                 JOIN _IDMatches AS IDM ON (ID.idSystemObject = IDM.idSystemObject)
                 WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabARK}
-            ),
-            _UnitCMSIDs (idSystemObject, IdentifierValue) AS (
-                SELECT ID.idSystemObject, ID.IdentifierValue
-                FROM Identifier AS ID
-                JOIN _IDMatches AS IDM ON (ID.idSystemObject = IDM.idSystemObject)
-                WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabUnitCMSID}
             )
 
             SELECT S.idSubject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation', 
