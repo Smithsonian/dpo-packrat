@@ -174,6 +174,8 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             directory: '',
                             identifiers: [identifier],
                             folders: [folder],
+                            sourceObjects: [],
+                            derivedObjects: []
                         };
 
                         const ingestDataInput = {

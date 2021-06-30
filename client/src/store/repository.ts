@@ -281,14 +281,27 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         resetRepositoryFilter(false);
 
         if (systemObjectType === eSystemObjectType.eModel) {
-            set({ repositoryRootType: [], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });
-            getChildrenForIngestion(idRoot || 0);
+            set({ repositoryRootType: [eSystemObjectType.eModel, eSystemObjectType.eScene], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });
         }
+
+        if (systemObjectType === eSystemObjectType.eCaptureData) {
+            set({ repositoryRootType: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });
+        }
+
+        if (systemObjectType === eSystemObjectType.eScene) {
+            set({ repositoryRootType: [eSystemObjectType.eModel, eSystemObjectType.eScene], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });
+        }
+
+        getChildrenForIngestion(idRoot || 0);
     },
     getChildrenForIngestion: async (idSystemObject: number): Promise<void> => {
         const { getFilterState } = get();
         const filter = getFilterState();
         const { data, error } = await getObjectChildrenForRoot(filter, idSystemObject);
+
+        // set root to 0 for testing
+        // const { data, error } = await getObjectChildrenForRoot(filter, 0);
+
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;

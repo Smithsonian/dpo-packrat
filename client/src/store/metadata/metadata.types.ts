@@ -67,6 +67,8 @@ export type StateFolder = {
 export type PhotogrammetryFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    sourceObjects: StateRelatedObject[];
+    derivedObjects: StateRelatedObject[];
     folders: StateFolder[];
     name: string;
     description: string;
@@ -91,6 +93,7 @@ export type ModelFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     sourceObjects: StateRelatedObject[];
+    derivedObjects: StateRelatedObject[];
     dateCaptured: Date | string | null;
     creationMethod: number | null;
     modality: number | null;
@@ -104,6 +107,8 @@ export type ModelFields = {
 export type SceneFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    sourceObjects: StateRelatedObject[];
+    derivedObjects: StateRelatedObject[];
     referenceModels: StateReferenceModel[];
     hasBeenQCd: boolean;
     isOriented: boolean;
