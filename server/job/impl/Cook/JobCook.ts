@@ -70,7 +70,7 @@ export abstract class JobCook<T> extends JobPackrat {
     protected _idAssetVersions: number[] | null;
     private _completionMutexes: MutexInterface[] = [];
     private _complete: boolean = false;
-    protected _streamOverrideMap: Map<number, STORE.ReadStreamResult> = new Map<number, STORE.ReadStreamResult>();
+    protected _streamOverrideMap: Map<number, STORE.ReadStreamResult[]> = new Map<number, STORE.ReadStreamResult[]>();
 
     private static _stagingSempaphoreWrite = new Semaphore(CookWebDAVSimultaneousTransfers);
     private static _stagingSempaphoreRead = new Semaphore(CookWebDAVSimultaneousTransfers);
@@ -319,68 +319,85 @@ export abstract class JobCook<T> extends JobPackrat {
         for (const idAssetVersion of this._idAssetVersions) {
             const resInner: H.IOResults = await JobCook._stagingSempaphoreWrite.runExclusive(async (value) => {
                 try {
-                    // look for read stream in override map, which may be supplied when we're ingesting a zip file containing a model and associated UV Maps
+                    // look for read streams in override map, which may be supplied when we're ingesting a zip file containing a model and associated UV Maps
                     // in this case, the override stream is for the model geometry file
-                    let RSR: STORE.ReadStreamResult | undefined = this._streamOverrideMap.get(idAssetVersion);
-                    if (!RSR)
-                        RSR = await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion);
-                    if (!RSR.success || !RSR.readStream || !RSR.fileName)
-                        return { success: false, error: `JobCook.stageFiles unable to read asset version ${idAssetVersion}: ${RSR.error}` };
-
-                    // handle the fact that our asset may be stuffed into a subfolder (due to it being zipped)
-                    const fileName: string = path.basename(RSR.fileName);
-
-                    // transmit file to Cook work folder via WebDAV
-                    const destination: string = `/${this._configuration.jobId}/${fileName}`;
-                    LOG.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
-
-                    const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl, {
-                        authType: AuthType.None,
-                        maxBodyLength: 10 * 1024 * 1024 * 1024,
-                        withCredentials: false
-                    });
-                    const webdavWSOpts: CreateWriteStreamOptions = {
-                        headers: { 'Content-Type': 'application/octet-stream' }
-                    };
-                    const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
-                    const res: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
-
-                    if (!res.success) {
-                        const error = `JobCook.stageFiles unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
-                        LOG.error(error, LOG.LS.eJOB);
-                        return { success: false, error };
+                    let RSRs: STORE.ReadStreamResult[] | undefined = this._streamOverrideMap.get(idAssetVersion);
+                    if (!RSRs) {
+                        RSRs = [];
+                        RSRs.push(await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion));
                     }
 
-                    LOG.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}: completed`, LOG.LS.eJOB);
+                    let success: boolean = true;
+                    let error: string = '';
+                    for (const RSR of RSRs) {
+                        if (!RSR.success || !RSR.readStream || !RSR.fileName)
+                            return { success: false, error: `JobCook.stageFiles unable to read asset version ${idAssetVersion}: ${RSR.error}` };
 
-                    // use WebDAV client's stat to detect when file is fully staged and available on the server
-                    // poll for filesize of remote file.  Continue polling:
-                    // - until we match or exceed our streamed size
-                    // - as long as the remote size is less than our streamed size, up to 100 times
-                    // - as long as the remote size is growing, and not "stuck" at the same size more than 5 times
-                    // - pause CookRetryDelay ms between stat polls
-                    let sizeLast: number = 0;
-                    let stuckCount: number = 0;
-                    for (let statCount: number = 0; statCount < 100; statCount++) {
-                        try {
-                            const stat: any = await webdavClient.stat(destination);
-                            const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
-                            const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
-                            LOG.info(`JobCook.stageFiles staging polling ${Config.job.cookServerUrl}${destination.substring(1)}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
-                            if (size >= res.size)
-                                return { success: baseName === fileName, error: '' };
-                            if (size === sizeLast) {
-                                if (++stuckCount >= 5)
-                                    return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
+                        // handle the fact that our asset may be stuffed into a subfolder (due to it being zipped)
+                        const fileName: string = path.basename(RSR.fileName);
+
+                        // transmit file to Cook work folder via WebDAV
+                        const destination: string = `/${this._configuration.jobId}/${fileName}`;
+                        LOG.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
+
+                        const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl, {
+                            authType: AuthType.None,
+                            maxBodyLength: 10 * 1024 * 1024 * 1024,
+                            withCredentials: false
+                        });
+                        const webdavWSOpts: CreateWriteStreamOptions = {
+                            headers: { 'Content-Type': 'application/octet-stream' }
+                        };
+                        const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
+                        const res: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
+
+                        if (!res.success) {
+                            const error = `JobCook.stageFiles unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
+                            LOG.error(error, LOG.LS.eJOB);
+                            return { success: false, error };
+                        }
+
+                        LOG.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}: completed`, LOG.LS.eJOB);
+
+                        // use WebDAV client's stat to detect when file is fully staged and available on the server
+                        // poll for filesize of remote file.  Continue polling:
+                        // - until we match or exceed our streamed size
+                        // - as long as the remote size is less than our streamed size, up to 100 times
+                        // - as long as the remote size is growing, and not "stuck" at the same size more than 5 times
+                        // - pause CookRetryDelay ms between stat polls
+                        let sizeLast: number = 0;
+                        let stuckCount: number = 0;
+                        let stagingSuccess: boolean = false;
+                        for (let statCount: number = 0; statCount < 100; statCount++) {
+                            try {
+                                const stat: any = await webdavClient.stat(destination);
+                                const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
+                                const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
+                                LOG.info(`JobCook.stageFiles staging polling ${Config.job.cookServerUrl}${destination.substring(1)}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
+                                if (size >= res.size) {
+                                    stagingSuccess = (baseName === fileName);
+                                    break;
+                                }
+                                if (size === sizeLast) {
+                                    if (++stuckCount >= 5)
+                                        return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
+                                }
+                                sizeLast = size;
+                                await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
+                            } catch (error) {
+                                LOG.error('JobCook.stageFiles stat', LOG.LS.eJOB, error);
+                                await H.Helpers.sleep(CookRetryDelay); // sleep for CookRetryDelay ms before retrying
                             }
-                            sizeLast = size;
-                            await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
-                        } catch (error) {
-                            LOG.error('JobCook.stageFiles stat', LOG.LS.eJOB, error);
-                            await H.Helpers.sleep(CookRetryDelay); // sleep for CookRetryDelay ms before retrying
+                        }
+
+                        if (!stagingSuccess) {
+                            error = `Unable to verify existence of staged file ${fileName}`;
+                            LOG.error(error, LOG.LS.eJOB);
+                            success = false;
+                            break;
                         }
                     }
-                    return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
+                    return { success, error };
                 } catch (error) {
                     LOG.error('JobCook.stageFiles', LOG.LS.eJOB, error);
                     return { success: false, error: JSON.stringify(error) };
