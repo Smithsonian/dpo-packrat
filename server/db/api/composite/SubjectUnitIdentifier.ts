@@ -62,31 +62,15 @@ export class SubjectUnitIdentifier {
                 FROM Identifier AS ID
                 JOIN _IDMatches AS IDM ON (ID.idSystemObject = IDM.idSystemObject)
                 WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabUnitCMSID}
-            ),
-            _IDs (idSystemObject, IdentifierPublic, IdentifierCollection) AS (
-                SELECT IFNULL(A.idSystemObject, U.idSystemObject) AS idSystemObject,
-                    A.IdentifierValue AS 'IdentifierPublic',
-                    U.IdentifierValue AS 'IdentifierCollection'
-                FROM _ARKIDs AS A
-                LEFT JOIN _UnitCMSIDs AS U ON (A.idSystemObject = U.idSystemObject)
-                
-                UNION
-                
-                SELECT IFNULL(A.idSystemObject, U.idSystemObject) AS idSystemObject,
-                    A.IdentifierValue AS 'IdentifierPublic',
-                    U.IdentifierValue AS 'IdentifierCollection'
-                FROM _ARKIDs AS A
-                RIGHT JOIN _UnitCMSIDs AS U ON (A.idSystemObject = U.idSystemObject)
-                WHERE A.idSystemObject IS NULL
             )
-
-            SELECT S.idSubject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation', 
-                '' AS IdentifierPublic, '' AS IdentifierCollection
+            SELECT DISTINCT S.idSubject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation', 
+                IDA.IdentifierValue AS 'IdentifierPublic', IDU.IdentifierValue AS 'IdentifierCollection'
             FROM Subject AS S
             JOIN Unit AS U ON (S.idUnit = U.idUnit)
             JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
             JOIN _IDMatches AS IDM ON (SO.idSystemObject = IDM.idSystemObject)
-            ORDER BY S.idSubject
+            LEFT JOIN _ARKIDs AS IDA ON (SO.idSystemObject = IDA.idSystemObject)
+            LEFT JOIN _UnitCMSIDs AS IDU ON (SO.idSystemObject = IDU.idSystemObject)
             LIMIT ${maxResults};`;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SubjectUnitIdentifier.fetch', LOG.LS.eDB, error);
