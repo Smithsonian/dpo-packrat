@@ -91,7 +91,7 @@ function TreeViewPage(): React.ReactElement {
         updateRepositoryFilter
     } = useRepositoryStore();
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
-    const isRepository = location.pathname.includes('/repository');
+    const isRepository = location.pathname.startsWith('/repository');
 
     const setDefaultFilterSelectionsCookie = () => {
         document.cookie = `filterSelections=${JSON.stringify({
