@@ -229,25 +229,32 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
     }
 
     // Use STORE.AssetStorageAdapter.commitNewAsset();
-    const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
-        storageKey: TestCase.assetVersions[0].StorageKeyStaging,
-        storageHash,
-        FileName: TestCase.assets[0].FileName,
-        FilePath: TestCase.assets[0].FilePath,
-        idAssetGroup: TestCase.assets[0].idAssetGroup,
-        idVAssetType: TestCase.assets[0].idVAssetType,
-        idUserCreator: TestCase.assetVersions[0].idUserCreator,
-        DateCreated: TestCase.assetVersions[0].DateCreated
-    };
 
     let ASRC: STORE.AssetStorageResultCommit;
     if (newAsset) {
         // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset ${TestCase.asset.FileName}`, LOG.LS.eTEST);
+        const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
+            storageKey: TestCase.assetVersions[0].StorageKeyStaging,
+            storageHash,
+            FileName: TestCase.assets[0].FileName,
+            FilePath: TestCase.assets[0].FilePath,
+            idAssetGroup: TestCase.assets[0].idAssetGroup,
+            idVAssetType: TestCase.assets[0].idVAssetType,
+            idUserCreator: TestCase.assetVersions[0].idUserCreator,
+            DateCreated: TestCase.assetVersions[0].DateCreated
+        };
         ASRC = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
     } else {
         // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`, LOG.LS.eTEST);
-        ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: TestCase.assetVersions[0].StorageKeyStaging, storageHash },
-            TestCase.assets[0], TestCase.assetVersions[0].idUserCreator, TestCase.assetVersions[0].DateCreated, TestCase.assetVersions[0].FileName);
+        const ASCNAVI: STORE.AssetStorageCommitNewAssetVersionInput = {
+            storageKey: TestCase.assetVersions[0].StorageKeyStaging,
+            storageHash,
+            asset: TestCase.assets[0],
+            assetNameOverride: TestCase.assets[0].FileName,
+            idUserCreator: TestCase.assetVersions[0].idUserCreator,
+            DateCreated: TestCase.assetVersions[0].DateCreated
+        };
+        ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAVI);
     }
     expect(ASRC.success).toBeTruthy();
     if (!ASRC.success) {

@@ -21,6 +21,18 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
     public fetchTableName(): string { return 'Asset'; }
     public fetchID(): number { return this.idAsset; }
 
+    static constructFromPrisma(asset: AssetBase): Asset {
+        return new Asset({
+            idAsset: asset.idAsset,
+            FileName: asset.FileName,
+            FilePath: asset.FilePath,
+            idAssetGroup: asset.idAssetGroup,
+            idVAssetType: asset.idVAssetType,
+            idSystemObject: asset.idSystemObject,
+            StorageKey: asset.StorageKey
+        });
+    }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, StorageKey } = this;
@@ -131,6 +143,38 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                 await DBC.DBConnection.prisma.asset.findMany({ where: { SystemObject_Asset_idSystemObjectToSystemObject: { idSystemObject } } }), Asset);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Asset.fetchFromSystemObject', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** Fetches assets that are connected to the specified idSystemObject (via that object's last SystemObjectVersion,
+     * and that SystemObjectVersionAssetVersionXref's records). For those assets, we look for a match on FileName, FilePath */
+    static async fetchMatching(idSystemObject: number, FileName: string, FilePath: string, idVAssetType: number): Promise<Asset | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            const assets: AssetBase[] | null = // DBC.CopyArray<AssetBase, Asset>(
+                await DBC.DBConnection.prisma.$queryRaw<Asset[]>`
+                SELECT DISTINCT A.*
+                FROM SystemObjectVersion AS SOV
+                JOIN SystemObjectVersionAssetVersionXref AS XREF ON (SOV.idSystemObjectVersion = XREF.idSystemObjectVersion)
+                JOIN AssetVersion AS AV ON (XREF.idAssetVersion = AV.idAssetVersion)
+                JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                WHERE SOV.idSystemObject = ${idSystemObject}
+                  AND SOV.idSystemObjectVersion = (SELECT MAX(idSystemObjectVersion)
+                                                   FROM SystemObjectVersion
+                                                   WHERE idSystemObject = ${idSystemObject})
+                  AND A.FileName = ${FileName} 
+                  AND A.FilePath = ${FilePath}
+                  AND A.idVAssetType = ${idVAssetType}
+                ORDER BY SOV.idSystemObjectVersion DESC
+                LIMIT 1;`; //, Asset);
+            /* istanbul ignore if */
+            if (!assets || assets.length == 0)
+                return null;
+            return Asset.constructFromPrisma(assets[0]);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Asset.fetchMatching', LOG.LS.eDB, error);
             return null;
         }
     }

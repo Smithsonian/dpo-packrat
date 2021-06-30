@@ -284,8 +284,10 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         ASRC = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
     } else {
         // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`, LOG.LS.eTEST);
-        ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: TestCase.assetVersions[0].StorageKeyStaging, storageHash },
-            TestCase.assets[0], TestCase.assetVersions[0].idUserCreator, TestCase.assetVersions[0].DateCreated, TestCase.assetVersions[0].FileName);
+        ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion({
+            storageKey: TestCase.assetVersions[0].StorageKeyStaging, storageHash, asset: TestCase.assets[0], assetNameOverride: TestCase.assetVersions[0].FileName,
+            idUserCreator: TestCase.assetVersions[0].idUserCreator, DateCreated: TestCase.assetVersions[0].DateCreated
+        });
     }
     expect(ASRC.success).toBeTruthy();
     if (!ASRC.success) {
@@ -389,7 +391,8 @@ async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
         // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
-        const ISR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(asset, assetVersion, TestCase.SOBased, opInfo);
+        const IAI: STORE.IngestAssetInput = { asset, assetVersion, allowZipCracking: true, SOBased: TestCase.SOBased, idSystemObject: null, opInfo };
+        const ISR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(IAI);
 
         if (!ISR.success && expectSuccess)
             LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset: ${ISR.error}`, LOG.LS.eTEST);
@@ -557,7 +560,15 @@ async function testIngestAssetFailure(TestCase: AssetStorageAdapterTestCase): Pr
     const storageKeyStagingOld: string = TestCase.assetVersions[0].StorageKeyStaging;
     TestCase.assetVersions[0].StorageKeyStaging = H.Helpers.randomSlug();
     LOG.info('AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting Failure)', LOG.LS.eTEST);
-    const ISR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(TestCase.assets[0], TestCase.assetVersions[0], TestCase.SOBased, opInfo);
+    const IAI: STORE.IngestAssetInput = {
+        asset: TestCase.assets[0],
+        assetVersion: TestCase.assetVersions[0],
+        allowZipCracking: true,
+        SOBased: TestCase.SOBased,
+        idSystemObject: null,
+        opInfo
+    };
+    const ISR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(IAI);
     TestCase.assetVersions[0].StorageKeyStaging = storageKeyStagingOld;
 
     expect(ISR.success).toBeFalsy();
