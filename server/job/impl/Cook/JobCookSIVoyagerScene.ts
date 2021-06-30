@@ -124,7 +124,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         // If needed, create a new scene (if we have no scenes, or if we have multiple scenes, then create a new one)
         const createScene: boolean = (scenes.length !== 1);
         const scene: DBAPI.Scene = createScene ? svx.SvxExtraction.extractScene() : scenes[0];
-        let Asset: DBAPI.Asset | null = null;
+        let asset: DBAPI.Asset | null = null;
         if (createScene) {
             if (!await scene.create()) {
                 LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`, LOG.LS.eJOB);
@@ -147,7 +147,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 if (sceneAssets) {
                     for (const sceneAsset of sceneAssets) {
                         if (await sceneAsset.assetType() === CACHE.eVocabularyID.eAssetAssetTypeScene) {
-                            Asset = sceneAsset;
+                            asset = sceneAsset;
                             break;
                         }
                     }
@@ -169,13 +169,14 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         const LS: LocalStore | undefined = ASL.getStore();
         const idUserCreator: number = LS?.idUser ?? 0;
         const ISI: STORE.IngestStreamOrFileInput = {
-            ReadStream: RSR.readStream,
-            LocalFilePath: null,
-            Asset,
+            readStream: RSR.readStream,
+            localFilePath: null,
+            asset,
             FileName: svxFile,
             FilePath: '',
             idAssetGroup: 0,
             idVAssetType: vScene.idVocabulary,
+            allowZipCracking: false,
             idUserCreator,
             SOBased: scene,
         };
@@ -194,7 +195,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 if (MSX.Name) {
                     // look for existing models, children of our scene, that match this model's purpose
                     let model: DBAPI.Model | null = await this.findMatchingModel(scene, MSX.computeModelAutomationTag());
-                    let Asset: DBAPI.Asset | null = null;
+                    let asset: DBAPI.Asset | null = null;
 
                     if (model) {
                         // if we already have a model, look for the asset that we are likely updating:
@@ -206,10 +207,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                                     switch (await modelAsset.assetType()) {
                                         case CACHE.eVocabularyID.eAssetAssetTypeModel:
                                         case CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile:
-                                            Asset = modelAsset;
+                                            asset = modelAsset;
                                             break;
                                     }
-                                    if (Asset)
+                                    if (asset)
                                         break;
                                 }
                             } else
@@ -261,13 +262,14 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                     const FileName: string = path.basename(MSX.Name);
                     const FilePath: string = path.dirname(MSX.Name);
                     const ISIModel: STORE.IngestStreamOrFileInput = {
-                        ReadStream: RSRModel.readStream,
-                        LocalFilePath: null,
-                        Asset,
+                        readStream: RSRModel.readStream,
+                        localFilePath: null,
+                        asset,
                         FileName,
                         FilePath,
                         idAssetGroup: 0,
                         idVAssetType: vModel.idVocabulary,
+                        allowZipCracking: false,
                         idUserCreator,
                         SOBased: model,
                     };

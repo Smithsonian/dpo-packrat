@@ -66,6 +66,7 @@ export class HttpServer {
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
         this.app.get('/download', download);
+        this.app.get('/download/*', download);
         this.app.use(errorhandler); // keep last
 
         if (process.env.NODE_ENV !== 'test') {

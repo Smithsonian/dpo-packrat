@@ -11,7 +11,7 @@ import DefaultThumbnail from '../../../../assets/images/default-thumbnail.png';
 import VoyagerExplorer from './DetailsTab/VoyagerExplorer';
 import { eSystemObjectType } from '../../../../types/server';
 import { getObjectAssets } from '../../hooks/useDetailsView';
-import { getRootSceneDownloadUrlForVoyager, getDocumentSceneDownloadUrlForVoyager } from '../../../../utils/repository';
+import { getRootSceneDownloadUrlForVoyager } from '../../../../utils/repository';
 
 const useStyles = makeStyles(() => ({
     thumbnail: {
@@ -38,14 +38,14 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     useEffect(() => {
         const fetchObjectAssets = async () => {
             if (idSystemObject) {
-                setRootLink(getRootSceneDownloadUrlForVoyager(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject));
                 const {
                     data: {
                         getAssetDetailsForSystemObject: { assetDetails }
                     }
                 } = await getObjectAssets(idSystemObject);
                 if (assetDetails && assetDetails.length > 0) {
-                    setDocumentLink(getDocumentSceneDownloadUrlForVoyager(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject, assetDetails[0].name));
+                    setRootLink(getRootSceneDownloadUrlForVoyager(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject, assetDetails[0].path));
+                    setDocumentLink(assetDetails[0].name);
                 }
             }
         };

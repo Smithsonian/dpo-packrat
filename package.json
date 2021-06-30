@@ -63,7 +63,7 @@
     "eslint-plugin-react-hooks": "4.1.2"
   },
   "devDependencies": {
-    "@types/node": "14.10.1",
+    "@types/node": "14.17.1",
     "concurrently": "5.3.0",
     "copyfiles": "2.3.0",
     "husky": "4.3.0",
@@ -87,7 +87,7 @@
     ]
   },
   "volta": {
-    "node": "14.16.0",
+    "node": "14.17.1",
     "yarn": "1.22.10"
   }
 }

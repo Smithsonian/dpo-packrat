@@ -232,7 +232,7 @@ describe('DB Creation Test Suite', () => {
         if (assetGroup && vocabulary)
             assetThumbnail = await UTIL.createAssetTest({
                 FileName: 'Test Asset Thumbnail',
-                FilePath: '/test/asset/path',
+                FilePath: '/test/asset/path/thumbnail',
                 idAssetGroup: assetGroup.idAssetGroup,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: null,
@@ -247,8 +247,8 @@ describe('DB Creation Test Suite', () => {
         expect(vocabBulkIngest).toBeTruthy();
         if (vocabBulkIngest)
             assetBulkIngest = await UTIL.createAssetTest({
-                FileName: 'Test Asset Thumbnail',
-                FilePath: '/test/asset/path',
+                FileName: 'Test Asset Bulk Ingest',
+                FilePath: '/test/asset/path/bulkingest',
                 idAssetGroup: null,
                 idVAssetType: vocabBulkIngest.idVocabulary,
                 idSystemObject: null,
@@ -597,8 +597,8 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Asset Without Asset Group', async () => {
         if (vocabulary&& systemObjectSubject)
             assetWithoutAG = await UTIL.createAssetTest({
-                FileName: 'Test Asset 2',
-                FilePath: '/test/asset/path2',
+                FileName: 'Test Asset Without AG',
+                FilePath: '/test/asset/path/without-ag',
                 idAssetGroup: null,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectSubject.idSystemObject,
@@ -1070,8 +1070,8 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Asset For Model', async () => {
         if (vocabulary&& systemObjectModel)
             assetModel = await UTIL.createAssetTest({
-                FileName: 'Test Asset 2',
-                FilePath: '/test/asset/path2',
+                FileName: 'Test Asset Model',
+                FilePath: '/test/asset/path/model',
                 idAssetGroup: null,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectModel.idSystemObject,
@@ -2666,6 +2666,17 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(modelSceneXrefFetch).toBeTruthy();
     });
 
+    test('DB Fetch ModelSceneXref: ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution', async () => {
+        let modelSceneXrefFetch: DBAPI.ModelSceneXref[] | null = null;
+        if (scene && modelSceneXref) {
+            modelSceneXrefFetch = await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(scene.idScene, modelSceneXref.Name,
+                modelSceneXref.Usage, modelSceneXref.Quality, modelSceneXref.UVResolution);
+            if (modelSceneXrefFetch)
+                expect(modelSceneXrefFetch).toEqual(expect.arrayContaining([modelSceneXref]));
+        }
+        expect(modelSceneXrefFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: Project', async () => {
         let projectFetch: DBAPI.Project | null = null;
         if (project) {
@@ -4149,6 +4160,8 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectNameToType('System Object Version')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersion);
         expect(DBAPI.DBObjectNameToType('SystemObjectXref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectXref);
         expect(DBAPI.DBObjectNameToType('System Object Xref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectXref);
+        expect(DBAPI.DBObjectNameToType('SystemObjectVersionAssetVersionXref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersionAssetVersionXref);
+        expect(DBAPI.DBObjectNameToType('System Object Version Asset Version Xref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersionAssetVersionXref);
         expect(DBAPI.DBObjectNameToType('UnitEdan')).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
         expect(DBAPI.DBObjectNameToType('Unit Edan')).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
         expect(DBAPI.DBObjectNameToType('User')).toEqual(DBAPI.eNonSystemObjectType.eUser);
@@ -4907,21 +4920,35 @@ describe('DB Fetch Special Test Suite', () => {
         if (modelSceneXref) {
             modelSceneXrefClone = new DBAPI.ModelSceneXref(modelSceneXref);
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeTruthy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeFalsy();
 
             modelSceneXrefClone.R3 = (modelSceneXref.R3 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.R2 = (modelSceneXref.R2 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.R1 = (modelSceneXref.R1 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.R0 = (modelSceneXref.R0 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.TS2 = (modelSceneXref.TS2 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.TS1 = (modelSceneXref.TS1 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
             modelSceneXrefClone.TS0 = (modelSceneXref.TS0 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
             // LOG.info(`clone = ${JSON.stringify(modelSceneXrefClone, H.Helpers.saferStringify)} vs ${JSON.stringify(modelSceneXref, H.Helpers.saferStringify)}}`, LOG.LS.eTEST);
 
             const modelAutomationTag: string = modelSceneXrefClone.computeModelAutomationTag();
@@ -6588,6 +6615,18 @@ describe('DB Update Test Suite', () => {
         expect(xref).toBeTruthy();
     });
 
+    // Placed this test here after various updates above ... it's a wonky test case and could be improved
+    test('DB Fetch Asset: Asset.fetchMatching', async () => {
+        let assetFetch: DBAPI.Asset | null = null;
+        if (systemObjectScene && assetWithoutAG && assetVersion) {
+            // LOG.info(`*** DBAPI.Asset.fetchMatching(${systemObjectScene.idSystemObject}, '${assetWithoutAG.FileName}', '${assetWithoutAG.FilePath}', ${assetWithoutAG.idVAssetType}, '${assetVersion.StorageHash}');`, LOG.LS.eTEST);
+            assetFetch = await DBAPI.Asset.fetchMatching(systemObjectScene.idSystemObject,
+                assetWithoutAG.FileName, assetWithoutAG.FilePath, assetWithoutAG.idVAssetType);
+            expect(assetFetch).toEqual(assetWithoutAG);
+        }
+        expect(assetFetch).toBeTruthy();
+    });
+
     test('DB Update: SystemObjectXref.update', async () => {
         let bUpdated: boolean = false;
         if (systemObjectXref && systemObjectAsset) {
@@ -7109,6 +7148,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Asset.fetchByStorageKey('')).toBeNull();
         expect(await DBAPI.Asset.fetchFromAssetGroup(0)).toBeNull();
         expect(await DBAPI.Asset.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.Asset.fetchMatching(0, '', '', 0)).toBeNull();
         expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
@@ -7195,6 +7235,11 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(0, -1, 'foo')).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(-1, 0, 'foo')).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(-1, -1, '')).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(0, 'foo', 'foo', 'foo', -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, null, 'foo', 'foo', -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', null, 'foo', -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', 'foo', null, -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', 'foo', 'foo', null)).toBeNull();
         expect(await DBAPI.Project.fetch(0)).toBeNull();
         expect(await DBAPI.Project.fetchDerivedFromUnits([])).toBeNull();
         expect(await DBAPI.Project.fetchMasterFromSubjects([])).toBeNull();
