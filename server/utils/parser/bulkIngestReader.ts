@@ -254,7 +254,7 @@ export class BulkIngestReader {
             return null;
         }
 
-        return { idSubject: 0, SubjectName: bagitSubject.subject_name, UnitAbbreviation: units[0].Abbreviation || /* istanbul ignore next */ '',
+        return { idSubject: 0, idSystemObject: 0, SubjectName: bagitSubject.subject_name, UnitAbbreviation: units[0].Abbreviation || /* istanbul ignore next */ '',
             IdentifierCollection: bagitSubject.subject_guid, IdentifierPublic: '' };
     }
 
@@ -271,10 +271,16 @@ export class BulkIngestReader {
             return null;
         }
 
+        const SO: DBAPI.SystemObject | null = await subject.fetchSystemObject();
+        if (!SO) {
+            LOG.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load system object from local_subject_id in ${JSON.stringify(bagitSubject)}`, LOG.LS.eSYS);
+            return null;
+        }
+
         const identifier: DBAPI.Identifier | null = (subject.idIdentifierPreferred)
             ? await DBAPI.Identifier.fetch(subject.idIdentifierPreferred)
             : /* istanbul ignore next */ null;
-        return { idSubject: subject.idSubject, SubjectName: subject.Name, UnitAbbreviation: unit.Abbreviation  || /* istanbul ignore next */ '',
+        return { idSubject: subject.idSubject, idSystemObject: SO.idSystemObject, SubjectName: subject.Name, UnitAbbreviation: unit.Abbreviation  || /* istanbul ignore next */ '',
             IdentifierCollection: identifier ? identifier.IdentifierValue : /* istanbul ignore next */ bagitSubject.subject_guid, IdentifierPublic: '' };
     }
 
