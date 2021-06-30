@@ -86,7 +86,7 @@ function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActi
                 </Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/user/create'>
+                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/users/create'>
                     <Button className={classes.searchUsersFilterButton}>Create</Button>
                 </Link>
             </Box>

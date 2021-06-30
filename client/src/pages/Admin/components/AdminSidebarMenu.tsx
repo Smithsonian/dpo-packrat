@@ -60,10 +60,12 @@ function AdminSidebarMenu(): React.ReactElement {
     return (
         <Box className={classes.AdminSidebarMenuContainer}>
             <MenuList>
+                <AdminSidebarMenuRow path={'licenses'} selected={path.includes('licenses')} />
                 <AdminSidebarMenuRow path={'users'} selected={path.includes('users')} />
                 <Box className={classes.divider} />
                 <AdminSidebarMenuRow path={'projects'} selected={path.includes('projects')} />
                 <AdminSidebarMenuRow path={'units'} selected={path.includes('units')} />
+                <AdminSidebarMenuRow path={'subjects'} selected={path.includes('subjects')} />
             </MenuList>
         </Box>
     );

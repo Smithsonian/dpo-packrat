@@ -34,6 +34,7 @@ export type Query = {
   getItem: GetItemResult;
   getItemsForSubject: GetItemsForSubjectResult;
   getLicense: GetLicenseResult;
+  getLicenseList: GetLicenseListResult;
   getModel: GetModelResult;
   getModelConstellation: GetModelConstellationResult;
   getModelConstellationForAssetVersion: GetModelConstellationForAssetVersionResult;
@@ -46,9 +47,11 @@ export type Query = {
   getSceneForAssetVersion: GetSceneForAssetVersionResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
+  getSubjectList: GetSubjectListResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
+  getUnitsFromEdanAbbreviation: GetUnitsFromEdanAbbreviationResult;
   getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
@@ -140,6 +143,11 @@ export type QueryGetLicenseArgs = {
 };
 
 
+export type QueryGetLicenseListArgs = {
+  input: GetLicenseListInput;
+};
+
+
 export type QueryGetModelArgs = {
   input: GetModelInput;
 };
@@ -200,6 +208,11 @@ export type QueryGetSubjectArgs = {
 };
 
 
+export type QueryGetSubjectListArgs = {
+  input: GetSubjectListInput;
+};
+
+
 export type QueryGetSubjectsForUnitArgs = {
   input: GetSubjectsForUnitInput;
 };
@@ -212,6 +225,11 @@ export type QueryGetSystemObjectDetailsArgs = {
 
 export type QueryGetUnitArgs = {
   input: GetUnitInput;
+};
+
+
+export type QueryGetUnitsFromEdanAbbreviationArgs = {
+  input: GetUnitsFromEdanAbbreviationInput;
 };
 
 
@@ -312,10 +330,13 @@ export type Mutation = {
   __typename?: 'Mutation';
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
+  createGeoLocation: CreateGeoLocationResult;
   createItem: CreateItemResult;
+  createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
   createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
+  createSubjectWithIdentifiers: CreateSubjectWithIdentifiersResult;
   createUnit: CreateUnitResult;
   createUser: CreateUserResult;
   createVocabulary: CreateVocabularyResult;
@@ -326,6 +347,7 @@ export type Mutation = {
   ingestData: IngestDataResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
+  updateLicense: CreateLicenseResult;
   updateObjectDetails: UpdateObjectDetailsResult;
   updateSourceObjects: UpdateSourceObjectsResult;
   updateUser: CreateUserResult;
@@ -343,8 +365,18 @@ export type MutationCreateCaptureDataPhotoArgs = {
 };
 
 
+export type MutationCreateGeoLocationArgs = {
+  input: CreateGeoLocationInput;
+};
+
+
 export type MutationCreateItemArgs = {
   input: CreateItemInput;
+};
+
+
+export type MutationCreateLicenseArgs = {
+  input: CreateLicenseInput;
 };
 
 
@@ -360,6 +392,11 @@ export type MutationCreateSceneArgs = {
 
 export type MutationCreateSubjectArgs = {
   input: CreateSubjectInput;
+};
+
+
+export type MutationCreateSubjectWithIdentifiersArgs = {
+  input: CreateSubjectWithIdentifiersInput;
 };
 
 
@@ -410,6 +447,11 @@ export type MutationRollbackSystemObjectVersionArgs = {
 
 export type MutationUpdateDerivedObjectsArgs = {
   input: UpdateDerivedObjectsInput;
+};
+
+
+export type MutationUpdateLicenseArgs = {
+  input: UpdateLicenseInput;
 };
 
 
@@ -900,6 +942,22 @@ export type AreCameraSettingsUniformResult = {
   isUniform: Scalars['Boolean'];
 };
 
+export type CreateLicenseInput = {
+  Name: Scalars['String'];
+  Description: Scalars['String'];
+};
+
+export type CreateLicenseResult = {
+  __typename?: 'CreateLicenseResult';
+  License?: Maybe<License>;
+};
+
+export type UpdateLicenseInput = {
+  idLicense: Scalars['Int'];
+  Name: Scalars['String'];
+  Description: Scalars['String'];
+};
+
 export type GetLicenseInput = {
   idLicense: Scalars['Int'];
 };
@@ -907,6 +965,15 @@ export type GetLicenseInput = {
 export type GetLicenseResult = {
   __typename?: 'GetLicenseResult';
   License?: Maybe<License>;
+};
+
+export type GetLicenseListInput = {
+  search?: Maybe<Scalars['String']>;
+};
+
+export type GetLicenseListResult = {
+  __typename?: 'GetLicenseListResult';
+  Licenses: Array<License>;
 };
 
 export type License = {
@@ -1456,6 +1523,25 @@ export type RollbackSystemObjectVersionInput = {
   idSystemObjectVersion: Scalars['Int'];
 };
 
+export type CreateSubjectWithIdentifiersResult = {
+  __typename?: 'CreateSubjectWithIdentifiersResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type CreateSubjectWithIdentifiersInput = {
+  identifiers: Array<CreateIdentifierInput>;
+  subject: CreateSubjectInput;
+  systemCreated: Scalars['Boolean'];
+};
+
+export type CreateIdentifierInput = {
+  identifierValue: Scalars['String'];
+  identifierType: Scalars['Int'];
+  idSystemObject?: Maybe<Scalars['Int']>;
+  selected: Scalars['Boolean'];
+};
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -1615,6 +1701,7 @@ export type RepositoryPath = {
 
 export type GetSystemObjectDetailsResult = {
   __typename?: 'GetSystemObjectDetailsResult';
+  idSystemObject: Scalars['Int'];
   idObject: Scalars['Int'];
   name: Scalars['String'];
   retired: Scalars['Boolean'];
@@ -1698,6 +1785,20 @@ export type GetProjectListResult = {
 
 export type GetProjectListInput = {
   search: Scalars['String'];
+};
+
+export type GetSubjectListResult = {
+  __typename?: 'GetSubjectListResult';
+  subjects: Array<Subject>;
+};
+
+export type GetSubjectListInput = {
+  search: Scalars['String'];
+  idUnit: Scalars['Int'];
+  pageNumber?: Maybe<Scalars['Int']>;
+  rowCount?: Maybe<Scalars['Int']>;
+  sortBy?: Maybe<Scalars['String']>;
+  sortOrder?: Maybe<Scalars['String']>;
 };
 
 export type SystemObject = {
@@ -1826,6 +1927,24 @@ export type CreateItemResult = {
   Item?: Maybe<Item>;
 };
 
+export type CreateGeoLocationInput = {
+  Latitude?: Maybe<Scalars['Int']>;
+  Longitude?: Maybe<Scalars['Int']>;
+  Altitude?: Maybe<Scalars['Int']>;
+  TS0?: Maybe<Scalars['Int']>;
+  TS1?: Maybe<Scalars['Int']>;
+  TS2?: Maybe<Scalars['Int']>;
+  R0?: Maybe<Scalars['Int']>;
+  R1?: Maybe<Scalars['Int']>;
+  R2?: Maybe<Scalars['Int']>;
+  R3?: Maybe<Scalars['Int']>;
+};
+
+export type CreateGeoLocationResult = {
+  __typename?: 'CreateGeoLocationResult';
+  GeoLocation?: Maybe<GeoLocation>;
+};
+
 export type GetSubjectsForUnitInput = {
   idUnit: Scalars['Int'];
   pagination?: Maybe<PaginationInput>;
@@ -1870,6 +1989,7 @@ export type GetObjectsForItemResult = {
 
 export type SearchIngestionSubjectsInput = {
   query: Scalars['String'];
+  EdanOnly?: Maybe<Scalars['Boolean']>;
 };
 
 export type SearchIngestionSubjectsResult = {
@@ -1947,6 +2067,15 @@ export type GetUnitsFromNameSearchResult = {
 
 export type GetUnitsFromNameSearchInput = {
   search: Scalars['String'];
+};
+
+export type GetUnitsFromEdanAbbreviationResult = {
+  __typename?: 'GetUnitsFromEdanAbbreviationResult';
+  Units: Array<Unit>;
+};
+
+export type GetUnitsFromEdanAbbreviationInput = {
+  abbreviation: Scalars['String'];
 };
 
 export type Unit = {
