@@ -4,8 +4,16 @@ import * as DBC from '../../connection';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
 
+export enum eSubjectUnitIdentifierSortColumns {
+    eUnitAbbreviation,
+    eSubjectName,
+    eIdentifierValue,
+    eDefault
+}
+
 export class SubjectUnitIdentifier {
     idSubject!: number;
+    idSystemObject!: number;
     SubjectName!: string;
     UnitAbbreviation!: string;
     IdentifierPublic!: string;
@@ -63,7 +71,7 @@ export class SubjectUnitIdentifier {
                 JOIN _IDMatches AS IDM ON (ID.idSystemObject = IDM.idSystemObject)
                 WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabUnitCMSID}
             )
-            SELECT DISTINCT S.idSubject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation', 
+            SELECT DISTINCT S.idSubject, SO.idSystemObject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation', 
                 IDA.IdentifierValue AS 'IdentifierPublic', IDU.IdentifierValue AS 'IdentifierCollection'
             FROM Subject AS S
             JOIN Unit AS U ON (S.idUnit = U.idUnit)
@@ -74,6 +82,64 @@ export class SubjectUnitIdentifier {
             LIMIT ${maxResults};`;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SubjectUnitIdentifier.fetch', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async search(query: string, idUnit?: number | undefined, pageNumber?: number | undefined,
+        rowCount?: number | undefined, sortBy?: eSubjectUnitIdentifierSortColumns | undefined,
+        sortDirection?: boolean | undefined): Promise<SubjectUnitIdentifier[] | null> {
+        try {
+            const queryRawParams: string[] = [];
+            const querySupplied: boolean = (query !== '');
+            const idUnitSupplied: boolean = ((idUnit ?? 0) !== 0);
+            const whereConditions: string[] = [];
+            if (querySupplied) {
+                query = `%${query}%`;
+                whereConditions.push('(S.Name LIKE ? OR ID.IdentifierValue LIKE ?)');
+                queryRawParams.push(query);
+                queryRawParams.push(query);
+            }
+            if (idUnitSupplied) {
+                whereConditions.push('U.idUnit = ?');
+                queryRawParams.push(`${idUnit}`);
+            }
+            const where: string = whereConditions.length > 0 ? `\nWHERE ${whereConditions.join(' AND ')}` : '';
+
+            let orderBy: string = '';
+            if (sortBy === undefined)
+                sortBy = eSubjectUnitIdentifierSortColumns.eDefault;
+            switch (sortBy) { /* istanbul ignore next */
+                default:
+                case eSubjectUnitIdentifierSortColumns.eDefault:
+                case eSubjectUnitIdentifierSortColumns.eSubjectName:
+                    orderBy = 'ORDER BY S.Name';
+                    break;
+                case eSubjectUnitIdentifierSortColumns.eUnitAbbreviation: orderBy = 'ORDER BY U.Abbreviation, S.Name'; break;
+                case eSubjectUnitIdentifierSortColumns.eIdentifierValue: orderBy = 'ORDER BY ID.IdentifierValue'; break;
+            }
+            if (sortDirection === false)
+                orderBy += ' DESC';
+
+            if ((rowCount ?? 0) <= 0)
+                rowCount = 100;
+            if ((pageNumber ?? 0) <= 1)
+                pageNumber = 1;
+            const rowStart: number = (pageNumber! - 1) * rowCount!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            queryRawParams.push(`${rowStart}`);
+            queryRawParams.push(`${rowCount}`);
+
+            const sql: string = `SELECT S.idSubject, SO.idSystemObject, S.Name AS 'SubjectName', U.Abbreviation, ID.IdentifierValue AS 'IdentifierPublic', '' AS 'IdentifierCollection'
+                FROM Subject AS S
+                JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
+                LEFT JOIN Identifier AS ID ON (S.idIdentifierPreferred = ID.idIdentifier)
+                LEFT JOIN Unit AS U ON (S.idUnit = U.idUnit)${where}
+                ${orderBy}
+                LIMIT ?, ?`;
+            // LOG.info(`DBAPI.SubjectUnitIdentifier.search, sql=${sql}; params=${JSON.stringify(queryRawParams)}`, LOG.LS.eDB);
+            return await DBC.DBConnection.prisma.$queryRaw<SubjectUnitIdentifier[] | null>(sql, ...queryRawParams);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.SubjectUnitIdentifier.search', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -17,6 +17,7 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
         for (const record of resultsCOL.records) {
             resultsDB.push({
                 idSubject: 0,
+                idSystemObject: 0,
                 SubjectName: record.name,
                 UnitAbbreviation: record.unit,
                 IdentifierPublic: record.identifierPublic,
