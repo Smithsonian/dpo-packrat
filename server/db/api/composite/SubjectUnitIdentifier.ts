@@ -86,6 +86,7 @@ export class SubjectUnitIdentifier {
             JOIN Unit AS U ON (S.idUnit = U.idUnit)
             JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
             JOIN _IDMatches AS IDM ON (SO.idSystemObject = IDM.idSystemObject)
+            LEFT JOIN _IDs AS ID ON (SO.idSystemObject = ID.idSystemObject)
             ORDER BY S.idSubject
             LIMIT ${maxResults};`;
         } catch (error) /* istanbul ignore next */ {
