@@ -262,12 +262,8 @@ export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | un
     return `${serverEndPoint}/download?idSystemObjectVersion=${idSystemObjectVersion}`;
 }
 
-export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number): string {
-    return `${serverEndPoint}/download/idSystemObject-${idSystemObject}`;
-}
-
-export function getDocumentSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number, document: string): string {
-    return `${serverEndPoint}/download/idSystemObject-${idSystemObject}/${document}`;
+export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number, path: string): string {
+    return `${serverEndPoint}/download/idSystemObject-${idSystemObject}/${path}/`;
 }
 
 // prettier-ignore
