@@ -61,13 +61,14 @@ interface RelatedObjectsListProps extends ViewableProps {
     currentObject?: number;
     onRemoveConnection?: (idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) => any;
     objectType?: number;
+    relationshipLanguage?: string;
 }
 
 function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement {
-    const { relatedObjects, type, onAdd, onRemove, viewMode = false, disabled = false, currentObject, onRemoveConnection, objectType } = props;
+    const { relatedObjects, type, onAdd, onRemove, viewMode = false, disabled = false, currentObject, onRemoveConnection, objectType, relationshipLanguage } = props;
     const classes = useStyles(viewMode);
 
-    const titles = [`${type.toString()} Object(s)`, 'Identifier', 'Object Type'];
+    const titles = [`${relationshipLanguage || type.toString() + ' Object(s)'}`, 'Identifier', 'Object Type'];
     const hasRelatedObjects = !!relatedObjects.length;
 
     const buttonLabel: string = viewMode ? 'Connect' : 'Add';
