@@ -117,6 +117,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                 currentObject={idSystemObject}
                 onRemoveConnection={deleteObjectConnection}
                 objectType={objectType}
+                relationshipLanguage='Parent(s)'
             />
             <RelatedObjectsList
                 disabled={disabled}
@@ -126,6 +127,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                 currentObject={idSystemObject}
                 onRemoveConnection={deleteObjectConnection}
                 objectType={objectType}
+                relationshipLanguage='Child(ren)'
             />
         </TabPanel>
     );
