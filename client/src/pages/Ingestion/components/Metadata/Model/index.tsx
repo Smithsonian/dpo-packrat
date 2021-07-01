@@ -261,10 +261,22 @@ function Model(props: ModelProps): React.ReactElement {
                 </Box>
 
                 <Box mb={2}>
-                    <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                    <RelatedObjectsList
+                        type={RelatedObjectType.Source}
+                        relatedObjects={model.sourceObjects}
+                        onAdd={openSourceObjectModal}
+                        onRemove={onRemoveSourceObject}
+                        relationshipLanguage='Parent(s)'
+                    />
                 </Box>
                 <Box mb={2}>
-                    <RelatedObjectsList type={RelatedObjectType.Derived} relatedObjects={model.derivedObjects} onAdd={openDerivedObjectModal} onRemove={onRemoveDerivedObject} />
+                    <RelatedObjectsList
+                        type={RelatedObjectType.Derived}
+                        relatedObjects={model.derivedObjects}
+                        onAdd={openDerivedObjectModal}
+                        onRemove={onRemoveDerivedObject}
+                        relationshipLanguage='Child(ren)'
+                    />
                 </Box>
                 <Box mb={2}>
                     <AssetFilesTable files={assetFiles} />

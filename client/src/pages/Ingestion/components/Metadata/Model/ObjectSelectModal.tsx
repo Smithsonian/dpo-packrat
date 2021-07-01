@@ -77,16 +77,16 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
             if (props.relationship === 'Source' && idSystemObject) {
                 const { data } = await updateSourceObjects(idSystemObject, idSystemObjects, previouslySelectedObjects);
                 if (data.updateSourceObjects.success) {
-                    toast.success('Source object(s) successfully added');
+                    toast.success('Parent(s) successfully added');
                 } else {
-                    toast.error('Source object(s) could not be added. Please try again later');
+                    toast.error('Parent(s) could not be added. Please try again later');
                 }
             } else if (props.relationship === 'Derived' && idSystemObject) {
                 const { data } = await updateDerivedObjects(idSystemObject, idSystemObjects, previouslySelectedObjects);
                 if (data.updateDerivedObjects.success) {
-                    toast.success('Derived object(s) successfully added');
+                    toast.success('Child(ren) successfully added');
                 } else {
-                    toast.error('Derived object(s) could not be added. Please try again later');
+                    toast.error('Child(ren) could not be added. Please try again later');
                 }
             }
             // const input: GetSourceObjectIdentiferInput = {
@@ -155,7 +155,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                         Close
                     </Button>
                     <Typography variant='h6' className={classes.title}>
-                        Select {props?.relationship} Objects
+                        Select {props?.relationship === 'Source' ? 'Parent(s)' : 'Child(ren)'}
                     </Typography>
                     <Button autoFocus color='inherit' onClick={onClick}>
                         {isSaving ? 'Saving...' : 'Save'}
