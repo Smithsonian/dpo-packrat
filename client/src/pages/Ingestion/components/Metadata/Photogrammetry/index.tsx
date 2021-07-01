@@ -149,7 +149,13 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                 onRemoveIdentifer={onIdentifersChange}
             />
             <Box mb={2}>
-                <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={photogrammetry.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                <RelatedObjectsList
+                    type={RelatedObjectType.Source}
+                    relatedObjects={photogrammetry.sourceObjects}
+                    onAdd={openSourceObjectModal}
+                    onRemove={onRemoveSourceObject}
+                    relationshipLanguage='Parent(s)'
+                />
             </Box>
             <Box mb={2}>
                 <RelatedObjectsList
@@ -157,22 +163,15 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     relatedObjects={photogrammetry.derivedObjects}
                     onAdd={openDerivedObjectModal}
                     onRemove={onRemoveDerivedObject}
+                    relationshipLanguage='Child(ren)'
                 />
             </Box>
             <Description value={photogrammetry.description} onChange={setField} />
 
             <Box display='flex' flexDirection='row' mt={1}>
                 <Box display='flex' flex={1} flexDirection='column'>
-                    <InputField required type='string' label='Name'
-                        name='name' value={photogrammetry.name} onChange={setNameField}
-                    />
-                    <FieldType
-                        error={errors.photogrammetry.dateCaptured}
-                        required
-                        label='Date Captured'
-                        direction='row'
-                        containerProps={rowFieldProps}
-                    >
+                    <InputField required type='string' label='Name' name='name' value={photogrammetry.name} onChange={setNameField} />
+                    <FieldType error={errors.photogrammetry.dateCaptured} required label='Date Captured' direction='row' containerProps={rowFieldProps}>
                         <DateInputField value={photogrammetry.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
                     </FieldType>
 
@@ -192,13 +191,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     />
                 </Box>
                 <Box display='flex' flex={1} flexDirection='column' ml='30px'>
-                    <InputField
-                        type='number'
-                        label='Dataset Field ID'
-                        value={photogrammetry.datasetFieldId}
-                        name='datasetFieldId'
-                        onChange={setIdField}
-                    />
+                    <InputField type='number' label='Dataset Field ID' value={photogrammetry.datasetFieldId} name='datasetFieldId' onChange={setIdField} />
                     <SelectField
                         label='Item Position Type'
                         value={withDefaultValueNumber(photogrammetry.itemPositionType, getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType))}
@@ -206,20 +199,8 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eCaptureDataItemPositionType)}
                     />
-                    <InputField
-                        type='number'
-                        label='Item Position Field ID'
-                        value={photogrammetry.itemPositionFieldId}
-                        name='itemPositionFieldId'
-                        onChange={setIdField}
-                    />
-                    <InputField
-                        type='number'
-                        label='Item Arrangement Field ID'
-                        value={photogrammetry.itemArrangementFieldId}
-                        name='itemArrangementFieldId'
-                        onChange={setIdField}
-                    />
+                    <InputField type='number' label='Item Position Field ID' value={photogrammetry.itemPositionFieldId} name='itemPositionFieldId' onChange={setIdField} />
+                    <InputField type='number' label='Item Arrangement Field ID' value={photogrammetry.itemArrangementFieldId} name='itemArrangementFieldId' onChange={setIdField} />
                     <SelectField
                         label='Focus Type'
                         value={withDefaultValueNumber(photogrammetry.focusType, getInitialEntry(eVocabularySetID.eCaptureDataFocusType))}
@@ -252,21 +233,9 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                         options={getEntries(eVocabularySetID.eCaptureDataClusterType)}
                     />
 
-                    <InputField
-                        type='number'
-                        label='Cluster Geometry Field ID'
-                        value={photogrammetry.clusterGeometryFieldId}
-                        name='clusterGeometryFieldId'
-                        onChange={setIdField}
-                    />
+                    <InputField type='number' label='Cluster Geometry Field ID' value={photogrammetry.clusterGeometryFieldId} name='clusterGeometryFieldId' onChange={setIdField} />
                     <FieldType required={false} label='Camera Settings Uniform?' direction='row' containerProps={rowFieldProps}>
-                        <CustomCheckbox
-                            disabled
-                            name='cameraSettingUniform'
-                            checked={photogrammetry.cameraSettingUniform}
-                            onChange={setCheckboxField}
-                            color='primary'
-                        />
+                        <CustomCheckbox disabled name='cameraSettingUniform' checked={photogrammetry.cameraSettingUniform} onChange={setCheckboxField} color='primary' />
                     </FieldType>
                 </Box>
             </Box>
@@ -285,10 +254,10 @@ const checkboxStyles = ({ palette }) => ({
     root: {
         color: palette.primary.main,
         '&$checked': {
-            color: palette.primary.main,
+            color: palette.primary.main
         },
         '&$disabled': {
-            color: palette.primary.main,
+            color: palette.primary.main
         }
     },
     checked: {},
