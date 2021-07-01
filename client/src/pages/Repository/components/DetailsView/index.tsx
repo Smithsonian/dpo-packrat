@@ -157,10 +157,6 @@ function DetailsView(): React.ReactElement {
         updateIdentifier(id, name, value);
     };
 
-    const onSelectedObjects = () => {
-        onModalClose();
-    };
-
     const onModalClose = () => {
         setModalOpen(false);
         setObjectRelationship('');
@@ -477,7 +473,6 @@ function DetailsView(): React.ReactElement {
 
             <ObjectSelectModal
                 open={modalOpen}
-                onSelectedObjects={onSelectedObjects}
                 onModalClose={onModalClose}
                 selectedObjects={objectRelationship === 'Source' ? sourceObjects : derivedObjects}
                 idSystemObject={idSystemObject}

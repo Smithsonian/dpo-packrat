@@ -129,7 +129,9 @@ function useIngest(): UseIngest {
                         clusterGeometryFieldId,
                         directory,
                         identifiers,
-                        folders
+                        folders,
+                        sourceObjects,
+                        derivedObjects
                     } = photogrammetry;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
@@ -154,7 +156,9 @@ function useIngest(): UseIngest {
                         backgroundRemovalMethod,
                         directory,
                         clusterType,
-                        clusterGeometryFieldId
+                        clusterGeometryFieldId,
+                        sourceObjects,
+                        derivedObjects
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);
@@ -167,7 +171,6 @@ function useIngest(): UseIngest {
                 if (isModel) {
                     const {
                         identifiers,
-                        sourceObjects,
                         systemCreated,
                         name,
                         creationMethod,
@@ -176,6 +179,8 @@ function useIngest(): UseIngest {
                         purpose,
                         modelFileType,
                         directory,
+                        sourceObjects,
+                        derivedObjects
                     } = model;
 
                     let {
@@ -203,6 +208,7 @@ function useIngest(): UseIngest {
                         directory,
                         systemCreated,
                         sourceObjects,
+                        derivedObjects
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);
@@ -213,7 +219,8 @@ function useIngest(): UseIngest {
                 }
 
                 if (isScene) {
-                    const { identifiers, systemCreated, hasBeenQCd, isOriented, name, directory } = scene;
+                    const { identifiers, systemCreated, hasBeenQCd, isOriented, name, directory, sourceObjects,
+                        derivedObjects } = scene;
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const sceneData: IngestSceneInput = {
@@ -223,7 +230,9 @@ function useIngest(): UseIngest {
                         name,
                         hasBeenQCd,
                         isOriented,
-                        directory
+                        directory,
+                        sourceObjects,
+                        derivedObjects
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);

@@ -91,6 +91,7 @@ function Model(props: ModelProps): React.ReactElement {
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
+    const [objectRelationship, setObjectRelationship] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
     const [ingestionModel, setIngestionModel] = useState<any>({
         CountVertices: null,
@@ -209,9 +210,16 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, value, MetadataType.model);
     };
 
-    const openSourceObjectModal = () => {
+    const openSourceObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
-        setModalOpen(true);
+        await setObjectRelationship('Source');
+        await setModalOpen(true);
+    };
+
+    const openDerivedObjectModal = async () => {
+        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setObjectRelationship('Derived');
+        await setModalOpen(true);
     };
 
     const onRemoveSourceObject = (idSystemObject: number): void => {
@@ -220,13 +228,20 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.model);
     };
 
+    const onRemoveDerivedObject = (idSystemObject: number): void => {
+        const { derivedObjects } = model;
+        const updatedDerivedObjects = derivedObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
+        updateMetadataField(metadataIndex, 'derivedObjects', updatedDerivedObjects, MetadataType.model);
+    };
+
     const onModalClose = () => {
         setModalOpen(false);
+        setObjectRelationship('');
         closeRepositoryBrowser();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
-        updateMetadataField(metadataIndex, 'sourceObjects', newSourceObjects, MetadataType.model);
+        updateMetadataField(metadataIndex, objectRelationship === 'Source' ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.model);
         onModalClose();
     };
 
@@ -246,7 +261,22 @@ function Model(props: ModelProps): React.ReactElement {
                 </Box>
 
                 <Box mb={2}>
-                    <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                    <RelatedObjectsList
+                        type={RelatedObjectType.Source}
+                        relatedObjects={model.sourceObjects}
+                        onAdd={openSourceObjectModal}
+                        onRemove={onRemoveSourceObject}
+                        relationshipLanguage='Parent(s)'
+                    />
+                </Box>
+                <Box mb={2}>
+                    <RelatedObjectsList
+                        type={RelatedObjectType.Derived}
+                        relatedObjects={model.derivedObjects}
+                        onAdd={openDerivedObjectModal}
+                        onRemove={onRemoveDerivedObject}
+                        relationshipLanguage='Child(ren)'
+                    />
                 </Box>
                 <Box mb={2}>
                     <AssetFilesTable files={assetFiles} />
@@ -343,7 +373,13 @@ function Model(props: ModelProps): React.ReactElement {
                 />
                 <ObjectMeshTable modelObjects={modelObjects} />
             </Box>
-            <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={model.sourceObjects} />
+            <ObjectSelectModal
+                open={modalOpen}
+                onSelectedObjects={onSelectedObjects}
+                onModalClose={onModalClose}
+                selectedObjects={objectRelationship === 'Source' ? model.sourceObjects : model.derivedObjects}
+                relationship={objectRelationship}
+            />
         </React.Fragment>
     );
 }
