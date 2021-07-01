@@ -385,7 +385,9 @@ export class BulkIngestReader {
             backgroundRemovalMethod,
             clusterType,
             clusterGeometryFieldId: bagitCDP.cluster_geometry_field_id,
-            directory: bagitCDP.directory_path
+            directory: bagitCDP.directory_path,
+            sourceObjects: [],
+            derivedObjects: []
         };
     }
 
@@ -424,7 +426,8 @@ export class BulkIngestReader {
             systemCreated: true,
             modelFileType: 0,
             identifiers: [],
-            sourceObjects: []
+            sourceObjects: [],
+            derivedObjects: []
         };
     }
 
@@ -437,7 +440,9 @@ export class BulkIngestReader {
             isOriented: bagitScene.is_oriented !== 'false' && bagitScene.is_oriented !== '0',
             directory: bagitScene.directory_path,
             identifiers: [],
-            referenceModels: []
+            referenceModels: [],
+            sourceObjects: [],
+            derivedObjects: []
         };
     }
 

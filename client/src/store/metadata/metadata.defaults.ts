@@ -39,6 +39,8 @@ const identifiersWhenValidation = {
 export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     systemCreated: true,
     identifiers: [],
+    sourceObjects: [],
+    derivedObjects: [],
     folders: [],
     name: '',
     description: '',
@@ -98,6 +100,7 @@ export const defaultModelFields: ModelFields = {
     systemCreated: true,
     identifiers: [],
     sourceObjects: [],
+    derivedObjects: [],
     dateCaptured: null,
     creationMethod: null,
     modality: null,
@@ -144,6 +147,8 @@ export const modelFieldsSchema = yup.object().shape({
 export const defaultSceneFields: SceneFields = {
     systemCreated: true,
     identifiers: [],
+    sourceObjects: [],
+    derivedObjects: [],
     referenceModels: [],
     hasBeenQCd: false,
     isOriented: false,

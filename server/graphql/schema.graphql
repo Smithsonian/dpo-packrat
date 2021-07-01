@@ -187,6 +187,8 @@ type IngestPhotogrammetry {
   directory: String!
   folders: [IngestFolder!]!
   identifiers: [IngestIdentifier!]!
+  sourceObjects: [RelatedObject!]!
+  derivedObjects: [RelatedObject!]!
 }
 
 enum RelatedObjectType {
@@ -214,6 +216,7 @@ type IngestModel {
   directory: String!
   identifiers: [IngestIdentifier!]!
   sourceObjects: [RelatedObject!]!
+  derivedObjects: [RelatedObject!]!
 }
 
 enum ReferenceModelAction {
@@ -246,6 +249,8 @@ type IngestScene {
   directory: String!
   identifiers: [IngestIdentifier!]!
   referenceModels: [ReferenceModel!]!
+  sourceObjects: [RelatedObject!]!
+  derivedObjects: [RelatedObject!]!
 }
 
 type GetAssetVersionDetailResult {
@@ -497,6 +502,8 @@ input IngestPhotogrammetryInput {
   directory: String!
   folders: [IngestFolderInput!]!
   identifiers: [IngestIdentifierInput!]!
+  sourceObjects: [RelatedObjectInput!]!
+  derivedObjects: [RelatedObjectInput!]!
 }
 
 input RelatedObjectInput {
@@ -520,6 +527,7 @@ input IngestModelInput {
   directory: String!
   identifiers: [IngestIdentifierInput!]!
   sourceObjects: [RelatedObjectInput!]!
+  derivedObjects: [RelatedObjectInput!]!
 }
 
 input IngestSceneInput {
@@ -531,6 +539,8 @@ input IngestSceneInput {
   isOriented: Boolean!
   directory: String!
   identifiers: [IngestIdentifierInput!]!
+  sourceObjects: [RelatedObjectInput!]!
+  derivedObjects: [RelatedObjectInput!]!
 }
 
 input IngestOtherInput {
