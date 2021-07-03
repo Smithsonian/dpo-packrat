@@ -5,13 +5,15 @@
  * This component renders details tab for Scene specific details used in DetailsTab component.
  */
 import { Box, makeStyles, Checkbox /*, Typography */ } from '@material-ui/core';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Loader } from '../../../../../components';
 import { GetSceneDocument } from '../../../../../types/graphql';
 import { DetailComponentProps } from './index';
 import { apolloClient } from '../../../../../graphql/index';
 import ReferenceModels from '../../../../Ingestion/components/Metadata/Scene/ReferenceModels';
 import { ReadOnlyRow, FieldType } from '../../../../../components/index';
+import { useDetailTabStore } from '../../../../../store';
+import { eSystemObjectType } from '../../../../../types/server';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {
@@ -35,38 +37,7 @@ export const useStyles = makeStyles(({ palette }) => ({
 function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const { data, loading, onUpdateDetail, objectType } = props;
-    const [details, setDetails] = useState({
-        Name: '',
-        HasBeenQCd: false,
-        IsOriented: false,
-        CountScene: 0,
-        CountNode: 0,
-        CountCamera: 0,
-        CountLight: 0,
-        CountModel: 0,
-        CountMeta: 0,
-        CountSetup: 0,
-        CountTour: 0,
-        ModelSceneXref: [
-            {
-                BoundingBoxP1X: 0,
-                BoundingBoxP1Y: 0,
-                BoundingBoxP1Z: 0,
-                BoundingBoxP2X: 0,
-                BoundingBoxP2Y: 0,
-                BoundingBoxP2Z: 0,
-                FileSize: 0,
-                Model: null,
-                Name: '',
-                Quality: '',
-                UVResolution: 0,
-                Usage: '',
-                idModel: -1,
-                idModelSceneXref: 0,
-                idScene: 0
-            }
-        ]
-    });
+    const [SceneDetails, updateDetailField] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField]);
 
     useEffect(() => {
         const retrieveSceneData = async () => {
@@ -83,15 +54,25 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     },
                     fetchPolicy: 'no-cache'
                 });
-                setDetails(getScene?.Scene);
+
+                updateDetailField(eSystemObjectType.eScene, 'ModelSceneXref', getScene?.Scene?.ModelSceneXref);
+                updateDetailField(eSystemObjectType.eScene, 'CountScene', getScene?.Scene?.CountScene);
+                updateDetailField(eSystemObjectType.eScene, 'CountNode', getScene?.Scene?.CountNode);
+                updateDetailField(eSystemObjectType.eScene, 'CountCamera', getScene?.Scene?.CountCamera);
+                updateDetailField(eSystemObjectType.eScene, 'CountLight', getScene?.Scene?.CountLight);
+                updateDetailField(eSystemObjectType.eScene, 'CountModel', getScene?.Scene?.CountModel);
+                updateDetailField(eSystemObjectType.eScene, 'CountMeta', getScene?.Scene?.CountMeta);
+                updateDetailField(eSystemObjectType.eScene, 'CountSetup', getScene?.Scene?.CountSetup);
+                updateDetailField(eSystemObjectType.eScene, 'CountTour', getScene?.Scene?.CountTour);
             }
         };
+
         retrieveSceneData();
-    }, [data, loading]);
+    }, []);
 
     useEffect(() => {
-        onUpdateDetail(objectType, details);
-    }, [details]);
+        onUpdateDetail(objectType, SceneDetails);
+    }, [SceneDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -99,31 +80,31 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
 
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
-        setDetails(details => ({ ...details, [name]: checked }));
+        updateDetailField(eSystemObjectType.eScene, name, checked);
     };
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
     return (
         <Box>
-            <ReferenceModels referenceModels={details.ModelSceneXref} />
+            <ReferenceModels referenceModels={SceneDetails.ModelSceneXref} />
 
             <Box display='flex' flexDirection='column' className={classes.container}>
                 <FieldType required label="Has been QC'd" direction='row' containerProps={rowFieldProps}>
-                    <Checkbox name='HasBeenQCd' checked={details.HasBeenQCd} color='primary' onChange={setCheckboxField} />
+                    <Checkbox name='HasBeenQCd' checked={SceneDetails.HasBeenQCd} color='primary' onChange={setCheckboxField} />
                 </FieldType>
 
                 <FieldType required label='Is Oriented' direction='row' containerProps={rowFieldProps}>
-                    <Checkbox name='IsOriented' checked={details.IsOriented} color='primary' onChange={setCheckboxField} />
+                    <Checkbox name='IsOriented' checked={SceneDetails.IsOriented} color='primary' onChange={setCheckboxField} />
                 </FieldType>
-                <ReadOnlyRow label='Scene Count' value={details.CountScene} padding={15} />
-                <ReadOnlyRow label='Node Count' value={details.CountNode} padding={15} />
-                <ReadOnlyRow label='Camera Count' value={details.CountCamera} padding={15} />
-                <ReadOnlyRow label='Light Count' value={details.CountLight} padding={15} />
-                <ReadOnlyRow label='Model Count' value={details.CountModel} padding={15} />
-                <ReadOnlyRow label='Meta Count' value={details.CountMeta} padding={15} />
-                <ReadOnlyRow label='Setup Count' value={details.CountSetup} padding={15} />
-                <ReadOnlyRow label='Tour Count' value={details.CountTour} padding={15} />
+                <ReadOnlyRow label='Scene Count' value={SceneDetails.CountScene} padding={15} />
+                <ReadOnlyRow label='Node Count' value={SceneDetails.CountNode} padding={15} />
+                <ReadOnlyRow label='Camera Count' value={SceneDetails.CountCamera} padding={15} />
+                <ReadOnlyRow label='Light Count' value={SceneDetails.CountLight} padding={15} />
+                <ReadOnlyRow label='Model Count' value={SceneDetails.CountModel} padding={15} />
+                <ReadOnlyRow label='Meta Count' value={SceneDetails.CountMeta} padding={15} />
+                <ReadOnlyRow label='Setup Count' value={SceneDetails.CountSetup} padding={15} />
+                <ReadOnlyRow label='Tour Count' value={SceneDetails.CountTour} padding={15} />
             </Box>
         </Box>
     );

@@ -5,14 +5,14 @@
  *
  * This component renders repository details view for the Repository UI.
  */
-import { Box } from '@material-ui/core';
+import { Box /*, Button*/ } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryDetailsFormStore, useRepositoryStore, useIdentifierStore } from '../../../../store';
+import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryDetailsFormStore, useRepositoryStore, useIdentifierStore, useDetailTabStore } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -32,7 +32,7 @@ import {
 import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
 import { withDefaultValueBoolean } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
-import { updateDetailsTabData, useObjectDetails, deleteIdentifier } from '../../hooks/useDetailsView';
+import { updateDetailsTabData, useObjectDetails, deleteIdentifier, getDetailsTabDataForObject } from '../../hooks/useDetailsView';
 import { apolloClient } from '../../../../graphql/index';
 import { GetDetailsTabDataForObjectDocument } from '../../../../types/graphql';
 import DetailsHeader from './DetailsHeader';
@@ -100,6 +100,7 @@ function DetailsView(): React.ReactElement {
         state.checkIdentifiersBeforeUpdate
     ]);
     const [resetRepositoryFilter, resetKeywordSearch, initializeTree] = useRepositoryStore(state => [state.resetRepositoryFilter, state.resetKeywordSearch, state.initializeTree]);
+    const [initializeDetailFields] = useDetailTabStore(state => [state.initializeDetailFields]);
     const objectDetailsData = data;
 
     useEffect(() => {
@@ -109,6 +110,18 @@ function DetailsView(): React.ReactElement {
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
         }
     }, [data, loading, initializeIdentifierState]);
+
+    // new function for setting state
+    useEffect(() => {
+        if (data) {
+            const fetchDetailTabDataAndInitializeStateStore = async () => {
+                const detailsTabData = await getDetailsTabDataForObject(idSystemObject, objectType);
+                initializeDetailFields(detailsTabData, objectType);
+            };
+
+            fetchDetailTabDataAndInitializeStateStore();
+        }
+    }, [idSystemObject, data]);
 
     if (!data || !params.idSystemObject) {
         return <ObjectNotFoundView loading={loading} />;
@@ -187,6 +200,7 @@ function DetailsView(): React.ReactElement {
     };
 
     const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
+        // console.log('onUpdateDetail', objectType, data);
         const updatedDataFields: UpdateObjectDetailsDataInput = {
             ...updatedData,
             Name: details.name,
@@ -416,6 +430,8 @@ function DetailsView(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
+            {/* <Button onClick={() => setDetail('AssetVersionDetails', 'StorageSize', 'howdy')}>SetDetail</Button>
+            <Button onClick={() => getDetail('AssetVersionDetails')}>GetDetail</Button> */}
             <DetailsHeader
                 originalFields={data.getSystemObjectDetails}
                 name={details.name}
