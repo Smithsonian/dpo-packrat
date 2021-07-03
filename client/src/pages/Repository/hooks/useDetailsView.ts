@@ -74,6 +74,18 @@ export function useDetailsTabData(idSystemObject: number, objectType: eSystemObj
     });
 }
 
+export async function getDetailsTabDataForObject(idSystemObject: number, objectType: eSystemObjectType) {
+    return await apolloClient.query({
+        query: GetDetailsTabDataForObjectDocument,
+        variables: {
+            input: {
+                idSystemObject,
+                objectType
+            }
+        }
+    });
+}
+
 export function updateDetailsTabData(idSystemObject: number, idObject: number, objectType: eSystemObjectType, data: UpdateObjectDetailsDataInput): Promise<FetchResult<UpdateObjectDetailsMutation>> {
     return apolloClient.mutate({
         mutation: UpdateObjectDetailsDocument,
