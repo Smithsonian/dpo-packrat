@@ -1,14 +1,16 @@
 import create, { GetState, SetState } from 'zustand';
-import { eVocabularySetID, eSystemObjectType } from '../types/server';
+import { eSystemObjectType } from '../types/server';
 import {
     CaptureDataDetailFields,
     ProjectDocumentationDetailFields,
-    StakeholderDetailFields /*, UnitDetailFields, ProjectDetailFields, SubjectDetailFields, ItemDetailFields, SceneDetailFields, AssetDetailFields, AssetVersionDetailFields, ActorDetailFields*/
+    StakeholderDetailFields,
+    UnitDetailFields,
+    ProjectDetailFields,
+    SubjectDetailFields,
+    AssetDetailFields,
+    AssetVersionDetailFields,
+    ActorDetailFields
 } from '../types/graphql';
-// import vocabularyStore to retrieve appropriate entries
-
-//Create an interface that takes on all of the detail types
-//Create an interface that takes on all of the query types
 
 export interface ModelDetailsType {
     DateCreated: string | null;
@@ -19,29 +21,7 @@ export interface ModelDetailsType {
     idVFileType: number | null;
 }
 
-interface UnitDetailsType {
-    Abbreviation: string;
-    ARKPrefix: string;
-}
-
-interface ProjectDetailsType {
-    Description: string;
-}
-
-interface SubjectDetailsType {
-    Latitude: number | undefined | null;
-    Longitude: number | undefined | null;
-    Altitude: number | undefined | null;
-    TS0: number | undefined | null;
-    TS1: number | undefined | null;
-    TS2: number | undefined | null;
-    R0: number | undefined | null;
-    R1: number | undefined | null;
-    R2: number | undefined | null;
-    R3: number | undefined | null;
-}
-
-interface ItemDetailsType extends SubjectDetailsType {
+export interface ItemDetailsType extends SubjectDetailFields {
     EntireSubject?: boolean | null | undefined;
 }
 
@@ -49,64 +29,45 @@ interface SceneDetailsType {
     HasBeenQCd: boolean;
     IsOriented: boolean;
     CountScene: number;
-    CountNode: 0;
-    CountCamera: 0;
-    CountLight: 0;
-    CountModel: 0;
-    CountMeta: 0;
-    CountSetup: 0;
-    CountTour: 0;
+    CountNode: number;
+    CountCamera: number;
+    CountLight: number;
+    CountModel: number;
+    CountMeta: number;
+    CountSetup: number;
+    CountTour: number;
     ModelSceneXref: any[];
 }
 
-interface AssetDetailsType {
-    AssetType: eVocabularySetID | number;
-    FilePath: string;
-}
-
-interface AssetVersionDetailsType {
-    Version: number;
-    Creator: string;
-    DateCreated: string | Date;
-    StorageSize: number;
-    Ingested: boolean;
-}
-
-interface ActorDetailsType {
-    OrganizationName: string;
-}
+export type DetailsTabType =
+    | CaptureDataDetailFields
+    | ProjectDocumentationDetailFields
+    | StakeholderDetailFields
+    | UnitDetailFields
+    | ProjectDetailFields
+    | SubjectDetailFields
+    | AssetDetailFields
+    | AssetVersionDetailFields
+    | ActorDetailFields
+    | ModelDetailsType
+    | ItemDetailsType
+    | SceneDetailsType;
 
 type DetailTabStore = {
-    UnitDetails: UnitDetailsType;
-    ProjectDetails: ProjectDetailsType;
-    SubjectDetails: SubjectDetailsType;
+    UnitDetails: UnitDetailFields;
+    ProjectDetails: ProjectDetailFields;
+    SubjectDetails: SubjectDetailFields;
     ItemDetails: ItemDetailsType;
     CaptureDataDetails: CaptureDataDetailFields;
     ModelDetails: ModelDetailsType;
     SceneDetails: SceneDetailsType;
     ProjectDocumentationDetails: ProjectDocumentationDetailFields;
-    AssetVersionDetails: AssetVersionDetailsType;
-    AssetDetails: AssetDetailsType;
-    ActorDetails: ActorDetailsType;
+    AssetVersionDetails: AssetVersionDetailFields;
+    AssetDetails: AssetDetailFields;
+    ActorDetails: ActorDetailFields;
     StakeholderDetails: StakeholderDetailFields;
     updateDetailField: (metadataType: eSystemObjectType, fieldName: string, value: number | string | boolean | Date | null) => void;
-    getDetail: (
-        type: eSystemObjectType
-    ) =>
-        | UnitDetailsType
-        | ProjectDetailsType
-        | SubjectDetailsType
-        | ItemDetailsType
-        | ModelDetailsType
-        | CaptureDataDetailFields
-        | SceneDetailsType
-        | ProjectDocumentationDetailFields
-        | AssetVersionDetailsType
-        | AssetDetailsType
-        | ActorDetailsType
-        | StakeholderDetailFields
-        | void;
-    // create another method for handling proper parsing of the object and setting it to state;
+    getDetail: (type: eSystemObjectType) => DetailsTabType | void;
     initializeDetailFields: (data: any, type: eSystemObjectType) => void;
 };
 
@@ -205,11 +166,11 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         Description: ''
     },
     AssetDetails: {
-        AssetType: 0,
-        FilePath: 'poo'
+        AssetType: null,
+        FilePath: ''
     },
     AssetVersionDetails: {
-        Version: 0,
+        Version: null,
         Creator: '',
         DateCreated: '',
         StorageSize: 0,
@@ -230,7 +191,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         // console.log('assetType', assetType, 'fieldName', fieldName, 'value', value);
 
         if (assetType === eSystemObjectType.eUnit) {
-            const UnitDetails = getDetail(eSystemObjectType.eUnit) as UnitDetailsType;
+            const UnitDetails = getDetail(eSystemObjectType.eUnit) as UnitDetailFields;
             const updatedDetails = { ...UnitDetails, [fieldName]: value };
             set({
                 UnitDetails: updatedDetails
@@ -238,7 +199,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
 
         if (assetType === eSystemObjectType.eProject) {
-            const ProjectDetails = getDetail(eSystemObjectType.eProject) as ProjectDetailsType;
+            const ProjectDetails = getDetail(eSystemObjectType.eProject) as ProjectDetailFields;
             const updatedDetails = { ...ProjectDetails, [fieldName]: value };
             set({
                 ProjectDetails: updatedDetails
@@ -246,7 +207,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
 
         if (assetType === eSystemObjectType.eSubject) {
-            const SubjectDetails = getDetail(eSystemObjectType.eSubject) as SubjectDetailsType;
+            const SubjectDetails = getDetail(eSystemObjectType.eSubject) as SubjectDetailFields;
             const updatedDetails = { ...SubjectDetails, [fieldName]: value };
             set({
                 SubjectDetails: updatedDetails
@@ -294,7 +255,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
 
         if (assetType === eSystemObjectType.eAsset) {
-            const AssetDetails = getDetail(eSystemObjectType.eAsset) as AssetDetailsType;
+            const AssetDetails = getDetail(eSystemObjectType.eAsset) as AssetDetailFields;
             const updatedDetails = { ...AssetDetails, [fieldName]: value };
             set({
                 AssetDetails: updatedDetails
@@ -302,7 +263,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
 
         if (assetType === eSystemObjectType.eAssetVersion) {
-            const AssetVersionDetails = getDetail(eSystemObjectType.eAssetVersion) as AssetVersionDetailsType;
+            const AssetVersionDetails = getDetail(eSystemObjectType.eAssetVersion) as AssetVersionDetailFields;
             const updatedDetails = { ...AssetVersionDetails, [fieldName]: value };
             set({
                 AssetVersionDetails: updatedDetails
@@ -310,7 +271,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
 
         if (assetType === eSystemObjectType.eActor) {
-            const ActorDetails = getDetail(eSystemObjectType.eActor) as ActorDetailsType;
+            const ActorDetails = getDetail(eSystemObjectType.eActor) as ActorDetailFields;
             const updatedDetails = { ...ActorDetails, [fieldName]: value };
             set({
                 ActorDetails: updatedDetails
