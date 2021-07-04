@@ -10,7 +10,6 @@ import {
     GetVersionsForAssetDocument,
     GetVersionsForAssetQueryResult,
     GetDetailsTabDataForObjectDocument,
-    GetDetailsTabDataForObjectQueryResult,
     UpdateObjectDetailsDocument,
     UpdateObjectDetailsDataInput,
     UpdateObjectDetailsMutation,
@@ -58,17 +57,6 @@ export function useObjectVersions(idSystemObject: number): GetVersionsForAssetQu
         variables: {
             input: {
                 idSystemObject
-            }
-        }
-    });
-}
-
-export function useDetailsTabData(idSystemObject: number, objectType: eSystemObjectType): GetDetailsTabDataForObjectQueryResult {
-    return useQuery(GetDetailsTabDataForObjectDocument, {
-        variables: {
-            input: {
-                idSystemObject,
-                objectType
             }
         }
     });
