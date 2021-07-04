@@ -10,6 +10,15 @@ import {
 //Create an interface that takes on all of the detail types
 //Create an interface that takes on all of the query types
 
+export interface ModelDetailsType {
+    DateCreated: string | null;
+    idVCreationMethod: number | null;
+    idVModality: number | null;
+    idVPurpose: number | null;
+    idVUnits: number | null;
+    idVFileType: number | null;
+}
+
 interface UnitDetailsType {
     Abbreviation: string;
     ARKPrefix: string;
@@ -73,6 +82,7 @@ type DetailTabStore = {
     SubjectDetails: SubjectDetailsType;
     ItemDetails: ItemDetailsType;
     CaptureDataDetails: CaptureDataDetailFields;
+    ModelDetails: ModelDetailsType;
     SceneDetails: SceneDetailsType;
     ProjectDocumentationDetails: ProjectDocumentationDetailFields;
     AssetVersionDetails: AssetVersionDetailsType;
@@ -87,6 +97,7 @@ type DetailTabStore = {
         | ProjectDetailsType
         | SubjectDetailsType
         | ItemDetailsType
+        | ModelDetailsType
         | CaptureDataDetailFields
         | SceneDetailsType
         | ProjectDocumentationDetailFields
@@ -131,6 +142,14 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         R2: null,
         R3: null,
         EntireSubject: null
+    },
+    ModelDetails: {
+        DateCreated: null,
+        idVCreationMethod: null,
+        idVModality: null,
+        idVPurpose: null,
+        idVUnits: null,
+        idVFileType: null
     },
     CaptureDataDetails: {
         captureMethod: null,
@@ -208,7 +227,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
     },
     updateDetailField(assetType, fieldName, value) {
         const { getDetail } = get();
-        console.log('assetType', assetType, 'fieldName', fieldName, 'value', value);
+        // console.log('assetType', assetType, 'fieldName', fieldName, 'value', value);
 
         if (assetType === eSystemObjectType.eUnit) {
             const UnitDetails = getDetail(eSystemObjectType.eUnit) as UnitDetailsType;
@@ -239,6 +258,14 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             const updatedDetails = { ...ItemDetails, [fieldName]: value };
             set({
                 ItemDetails: updatedDetails
+            });
+        }
+
+        if (assetType === eSystemObjectType.eModel) {
+            const ModelDetails = getDetail(eSystemObjectType.eModel) as ModelDetailsType;
+            const updatedDetails = { ...ModelDetails, [fieldName]: value };
+            set({
+                ModelDetails: updatedDetails
             });
         }
 
@@ -315,6 +342,10 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             const { ItemDetails } = get();
             return ItemDetails;
         }
+        if (assetType === eSystemObjectType.eModel) {
+            const { ModelDetails } = get();
+            return ModelDetails;
+        }
         if (assetType === eSystemObjectType.eCaptureData) {
             const { CaptureDataDetails } = get();
             return CaptureDataDetails;
@@ -350,7 +381,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         const {
             data: { getDetailsTabDataForObject }
         } = fetchedQuery;
-        console.log('initializeDetailsFields', getDetailsTabDataForObject);
+        // console.log('initializeDetailsFields', getDetailsTabDataForObject);
         if (!getDetailsTabDataForObject) return;
 
         if (objectType === eSystemObjectType.eUnit) {
@@ -399,6 +430,20 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             updateDetailField(eSystemObjectType.eItem, 'R2', R2);
             updateDetailField(eSystemObjectType.eItem, 'R3', R3);
             updateDetailField(eSystemObjectType.eItem, 'EntireSubject', EntireSubject);
+        }
+
+        if (objectType === eSystemObjectType.eModel) {
+            const {
+                Model: {
+                    Model: { DateCreated, idVModality, idVPurpose, idVUnits, idVFileType, idVCreationMethod }
+                }
+            } = getDetailsTabDataForObject;
+            updateDetailField(eSystemObjectType.eModel, 'DateCreated', DateCreated);
+            updateDetailField(eSystemObjectType.eModel, 'idVModality', idVModality);
+            updateDetailField(eSystemObjectType.eModel, 'idVPurpose', idVPurpose);
+            updateDetailField(eSystemObjectType.eModel, 'idVUnits', idVUnits);
+            updateDetailField(eSystemObjectType.eModel, 'idVFileType', idVFileType);
+            updateDetailField(eSystemObjectType.eModel, 'idVCreationMethod', idVCreationMethod);
         }
 
         if (objectType === eSystemObjectType.eCaptureData) {

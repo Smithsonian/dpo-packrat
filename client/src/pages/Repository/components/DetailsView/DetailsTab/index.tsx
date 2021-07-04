@@ -29,7 +29,6 @@ import {
 } from '../../../../../types/graphql';
 import { eSystemObjectType } from '../../../../../types/server';
 import RelatedObjectsList from '../../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
-import { useDetailsTabData } from '../../../hooks/useDetailsView';
 import ActorDetails from './ActorDetails';
 import AssetDetails from './AssetDetails';
 import AssetDetailsTable from './AssetDetailsTable';
@@ -91,10 +90,11 @@ type DetailsTabParams = {
     onAddDerivedObject: () => void;
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
     objectVersions: SystemObjectVersion[];
+    detailQuery: any;
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
-    const { disabled, idSystemObject, objectType, sourceObjects, derivedObjects, onAddSourceObject, onAddDerivedObject, onUpdateDetail, objectVersions } = props;
+    const { disabled, idSystemObject, objectType, sourceObjects, derivedObjects, onAddSourceObject, onAddDerivedObject, onUpdateDetail, objectVersions, detailQuery } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
     const history = useHistory();
@@ -103,7 +103,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         setTab(nextTab);
     };
 
-    const detailsQueryResult = useDetailsTabData(idSystemObject, objectType);
+    const detailsQueryResult = detailQuery;
     let tabs: string[] = [];
 
     let tabPanels: React.ReactNode = null;

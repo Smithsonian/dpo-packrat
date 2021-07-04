@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable prefer-const */
 
 /**
@@ -5,18 +6,19 @@
  *
  * This component renders repository details view for the Repository UI.
  */
-import { Box /*, Button*/ } from '@material-ui/core';
+import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryDetailsFormStore, useRepositoryStore, useIdentifierStore, useDetailTabStore } from '../../../../store';
+import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
     AssetVersionDetailFieldsInput,
+    CaptureDataDetailFields,
     CaptureDataDetailFieldsInput,
     ItemDetailFieldsInput,
     ModelDetailFieldsInput,
@@ -33,8 +35,6 @@ import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
 import { withDefaultValueBoolean } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
 import { updateDetailsTabData, useObjectDetails, deleteIdentifier, getDetailsTabDataForObject } from '../../hooks/useDetailsView';
-import { apolloClient } from '../../../../graphql/index';
-import { GetDetailsTabDataForObjectDocument } from '../../../../types/graphql';
 import DetailsHeader from './DetailsHeader';
 import DetailsTab, { UpdateDataFields } from './DetailsTab';
 import DetailsThumbnail from './DetailsThumbnail';
@@ -82,6 +82,7 @@ function DetailsView(): React.ReactElement {
     const params = useParams<DetailsParams>();
     const [modalOpen, setModalOpen] = useState(false);
     const [details, setDetails] = useState<DetailsFields>({});
+    const [detailQuery, setDetailQuery] = useState<any>({});
     const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState('');
 
@@ -90,7 +91,6 @@ function DetailsView(): React.ReactElement {
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
 
     const getEntries = useVocabularyStore(state => state.getEntries);
-    const getModelFormState = useRepositoryDetailsFormStore(state => state.getModelFormState);
     const [stateIdentifiers, addNewIdentifier, initializeIdentifierState, removeTargetIdentifier, updateIdentifier, checkIdentifiersBeforeUpdate] = useIdentifierStore(state => [
         state.stateIdentifiers,
         state.addNewIdentifier,
@@ -100,7 +100,7 @@ function DetailsView(): React.ReactElement {
         state.checkIdentifiersBeforeUpdate
     ]);
     const [resetRepositoryFilter, resetKeywordSearch, initializeTree] = useRepositoryStore(state => [state.resetRepositoryFilter, state.resetKeywordSearch, state.initializeTree]);
-    const [initializeDetailFields] = useDetailTabStore(state => [state.initializeDetailFields]);
+    const [initializeDetailFields, getDetail] = useDetailTabStore(state => [state.initializeDetailFields, state.getDetail]);
     const objectDetailsData = data;
 
     useEffect(() => {
@@ -116,6 +116,7 @@ function DetailsView(): React.ReactElement {
         if (data) {
             const fetchDetailTabDataAndInitializeStateStore = async () => {
                 const detailsTabData = await getDetailsTabDataForObject(idSystemObject, objectType);
+                setDetailQuery(detailsTabData);
                 initializeDetailFields(detailsTabData, objectType);
             };
 
@@ -262,77 +263,20 @@ function DetailsView(): React.ReactElement {
             return;
         }
         try {
+            // TODO: Model, Scene, and CD are currently updating in a way that
+            // requires the fields to be populated.
             if (objectType === eSystemObjectType.eModel) {
-                const { dateCaptured, creationMethod, modality, purpose, units, fileType } = getModelFormState();
+                const ModelDetails = getDetail(objectType) as ModelDetailsType;
+                const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
+
                 updatedData.Model = {
                     Name: updatedData?.Name,
-                    CreationMethod: creationMethod,
-                    Modality: modality,
-                    Purpose: purpose,
-                    Units: units,
-                    ModelFileType: fileType,
-                    DateCaptured: dateCaptured
-                };
-            }
-
-            if (objectType === eSystemObjectType.eSubject && !updatedData.Subject) {
-                const {
-                    data: {
-                        getDetailsTabDataForObject: {
-                            Subject: { Altitude, Longitude, Latitude, R0, R1, R2, R3, TS0, TS1, TS2 }
-                        }
-                    }
-                } = await apolloClient.query({
-                    query: GetDetailsTabDataForObjectDocument,
-                    variables: {
-                        input: {
-                            idSystemObject,
-                            objectType
-                        }
-                    }
-                });
-                updatedData.Subject = {
-                    Latitude,
-                    Longitude,
-                    Altitude,
-                    R0,
-                    R1,
-                    R2,
-                    R3,
-                    TS0,
-                    TS1,
-                    TS2
-                };
-            }
-
-            if (objectType === eSystemObjectType.eItem && !updatedData.Item) {
-                const {
-                    data: {
-                        getDetailsTabDataForObject: {
-                            Item: { Altitude, Longitude, Latitude, R0, R1, R2, R3, TS0, TS1, TS2, EntireSubject }
-                        }
-                    }
-                } = await apolloClient.query({
-                    query: GetDetailsTabDataForObjectDocument,
-                    variables: {
-                        input: {
-                            idSystemObject,
-                            objectType
-                        }
-                    }
-                });
-                updatedData.Item = {
-                    Latitude,
-                    Longitude,
-                    Altitude,
-                    R0,
-                    R1,
-                    R2,
-                    R3,
-                    TS0,
-                    TS1,
-                    TS2,
-                    EntireSubject
+                    CreationMethod: idVCreationMethod,
+                    Modality: idVModality,
+                    Purpose: idVPurpose,
+                    Units: idVUnits,
+                    ModelFileType: idVFileType,
+                    DateCaptured: DateCreated
                 };
             }
 
@@ -342,38 +286,26 @@ function DetailsView(): React.ReactElement {
             }
 
             if (objectType === eSystemObjectType.eCaptureData && !updatedData.CaptureData) {
+                const CaptureDataDetails = getDetail(objectType) as CaptureDataDetailFields;
                 const {
-                    data: {
-                        getDetailsTabDataForObject: {
-                            CaptureData: {
-                                captureMethod,
-                                dateCaptured,
-                                datasetType,
-                                systemCreated,
-                                description,
-                                cameraSettingUniform,
-                                datasetFieldId,
-                                itemPositionType,
-                                itemPositionFieldId,
-                                itemArrangementFieldId,
-                                focusType,
-                                lightsourceType,
-                                backgroundRemovalMethod,
-                                clusterType,
-                                clusterGeometryFieldId,
-                                folders
-                            }
-                        }
-                    }
-                } = await apolloClient.query({
-                    query: GetDetailsTabDataForObjectDocument,
-                    variables: {
-                        input: {
-                            idSystemObject,
-                            objectType
-                        }
-                    }
-                });
+                    captureMethod,
+                    dateCaptured,
+                    datasetType,
+                    systemCreated,
+                    description,
+                    cameraSettingUniform,
+                    datasetFieldId,
+                    itemPositionType,
+                    itemPositionFieldId,
+                    itemArrangementFieldId,
+                    focusType,
+                    lightsourceType,
+                    backgroundRemovalMethod,
+                    clusterType,
+                    clusterGeometryFieldId,
+                    folders
+                } = CaptureDataDetails;
+
                 updatedData.CaptureData = {
                     captureMethod,
                     dateCaptured,
@@ -430,8 +362,6 @@ function DetailsView(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            {/* <Button onClick={() => setDetail('AssetVersionDetails', 'StorageSize', 'howdy')}>SetDetail</Button>
-            <Button onClick={() => getDetail('AssetVersionDetails')}>GetDetail</Button> */}
             <DetailsHeader
                 originalFields={data.getSystemObjectDetails}
                 name={details.name}
@@ -477,6 +407,7 @@ function DetailsView(): React.ReactElement {
                     onAddDerivedObject={onAddDerivedObject}
                     onUpdateDetail={onUpdateDetail}
                     objectVersions={objectVersions}
+                    detailQuery={detailQuery}
                 />
                 <Box display='flex' flex={1} padding={2}>
                     <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />
