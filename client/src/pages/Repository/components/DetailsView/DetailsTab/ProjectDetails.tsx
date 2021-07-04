@@ -4,30 +4,21 @@
  *
  * This component renders details tab for Actor specific details used in DetailsTab component.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Loader } from '../../../../../components';
-import { ProjectDetailFields } from '../../../../../types/graphql';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
 import { DetailComponentProps } from './index';
+import { eSystemObjectType } from '../../../../../types/server';
+import { useDetailTabStore } from '../../../../../store';
 
 function ProjectDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
-
-    const [details, setDetails] = useState<ProjectDetailFields>({});
-
-    useEffect(() => {
-        onUpdateDetail(objectType, details);
-    }, [details]);
+    const [ProjectDetails, updateDetailField] = useDetailTabStore(state => [state.ProjectDetails, state.updateDetailField]);
 
     useEffect(() => {
-        if (data && !loading) {
-            const { Project } = data.getDetailsTabDataForObject;
-            setDetails({
-                Description: Project?.Description
-            });
-        }
-    }, [data, loading]);
+        onUpdateDetail(objectType, ProjectDetails);
+    }, [ProjectDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -35,17 +26,17 @@ function ProjectDetails(props: DetailComponentProps): React.ReactElement {
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = event.target;
-        setDetails(details => ({ ...details, Description: value }));
+        updateDetailField(eSystemObjectType.eProject, 'Description', value);
     };
 
     const projectData = data.getDetailsTabDataForObject?.Project;
 
     return (
         <Description
-            updated={isFieldUpdated(details, projectData, 'description')}
+            updated={isFieldUpdated(ProjectDetails, projectData, 'Description')}
             disabled={disabled}
             viewMode
-            value={details.Description ?? ''}
+            value={ProjectDetails?.Description ?? ''}
             onChange={onSetField}
         />
     );

@@ -4,29 +4,21 @@
  *
  * This component renders details tab for Actor specific details used in DetailsTab component.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Loader } from '../../../../../components';
-import { ProjectDocumentationDetailFields } from '../../../../../types/graphql';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
 import { DetailComponentProps } from './index';
+import { eSystemObjectType } from '../../../../../types/server';
+import { useDetailTabStore } from '../../../../../store';
 
 function ProjectDocumentationDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
-    const [details, setDetails] = useState<ProjectDocumentationDetailFields>({});
+    const [ProjectDocumentationDetails, updateDetailField] = useDetailTabStore(state => [state.ProjectDocumentationDetails, state.updateDetailField]);
 
     useEffect(() => {
-        onUpdateDetail(objectType, details);
-    }, [details]);
-
-    useEffect(() => {
-        if (data && !loading) {
-            const { ProjectDocumentation } = data.getDetailsTabDataForObject;
-            setDetails({
-                Description: ProjectDocumentation?.Description
-            });
-        }
-    }, [data, loading]);
+        onUpdateDetail(objectType, ProjectDocumentationDetails);
+    }, [ProjectDocumentationDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -34,17 +26,17 @@ function ProjectDocumentationDetails(props: DetailComponentProps): React.ReactEl
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = event.target;
-        setDetails(details => ({ ...details, Description: value }));
+        updateDetailField(eSystemObjectType.eProjectDocumentation, 'Description', value);
     };
 
     const projectDocumentationData = data.getDetailsTabDataForObject?.ProjectDocumentation;
 
     return (
         <Description
-            updated={isFieldUpdated(details, projectDocumentationData, 'description')}
+            updated={isFieldUpdated(ProjectDocumentationDetails, projectDocumentationData, 'description')}
             disabled={disabled}
             viewMode
-            value={details.Description ?? ''}
+            value={ProjectDocumentationDetails.Description ?? ''}
             onChange={onSetField}
         />
     );
