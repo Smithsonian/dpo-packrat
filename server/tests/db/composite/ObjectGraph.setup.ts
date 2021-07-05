@@ -1,7 +1,7 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as UTIL from '../api';
-//import * as LOG from '../../../utils/logger';
+import * as LOG from '../../../utils/logger';
 
 /** Implements the object graph described here: https://confluence.si.edu/download/attachments/100272687/ObjectGraph.png?api=v2 */
 export class ObjectGraphTestSetup {
@@ -221,6 +221,20 @@ export class ObjectGraphTestSetup {
         await UTIL.createXref(this.unit2, this.stakeholder2);
 
         // Asset-AssetVersion is defined via AssetVersion.idAsset
+    }
+
+    async assignLicenses(): Promise<void> {
+        const licenseCC0:           DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadCC0);
+        const licenseDownload:      DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadRestriction);
+        const licenseView:          DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewOnly);
+        const licenseRestricted:    DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eRestricted);
+
+        if (!licenseCC0 || !licenseDownload || !licenseView || !licenseRestricted) {
+            LOG.error('ObjectGraphTestSetup.assignLicenses unable to fetch cached licenses', LOG.LS.eTEST);
+            return;
+        }
+
+        // this.unit1
     }
 
     static async testObjectGraphFetch(SOBased: DBAPI.SystemObjectBased | null, eMode: DBAPI.eObjectGraphMode,
