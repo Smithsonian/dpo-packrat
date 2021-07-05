@@ -312,6 +312,7 @@ model License {
   idLicense         Int                 @id @default(autoincrement())
   Name              String              @mariasql.VarChar(255)
   Description       String              @mariasql.VarChar(8000)
+  RestrictLevel     Int
   LicenseAssignment LicenseAssignment[]
 }
 
