@@ -8,12 +8,14 @@ import getAssetDetailsForSystemObject from './queries/getAssetDetailsForSystemOb
 import getVersionsForAsset from './queries/getVersionsForAsset';
 import getDetailsTabDataForObject from './queries/getDetailsTabDataForObject';
 import getProjectList from './queries/getProjectList';
+import getSubjectList from './queries/getSubjectList';
 import updateObjectDetails from './mutations/updateObjectDetails';
 import updateSourceObjects from './mutations/updateSourceObjects';
 import updateDerivedObjects from './mutations/updateDerivedObjects';
 import deleteObjectConnection from './mutations/deleteObjectConnection';
 import deleteIdentifier from './mutations/deleteIdentifier';
 import rollbackSystemObjectVersion from './mutations/rollbackSystemObjectVersion';
+import createSubjectWithIdentifiers from './mutations/createSubjectWithIdentifiers';
 
 const resolvers = {
     Query: {
@@ -23,6 +25,7 @@ const resolvers = {
         getVersionsForAsset,
         getDetailsTabDataForObject,
         getProjectList,
+        getSubjectList
     },
     Mutation: {
         updateObjectDetails,
@@ -30,7 +33,8 @@ const resolvers = {
         updateDerivedObjects,
         deleteObjectConnection,
         deleteIdentifier,
-        rollbackSystemObjectVersion
+        rollbackSystemObjectVersion,
+        createSubjectWithIdentifiers
     },
     SystemObject,
     SystemObjectVersion,

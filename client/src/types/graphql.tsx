@@ -37,6 +37,7 @@ export type Query = {
   getItem: GetItemResult;
   getItemsForSubject: GetItemsForSubjectResult;
   getLicense: GetLicenseResult;
+  getLicenseList: GetLicenseListResult;
   getModel: GetModelResult;
   getModelConstellation: GetModelConstellationResult;
   getModelConstellationForAssetVersion: GetModelConstellationForAssetVersionResult;
@@ -49,9 +50,11 @@ export type Query = {
   getSceneForAssetVersion: GetSceneForAssetVersionResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
+  getSubjectList: GetSubjectListResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
+  getUnitsFromEdanAbbreviation: GetUnitsFromEdanAbbreviationResult;
   getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
@@ -143,6 +146,11 @@ export type QueryGetLicenseArgs = {
 };
 
 
+export type QueryGetLicenseListArgs = {
+  input: GetLicenseListInput;
+};
+
+
 export type QueryGetModelArgs = {
   input: GetModelInput;
 };
@@ -203,6 +211,11 @@ export type QueryGetSubjectArgs = {
 };
 
 
+export type QueryGetSubjectListArgs = {
+  input: GetSubjectListInput;
+};
+
+
 export type QueryGetSubjectsForUnitArgs = {
   input: GetSubjectsForUnitInput;
 };
@@ -215,6 +228,11 @@ export type QueryGetSystemObjectDetailsArgs = {
 
 export type QueryGetUnitArgs = {
   input: GetUnitInput;
+};
+
+
+export type QueryGetUnitsFromEdanAbbreviationArgs = {
+  input: GetUnitsFromEdanAbbreviationInput;
 };
 
 
@@ -315,10 +333,13 @@ export type Mutation = {
   __typename?: 'Mutation';
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
+  createGeoLocation: CreateGeoLocationResult;
   createItem: CreateItemResult;
+  createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
   createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
+  createSubjectWithIdentifiers: CreateSubjectWithIdentifiersResult;
   createUnit: CreateUnitResult;
   createUser: CreateUserResult;
   createVocabulary: CreateVocabularyResult;
@@ -329,6 +350,7 @@ export type Mutation = {
   ingestData: IngestDataResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
+  updateLicense: CreateLicenseResult;
   updateObjectDetails: UpdateObjectDetailsResult;
   updateSourceObjects: UpdateSourceObjectsResult;
   updateUser: CreateUserResult;
@@ -346,8 +368,18 @@ export type MutationCreateCaptureDataPhotoArgs = {
 };
 
 
+export type MutationCreateGeoLocationArgs = {
+  input: CreateGeoLocationInput;
+};
+
+
 export type MutationCreateItemArgs = {
   input: CreateItemInput;
+};
+
+
+export type MutationCreateLicenseArgs = {
+  input: CreateLicenseInput;
 };
 
 
@@ -363,6 +395,11 @@ export type MutationCreateSceneArgs = {
 
 export type MutationCreateSubjectArgs = {
   input: CreateSubjectInput;
+};
+
+
+export type MutationCreateSubjectWithIdentifiersArgs = {
+  input: CreateSubjectWithIdentifiersInput;
 };
 
 
@@ -413,6 +450,11 @@ export type MutationRollbackSystemObjectVersionArgs = {
 
 export type MutationUpdateDerivedObjectsArgs = {
   input: UpdateDerivedObjectsInput;
+};
+
+
+export type MutationUpdateLicenseArgs = {
+  input: UpdateLicenseInput;
 };
 
 
@@ -913,6 +955,22 @@ export type AreCameraSettingsUniformResult = {
   isUniform: Scalars['Boolean'];
 };
 
+export type CreateLicenseInput = {
+  Name: Scalars['String'];
+  Description: Scalars['String'];
+};
+
+export type CreateLicenseResult = {
+  __typename?: 'CreateLicenseResult';
+  License?: Maybe<License>;
+};
+
+export type UpdateLicenseInput = {
+  idLicense: Scalars['Int'];
+  Name: Scalars['String'];
+  Description: Scalars['String'];
+};
+
 export type GetLicenseInput = {
   idLicense: Scalars['Int'];
 };
@@ -920,6 +978,15 @@ export type GetLicenseInput = {
 export type GetLicenseResult = {
   __typename?: 'GetLicenseResult';
   License?: Maybe<License>;
+};
+
+export type GetLicenseListInput = {
+  search?: Maybe<Scalars['String']>;
+};
+
+export type GetLicenseListResult = {
+  __typename?: 'GetLicenseListResult';
+  Licenses: Array<License>;
 };
 
 export type License = {
@@ -1469,6 +1536,25 @@ export type RollbackSystemObjectVersionInput = {
   idSystemObjectVersion: Scalars['Int'];
 };
 
+export type CreateSubjectWithIdentifiersResult = {
+  __typename?: 'CreateSubjectWithIdentifiersResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type CreateSubjectWithIdentifiersInput = {
+  identifiers: Array<CreateIdentifierInput>;
+  subject: CreateSubjectInput;
+  systemCreated: Scalars['Boolean'];
+};
+
+export type CreateIdentifierInput = {
+  identifierValue: Scalars['String'];
+  identifierType: Scalars['Int'];
+  idSystemObject?: Maybe<Scalars['Int']>;
+  selected: Scalars['Boolean'];
+};
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -1628,6 +1714,7 @@ export type RepositoryPath = {
 
 export type GetSystemObjectDetailsResult = {
   __typename?: 'GetSystemObjectDetailsResult';
+  idSystemObject: Scalars['Int'];
   idObject: Scalars['Int'];
   name: Scalars['String'];
   retired: Scalars['Boolean'];
@@ -1711,6 +1798,20 @@ export type GetProjectListResult = {
 
 export type GetProjectListInput = {
   search: Scalars['String'];
+};
+
+export type GetSubjectListResult = {
+  __typename?: 'GetSubjectListResult';
+  subjects: Array<SubjectUnitIdentifier>;
+};
+
+export type GetSubjectListInput = {
+  search: Scalars['String'];
+  idUnit?: Maybe<Scalars['Int']>;
+  pageNumber?: Maybe<Scalars['Int']>;
+  rowCount?: Maybe<Scalars['Int']>;
+  sortBy?: Maybe<Scalars['Int']>;
+  sortOrder?: Maybe<Scalars['Boolean']>;
 };
 
 export type SystemObject = {
@@ -1839,6 +1940,24 @@ export type CreateItemResult = {
   Item?: Maybe<Item>;
 };
 
+export type CreateGeoLocationInput = {
+  Latitude?: Maybe<Scalars['Int']>;
+  Longitude?: Maybe<Scalars['Int']>;
+  Altitude?: Maybe<Scalars['Int']>;
+  TS0?: Maybe<Scalars['Int']>;
+  TS1?: Maybe<Scalars['Int']>;
+  TS2?: Maybe<Scalars['Int']>;
+  R0?: Maybe<Scalars['Int']>;
+  R1?: Maybe<Scalars['Int']>;
+  R2?: Maybe<Scalars['Int']>;
+  R3?: Maybe<Scalars['Int']>;
+};
+
+export type CreateGeoLocationResult = {
+  __typename?: 'CreateGeoLocationResult';
+  GeoLocation?: Maybe<GeoLocation>;
+};
+
 export type GetSubjectsForUnitInput = {
   idUnit: Scalars['Int'];
   pagination?: Maybe<PaginationInput>;
@@ -1862,6 +1981,7 @@ export type GetItemsForSubjectResult = {
 export type SubjectUnitIdentifier = {
   __typename?: 'SubjectUnitIdentifier';
   idSubject: Scalars['Int'];
+  idSystemObject: Scalars['Int'];
   SubjectName: Scalars['String'];
   UnitAbbreviation: Scalars['String'];
   IdentifierPublic?: Maybe<Scalars['String']>;
@@ -1883,6 +2003,7 @@ export type GetObjectsForItemResult = {
 
 export type SearchIngestionSubjectsInput = {
   query: Scalars['String'];
+  EdanOnly?: Maybe<Scalars['Boolean']>;
 };
 
 export type SearchIngestionSubjectsResult = {
@@ -1960,6 +2081,15 @@ export type GetUnitsFromNameSearchResult = {
 
 export type GetUnitsFromNameSearchInput = {
   search: Scalars['String'];
+};
+
+export type GetUnitsFromEdanAbbreviationResult = {
+  __typename?: 'GetUnitsFromEdanAbbreviationResult';
+  Units: Array<Unit>;
+};
+
+export type GetUnitsFromEdanAbbreviationInput = {
+  abbreviation: Scalars['String'];
 };
 
 export type Unit = {
@@ -2352,6 +2482,38 @@ export type IngestDataMutation = (
   ) }
 );
 
+export type CreateLicenseMutationVariables = Exact<{
+  input: CreateLicenseInput;
+}>;
+
+
+export type CreateLicenseMutation = (
+  { __typename?: 'Mutation' }
+  & { createLicense: (
+    { __typename?: 'CreateLicenseResult' }
+    & { License?: Maybe<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Name' | 'Description'>
+    )> }
+  ) }
+);
+
+export type UpdateLicenseMutationVariables = Exact<{
+  input: UpdateLicenseInput;
+}>;
+
+
+export type UpdateLicenseMutation = (
+  { __typename?: 'Mutation' }
+  & { updateLicense: (
+    { __typename?: 'CreateLicenseResult' }
+    & { License?: Maybe<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Name' | 'Description'>
+    )> }
+  ) }
+);
+
 export type CreateSceneMutationVariables = Exact<{
   input: CreateSceneInput;
 }>;
@@ -2365,6 +2527,19 @@ export type CreateSceneMutation = (
       { __typename?: 'Scene' }
       & Pick<Scene, 'idScene'>
     )> }
+  ) }
+);
+
+export type CreateSubjectWithIdentifiersMutationVariables = Exact<{
+  input: CreateSubjectWithIdentifiersInput;
+}>;
+
+
+export type CreateSubjectWithIdentifiersMutation = (
+  { __typename?: 'Mutation' }
+  & { createSubjectWithIdentifiers: (
+    { __typename?: 'CreateSubjectWithIdentifiersResult' }
+    & Pick<CreateSubjectWithIdentifiersResult, 'success' | 'message'>
   ) }
 );
 
@@ -2443,6 +2618,22 @@ export type UpdateSourceObjectsMutation = (
   & { updateSourceObjects: (
     { __typename?: 'UpdateSourceObjectsResult' }
     & Pick<UpdateSourceObjectsResult, 'success'>
+  ) }
+);
+
+export type CreateGeoLocationMutationVariables = Exact<{
+  input: CreateGeoLocationInput;
+}>;
+
+
+export type CreateGeoLocationMutation = (
+  { __typename?: 'Mutation' }
+  & { createGeoLocation: (
+    { __typename?: 'CreateGeoLocationResult' }
+    & { GeoLocation?: Maybe<(
+      { __typename?: 'GeoLocation' }
+      & Pick<GeoLocation, 'idGeoLocation'>
+    )> }
   ) }
 );
 
@@ -2629,7 +2820,7 @@ export type GetAssetVersionsDetailsQuery = (
       & Pick<GetAssetVersionDetailResult, 'idAssetVersion'>
       & { SubjectUnitIdentifier?: Maybe<(
         { __typename?: 'SubjectUnitIdentifier' }
-        & Pick<SubjectUnitIdentifier, 'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
+        & Pick<SubjectUnitIdentifier, 'idSubject' | 'idSystemObject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
       )>, Project?: Maybe<Array<(
         { __typename?: 'Project' }
         & Pick<Project, 'idProject' | 'Name'>
@@ -2795,7 +2986,23 @@ export type GetLicenseQuery = (
     { __typename?: 'GetLicenseResult' }
     & { License?: Maybe<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense'>
+      & Pick<License, 'idLicense' | 'Description' | 'Name'>
+    )> }
+  ) }
+);
+
+export type GetLicenseListQueryVariables = Exact<{
+  input: GetLicenseListInput;
+}>;
+
+
+export type GetLicenseListQuery = (
+  { __typename?: 'Query' }
+  & { getLicenseList: (
+    { __typename?: 'GetLicenseListResult' }
+    & { Licenses: Array<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Description' | 'Name'>
     )> }
   ) }
 );
@@ -3115,6 +3322,22 @@ export type GetSourceObjectIdentiferQuery = (
   ) }
 );
 
+export type GetSubjectListQueryVariables = Exact<{
+  input: GetSubjectListInput;
+}>;
+
+
+export type GetSubjectListQuery = (
+  { __typename?: 'Query' }
+  & { getSubjectList: (
+    { __typename?: 'GetSubjectListResult' }
+    & { subjects: Array<(
+      { __typename?: 'SubjectUnitIdentifier' }
+      & Pick<SubjectUnitIdentifier, 'idSubject' | 'idSystemObject' | 'UnitAbbreviation' | 'SubjectName' | 'IdentifierPublic'>
+    )> }
+  ) }
+);
+
 export type GetSystemObjectDetailsQueryVariables = Exact<{
   input: GetSystemObjectDetailsInput;
 }>;
@@ -3124,7 +3347,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3352,6 +3575,22 @@ export type GetUnitQuery = (
   ) }
 );
 
+export type GetUnitsFromEdanAbbreviationQueryVariables = Exact<{
+  input: GetUnitsFromEdanAbbreviationInput;
+}>;
+
+
+export type GetUnitsFromEdanAbbreviationQuery = (
+  { __typename?: 'Query' }
+  & { getUnitsFromEdanAbbreviation: (
+    { __typename?: 'GetUnitsFromEdanAbbreviationResult' }
+    & { Units: Array<(
+      { __typename?: 'Unit' }
+      & Pick<Unit, 'idUnit' | 'Name'>
+    )> }
+  ) }
+);
+
 export type GetUnitsFromNameSearchQueryVariables = Exact<{
   input: GetUnitsFromNameSearchInput;
 }>;
@@ -3383,7 +3622,7 @@ export type SearchIngestionSubjectsQuery = (
     { __typename?: 'SearchIngestionSubjectsResult' }
     & { SubjectUnitIdentifier: Array<(
       { __typename?: 'SubjectUnitIdentifier' }
-      & Pick<SubjectUnitIdentifier, 'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
+      & Pick<SubjectUnitIdentifier, 'idSubject' | 'idSystemObject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
     )> }
   ) }
 );
@@ -3661,6 +3900,80 @@ export function useIngestDataMutation(baseOptions?: Apollo.MutationHookOptions<I
 export type IngestDataMutationHookResult = ReturnType<typeof useIngestDataMutation>;
 export type IngestDataMutationResult = Apollo.MutationResult<IngestDataMutation>;
 export type IngestDataMutationOptions = Apollo.BaseMutationOptions<IngestDataMutation, IngestDataMutationVariables>;
+export const CreateLicenseDocument = gql`
+    mutation createLicense($input: CreateLicenseInput!) {
+  createLicense(input: $input) {
+    License {
+      idLicense
+      Name
+      Description
+    }
+  }
+}
+    `;
+export type CreateLicenseMutationFn = Apollo.MutationFunction<CreateLicenseMutation, CreateLicenseMutationVariables>;
+
+/**
+ * __useCreateLicenseMutation__
+ *
+ * To run a mutation, you first call `useCreateLicenseMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateLicenseMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createLicenseMutation, { data, loading, error }] = useCreateLicenseMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateLicenseMutation(baseOptions?: Apollo.MutationHookOptions<CreateLicenseMutation, CreateLicenseMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateLicenseMutation, CreateLicenseMutationVariables>(CreateLicenseDocument, options);
+      }
+export type CreateLicenseMutationHookResult = ReturnType<typeof useCreateLicenseMutation>;
+export type CreateLicenseMutationResult = Apollo.MutationResult<CreateLicenseMutation>;
+export type CreateLicenseMutationOptions = Apollo.BaseMutationOptions<CreateLicenseMutation, CreateLicenseMutationVariables>;
+export const UpdateLicenseDocument = gql`
+    mutation updateLicense($input: UpdateLicenseInput!) {
+  updateLicense(input: $input) {
+    License {
+      idLicense
+      Name
+      Description
+    }
+  }
+}
+    `;
+export type UpdateLicenseMutationFn = Apollo.MutationFunction<UpdateLicenseMutation, UpdateLicenseMutationVariables>;
+
+/**
+ * __useUpdateLicenseMutation__
+ *
+ * To run a mutation, you first call `useUpdateLicenseMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateLicenseMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateLicenseMutation, { data, loading, error }] = useUpdateLicenseMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateLicenseMutation(baseOptions?: Apollo.MutationHookOptions<UpdateLicenseMutation, UpdateLicenseMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateLicenseMutation, UpdateLicenseMutationVariables>(UpdateLicenseDocument, options);
+      }
+export type UpdateLicenseMutationHookResult = ReturnType<typeof useUpdateLicenseMutation>;
+export type UpdateLicenseMutationResult = Apollo.MutationResult<UpdateLicenseMutation>;
+export type UpdateLicenseMutationOptions = Apollo.BaseMutationOptions<UpdateLicenseMutation, UpdateLicenseMutationVariables>;
 export const CreateSceneDocument = gql`
     mutation createScene($input: CreateSceneInput!) {
   createScene(input: $input) {
@@ -3696,6 +4009,40 @@ export function useCreateSceneMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateSceneMutationHookResult = ReturnType<typeof useCreateSceneMutation>;
 export type CreateSceneMutationResult = Apollo.MutationResult<CreateSceneMutation>;
 export type CreateSceneMutationOptions = Apollo.BaseMutationOptions<CreateSceneMutation, CreateSceneMutationVariables>;
+export const CreateSubjectWithIdentifiersDocument = gql`
+    mutation createSubjectWithIdentifiers($input: CreateSubjectWithIdentifiersInput!) {
+  createSubjectWithIdentifiers(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type CreateSubjectWithIdentifiersMutationFn = Apollo.MutationFunction<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>;
+
+/**
+ * __useCreateSubjectWithIdentifiersMutation__
+ *
+ * To run a mutation, you first call `useCreateSubjectWithIdentifiersMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateSubjectWithIdentifiersMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createSubjectWithIdentifiersMutation, { data, loading, error }] = useCreateSubjectWithIdentifiersMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateSubjectWithIdentifiersMutation(baseOptions?: Apollo.MutationHookOptions<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>(CreateSubjectWithIdentifiersDocument, options);
+      }
+export type CreateSubjectWithIdentifiersMutationHookResult = ReturnType<typeof useCreateSubjectWithIdentifiersMutation>;
+export type CreateSubjectWithIdentifiersMutationResult = Apollo.MutationResult<CreateSubjectWithIdentifiersMutation>;
+export type CreateSubjectWithIdentifiersMutationOptions = Apollo.BaseMutationOptions<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>;
 export const DeleteIdentifierDocument = gql`
     mutation deleteIdentifier($input: DeleteIdentifierInput!) {
   deleteIdentifier(input: $input) {
@@ -3897,6 +4244,41 @@ export function useUpdateSourceObjectsMutation(baseOptions?: Apollo.MutationHook
 export type UpdateSourceObjectsMutationHookResult = ReturnType<typeof useUpdateSourceObjectsMutation>;
 export type UpdateSourceObjectsMutationResult = Apollo.MutationResult<UpdateSourceObjectsMutation>;
 export type UpdateSourceObjectsMutationOptions = Apollo.BaseMutationOptions<UpdateSourceObjectsMutation, UpdateSourceObjectsMutationVariables>;
+export const CreateGeoLocationDocument = gql`
+    mutation createGeoLocation($input: CreateGeoLocationInput!) {
+  createGeoLocation(input: $input) {
+    GeoLocation {
+      idGeoLocation
+    }
+  }
+}
+    `;
+export type CreateGeoLocationMutationFn = Apollo.MutationFunction<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>;
+
+/**
+ * __useCreateGeoLocationMutation__
+ *
+ * To run a mutation, you first call `useCreateGeoLocationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateGeoLocationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createGeoLocationMutation, { data, loading, error }] = useCreateGeoLocationMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateGeoLocationMutation(baseOptions?: Apollo.MutationHookOptions<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>(CreateGeoLocationDocument, options);
+      }
+export type CreateGeoLocationMutationHookResult = ReturnType<typeof useCreateGeoLocationMutation>;
+export type CreateGeoLocationMutationResult = Apollo.MutationResult<CreateGeoLocationMutation>;
+export type CreateGeoLocationMutationOptions = Apollo.BaseMutationOptions<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>;
 export const CreateItemDocument = gql`
     mutation createItem($input: CreateItemInput!) {
   createItem(input: $input) {
@@ -4278,6 +4660,7 @@ export const GetAssetVersionsDetailsDocument = gql`
       idAssetVersion
       SubjectUnitIdentifier {
         idSubject
+        idSystemObject
         SubjectName
         UnitAbbreviation
         IdentifierPublic
@@ -4679,6 +5062,8 @@ export const GetLicenseDocument = gql`
   getLicense(input: $input) {
     License {
       idLicense
+      Description
+      Name
     }
   }
 }
@@ -4711,6 +5096,45 @@ export function useGetLicenseLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions
 export type GetLicenseQueryHookResult = ReturnType<typeof useGetLicenseQuery>;
 export type GetLicenseLazyQueryHookResult = ReturnType<typeof useGetLicenseLazyQuery>;
 export type GetLicenseQueryResult = Apollo.QueryResult<GetLicenseQuery, GetLicenseQueryVariables>;
+export const GetLicenseListDocument = gql`
+    query getLicenseList($input: GetLicenseListInput!) {
+  getLicenseList(input: $input) {
+    Licenses {
+      idLicense
+      Description
+      Name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetLicenseListQuery__
+ *
+ * To run a query within a React component, call `useGetLicenseListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLicenseListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLicenseListQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetLicenseListQuery(baseOptions: Apollo.QueryHookOptions<GetLicenseListQuery, GetLicenseListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLicenseListQuery, GetLicenseListQueryVariables>(GetLicenseListDocument, options);
+      }
+export function useGetLicenseListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLicenseListQuery, GetLicenseListQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLicenseListQuery, GetLicenseListQueryVariables>(GetLicenseListDocument, options);
+        }
+export type GetLicenseListQueryHookResult = ReturnType<typeof useGetLicenseListQuery>;
+export type GetLicenseListLazyQueryHookResult = ReturnType<typeof useGetLicenseListLazyQuery>;
+export type GetLicenseListQueryResult = Apollo.QueryResult<GetLicenseListQuery, GetLicenseListQueryVariables>;
 export const GetModelDocument = gql`
     query getModel($input: GetModelInput!) {
   getModel(input: $input) {
@@ -5473,9 +5897,51 @@ export function useGetSourceObjectIdentiferLazyQuery(baseOptions?: Apollo.LazyQu
 export type GetSourceObjectIdentiferQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferQuery>;
 export type GetSourceObjectIdentiferLazyQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferLazyQuery>;
 export type GetSourceObjectIdentiferQueryResult = Apollo.QueryResult<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>;
+export const GetSubjectListDocument = gql`
+    query getSubjectList($input: GetSubjectListInput!) {
+  getSubjectList(input: $input) {
+    subjects {
+      idSubject
+      idSystemObject
+      UnitAbbreviation
+      SubjectName
+      IdentifierPublic
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSubjectListQuery__
+ *
+ * To run a query within a React component, call `useGetSubjectListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSubjectListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSubjectListQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSubjectListQuery(baseOptions: Apollo.QueryHookOptions<GetSubjectListQuery, GetSubjectListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSubjectListQuery, GetSubjectListQueryVariables>(GetSubjectListDocument, options);
+      }
+export function useGetSubjectListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSubjectListQuery, GetSubjectListQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSubjectListQuery, GetSubjectListQueryVariables>(GetSubjectListDocument, options);
+        }
+export type GetSubjectListQueryHookResult = ReturnType<typeof useGetSubjectListQuery>;
+export type GetSubjectListLazyQueryHookResult = ReturnType<typeof useGetSubjectListLazyQuery>;
+export type GetSubjectListQueryResult = Apollo.QueryResult<GetSubjectListQuery, GetSubjectListQueryVariables>;
 export const GetSystemObjectDetailsDocument = gql`
     query getSystemObjectDetails($input: GetSystemObjectDetailsInput!) {
   getSystemObjectDetails(input: $input) {
+    idSystemObject
     idObject
     name
     retired
@@ -6008,6 +6474,44 @@ export function useGetUnitLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ge
 export type GetUnitQueryHookResult = ReturnType<typeof useGetUnitQuery>;
 export type GetUnitLazyQueryHookResult = ReturnType<typeof useGetUnitLazyQuery>;
 export type GetUnitQueryResult = Apollo.QueryResult<GetUnitQuery, GetUnitQueryVariables>;
+export const GetUnitsFromEdanAbbreviationDocument = gql`
+    query getUnitsFromEdanAbbreviation($input: GetUnitsFromEdanAbbreviationInput!) {
+  getUnitsFromEdanAbbreviation(input: $input) {
+    Units {
+      idUnit
+      Name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetUnitsFromEdanAbbreviationQuery__
+ *
+ * To run a query within a React component, call `useGetUnitsFromEdanAbbreviationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUnitsFromEdanAbbreviationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUnitsFromEdanAbbreviationQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetUnitsFromEdanAbbreviationQuery(baseOptions: Apollo.QueryHookOptions<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>(GetUnitsFromEdanAbbreviationDocument, options);
+      }
+export function useGetUnitsFromEdanAbbreviationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>(GetUnitsFromEdanAbbreviationDocument, options);
+        }
+export type GetUnitsFromEdanAbbreviationQueryHookResult = ReturnType<typeof useGetUnitsFromEdanAbbreviationQuery>;
+export type GetUnitsFromEdanAbbreviationLazyQueryHookResult = ReturnType<typeof useGetUnitsFromEdanAbbreviationLazyQuery>;
+export type GetUnitsFromEdanAbbreviationQueryResult = Apollo.QueryResult<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>;
 export const GetUnitsFromNameSearchDocument = gql`
     query getUnitsFromNameSearch($input: GetUnitsFromNameSearchInput!) {
   getUnitsFromNameSearch(input: $input) {
@@ -6055,6 +6559,7 @@ export const SearchIngestionSubjectsDocument = gql`
   searchIngestionSubjects(input: $input) {
     SubjectUnitIdentifier {
       idSubject
+      idSystemObject
       SubjectName
       UnitAbbreviation
       IdentifierPublic
