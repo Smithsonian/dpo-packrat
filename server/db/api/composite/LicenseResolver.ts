@@ -21,7 +21,7 @@ export class LicenseResolver {
             return LR;
 
         const OGD: ObjectGraphDatabase = new ObjectGraphDatabase();
-        const OG: ObjectGraph = new ObjectGraph(idSystemObject, eObjectGraphMode.eAncestors, 32, OGD);
+        const OG: ObjectGraph = new ObjectGraph(idSystemObject, eObjectGraphMode.eAncestors, 32, OGD); /* istanbul ignore if */
         if (!await OG.fetch()) {
             LOG.error(`LicenseResolver unable to fetch object graph for ${idSystemObject}`, LOG.LS.eDB);
             return null;
@@ -39,7 +39,7 @@ export class LicenseResolver {
             if (!assignment.assignmentActive()) // only consider active license assignments
                 continue;
 
-            const license: License | null = await License.fetch(assignment.idLicense);
+            const license: License | null = await License.fetch(assignment.idLicense); /* istanbul ignore if */
             if (!license) {
                 LOG.error(`LicenseResolver.pickMostRestrictiveAssignment unable to compute license from ${JSON.stringify(assignment)}`, LOG.LS.eDB);
                 continue;
@@ -51,15 +51,16 @@ export class LicenseResolver {
                 restrictiveAssignment = assignment;
             }
         }
-        return (restrictiveLicense && restrictiveAssignment) ? new LicenseResolver(restrictiveLicense, restrictiveAssignment, inherited) : null;
+        return (restrictiveLicense && restrictiveAssignment) ? new LicenseResolver(restrictiveLicense, restrictiveAssignment, inherited) : /* istanbul ignore next */ null;
     }
 
     private static async fetchSpecificLicense(idSystemObject: number, inherited: boolean): Promise<LicenseResolver | null> {
         const assignments: LicenseAssignment[] | null = await LicenseAssignment.fetchFromSystemObject(idSystemObject);
-        if (!assignments || assignments.length == 0)
-            return null;
-
-        return await LicenseResolver.pickMostRestrictiveLicense(assignments, inherited);
+        let LR: LicenseResolver | null = null;
+        if (assignments && assignments.length > 0)
+            LR = await LicenseResolver.pickMostRestrictiveLicense(assignments, inherited);
+        LOG.info(`LR.fetchSpecificLicense found ${JSON.stringify(LR)}`, LOG.LS.eDB);
+        return LR;
     }
 
     private static async fetchParentsLicense(OGD: ObjectGraphDatabase, idSystemObject: number, depth: number): Promise<LicenseResolver | null> {
@@ -74,13 +75,13 @@ export class LicenseResolver {
         for (const idSystemObjectParent of OGDE.parentMap.keys()) {
             // for each parent, get its specific LicenseResolver
             let LRP: LicenseResolver | null = await LicenseResolver.fetchSpecificLicense(idSystemObjectParent, true);
-            if (!LRP || !LRP.License) {
+            if (!LRP || !LRP.License) {  /* istanbul ignore if */
                 // if none, step "up" to the parent, and fetch it's aggregate parents' notion of license, via recursion
                 if (depth <= 0)
                     continue;
 
                 LRP = await LicenseResolver.fetchParentsLicense(OGD, idSystemObjectParent, depth - 1);
-            }
+            } /* istanbul ignore else */
 
             if (LRP && LRP.License) {
                 if (!LR || !LR.License)                                         // if we don't yet have a license, use this one
@@ -90,6 +91,7 @@ export class LicenseResolver {
                 continue;
             }
         }
+        LOG.info(`LR.fetchParentsLicense found ${JSON.stringify(LR)}`, LOG.LS.eDB);
         return LR;
     }
 }

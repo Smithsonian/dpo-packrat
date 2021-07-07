@@ -67,6 +67,22 @@ export class ObjectGraphTestSetup {
     assetVersion9: DBAPI.AssetVersion | null = null;
     assetVersion10: DBAPI.AssetVersion | null = null;
     v1: DBAPI.Vocabulary | undefined;
+
+    licenseCC0:        DBAPI.License | null = null;
+    licenseDownload:   DBAPI.License | null = null;
+    licenseView:       DBAPI.License | null = null;
+    licenseRestricted: DBAPI.License | null = null;
+
+    idSOUnit1: number = 0;
+    idSOUnit2: number = 0;
+    idSOProject1: number = 0;
+    idSOSubject1: number = 0;
+    idSOSubject2: number = 0;
+    idSOSubject4: number = 0;
+    idSOItem1: number = 0;
+    idSOItem2: number = 0;
+    idSOCaptureData1: number = 0;
+    idSOCaptureData2: number = 0;
     /* #endregion */
 
     async initialize(): Promise<void> {
@@ -167,6 +183,17 @@ export class ObjectGraphTestSetup {
         this.actor2 = await UTIL.createActorTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', idUnit: 0, idActor: 0 });
         this.stakeholder1 = await UTIL.createStakeholderTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', EmailAddress: 'OA Test', PhoneNumberMobile: 'OA Test', PhoneNumberOffice: 'OA Test', MailingAddress: 'OA Test', idStakeholder: 0 });
         this.stakeholder2 = await UTIL.createStakeholderTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', EmailAddress: 'OA Test', PhoneNumberMobile: 'OA Test', PhoneNumberOffice: 'OA Test', MailingAddress: 'OA Test', idStakeholder: 0 });
+
+        this.idSOUnit1 = await ObjectGraphTestSetup.fetchSystemObjectID(this.unit1) ?? 0;
+        this.idSOUnit2 = await ObjectGraphTestSetup.fetchSystemObjectID(this.unit2) ?? 0;
+        this.idSOProject1 = await ObjectGraphTestSetup.fetchSystemObjectID(this.project1) ?? 0;
+        this.idSOSubject1 = await ObjectGraphTestSetup.fetchSystemObjectID(this.subject1) ?? 0;
+        this.idSOSubject2 = await ObjectGraphTestSetup.fetchSystemObjectID(this.subject2) ?? 0;
+        this.idSOSubject4 = await ObjectGraphTestSetup.fetchSystemObjectID(this.subject4) ?? 0;
+        this.idSOItem1 = await ObjectGraphTestSetup.fetchSystemObjectID(this.item1) ?? 0;
+        this.idSOItem2 = await ObjectGraphTestSetup.fetchSystemObjectID(this.item2) ?? 0;
+        this.idSOCaptureData1 = await ObjectGraphTestSetup.fetchSystemObjectID(this.captureData1) ?? 0;
+        this.idSOCaptureData2 = await ObjectGraphTestSetup.fetchSystemObjectID(this.captureData2) ?? 0;
         /* #endregion */
     }
 
@@ -223,18 +250,49 @@ export class ObjectGraphTestSetup {
         // Asset-AssetVersion is defined via AssetVersion.idAsset
     }
 
-    async assignLicenses(): Promise<void> {
-        const licenseCC0:           DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadCC0);
-        const licenseDownload:      DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadRestriction);
-        const licenseView:          DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewOnly);
-        const licenseRestricted:    DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eRestricted);
+    async assignLicenses(): Promise<boolean> {
+        this.licenseCC0        = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadCC0) ?? null;
+        this.licenseDownload   = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadRestriction) ?? null;
+        this.licenseView       = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewOnly) ?? null;
+        this.licenseRestricted = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eRestricted) ?? null;
 
-        if (!licenseCC0 || !licenseDownload || !licenseView || !licenseRestricted) {
+        if (!this.licenseCC0 || !this.licenseDownload || !this.licenseView || !this.licenseRestricted) {
             LOG.error('ObjectGraphTestSetup.assignLicenses unable to fetch cached licenses', LOG.LS.eTEST);
-            return;
+            return false;
         }
 
-        // this.unit1
+        if (!this.idSOUnit1 || !this.idSOUnit2 || !this.idSOProject1 || !this.idSOSubject1 ||
+            !this.idSOSubject2 || !this.idSOSubject4 || !this.idSOItem1 || !this.idSOItem2 ||
+            !this.idSOCaptureData1 || !this.idSOCaptureData2 || !this.user1) {
+            LOG.error('ObjectGraphTestSetup.assignLicenses unable to fetch objects', LOG.LS.eTEST);
+            return false;
+        }
+
+        const now: Date = new Date();
+        const lastYear: Date = new Date(now.getFullYear() - 1, 1, 1);
+        const nextYear: Date = new Date(now.getFullYear() + 1, 1, 1);
+
+        await DBAPI.LicenseManager.setAssignment(this.idSOUnit1, this.licenseCC0);
+        await DBAPI.LicenseManager.setAssignment(this.idSOUnit2, this.licenseCC0);
+        await DBAPI.LicenseManager.setAssignment(this.idSOProject1, this.licenseRestricted, this.user1.idUser);
+        await DBAPI.LicenseManager.setAssignment(this.idSOSubject1, this.licenseDownload, this.user1.idUser, null, null);
+        await DBAPI.LicenseManager.setAssignment(this.idSOSubject2, this.licenseView, this.user1.idUser, lastYear, null);
+        await DBAPI.LicenseManager.setAssignment(this.idSOItem2, this.licenseRestricted, this.user1.idUser, null, lastYear); // not active
+        await DBAPI.LicenseManager.setAssignment(this.idSOCaptureData1, this.licenseCC0, this.user1.idUser, lastYear, nextYear);
+        await DBAPI.LicenseManager.clearAssignment(this.idSOCaptureData1);
+        await DBAPI.LicenseManager.clearAssignment(this.idSOCaptureData1, false);
+        await DBAPI.LicenseManager.clearAssignment(this.idSOCaptureData1, true);
+        await DBAPI.LicenseManager.setAssignment(this.idSOCaptureData1, this.licenseCC0, this.user1.idUser, lastYear, nextYear);
+        return true;
+    }
+
+    private static async fetchSystemObjectID(SOBased: DBAPI.SystemObjectBased | null): Promise<number | null> {
+        expect(SOBased).toBeTruthy();
+        if (!SOBased)
+            return null;
+        const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
+        expect(SO).toBeTruthy();
+        return SO ? SO.idSystemObject : null;
     }
 
     static async testObjectGraphFetch(SOBased: DBAPI.SystemObjectBased | null, eMode: DBAPI.eObjectGraphMode,
