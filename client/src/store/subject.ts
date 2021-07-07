@@ -27,6 +27,7 @@ export type StateSubject = {
     arkId: string;
     unit: string;
     name: string;
+    collectionId?: string;
 };
 
 type SubjectStore = {

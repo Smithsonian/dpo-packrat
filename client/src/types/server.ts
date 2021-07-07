@@ -217,3 +217,10 @@ export const PublishedStateEnumToString = (eState: ePublishedState): string => {
         case ePublishedState.eNotPublished: return 'Not Published';
     }
 };
+
+export enum eSubjectUnitIdentifierSortColumns {
+    eUnitAbbreviation = 1,
+    eSubjectName = 2,
+    eIdentifierValue = 3,
+    eDefault = 0
+}

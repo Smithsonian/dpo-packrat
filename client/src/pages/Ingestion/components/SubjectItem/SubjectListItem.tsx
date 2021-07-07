@@ -25,6 +25,7 @@ const useStyles = makeStyles(() => ({
 interface SubjectListItemProps {
     id: number;
     arkId: string;
+    collectionId?: string;
     unit: string;
     name: string;
     selected: boolean;
@@ -33,7 +34,7 @@ interface SubjectListItemProps {
 }
 
 function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
-    const { id, arkId, unit, name, selected, onAdd, onRemove } = props;
+    const { id, arkId, unit, name, selected, collectionId, onAdd, onRemove } = props;
     const classes = useStyles();
 
     const add = () => {
@@ -41,7 +42,8 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
             id,
             arkId,
             unit,
-            name
+            name,
+            collectionId
         };
 
         onAdd(subject);

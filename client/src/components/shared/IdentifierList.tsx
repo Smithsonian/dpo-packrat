@@ -64,7 +64,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 
 interface IdentifierListProps extends ViewableProps {
     identifiers: StateIdentifier[];
-    onAdd: (initialEntry: number | null) => void;
+    onAdd: (initialEntry: number | null, name?: string) => void;
     onUpdate: (id: number, fieldName: string, fieldValue: number | string | boolean) => void;
     onRemove: (idIdentifier: number, id: number) => void;
     identifierTypes: VocabularyOption[];

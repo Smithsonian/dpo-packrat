@@ -17,6 +17,7 @@ type Query {
   getItem(input: GetItemInput!): GetItemResult!
   getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
+  getLicenseList(input: GetLicenseListInput!): GetLicenseListResult!
   getModel(input: GetModelInput!): GetModelResult!
   getModelConstellation(input: GetModelConstellationInput!): GetModelConstellationResult!
   getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput!): GetModelConstellationForAssetVersionResult!
@@ -29,9 +30,11 @@ type Query {
   getSceneForAssetVersion(input: GetSceneForAssetVersionInput!): GetSceneForAssetVersionResult!
   getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
+  getSubjectList(input: GetSubjectListInput!): GetSubjectListResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
   getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
+  getUnitsFromEdanAbbreviation(input: GetUnitsFromEdanAbbreviationInput!): GetUnitsFromEdanAbbreviationResult!
   getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput!): GetUnitsFromNameSearchResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
@@ -100,10 +103,13 @@ scalar Upload
 type Mutation {
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
+  createGeoLocation(input: CreateGeoLocationInput!): CreateGeoLocationResult!
   createItem(input: CreateItemInput!): CreateItemResult!
+  createLicense(input: CreateLicenseInput!): CreateLicenseResult!
   createProject(input: CreateProjectInput!): CreateProjectResult!
   createScene(input: CreateSceneInput!): CreateSceneResult!
   createSubject(input: CreateSubjectInput!): CreateSubjectResult!
+  createSubjectWithIdentifiers(input: CreateSubjectWithIdentifiersInput!): CreateSubjectWithIdentifiersResult!
   createUnit(input: CreateUnitInput!): CreateUnitResult!
   createUser(input: CreateUserInput!): CreateUserResult!
   createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
@@ -114,6 +120,7 @@ type Mutation {
   ingestData(input: IngestDataInput!): IngestDataResult!
   rollbackSystemObjectVersion(input: RollbackSystemObjectVersionInput!): RollbackSystemObjectVersionResult!
   updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
+  updateLicense(input: UpdateLicenseInput!): CreateLicenseResult!
   updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
   updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
   updateUser(input: UpdateUserInput!): CreateUserResult!
@@ -566,12 +573,35 @@ type AreCameraSettingsUniformResult {
   isUniform: Boolean!
 }
 
+input CreateLicenseInput {
+  Name: String!
+  Description: String!
+}
+
+type CreateLicenseResult {
+  License: License
+}
+
+input UpdateLicenseInput {
+  idLicense: Int!
+  Name: String!
+  Description: String!
+}
+
 input GetLicenseInput {
   idLicense: Int!
 }
 
 type GetLicenseResult {
   License: License
+}
+
+input GetLicenseListInput {
+  search: String
+}
+
+type GetLicenseListResult {
+  Licenses: [License!]!
 }
 
 type License {
@@ -1090,6 +1120,24 @@ input RollbackSystemObjectVersionInput {
   idSystemObjectVersion: Int!
 }
 
+type CreateSubjectWithIdentifiersResult {
+  success: Boolean!
+  message: String!
+}
+
+input CreateSubjectWithIdentifiersInput {
+  identifiers: [CreateIdentifierInput!]!
+  subject: CreateSubjectInput!
+  systemCreated: Boolean!
+}
+
+input CreateIdentifierInput {
+  identifierValue: String!
+  identifierType: Int!
+  idSystemObject: Int
+  selected: Boolean!
+}
+
 input GetDetailsTabDataForObjectInput {
   idSystemObject: Int!
   objectType: Int!
@@ -1234,6 +1282,7 @@ type RepositoryPath {
 }
 
 type GetSystemObjectDetailsResult {
+  idSystemObject: Int!
   idObject: Int!
   name: String!
   retired: Boolean!
@@ -1310,6 +1359,19 @@ type GetProjectListResult {
 
 input GetProjectListInput {
   search: String!
+}
+
+type GetSubjectListResult {
+  subjects: [SubjectUnitIdentifier!]!
+}
+
+input GetSubjectListInput {
+  search: String!
+  idUnit: Int
+  pageNumber: Int
+  rowCount: Int
+  sortBy: Int
+  sortOrder: Boolean
 }
 
 type SystemObject {
@@ -1430,6 +1492,23 @@ type CreateItemResult {
   Item: Item
 }
 
+input CreateGeoLocationInput {
+  Latitude: Int
+  Longitude: Int
+  Altitude: Int
+  TS0: Int
+  TS1: Int
+  TS2: Int
+  R0: Int
+  R1: Int
+  R2: Int
+  R3: Int
+}
+
+type CreateGeoLocationResult {
+  GeoLocation: GeoLocation
+}
+
 input GetSubjectsForUnitInput {
   idUnit: Int!
   pagination: PaginationInput = {}
@@ -1450,6 +1529,7 @@ type GetItemsForSubjectResult {
 
 type SubjectUnitIdentifier {
   idSubject: Int!
+  idSystemObject: Int!
   SubjectName: String!
   UnitAbbreviation: String!
   IdentifierPublic: String
@@ -1470,6 +1550,7 @@ type GetObjectsForItemResult {
 
 input SearchIngestionSubjectsInput {
   query: String!
+  EdanOnly: Boolean
 }
 
 type SearchIngestionSubjectsResult {
@@ -1538,6 +1619,14 @@ type GetUnitsFromNameSearchResult {
 
 input GetUnitsFromNameSearchInput {
   search: String!
+}
+
+type GetUnitsFromEdanAbbreviationResult {
+  Units: [Unit!]!
+}
+
+input GetUnitsFromEdanAbbreviationInput {
+  abbreviation: String!
 }
 
 type Unit {
