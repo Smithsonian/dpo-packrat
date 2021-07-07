@@ -107,7 +107,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
     const setDateField = (date: Date | string | null): void => {
         if (date) {
             const newDate = new Date(date);
-            updateDetailField(eSystemObjectType.eModel, 'DateCreated', newDate);
+            updateDetailField(eSystemObjectType.eModel, 'DateCaptured', newDate);
         }
     };
 
@@ -133,7 +133,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 <Box className={classes.modelMetricsAndForm}>
                     <Box display='flex' flexDirection='column' className={classes.dataEntry}>
                         <FieldType required label='Date Created' direction='row' containerProps={rowFieldProps}>
-                            <DateInputField value={ModelDetails.DateCreated} onChange={date => setDateField(date)} />
+                            <DateInputField value={ModelDetails.DateCaptured} onChange={date => setDateField(date)} />
                         </FieldType>
 
                         <SelectField

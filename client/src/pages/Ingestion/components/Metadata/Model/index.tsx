@@ -289,7 +289,7 @@ function Model(props: ModelProps): React.ReactElement {
 
                     <Box className={classes.modelMetricsAndForm}>
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
-                            <InputField required type='string' label='Name' value={model.name} name='name' onChange={setNameField} />
+                            <InputField required type='string' label='Name' value={model.name} name='name' onChange={setNameField} error={errors.model.name} />
 
                             <FieldType error={errors.model.dateCaptured} required label='Date Created' direction='row' containerProps={rowFieldProps}>
                                 <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />

@@ -100,7 +100,11 @@ function DetailsView(): React.ReactElement {
         state.checkIdentifiersBeforeUpdate
     ]);
     const [resetRepositoryFilter, resetKeywordSearch, initializeTree] = useRepositoryStore(state => [state.resetRepositoryFilter, state.resetKeywordSearch, state.initializeTree]);
-    const [initializeDetailFields, getDetail] = useDetailTabStore(state => [state.initializeDetailFields, state.getDetail]);
+    const [initializeDetailFields, getDetail, getDetailsViewFieldErrors] = useDetailTabStore(state => [
+        state.initializeDetailFields,
+        state.getDetail,
+        state.getDetailsViewFieldErrors
+    ]);
     const objectDetailsData = data;
 
     useEffect(() => {
@@ -255,6 +259,7 @@ function DetailsView(): React.ReactElement {
     };
 
     const updateData = async (): Promise<void> => {
+        toast.dismiss();
         setIsUpdatingData(true);
         const identifierCheck = checkIdentifiersBeforeUpdate();
         if (identifierCheck.length) {
@@ -262,12 +267,21 @@ function DetailsView(): React.ReactElement {
             setIsUpdatingData(false);
             return;
         }
+
+        // Create another validation here to make sure that the appropriate SO types are being checked
+        const errors = getDetailsViewFieldErrors(updatedData, objectType);
+        if (errors.length) {
+            errors.forEach(error => toast.error(`Please input a valid ${error}`, { autoClose: false }));
+            setIsUpdatingData(false);
+            return;
+        }
+
         try {
             // TODO: Model, Scene, and CD are currently updating in a way that
             // requires the fields to be populated.
             if (objectType === eSystemObjectType.eModel) {
                 const ModelDetails = getDetail(objectType) as ModelDetailsType;
-                const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
+                const { DateCaptured, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
 
                 updatedData.Model = {
                     Name: updatedData?.Name,
@@ -276,7 +290,7 @@ function DetailsView(): React.ReactElement {
                     Purpose: idVPurpose,
                     Units: idVUnits,
                     ModelFileType: idVFileType,
-                    DateCaptured: DateCreated
+                    DateCaptured
                 };
             }
 
