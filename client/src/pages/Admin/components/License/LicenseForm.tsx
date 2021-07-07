@@ -87,6 +87,7 @@ function LicenseForm(): React.ReactElement {
     const parameters: { idLicense: string } = useParams();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [restrictLevel, setRestrictLevel] = useState('');
     const [validName, setValidName] = useState<boolean | null>(null);
 
     const singularSystemObjectType = 'license';
@@ -113,6 +114,7 @@ function LicenseForm(): React.ReactElement {
 
             setName(data.getLicense.License.Name);
             setDescription(data.getLicense.License.Description);
+            setRestrictLevel(data.getLicense.License.RestrictLevel);
         };
 
         fetchLicenseQuery();
@@ -124,6 +126,10 @@ function LicenseForm(): React.ReactElement {
 
     const onDescriptionUpdate = ({ target }) => {
         setDescription(target.value);
+    };
+
+    const onRestrictLevelUpdate = ({ target }) => {
+        setRestrictLevel(target.value);
     };
 
     const validateFields = async (): Promise<boolean | void> => {
@@ -171,7 +177,8 @@ function LicenseForm(): React.ReactElement {
                     input: {
                         idLicense: Number(idLicense),
                         Name: name,
-                        Description: description
+                        Description: description,
+                        RestrictLevel: Number(restrictLevel)
                     }
                 },
                 refetchQueries: [{ query: GetLicenseListDocument, variables: { input: { search: '' } } }],
@@ -202,7 +209,8 @@ function LicenseForm(): React.ReactElement {
                 variables: {
                     input: {
                         Name: name,
-                        Description: description
+                        Description: description,
+                        RestrictLevel: restrictLevel,
                     }
                 },
                 refetchQueries: [{ query: GetLicenseListDocument, variables: { input: { search: '' } } }],
@@ -255,6 +263,20 @@ function LicenseForm(): React.ReactElement {
                             </React.Fragment>
                         )}
                     </FormControl>
+                </Box>
+                <Box className={classes.formRow}>
+                    <Typography className={classes.formRowLabel}>Restriction Level</Typography>
+                    <TextField
+                        className={classes.formField}
+                        style={{ width: '270px' }}
+                        variant='outlined'
+                        size='small'
+                        value={restrictLevel || ''}
+                        onChange={onRestrictLevelUpdate}
+                        InputLabelProps={{
+                            shrink: true
+                        }}
+                    />
                 </Box>
                 <Box className={classes.formRow}>
                     <Typography className={classes.formRowLabel}>Description</Typography>

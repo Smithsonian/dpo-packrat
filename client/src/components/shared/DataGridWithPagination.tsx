@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Box, TextField, Button, FormControl, Select, MenuItem } from '@material-ui/core';

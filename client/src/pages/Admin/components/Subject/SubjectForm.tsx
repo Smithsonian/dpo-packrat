@@ -1,4 +1,4 @@
-/* eslint-disable react/jsx-max-props-per-line */
+/* eslint-disable react/jsx-max-props-per-line, @typescript-eslint/no-explicit-any */
 
 import { Box, Button, Select, MenuItem } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';

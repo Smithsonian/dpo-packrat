@@ -958,6 +958,7 @@ export type AreCameraSettingsUniformResult = {
 export type CreateLicenseInput = {
   Name: Scalars['String'];
   Description: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
 };
 
 export type CreateLicenseResult = {
@@ -969,6 +970,7 @@ export type UpdateLicenseInput = {
   idLicense: Scalars['Int'];
   Name: Scalars['String'];
   Description: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
 };
 
 export type GetLicenseInput = {
@@ -994,6 +996,7 @@ export type License = {
   idLicense: Scalars['Int'];
   Description: Scalars['String'];
   Name: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
   LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
 };
 
@@ -2493,7 +2496,7 @@ export type CreateLicenseMutation = (
     { __typename?: 'CreateLicenseResult' }
     & { License?: Maybe<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense' | 'Name' | 'Description'>
+      & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
     )> }
   ) }
 );
@@ -2509,7 +2512,7 @@ export type UpdateLicenseMutation = (
     { __typename?: 'CreateLicenseResult' }
     & { License?: Maybe<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense' | 'Name' | 'Description'>
+      & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
     )> }
   ) }
 );
@@ -2986,7 +2989,7 @@ export type GetLicenseQuery = (
     { __typename?: 'GetLicenseResult' }
     & { License?: Maybe<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense' | 'Description' | 'Name'>
+      & Pick<License, 'idLicense' | 'Description' | 'Name' | 'RestrictLevel'>
     )> }
   ) }
 );
@@ -3002,7 +3005,7 @@ export type GetLicenseListQuery = (
     { __typename?: 'GetLicenseListResult' }
     & { Licenses: Array<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense' | 'Description' | 'Name'>
+      & Pick<License, 'idLicense' | 'Description' | 'Name' | 'RestrictLevel'>
     )> }
   ) }
 );
@@ -3907,6 +3910,7 @@ export const CreateLicenseDocument = gql`
       idLicense
       Name
       Description
+      RestrictLevel
     }
   }
 }
@@ -3944,6 +3948,7 @@ export const UpdateLicenseDocument = gql`
       idLicense
       Name
       Description
+      RestrictLevel
     }
   }
 }
@@ -5064,6 +5069,7 @@ export const GetLicenseDocument = gql`
       idLicense
       Description
       Name
+      RestrictLevel
     }
   }
 }
@@ -5103,6 +5109,7 @@ export const GetLicenseListDocument = gql`
       idLicense
       Description
       Name
+      RestrictLevel
     }
   }
 }
