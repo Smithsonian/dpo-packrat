@@ -170,6 +170,8 @@ type GetSystemObjectDetailsResult {
     project: RepositoryPath
     subject: RepositoryPath
     item: RepositoryPath
+    license: License
+    licenseInherited: Boolean
 }
 
 input GetSourceObjectIdentiferInput {
