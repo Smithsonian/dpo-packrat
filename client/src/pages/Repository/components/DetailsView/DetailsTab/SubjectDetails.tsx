@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps, react/jsx-max-props-per-line */
 /**
  * SubjectDetails
  *

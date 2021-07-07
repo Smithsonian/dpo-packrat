@@ -955,6 +955,7 @@ export type AreCameraSettingsUniformResult = {
 export type CreateLicenseInput = {
   Name: Scalars['String'];
   Description: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
 };
 
 export type CreateLicenseResult = {
@@ -966,6 +967,7 @@ export type UpdateLicenseInput = {
   idLicense: Scalars['Int'];
   Name: Scalars['String'];
   Description: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
 };
 
 export type GetLicenseInput = {
@@ -991,6 +993,7 @@ export type License = {
   idLicense: Scalars['Int'];
   Description: Scalars['String'];
   Name: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
   LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
 };
 

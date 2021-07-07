@@ -576,6 +576,7 @@ type AreCameraSettingsUniformResult {
 input CreateLicenseInput {
   Name: String!
   Description: String!
+  RestrictLevel: Int!
 }
 
 type CreateLicenseResult {
@@ -586,6 +587,7 @@ input UpdateLicenseInput {
   idLicense: Int!
   Name: String!
   Description: String!
+  RestrictLevel: Int!
 }
 
 input GetLicenseInput {
@@ -608,6 +610,7 @@ type License {
   idLicense: Int!
   Description: String!
   Name: String!
+  RestrictLevel: Int!
   LicenseAssignment: [LicenseAssignment]
 }
 
