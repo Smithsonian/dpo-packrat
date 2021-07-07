@@ -9,11 +9,13 @@ import {
     SubjectDetailFields,
     AssetDetailFields,
     AssetVersionDetailFields,
-    ActorDetailFields
+    ActorDetailFields,
+    UpdateObjectDetailsDataInput
 } from '../types/graphql';
+import lodash from 'lodash';
 
 export interface ModelDetailsType {
-    DateCreated: string | null;
+    DateCaptured: string | null;
     idVCreationMethod: number | null;
     idVModality: number | null;
     idVPurpose: number | null;
@@ -24,6 +26,13 @@ export interface ModelDetailsType {
 export interface ItemDetailsType extends SubjectDetailFields {
     EntireSubject?: boolean | null | undefined;
 }
+
+export type DetailsViewFieldErrors = {
+    model: {
+        name: boolean;
+        dateCaptured: boolean;
+    };
+};
 
 interface SceneDetailsType {
     HasBeenQCd: boolean;
@@ -69,6 +78,7 @@ type DetailTabStore = {
     updateDetailField: (metadataType: eSystemObjectType, fieldName: string, value: number | string | boolean | Date | null) => void;
     getDetail: (type: eSystemObjectType) => DetailsTabType | void;
     initializeDetailFields: (data: any, type: eSystemObjectType) => void;
+    getDetailsViewFieldErrors: (metadata: UpdateObjectDetailsDataInput, objectType: eSystemObjectType) => string[];
 };
 
 export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTabStore>, get: GetState<DetailTabStore>) => ({
@@ -105,7 +115,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         EntireSubject: null
     },
     ModelDetails: {
-        DateCreated: null,
+        DateCaptured: null,
         idVCreationMethod: null,
         idVModality: null,
         idVPurpose: null,
@@ -497,5 +507,30 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             updateDetailField(eSystemObjectType.eStakeholder, 'PhoneNumberOffice', PhoneNumberOffice);
             updateDetailField(eSystemObjectType.eStakeholder, 'MailingAddress', MailingAddress);
         }
+    },
+    getDetailsViewFieldErrors: (metadata: UpdateObjectDetailsDataInput, objectType: eSystemObjectType): string[] => {
+        // UPDATE these error fields as we include more validation for ingestion
+        const errors: DetailsViewFieldErrors = {
+            model: {
+                name: false,
+                dateCaptured: false
+            }
+        };
+
+        const errorMessages: string[] = [];
+
+        if (objectType === eSystemObjectType.eModel) {
+            if (!lodash.isNil(metadata.Name)) {
+                errors.model.name = !metadata.Name.trim().length;
+            }
+            if (!lodash.isNil(metadata.Model?.DateCaptured)) {
+                errors.model.dateCaptured = metadata?.Model?.DateCaptured.toString() === 'Invalid Date' || new Date(metadata?.Model?.DateCaptured).getTime() > new Date().getTime();
+            }
+            for (const field in errors.model) {
+                if (errors.model[field]) errorMessages.push(field);
+            }
+        }
+
+        return errorMessages;
     }
 }));

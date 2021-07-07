@@ -33,6 +33,7 @@ export type FieldErrors = {
         datasetType: boolean;
     };
     model: {
+        name: boolean;
         dateCaptured: boolean;
         creationMethod: boolean;
         modality: boolean;
