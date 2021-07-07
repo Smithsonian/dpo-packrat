@@ -1,4 +1,5 @@
 import * as LOG from '../utils/logger';
+// import * as H from '../utils/helpers';
 import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
 
@@ -39,17 +40,19 @@ export class LicenseCache {
             LOG.error('LicenseCache.flushInternalWorker unable to fetch Licenses', LOG.LS.eCACHE );
             return false;
         }
+        // LOG.info(`LicenseCache LicenseFetch=\n${JSON.stringify(LicenseFetch, H.Helpers.saferStringify)}`, LOG.LS.eCACHE);
 
         for (const license of LicenseFetch) {
             this.licenseMap.set(license.idLicense, license);
             switch (license.Name.toLowerCase()) {
-                case 'view And download cc0':           this.publishedStateMap.set(DBAPI.ePublishedState.eViewDownloadCC0, license); break;
+                case 'view and download cc0':           this.publishedStateMap.set(DBAPI.ePublishedState.eViewDownloadCC0, license); break;
                 case 'view with download restrictions': this.publishedStateMap.set(DBAPI.ePublishedState.eViewDownloadRestriction, license); break;
                 case 'view only':                       this.publishedStateMap.set(DBAPI.ePublishedState.eViewOnly, license); break;
                 case 'restricted':                      this.publishedStateMap.set(DBAPI.ePublishedState.eRestricted, license); break;
             }
         }
-        LOG.info('CACHE LicenseCache.flushInternalWorker() done', LOG.LS.eCACHE );
+        // LOG.info(`LicenseCache publishedStateMap=\n${JSON.stringify(this.publishedStateMap, H.Helpers.saferStringify)}`, LOG.LS.eCACHE);
+        LOG.info('CACHE LicenseCache.flushInternalWorker() done', LOG.LS.eCACHE);
         return true;
     }
 
@@ -76,30 +79,37 @@ export class LicenseCache {
             licenseResolver = await DBAPI.LicenseResolver.fetch(idSystemObject);
             if (licenseResolver)
                 this.licenseResolverMap.set(idSystemObject, licenseResolver);
-        }
+            // LOG.info(`LicenseCache.getLicenseResolverInternal(${idSystemObject}) computed ${JSON.stringify(licenseResolver)}`, LOG.LS.eCACHE);
+        } // else
+        //     LOG.info(`LicenseCache.getLicenseResolverInternal(${idSystemObject}) from cache ${JSON.stringify(licenseResolver)}`, LOG.LS.eCACHE);
         return licenseResolver ?? undefined;
     }
 
     private async clearAssignmentInternal(idSystemObject: number): Promise<boolean> {
+        // LOG.info(`LicenseCache.clearAssignmentInternal(${idSystemObject})`, LOG.LS.eCACHE);
         // Compute object graph of descendants; remove assignment from each
         const OGD: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
-        const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eDescendents, 32, OGD);
+        const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eDescendents, 32, OGD); /* istanbul ignore if */
         if (!await OG.fetch()) {
             LOG.error(`LicenseCache unable to fetch object graph for ${idSystemObject}`, LOG.LS.eDB);
             return false;
         }
 
-        for (const idSystemObject of OGD.objectMap.keys())
-            this.licenseResolverMap.delete(idSystemObject);
+        for (const idSODescendant of OGD.objectMap.keys()) {
+            // LOG.info(`LicenseCache.clearAssignmentInternal(${idSystemObject}) cleared ${idSODescendant}`, LOG.LS.eCACHE);
+            this.licenseResolverMap.delete(idSODescendant);
+        }
         return true;
     }
 
     private async setAssignmentInternal(idSystemObject: number, licenseResolver: DBAPI.LicenseResolver): Promise<boolean> {
+        // LOG.info(`LicenseCache.setAssignmentInternal(${idSystemObject})`, LOG.LS.eCACHE); /* istanbul ignore if */
         // Compute object graph of descendants; remove assignment from each
         if (!await this.clearAssignmentInternal(idSystemObject))
             return false;
 
         // Record assignment
+        // LOG.info(`LicenseCache.setAssignmentInternal(${idSystemObject}) stored ${JSON.stringify(licenseResolver)}`, LOG.LS.eCACHE);
         this.licenseResolverMap.set(idSystemObject, licenseResolver);
         return true;
     }
