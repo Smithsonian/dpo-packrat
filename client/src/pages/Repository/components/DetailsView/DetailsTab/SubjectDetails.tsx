@@ -1,5 +1,5 @@
-/* eslint-disable react/jsx-max-props-per-line */
-/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps, react/jsx-max-props-per-line */
+
 /**
  * SubjectDetails
  *
@@ -113,11 +113,12 @@ interface RotationOriginInputProps {
     TS1?: number | null;
     TS2?: number | null;
     originalFields?: SubjectDetailFields | ItemDetailFields | null;
+    ignoreUpdate?: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-function RotationOriginInput(props: RotationOriginInputProps): React.ReactElement {
-    const { TS0, TS1, TS2, onChange, originalFields } = props;
+export function RotationOriginInput(props: RotationOriginInputProps): React.ReactElement {
+    const { TS0, TS1, TS2, onChange, originalFields, ignoreUpdate } = props;
 
     const rowFieldProps = { justifyContent: 'space-between', style: { borderRadius: 0 } };
 
@@ -131,9 +132,9 @@ function RotationOriginInput(props: RotationOriginInputProps): React.ReactElemen
         <FieldType required label='Rotation Origin' direction='row' containerProps={rowFieldProps} width='auto'>
             <Box display='flex' flex={1} flexDirection='column'>
                 <Box display='flex' justifyContent='flex-end'>
-                    <DebounceNumberInput updated={isFieldUpdated(details, originalFields, 'TS0')} value={TS0} name='TS0' onChange={onChange} />
-                    <DebounceNumberInput updated={isFieldUpdated(details, originalFields, 'TS1')} value={TS1} name='TS1' onChange={onChange} />
-                    <DebounceNumberInput updated={isFieldUpdated(details, originalFields, 'TS2')} value={TS2} name='TS2' onChange={onChange} />
+                    <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'TS0')} value={TS0} name='TS0' onChange={onChange} />
+                    <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'TS1')} value={TS1} name='TS1' onChange={onChange} />
+                    <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'TS2')} value={TS2} name='TS2' onChange={onChange} />
                 </Box>
             </Box>
         </FieldType>
@@ -146,11 +147,12 @@ interface RotationQuaternionInputProps {
     R2?: number | null;
     R3?: number | null;
     originalFields?: SubjectDetailFields | ItemDetailFields | null;
+    ignoreUpdate?: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-function RotationQuaternionInput(props: RotationQuaternionInputProps): React.ReactElement {
-    const { R0, R1, R2, R3, onChange, originalFields } = props;
+export function RotationQuaternionInput(props: RotationQuaternionInputProps): React.ReactElement {
+    const { R0, R1, R2, R3, onChange, originalFields, ignoreUpdate } = props;
 
     const rowFieldProps = { justifyContent: 'space-between', style: { borderRadius: 0 } };
 
@@ -160,15 +162,14 @@ function RotationQuaternionInput(props: RotationQuaternionInputProps): React.Rea
         R2,
         R3
     };
-
     return (
         <FieldType required label='Rotation Quaternion' direction='row' containerProps={rowFieldProps} width='auto'>
             <Box display='flex' flex={1} flexDirection='column'>
                 <Box display='flex' justifyContent='flex-end'>
-                    <DebounceNumberInput updated={isFieldUpdated(details, originalFields, 'R0')} value={R0} name='R0' onChange={onChange} />
-                    <DebounceNumberInput updated={isFieldUpdated(details, originalFields, 'R1')} value={R1} name='R1' onChange={onChange} />
-                    <DebounceNumberInput updated={isFieldUpdated(details, originalFields, 'R2')} value={R2} name='R2' onChange={onChange} />
-                    <DebounceNumberInput updated={isFieldUpdated(details, originalFields, 'R3')} value={R3} name='R3' onChange={onChange} />
+                    <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'R0')} value={R0} name='R0' onChange={onChange} />
+                    <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'R1')} value={R1} name='R1' onChange={onChange} />
+                    <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'R2')} value={R2} name='R2' onChange={onChange} />
+                    <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'R3')} value={R3} name='R3' onChange={onChange} />
                 </Box>
             </Box>
         </FieldType>

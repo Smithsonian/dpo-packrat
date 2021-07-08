@@ -59,6 +59,13 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
         }
     }
 
+    public assignmentActive(): boolean {
+        const now: Date = new Date();
+        const started: boolean = (this.DateStart === null) || (this.DateStart <= now);
+        const ended: boolean = (this.DateEnd !== null) && (this.DateEnd <= now);
+        return started && !ended;
+    }
+
     static async fetch(idLicenseAssignment: number): Promise<LicenseAssignment | null> {
         if (!idLicenseAssignment)
             return null;

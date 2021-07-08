@@ -7,6 +7,7 @@ type Mutation {
     deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
     deleteIdentifier(input: DeleteIdentifierInput!): DeleteIdentifierResult!
     rollbackSystemObjectVersion(input: RollbackSystemObjectVersionInput!): RollbackSystemObjectVersionResult!
+    createSubjectWithIdentifiers(input: CreateSubjectWithIdentifiersInput!): CreateSubjectWithIdentifiersResult!
 }
 
 input UpdateObjectDetailsInput {
@@ -194,4 +195,22 @@ type RollbackSystemObjectVersionResult {
 
 input RollbackSystemObjectVersionInput {
     idSystemObjectVersion: Int!
+}
+
+type CreateSubjectWithIdentifiersResult {
+    success: Boolean!
+    message: String!
+}
+
+input CreateSubjectWithIdentifiersInput {
+    identifiers: [CreateIdentifierInput!]!
+    subject: CreateSubjectInput!
+    systemCreated: Boolean!
+}
+
+input CreateIdentifierInput {
+    identifierValue: String!
+    identifierType: Int!
+    idSystemObject: Int
+    selected: Boolean!
 }

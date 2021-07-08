@@ -1,6 +1,5 @@
 import * as CACHE from '../../../../../cache';
 import * as DBAPI from '../../../../../db';
-import { eObjectGraphMode, eSystemObjectType, eDBObjectType } from '../../../../../db';
 import {
     GetSystemObjectDetailsResult,
     IngestIdentifier,
@@ -48,7 +47,10 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const idObject: number = oID.idObject;
     const name: string = await resolveNameForObjectType(systemObject, oID.eObjectType);
 
+    const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
+
     return {
+        idSystemObject,
         idObject,
         name,
         retired: systemObject.Retired,
@@ -64,7 +66,9 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         identifiers,
         sourceObjects,
         derivedObjects,
-        objectVersions
+        objectVersions,
+        license: LR?.License,
+        licenseInherited: LR?.inherited,
     };
 }
 
@@ -130,7 +134,7 @@ type GetObjectAncestorsResult = {
 };
 
 async function getObjectAncestors(idSystemObject: number): Promise<GetObjectAncestorsResult> {
-    const objectGraph = new DBAPI.ObjectGraph(idSystemObject, eObjectGraphMode.eAncestors);
+    const objectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors);
     let unit: RepositoryPath | null = null;
     let project: RepositoryPath | null = null;
     let subject: RepositoryPath | null = null;
@@ -149,38 +153,38 @@ async function getObjectAncestors(idSystemObject: number): Promise<GetObjectAnce
     const objectAncestors: RepositoryPath[][] = [];
 
     if (objectGraph.unit) {
-        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.unit, eSystemObjectType.eUnit);
+        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.unit, DBAPI.eSystemObjectType.eUnit);
         unit = objectAncestor[0];
         objectAncestors.push(objectAncestor);
     }
 
     if (objectGraph.project) {
-        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.project, eSystemObjectType.eProject);
+        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.project, DBAPI.eSystemObjectType.eProject);
         project = objectAncestor[0];
         objectAncestors.push(objectAncestor);
     }
 
     if (objectGraph.subject) {
-        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.subject, eSystemObjectType.eSubject);
+        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.subject, DBAPI.eSystemObjectType.eSubject);
         subject = objectAncestor[0];
         objectAncestors.push(objectAncestor);
     }
 
     if (objectGraph.item) {
-        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.item, eSystemObjectType.eItem);
+        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.item, DBAPI.eSystemObjectType.eItem);
         item = objectAncestor[0];
         objectAncestors.push(objectAncestor);
     }
 
-    if (objectGraph.captureData) objectAncestors.push(await objectToRepositoryPath(objectGraph.captureData, eSystemObjectType.eCaptureData));
-    if (objectGraph.model) objectAncestors.push(await objectToRepositoryPath(objectGraph.model, eSystemObjectType.eModel));
-    if (objectGraph.scene) objectAncestors.push(await objectToRepositoryPath(objectGraph.scene, eSystemObjectType.eScene));
-    if (objectGraph.intermediaryFile) objectAncestors.push(await objectToRepositoryPath(objectGraph.intermediaryFile, eSystemObjectType.eIntermediaryFile));
-    if (objectGraph.projectDocumentation) objectAncestors.push(await objectToRepositoryPath(objectGraph.projectDocumentation, eSystemObjectType.eProjectDocumentation));
-    if (objectGraph.asset) objectAncestors.push(await objectToRepositoryPath(objectGraph.asset, eSystemObjectType.eAsset));
-    if (objectGraph.assetVersion) objectAncestors.push(await objectToRepositoryPath(objectGraph.assetVersion, eSystemObjectType.eAssetVersion));
-    if (objectGraph.actor) objectAncestors.push(await objectToRepositoryPath(objectGraph.actor, eSystemObjectType.eActor));
-    if (objectGraph.stakeholder) objectAncestors.push(await objectToRepositoryPath(objectGraph.stakeholder, eSystemObjectType.eStakeholder));
+    if (objectGraph.captureData) objectAncestors.push(await objectToRepositoryPath(objectGraph.captureData, DBAPI.eSystemObjectType.eCaptureData));
+    if (objectGraph.model) objectAncestors.push(await objectToRepositoryPath(objectGraph.model, DBAPI.eSystemObjectType.eModel));
+    if (objectGraph.scene) objectAncestors.push(await objectToRepositoryPath(objectGraph.scene, DBAPI.eSystemObjectType.eScene));
+    if (objectGraph.intermediaryFile) objectAncestors.push(await objectToRepositoryPath(objectGraph.intermediaryFile, DBAPI.eSystemObjectType.eIntermediaryFile));
+    if (objectGraph.projectDocumentation) objectAncestors.push(await objectToRepositoryPath(objectGraph.projectDocumentation, DBAPI.eSystemObjectType.eProjectDocumentation));
+    if (objectGraph.asset) objectAncestors.push(await objectToRepositoryPath(objectGraph.asset, DBAPI.eSystemObjectType.eAsset));
+    if (objectGraph.assetVersion) objectAncestors.push(await objectToRepositoryPath(objectGraph.assetVersion, DBAPI.eSystemObjectType.eAssetVersion));
+    if (objectGraph.actor) objectAncestors.push(await objectToRepositoryPath(objectGraph.actor, DBAPI.eSystemObjectType.eActor));
+    if (objectGraph.stakeholder) objectAncestors.push(await objectToRepositoryPath(objectGraph.stakeholder, DBAPI.eSystemObjectType.eStakeholder));
 
     return {
         unit,
@@ -208,36 +212,36 @@ type Objects =
     | DBAPI.Actor[]
     | DBAPI.Stakeholder[];
 
-async function objectToRepositoryPath(objects: Objects, objectType: eSystemObjectType): Promise<RepositoryPath[]> {
+async function objectToRepositoryPath(objects: Objects, objectType: DBAPI.eSystemObjectType): Promise<RepositoryPath[]> {
     const paths: RepositoryPath[] = [];
     for (const object of objects) {
         let SystemObject: SystemObject | null = null;
 
-        if (object instanceof DBAPI.Unit && objectType === eSystemObjectType.eUnit)
+        if (object instanceof DBAPI.Unit && objectType === DBAPI.eSystemObjectType.eUnit)
             SystemObject = await DBAPI.SystemObject.fetchFromUnitID(object.idUnit);
-        if (object instanceof DBAPI.Project && objectType === eSystemObjectType.eProject)
+        if (object instanceof DBAPI.Project && objectType === DBAPI.eSystemObjectType.eProject)
             SystemObject = await DBAPI.SystemObject.fetchFromProjectID(object.idProject);
-        if (object instanceof DBAPI.Subject && objectType === eSystemObjectType.eSubject)
+        if (object instanceof DBAPI.Subject && objectType === DBAPI.eSystemObjectType.eSubject)
             SystemObject = await DBAPI.SystemObject.fetchFromSubjectID(object.idSubject);
-        if (object instanceof DBAPI.Item && objectType === eSystemObjectType.eItem)
+        if (object instanceof DBAPI.Item && objectType === DBAPI.eSystemObjectType.eItem)
             SystemObject = await DBAPI.SystemObject.fetchFromItemID(object.idItem);
-        if (object instanceof DBAPI.CaptureData && objectType === eSystemObjectType.eCaptureData)
+        if (object instanceof DBAPI.CaptureData && objectType === DBAPI.eSystemObjectType.eCaptureData)
             SystemObject = await DBAPI.SystemObject.fetchFromCaptureDataID(object.idCaptureData);
-        if (object instanceof DBAPI.Model && objectType === eSystemObjectType.eModel)
+        if (object instanceof DBAPI.Model && objectType === DBAPI.eSystemObjectType.eModel)
             SystemObject = await DBAPI.SystemObject.fetchFromModelID(object.idModel);
-        if (object instanceof DBAPI.Scene && objectType === eSystemObjectType.eScene)
+        if (object instanceof DBAPI.Scene && objectType === DBAPI.eSystemObjectType.eScene)
             SystemObject = await DBAPI.SystemObject.fetchFromSceneID(object.idScene);
-        if (object instanceof DBAPI.IntermediaryFile && objectType === eSystemObjectType.eIntermediaryFile)
+        if (object instanceof DBAPI.IntermediaryFile && objectType === DBAPI.eSystemObjectType.eIntermediaryFile)
             SystemObject = await DBAPI.SystemObject.fetchFromIntermediaryFileID(object.idIntermediaryFile);
-        if (object instanceof DBAPI.ProjectDocumentation && objectType === eSystemObjectType.eProjectDocumentation)
+        if (object instanceof DBAPI.ProjectDocumentation && objectType === DBAPI.eSystemObjectType.eProjectDocumentation)
             SystemObject = await DBAPI.SystemObject.fetchFromProjectDocumentationID(object.idProjectDocumentation);
-        if (object instanceof DBAPI.Asset && objectType === eSystemObjectType.eAsset)
+        if (object instanceof DBAPI.Asset && objectType === DBAPI.eSystemObjectType.eAsset)
             SystemObject = await DBAPI.SystemObject.fetchFromAssetID(object.idAsset);
-        if (object instanceof DBAPI.AssetVersion && objectType === eSystemObjectType.eAssetVersion)
+        if (object instanceof DBAPI.AssetVersion && objectType === DBAPI.eSystemObjectType.eAssetVersion)
             SystemObject = await DBAPI.SystemObject.fetchFromAssetVersionID(object.idAssetVersion);
-        if (object instanceof DBAPI.Actor && objectType === eSystemObjectType.eActor)
+        if (object instanceof DBAPI.Actor && objectType === DBAPI.eSystemObjectType.eActor)
             SystemObject = await DBAPI.SystemObject.fetchFromActorID(object.idActor);
-        if (object instanceof DBAPI.Stakeholder && objectType === eSystemObjectType.eStakeholder)
+        if (object instanceof DBAPI.Stakeholder && objectType === DBAPI.eSystemObjectType.eStakeholder)
             SystemObject = await DBAPI.SystemObject.fetchFromStakeholderID(object.idStakeholder);
 
         const path: RepositoryPath = {
@@ -251,7 +255,7 @@ async function objectToRepositoryPath(objects: Objects, objectType: eSystemObjec
     return paths;
 }
 
-async function resolveNameForObjectType(systemObject: SystemObject | null, _objectType: eDBObjectType): Promise<string> {
+async function resolveNameForObjectType(systemObject: SystemObject | null, _objectType: DBAPI.eDBObjectType): Promise<string> {
     if (!systemObject)
         return unknownName;
     const name: string | undefined = await CACHE.SystemObjectCache.getObjectNameByID(systemObject.idSystemObject);

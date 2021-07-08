@@ -1453,6 +1453,7 @@ describe('DB Creation Test Suite', () => {
         license = new DBAPI.License({
             Name: 'Test License',
             Description: 'Test License Description',
+            RestrictLevel: 10,
             idLicense: 0
         });
         expect(license).toBeTruthy();
@@ -4671,6 +4672,63 @@ describe('DB Fetch Special Test Suite', () => {
         }
     });
 
+    test('DB Fetch Special: License.fetchAll', async () => {
+        const licenseFetch: DBAPI.License[] | null = await DBAPI.License.fetchAll();
+        if (licenseFetch)
+            expect(licenseFetch).toEqual(expect.arrayContaining([license]));
+        expect(licenseFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: License.fetchLicenseList 1', async () => {
+        const licenseFetch: DBAPI.License[] | null = await DBAPI.License.fetchLicenseList('');
+        if (licenseFetch)
+            expect(licenseFetch).toEqual(expect.arrayContaining([license]));
+        expect(licenseFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: License.fetchLicenseList 2', async () => {
+        let licenseFetch: DBAPI.License[] | null = null;
+        if (license) {
+            licenseFetch = await DBAPI.License.fetchLicenseList(license.Name);
+            if (licenseFetch)
+                expect(licenseFetch).toEqual(expect.arrayContaining([license]));
+        }
+        expect(licenseFetch).toBeTruthy();
+    });
+
+    /*
+        const now: Date = new Date();
+        const started: boolean = (this.DateStart === null) || (this.DateStart <= now);
+        const ended: boolean = (this.DateEnd !== null) && (this.DateEnd <= now);
+        return started && !ended;
+    */
+
+    test('DB Fetch Special: LicenseAssignment.assignmentActive', async () => {
+        const LA: DBAPI.LicenseAssignment = new DBAPI.LicenseAssignment({
+            idLicense: 0,
+            idLicenseAssignment: 0,
+            idUserCreator: 0,
+            DateStart: null,
+            DateEnd: null,
+            idSystemObject: 0
+        });
+        expect(LA.assignmentActive()).toBeTruthy();
+
+        const now: Date = new Date();
+
+        LA.DateStart = new Date(now.getFullYear() + 1, 1, 1);
+        expect(LA.assignmentActive()).toBeFalsy();
+
+        LA.DateStart = new Date(now.getFullYear() - 1, 1, 1);
+        expect(LA.assignmentActive()).toBeTruthy();
+
+        LA.DateEnd = new Date(now.getFullYear() - 1, 1, 1);
+        expect(LA.assignmentActive()).toBeFalsy();
+
+        LA.DateEnd = new Date(now.getFullYear() + 1, 1, 1);
+        expect(LA.assignmentActive()).toBeTruthy();
+    });
+
     test('DB Fetch Special: Model.fetchAll', async () => {
         let modelFetch: DBAPI.Model[] | null = null;
         if (model && modelNulls) {
@@ -7013,7 +7071,9 @@ describe('DB Update Test Suite', () => {
 });
 // #endregion
 
+// *******************************************************************
 // #region DB Deletes
+// *******************************************************************
 describe('DB Delete Test', () => {
     test('DB Delete: Identifier.delete', async () => {
         if (identifierNull) {
@@ -7127,7 +7187,9 @@ describe('DB Delete Test', () => {
 });
 // #endregion
 
+// *******************************************************************
 // #region Null tests
+// *******************************************************************
 describe('DB Null/Zero ID Test', () => {
     test('DB Null/Zero ID Test', async () => {
         expect(await DBAPI.AccessAction.fetch(0)).toBeNull();

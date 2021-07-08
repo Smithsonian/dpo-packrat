@@ -59,6 +59,8 @@ export * from './api/Workflow';
 export * from './api/WorkflowStep';
 export * from './api/WorkflowStepSystemObjectXref';
 
+export * from './api/composite/LicenseManager';
+export * from './api/composite/LicenseResolver';
 export * from './api/composite/ModelConstellation';
 export * from './api/composite/ObjectGraph';
 export * from './api/composite/ObjectGraphDatabase';
