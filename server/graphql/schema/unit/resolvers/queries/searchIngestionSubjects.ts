@@ -5,10 +5,10 @@ import * as DBAPI from '../../../../../db';
 
 export default async function searchIngestionSubjects(_: Parent, args: QuerySearchIngestionSubjectsArgs): Promise<SearchIngestionSubjectsResult> {
     const { input } = args;
-    const { query } = input;
+    const { query, EdanOnly } = input;
 
     const ICollection: COL.ICollection = COL.CollectionFactory.getInstance();
-    let resultsDB: DBAPI.SubjectUnitIdentifier[] | null = await DBAPI.SubjectUnitIdentifier.fetch(query, 10);
+    let resultsDB: DBAPI.SubjectUnitIdentifier[] | null = EdanOnly ? [] : await DBAPI.SubjectUnitIdentifier.fetch(query, 10);
     const resultsCOL: COL.CollectionQueryResults | null = await ICollection.queryCollection(query, 10, 0, null);
 
     if (!resultsDB) resultsDB = [];
@@ -17,6 +17,7 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
         for (const record of resultsCOL.records) {
             resultsDB.push({
                 idSubject: 0,
+                idSystemObject: 0,
                 SubjectName: record.name,
                 UnitAbbreviation: record.unit,
                 IdentifierPublic: record.identifierPublic,

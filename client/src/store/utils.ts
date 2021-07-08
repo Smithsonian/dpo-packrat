@@ -15,13 +15,14 @@ export function parseFileId(id: FileId): number {
 }
 
 export function parseSubjectUnitIdentifierToState(subjectUnitIdentifier: SubjectUnitIdentifier): StateSubject {
-    const { idSubject, SubjectName, UnitAbbreviation, IdentifierPublic } = subjectUnitIdentifier;
+    const { idSubject, SubjectName, UnitAbbreviation, IdentifierPublic, IdentifierCollection } = subjectUnitIdentifier;
 
     return {
         id: idSubject,
         name: SubjectName,
         arkId: IdentifierPublic || '',
-        unit: UnitAbbreviation
+        unit: UnitAbbreviation,
+        collectionId: IdentifierCollection || ''
     };
 }
 

@@ -51,3 +51,10 @@ INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELE
 ALTER TABLE Model ADD COLUMN AutomationTag varchar(256) NULL;
 
 -- 2021-06-06 Deployed to Staging
+
+-- 2021-07-01 Jon
+ALTER TABLE License ADD COLUMN RestrictLevel int(11) NOT NULL;
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View And Download CC0', 'View And Download CC0', 10);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View with Download Restrictions', 'View with Download Restrictions', 20);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View Only', 'View Only', 30);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('Restricted', 'Restricted', 1000);
