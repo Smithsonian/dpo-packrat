@@ -50,12 +50,12 @@ export class UserCache {
     // #region Private Interface
     // *************************
     private async getUserInternal(idUser: number): Promise<DBAPI.User | undefined> {
-        let user: User | undefined | null = this.userMap.get(idUser);
-        if (!user) /* istanbul ignore next */ { // cache miss, look it up
+        let user: User | undefined | null = this.userMap.get(idUser); /* istanbul ignore if */
+        if (!user) { // cache miss, look it up
             user = await User.fetch(idUser);
             if (user)
                 this.userMap.set(idUser, user);
-        }
+        } /* istanbul ignore next */
         return user ?? undefined;
     }
     // #endregion

@@ -20,6 +20,8 @@ import getItemsForSubject from './queries/getItemsForSubject';
 import getObjectsForItem from './queries/getObjectsForItem';
 import getProjectDocumentation from './queries/getProjectDocumentation';
 import getUnitsFromNameSearch from './queries/getUnitsFromNameSearch';
+import getUnitsFromEdanAbbreviation from './queries/getUnitsFromEdanAbbreviation';
+import createGeoLocation from './mutations/createGeoLocation';
 
 const resolvers = {
     Query: {
@@ -34,13 +36,15 @@ const resolvers = {
         getItemsForSubject,
         getObjectsForItem,
         getProjectDocumentation,
-        getUnitsFromNameSearch
+        getUnitsFromNameSearch,
+        getUnitsFromEdanAbbreviation
     },
     Mutation: {
         createUnit,
         createProject,
         createSubject,
-        createItem
+        createItem,
+        createGeoLocation
     },
     Unit,
     Project,

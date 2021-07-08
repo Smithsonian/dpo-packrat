@@ -4,9 +4,10 @@
 import * as DBC from '../../db/connection';
 
 import cacheControlTest from './CacheControl.test';
-import vocabularyCacheTest from './VocabularyCache.test';
-import userCacheTest from './UserCacheTest.test';
+import licenseCacheTest from './LicenseCacheTest.test';
 import systemObjectCacheTest from './SystemObjectCache.test';
+import userCacheTest from './UserCacheTest.test';
+import vocabularyCacheTest from './VocabularyCache.test';
 import { EventFactory } from '../../event/interface/EventFactory';
 
 beforeAll(() => {
@@ -19,6 +20,7 @@ afterAll(async done => {
 });
 
 describe('Cache Test Suite', () => {
+    licenseCacheTest();
     systemObjectCacheTest();
     userCacheTest();
     vocabularyCacheTest();

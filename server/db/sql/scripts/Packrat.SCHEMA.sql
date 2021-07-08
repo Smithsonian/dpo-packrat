@@ -239,6 +239,7 @@ CREATE TABLE IF NOT EXISTS `License` (
   `idLicense` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `Description` varchar(8000) NOT NULL,
+  `RestrictLevel` int(11) NOT NULL,
   PRIMARY KEY (`idLicense`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

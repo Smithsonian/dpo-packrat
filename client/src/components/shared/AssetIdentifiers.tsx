@@ -54,9 +54,9 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
         onAddIdentifer(updatedIdentifiers);
     };
 
-    const removeIdentifier = (id: number) => {
+    const removeIdentifier = (_idIdentifier: number, id: number) => {
         const updatedIdentifiers = lodash.filter(identifiers, identifier => identifier.id !== id);
-        onUpdateIdentifer(updatedIdentifiers);
+        onRemoveIdentifer(updatedIdentifiers);
     };
 
     const updateIdentifierFields = (id: number, name: string, value: string | number | boolean) => {
@@ -69,7 +69,7 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
             }
             return identifier;
         });
-        onRemoveIdentifer(updatedIdentifiers);
+        onUpdateIdentifer(updatedIdentifiers);
     };
 
     return (

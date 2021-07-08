@@ -3,13 +3,15 @@
  *
  * This component renders object details for the Repository Details UI.
  */
-import { Box, Checkbox, Typography } from '@material-ui/core';
+import { Box, Checkbox, Typography, Select, MenuItem, Button } from '@material-ui/core';
 import { withStyles, makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../components';
 import { GetSystemObjectDetailsResult, RepositoryPath } from '../../../../types/graphql';
 import { getDetailsUrlForObject, getUpdatedCheckboxProps, isFieldUpdated } from '../../../../utils/repository';
 import { withDefaultValueBoolean } from '../../../../utils/shared';
+import { getLicenseList } from '../../hooks/useDetailsView';
+import { License } from '../../../../types/graphql';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     detail: {
@@ -24,6 +26,12 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     value: {
         color: ({ clickable = true }: DetailProps) => (clickable ? palette.primary.main : palette.primary.dark),
         textDecoration: ({ clickable = true, value }: DetailProps) => (clickable && value ? 'underline' : undefined)
+    },
+    btn: {
+        backgroundColor: '#687DDB',
+        color: 'white',
+        width: '90px',
+        height: '30px'
     }
 }));
 
@@ -45,12 +53,45 @@ interface ObjectDetailsProps {
     hideRetired?: boolean;
     originalFields?: GetSystemObjectDetailsResult;
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
+    licenseAssignment?: RepositoryPath | null;
 }
 
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
-    const { unit, project, subject, item, publishedState, retired, hideRetired, disabled, originalFields, onRetiredUpdate } = props;
-
+    const { unit, project, subject, item, publishedState, retired, hideRetired, disabled, originalFields, onRetiredUpdate /*, licenseAssignment */ } = props;
+    const [licenseList, setLicenseList] = useState<License[]>([]);
     const isRetiredUpdated: boolean = isFieldUpdated({ retired }, originalFields, 'retired');
+
+    useEffect(() => {
+        const fetchInitialLicenseList = async () => {
+            const { data } = await getLicenseList();
+            const fetchedLicenses = [...data?.getLicenseList?.Licenses];
+            if (fetchedLicenses && fetchedLicenses.length) {
+                fetchedLicenses.sort((a, b) => a.Name.toLowerCase() - b.Name.toLowerCase());
+            }
+            setLicenseList(fetchedLicenses);
+        };
+
+        fetchInitialLicenseList();
+    }, []);
+
+    /*
+        TODO
+        Create a proper state to hold the license
+        Create a function to handle Select's onChange
+        Complete clearAssignment function
+        Get the correct data shape to pass into select
+        Write the component to include hyperlink to appropriate license object
+        Figure out which kinds of system object have licenses
+        Figure out how to inherit license from parent
+    */
+
+    const clearLicenseAssignment = () => {
+        // TODO
+    };
+
+    const assignInheritedLicense = () => {
+        // TODO
+    };
 
     return (
         <Box display='flex' flex={2} flexDirection='column'>
@@ -70,6 +111,42 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             onChange={onRetiredUpdate}
                             {...getUpdatedCheckboxProps(isRetiredUpdated)}
                         />
+                    }
+                />
+            )}
+            {licenseList.length ? (
+                <Detail
+                    label='License'
+                    valueComponent={
+                        <React.Fragment>
+                            <Select onChange={() => {}} value={licenseList[0].idLicense}>
+                                {licenseList.map(license => (
+                                    <MenuItem value={license.idLicense} key={license.idLicense}>
+                                        {license.Name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                            <Button
+                                onClick={clearLicenseAssignment}
+                                style={{ backgroundColor: '#687DDB', color: 'white', width: 'fit-content', height: '30px', marginLeft: '10px' }}
+                            >
+                                Clear Assignment
+                            </Button>
+                        </React.Fragment>
+                    }
+                />
+            ) : (
+                <Detail
+                    label='License'
+                    valueComponent={
+                        <React.Fragment>
+                            <Button
+                                onClick={assignInheritedLicense}
+                                style={{ backgroundColor: '#687DDB', color: 'white', width: 'fit-content', height: '30px', marginLeft: '10px' }}
+                            >
+                                Assign License
+                            </Button>
+                        </React.Fragment>
                     }
                 />
             )}
