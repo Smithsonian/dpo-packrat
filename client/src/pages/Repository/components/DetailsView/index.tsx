@@ -82,6 +82,7 @@ function DetailsView(): React.ReactElement {
     const params = useParams<DetailsParams>();
     const [modalOpen, setModalOpen] = useState(false);
     const [details, setDetails] = useState<DetailsFields>({});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [detailQuery, setDetailQuery] = useState<any>({});
     const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState('');

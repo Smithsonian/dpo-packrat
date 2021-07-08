@@ -224,3 +224,13 @@ export enum eSubjectUnitIdentifierSortColumns {
     eIdentifierValue = 3,
     eDefault = 0
 }
+
+export const subjectUnitIdentifierStringToEnum = (col: string): eSubjectUnitIdentifierSortColumns => {
+    switch (col) {
+        case 'Unit': return eSubjectUnitIdentifierSortColumns.eUnitAbbreviation;
+        case 'Name': return eSubjectUnitIdentifierSortColumns.eSubjectName;
+        case 'Identifier': return eSubjectUnitIdentifierSortColumns.eIdentifierValue;
+        default:
+        case '' || null: return eSubjectUnitIdentifierSortColumns.eDefault;
+    }
+};
