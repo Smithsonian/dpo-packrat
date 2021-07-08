@@ -4,6 +4,7 @@ type License {
     idLicense: Int!
     Description: String!
     Name: String!
+    RestrictLevel: Int!
     LicenseAssignment: [LicenseAssignment]
 }
 

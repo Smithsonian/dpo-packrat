@@ -3,7 +3,8 @@ import { QueryGetAssetVersionsDetailsArgs, GetAssetVersionsDetailsResult,
     Item, IngestPhotogrammetry, IngestModel, IngestScene, SubjectUnitIdentifier } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import { AssetStorageAdapter } from '../../../../../storage/interface';
-import { AssetVersion, Project } from '../../../../../db';
+import { AssetVersion, Project, eSystemObjectType, SystemObjectInfo } from '../../../../../db';
+import* as CACHE from '../../../../../cache';
 import { IngestMetadata, BulkIngestReader } from '../../../../../utils/parser';
 import * as LOG from '../../../../../utils/logger';
 
@@ -29,8 +30,10 @@ export default async function getAssetVersionsDetails(_: Parent, args: QueryGetA
         const Project: Project[] | null = await BulkIngestReader.computeProjects(ingestMetadata);
 
         const { idSubject, SubjectName, UnitAbbreviation, IdentifierPublic, IdentifierCollection } = ingestMetadata;
+        const SOI: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ idObject: idSubject, eObjectType: eSystemObjectType.eSubject });
         const SubjectUnitIdentifier: SubjectUnitIdentifier = {
             idSubject,
+            idSystemObject: SOI ? SOI.idSystemObject : 0,
             SubjectName,
             UnitAbbreviation,
             IdentifierPublic,
