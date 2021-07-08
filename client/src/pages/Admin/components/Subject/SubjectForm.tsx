@@ -100,6 +100,7 @@ function SubjectForm(): React.ReactElement {
     const history = useHistory();
     const [subjectName, setSubjectName] = useState('');
     const [subjectUnit, setSubjectUnit] = useState(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [unitList, setUnitList] = useState<any>([]);
     const [subjectIdentifiers, setSubjectIdentifiers] = useState<StateIdentifier[]>([]);
     const [coordinateValues, setCoordinateValues] = useState<CoordinateValues>({

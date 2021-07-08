@@ -112,6 +112,7 @@ type DataGridWithPaginationProps = {
     Search: Search;
     PaginationSettings: PaginationSettings;
     SortSettings: SortSettings;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rows: any[];
     columnHeader: Columns;
     loading: boolean;
@@ -147,6 +148,16 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
         : () => {};
 
     const handleSearchKeyword = ({ target }) => handleSearchKeywordChange(target.value);
+
+    const calculateRowCountFooter = (): number => {
+        if (PaginationSettings.pageNumber === 0 && rows.length < PaginationSettings.rowCount) {
+            return rows.length;
+        } else if (rows.length < PaginationSettings.rowCount) {
+            return PaginationSettings.pageNumber * PaginationSettings.rowCount + rows.length;
+        }
+        // +1 allows pagination to work
+        return (PaginationSettings.pageNumber + 1) * PaginationSettings.rowCount + 1;
+    };
 
     return (
         <Box className={classes.Container}>
@@ -207,6 +218,9 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                     onSortModelChange={handleSortChange}
                     onPageSizeChange={handlePaginationChange}
                     onPageChange={handlePaginationChange}
+                    hideFooterRowCount
+                    rowCount={calculateRowCountFooter()}
+                    sortingOrder={['asc', 'desc']}
                 />
             </Box>
         </Box>

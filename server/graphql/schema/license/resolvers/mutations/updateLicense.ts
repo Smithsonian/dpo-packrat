@@ -15,7 +15,7 @@ export default async function updateLicense(_: Parent, args: MutationUpdateLicen
     }
 
     License.Name = Name;
-    License.Description = Description
+    License.Description = Description;
     const success = await License.update();
     if (!success) {
         // LOG.info('Error when updating license in updateLicense.ts', LOG.LS.eGQL);

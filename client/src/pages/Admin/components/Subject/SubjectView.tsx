@@ -12,7 +12,7 @@ import { getUnitsList, getSubjectList } from '../../hooks/useAdminview';
 import { resolveSubRoute, ADMIN_ROUTE, ADMIN_ROUTES_TYPE } from '../../../../constants/routes';
 import { Subject } from '../../../../types/graphql';
 import { toast } from 'react-toastify';
-import { eSubjectUnitIdentifierSortColumns } from '../../../../types/server';
+import { subjectUnitIdentifierStringToEnum } from '../../../../types/server';
 
 const useStyles = makeStyles({
     AdminViewContainer: {
@@ -52,8 +52,8 @@ function SubjectView(): React.ReactElement {
     });
     const [dropDownState, setDropDownState] = useState<DropDown>({
         name: 'Units',
-        value: 2,
-        options: [{ value: 2, label: '' }]
+        value: 0,
+        options: [{ value: 0, label: 'All' }]
     });
     const [sortState, setSortState] = useState<SortSettings>({
         sortModel: []
@@ -107,6 +107,7 @@ function SubjectView(): React.ReactElement {
                 const unitListOptions = fetchedUnitList.map(unit => {
                     return { value: unit.idUnit, label: unit.Name };
                 });
+                unitListOptions.unshift({ value: 0, label: 'All' });
                 setDropDownState({ ...dropDownState, options: unitListOptions });
             }
         };
@@ -115,41 +116,50 @@ function SubjectView(): React.ReactElement {
 
     useEffect(() => {
         fetchSubjectList();
-    }, []);
+        // console.log('sortModel', sortState.sortModel);
+    }, [paginationState.pageNumber, paginationState.rowCount, sortState.sortModel]);
 
     const fetchSubjectList = async () => {
         setLoading(true);
-        const getSubjectListInput = {
-            search: searchState.text,
-            idUnit: dropDownState.value,
-            pageNumber: paginationState.pageNumber,
-            rowCount: paginationState.rowCount,
-            sortBy: eSubjectUnitIdentifierSortColumns.eDefault /* sortState.sortModel?.[0]?.field */,
-            sortOrder: true /* sortState.sortModel?.[0]?.sort */
-        };
-        const { data } = await getSubjectList(getSubjectListInput);
-        if (data?.getSubjectList.subjects && data?.getSubjectList.subjects.length) {
-            const subjectListWithId = data.getSubjectList.subjects.map(subject => {
-                const { idSubject, idSystemObject, SubjectName, UnitAbbreviation, IdentifierPublic } = subject;
-                return {
-                    Name: SubjectName,
-                    idSystemObject,
-                    Identifier: IdentifierPublic,
-                    idSubject,
-                    Unit: UnitAbbreviation,
-                    id: idSubject
-                };
-            });
-            setSubjectListState(subjectListWithId);
-        } else {
-            toast.error('Unable to fetch subjects. Please try again.');
+        // console.log('sortBy', subjectUnitIdentifierStringToEnum(sortState?.sortModel[0]?.field), 'sortOrder', sortState.sortModel[0]?.sort === 'asc');
+        try {
+            const getSubjectListInput = {
+                search: searchState.text,
+                idUnit: dropDownState.value,
+                // pageNumber + 1 because Material UI requires starting page === 0
+                pageNumber: paginationState.pageNumber + 1,
+                rowCount: paginationState.rowCount,
+                sortBy: subjectUnitIdentifierStringToEnum(sortState?.sortModel[0]?.field),
+                sortOrder: sortState.sortModel[0]?.sort === 'asc'
+            };
+            const { data } = await getSubjectList(getSubjectListInput);
+            if (data?.getSubjectList.subjects && data?.getSubjectList.subjects.length) {
+                const subjectListWithId = data.getSubjectList.subjects.map(subject => {
+                    const { idSubject, idSystemObject, SubjectName, UnitAbbreviation, IdentifierPublic } = subject;
+                    return {
+                        Name: SubjectName,
+                        idSystemObject,
+                        Identifier: IdentifierPublic,
+                        idSubject,
+                        Unit: UnitAbbreviation,
+                        id: idSubject
+                    };
+                });
+                setSubjectListState(subjectListWithId);
+            } else {
+                setSubjectListState([]);
+            }
+        } catch (error) {
+            toast.error(`Error in fetching subjects. Message: ${error}`);
         }
         setLoading(false);
     };
 
-    const handlePaginationChange = async (params: PageChangeParams) => setPaginationState({ ...paginationState, pageNumber: params.page, rowCount: params.pageSize });
+    const handlePaginationChange = async (params: PageChangeParams) => await setPaginationState({ ...paginationState, pageNumber: params.page, rowCount: params.pageSize });
 
-    const handleSortChange = (params: SortModelParams) => setSortState({ sortModel: params.sortModel });
+    const handleSortChange = async (params: SortModelParams) => {
+        await setSortState({ sortModel: params.sortModel });
+    };
 
     const handleDropDownChange = value => setDropDownState({ ...dropDownState, value });
 
