@@ -5,12 +5,14 @@
  * This component renders details tab for Item specific details used in DetailsTab component.
  */
 import { Box } from '@material-ui/core';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { CheckboxField, Loader } from '../../../../../components';
 import { SubjectDetailFields } from '../../../../../types/graphql';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 import { SubjectFields } from './SubjectDetails';
+import { eSystemObjectType } from '../../../../../types/server';
+import { useDetailTabStore } from '../../../../../store';
 
 export interface ItemDetailFields extends SubjectDetailFields {
     EntireSubject?: boolean | null | undefined;
@@ -18,31 +20,11 @@ export interface ItemDetailFields extends SubjectDetailFields {
 
 function ItemDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
-
-    const [details, setDetails] = useState<ItemDetailFields>({});
-
-    useEffect(() => {
-        onUpdateDetail(objectType, details);
-    }, [details]);
+    const [ItemDetails, updateDetailField] = useDetailTabStore(state => [state.ItemDetails, state.updateDetailField]);
 
     useEffect(() => {
-        if (data && !loading) {
-            const { Item } = data.getDetailsTabDataForObject;
-            setDetails({
-                EntireSubject: Item?.EntireSubject,
-                Latitude: Item?.Latitude,
-                Longitude: Item?.Longitude,
-                Altitude: Item?.Altitude,
-                TS0: Item?.TS0,
-                TS1: Item?.TS1,
-                TS2: Item?.TS2,
-                R0: Item?.R0,
-                R1: Item?.R1,
-                R2: Item?.R2,
-                R3: Item?.R3
-            });
-        }
-    }, [data, loading]);
+        onUpdateDetail(objectType, ItemDetails);
+    }, [ItemDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -56,12 +38,12 @@ function ItemDetails(props: DetailComponentProps): React.ReactElement {
             numberValue = Number.parseInt(value, 10);
         }
 
-        setDetails(details => ({ ...details, [name]: numberValue }));
+        updateDetailField(eSystemObjectType.eItem, name, numberValue);
     };
 
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
-        setDetails(details => ({ ...details, [name]: checked }));
+        updateDetailField(eSystemObjectType.eItem, name, checked);
     };
 
     const itemData = data.getDetailsTabDataForObject?.Item;
@@ -71,14 +53,14 @@ function ItemDetails(props: DetailComponentProps): React.ReactElement {
             <CheckboxField
                 viewMode
                 required
-                updated={isFieldUpdated(details, itemData, 'EntireSubject')}
+                updated={isFieldUpdated(ItemDetails, itemData, 'EntireSubject')}
                 disabled={disabled}
                 name='EntireSubject'
                 label='Entire Subject'
-                value={details?.EntireSubject ?? false}
+                value={ItemDetails?.EntireSubject ?? false}
                 onChange={setCheckboxField}
             />
-            <SubjectFields {...details} originalFields={itemData} disabled={disabled} onChange={onSetField} />
+            <SubjectFields {...ItemDetails} originalFields={itemData} disabled={disabled} onChange={onSetField} />
         </Box>
     );
 }

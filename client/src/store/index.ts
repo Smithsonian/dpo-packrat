@@ -13,5 +13,5 @@ export * from './metadata';
 export * from './repository';
 export * from './utils';
 export * from './control';
-export * from './repositoryDetails';
 export * from './identifier';
+export * from './detailTab';
