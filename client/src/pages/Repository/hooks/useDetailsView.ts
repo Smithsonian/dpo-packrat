@@ -10,7 +10,6 @@ import {
     GetVersionsForAssetDocument,
     GetVersionsForAssetQueryResult,
     GetDetailsTabDataForObjectDocument,
-    GetDetailsTabDataForObjectQueryResult,
     UpdateObjectDetailsDocument,
     UpdateObjectDetailsDataInput,
     UpdateObjectDetailsMutation,
@@ -64,8 +63,9 @@ export function useObjectVersions(idSystemObject: number): GetVersionsForAssetQu
     });
 }
 
-export function useDetailsTabData(idSystemObject: number, objectType: eSystemObjectType): GetDetailsTabDataForObjectQueryResult {
-    return useQuery(GetDetailsTabDataForObjectDocument, {
+export async function getDetailsTabDataForObject(idSystemObject: number, objectType: eSystemObjectType) {
+    return await apolloClient.query({
+        query: GetDetailsTabDataForObjectDocument,
         variables: {
             input: {
                 idSystemObject,

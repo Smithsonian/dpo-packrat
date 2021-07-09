@@ -113,12 +113,12 @@ export const defaultModelFields: ModelFields = {
 export type ModelSchemaType = typeof modelFieldsSchema;
 
 export const modelFieldsSchema = yup.object().shape({
-    name: yup.string(),
+    name: yup.string().min(1, 'Name must have at least one character').required('Name is required'),
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     uvMaps: yup.array().of(uvMapSchema),
     sourceObjects: yup.array().of(sourceObjectSchema),
-    dateCaptured: yup.date().typeError('Date Captured is required'),
+    dateCaptured: yup.date().max(Date(), 'Date Captured cannot be set in the future').typeError('Date Captured is required'),
     creationMethod: yup.number().typeError('Creation method is required'),
     modality: yup.number().typeError('Modality is required'),
     units: yup.number().typeError('Units is required'),

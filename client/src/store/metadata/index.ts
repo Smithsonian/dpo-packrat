@@ -63,13 +63,15 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => lodash.filter(identifiers, { selected: true }),
     getFieldErrors: (metadata: StateMetadata): FieldErrors => {
         const { getAssetType } = useVocabularyStore.getState();
+        // UPDATE these error fields as we include more validation for ingestion
         const errors: FieldErrors = {
             photogrammetry: {
                 dateCaptured: false,
                 datasetType: false
             },
             model: {
-                dateCaptured: true,
+                name: false,
+                dateCaptured: false,
                 creationMethod: false,
                 modality: false,
                 units: false,
@@ -89,6 +91,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         }
 
         if (assetType.model) {
+            errors.model.name = lodash.isNull(metadata.model.name) || metadata.model.name.length < 1;
             errors.model.dateCaptured = lodash.isNull(metadata.model.dateCaptured) || metadata.model.dateCaptured.toString() === 'Invalid Date';
             errors.model.creationMethod = lodash.isNull(metadata.model.creationMethod);
             errors.model.modality = lodash.isNull(metadata.model.modality);
