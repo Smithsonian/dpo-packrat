@@ -19,7 +19,7 @@ import './global/root.css';
 import { apolloClient } from './graphql';
 import { Home, Login } from './pages';
 import * as serviceWorker from './serviceWorker';
-import { useUserStore, useVocabularyStore } from './store';
+import { useUserStore, useVocabularyStore, useLicenseStore } from './store';
 import theme from './theme';
 import { getHeaderTitle } from './utils/shared';
 
@@ -27,16 +27,18 @@ function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
     const initialize = useUserStore(state => state.initialize);
     const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
+    const updateLicenseEntries = useLicenseStore(state => state.updateLicenseEntries);
 
     const initializeUser = useCallback(async () => {
         try {
             await initialize();
             await updateVocabularyEntries();
+            await updateLicenseEntries();
             setLoading(false);
         } catch {
             toast.error('Cannot connect to the server, please try again later');
         }
-    }, [initialize, updateVocabularyEntries]);
+    }, [initialize, updateVocabularyEntries, updateLicenseEntries]);
 
     useEffect(() => {
         initializeUser();

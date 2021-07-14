@@ -10,9 +10,10 @@ import { Box, Tooltip, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { DataGrid, Columns } from '@material-ui/data-grid';
 import { useLocation } from 'react-router';
-import { GetLicenseListDocument, GetLicenseListResult } from '../../../../types/graphql';
+import { GetLicenseListDocument, License } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
+import { useLicenseStore } from '../../../../store';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -177,22 +178,13 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
 function LicenseView(): React.ReactElement {
     const classes = useStyles();
     const location = useLocation();
-    const [licenseList, setLicenseList] = useState<GetLicenseListResult | []>([]);
+    const [licenseList, setLicenseList] = useState<License[]>([]);
+    const getEntries = useLicenseStore(state => state.getEntries);
 
     useEffect(() => {
-        async function fetchInitialUnitList() {
-            const initialLicenseListQuery = await apolloClient.query({
-                query: GetLicenseListDocument,
-                variables: {
-                    input: {
-                        search: ''
-                    }
-                }
-            });
-            setLicenseList(initialLicenseListQuery?.data?.getLicenseList?.Licenses);
-        }
-        fetchInitialUnitList();
-    }, []);
+        const licenses = getEntries();
+        setLicenseList(licenses);
+    }, [getEntries]);
 
     const queryByFilter = async newSearchText => {
         const newFilterQuery = await apolloClient.query({
