@@ -599,6 +599,14 @@ CREATE TABLE IF NOT EXISTS `Workflow` (
   KEY `Workflow_idUserInitiator` (`idUserInitiator`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
+CREATE TABLE IF NOT EXISTS `WorkflowReport` (
+  `idWorkflowReport` int(11) NOT NULL AUTO_INCREMENT,
+  `idWorkflow` int(11) NOT NULL,
+  `MimeType` varchar(256) NOT NULL,
+  `Data` longtext NOT NULL,
+  PRIMARY KEY (`idWorkflowReport`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
 CREATE TABLE IF NOT EXISTS `WorkflowStep` (
   `idWorkflowStep` int(11) NOT NULL AUTO_INCREMENT,
   `idWorkflow` int(11) NOT NULL,
@@ -1178,6 +1186,13 @@ ADD CONSTRAINT `fk_workflow_vocabulary1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
+ALTER TABLE `WorkflowReport` 
+ADD CONSTRAINT `fk_workflowreport_workflow1`
+  FOREIGN KEY (`idWorkflow`)
+  REFERENCES `Workflow` (`idWorkflow`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
 ALTER TABLE `WorkflowStep` 
 ADD CONSTRAINT `fk_workflowstep_workflow1`
   FOREIGN KEY (`idWorkflow`)

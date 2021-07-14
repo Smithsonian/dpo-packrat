@@ -789,16 +789,17 @@ model VocabularySet {
 }
 
 model Workflow {
-  idWorkflow      Int            @id @default(autoincrement())
+  idWorkflow      Int              @id @default(autoincrement())
   idVWorkflowType Int
   idProject       Int?
   idUserInitiator Int?
-  DateInitiated   DateTime       @mariasql.DateTime(0)
-  DateUpdated     DateTime       @mariasql.DateTime(0)
-  Parameters      String?        @mariasql.Text
-  Project         Project?       @relation(fields: [idProject], references: [idProject])
-  User            User?          @relation(fields: [idUserInitiator], references: [idUser])
-  Vocabulary      Vocabulary     @relation(fields: [idVWorkflowType], references: [idVocabulary])
+  DateInitiated   DateTime         @mariasql.DateTime(0)
+  DateUpdated     DateTime         @mariasql.DateTime(0)
+  Parameters      String?          @mariasql.Text
+  Project         Project?         @relation(fields: [idProject], references: [idProject])
+  User            User?            @relation(fields: [idUserInitiator], references: [idUser])
+  Vocabulary      Vocabulary       @relation(fields: [idVWorkflowType], references: [idVocabulary])
+  WorkflowReport  WorkflowReport[]
   WorkflowStep    WorkflowStep[]
 
   @@index([idProject], name: "Workflow_idProject")
@@ -867,4 +868,14 @@ model SystemObjectVersionAssetVersionXref {
 
   @@index([idAssetVersion], name: "fk_systemobjectversionassetversionxref_assetversion")
   @@index([idSystemObjectVersion], name: "fk_systemobjectversionassetversionxref_systemobjectversion")
+}
+
+model WorkflowReport {
+  idWorkflowReport Int      @id @default(autoincrement())
+  idWorkflow       Int
+  MimeType         String   @mariasql.VarChar(256)
+  Data             String   @mariasql.LongText
+  Workflow         Workflow @relation(fields: [idWorkflow], references: [idWorkflow])
+
+  @@index([idWorkflow], name: "fk_workflowreport_workflow1")
 }
