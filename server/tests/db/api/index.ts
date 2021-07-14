@@ -18,6 +18,7 @@ export * from './Unit.util';
 export * from './UnitEdan.util';
 export * from './User.util';
 export * from './Workflow.util';
+export * from './WorkflowReport.util';
 export * from './WorkflowStep.util';
 
 export function randomStorageKey(baseName: string): string {

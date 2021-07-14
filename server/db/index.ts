@@ -56,6 +56,7 @@ export * from './api/UserPersonalizationUrl';
 export * from './api/Vocabulary';
 export * from './api/VocabularySet';
 export * from './api/Workflow';
+export * from './api/WorkflowReport';
 export * from './api/WorkflowStep';
 export * from './api/WorkflowStepSystemObjectXref';
 
