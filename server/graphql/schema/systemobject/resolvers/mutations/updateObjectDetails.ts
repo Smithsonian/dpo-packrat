@@ -60,6 +60,24 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         });
     }
 
+    if (data.License) {
+        const reassignedLicense = await DBAPI.License.fetch(data.License);
+        if (reassignedLicense) {
+            const reassignmentSuccess = await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense);
+            if (!reassignmentSuccess) {
+                return {
+                    success: false,
+                    message: 'There was an error assigning the license. Please try again.'
+                };
+            }
+        } else {
+            return {
+                success: false,
+                message: 'There was an error fetching the license for assignment. Please try again.'
+            };
+        }
+    }
+
     switch (objectType) {
         case eSystemObjectType.eUnit: {
             const Unit = await DBAPI.Unit.fetch(idObject);

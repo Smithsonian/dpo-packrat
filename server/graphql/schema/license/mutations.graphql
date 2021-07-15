@@ -1,11 +1,14 @@
 type Mutation {
     createLicense(input: CreateLicenseInput!): CreateLicenseResult!
     updateLicense(input: UpdateLicenseInput!): CreateLicenseResult!
+    clearLicenseAssignment(input: ClearLicenseAssignmentInput!): ClearLicenseAssignmentResult!
+    assignLicense(input: AssignLicenseInput!): AssignLicenseResult!
 }
 
 input CreateLicenseInput {
     Name: String!
     Description: String!
+    RestrictLevel: Int!
 }
 
 type CreateLicenseResult {
@@ -16,4 +19,25 @@ input UpdateLicenseInput {
     idLicense: Int!
     Name: String!
     Description: String!
+    RestrictLevel: Int!
+}
+
+input ClearLicenseAssignmentInput {
+    idSystemObject: Int!
+    clearAll: Boolean
+}
+
+type ClearLicenseAssignmentResult {
+    success: Boolean!
+    message: String!
+}
+
+input AssignLicenseInput {
+    idSystemObject: Int!
+    idLicense: Int!
+}
+
+type AssignLicenseResult {
+    success: Boolean!
+    message: String!
 }

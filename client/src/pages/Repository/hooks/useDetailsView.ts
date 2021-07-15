@@ -18,7 +18,11 @@ import {
     DeleteObjectConnectionDocument,
     DeleteIdentifierDocument,
     RollbackSystemObjectVersionDocument,
-    GetLicenseListDocument
+    GetLicenseListDocument,
+    ClearLicenseAssignmentDocument,
+    AssignLicenseDocument,
+    ClearLicenseAssignmentMutation,
+    AssignLicenseMutation
 } from '../../../types/graphql';
 import { eSystemObjectType } from '../../../types/server';
 
@@ -75,7 +79,12 @@ export async function getDetailsTabDataForObject(idSystemObject: number, objectT
     });
 }
 
-export function updateDetailsTabData(idSystemObject: number, idObject: number, objectType: eSystemObjectType, data: UpdateObjectDetailsDataInput): Promise<FetchResult<UpdateObjectDetailsMutation>> {
+export function updateDetailsTabData(
+    idSystemObject: number,
+    idObject: number,
+    objectType: eSystemObjectType,
+    data: UpdateObjectDetailsDataInput
+): Promise<FetchResult<UpdateObjectDetailsMutation>> {
     return apolloClient.mutate({
         mutation: UpdateObjectDetailsDocument,
         variables: {
@@ -127,22 +136,25 @@ export async function deleteObjectConnection(idSystemObjectMaster: number, idSys
                 idSystemObjectDerived
             }
         },
-        refetchQueries: [{
-            query: GetSystemObjectDetailsDocument,
-            variables: {
-                input: {
-                    idSystemObject: type === 'Source' ? idSystemObjectDerived : idSystemObjectMaster
+        refetchQueries: [
+            {
+                query: GetSystemObjectDetailsDocument,
+                variables: {
+                    input: {
+                        idSystemObject: type === 'Source' ? idSystemObjectDerived : idSystemObjectMaster
+                    }
+                }
+            },
+            {
+                query: GetDetailsTabDataForObjectDocument,
+                variables: {
+                    input: {
+                        idSystemObject: type === 'Source' ? idSystemObjectDerived : idSystemObjectMaster,
+                        objectType: systemObjectType
+                    }
                 }
             }
-        }, {
-            query: GetDetailsTabDataForObjectDocument,
-            variables: {
-                input: {
-                    idSystemObject: type === 'Source' ? idSystemObjectDerived : idSystemObjectMaster,
-                    objectType: systemObjectType
-                }
-            }
-        }],
+        ],
         awaitRefetchQueries: true
     });
 }
@@ -177,6 +189,33 @@ export async function getLicenseList() {
             input: {
                 search: ''
             }
-        }
+        },
+        fetchPolicy: 'no-cache'
+    });
+}
+
+export async function clearLicenseAssignment(idSystemObject: number, clearAll?: boolean): Promise<FetchResult<ClearLicenseAssignmentMutation>> {
+    return await apolloClient.mutate({
+        mutation: ClearLicenseAssignmentDocument,
+        variables: {
+            input: {
+                idSystemObject,
+                clearAll
+            }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+    });
+}
+
+export async function assignLicense(idSystemObject: number, idLicense: number): Promise<FetchResult<AssignLicenseMutation>> {
+    return await apolloClient.mutate({
+        mutation: AssignLicenseDocument,
+        variables: {
+            input: {
+                idLicense,
+                idSystemObject
+            }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
     });
 }

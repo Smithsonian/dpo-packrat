@@ -7,6 +7,7 @@ const createLicense = gql`
                 idLicense
                 Name
                 Description
+                RestrictLevel
             }
         }
     }

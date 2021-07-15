@@ -38,7 +38,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         }
     },
     identifierSelect: {
-        minWidth: 180,
+        width: 'fit-content',
         padding: '0px 10px',
         marginLeft: 20,
         background: palette.background.paper,
@@ -136,7 +136,7 @@ function Header(): React.ReactElement {
             <Box display='flex' flex={1}>
                 <Typography className={classes.header}>Identifer</Typography>
             </Box>
-            <Box display='flex' style={{ width: 220 }}>
+            <Box display='flex' style={{ width: 140 }}>
                 <Typography className={classes.header}>Identifer Type</Typography>
             </Box>
         </Box>

@@ -1,13 +1,13 @@
 import { SystemObjectCache } from '../../cache';
 import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
-import * as H from '../../utils/helpers';
+// import * as H from '../../utils/helpers';
 import { ObjectGraphTestSetup } from '../db/composite/ObjectGraph.setup';
 import { createItemTest } from '../db/api';
 import * as L from 'lodash';
 
 afterAll(async done => {
-    await H.Helpers.sleep(4000);
+    // await H.Helpers.sleep(4000);
     done();
 });
 enum eCacheTestMode {

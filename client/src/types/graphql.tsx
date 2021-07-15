@@ -331,6 +331,8 @@ export type AccessRole = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  assignLicense: AssignLicenseResult;
+  clearLicenseAssignment: ClearLicenseAssignmentResult;
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
   createGeoLocation: CreateGeoLocationResult;
@@ -355,6 +357,16 @@ export type Mutation = {
   updateSourceObjects: UpdateSourceObjectsResult;
   updateUser: CreateUserResult;
   uploadAsset: UploadAssetResult;
+};
+
+
+export type MutationAssignLicenseArgs = {
+  input: AssignLicenseInput;
+};
+
+
+export type MutationClearLicenseAssignmentArgs = {
+  input: ClearLicenseAssignmentInput;
 };
 
 
@@ -958,6 +970,7 @@ export type AreCameraSettingsUniformResult = {
 export type CreateLicenseInput = {
   Name: Scalars['String'];
   Description: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
 };
 
 export type CreateLicenseResult = {
@@ -969,6 +982,29 @@ export type UpdateLicenseInput = {
   idLicense: Scalars['Int'];
   Name: Scalars['String'];
   Description: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
+};
+
+export type ClearLicenseAssignmentInput = {
+  idSystemObject: Scalars['Int'];
+  clearAll?: Maybe<Scalars['Boolean']>;
+};
+
+export type ClearLicenseAssignmentResult = {
+  __typename?: 'ClearLicenseAssignmentResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type AssignLicenseInput = {
+  idSystemObject: Scalars['Int'];
+  idLicense: Scalars['Int'];
+};
+
+export type AssignLicenseResult = {
+  __typename?: 'AssignLicenseResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
 };
 
 export type GetLicenseInput = {
@@ -994,6 +1030,7 @@ export type License = {
   idLicense: Scalars['Int'];
   Description: Scalars['String'];
   Name: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
   LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
 };
 
@@ -1454,6 +1491,7 @@ export type StakeholderDetailFieldsInput = {
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
+  License?: Maybe<Scalars['Int']>;
   Unit?: Maybe<UnitDetailFieldsInput>;
   Project?: Maybe<ProjectDetailFieldsInput>;
   Subject?: Maybe<SubjectDetailFieldsInput>;
@@ -1731,6 +1769,8 @@ export type GetSystemObjectDetailsResult = {
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  license?: Maybe<License>;
+  licenseInherited?: Maybe<Scalars['Boolean']>;
 };
 
 export type GetSourceObjectIdentiferInput = {
@@ -2482,6 +2522,32 @@ export type IngestDataMutation = (
   ) }
 );
 
+export type AssignLicenseMutationVariables = Exact<{
+  input: AssignLicenseInput;
+}>;
+
+
+export type AssignLicenseMutation = (
+  { __typename?: 'Mutation' }
+  & { assignLicense: (
+    { __typename?: 'AssignLicenseResult' }
+    & Pick<AssignLicenseResult, 'success' | 'message'>
+  ) }
+);
+
+export type ClearLicenseAssignmentMutationVariables = Exact<{
+  input: ClearLicenseAssignmentInput;
+}>;
+
+
+export type ClearLicenseAssignmentMutation = (
+  { __typename?: 'Mutation' }
+  & { clearLicenseAssignment: (
+    { __typename?: 'ClearLicenseAssignmentResult' }
+    & Pick<ClearLicenseAssignmentResult, 'success' | 'message'>
+  ) }
+);
+
 export type CreateLicenseMutationVariables = Exact<{
   input: CreateLicenseInput;
 }>;
@@ -2493,7 +2559,7 @@ export type CreateLicenseMutation = (
     { __typename?: 'CreateLicenseResult' }
     & { License?: Maybe<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense' | 'Name' | 'Description'>
+      & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
     )> }
   ) }
 );
@@ -2509,7 +2575,7 @@ export type UpdateLicenseMutation = (
     { __typename?: 'CreateLicenseResult' }
     & { License?: Maybe<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense' | 'Name' | 'Description'>
+      & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
     )> }
   ) }
 );
@@ -2986,7 +3052,7 @@ export type GetLicenseQuery = (
     { __typename?: 'GetLicenseResult' }
     & { License?: Maybe<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense' | 'Description' | 'Name'>
+      & Pick<License, 'idLicense' | 'Description' | 'Name' | 'RestrictLevel'>
     )> }
   ) }
 );
@@ -3002,7 +3068,7 @@ export type GetLicenseListQuery = (
     { __typename?: 'GetLicenseListResult' }
     & { Licenses: Array<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense' | 'Description' | 'Name'>
+      & Pick<License, 'idLicense' | 'Description' | 'Name' | 'RestrictLevel'>
     )> }
   ) }
 );
@@ -3347,7 +3413,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail' | 'licenseInherited'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3375,6 +3441,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, objectVersions: Array<(
       { __typename?: 'SystemObjectVersion' }
       & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated'>
+    )>, license?: Maybe<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
     )> }
   ) }
 );
@@ -3900,6 +3969,74 @@ export function useIngestDataMutation(baseOptions?: Apollo.MutationHookOptions<I
 export type IngestDataMutationHookResult = ReturnType<typeof useIngestDataMutation>;
 export type IngestDataMutationResult = Apollo.MutationResult<IngestDataMutation>;
 export type IngestDataMutationOptions = Apollo.BaseMutationOptions<IngestDataMutation, IngestDataMutationVariables>;
+export const AssignLicenseDocument = gql`
+    mutation assignLicense($input: AssignLicenseInput!) {
+  assignLicense(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type AssignLicenseMutationFn = Apollo.MutationFunction<AssignLicenseMutation, AssignLicenseMutationVariables>;
+
+/**
+ * __useAssignLicenseMutation__
+ *
+ * To run a mutation, you first call `useAssignLicenseMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAssignLicenseMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [assignLicenseMutation, { data, loading, error }] = useAssignLicenseMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAssignLicenseMutation(baseOptions?: Apollo.MutationHookOptions<AssignLicenseMutation, AssignLicenseMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AssignLicenseMutation, AssignLicenseMutationVariables>(AssignLicenseDocument, options);
+      }
+export type AssignLicenseMutationHookResult = ReturnType<typeof useAssignLicenseMutation>;
+export type AssignLicenseMutationResult = Apollo.MutationResult<AssignLicenseMutation>;
+export type AssignLicenseMutationOptions = Apollo.BaseMutationOptions<AssignLicenseMutation, AssignLicenseMutationVariables>;
+export const ClearLicenseAssignmentDocument = gql`
+    mutation clearLicenseAssignment($input: ClearLicenseAssignmentInput!) {
+  clearLicenseAssignment(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type ClearLicenseAssignmentMutationFn = Apollo.MutationFunction<ClearLicenseAssignmentMutation, ClearLicenseAssignmentMutationVariables>;
+
+/**
+ * __useClearLicenseAssignmentMutation__
+ *
+ * To run a mutation, you first call `useClearLicenseAssignmentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useClearLicenseAssignmentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [clearLicenseAssignmentMutation, { data, loading, error }] = useClearLicenseAssignmentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useClearLicenseAssignmentMutation(baseOptions?: Apollo.MutationHookOptions<ClearLicenseAssignmentMutation, ClearLicenseAssignmentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ClearLicenseAssignmentMutation, ClearLicenseAssignmentMutationVariables>(ClearLicenseAssignmentDocument, options);
+      }
+export type ClearLicenseAssignmentMutationHookResult = ReturnType<typeof useClearLicenseAssignmentMutation>;
+export type ClearLicenseAssignmentMutationResult = Apollo.MutationResult<ClearLicenseAssignmentMutation>;
+export type ClearLicenseAssignmentMutationOptions = Apollo.BaseMutationOptions<ClearLicenseAssignmentMutation, ClearLicenseAssignmentMutationVariables>;
 export const CreateLicenseDocument = gql`
     mutation createLicense($input: CreateLicenseInput!) {
   createLicense(input: $input) {
@@ -3907,6 +4044,7 @@ export const CreateLicenseDocument = gql`
       idLicense
       Name
       Description
+      RestrictLevel
     }
   }
 }
@@ -3944,6 +4082,7 @@ export const UpdateLicenseDocument = gql`
       idLicense
       Name
       Description
+      RestrictLevel
     }
   }
 }
@@ -5064,6 +5203,7 @@ export const GetLicenseDocument = gql`
       idLicense
       Description
       Name
+      RestrictLevel
     }
   }
 }
@@ -5103,6 +5243,7 @@ export const GetLicenseListDocument = gql`
       idLicense
       Description
       Name
+      RestrictLevel
     }
   }
 }
@@ -5996,6 +6137,13 @@ export const GetSystemObjectDetailsDocument = gql`
       idSystemObject
       PublishedState
       DateCreated
+    }
+    licenseInherited
+    license {
+      idLicense
+      Name
+      Description
+      RestrictLevel
     }
   }
 }

@@ -4,12 +4,13 @@ import * as DBAPI from '../../../../../db';
 
 export default async function createLicense(_: Parent, args: MutationCreateLicenseArgs): Promise<CreateLicenseResult> {
     const { input } = args;
-    const { Name, Description } = input;
+    const { Name, Description, RestrictLevel } = input;
 
     const licenseArgs = {
         idLicense: 0,
         Name,
         Description,
+        RestrictLevel,
     };
 
     const License = new DBAPI.License(licenseArgs);

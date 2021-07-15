@@ -102,7 +102,7 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
             headerName: 'Action',
             flex: 1,
             sortable: false,
-            renderCell: params => <Link to={`/admin/user/${[params.row.idUser]}`}>Edit</Link>
+            renderCell: params => <Link to={`/admin/users/${[params.row.idUser]}`}>Edit</Link>
         }
     ];
 
