@@ -19,7 +19,7 @@ export default async function assignLicense(_: Parent, args: MutationAssignLicen
     } else {
         return {
             success: false,
-            message: 'Error with fetching desired license'
+            message: 'There was an error fetching the license for assignment. Please try again.'
         };
     }
 

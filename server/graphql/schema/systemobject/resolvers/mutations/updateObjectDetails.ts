@@ -67,13 +67,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (!reassignmentSuccess) {
                 return {
                     success: false,
-                    message: 'Error with reassigning license'
+                    message: 'There was an error assigning the license. Please try again.'
                 };
             }
         } else {
             return {
                 success: false,
-                message: 'Error with fetching desired license'
+                message: 'There was an error fetching the license for assignment. Please try again.'
             };
         }
     }

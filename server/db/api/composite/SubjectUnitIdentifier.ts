@@ -117,7 +117,7 @@ export class SubjectUnitIdentifier {
                     break;
                 case eSubjectUnitIdentifierSortColumns.eUnitAbbreviation:
                     if (sortDirection === false)
-                        orderBy = 'ORDER BY U.Abbreviation DESC, S.Name DESC';
+                        orderBy = 'ORDER BY U.Abbreviation DESC, S.Name';
                     else
                         orderBy = 'ORDER BY U.Abbreviation, S.Name';
                     break;
