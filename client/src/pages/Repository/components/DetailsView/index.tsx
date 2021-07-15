@@ -451,7 +451,7 @@ function DetailsView(): React.ReactElement {
                     licenseInherited={licenseInherited}
                     path={objectAncestors}
                 />
-                <Box display='flex' flex={3} flexDirection='column'>
+                <Box display='flex' flex={2.2} flexDirection='column'>
                     <IdentifierList
                         viewMode
                         disabled={disabled}
