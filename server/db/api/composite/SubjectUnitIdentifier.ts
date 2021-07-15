@@ -113,13 +113,18 @@ export class SubjectUnitIdentifier {
                 default:
                 case eSubjectUnitIdentifierSortColumns.eDefault:
                 case eSubjectUnitIdentifierSortColumns.eSubjectName:
-                    orderBy = 'ORDER BY S.Name';
+                    orderBy = 'ORDER BY S.Name' + ((sortDirection === false) ? ' DESC' : '');
                     break;
-                case eSubjectUnitIdentifierSortColumns.eUnitAbbreviation: orderBy = 'ORDER BY U.Abbreviation, S.Name'; break;
-                case eSubjectUnitIdentifierSortColumns.eIdentifierValue: orderBy = 'ORDER BY ID.IdentifierValue'; break;
+                case eSubjectUnitIdentifierSortColumns.eUnitAbbreviation:
+                    if (sortDirection === false)
+                        orderBy = 'ORDER BY U.Abbreviation DESC, S.Name';
+                    else
+                        orderBy = 'ORDER BY U.Abbreviation, S.Name';
+                    break;
+                case eSubjectUnitIdentifierSortColumns.eIdentifierValue:
+                    orderBy = 'ORDER BY ID.IdentifierValue' + ((sortDirection === false) ? ' DESC' : '');
+                    break;
             }
-            if (sortDirection === false)
-                orderBy += ' DESC';
 
             if ((rowCount ?? 0) <= 0)
                 rowCount = 100;

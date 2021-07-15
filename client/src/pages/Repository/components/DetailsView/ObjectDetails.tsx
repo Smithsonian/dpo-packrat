@@ -1,17 +1,21 @@
+/* eslint-disable react/jsx-max-props-per-line */
 /**
  * Object Details
  *
  * This component renders object details for the Repository Details UI.
  */
-import { Box, Checkbox, Typography, Select, MenuItem, Button } from '@material-ui/core';
+import { Box, Checkbox, Typography, Select, MenuItem } from '@material-ui/core';
 import { withStyles, makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../components';
-import { GetSystemObjectDetailsResult, RepositoryPath } from '../../../../types/graphql';
+import { GetSystemObjectDetailsResult, RepositoryPath, License } from '../../../../types/graphql';
 import { getDetailsUrlForObject, getUpdatedCheckboxProps, isFieldUpdated } from '../../../../utils/repository';
 import { withDefaultValueBoolean } from '../../../../utils/shared';
-import { getLicenseList } from '../../hooks/useDetailsView';
-import { License } from '../../../../types/graphql';
+import { useLicenseStore } from '../../../../store';
+import { clearLicenseAssignment, assignLicense } from '../../hooks/useDetailsView';
+import { getTermForSystemObjectType } from '../../../../utils/repository';
+import { LoadingButton } from '../../../../components';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     detail: {
@@ -21,7 +25,8 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         marginBottom: 8
     },
     label: {
-        fontWeight: typography.fontWeightMedium
+        fontWeight: typography.fontWeightMedium,
+        alignSelf: 'center'
     },
     value: {
         color: ({ clickable = true }: DetailProps) => (clickable ? palette.primary.main : palette.primary.dark),
@@ -32,6 +37,42 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         color: 'white',
         width: '90px',
         height: '30px'
+    }
+}));
+
+const useObjectDetailsStyles = makeStyles(({ breakpoints, palette }) => ({
+    loadingBtn: {
+        height: 35,
+        width: 'fit-content',
+        color: palette.background.paper,
+        [breakpoints.down('lg')]: {
+            height: 30
+        }
+    },
+    select: {
+        fontSize: '0.875rem',
+        color: 'rgb(44, 64, 90)',
+        marginRight: '5px'
+    },
+    assignedLicense: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        whiteSpace: 'pre',
+        flexWrap: 'wrap'
+    },
+    inheritedLicense: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        whiteSpace: 'pre-wrap',
+        flexWrap: 'wrap'
+    },
+    link: {
+        display: 'flex',
+        color: 'rgb(0, 121, 196)',
+        marginRight: '5px',
+        textDecoration: 'underline'
     }
 }));
 
@@ -53,44 +94,78 @@ interface ObjectDetailsProps {
     hideRetired?: boolean;
     originalFields?: GetSystemObjectDetailsResult;
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
-    licenseAssignment?: RepositoryPath | null;
+    onLicenseUpdate?: (event) => void;
+    path?: RepositoryPath[][] | null;
+    idSystemObject: number;
+    license?: number;
+    licenseInherited?: boolean | null;
 }
 
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
-    const { unit, project, subject, item, publishedState, retired, hideRetired, disabled, originalFields, onRetiredUpdate /*, licenseAssignment */ } = props;
+    const {
+        unit,
+        project,
+        subject,
+        item,
+        publishedState,
+        retired,
+        hideRetired,
+        disabled,
+        originalFields,
+        onRetiredUpdate,
+        onLicenseUpdate,
+        idSystemObject,
+        license,
+        licenseInherited,
+        path
+    } = props;
     const [licenseList, setLicenseList] = useState<License[]>([]);
+    const [loading, setLoading] = useState(false);
     const isRetiredUpdated: boolean = isFieldUpdated({ retired }, originalFields, 'retired');
+    const getEntries = useLicenseStore(state => state.getEntries);
+    const classes = useObjectDetailsStyles(props);
 
     useEffect(() => {
-        const fetchInitialLicenseList = async () => {
-            const { data } = await getLicenseList();
-            const fetchedLicenses = [...data?.getLicenseList?.Licenses];
-            if (fetchedLicenses && fetchedLicenses.length) {
-                fetchedLicenses.sort((a, b) => a.Name.toLowerCase() - b.Name.toLowerCase());
-            }
-            setLicenseList(fetchedLicenses);
-        };
+        const licenses = getEntries();
+        if (licenses && licenses.length) {
+            licenses.sort((a: License, b: License) => a.Name.localeCompare(b.Name));
+        }
+        setLicenseList(licenses);
+    }, [getEntries]);
 
-        fetchInitialLicenseList();
-    }, []);
-
-    /*
-        TODO
-        Create a proper state to hold the license
-        Create a function to handle Select's onChange
-        Complete clearAssignment function
-        Get the correct data shape to pass into select
-        Write the component to include hyperlink to appropriate license object
-        Figure out which kinds of system object have licenses
-        Figure out how to inherit license from parent
-    */
-
-    const clearLicenseAssignment = () => {
-        // TODO
+    const calculateAncestorDetails = ancestorPath => {
+        if (ancestorPath.length < 2) return ancestorPath[0][0];
+        return ancestorPath[ancestorPath.length - 2][0];
     };
 
-    const assignInheritedLicense = () => {
-        // TODO
+    const ancestor = calculateAncestorDetails(path);
+
+    const onClearLicenseAssignment = async () => {
+        setLoading(true);
+
+        const { data } = await clearLicenseAssignment(idSystemObject);
+        if (data?.clearLicenseAssignment?.success) {
+            toast.success('License assignment successfully cleared');
+        } else {
+            toast.error(`License assignment failure: ${data?.clearLicenseAssignment?.message}`);
+        }
+
+        setLoading(false);
+    };
+
+    const onAssignInheritedLicense = async () => {
+        setLoading(true);
+
+        if (license) {
+            const { data } = await assignLicense(idSystemObject, license);
+            if (data?.assignLicense?.success) {
+                toast.success('License assignment successfully cleared');
+            } else {
+                toast.error(`License assignment failure: ${data?.assignLicense?.message}`);
+            }
+        }
+
+        setLoading(false);
     };
 
     return (
@@ -114,39 +189,41 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     }
                 />
             )}
-            {licenseList.length ? (
+            {licenseInherited ? (
                 <Detail
                     label='License'
                     valueComponent={
-                        <React.Fragment>
-                            <Select onChange={() => {}} value={licenseList[0].idLicense}>
-                                {licenseList.map(license => (
-                                    <MenuItem value={license.idLicense} key={license.idLicense}>
-                                        {license.Name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                            <Button
-                                onClick={clearLicenseAssignment}
-                                style={{ backgroundColor: '#687DDB', color: 'white', width: 'fit-content', height: '30px', marginLeft: '10px' }}
-                            >
-                                Clear Assignment
-                            </Button>
-                        </React.Fragment>
+                        <Box className={classes.inheritedLicense}>
+                            <Box fontStyle='italic'>
+                                <Typography>{licenseList.find(lic => lic.idLicense === license)?.Name}</Typography>
+                            </Box>
+                            <Typography>{' Inherited from '}</Typography>
+                            <NewTabLink className={classes.link} to={`/repository/details/${ancestor?.idSystemObject}`} target='_blank'>
+                                <Typography>{`${getTermForSystemObjectType(ancestor?.objectType)} ${ancestor?.name}`}</Typography>
+                            </NewTabLink>
+                            <LoadingButton onClick={onAssignInheritedLicense} className={classes.loadingBtn} loading={loading}>
+                                Assign License
+                            </LoadingButton>
+                        </Box>
                     }
                 />
             ) : (
                 <Detail
                     label='License'
                     valueComponent={
-                        <React.Fragment>
-                            <Button
-                                onClick={assignInheritedLicense}
-                                style={{ backgroundColor: '#687DDB', color: 'white', width: 'fit-content', height: '30px', marginLeft: '10px' }}
-                            >
-                                Assign License
-                            </Button>
-                        </React.Fragment>
+                        <Box className={classes.assignedLicense}>
+                            <Select name='License' className={classes.select} onChange={onLicenseUpdate} value={license}>
+                                <MenuItem value={0}>None</MenuItem>
+                                {licenseList.map(license => (
+                                    <MenuItem value={license.idLicense} key={license.idLicense}>
+                                        {license.Name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                            <LoadingButton onClick={onClearLicenseAssignment} loading={loading} className={classes.loadingBtn}>
+                                Clear Assignment
+                            </LoadingButton>
+                        </Box>
                     }
                 />
             )}
@@ -174,10 +251,10 @@ function Detail(props: DetailProps): React.ReactElement {
 
     return (
         <Box className={classes.detail}>
-            <Box display='flex' flex={2}>
+            <Box display='flex' flex={1.5}>
                 <Typography className={classes.label}>{label}</Typography>
             </Box>
-            <Box display='flex' flex={3}>
+            <Box display='flex' flex={3.5}>
                 {valueComponent || content}
             </Box>
         </Box>

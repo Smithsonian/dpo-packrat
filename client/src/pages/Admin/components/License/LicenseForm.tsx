@@ -8,12 +8,14 @@ import { useHistory, Link } from 'react-router-dom';
 import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { DebounceInput } from 'react-debounce-input';
-import { CreateLicenseDocument, UpdateLicenseDocument, GetLicenseListDocument, GetLicenseDocument } from '../../../../types/graphql';
+import { GetLicenseDocument } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
+import { createLicense, updateLicense } from '../../hooks/useAdminview';
 import { toTitleCase } from '../../../../constants/helperfunctions';
 import * as yup from 'yup';
+import { useLicenseStore } from '../../../../store';
 
-const useStyles = makeStyles(({ breakpoints }) => ({
+const useStyles = makeStyles(({ breakpoints, typography }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -65,7 +67,10 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         backgroundColor: 'white',
         borderRadius: '4px',
         width: '80%',
-        minHeight: '100px'
+        minHeight: '100px',
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily,
+        fontSize: 'inherit'
     },
     btn: {
         backgroundColor: '#687DDB',
@@ -89,6 +94,7 @@ function LicenseForm(): React.ReactElement {
     const [description, setDescription] = useState('');
     const [restrictLevel, setRestrictLevel] = useState('');
     const [validName, setValidName] = useState<boolean | null>(null);
+    const [updateLicenseEntries, getEntries] = useLicenseStore(state => [state.updateLicenseEntries, state.getEntries]);
 
     const singularSystemObjectType = 'license';
     const { idLicense } = parameters;
@@ -136,15 +142,7 @@ function LicenseForm(): React.ReactElement {
         try {
             const isValidName = await schema.isValid({ name });
 
-            const { data } = await apolloClient.query({
-                query: GetLicenseListDocument,
-                variables: {
-                    input: {
-                        search: ''
-                    }
-                }
-            });
-            const licenseList = data?.getLicenseList?.Licenses;
+            const licenseList = getEntries();
             let isUniqueName = true;
             licenseList.forEach(license => {
                 if (license.idLicense !== Number(idLicense)) {
@@ -166,37 +164,26 @@ function LicenseForm(): React.ReactElement {
         }
     };
 
-    const updateLicense = async () => {
+    const onUpdateLicense = async () => {
         const validUpdate = await validateFields();
         if (!validUpdate) return;
 
         try {
-            const { data } = await apolloClient.mutate({
-                mutation: UpdateLicenseDocument,
-                variables: {
-                    input: {
-                        idLicense: Number(idLicense),
-                        Name: name,
-                        Description: description,
-                        RestrictLevel: Number(restrictLevel)
-                    }
-                },
-                refetchQueries: [{ query: GetLicenseListDocument, variables: { input: { search: '' } } }],
-                awaitRefetchQueries: true
-            });
+            const { data } = await updateLicense(Number(idLicense), name, description, Number(restrictLevel));
+            await updateLicenseEntries();
+
             if (data) {
                 toast.success('License updated successfully');
+                history.push('/admin/licenses');
             } else {
                 throw new Error('Update request returned success: false');
             }
         } catch (error) {
             toast.error(`Failed to update license: error ${error}`);
-        } finally {
-            history.push('/admin/licenses');
         }
     };
 
-    const createLicense = async (): Promise<void> => {
+    const onCreateLicense = async (): Promise<void> => {
         const validUpdate = await validateFields();
         if (!validUpdate) {
             toast.warn('Creation Failed. Please double-check your form inputs');
@@ -204,18 +191,9 @@ function LicenseForm(): React.ReactElement {
         }
 
         try {
-            const { data } = await apolloClient.mutate({
-                mutation: CreateLicenseDocument,
-                variables: {
-                    input: {
-                        Name: name,
-                        Description: description,
-                        RestrictLevel: restrictLevel,
-                    }
-                },
-                refetchQueries: [{ query: GetLicenseListDocument, variables: { input: { search: '' } } }],
-                awaitRefetchQueries: true
-            });
+            const { data } = await createLicense(name, description, Number(restrictLevel));
+            await updateLicenseEntries();
+
             if (data?.createLicense) {
                 toast.success('License created successfully');
                 history.push('/admin/licenses');
@@ -294,11 +272,11 @@ function LicenseForm(): React.ReactElement {
             </Box>
             <Box className={classes.ButtonGroup}>
                 {create ? (
-                    <Button className={classes.btn} onClick={createLicense} disableElevation>
+                    <Button className={classes.btn} onClick={onCreateLicense} disableElevation>
                         Create
                     </Button>
                 ) : (
-                    <Button className={classes.btn} onClick={updateLicense} disableElevation>
+                    <Button className={classes.btn} onClick={onUpdateLicense} disableElevation>
                         Update
                     </Button>
                 )}

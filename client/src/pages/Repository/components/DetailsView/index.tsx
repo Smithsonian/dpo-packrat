@@ -32,7 +32,7 @@ import {
     UpdateObjectDetailsDataInput
 } from '../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
-import { withDefaultValueBoolean } from '../../../../utils/shared';
+import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
 import { updateDetailsTabData, useObjectDetails, deleteIdentifier, getDetailsTabDataForObject } from '../../hooks/useDetailsView';
 import DetailsHeader from './DetailsHeader';
@@ -75,6 +75,7 @@ type DetailsParams = {
 type DetailsFields = {
     name?: string;
     retired?: boolean;
+    idLicense?: number;
 };
 
 function DetailsView(): React.ReactElement {
@@ -110,8 +111,8 @@ function DetailsView(): React.ReactElement {
 
     useEffect(() => {
         if (data && !loading) {
-            const { name, retired } = data.getSystemObjectDetails;
-            setDetails({ name, retired });
+            const { name, retired, license } = data.getSystemObjectDetails;
+            setDetails({ name, retired, idLicense: license?.idLicense || 0 });
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
         }
     }, [data, loading, initializeIdentifierState]);
@@ -146,7 +147,8 @@ function DetailsView(): React.ReactElement {
         objectAncestors,
         sourceObjects,
         derivedObjects,
-        objectVersions
+        objectVersions,
+        licenseInherited = null
     } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
@@ -202,6 +204,20 @@ function DetailsView(): React.ReactElement {
         const updatedDataFields: UpdateObjectDetailsDataInput = { ...updatedData };
         setDetails(details => ({ ...details, name: target.value }));
         updatedDataFields.Name = target.value;
+        setUpdatedData(updatedDataFields);
+    };
+
+    const onRetiredUpdate = ({ target }): void => {
+        const updatedDataFields: UpdateObjectDetailsDataInput = { ...updatedData };
+        setDetails(details => ({ ...details, retired: target.checked }));
+        updatedDataFields.Retired = target.checked;
+        setUpdatedData(updatedDataFields);
+    };
+
+    const onLicenseUpdate = ({ target }): void => {
+        const updatedDataFields: UpdateObjectDetailsDataInput = { ...updatedData };
+        setDetails(details => ({ ...details, idLicense: target.value }));
+        updatedDataFields.License = target.value;
         setUpdatedData(updatedDataFields);
     };
 
@@ -368,13 +384,6 @@ function DetailsView(): React.ReactElement {
         }
     };
 
-    const onRetiredUpdate = ({ target }): void => {
-        const updatedDataFields: UpdateObjectDetailsDataInput = { ...updatedData };
-        setDetails(details => ({ ...details, retired: target.checked }));
-        updatedDataFields.Retired = target.checked;
-        setUpdatedData(updatedDataFields);
-    };
-
     return (
         <Box className={classes.container}>
             <DetailsHeader
@@ -393,12 +402,17 @@ function DetailsView(): React.ReactElement {
                     subject={subject}
                     item={item}
                     onRetiredUpdate={onRetiredUpdate}
+                    onLicenseUpdate={onLicenseUpdate}
                     publishedState={publishedState}
                     originalFields={data.getSystemObjectDetails}
                     retired={withDefaultValueBoolean(details.retired, false)}
+                    license={withDefaultValueNumber(details.idLicense, 0)}
                     disabled={disabled}
+                    idSystemObject={idSystemObject}
+                    licenseInherited={licenseInherited}
+                    path={objectAncestors}
                 />
-                <Box display='flex' flex={3} flexDirection='column'>
+                <Box display='flex' flex={2.2} flexDirection='column'>
                     <IdentifierList
                         viewMode
                         disabled={disabled}
