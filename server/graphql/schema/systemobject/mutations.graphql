@@ -121,6 +121,7 @@ input StakeholderDetailFieldsInput {
 input UpdateObjectDetailsDataInput {
     Name: String
     Retired: Boolean
+    License: Int
     Unit: UnitDetailFieldsInput
     Project: ProjectDetailFieldsInput
     Subject: SubjectDetailFieldsInput

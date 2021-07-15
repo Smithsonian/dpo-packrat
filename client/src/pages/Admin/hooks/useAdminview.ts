@@ -11,8 +11,14 @@ import {
     GetSubjectListInput,
     CreateSubjectWithIdentifiersInput,
     CreateSubjectWithIdentifiersDocument,
+    UpdateLicenseDocument,
+    CreateLicenseDocument,
+    UpdateLicenseMutation,
+    CreateLicenseMutation,
+    GetLicenseListDocument
 } from '../../../types/graphql';
 import { CoordinateValues } from '../components/Subject/SubjectForm';
+import { FetchResult } from '@apollo/client';
 
 export async function getUnitsList() {
     return await apolloClient.query({
@@ -77,5 +83,36 @@ export async function createSubjectWithIdentifiers(input: CreateSubjectWithIdent
                 ...input
             }
         }
+    });
+}
+
+export function updateLicense(idLicense: number, Name: string, Description: string, RestrictLevel: number): Promise<FetchResult<UpdateLicenseMutation>> {
+    return apolloClient.mutate({
+        mutation: UpdateLicenseDocument,
+        variables: {
+            input: {
+                idLicense,
+                Name,
+                Description,
+                RestrictLevel
+            }
+        },
+        refetchQueries: [{ query: GetLicenseListDocument, variables: { input: { search: '' } } }],
+        awaitRefetchQueries: true
+    });
+}
+
+export function createLicense(Name: string, Description: string, RestrictLevel: number): Promise<FetchResult<CreateLicenseMutation>> {
+    return apolloClient.mutate({
+        mutation: CreateLicenseDocument,
+        variables: {
+            input: {
+                Name,
+                Description,
+                RestrictLevel
+            }
+        },
+        refetchQueries: [{ query: GetLicenseListDocument, variables: { input: { search: '' } } }],
+        awaitRefetchQueries: true
     });
 }

@@ -328,6 +328,8 @@ export type AccessRole = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  assignLicense: AssignLicenseResult;
+  clearLicenseAssignment: ClearLicenseAssignmentResult;
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
   createGeoLocation: CreateGeoLocationResult;
@@ -352,6 +354,16 @@ export type Mutation = {
   updateSourceObjects: UpdateSourceObjectsResult;
   updateUser: CreateUserResult;
   uploadAsset: UploadAssetResult;
+};
+
+
+export type MutationAssignLicenseArgs = {
+  input: AssignLicenseInput;
+};
+
+
+export type MutationClearLicenseAssignmentArgs = {
+  input: ClearLicenseAssignmentInput;
 };
 
 
@@ -955,6 +967,7 @@ export type AreCameraSettingsUniformResult = {
 export type CreateLicenseInput = {
   Name: Scalars['String'];
   Description: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
 };
 
 export type CreateLicenseResult = {
@@ -966,6 +979,29 @@ export type UpdateLicenseInput = {
   idLicense: Scalars['Int'];
   Name: Scalars['String'];
   Description: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
+};
+
+export type ClearLicenseAssignmentInput = {
+  idSystemObject: Scalars['Int'];
+  clearAll?: Maybe<Scalars['Boolean']>;
+};
+
+export type ClearLicenseAssignmentResult = {
+  __typename?: 'ClearLicenseAssignmentResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type AssignLicenseInput = {
+  idSystemObject: Scalars['Int'];
+  idLicense: Scalars['Int'];
+};
+
+export type AssignLicenseResult = {
+  __typename?: 'AssignLicenseResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
 };
 
 export type GetLicenseInput = {
@@ -991,6 +1027,7 @@ export type License = {
   idLicense: Scalars['Int'];
   Description: Scalars['String'];
   Name: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
   LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
 };
 
@@ -1451,6 +1488,7 @@ export type StakeholderDetailFieldsInput = {
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
+  License?: Maybe<Scalars['Int']>;
   Unit?: Maybe<UnitDetailFieldsInput>;
   Project?: Maybe<ProjectDetailFieldsInput>;
   Subject?: Maybe<SubjectDetailFieldsInput>;
@@ -1728,6 +1766,8 @@ export type GetSystemObjectDetailsResult = {
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  license?: Maybe<License>;
+  licenseInherited?: Maybe<Scalars['Boolean']>;
 };
 
 export type GetSourceObjectIdentiferInput = {

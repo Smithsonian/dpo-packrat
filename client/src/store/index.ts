@@ -14,4 +14,5 @@ export * from './repository';
 export * from './utils';
 export * from './control';
 export * from './identifier';
+export * from './license';
 export * from './detailTab';

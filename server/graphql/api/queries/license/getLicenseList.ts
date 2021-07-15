@@ -7,6 +7,7 @@ const getLicenseList = gql`
                 idLicense
                 Description
                 Name
+                RestrictLevel
             }
         }
     }
