@@ -1,42 +1,26 @@
 /* eslint-disable react-hooks/exhaustive-deps, react/jsx-max-props-per-line */
+
 /**
  * SubjectDetails
  *
  * This component renders details tab for Subject specific details used in DetailsTab component.
  */
 import { Box } from '@material-ui/core';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { DebounceNumberInput, FieldType, InputField, Loader } from '../../../../../components';
 import { ItemDetailFields, SubjectDetailFields } from '../../../../../types/graphql';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
+import { eSystemObjectType } from '../../../../../types/server';
+import { useDetailTabStore } from '../../../../../store';
 
 function SubjectDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
-
-    const [details, setDetails] = useState<SubjectDetailFields>({});
-
-    useEffect(() => {
-        onUpdateDetail(objectType, details);
-    }, [details]);
+    const [SubjectDetails, updateDetailField] = useDetailTabStore(state => [state.SubjectDetails, state.updateDetailField]);
 
     useEffect(() => {
-        if (data && !loading) {
-            const { Subject } = data.getDetailsTabDataForObject;
-            setDetails({
-                Latitude: Subject?.Latitude,
-                Longitude: Subject?.Longitude,
-                Altitude: Subject?.Altitude,
-                TS0: Subject?.TS0,
-                TS1: Subject?.TS1,
-                TS2: Subject?.TS2,
-                R0: Subject?.R0,
-                R1: Subject?.R1,
-                R2: Subject?.R2,
-                R3: Subject?.R3
-            });
-        }
-    }, [data, loading]);
+        onUpdateDetail(objectType, SubjectDetails);
+    }, [SubjectDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -49,15 +33,14 @@ function SubjectDetails(props: DetailComponentProps): React.ReactElement {
         if (value) {
             numberValue = Number.parseInt(value, 10);
         }
-
-        setDetails(details => ({ ...details, [name]: numberValue }));
+        updateDetailField(eSystemObjectType.eSubject, name, numberValue);
+        // setDetails(details => ({ ...details, [name]: numberValue }));
     };
 
     const subjectData = data.getDetailsTabDataForObject?.Subject;
-
     return (
         <Box>
-            <SubjectFields {...details} originalFields={subjectData} disabled={disabled} onChange={onSetField} />
+            <SubjectFields {...SubjectDetails} originalFields={subjectData} disabled={disabled} onChange={onSetField} />
         </Box>
     );
 }
