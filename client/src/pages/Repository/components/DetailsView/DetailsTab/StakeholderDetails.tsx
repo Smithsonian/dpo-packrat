@@ -5,33 +5,20 @@
  * This component renders details tab for Stakeholder specific details used in DetailsTab component.
  */
 import { Box } from '@material-ui/core';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { InputField, Loader } from '../../../../../components';
-import { StakeholderDetailFields } from '../../../../../types/graphql';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
+import { eSystemObjectType } from '../../../../../types/server';
+import { useDetailTabStore } from '../../../../../store';
 
 function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
-
-    const [details, setDetails] = useState<StakeholderDetailFields>({});
-
-    useEffect(() => {
-        onUpdateDetail(objectType, details);
-    }, [details]);
+    const [StakeholderDetails, updateDetailField] = useDetailTabStore(state => [state.StakeholderDetails, state.updateDetailField]);
 
     useEffect(() => {
-        if (data && !loading) {
-            const { Stakeholder } = data.getDetailsTabDataForObject;
-            setDetails({
-                OrganizationName: Stakeholder?.OrganizationName,
-                EmailAddress: Stakeholder?.EmailAddress,
-                PhoneNumberMobile: Stakeholder?.PhoneNumberMobile,
-                PhoneNumberOffice: Stakeholder?.PhoneNumberOffice,
-                MailingAddress: Stakeholder?.MailingAddress,
-            });
-        }
-    }, [data, loading]);
+        onUpdateDetail(objectType, StakeholderDetails);
+    }, [StakeholderDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -39,7 +26,7 @@ function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
-        setDetails(details => ({ ...details, [name]: value }));
+        updateDetailField(eSystemObjectType.eStakeholder, name, value);
     };
 
     const stakeholderData = data.getDetailsTabDataForObject?.Stakeholder;
@@ -49,50 +36,50 @@ function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
             <InputField
                 viewMode
                 required
-                updated={isFieldUpdated(details, stakeholderData, 'OrganizationName')}
+                updated={isFieldUpdated(StakeholderDetails, stakeholderData, 'OrganizationName')}
                 disabled={disabled}
                 label='OrganizationName'
-                value={details?.OrganizationName}
+                value={StakeholderDetails?.OrganizationName}
                 name='OrganizationName'
                 onChange={onSetField}
             />
             <InputField
                 viewMode
                 required
-                updated={isFieldUpdated(details, stakeholderData, 'EmailAddress')}
+                updated={isFieldUpdated(StakeholderDetails, stakeholderData, 'EmailAddress')}
                 disabled={disabled}
                 label='EmailAddress'
-                value={details?.EmailAddress}
+                value={StakeholderDetails?.EmailAddress}
                 name='EmailAddress'
                 onChange={onSetField}
             />
             <InputField
                 viewMode
                 required
-                updated={isFieldUpdated(details, stakeholderData, 'PhoneNumberMobile')}
+                updated={isFieldUpdated(StakeholderDetails, stakeholderData, 'PhoneNumberMobile')}
                 disabled={disabled}
                 label='PhoneNumberMobile'
-                value={details?.PhoneNumberMobile}
+                value={StakeholderDetails?.PhoneNumberMobile}
                 name='PhoneNumberMobile'
                 onChange={onSetField}
             />
             <InputField
                 viewMode
                 required
-                updated={isFieldUpdated(details, stakeholderData, 'PhoneNumberOffice')}
+                updated={isFieldUpdated(StakeholderDetails, stakeholderData, 'PhoneNumberOffice')}
                 disabled={disabled}
                 label='PhoneNumberOffice'
-                value={details?.PhoneNumberOffice}
+                value={StakeholderDetails?.PhoneNumberOffice}
                 name='PhoneNumberOffice'
                 onChange={onSetField}
             />
             <InputField
                 viewMode
                 required
-                updated={isFieldUpdated(details, stakeholderData, 'MailingAddress')}
+                updated={isFieldUpdated(StakeholderDetails, stakeholderData, 'MailingAddress')}
                 disabled={disabled}
                 label='MailingAddress'
-                value={details?.MailingAddress}
+                value={StakeholderDetails?.MailingAddress}
                 name='MailingAddress'
                 onChange={onSetField}
             />

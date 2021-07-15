@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable prefer-const */
 
 /**
@@ -12,11 +13,12 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryDetailsFormStore, useRepositoryStore, useIdentifierStore } from '../../../../store';
+import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
     AssetVersionDetailFieldsInput,
+    CaptureDataDetailFields,
     CaptureDataDetailFieldsInput,
     ItemDetailFieldsInput,
     ModelDetailFieldsInput,
@@ -32,9 +34,7 @@ import {
 import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
-import { updateDetailsTabData, useObjectDetails, deleteIdentifier } from '../../hooks/useDetailsView';
-import { apolloClient } from '../../../../graphql/index';
-import { GetDetailsTabDataForObjectDocument } from '../../../../types/graphql';
+import { updateDetailsTabData, useObjectDetails, deleteIdentifier, getDetailsTabDataForObject } from '../../hooks/useDetailsView';
 import DetailsHeader from './DetailsHeader';
 import DetailsTab, { UpdateDataFields } from './DetailsTab';
 import DetailsThumbnail from './DetailsThumbnail';
@@ -83,6 +83,8 @@ function DetailsView(): React.ReactElement {
     const params = useParams<DetailsParams>();
     const [modalOpen, setModalOpen] = useState(false);
     const [details, setDetails] = useState<DetailsFields>({});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [detailQuery, setDetailQuery] = useState<any>({});
     const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState('');
 
@@ -91,7 +93,6 @@ function DetailsView(): React.ReactElement {
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
 
     const getEntries = useVocabularyStore(state => state.getEntries);
-    const getModelFormState = useRepositoryDetailsFormStore(state => state.getModelFormState);
     const [stateIdentifiers, addNewIdentifier, initializeIdentifierState, removeTargetIdentifier, updateIdentifier, checkIdentifiersBeforeUpdate] = useIdentifierStore(state => [
         state.stateIdentifiers,
         state.addNewIdentifier,
@@ -101,6 +102,11 @@ function DetailsView(): React.ReactElement {
         state.checkIdentifiersBeforeUpdate
     ]);
     const [resetRepositoryFilter, resetKeywordSearch, initializeTree] = useRepositoryStore(state => [state.resetRepositoryFilter, state.resetKeywordSearch, state.initializeTree]);
+    const [initializeDetailFields, getDetail, getDetailsViewFieldErrors] = useDetailTabStore(state => [
+        state.initializeDetailFields,
+        state.getDetail,
+        state.getDetailsViewFieldErrors
+    ]);
     const objectDetailsData = data;
 
     useEffect(() => {
@@ -110,6 +116,19 @@ function DetailsView(): React.ReactElement {
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
         }
     }, [data, loading, initializeIdentifierState]);
+
+    // new function for setting state
+    useEffect(() => {
+        if (data) {
+            const fetchDetailTabDataAndInitializeStateStore = async () => {
+                const detailsTabData = await getDetailsTabDataForObject(idSystemObject, objectType);
+                setDetailQuery(detailsTabData);
+                initializeDetailFields(detailsTabData, objectType);
+            };
+
+            fetchDetailTabDataAndInitializeStateStore();
+        }
+    }, [idSystemObject, data]);
 
     if (!data || !params.idSystemObject) {
         return <ObjectNotFoundView loading={loading} />;
@@ -203,6 +222,7 @@ function DetailsView(): React.ReactElement {
     };
 
     const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
+        // console.log('onUpdateDetail', objectType, data);
         const updatedDataFields: UpdateObjectDetailsDataInput = {
             ...updatedData,
             Name: details.name,
@@ -256,6 +276,7 @@ function DetailsView(): React.ReactElement {
     };
 
     const updateData = async (): Promise<void> => {
+        toast.dismiss();
         setIsUpdatingData(true);
         const identifierCheck = checkIdentifiersBeforeUpdate();
         if (identifierCheck.length) {
@@ -263,78 +284,30 @@ function DetailsView(): React.ReactElement {
             setIsUpdatingData(false);
             return;
         }
+
+        // Create another validation here to make sure that the appropriate SO types are being checked
+        const errors = getDetailsViewFieldErrors(updatedData, objectType);
+        if (errors.length) {
+            errors.forEach(error => toast.error(`Please input a valid ${error}`, { autoClose: false }));
+            setIsUpdatingData(false);
+            return;
+        }
+
         try {
+            // TODO: Model, Scene, and CD are currently updating in a way that
+            // requires the fields to be populated.
             if (objectType === eSystemObjectType.eModel) {
-                const { dateCaptured, creationMethod, modality, purpose, units, fileType } = getModelFormState();
+                const ModelDetails = getDetail(objectType) as ModelDetailsType;
+                const { DateCaptured, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
+
                 updatedData.Model = {
                     Name: updatedData?.Name,
-                    CreationMethod: creationMethod,
-                    Modality: modality,
-                    Purpose: purpose,
-                    Units: units,
-                    ModelFileType: fileType,
-                    DateCaptured: dateCaptured
-                };
-            }
-
-            if (objectType === eSystemObjectType.eSubject && !updatedData.Subject) {
-                const {
-                    data: {
-                        getDetailsTabDataForObject: {
-                            Subject: { Altitude, Longitude, Latitude, R0, R1, R2, R3, TS0, TS1, TS2 }
-                        }
-                    }
-                } = await apolloClient.query({
-                    query: GetDetailsTabDataForObjectDocument,
-                    variables: {
-                        input: {
-                            idSystemObject,
-                            objectType
-                        }
-                    }
-                });
-                updatedData.Subject = {
-                    Latitude,
-                    Longitude,
-                    Altitude,
-                    R0,
-                    R1,
-                    R2,
-                    R3,
-                    TS0,
-                    TS1,
-                    TS2
-                };
-            }
-
-            if (objectType === eSystemObjectType.eItem && !updatedData.Item) {
-                const {
-                    data: {
-                        getDetailsTabDataForObject: {
-                            Item: { Altitude, Longitude, Latitude, R0, R1, R2, R3, TS0, TS1, TS2, EntireSubject }
-                        }
-                    }
-                } = await apolloClient.query({
-                    query: GetDetailsTabDataForObjectDocument,
-                    variables: {
-                        input: {
-                            idSystemObject,
-                            objectType
-                        }
-                    }
-                });
-                updatedData.Item = {
-                    Latitude,
-                    Longitude,
-                    Altitude,
-                    R0,
-                    R1,
-                    R2,
-                    R3,
-                    TS0,
-                    TS1,
-                    TS2,
-                    EntireSubject
+                    CreationMethod: idVCreationMethod,
+                    Modality: idVModality,
+                    Purpose: idVPurpose,
+                    Units: idVUnits,
+                    ModelFileType: idVFileType,
+                    DateCaptured
                 };
             }
 
@@ -344,38 +317,26 @@ function DetailsView(): React.ReactElement {
             }
 
             if (objectType === eSystemObjectType.eCaptureData && !updatedData.CaptureData) {
+                const CaptureDataDetails = getDetail(objectType) as CaptureDataDetailFields;
                 const {
-                    data: {
-                        getDetailsTabDataForObject: {
-                            CaptureData: {
-                                captureMethod,
-                                dateCaptured,
-                                datasetType,
-                                systemCreated,
-                                description,
-                                cameraSettingUniform,
-                                datasetFieldId,
-                                itemPositionType,
-                                itemPositionFieldId,
-                                itemArrangementFieldId,
-                                focusType,
-                                lightsourceType,
-                                backgroundRemovalMethod,
-                                clusterType,
-                                clusterGeometryFieldId,
-                                folders
-                            }
-                        }
-                    }
-                } = await apolloClient.query({
-                    query: GetDetailsTabDataForObjectDocument,
-                    variables: {
-                        input: {
-                            idSystemObject,
-                            objectType
-                        }
-                    }
-                });
+                    captureMethod,
+                    dateCaptured,
+                    datasetType,
+                    systemCreated,
+                    description,
+                    cameraSettingUniform,
+                    datasetFieldId,
+                    itemPositionType,
+                    itemPositionFieldId,
+                    itemArrangementFieldId,
+                    focusType,
+                    lightsourceType,
+                    backgroundRemovalMethod,
+                    clusterType,
+                    clusterGeometryFieldId,
+                    folders
+                } = CaptureDataDetails;
+
                 updatedData.CaptureData = {
                     captureMethod,
                     dateCaptured,
@@ -475,6 +436,7 @@ function DetailsView(): React.ReactElement {
                     onAddDerivedObject={onAddDerivedObject}
                     onUpdateDetail={onUpdateDetail}
                     objectVersions={objectVersions}
+                    detailQuery={detailQuery}
                 />
                 <Box display='flex' flex={1} padding={2}>
                     <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />
