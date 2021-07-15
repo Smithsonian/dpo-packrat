@@ -7,8 +7,8 @@ export default async function createLicense(_: Parent, args: MutationClearLicens
         input: { idSystemObject, clearAll }
     } = args;
 
-    const clearAssignmentSuccess = await DBAPI.LicenseManager.clearAssignment(idSystemObject, clearAll || undefined);
+    const clearAssignmentSuccess = await DBAPI.LicenseManager.clearAssignment(idSystemObject, clearAll ?? undefined);
     if (clearAssignmentSuccess) return { success: true, message: '' };
 
-    return { success: false, message: 'Error in clearing assignment' };
+    return { success: false, message: 'There was an error clearing the assigned license. Please try again.' };
 }
