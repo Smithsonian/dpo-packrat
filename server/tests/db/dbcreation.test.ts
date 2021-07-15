@@ -4094,6 +4094,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eVocabulary)).toEqual('Vocabulary');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eVocabularySet)).toEqual('VocabularySet');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eWorkflow)).toEqual('Workflow');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eWorkflowReport)).toEqual('WorkflowReport');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eWorkflowStep)).toEqual('WorkflowStep');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eWorkflowStepSystemObjectXref)).toEqual('WorkflowStepSystemObjectXref');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUnknown)).toEqual('Unknown');
@@ -4183,6 +4184,8 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectNameToType('VocabularySet')).toEqual(DBAPI.eNonSystemObjectType.eVocabularySet);
         expect(DBAPI.DBObjectNameToType('Vocabulary Set')).toEqual(DBAPI.eNonSystemObjectType.eVocabularySet);
         expect(DBAPI.DBObjectNameToType('Workflow')).toEqual(DBAPI.eNonSystemObjectType.eWorkflow);
+        expect(DBAPI.DBObjectNameToType('WorkflowReport')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowReport);
+        expect(DBAPI.DBObjectNameToType('Workflow Report')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowReport);
         expect(DBAPI.DBObjectNameToType('WorkflowStep')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStep);
         expect(DBAPI.DBObjectNameToType('Workflow Step')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStep);
         expect(DBAPI.DBObjectNameToType('WorkflowStepSystemObjectXref')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStepSystemObjectXref);
