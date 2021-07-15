@@ -101,6 +101,8 @@ type AccessRole {
 scalar Upload
 
 type Mutation {
+  assignLicense(input: AssignLicenseInput!): AssignLicenseResult!
+  clearLicenseAssignment(input: ClearLicenseAssignmentInput!): ClearLicenseAssignmentResult!
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
   createGeoLocation(input: CreateGeoLocationInput!): CreateGeoLocationResult!
@@ -590,6 +592,26 @@ input UpdateLicenseInput {
   RestrictLevel: Int!
 }
 
+input ClearLicenseAssignmentInput {
+  idSystemObject: Int!
+  clearAll: Boolean
+}
+
+type ClearLicenseAssignmentResult {
+  success: Boolean!
+  message: String!
+}
+
+input AssignLicenseInput {
+  idSystemObject: Int!
+  idLicense: Int!
+}
+
+type AssignLicenseResult {
+  success: Boolean!
+  message: String!
+}
+
 input GetLicenseInput {
   idLicense: Int!
 }
@@ -1047,6 +1069,7 @@ input StakeholderDetailFieldsInput {
 input UpdateObjectDetailsDataInput {
   Name: String
   Retired: Boolean
+  License: Int
   Unit: UnitDetailFieldsInput
   Project: ProjectDetailFieldsInput
   Subject: SubjectDetailFieldsInput
