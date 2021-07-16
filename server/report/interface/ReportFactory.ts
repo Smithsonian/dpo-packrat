@@ -40,8 +40,10 @@ export class ReportFactory {
             }
         }
 
-        if (workflowReport)
+        if (workflowReport) {
+            LS.idWorkflowReport = workflowReport.idWorkflowReport;
             return new Report(workflowReport);
+        }
         LOG.error('ReportFactory.getReport() unable to locate active workflow report from LocalStorage', LOG.LS.eRPT);
         return null;
     }
