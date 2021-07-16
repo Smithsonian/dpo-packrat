@@ -59,6 +59,13 @@ const getSystemObjectDetails = gql`
                 PublishedState
                 DateCreated
             }
+            licenseInherited
+            license {
+                idLicense
+                Name
+                Description
+                RestrictLevel
+            }
         }
     }
 `;
