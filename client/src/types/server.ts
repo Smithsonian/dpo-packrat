@@ -230,7 +230,6 @@ export const subjectUnitIdentifierStringToEnum = (col: string): eSubjectUnitIden
         case 'Unit': return eSubjectUnitIdentifierSortColumns.eUnitAbbreviation;
         case 'Name': return eSubjectUnitIdentifierSortColumns.eSubjectName;
         case 'Identifier': return eSubjectUnitIdentifierSortColumns.eIdentifierValue;
-        default:
-        case '' || null: return eSubjectUnitIdentifierSortColumns.eDefault;
+        default: return eSubjectUnitIdentifierSortColumns.eDefault;
     }
 };
