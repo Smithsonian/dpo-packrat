@@ -6,6 +6,7 @@ import * as COOK from '../../../job/impl/Cook';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
+import { ASL, LocalStore } from '../../../utils/localStore';
 import * as H from '../../../utils/helpers';
 import path from 'path';
 import * as L from 'lodash';
@@ -445,6 +446,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         WFC.workflowStep = [];
         WFC.workflowStep.push(workflowStep);
 
+        this.setActiveWorkflowStep(workflowStep);
+
         // *****************************************************
         // WorkflowStepSystemObjectXref for linked system objects
         let workflowStepXref: DBAPI.WorkflowStepSystemObjectXref[] | null = null;
@@ -653,5 +656,13 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             assetVersionDiffuse: CMIR.assetVersionDiffuse, assetVersionMTL: CMIR.assetVersionMTL };
         LOG.info(`WorkflowEngine.computeSceneInfo returning ${JSON.stringify(retValue, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         return retValue;
+    }
+
+    private setActiveWorkflowStep(workflowStep: DBAPI.WorkflowStep): void {
+        const LS: LocalStore | undefined = ASL.getStore();
+        if (LS) {
+            LS.idWorkflow = workflowStep.idWorkflow;
+            LS.idWorkflowStep = workflowStep.idWorkflowStep;
+        }
     }
 }

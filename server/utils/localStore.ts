@@ -6,6 +6,9 @@ export const ASL: AsyncLocalStorage<LocalStore> = new AsyncLocalStorage<LocalSto
 export class LocalStore {
     idRequest: number;
     idUser: number | null; // User.idUser
+    idWorkflow?: number | undefined;
+    idWorkflowStep?: number | undefined;
+    idWorkflowReport?: number | undefined;
 
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {
