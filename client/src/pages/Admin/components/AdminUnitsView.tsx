@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Tooltip, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { DataGrid, Columns } from '@material-ui/data-grid';
+import { DataGrid, GridColumns } from '@material-ui/data-grid';
 import { useLocation } from 'react-router';
 import { GetUnitsFromNameSearchDocument, GetUnitsFromNameSearchResult } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
@@ -106,7 +106,7 @@ function AdminUnitsList({ units }): React.ReactElement {
         };
     });
 
-    const columnHeader: Columns = [
+    const columnHeader: GridColumns = [
         {
             field: 'Abbreviation',
             headerName: 'Abbreviation',
@@ -118,8 +118,8 @@ function AdminUnitsList({ units }): React.ReactElement {
             headerName: 'Name',
             flex: 4,
             renderCell: params => (
-                <Tooltip placement='left' title={`${params.getValue('Name')}`} arrow>
-                    <div>{`${params.getValue('Name')}`}</div>
+                <Tooltip placement='left' title={`${params.row.Name}`} arrow>
+                    <div>{`${params.row.Name}`}</div>
                 </Tooltip>
             )
         },

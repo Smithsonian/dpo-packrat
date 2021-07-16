@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Box, TextField, Button, FormControl, Select, MenuItem } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { DataGrid, Columns, SortModel, SortModelParams, PageChangeParams } from '@material-ui/data-grid';
+import { DataGrid, GridColumns, GridSortModel, GridSortModelParams, GridPageChangeParams } from '@material-ui/data-grid';
 
 const useStyles = makeStyles({
     Container: {
@@ -103,7 +103,7 @@ export type PaginationSettings = {
 };
 
 export type SortSettings = {
-    sortModel: SortModel;
+    sortModel: GridSortModel;
 };
 
 // TODO: include additional prop for styling
@@ -114,11 +114,11 @@ type DataGridWithPaginationProps = {
     PaginationSettings: PaginationSettings;
     SortSettings: SortSettings;
     rows: any[];
-    columnHeader: Columns;
+    columnHeader: GridColumns;
     loading: boolean;
-    handlePaginationChange: (params: PageChangeParams) => void;
+    handlePaginationChange: (params: GridPageChangeParams) => void;
     handleDropDownChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    handleSortChange: (params: SortModelParams) => void;
+    handleSortChange: (params: GridSortModelParams) => void;
     handleSearchKeywordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleSearch: () => void;
 };
