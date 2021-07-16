@@ -19,6 +19,7 @@ export enum LS { // logger section
     eHTTP,  // http
     eJOB,   // job
     eNAV,   // navigation
+    eRPT,   // report
     eSTR,   // storage
     eSYS,   // system/utilities
     eTEST,  // test code
@@ -51,6 +52,7 @@ function loggerSectionName(eLogSection: LS | undefined): string {
         case LS.eHTTP:  return 'HTP';
         case LS.eJOB:   return 'JOB';
         case LS.eNAV:   return 'NAV';
+        case LS.eRPT:   return 'RPT';
         case LS.eSTR:   return 'STR';
         case LS.eSYS:   return 'SYS';
         case LS.eTEST:  return 'tst';
