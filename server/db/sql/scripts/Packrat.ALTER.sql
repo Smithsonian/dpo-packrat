@@ -75,4 +75,17 @@ ADD CONSTRAINT `fk_workflowreport_workflow1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
+-- 2021-07-16 Jon
+CREATE TABLE IF NOT EXISTS `WorkflowSet` (
+  `idWorkflowSet` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`idWorkflowSet`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
+ALTER TABLE Workflow ADD COLUMN idWorkflowSet int(11) DEFAULT NULL;
+
+ALTER TABLE `Workflow` 
+ADD CONSTRAINT `fk_workflow_workflowset1`
+  FOREIGN KEY (`idWorkflowSet`)
+  REFERENCES `WorkflowSet` (`idWorkflowSet`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
