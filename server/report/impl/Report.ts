@@ -9,7 +9,7 @@ export class Report implements IReport {
     }
 
     async append(content: string): Promise<H.IOResults> {
-        const seperator: string = (this._workflowReport.Data) ? '\n' : '';
+        const seperator: string = (this._workflowReport.Data) ? '<br/>\n' : '';
         this._workflowReport.Data += seperator + content;
         if (await this._workflowReport.update())
             return { success: true, error: '' };

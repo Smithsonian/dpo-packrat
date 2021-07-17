@@ -29,7 +29,7 @@ export class ReportFactory {
             else {
                 workflowReport = new DBAPI.WorkflowReport({
                     idWorkflow: LS.idWorkflow,
-                    MimeType: 'text/plain;charset=UTF-8',
+                    MimeType: 'text/html',
                     Data: '',
                     idWorkflowReport: 0
                 });

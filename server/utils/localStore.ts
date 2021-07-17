@@ -7,6 +7,7 @@ export class LocalStore {
     idRequest: number;
     idUser: number | null; // User.idUser
     idWorkflow?: number | undefined;
+    idWorkflowSet?: number | undefined;
     idWorkflowStep?: number | undefined;
     idWorkflowReport?: number | undefined;
 
