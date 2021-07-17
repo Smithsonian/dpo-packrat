@@ -1,12 +1,13 @@
 /* eslint-disable camelcase */
 import { Workflow as WorkflowBase } from '@prisma/client';
-import { WorkflowStep, WorkflowStepSystemObjectXref } from '..';
+import { WorkflowSet, WorkflowStep, WorkflowStepSystemObjectXref } from '..';
 import * as DBC from '../connection';
 import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 
 export class WorkflowConstellation {
     workflow: Workflow | null = null;
+    workflowSet: WorkflowSet | null = null;
     workflowStep: WorkflowStep[] | null = null;
     workflowStepXref: WorkflowStepSystemObjectXref[] | null = null;
 
@@ -16,6 +17,14 @@ export class WorkflowConstellation {
         if (!WFC.workflow) {
             LOG.error(`WorkflowConstellation.fetch failed to retrieve Workflow ${idWorkflow}`, LOG.LS.eDB);
             return null;
+        }
+
+        if (WFC.workflow.idWorkflowSet) {
+            WFC.workflowSet = await WorkflowSet.fetch(WFC.workflow.idWorkflowSet); /* istanbul ignore next */
+            if (!WFC.workflowSet) {
+                LOG.error(`WorkflowConstellation.fetch failed to retrieve WorkflowSet ${WFC.workflow.idWorkflowSet}`, LOG.LS.eDB);
+                return null;
+            }
         }
 
         WFC.workflowStep = await WorkflowStep.fetchFromWorkflow(idWorkflow); /* istanbul ignore next */
@@ -41,6 +50,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
     DateInitiated!: Date;
     DateUpdated!: Date;
     Parameters!: string | null;
+    idWorkflowSet!: number | null;
 
     constructor(input: WorkflowBase) {
         super(input);
@@ -51,10 +61,10 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idVWorkflowType, idProject, idUserInitiator, DateInitiated, DateUpdated, Parameters } = this;
+            const { idVWorkflowType, idProject, idUserInitiator, DateInitiated, DateUpdated, Parameters, idWorkflowSet } = this;
             ({ idWorkflow: this.idWorkflow, idVWorkflowType: this.idVWorkflowType, idProject: this.idProject,
                 idUserInitiator: this.idUserInitiator, DateInitiated: this.DateInitiated, DateUpdated: this.DateUpdated,
-                Parameters: this.Parameters } =
+                Parameters: this.Parameters, idWorkflowSet: this.idWorkflowSet } =
                 await DBC.DBConnection.prisma.workflow.create({
                     data: {
                         Vocabulary:    { connect: { idVocabulary: idVWorkflowType }, },
@@ -63,6 +73,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
                         DateInitiated,
                         DateUpdated,
                         Parameters,
+                        WorkflowSet:    idWorkflowSet ? { connect: { idWorkflowSet }, } : undefined,
                     },
                 }));
             return true;
@@ -75,7 +86,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflow, idVWorkflowType, idProject, idUserInitiator, DateInitiated,
-                DateUpdated, Parameters } = this;
+                DateUpdated, Parameters, idWorkflowSet } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.workflow.update({
                 where: { idWorkflow, },
                 data: {
@@ -84,7 +95,8 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
                     User:           idUserInitiator ? { connect: { idUser: idUserInitiator }, } : { disconnect: true, },
                     DateInitiated,
                     DateUpdated,
-                    Parameters
+                    Parameters,
+                    WorkflowSet:    idWorkflowSet ? { connect: { idWorkflowSet }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -147,6 +159,18 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
                 await DBC.DBConnection.prisma.workflow.findMany({ where: { idVWorkflowType } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Workflow.fetchFromWorkflowType', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchFromWorkflowSet(idWorkflowSet: number): Promise<Workflow[] | null> {
+        if (!idWorkflowSet)
+            return null;
+        try {
+            return DBC.CopyArray<WorkflowBase, Workflow>(
+                await DBC.DBConnection.prisma.workflow.findMany({ where: { idWorkflowSet } }), Workflow);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Workflow.fetchFromWorkflowSet', LOG.LS.eDB, error);
             return null;
         }
     }
