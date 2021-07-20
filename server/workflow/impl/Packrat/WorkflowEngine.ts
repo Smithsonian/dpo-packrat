@@ -2,6 +2,7 @@
 import * as WF from '../../interface';
 import * as WFP from '../../../workflow/impl/Packrat';
 import { WorkflowJob } from './WorkflowJob';
+import { WorkflowIngestion } from './WorkflowIngestion';
 import * as COOK from '../../../job/impl/Cook';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
@@ -473,7 +474,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
     private async fetchWorkflowImpl(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WF.IWorkflow | null> {
         switch (workflowParams.eWorkflowType) {
-            case CACHE.eVocabularyID.eWorkflowTypeCookJob: return await WorkflowJob.constructWorkflowJob(workflowParams, WFC);
+            case CACHE.eVocabularyID.eWorkflowTypeCookJob: return await WorkflowJob.constructWorkflow(workflowParams, WFC);
+            case CACHE.eVocabularyID.eWorkflowTypeIngestion: return await WorkflowIngestion.constructWorkflow(workflowParams, WFC);
         }
         return null;
     }
