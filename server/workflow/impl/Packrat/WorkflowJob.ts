@@ -29,7 +29,7 @@ export class WorkflowJob implements WF.IWorkflow {
     private complete: boolean = false;
     private results: H.IOResults = { success: false, error: 'Workflow Job Not Initialized' };
 
-    static async constructWorkflowJob(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowJob | null> {
+    static async constructWorkflow(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowJob | null> {
         const workflowJob: WorkflowJob = new WorkflowJob(workflowParams, WFC);
         const res: H.IOResults = await workflowJob.extractParameters();
         if (!res.success)
