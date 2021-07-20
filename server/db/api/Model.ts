@@ -164,6 +164,23 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         }
     }
 
+    static async fetchByFileNameAndAssetType(FileName: string, idVAssetTypes: number[]): Promise<Model[] | null> {
+        try {
+            return DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.$queryRaw<Model[]>`
+                SELECT DISTINCT M.*
+                FROM Model AS M
+                JOIN SystemObject AS SOM ON (M.idModel = SOM.idModel)
+                JOIN Asset AS ASS ON (SOM.idSystemObject = ASS.idSystemObject)
+                JOIN AssetVersion AS ASV ON (ASS.idAsset = ASV.idAsset)
+                WHERE ASV.FileName = ${FileName}
+                  AND ASS.idVAssetType IN (${Prisma.join(idVAssetTypes)})`, Model);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchByFileNameAndAssetType', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
     static async fetchByFileNameSizeAndAssetType(FileName: string, StorageSize: BigInt, idVAssetTypes: number[]): Promise<Model[] | null> {
         try {
             return DBC.CopyArray<ModelBase, Model>(
