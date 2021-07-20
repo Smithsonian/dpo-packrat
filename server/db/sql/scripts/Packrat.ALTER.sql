@@ -89,3 +89,6 @@ ADD CONSTRAINT `fk_workflow_workflowset1`
   REFERENCES `WorkflowSet` (`idWorkflowSet`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
+
+-- 2021-07-20 Jon
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 2, 'Ingestion');
