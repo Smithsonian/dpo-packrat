@@ -3,6 +3,7 @@ import {
     IngestSubjectInput, IngestItemInput, IngestIdentifierInput, User,
     IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput
 } from '../../../../../types/graphql';
+import { ResolverBase, IWorkflowHelper } from '../../../ResolverBase';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
@@ -15,17 +16,12 @@ import * as REP from '../../../../../report/interface';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
+import { RouteBuilder } from '../../../../../http/routes/routeBuilder';
 
 type AssetPair = {
     asset: DBAPI.Asset;
     assetVersion: DBAPI.AssetVersion | undefined;
 };
-
-interface IWorkflowHelper extends H.IOResults {
-    workflowEngine?: WF.IWorkflowEngine | null | undefined;
-    workflowIngestion?: WF.IWorkflow | null | undefined;
-    workflowReport?: REP.IReport | null | undefined;
-}
 
 export default async function ingestData(_: Parent, args: MutationIngestDataArgs, context: Context): Promise<IngestDataResult> {
     const { input } = args;
@@ -34,7 +30,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     return await ingestDataWorker.ingest();
 }
 
-class IngestDataWorker {
+class IngestDataWorker extends ResolverBase {
     private input: IngestDataInput;
     private user: User | undefined;
     private vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
@@ -47,27 +43,36 @@ class IngestDataWorker {
     private ingestUpdate: boolean = false;
     private assetVersionSet: Set<number> = new Set<number>(); // set of idAssetVersions
 
-    private workflowHelper: IWorkflowHelper | undefined = undefined;
     private assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>();       // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
     private ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>();    // map from idAssetVersion -> photogrammetry input
 
     constructor(input: IngestDataInput, user: User | undefined) {
+        super();
         this.input = input;
         this.user = user;
     }
 
     async ingest(): Promise<IngestDataResult> {
-        LOG.info(`ingestData: input=${JSON.stringify(this.input, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-        const results: H.IOResults = this.validateInput();
-        this.workflowHelper = await this.createIngestionWorkflow();
+        const IDR: IngestDataResult = await this.ingestWorker();
+        if (IDR.success)
+            await this.appendToWFReport('<b>Ingest validation succeeded</b>');
+        else
+            await this.appendToWFReport(`<b>Ingest validation failed</b>: ${IDR.message}`);
+        return IDR;
+    }
 
-        if (!results.success) {
-            await this.appendToWFReport(`<b>Ingest validation failed</b>: ${results.error}`);
-            return { success: false, message: results.error };
-        }
+    private async ingestWorker(): Promise<IngestDataResult> {
+        LOG.info(`ingestData: input=${JSON.stringify(this.input, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+
+        const results: H.IOResults = this.validateInput();
+        this.workflowHelper = await this.createWorkflow(); // do this *after* this.validateInput, and *before* returning from validation failure
+        if (!results.success)
+            return results;
 
         let itemDB: DBAPI.Item | null = null;
         if (this.ingestNew) {
+            await this.appendToWFReport('Ingesting content for new object');
+
             // retrieve/create subjects; if creating subjects, create related objects (Identifiers, possibly UnitEdan records, though unlikely)
             const subjectsDB: DBAPI.Subject[] = [];
             for (const subject of this.input.subjects) {
@@ -82,21 +87,25 @@ class IngestDataWorker {
 
                 if (!subjectDB)
                     return { success: false, message: 'failure to retrieve or create subject' };
+
                 subjectsDB.push(subjectDB);
             }
 
             // wire projects to subjects
             if (this.input.project.id && !(await this.wireProjectToSubjects(this.input.project.id, subjectsDB)))
                 return { success: false, message: 'failure to wire project to subjects' };
+            await this.appendToWFReport(`Packrat Project: ${this.input.project.name}`);
 
             itemDB = await this.fetchOrCreateItem(this.input.item);
             if (!itemDB)
                 return { success: false, message: 'failure to retrieve or create item' };
+            await this.appendToWFReport(`Packrat Item: ${itemDB.Name}`);
 
             // wire subjects to item
             if (!await this.wireSubjectsToItem(subjectsDB, itemDB))
                 return { success: false, message: 'failure to wire subjects to item' };
-        }
+        } else
+            await this.appendToWFReport('Ingesting content for updated object');
 
         if (this.ingestPhotogrammetry) {
             for (const photogrammetry of this.input.photogrammetry) {
@@ -179,6 +188,7 @@ class IngestDataWorker {
                 }
             }
         }
+
         return true;
     }
 
@@ -194,15 +204,13 @@ class IngestDataWorker {
         if (!identifier) {
             // create system identifier when needed
             const arkId: string = ICOL.generateArk(null, false);
-            const identifierSystemDB: DBAPI.Identifier | null = await this.createIdentifier(arkId, SO, null);
+            const identifierSystemDB: DBAPI.Identifier | null = await this.createIdentifier(arkId, SO, null, true);
             if (!identifierSystemDB) {
                 LOG.error(`ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
                 return false;
             } else
                 return true;
-        } else {
-            // use identifier provided by use
-
+        } else { // use identifier provided by user
             // compute identifier; for ARKs, extract the ID from a URL that may be housing the ARK ID
             const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
             if (!vocabularyARK)
@@ -223,14 +231,15 @@ class IngestDataWorker {
                 return false;
             }
 
-            const identifierDB: DBAPI.Identifier | null = await this.createIdentifier(IdentifierValue, SO, identifier.identifierType);
+            const identifierDB: DBAPI.Identifier | null = await this.createIdentifier(IdentifierValue, SO, identifier.identifierType, false);
             if (!identifierDB)
                 return false;
         }
         return true;
     }
 
-    private async createIdentifier(identifierValue: string, SO: DBAPI.SystemObject | null, idVIdentifierType: number | null): Promise<DBAPI.Identifier | null> {
+    private async createIdentifier(identifierValue: string, SO: DBAPI.SystemObject | null,
+        idVIdentifierType: number | null, systemGenerated: boolean): Promise<DBAPI.Identifier | null> {
         if (!idVIdentifierType) {
             const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
             if (!vocabularyARK)
@@ -246,9 +255,12 @@ class IngestDataWorker {
         });
 
         if (!await identifier.create()) {
-            LOG.error(`ingestData unable to create identifier record for subject's arkId ${identifierValue}`, LOG.LS.eGQL);
+            const error: string = `ingestData unable to create identifier record for subject's identifier ${identifierValue}`;
+            await this.appendToWFReport(`Identifier: ${identifierValue} (${systemGenerated ? 'system generated' : 'user-supplied'}) <b>creation failed</b>`);
+            LOG.error(error, LOG.LS.eGQL);
             return null;
         }
+        await this.appendToWFReport(`Identifier: ${identifierValue} (${systemGenerated ? 'system generated' : 'user-supplied'})`);
         return identifier;
     }
 
@@ -317,6 +329,8 @@ class IngestDataWorker {
             LOG.error(`ingestData called with invalid subject's unit ${subject.unit}`, LOG.LS.eGQL);
             return null;
         }
+
+        await this.appendToWFReport(`Subject ${subject.name} (ARK ID ${subject.arkId}) validated`);
         return subjectDB;
     }
 
@@ -329,7 +343,7 @@ class IngestDataWorker {
         // create identifier
         let identifier: DBAPI.Identifier | null = null;
         if (subject.arkId) {
-            identifier = await this.createIdentifier(subject.arkId, null, null);
+            identifier = await this.createIdentifier(subject.arkId, null, null, true);
             if (!identifier)
                 return null;
         }
@@ -338,6 +352,7 @@ class IngestDataWorker {
         const subjectDB: DBAPI.Subject | null = await this.createSubject(unit.idUnit, subject.name, identifier);
         if (!subjectDB)
             return null;
+        await this.appendToWFReport(`Subject ${subject.name} (ARK ID ${subject.arkId}) created`);
 
         // update identifier, if it exists with systemobject ID of our subject
         if (!await this.updateSubjectIdentifier(identifier, subjectDB))
@@ -419,6 +434,10 @@ class IngestDataWorker {
             LOG.error(`ingestData unable to create CaptureData for photogrammetry data ${JSON.stringify(photogrammetry)}`, LOG.LS.eGQL);
             return false;
         }
+        const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromCaptureData(captureDataDB);
+        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
+        const href: string = H.Helpers.computeHref(path, captureDataDB.Name);
+        await this.appendToWFReport(`CaptureData Photogrammetry: ${href}`);
 
         const captureDataPhotoDB: DBAPI.CaptureDataPhoto = new DBAPI.CaptureDataPhoto({
             idVCaptureDatasetType: photogrammetry.datasetType,
@@ -588,6 +607,11 @@ class IngestDataWorker {
         }
         modelDB = JCOutput.modelConstellation.Model; // retrieve again, as we may have swapped the object above, in JCOutput.persist
 
+        const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(modelDB);
+        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
+        const href: string = H.Helpers.computeHref(path, modelDB.Name);
+        await this.appendToWFReport(`Model: ${href}`);
+
         if (!await this.handleIdentifiers(modelDB, model.systemCreated, model.identifiers))
             return false;
 
@@ -654,6 +678,11 @@ class IngestDataWorker {
         sceneDB.IsOriented = scene.isOriented;
         LOG.info(`ingestData createSceneObjects, updateMode=${updateMode}, sceneDB=${JSON.stringify(sceneDB, H.Helpers.saferStringify)}, sceneConstellation=${JSON.stringify(sceneConstellation, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         let success: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
+
+        const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(sceneDB);
+        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
+        const href: string = H.Helpers.computeHref(path, sceneDB.Name);
+        await this.appendToWFReport(`Scene: ${href}`);
 
         if (!await this.handleIdentifiers(sceneDB, scene.systemCreated, scene.identifiers))
             return { success: false };
@@ -813,21 +842,37 @@ class IngestDataWorker {
                 idSystemObject: null,
                 opInfo,
             };
+
             const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
-            if (!ISR.success)
+            if (!ISR.success) {
                 LOG.error(`ingestData unable to ingest assetVersion ${idAssetVersion}: ${ISR.error}`, LOG.LS.eGQL);
-            else if (ISR.assets) {
-                // Handle complex ingestion, such as ingestion of a scene package as a zip file.
-                // In this case, we will receive the scene .svx.json file, supporting HTML, images, CSS, as well as models.
-                // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
-                if (SOBased instanceof DBAPI.Scene) {
-                    const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, ISR);
-                    if (success && modelTransformUpdated)
-                        transformUpdated = true;
+                await this.appendToWFReport(`<b>Asset Ingestion Failed</b>: ${ISR.error}`);
+            } else {
+                if (ISR.assetVersions) {
+                    for (const assetVersion of ISR.assetVersions) {
+                        const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
+                        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
+                        const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName);
+                        const pathDownload: string = RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion);
+                        const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Download');
+                        await this.appendToWFReport(`Ingested ${hrefObject}: ${hrefDownload}`);
+                    }
+                }
+                if (ISR.assets) {
+                    // Handle complex ingestion, such as ingestion of a scene package as a zip file.
+                    // In this case, we will receive the scene .svx.json file, supporting HTML, images, CSS, as well as models.
+                    // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
+                    if (SOBased instanceof DBAPI.Scene) {
+                        const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, ISR);
+                        if (success && modelTransformUpdated)
+                            transformUpdated = true;
+                    }
                 }
             }
             ingestResMap.set(idAssetVersion, ISR);
         }
+        if (transformUpdated)
+            await this.appendToWFReport('Scene ingested with Model Transform(s) Updated');
         return { ingestResMap, transformUpdated };
     }
 
@@ -866,6 +911,8 @@ class IngestDataWorker {
                 idUserInitiator: user.idUser,
                 parameters: modelTransformUpdated ? { modelTransformUpdated } : null
             };
+
+            await this.appendToWFReport('Sending WorkflowEngine IngestObject event');
 
             // send workflow engine event, but don't wait for results
             workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);
@@ -1160,10 +1207,10 @@ class IngestDataWorker {
         });
     }
 
-    private async createIngestionWorkflow(): Promise<IWorkflowHelper> {
+    private async createWorkflow(): Promise<IWorkflowHelper> {
         const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
         if (!workflowEngine) {
-            const error: string = 'ingestData createIngestionWorkflow could not load WorkflowEngine';
+            const error: string = 'ingestData createWorkflow could not load WorkflowEngine';
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
@@ -1179,7 +1226,7 @@ class IngestDataWorker {
             if (SOI)
                 idSystemObject.push(SOI.idSystemObject);
             else
-                LOG.error(`ingestData createIngestionWorkflow unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData createWorkflow unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
         }
 
         const wfParams: WF.WorkflowParameters = {
@@ -1190,26 +1237,14 @@ class IngestDataWorker {
             parameters: null,
         };
 
-        const workflowIngestion: WF.IWorkflow | null = await workflowEngine.create(wfParams);
-        if (!workflowIngestion) {
-            const error: string = `ingestData createIngestionWorkflow unable to create Ingestion workflow: ${JSON.stringify(wfParams)}`;
+        const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
+        if (!workflow) {
+            const error: string = `ingestData createWorkflow unable to create Ingestion workflow: ${JSON.stringify(wfParams)}`;
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
 
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
-        if (!workflowReport) {
-            const error: string = 'ingestData createIngestionWorkflow unable to fetch workflow report';
-            LOG.error(error, LOG.LS.eGQL);
-            return { success: false, error };
-        }
-
-        return { success: true, error: '', workflowEngine, workflowIngestion, workflowReport };
-    }
-
-    private async appendToWFReport(content: string): Promise<H.IOResults> {
-        if (!this.workflowHelper || !this.workflowHelper.workflowReport)
-            return { success: false, error: 'No Active WorkflowReport' };
-        return await this.workflowHelper.workflowReport.append(content);
+        return { success: true, error: '', workflowEngine, workflow, workflowReport };
     }
 }

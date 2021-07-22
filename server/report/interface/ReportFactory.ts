@@ -14,34 +14,36 @@ export class ReportFactory {
             return null;
         }
 
-        if (LS.idWorkflowReport) {
-            workflowReport = await DBAPI.WorkflowReport.fetch(LS.idWorkflowReport);
+        const idWorkflowReport: number | undefined = LS.getWorkflowReportID();
+        if (idWorkflowReport) {
+            workflowReport = await DBAPI.WorkflowReport.fetch(idWorkflowReport);
             if (!workflowReport)
-                LOG.error(`ReportFactory.getReport() unable to fetch report with id ${LS.idWorkflowReport}`, LOG.LS.eRPT);
+                LOG.error(`ReportFactory.getReport() unable to fetch report with id ${idWorkflowReport}`, LOG.LS.eRPT);
         }
 
-        if (!workflowReport && LS.idWorkflow) {
-            const workflowReports: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(LS.idWorkflow);
+        const idWorkflow: number | undefined = LS.getWorkflowID();
+        if ((!workflowReport || workflowReport.idWorkflow !== idWorkflow) && idWorkflow) {
+            const workflowReports: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(idWorkflow);
             if (!workflowReports)
-                LOG.error(`ReportFactory.getReport() unable to fetch reports from workflow with ID ${LS.idWorkflow}`, LOG.LS.eRPT);
+                LOG.error(`ReportFactory.getReport() unable to fetch reports from workflow with ID ${idWorkflow}`, LOG.LS.eRPT);
             else if (workflowReports.length > 0)
                 workflowReport = workflowReports[0];
             else {
                 workflowReport = new DBAPI.WorkflowReport({
-                    idWorkflow: LS.idWorkflow,
+                    idWorkflow,
                     MimeType: 'text/html',
                     Data: '',
                     idWorkflowReport: 0
                 });
                 if (!await workflowReport.create()) {
-                    LOG.error(`ReportFactory.getReport() unable to create WorkflowReport for workflow with ID ${LS.idWorkflow}`, LOG.LS.eRPT);
+                    LOG.error(`ReportFactory.getReport() unable to create WorkflowReport for workflow with ID ${JSON.stringify(idWorkflow)}`, LOG.LS.eRPT);
                     workflowReport = null;
                 }
             }
         }
 
         if (workflowReport) {
-            LS.idWorkflowReport = workflowReport.idWorkflowReport;
+            LS.setWorkflowReportID(workflowReport.idWorkflowReport);
             return new Report(workflowReport);
         }
         LOG.error('ReportFactory.getReport() unable to locate active workflow report from LocalStorage', LOG.LS.eRPT);

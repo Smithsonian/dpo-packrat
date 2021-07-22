@@ -92,3 +92,4 @@ ADD CONSTRAINT `fk_workflow_workflowset1`
 
 -- 2021-07-20 Jon
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 2, 'Ingestion');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 3, 'Upload');

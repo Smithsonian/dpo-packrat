@@ -5,6 +5,7 @@ import * as COOK from '../Cook';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
+import * as REP from '../../../report/interface';
 
 import * as NS from 'node-schedule';
 
@@ -29,6 +30,7 @@ export class JobEngine implements JOB.IJobEngine {
         let eJobType: CACHE.eVocabularyID | null = jobParams.eJobType;
         let dbJob: DBAPI.Job | null = null;
         const idAssetVersions: number[] | null = jobParams.idAssetVersions;
+        const report: REP.IReport | null = jobParams.report;
         const parameters: any = jobParams.parameters;
         const frequency: string | null = jobParams.frequency;
 
@@ -68,7 +70,7 @@ export class JobEngine implements JOB.IJobEngine {
             return null;
         }
 
-        const job: JobPackrat | null = await this.createJob(eJobType, idAssetVersions, parameters, frequency, dbJobRun);
+        const job: JobPackrat | null = await this.createJob(eJobType, idAssetVersions, report, parameters, frequency, dbJobRun);
         if (!job) {
             LOG.error('JobEngine.createWorker unable to create Job', LOG.LS.eJOB);
             return null;
@@ -144,10 +146,10 @@ export class JobEngine implements JOB.IJobEngine {
     // #endregion
 
     // #region Job Creation Factory
-    private async createJob(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null,
+    private async createJob(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: any, frequency: string | null, dbJobRun: DBAPI.JobRun): Promise<JobPackrat | null> {
         // create job
-        const job: JobPackrat | null = this.createJobWorker(eJobType, idAssetVersions, parameters, dbJobRun);
+        const job: JobPackrat | null = await this.createJobWorker(eJobType, idAssetVersions, report, parameters, dbJobRun);
         if (!job)
             return null;
 
@@ -157,32 +159,37 @@ export class JobEngine implements JOB.IJobEngine {
 
         if (frequency === '') { // empty frequency means run it once, now
             LOG.info(`JobEngine.createJob running now ${job.name()}`, LOG.LS.eJOB);
+            if (report)
+                await report.append(`JobEngine running ${job.name()}`);
             job.executeJob(new Date()); // do not use await here, so that we remain unblocked while the job starts
         } else {                 // non-empty frequency means run job on schedule
             const nsJob: NS.Job = NS.scheduleJob(job.name(), frequency, job.executeJob);
+            if (report)
+                await report.append(`JobEngine scheduling ${job.name()}`);
             job.setNSJob(nsJob);
         }
         return job;
     }
 
-    private createJobWorker(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null, parameters: any, dbJobRun: DBAPI.JobRun): JobPackrat | null {
+    private async createJobWorker(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null, report: REP.IReport | null,
+        parameters: any, dbJobRun: DBAPI.JobRun): Promise<JobPackrat | null> {
         let job: JobPackrat | null = null;
         let expectedJob: string = '';
         switch (eJobType) {
             case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect:
-                expectedJob = 'JobCookSIPackratInspect';
+                expectedJob = 'Cook si-packrat-inspect';
                 if (parameters instanceof COOK.JobCookSIPackratInspectParameters) // confirm that parameters is of type JobCookSIPackratInspectParameters
-                    job = new COOK.JobCookSIPackratInspect(this, idAssetVersions, parameters, dbJobRun);
+                    job = new COOK.JobCookSIPackratInspect(this, idAssetVersions, report, parameters, dbJobRun);
                 break;
             case CACHE.eVocabularyID.eJobJobTypeCookSIVoyagerScene:
-                expectedJob = 'JobCookSIVoyagerScene';
+                expectedJob = 'Cook si-voyager-scene';
                 if (parameters instanceof COOK.JobCookSIVoyagerSceneParameters) // confirm that parameters is of type JobCookSIVoyagerSceneParameters
-                    job = new COOK.JobCookSIVoyagerScene(this, idAssetVersions, parameters, dbJobRun);
+                    job = new COOK.JobCookSIVoyagerScene(this, idAssetVersions, report, parameters, dbJobRun);
                 break;
             case CACHE.eVocabularyID.eJobJobTypeCookSIGenerateDownloads:
-                expectedJob = 'JobCookSIGenerateDownloads';
+                expectedJob = 'Cook si-generate-downloads';
                 if (parameters instanceof COOK.JobCookSIGenerateDownloadsParameters) // confirm that parameters is of type JobCookSIGenerateDownloadsParameters
-                    job = new COOK.JobCookSIGenerateDownloads(this, idAssetVersions, parameters, dbJobRun);
+                    job = new COOK.JobCookSIGenerateDownloads(this, idAssetVersions, report, parameters, dbJobRun);
                 break;
             default:
                 LOG.error(`JobEngine.createJobWorker unknown job type ${CACHE.eVocabularyID[eJobType]}`, LOG.LS.eJOB);
@@ -191,6 +198,9 @@ export class JobEngine implements JOB.IJobEngine {
 
         if (!job)
             LOG.error(`JobEngine.createJobWorker called with parameters not of type ${expectedJob}: ${JSON.stringify(parameters)}`, LOG.LS.eJOB);
+        else if (report)
+            await report.append(`JobEngine creating ${expectedJob}`);
+
         return job;
     }
     // #endregion

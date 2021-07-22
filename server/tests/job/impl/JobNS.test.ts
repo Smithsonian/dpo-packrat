@@ -6,6 +6,7 @@ import * as JOB from '../../../job/interface';
 import * as COOK from '../../../job/impl/Cook';
 import * as WF from '../../../workflow/interface';
 import * as WFP from '../../../workflow/impl/Packrat';
+import * as REP from '../../../report/interface';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
@@ -252,10 +253,14 @@ async function testCreateJob(idJob: number | null, eJobType: CACHE.eVocabularyID
     frequency: string | null, expectSuccess: boolean = true): Promise<JOB.IJob | null> {
     expect(jobEngine).toBeTruthy(); if (!jobEngine) return null;
 
+    // fetch workflow report
+    const report: REP.IReport | null = await REP.ReportFactory.getReport();
+
     const JPC: JOB.JobCreationParameters = {
         idJob,
         eJobType,
         idAssetVersions: idAssetVersions || null,
+        report,
         parameters,
         frequency
     };
