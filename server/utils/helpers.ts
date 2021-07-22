@@ -504,4 +504,25 @@ export class Helpers {
         }
         return Helpers.saferStringify(key, value);
     }
+
+    /* c.f. https://coderwall.com/p/ostduq/escape-html-with-javascript */
+    static escapeHTMLEntity(input: string): string {
+        return input.replace(/[&<>"'\/]/g, function (s) {
+            const entityMap = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                '\'': '&#39;',
+                '/': '&#x2F;'
+            };
+            return entityMap[s];
+        });
+    }
+
+    static computeHref(path: string, anchor: string): string {
+        if (!path)
+            return anchor;
+        return `<a href='${path}'>${Helpers.escapeHTMLEntity(anchor)}</a>`;
+    }
 }

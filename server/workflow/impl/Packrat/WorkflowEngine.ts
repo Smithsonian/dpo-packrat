@@ -3,6 +3,7 @@ import * as WF from '../../interface';
 import * as WFP from '../../../workflow/impl/Packrat';
 import { WorkflowJob } from './WorkflowJob';
 import { WorkflowIngestion } from './WorkflowIngestion';
+import { WorkflowUpload } from './WorkflowUpload';
 import * as COOK from '../../../job/impl/Cook';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
@@ -43,15 +44,15 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     private workflowMap: Map<number, WF.IWorkflow> = new Map<number, WF.IWorkflow>();
 
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
-        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
-        const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
-        if (!WFC)
-            return null;
-
         if (!workflowParams.eWorkflowType) {
             LOG.error(`WorkflowEngine.create called without workflow type ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
             return null;
         }
+
+        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}] ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
+        const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
+        if (!WFC)
+            return null;
 
         const workflow: WF.IWorkflow | null = await this.fetchWorkflowImpl(workflowParams, WFC);
         if (!workflow) {
@@ -97,6 +98,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             const updateRes: WF.WorkflowUpdateResults = await workflow.update(workflowStep, jobRun);
             if (updateRes.workflowComplete) {
                 this.workflowMap.delete(WFC.workflow.idWorkflow);
+                this.unsetActiveWorkflowStep(true);
                 LOG.info(`WorkflowEngine.jobUpdated completed workflow [${this.workflowMap.size}]: ${idJobRun}`, LOG.LS.eWF);
             }
             result = updateRes.success && result;
@@ -476,6 +478,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         switch (workflowParams.eWorkflowType) {
             case CACHE.eVocabularyID.eWorkflowTypeCookJob: return await WorkflowJob.constructWorkflow(workflowParams, WFC);
             case CACHE.eVocabularyID.eWorkflowTypeIngestion: return await WorkflowIngestion.constructWorkflow(workflowParams, WFC);
+            case CACHE.eVocabularyID.eWorkflowTypeUpload: return await WorkflowUpload.constructWorkflow(workflowParams, WFC);
         }
         return null;
     }
@@ -665,9 +668,16 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
     private setActiveWorkflowStep(workflowStep: DBAPI.WorkflowStep): void {
         const LS: LocalStore | undefined = ASL.getStore();
+        if (LS)
+            LS.pushWorkflow(workflowStep.idWorkflow, workflowStep.idWorkflowStep);
+    }
+
+    private unsetActiveWorkflowStep(workflowComplete: boolean): void {
+        const LS: LocalStore | undefined = ASL.getStore();
         if (LS) {
-            LS.idWorkflow = workflowStep.idWorkflow;
-            LS.idWorkflowStep = workflowStep.idWorkflowStep;
+            if (workflowComplete && LS.getWorkflowID())
+                LS.popWorkflowID();
+            LS.setWorkflowStepID(undefined);
         }
     }
 

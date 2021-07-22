@@ -127,6 +127,7 @@ export enum eVocabularyID {
     eJobJobTypeCookUnwrap,
     eWorkflowTypeCookJob,
     eWorkflowTypeIngestion,
+    eWorkflowTypeUpload,
     eWorkflowStepTypeStart,
     eWorkflowEventIngestionUploadAssetVersion,
     eWorkflowEventIngestionIngestObject,
@@ -386,6 +387,7 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Cook Job':                        eVocabEnum = eVocabularyID.eWorkflowTypeCookJob; break;
                         case 'Ingestion':                       eVocabEnum = eVocabularyID.eWorkflowTypeIngestion; break;
+                        case 'Upload':                          eVocabEnum = eVocabularyID.eWorkflowTypeUpload; break;
                     }
                 } break;
 

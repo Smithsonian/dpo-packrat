@@ -5,12 +5,12 @@ import * as H from '../../../utils/helpers';
 // This Workflow represents an ingestion action, typically initiated by a user.
 // The workflow itself performs no work (ingestion is performed in the graphQl ingestData routine)
 // Instead, this workflow provide a means for gathering ingestion report output
-export class WorkflowIngestion implements WF.IWorkflow {
+export class WorkflowUpload implements WF.IWorkflow {
     private workflowParams: WF.WorkflowParameters;
     private workflowData: DBAPI.WorkflowConstellation;
 
-    static async constructWorkflow(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowIngestion | null> {
-        return new WorkflowIngestion(workflowParams, WFC);
+    static async constructWorkflow(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowUpload | null> {
+        return new WorkflowUpload(workflowParams, WFC);
     }
 
     constructor(workflowParams: WF.WorkflowParameters, workflowData: DBAPI.WorkflowConstellation) {

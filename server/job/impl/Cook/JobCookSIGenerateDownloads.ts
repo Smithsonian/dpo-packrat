@@ -8,8 +8,10 @@ import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as STORE from '../../../storage/interface';
+import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { ASL, LocalStore } from '../../../utils/localStore';
+import { RouteBuilder } from '../../../http/routes/routeBuilder';
 
 import * as path from 'path';
 
@@ -64,11 +66,11 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     private idModel: number | null;
     private cleanupCalled: boolean = false;
 
-    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null,
+    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIGenerateDownloadsParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-generate-downloads',
             CookRecipe.getCookRecipeID('si-generate-downloads', 'fcef7b5c-2df5-4a63-8fe9-365dd1a5e39c'),
-            null, idAssetVersions, dbJobRun);
+            null, idAssetVersions, report, dbJobRun);
         if (parameters.idScene) {
             this.idScene = parameters.idScene ?? null;
             delete parameters.idScene; // strip this out, as Cook will choke on it!
@@ -90,7 +92,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             if (this.cleanupCalled)
                 return { success: true, error: 'cleanupJob already called, exiting early' };
             this.cleanupCalled = true;
-            return await this.createSystemObjects();
+
+            const results: H.IOResults = await this.createSystemObjects();
+            await this.appendToReportAndLog(`${this.name()} ${results.success ? 'succeeded' : 'failed: ' + results.error}`, !results.success);
+            return results;
         } catch (error) {
             LOG.error('JobCookSIGenerateDownloads.cleanupJob', LOG.LS.eJOB, error);
             return { success: false, error: JSON.stringify(error) };
@@ -156,11 +161,12 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
             // look for existing model, a child object of modelSource, with the matching downloadType
             let model: DBAPI.Model | null = await this.findMatchingModel(modelSource, downloadType);
+            let modelSO: DBAPI.SystemObject | null = null;
             let Asset: DBAPI.Asset | null = null;
 
             if (model) {
                 // if we already have a model, look for the asset that we are likely updating:
-                const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
+                modelSO = await model.fetchSystemObject();
                 if (modelSO) {
                     const modelAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(modelSO.idSystemObject);
                     if (modelAssets) {
@@ -216,9 +222,20 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             };
             const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
             if (!ISR.success) {
-                LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to ingest generated download model ${downloadFile}: ${ISR.error}`, LOG.LS.eJOB);
+                await this.appendToReportAndLog(`${this.name()} unable to ingest generated download model ${downloadFile}: ${ISR.error}`, true);
                 return { success: false, error: ISR.error };
             }
+
+            let idSystemObjectModel: number | null = modelSO ? modelSO.idSystemObject : null;
+            if (!idSystemObjectModel) {
+                const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
+                idSystemObjectModel = SOI ? SOI.idSystemObject : null;
+            }
+            const pathObject: string = idSystemObjectModel ? RouteBuilder.RepositoryDetails(idSystemObjectModel) : '';
+            const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
+            const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion) : '';
+            const hrefDownload: string = pathDownload ? H.Helpers.computeHref(pathDownload, ': Download') : '';
+            await this.appendToReportAndLog(`${this.name()} ingested generated download model ${hrefObject}${hrefDownload}`);
 
             if (ISR.assetVersion)
                 assetVersionOverrideMap.set(ISR.assetVersion.idAsset, ISR.assetVersion.idAssetVersion);
@@ -309,4 +326,3 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         return matches && matches.length > 0 ? matches[0] : null;
     }
 }
-
