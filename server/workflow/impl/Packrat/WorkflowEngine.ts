@@ -667,25 +667,19 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     }
 
     private setActiveWorkflowStep(workflowStep: DBAPI.WorkflowStep): void {
-        const LS: LocalStore | undefined = ASL.getStore();
-        if (LS)
-            LS.pushWorkflow(workflowStep.idWorkflow, workflowStep.idWorkflowStep);
+        const LS: LocalStore = ASL.getOrCreateStore();
+        LS.pushWorkflow(workflowStep.idWorkflow, workflowStep.idWorkflowStep);
     }
 
     private unsetActiveWorkflowStep(workflowComplete: boolean): void {
-        const LS: LocalStore | undefined = ASL.getStore();
-        if (LS) {
-            if (workflowComplete && LS.getWorkflowID())
-                LS.popWorkflowID();
-            LS.setWorkflowStepID(undefined);
-        }
+        const LS: LocalStore = ASL.getOrCreateStore();
+        if (workflowComplete && LS.getWorkflowID())
+            LS.popWorkflowID();
+        LS.setWorkflowStepID(undefined);
     }
 
     private async getActiveWorkflowSet(): Promise<DBAPI.WorkflowSet | null> {
-        const LS: LocalStore | undefined = ASL.getStore();
-        if (!LS)
-            return null;
-
+        const LS: LocalStore = ASL.getOrCreateStore();
         let workflowSet: DBAPI.WorkflowSet | null = null;
         if (LS.idWorkflowSet) {
             workflowSet = await DBAPI.WorkflowSet.fetch(LS.idWorkflowSet);

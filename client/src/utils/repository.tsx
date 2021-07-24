@@ -263,7 +263,7 @@ export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | un
 }
 
 export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number, path: string): string {
-    return `${serverEndPoint}/download/idSystemObject-${idSystemObject}/${path}/`;
+    return `${serverEndPoint}/download/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
 }
 
 // prettier-ignore

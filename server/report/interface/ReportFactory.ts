@@ -8,12 +8,7 @@ export class ReportFactory {
     static async getReport(): Promise<IReport | null> {
         let workflowReport: DBAPI.WorkflowReport | null = null;
 
-        const LS: LocalStore | undefined = ASL.getStore();
-        if (!LS) {
-            LOG.error('ReportFactory.getReport() unable to retrieve active workflow from LocalStorage', LOG.LS.eRPT);
-            return null;
-        }
-
+        const LS: LocalStore = ASL.getOrCreateStore();
         const idWorkflowReport: number | undefined = LS.getWorkflowReportID();
         if (idWorkflowReport) {
             workflowReport = await DBAPI.WorkflowReport.fetch(idWorkflowReport);
