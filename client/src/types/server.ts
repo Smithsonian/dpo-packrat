@@ -224,3 +224,7 @@ export enum eSubjectUnitIdentifierSortColumns {
     eIdentifierValue = 3,
     eDefault = 0
 }
+
+export enum eIcon {
+    eIconDownload
+}

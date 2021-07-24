@@ -45,6 +45,7 @@ import StakeholderDetails from './StakeholderDetails';
 import SubjectDetails from './SubjectDetails';
 import UnitDetails from './UnitDetails';
 import ObjectVersionTable from './ObjectVersionTable';
+import AssetGrid from './AssetGrid';
 import { deleteObjectConnection } from '../../../hooks/useDetailsView';
 import { sharedButtonProps } from '../../../../../utils/shared';
 import { useHistory } from 'react-router-dom';
@@ -141,6 +142,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     const AssetDetailsTableTab = (index: number, idSystemObject: number, systemObjectType?: eSystemObjectType) => (
         <TabPanel value={tab} index={index}>
             <AssetDetailsTable idSystemObject={idSystemObject} systemObjectType={systemObjectType} />
+            <AssetGrid idSystemObject={idSystemObject} systemObjectType={systemObjectType} />
         </TabPanel>
     );
 
