@@ -2,8 +2,6 @@
 import { AsyncLocalStorage } from 'async_hooks';
 import * as LOG from './logger';
 
-export const ASL: AsyncLocalStorage<LocalStore> = new AsyncLocalStorage<LocalStore>();
-
 export class LocalStore {
     idRequest: number;
     idUser: number | null; // User.idUser
@@ -57,3 +55,12 @@ export class LocalStore {
         this.idWorkflowReport = idWorkflowReport;
     }
 }
+
+export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
+    getOrCreateStore(): LocalStore {
+        const LS: LocalStore | undefined = this.getStore();
+        return (LS) ? LS : new LocalStore(true, undefined);
+    }
+}
+
+export const ASL: AsyncLocalStore = new AsyncLocalStore();

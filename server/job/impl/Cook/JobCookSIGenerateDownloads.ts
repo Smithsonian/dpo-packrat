@@ -206,7 +206,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             }
 
             // ingest model assets, and associate them with the correct model
-            const LS: LocalStore | undefined = ASL.getStore();
+            const LS: LocalStore = ASL.getOrCreateStore();
             const idUserCreator: number = LS?.idUser ?? 0;
             const ISI: STORE.IngestStreamOrFileInput = {
                 readStream: RSR.readStream,
@@ -232,9 +232,9 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 idSystemObjectModel = SOI ? SOI.idSystemObject : null;
             }
             const pathObject: string = idSystemObjectModel ? RouteBuilder.RepositoryDetails(idSystemObjectModel) : '';
-            const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
+            const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name, false);
             const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion) : '';
-            const hrefDownload: string = pathDownload ? H.Helpers.computeHref(pathDownload, ': Download') : '';
+            const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', true) : '';
             await this.appendToReportAndLog(`${this.name()} ingested generated download model ${hrefObject}${hrefDownload}`);
 
             if (ISR.assetVersion)

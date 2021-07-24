@@ -80,7 +80,7 @@ function configureLogger(logPath: string | null): void {
             // winston.format.json()
             // winston.format.simple(),
             winston.format.printf((info) => {
-                const LS: LocalStore | undefined = ASL.getStore();
+                const LS: LocalStore = ASL.getOrCreateStore();
                 const idRequest: number | undefined = LS?.idRequest;
                 const reqID: string = idRequest ? ('00000' + (idRequest % 100000)).slice(-5) : ' --- ';
 

@@ -436,7 +436,7 @@ class IngestDataWorker extends ResolverBase {
         }
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromCaptureData(captureDataDB);
         const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, captureDataDB.Name);
+        const href: string = H.Helpers.computeHref(path, captureDataDB.Name, false);
         await this.appendToWFReport(`CaptureData Photogrammetry: ${href}`);
 
         const captureDataPhotoDB: DBAPI.CaptureDataPhoto = new DBAPI.CaptureDataPhoto({
@@ -609,7 +609,7 @@ class IngestDataWorker extends ResolverBase {
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(modelDB);
         const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, modelDB.Name);
+        const href: string = H.Helpers.computeHref(path, modelDB.Name, false);
         await this.appendToWFReport(`Model: ${href}`);
 
         if (!await this.handleIdentifiers(modelDB, model.systemCreated, model.identifiers))
@@ -681,7 +681,7 @@ class IngestDataWorker extends ResolverBase {
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(sceneDB);
         const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, sceneDB.Name);
+        const href: string = H.Helpers.computeHref(path, sceneDB.Name, false);
         await this.appendToWFReport(`Scene: ${href}`);
 
         if (!await this.handleIdentifiers(sceneDB, scene.systemCreated, scene.identifiers))
@@ -852,9 +852,9 @@ class IngestDataWorker extends ResolverBase {
                     for (const assetVersion of ISR.assetVersions) {
                         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
                         const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-                        const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName);
+                        const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName, false);
                         const pathDownload: string = RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion);
-                        const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Download');
+                        const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Download', true);
                         await this.appendToWFReport(`Ingested ${hrefObject}: ${hrefDownload}`);
                     }
                 }

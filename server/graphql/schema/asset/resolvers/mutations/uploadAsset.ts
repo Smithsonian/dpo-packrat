@@ -218,7 +218,7 @@ class UploadAssetWorker extends ResolverBase {
                 idSystemObject.push(SOI.idSystemObject);
 
                 const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-                const href: string = H.Helpers.computeHref(path, assetVersion.FileName);
+                const href: string = H.Helpers.computeHref(path, assetVersion.FileName, false);
                 await this.appendToWFReport(`Uploaded asset: ${href}`);
             } else
                 LOG.error(`uploadAsset createWorkflow unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
