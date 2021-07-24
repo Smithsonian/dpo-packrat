@@ -75,4 +75,21 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
             return null;
         }
     }
+
+    static async fetchFromWorkflowSet(idWorkflowSet: number): Promise<WorkflowReport[] | null> {
+        if (!idWorkflowSet)
+            return null;
+        try {
+            return DBC.CopyArray<WorkflowReportBase, WorkflowReport>(
+                await DBC.DBConnection.prisma.$queryRaw<WorkflowReport[]>`
+                    SELECT WR.*
+                    FROM WorkflowReport AS WR
+                    JOIN Workflow AS W ON (WR.idWorkflow = W.idWorkflow)
+                    JOIN WorkflowSet AS WS ON (W.idWorkflowSet = WS.idWorkflowSet)
+                    WHERE WS.idWorkflowSet = ${idWorkflowSet}`, WorkflowReport);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.WorkflowReport.fetchFromWorkflowSet', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }

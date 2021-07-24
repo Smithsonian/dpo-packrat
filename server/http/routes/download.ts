@@ -11,13 +11,19 @@ import { ParsedQs } from 'qs';
 import mime from 'mime'; // const mime = require('mime-types'); // can't seem to make this work using "import * as mime from 'mime'"; subsequent calls to mime.lookup freeze!
 import path from 'path';
 
-/** Used to provide download access to assets. Access with one of the following URL query parameters set, or path
+/** Used to provide download access to assets and reports. Access with one of the following URL patterns:
+ * ASSETS:
  * /download?idAssetVersion=ID:         Downloads the specified version of the specified asset
  * /download?idAsset=ID:                Downloads the most recent asset version of the specified asset
  * /download?idSystemObject=ID:         Computes the assets attached to system object with idSystemObject = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
  * /download/idSystemObject-ID:         Computes the assets attached to system object with idSystemObject = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
  * /download/idSystemObject-ID/FOO/BAR: Computes the asset  attached to system object with idSystemObject = ID, found at the path /FOO/BAR.
  * /download?idSystemObjectVersion=ID:  Computes the assets attached to system object version with idSystemObjectVersion = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
+ *
+ * REPORTS:
+ * /download?idWorkflow=ID:             Downloads the WorkflowReport(s) for the specified workflow ID
+ * /download?idWorkflowReport=ID:       Downloads the specified WorkflowReport
+ * /download?idWorkflowSet=ID:          Downloads the WorkflowReport(s) for workflows in the specified workflow set
  */
 export async function download(request: Request, response: Response): Promise<boolean> {
     const DL: Downloader = new Downloader(request, response);
@@ -34,6 +40,9 @@ enum eDownloadMode {
     eAsset,
     eSystemObject,
     eSystemObjectVersion,
+    eWorkflow,
+    eWorkflowReport,
+    eWorkflowSet,
     eUnknown
 }
 
@@ -46,6 +55,10 @@ class Downloader {
     private idAsset: number | null = null;
     private idSystemObject: number | null = null;
     private idSystemObjectVersion: number | null = null;
+
+    private idWorkflow: number | null = null;
+    private idWorkflowReport: number | null = null;
+    private idWorkflowSet: number | null = null;
 
     private systemObjectPath: string | null = null;         // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
 
@@ -132,6 +145,33 @@ class Downloader {
                 }
                 return await this.emitDownloadZip(assetVersions);
             }
+
+            case eDownloadMode.eWorkflow: {
+                const WFReports: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(this.idWorkflow!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                if (!WFReports || WFReports.length === 0) {
+                    LOG.error(`/download?idWorkflow=${this.idWorkflow} invalid parameter`, LOG.LS.eHTTP);
+                    return this.sendError(404);
+                }
+                return this.emitDownloadReports(WFReports);
+            }
+
+            case eDownloadMode.eWorkflowReport: {
+                const WFReport: DBAPI.WorkflowReport | null = await DBAPI.WorkflowReport.fetch(this.idWorkflowReport!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                if (!WFReport) {
+                    LOG.error(`/download?idWorkflowReport=${this.idWorkflowReport} invalid parameter`, LOG.LS.eHTTP);
+                    return this.sendError(404);
+                }
+                return this.emitDownloadReports([WFReport]);
+            }
+
+            case eDownloadMode.eWorkflowSet: {
+                const WFReports: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflowSet(this.idWorkflowSet!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                if (!WFReports || WFReports.length === 0) {
+                    LOG.error(`/download?idWorkflowSet=${this.idWorkflowSet} invalid parameter`, LOG.LS.eHTTP);
+                    return this.sendError(404);
+                }
+                return this.emitDownloadReports(WFReports);
+            }
         }
         return this.sendError(404);
     }
@@ -154,7 +194,12 @@ class Downloader {
         const idSystemObjectVersionU = this.request.query.idSystemObjectVersion;
         const idAssetU = this.request.query.idAsset;
         const idAssetVersionU = this.request.query.idAssetVersion;
-        const urlParamCount: number = (idSystemObjectU ? 1 : 0) + (idSystemObjectVersionU ? 1 : 0) + (idAssetU ? 1 : 0) + (idAssetVersionU ? 1 : 0);
+        const idWorkflowU = this.request.query.idWorkflow;
+        const idWorkflowReportU = this.request.query.idWorkflowReport;
+        const idWorkflowSetU = this.request.query.idWorkflowSet;
+
+        const urlParamCount: number = (idSystemObjectU ? 1 : 0) + (idSystemObjectVersionU ? 1 : 0) + (idAssetU ? 1 : 0)
+            + (idAssetVersionU ? 1 : 0) + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0);
         if (urlParamCount != 1) {
             LOG.error(`/download called with ${urlParamCount} parameters, expected 1`, LOG.LS.eHTTP);
             return this.sendError(404);
@@ -194,6 +239,33 @@ class Downloader {
                 return this.sendError(404);
             }
             this.eMode = eDownloadMode.eSystemObjectVersion;
+        }
+
+        if (idWorkflowU) {
+            this.idWorkflow = H.Helpers.safeNumber(idWorkflowU);
+            if (!this.idWorkflow) {
+                LOG.error(`/download?idWorkflow=${idWorkflowU} invalid parameter`, LOG.LS.eHTTP);
+                return this.sendError(404);
+            }
+            this.eMode = eDownloadMode.eWorkflow;
+        }
+
+        if (idWorkflowReportU) {
+            this.idWorkflowReport = H.Helpers.safeNumber(idWorkflowReportU);
+            if (!this.idWorkflowReport) {
+                LOG.error(`/download?idWorkflowReport=${idWorkflowReportU} invalid parameter`, LOG.LS.eHTTP);
+                return this.sendError(404);
+            }
+            this.eMode = eDownloadMode.eWorkflowReport;
+        }
+
+        if (idWorkflowSetU) {
+            this.idWorkflowSet = H.Helpers.safeNumber(idWorkflowSetU);
+            if (!this.idWorkflowSet) {
+                LOG.error(`/download?idWorkflowSet=${idWorkflowSetU} invalid parameter`, LOG.LS.eHTTP);
+                return this.sendError(404);
+            }
+            this.eMode = eDownloadMode.eWorkflowSet;
         }
         return true;
     }
@@ -265,6 +337,26 @@ class Downloader {
         const fileName: string = (await CACHE.SystemObjectCache.getObjectNameByID(idSystemObject) || `SystemObject${idSystemObject}`) + '.zip';
         const mimeType: string = mime.lookup(fileName) || 'application/zip';
         return this.emitDownloadFromStream(zipStream, fileName, mimeType);
+    }
+
+    private async emitDownloadReports(WFReports: DBAPI.WorkflowReport[]): Promise<boolean> {
+        if (WFReports.length === 0)
+            return false;
+        const mimeType: string = WFReports[0].MimeType;
+
+        this.response.setHeader('Content-disposition', 'attachment; filename=WorkflowReport.htm');
+        if (mimeType)
+            this.response.setHeader('Content-type', mimeType);
+        let first: boolean = true;
+        for (const report of WFReports) {
+            if (first)
+                first = false;
+            else
+                this.response.write('<br/>\n<br/>\n');
+            this.response.write(report.Data);
+        }
+        this.response.end();
+        return true;
     }
 
     private async emitDownloadFromStream(readStream: NodeJS.ReadableStream, fileNameIn: string, mimeType: string | undefined): Promise<boolean> {

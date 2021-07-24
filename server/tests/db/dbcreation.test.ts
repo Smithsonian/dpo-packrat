@@ -3133,9 +3133,18 @@ describe('DB Fetch By ID Test Suite', () => {
         let workflowReportFetch: DBAPI.WorkflowReport[] | null = null;
         if (workflow) {
             workflowReportFetch = await DBAPI.WorkflowReport.fetchFromWorkflow(workflow.idWorkflow);
-            if (workflowReportFetch) {
+            if (workflowReportFetch)
                 expect(workflowReportFetch).toEqual(expect.arrayContaining([workflowReport]));
-            }
+        }
+        expect(workflowReportFetch).toBeTruthy();
+    });
+
+    test('DB Fetch WorkflowReport: WorkflowReport.fetchFromWorkflowSet', async () => {
+        let workflowReportFetch: DBAPI.WorkflowReport[] | null = null;
+        if (workflowSet) {
+            workflowReportFetch = await DBAPI.WorkflowReport.fetchFromWorkflowSet(workflowSet.idWorkflowSet);
+            if (workflowReportFetch)
+                expect(workflowReportFetch).toEqual(expect.arrayContaining([workflowReport]));
         }
         expect(workflowReportFetch).toBeTruthy();
     });
@@ -7515,6 +7524,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.WorkflowConstellation.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowReport.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowReport.fetchFromWorkflow(0)).toBeNull();
+        expect(await DBAPI.WorkflowReport.fetchFromWorkflowSet(0)).toBeNull();
         expect(await DBAPI.WorkflowSet.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowSet.fetchFromWorkflow(0)).toBeNull();
         expect(await DBAPI.WorkflowStep.fetch(0)).toBeNull();
