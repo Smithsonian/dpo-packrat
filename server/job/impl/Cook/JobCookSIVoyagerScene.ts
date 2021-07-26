@@ -8,9 +8,11 @@ import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as STORE from '../../../storage/interface';
+import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { SvxReader } from '../../../utils/parser';
 import { ASL, LocalStore } from '../../../utils/localStore';
+import { RouteBuilder } from '../../../http/routes/routeBuilder';
 
 import * as path from 'path';
 // import cloneable from 'cloneable-readable';
@@ -46,11 +48,11 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private idModel: number | null;
     private cleanupCalled: boolean = false;
 
-    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null,
+    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIVoyagerSceneParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-vogager-scene',
             CookRecipe.getCookRecipeID('si-vogager-scene', '512211e5-f2e8-4723-93e9-e30116c88ab0'),
-            null, idAssetVersions, dbJobRun);
+            null, idAssetVersions, report, dbJobRun);
         if (parameters.idModel) {
             this.idModel = parameters.idModel ?? null;
             delete parameters.idModel; // strip this out, as Cook will choke on it!
@@ -66,7 +68,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             if (this.cleanupCalled)
                 return { success: true, error: 'cleanupJob already called, exiting early' };
             this.cleanupCalled = true;
-            return await this.createSystemObjects();
+
+            const results: H.IOResults = await this.createSystemObjects();
+            await this.appendToReportAndLog(`${this.name()} ${results.success ? 'succeeded' : 'failed: ' + results.error}`, !results.success);
+            return results;
         } catch (error) {
             LOG.error('JobCookSIVoyagerScene.cleanupJob', LOG.LS.eJOB, error);
             return { success: false, error: JSON.stringify(error) };
@@ -130,7 +135,6 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`, LOG.LS.eJOB);
                 return { success: false, error: res.error };
             }
-            // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] create scene`, LOG.LS.eJOB);
 
             // wire ModelSource to Scene
             const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, scene);
@@ -166,7 +170,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         }
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] retrieve svx.json 2`, LOG.LS.eJOB);
 
-        const LS: LocalStore | undefined = ASL.getStore();
+        const LS: LocalStore = ASL.getOrCreateStore();
         const idUserCreator: number = LS?.idUser ?? 0;
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream: RSR.readStream,
@@ -182,9 +186,17 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         };
         let ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!ISR.success) {
-            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to ingest scene file ${svxFile}: ${ISR.error}`, LOG.LS.eJOB);
+            await this.appendToReportAndLog(`${this.name()} unable to ingest scene file ${svxFile}: ${ISR.error}`, true);
             return { success: false, error: ISR.error };
         }
+
+        const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(scene);
+        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
+        const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name, false);
+        const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion) : '';
+        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', true) : '';
+        await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
+
         const SOV: DBAPI.SystemObjectVersion | null | undefined = ISR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
@@ -275,9 +287,16 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                     };
                     ISR = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISIModel);
                     if (!ISR.success) {
-                        LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to ingest model file ${MSX.Name}: ${ISR.error}`, LOG.LS.eJOB);
+                        await this.appendToReportAndLog(`${this.name()} unable to ingest model file ${MSX.Name}: ${ISR.error}`, true);
                         return { success: false, error: ISR.error };
                     }
+
+                    const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
+                    const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
+                    const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name, false);
+                    const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion) : '';
+                    const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', true) : '';
+                    await this.appendToReportAndLog(`${this.name()} ingested model ${hrefObject}${hrefDownload}`);
 
                     // if an asset version was created for ingestion of this model, and if a system object version was created for scene ingestion,
                     // associate the asset version with the scene's system object version (enabling a scene package to be downloaded, even if some assets
