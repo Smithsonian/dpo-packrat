@@ -957,7 +957,7 @@ describe('DB Creation Test Suite', () => {
         if (jobSIPackratInspect)
             jobRun = await UTIL.createJobRunTest({
                 idJob: jobSIPackratInspect.idJob,
-                Status: DBAPI.eJobRunStatus.eDone,
+                Status: DBAPI.eWorkflowJobRunStatus.eDone,
                 Result: true,
                 DateStart: UTIL.nowCleansed(),
                 DateEnd: null,
@@ -972,7 +972,7 @@ describe('DB Creation Test Suite', () => {
         if (jobSIPackratInspect) {
             const jobRunTemp: DBAPI.JobRun = DBAPI.JobRun.constructFromPrisma({
                 idJob: jobSIPackratInspect.idJob,
-                Status: DBAPI.eJobRunStatus.eDone,
+                Status: DBAPI.eWorkflowJobRunStatus.eDone,
                 Result: true,
                 DateStart: UTIL.nowCleansed(),
                 DateEnd: null,
@@ -4694,31 +4694,42 @@ describe('DB Fetch Special Test Suite', () => {
         }
     });
 
+    test('DB Fetch Special: convertWorkflowJobRunStatusEnumToString', async () => {
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(-1)).toEqual('Uninitialized');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eUnitialized)).toEqual('Uninitialized');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eCreated)).toEqual('Created');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eRunning)).toEqual('Running');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eWaiting)).toEqual('Waiting');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eDone)).toEqual('Done');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eError)).toEqual('Error');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eCancelled)).toEqual('Cancelled');
+    });
+
     test('DB Fetch Special: JobRun.convertJobRunStatusToEnum', async () => {
-        expect(DBAPI.JobRun.convertJobRunStatusToEnum(-1)).toEqual(DBAPI.eJobRunStatus.eUnitialized);
-        expect(DBAPI.JobRun.convertJobRunStatusToEnum(0)).toEqual(DBAPI.eJobRunStatus.eUnitialized);
-        expect(DBAPI.JobRun.convertJobRunStatusToEnum(1)).toEqual(DBAPI.eJobRunStatus.eCreated);
-        expect(DBAPI.JobRun.convertJobRunStatusToEnum(2)).toEqual(DBAPI.eJobRunStatus.eRunning);
-        expect(DBAPI.JobRun.convertJobRunStatusToEnum(3)).toEqual(DBAPI.eJobRunStatus.eWaiting);
-        expect(DBAPI.JobRun.convertJobRunStatusToEnum(4)).toEqual(DBAPI.eJobRunStatus.eDone);
-        expect(DBAPI.JobRun.convertJobRunStatusToEnum(5)).toEqual(DBAPI.eJobRunStatus.eError);
-        expect(DBAPI.JobRun.convertJobRunStatusToEnum(6)).toEqual(DBAPI.eJobRunStatus.eCancelled);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(-1)).toEqual(DBAPI.eWorkflowJobRunStatus.eUnitialized);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(0)).toEqual(DBAPI.eWorkflowJobRunStatus.eUnitialized);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(1)).toEqual(DBAPI.eWorkflowJobRunStatus.eCreated);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(2)).toEqual(DBAPI.eWorkflowJobRunStatus.eRunning);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(3)).toEqual(DBAPI.eWorkflowJobRunStatus.eWaiting);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(4)).toEqual(DBAPI.eWorkflowJobRunStatus.eDone);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(5)).toEqual(DBAPI.eWorkflowJobRunStatus.eError);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(6)).toEqual(DBAPI.eWorkflowJobRunStatus.eCancelled);
 
         expect(jobRun).toBeTruthy();
         if (jobRun) {
-            jobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
-            expect(jobRun.getStatus()).toEqual(DBAPI.eJobRunStatus.eCreated);
+            jobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eCreated);
+            expect(jobRun.getStatus()).toEqual(DBAPI.eWorkflowJobRunStatus.eCreated);
             expect(jobRun.Status).toEqual(1);
-            jobRun.setStatus(DBAPI.eJobRunStatus.eUnitialized);
+            jobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eUnitialized);
         }
     });
 
     test('DB Fetch Special: JobRun.fetchMatching', async () => {
-        const jobRuns1: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eJobRunStatus.eDone, true, [0]);
+        const jobRuns1: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eWorkflowJobRunStatus.eDone, true, [0]);
         expect(jobRuns1).toBeTruthy();
         if (jobRuns1)
             expect(jobRuns1.length).toBeFalsy();
-        const jobRuns2: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eJobRunStatus.eDone, true, null);
+        const jobRuns2: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eWorkflowJobRunStatus.eDone, true, null);
         expect(jobRuns2).toBeTruthy();
         if (jobRuns2)
             expect(jobRuns2.length).toBeFalsy();
@@ -4728,7 +4739,7 @@ describe('DB Fetch Special Test Suite', () => {
         if (vocabJobSIPackratInspect) {
             // The following will return a row if the JobNS test has run and successfully completed testing of packrat-cook integration.
             // We cannot rely on this test having been run, so for now, we don't validate the result
-            await DBAPI.JobRun.fetchMatching(1, vocabJobSIPackratInspect.idVocabulary, DBAPI.eJobRunStatus.eDone, true, null);
+            await DBAPI.JobRun.fetchMatching(1, vocabJobSIPackratInspect.idVocabulary, DBAPI.eWorkflowJobRunStatus.eDone, true, null);
         }
     });
 
@@ -7071,14 +7082,26 @@ describe('DB Update Test Suite', () => {
         if (workflowStep && workflowNulls) {
             workflowStep.idWorkflow = workflowNulls.idWorkflow;
 
-            workflowStep.setState(DBAPI.eWorkflowStepState.eCreated);
-            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowStepState.eCreated);
+            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eUnitialized);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eUnitialized);
 
-            workflowStep.setState(DBAPI.eWorkflowStepState.eStarted);
-            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowStepState.eStarted);
+            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eCreated);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eCreated);
 
-            workflowStep.setState(DBAPI.eWorkflowStepState.eFinished);
-            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowStepState.eFinished);
+            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eRunning);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eRunning);
+
+            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eWaiting);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eWaiting);
+
+            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eError);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eError);
+
+            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eCancelled);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eCancelled);
+
+            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eDone);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eDone);
 
             bUpdated = await workflowStep.update();
 
@@ -7086,14 +7109,6 @@ describe('DB Update Test Suite', () => {
             expect(workflowStepFetch).toBeTruthy();
             if (workflowStepFetch)
                 expect(workflowStepFetch.idWorkflow).toBe(workflowNulls.idWorkflow);
-
-            expect(DBAPI.WorkflowStep.stateValueToEnum(-1)).toEqual(DBAPI.eWorkflowStepState.eCreated);
-            expect(DBAPI.WorkflowStep.stateValueToEnum(0)).toEqual(DBAPI.eWorkflowStepState.eCreated);
-            expect(DBAPI.WorkflowStep.stateValueToEnum(1)).toEqual(DBAPI.eWorkflowStepState.eStarted);
-            expect(DBAPI.WorkflowStep.stateValueToEnum(2)).toEqual(DBAPI.eWorkflowStepState.eFinished);
-            expect(DBAPI.WorkflowStep.stateEnumToValue(DBAPI.eWorkflowStepState.eCreated)).toEqual(0);
-            expect(DBAPI.WorkflowStep.stateEnumToValue(DBAPI.eWorkflowStepState.eStarted)).toEqual(1);
-            expect(DBAPI.WorkflowStep.stateEnumToValue(DBAPI.eWorkflowStepState.eFinished)).toEqual(2);
         }
         expect(bUpdated).toBeTruthy();
     });

@@ -146,8 +146,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     const wfParams: WF.WorkflowParameters = {
                         eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
                         idSystemObject: [idSystemObject],
-                        idProject: null,    // TODO: populate with idProject
-                        idUserInitiator: null,
+                        idProject: workflowParams.idProject,
+                        idUserInitiator: workflowParams.idUserInitiator,
                         parameters,
                     };
 
@@ -224,15 +224,15 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
 
         if (CMIR)
-            workflow = await this.eventIngestionIngestObjectModel(CMIR);
+            workflow = await this.eventIngestionIngestObjectModel(CMIR, workflowParams);
 
         if (CSIR)
-            workflow = await this.eventIngestionIngestObjectScene(CSIR);
+            workflow = await this.eventIngestionIngestObjectScene(CSIR, workflowParams);
 
         return workflow;
     }
 
-    private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult): Promise<WF.IWorkflow | null> {
+    private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
         if (CMIR.assetVersionGeometry === undefined) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry and/or diffuse texture from model ${CMIR.idModel}`, LOG.LS.eWF);
             return null;
@@ -263,8 +263,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const wfParamSIVoyagerScene: WF.WorkflowParameters = {
             eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
             idSystemObject,
-            idProject: null,    // TODO: populate with idProject
-            idUserInitiator: null,
+            idProject: workflowParams.idProject,
+            idUserInitiator: workflowParams.idUserInitiator,
             parameters: jobParamSIVoyagerScene,
         };
 
@@ -312,8 +312,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
                     eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
                     idSystemObject: idSystemObjectClone,
-                    idProject: null,    // TODO: populate with idProject
-                    idUserInitiator: null,
+                    idProject: workflowParams.idProject,
+                    idUserInitiator: workflowParams.idUserInitiator,
                     parameters: jobParamSIGenerateDownloads,
                 };
 
@@ -328,7 +328,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return workflow;
     }
 
-    private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult): Promise<WF.IWorkflow | null> {
+    private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
         if (CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute geometry and/or scene asset version from scene ${CSIR.idScene}`, LOG.LS.eWF);
             return null;
@@ -366,8 +366,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
             eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
             idSystemObject,
-            idProject: null,    // TODO: populate with idProject
-            idUserInitiator: null,
+            idProject: workflowParams.idProject,
+            idUserInitiator: workflowParams.idUserInitiator,
             parameters: jobParamSIGenerateDownloads,
         };
 
@@ -442,7 +442,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idJobRun: null,
             idUserOwner: workflowParams.idUserInitiator,
             idVWorkflowStepType,
-            State: DBAPI.WorkflowStep.stateEnumToValue(DBAPI.eWorkflowStepState.eCreated),
+            State: DBAPI.eWorkflowJobRunStatus.eCreated,
             DateCreated: dtNow,
             DateCompleted: dtNow,
             idWorkflowStep: 0

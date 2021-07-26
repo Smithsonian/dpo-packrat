@@ -70,6 +70,7 @@ export type ConfigType = {
         type: EVENT_TYPE;
     },
     http: {
+        clientUrl: string;
         serverUrl: string;
         port: number;
     },
@@ -126,6 +127,7 @@ export const Config: ConfigType = {
         type: EVENT_TYPE.INPROCESS,
     },
     http: {
+        clientUrl: process.env.PACKRAT_CLIENT_ENDPOINT ? process.env.PACKRAT_CLIENT_ENDPOINT : 'https://packrat.si.edu:8443',
         serverUrl: process.env.REACT_APP_PACKRAT_SERVER_ENDPOINT ? process.env.REACT_APP_PACKRAT_SERVER_ENDPOINT : 'https://packrat.si.edu:8443/server',
         port: process.env.PACKRAT_SERVER_PORT ? parseInt(process.env.PACKRAT_SERVER_PORT) : 4000,
     },

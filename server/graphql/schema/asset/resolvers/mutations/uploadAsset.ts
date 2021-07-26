@@ -40,7 +40,12 @@ class UploadAssetWorker extends ResolverBase {
 
     async upload(): Promise<UploadAssetResult> {
         const UAR: UploadAssetResult = await this.uploadWorker();
-        if (UAR.status === UploadStatus.Complete)
+
+        const success: boolean = (UAR.status === UploadStatus.Complete);
+        if (this.workflowHelper?.workflow)
+            await this.workflowHelper.workflow.updateStatus(success ? DBAPI.eWorkflowJobRunStatus.eDone : DBAPI.eWorkflowJobRunStatus.eError);
+
+        if (success)
             await this.appendToWFReport('<b>Upload succeeded</b>');
         else
             await this.appendToWFReport(`<b>Upload failed</b>: ${UAR.error}`);
@@ -218,7 +223,7 @@ class UploadAssetWorker extends ResolverBase {
                 idSystemObject.push(SOI.idSystemObject);
 
                 const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-                const href: string = H.Helpers.computeHref(path, assetVersion.FileName, false);
+                const href: string = H.Helpers.computeHref(path, assetVersion.FileName, H.eHrefMode.ePrependClientURL);
                 await this.appendToWFReport(`Uploaded asset: ${href}`);
             } else
                 LOG.error(`uploadAsset createWorkflow unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);

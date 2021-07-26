@@ -69,3 +69,4 @@ export * from './api/composite/ObjectGraphDatabase';
 export * from './api/composite/ObjectGraphDataEntry';
 export * from './api/composite/SceneConstellation';
 export * from './api/composite/SubjectUnitIdentifier';
+export * from './api/composite/WorkflowListResult';

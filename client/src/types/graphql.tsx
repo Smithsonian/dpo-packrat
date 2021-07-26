@@ -62,6 +62,7 @@ export type Query = {
   getVocabulary: GetVocabularyResult;
   getVocabularyEntries: GetVocabularyEntriesResult;
   getWorkflow: GetWorkflowResult;
+  getWorkflowList: GetWorkflowListResult;
   searchIngestionSubjects: SearchIngestionSubjectsResult;
 };
 
@@ -263,6 +264,11 @@ export type QueryGetVocabularyEntriesArgs = {
 
 export type QueryGetWorkflowArgs = {
   input: GetWorkflowInput;
+};
+
+
+export type QueryGetWorkflowListArgs = {
+  input: GetWorkflowListInput;
 };
 
 
@@ -2378,9 +2384,28 @@ export type GetWorkflowInput = {
   idWorkflow: Scalars['Int'];
 };
 
+export type GetWorkflowListInput = {
+  idVWorkflowType?: Maybe<Scalars['Int']>;
+  idVJobType?: Maybe<Scalars['Int']>;
+  State?: Maybe<Scalars['Int']>;
+  DateFrom?: Maybe<Scalars['DateTime']>;
+  DateTo?: Maybe<Scalars['DateTime']>;
+  idUserInitiator?: Maybe<Scalars['Int']>;
+  idUserOwner?: Maybe<Scalars['Int']>;
+  pageNumber?: Maybe<Scalars['Int']>;
+  rowCount?: Maybe<Scalars['Int']>;
+  sortBy?: Maybe<Scalars['Int']>;
+  sortOrder?: Maybe<Scalars['Boolean']>;
+};
+
 export type GetWorkflowResult = {
   __typename?: 'GetWorkflowResult';
   Workflow?: Maybe<Workflow>;
+};
+
+export type GetWorkflowListResult = {
+  __typename?: 'GetWorkflowListResult';
+  WorkflowList?: Maybe<Array<Maybe<WorkflowListResult>>>;
 };
 
 export type Job = {
@@ -2423,6 +2448,21 @@ export type Workflow = {
   WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 
+export type WorkflowReport = {
+  __typename?: 'WorkflowReport';
+  idWorkflowReport: Scalars['Int'];
+  idWorkflow: Scalars['Int'];
+  MimeType: Scalars['String'];
+  Data: Scalars['String'];
+  Workflow?: Maybe<Workflow>;
+};
+
+export type WorkflowSet = {
+  __typename?: 'WorkflowSet';
+  idWorkflowSet: Scalars['Int'];
+  Workflow?: Maybe<Array<Maybe<Workflow>>>;
+};
+
 export type WorkflowStep = {
   __typename?: 'WorkflowStep';
   idWorkflowStep: Scalars['Int'];
@@ -2447,6 +2487,25 @@ export type WorkflowStepSystemObjectXref = {
   Input: Scalars['Boolean'];
   SystemObject?: Maybe<SystemObject>;
   WorkflowStep?: Maybe<WorkflowStep>;
+};
+
+export type WorkflowListResult = {
+  __typename?: 'WorkflowListResult';
+  idWorkflow: Scalars['Int'];
+  idWorkflowSet: Scalars['Int'];
+  idWorkflowReport: Scalars['Int'];
+  idJobRun: Scalars['Int'];
+  Type: Scalars['String'];
+  State: Scalars['String'];
+  idUserInitiator: Scalars['Int'];
+  idOwner: Scalars['Int'];
+  DateStart: Scalars['DateTime'];
+  DateLast: Scalars['DateTime'];
+  Error: Scalars['String'];
+  UserInitiator?: Maybe<User>;
+  Owner?: Maybe<User>;
+  Workflow?: Maybe<Workflow>;
+  WorkflowSet?: Maybe<WorkflowSet>;
 };
 
 export type DiscardUploadedAssetVersionsMutationVariables = Exact<{
@@ -3791,6 +3850,26 @@ export type GetWorkflowQuery = (
       { __typename?: 'Workflow' }
       & Pick<Workflow, 'idWorkflow'>
     )> }
+  ) }
+);
+
+export type GetWorkflowListQueryVariables = Exact<{
+  input: GetWorkflowListInput;
+}>;
+
+
+export type GetWorkflowListQuery = (
+  { __typename?: 'Query' }
+  & { getWorkflowList: (
+    { __typename?: 'GetWorkflowListResult' }
+    & { WorkflowList?: Maybe<Array<Maybe<(
+      { __typename?: 'WorkflowListResult' }
+      & Pick<WorkflowListResult, 'idWorkflow' | 'idWorkflowSet' | 'idWorkflowReport' | 'idJobRun' | 'Type' | 'State' | 'DateStart' | 'DateLast' | 'Error'>
+      & { Owner?: Maybe<(
+        { __typename?: 'User' }
+        & Pick<User, 'Name'>
+      )> }
+    )>>> }
   ) }
 );
 
@@ -6993,3 +7072,51 @@ export function useGetWorkflowLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type GetWorkflowQueryHookResult = ReturnType<typeof useGetWorkflowQuery>;
 export type GetWorkflowLazyQueryHookResult = ReturnType<typeof useGetWorkflowLazyQuery>;
 export type GetWorkflowQueryResult = Apollo.QueryResult<GetWorkflowQuery, GetWorkflowQueryVariables>;
+export const GetWorkflowListDocument = gql`
+    query getWorkflowList($input: GetWorkflowListInput!) {
+  getWorkflowList(input: $input) {
+    WorkflowList {
+      idWorkflow
+      idWorkflowSet
+      idWorkflowReport
+      idJobRun
+      Type
+      State
+      Owner {
+        Name
+      }
+      DateStart
+      DateLast
+      Error
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetWorkflowListQuery__
+ *
+ * To run a query within a React component, call `useGetWorkflowListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetWorkflowListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetWorkflowListQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetWorkflowListQuery(baseOptions: Apollo.QueryHookOptions<GetWorkflowListQuery, GetWorkflowListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetWorkflowListQuery, GetWorkflowListQueryVariables>(GetWorkflowListDocument, options);
+      }
+export function useGetWorkflowListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetWorkflowListQuery, GetWorkflowListQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetWorkflowListQuery, GetWorkflowListQueryVariables>(GetWorkflowListDocument, options);
+        }
+export type GetWorkflowListQueryHookResult = ReturnType<typeof useGetWorkflowListQuery>;
+export type GetWorkflowListLazyQueryHookResult = ReturnType<typeof useGetWorkflowListLazyQuery>;
+export type GetWorkflowListQueryResult = Apollo.QueryResult<GetWorkflowListQuery, GetWorkflowListQueryVariables>;
