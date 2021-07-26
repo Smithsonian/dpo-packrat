@@ -59,6 +59,7 @@ export type Query = {
   getVocabulary: GetVocabularyResult;
   getVocabularyEntries: GetVocabularyEntriesResult;
   getWorkflow: GetWorkflowResult;
+  getWorkflowList: GetWorkflowListResult;
   searchIngestionSubjects: SearchIngestionSubjectsResult;
 };
 
@@ -260,6 +261,11 @@ export type QueryGetVocabularyEntriesArgs = {
 
 export type QueryGetWorkflowArgs = {
   input: GetWorkflowInput;
+};
+
+
+export type QueryGetWorkflowListArgs = {
+  input: GetWorkflowListInput;
 };
 
 
@@ -2375,9 +2381,28 @@ export type GetWorkflowInput = {
   idWorkflow: Scalars['Int'];
 };
 
+export type GetWorkflowListInput = {
+  idVWorkflowType?: Maybe<Scalars['Int']>;
+  idVJobType?: Maybe<Scalars['Int']>;
+  State?: Maybe<Scalars['Int']>;
+  DateFrom?: Maybe<Scalars['DateTime']>;
+  DateTo?: Maybe<Scalars['DateTime']>;
+  idUserInitiator?: Maybe<Scalars['Int']>;
+  idUserOwner?: Maybe<Scalars['Int']>;
+  pageNumber?: Maybe<Scalars['Int']>;
+  rowCount?: Maybe<Scalars['Int']>;
+  sortBy?: Maybe<Scalars['Int']>;
+  sortOrder?: Maybe<Scalars['Boolean']>;
+};
+
 export type GetWorkflowResult = {
   __typename?: 'GetWorkflowResult';
   Workflow?: Maybe<Workflow>;
+};
+
+export type GetWorkflowListResult = {
+  __typename?: 'GetWorkflowListResult';
+  WorkflowList?: Maybe<Array<Maybe<WorkflowListResult>>>;
 };
 
 export type Job = {
@@ -2420,6 +2445,21 @@ export type Workflow = {
   WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 
+export type WorkflowReport = {
+  __typename?: 'WorkflowReport';
+  idWorkflowReport: Scalars['Int'];
+  idWorkflow: Scalars['Int'];
+  MimeType: Scalars['String'];
+  Data: Scalars['String'];
+  Workflow?: Maybe<Workflow>;
+};
+
+export type WorkflowSet = {
+  __typename?: 'WorkflowSet';
+  idWorkflowSet: Scalars['Int'];
+  Workflow?: Maybe<Array<Maybe<Workflow>>>;
+};
+
 export type WorkflowStep = {
   __typename?: 'WorkflowStep';
   idWorkflowStep: Scalars['Int'];
@@ -2444,4 +2484,23 @@ export type WorkflowStepSystemObjectXref = {
   Input: Scalars['Boolean'];
   SystemObject?: Maybe<SystemObject>;
   WorkflowStep?: Maybe<WorkflowStep>;
+};
+
+export type WorkflowListResult = {
+  __typename?: 'WorkflowListResult';
+  idWorkflow: Scalars['Int'];
+  idWorkflowSet: Scalars['Int'];
+  idWorkflowReport: Scalars['Int'];
+  idJobRun: Scalars['Int'];
+  Type: Scalars['String'];
+  State: Scalars['String'];
+  idUserInitiator: Scalars['Int'];
+  idOwner: Scalars['Int'];
+  DateStart: Scalars['DateTime'];
+  DateLast: Scalars['DateTime'];
+  Error: Scalars['String'];
+  UserInitiator?: Maybe<User>;
+  Owner?: Maybe<User>;
+  Workflow?: Maybe<Workflow>;
+  WorkflowSet?: Maybe<WorkflowSet>;
 };

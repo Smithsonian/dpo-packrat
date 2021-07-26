@@ -1,11 +1,30 @@
 type Query {
     getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
+    getWorkflowList(input: GetWorkflowListInput!): GetWorkflowListResult!
 }
 
 input GetWorkflowInput {
     idWorkflow: Int!
 }
 
+input GetWorkflowListInput {
+    idVWorkflowType: Int
+    idVJobType: Int
+    State: Int
+    DateFrom: DateTime
+    DateTo: DateTime
+    idUserInitiator: Int
+    idUserOwner: Int
+    pageNumber: Int
+    rowCount: Int
+    sortBy: Int
+    sortOrder: Boolean
+}
+
 type GetWorkflowResult {
     Workflow: Workflow
+}
+
+type GetWorkflowListResult {
+    WorkflowList: [WorkflowListResult]
 }

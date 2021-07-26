@@ -38,6 +38,8 @@ import {
     GetVocabularyResult,
     GetWorkflowInput,
     GetWorkflowResult,
+    GetWorkflowListInput,
+    GetWorkflowListResult,
     CreateUserInput,
     CreateUserResult,
     CreateCaptureDataInput,
@@ -132,6 +134,7 @@ import getItem from './queries/unit/getItem';
 import getSubject from './queries/unit/getSubject';
 import getVocabulary from './queries/vocabulary/getVocabulary';
 import getWorkflow from './queries/workflow/getWorkflow';
+import getWorkflowList from './queries/workflow/getWorkflowList';
 import getUploadedAssetVersion from './queries/asset/getUploadedAssetVersion';
 import searchIngestionSubjects from './queries/unit/searchIngestionSubjects';
 import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSubjects';
@@ -193,6 +196,7 @@ const allQueries = {
     getSubject,
     getVocabulary,
     getWorkflow,
+    getWorkflowList,
     createUser,
     createCaptureData,
     createCaptureDataPhoto,
@@ -749,6 +753,16 @@ class GraphQLApi {
 
     async getWorkflow(input: GetWorkflowInput, context?: Context): Promise<GetWorkflowResult> {
         const operationName = 'getWorkflow';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getWorkflowList(input: GetWorkflowListInput, context?: Context): Promise<GetWorkflowListResult> {
+        const operationName = 'getWorkflowList';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

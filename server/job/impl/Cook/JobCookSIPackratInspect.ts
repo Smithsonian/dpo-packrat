@@ -530,7 +530,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             return null;
         }
 
-        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eJobRunStatus.eDone, true, [idAssetVersion]);
+        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eWorkflowJobRunStatus.eDone, true, [idAssetVersion]);
         if (!jobRuns || jobRuns.length != 1) {
             LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}`, LOG.LS.eJOB);
             return null;

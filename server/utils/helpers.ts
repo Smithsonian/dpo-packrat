@@ -36,6 +36,12 @@ export type StatResults = {
     error: string;
 };
 
+export enum eHrefMode {
+    eNone = 0,
+    ePrependClientURL = 1,
+    ePrependServerURL = 2,
+}
+
 export class Helpers {
     static arraysEqual(input1: any, input2: any): boolean {
         if (!Array.isArray(input1) || ! Array.isArray(input2) || input1.length !== input2.length)
@@ -521,11 +527,20 @@ export class Helpers {
         });
     }
 
-    static computeHref(path: string, anchor: string, prependServerRoot?: boolean | undefined): string {
+    static computeHref(path: string, anchor: string, eMode?: eHrefMode | undefined): string {
         if (!path)
             return anchor;
-        if (prependServerRoot)
-            path = Config.http.serverUrl + (path.startsWith('/') ? path : '/' + path);
+
+        let prefix: string = '';
+        switch (eMode) {
+            case undefined: break;
+            case eHrefMode.eNone: break;
+            case eHrefMode.ePrependClientURL: prefix = Config.http.clientUrl; break;
+            case eHrefMode.ePrependServerURL: prefix = Config.http.serverUrl; break;
+        }
+
+        if (prefix)
+            path = prefix + (path.startsWith('/') ? path : '/' + path);
 
         return `<a href='${path}'>${Helpers.escapeHTMLEntity(anchor)}</a>`;
     }

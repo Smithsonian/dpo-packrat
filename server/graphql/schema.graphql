@@ -42,6 +42,7 @@ type Query {
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
   getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
+  getWorkflowList(input: GetWorkflowListInput!): GetWorkflowListResult!
   searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
 }
 
@@ -1882,8 +1883,26 @@ input GetWorkflowInput {
   idWorkflow: Int!
 }
 
+input GetWorkflowListInput {
+  idVWorkflowType: Int
+  idVJobType: Int
+  State: Int
+  DateFrom: DateTime
+  DateTo: DateTime
+  idUserInitiator: Int
+  idUserOwner: Int
+  pageNumber: Int
+  rowCount: Int
+  sortBy: Int
+  sortOrder: Boolean
+}
+
 type GetWorkflowResult {
   Workflow: Workflow
+}
+
+type GetWorkflowListResult {
+  WorkflowList: [WorkflowListResult]
 }
 
 type Job {
@@ -1923,6 +1942,19 @@ type Workflow {
   WorkflowStep: [WorkflowStep]
 }
 
+type WorkflowReport {
+  idWorkflowReport: Int!
+  idWorkflow: Int!
+  MimeType: String!
+  Data: String!
+  Workflow: Workflow
+}
+
+type WorkflowSet {
+  idWorkflowSet: Int!
+  Workflow: [Workflow]
+}
+
 type WorkflowStep {
   idWorkflowStep: Int!
   JobRun: JobRun
@@ -1945,4 +1977,22 @@ type WorkflowStepSystemObjectXref {
   Input: Boolean!
   SystemObject: SystemObject
   WorkflowStep: WorkflowStep
+}
+
+type WorkflowListResult {
+  idWorkflow: Int!
+  idWorkflowSet: Int!
+  idWorkflowReport: Int!
+  idJobRun: Int!
+  Type: String!
+  State: String!
+  idUserInitiator: Int!
+  idOwner: Int!
+  DateStart: DateTime!
+  DateLast: DateTime!
+  Error: String!
+  UserInitiator: User
+  Owner: User
+  Workflow: Workflow
+  WorkflowSet: WorkflowSet
 }

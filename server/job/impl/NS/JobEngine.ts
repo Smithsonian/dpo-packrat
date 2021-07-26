@@ -131,7 +131,7 @@ export class JobEngine implements JOB.IJobEngine {
 
     private async createJobRunDBRecord(dbJob: DBAPI.Job, configuration: any, parameters: any): Promise<DBAPI.JobRun | null> {
         const dbJobRun: DBAPI.JobRun = new DBAPI.JobRun({
-            idJobRun: 0, idJob: dbJob.idJob, Status: DBAPI.eJobRunStatus.eUnitialized,
+            idJobRun: 0, idJob: dbJob.idJob, Status: DBAPI.eWorkflowJobRunStatus.eUnitialized,
             Result: null, DateStart: null, DateEnd: null, Configuration: JSON.stringify(configuration),
             Parameters: JSON.stringify(parameters),
             Output: null, Error: null

@@ -54,6 +54,10 @@ class IngestDataWorker extends ResolverBase {
 
     async ingest(): Promise<IngestDataResult> {
         const IDR: IngestDataResult = await this.ingestWorker();
+
+        if (this.workflowHelper?.workflow)
+            await this.workflowHelper.workflow.updateStatus(IDR.success ? DBAPI.eWorkflowJobRunStatus.eDone : DBAPI.eWorkflowJobRunStatus.eError);
+
         if (IDR.success)
             await this.appendToWFReport('<b>Ingest validation succeeded</b>');
         else
@@ -436,7 +440,7 @@ class IngestDataWorker extends ResolverBase {
         }
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromCaptureData(captureDataDB);
         const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, captureDataDB.Name, false);
+        const href: string = H.Helpers.computeHref(path, captureDataDB.Name, H.eHrefMode.ePrependClientURL);
         await this.appendToWFReport(`CaptureData Photogrammetry: ${href}`);
 
         const captureDataPhotoDB: DBAPI.CaptureDataPhoto = new DBAPI.CaptureDataPhoto({
@@ -609,7 +613,7 @@ class IngestDataWorker extends ResolverBase {
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(modelDB);
         const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, modelDB.Name, false);
+        const href: string = H.Helpers.computeHref(path, modelDB.Name, H.eHrefMode.ePrependClientURL);
         await this.appendToWFReport(`Model: ${href}`);
 
         if (!await this.handleIdentifiers(modelDB, model.systemCreated, model.identifiers))
@@ -681,7 +685,7 @@ class IngestDataWorker extends ResolverBase {
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(sceneDB);
         const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, sceneDB.Name, false);
+        const href: string = H.Helpers.computeHref(path, sceneDB.Name, H.eHrefMode.ePrependClientURL);
         await this.appendToWFReport(`Scene: ${href}`);
 
         if (!await this.handleIdentifiers(sceneDB, scene.systemCreated, scene.identifiers))
@@ -852,9 +856,9 @@ class IngestDataWorker extends ResolverBase {
                     for (const assetVersion of ISR.assetVersions) {
                         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
                         const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-                        const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName, false);
+                        const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName, H.eHrefMode.ePrependClientURL);
                         const pathDownload: string = RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion);
-                        const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Download', true);
+                        const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Download', H.eHrefMode.ePrependServerURL);
                         await this.appendToWFReport(`Ingested ${hrefObject}: ${hrefDownload}`);
                     }
                 }

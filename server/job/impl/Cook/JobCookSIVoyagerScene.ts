@@ -192,9 +192,9 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(scene);
         const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name, false);
+        const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name, H.eHrefMode.ePrependClientURL);
         const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion) : '';
-        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', true) : '';
+        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', H.eHrefMode.ePrependServerURL) : '';
         await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
 
         const SOV: DBAPI.SystemObjectVersion | null | undefined = ISR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
@@ -293,9 +293,9 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
                     const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
                     const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-                    const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name, false);
+                    const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name, H.eHrefMode.ePrependClientURL);
                     const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion) : '';
-                    const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', true) : '';
+                    const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', H.eHrefMode.ePrependServerURL) : '';
                     await this.appendToReportAndLog(`${this.name()} ingested model ${hrefObject}${hrefDownload}`);
 
                     // if an asset version was created for ingestion of this model, and if a system object version was created for scene ingestion,

@@ -232,9 +232,9 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 idSystemObjectModel = SOI ? SOI.idSystemObject : null;
             }
             const pathObject: string = idSystemObjectModel ? RouteBuilder.RepositoryDetails(idSystemObjectModel) : '';
-            const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name, false);
+            const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name, H.eHrefMode.ePrependClientURL);
             const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion) : '';
-            const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', true) : '';
+            const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', H.eHrefMode.ePrependServerURL) : '';
             await this.appendToReportAndLog(`${this.name()} ingested generated download model ${hrefObject}${hrefDownload}`);
 
             if (ISR.assetVersion)
