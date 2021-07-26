@@ -32,7 +32,7 @@ export class AuditEventGenerator {
 
         if (this.eventProducer) {
             const eventDate: Date = new Date();
-            const LS: LocalStore | undefined = ASL.getStore();
+            const LS: LocalStore = ASL.getOrCreateStore();
             const idUser: number | null = LS?.idUser || null;
 
             const DBObjectType: eDBObjectType = oID.eObjectType;

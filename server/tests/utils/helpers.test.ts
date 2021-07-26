@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as T from '../../utils/types';
+import { Config } from '../../config';
 
 const n1: number = 3;
 const n2: number = 5;
@@ -220,7 +221,7 @@ describe('Utils: Helpers', () => {
         const buffer3: Buffer | null = await H.Helpers.readFileFromStream(stream3);
         expect(buffer3).toBeTruthy();
 
-        const stream4: NodeJS.ReadableStream = fs.createReadStream(filePath);
+        const stream4: NodeJS.ReadableStream = fs.createReadStream(filePathRandom);
         const buffer4: Buffer | null = await H.Helpers.readFileFromStreamThrowErrors(stream4);
         expect(buffer4).toBeTruthy();
     });
@@ -422,6 +423,8 @@ describe('Utils: Helpers', () => {
         const strVal: string = 'string';
         const boolVal: boolean = false;
         const dateVal: Date = new Date();
+        const dateVal2: Date = dateVal;
+        dateVal2.setMilliseconds(0);
         const objVal = {
             foo: 'abba',
             bar: 'dabba'
@@ -432,6 +435,7 @@ describe('Utils: Helpers', () => {
         expect(H.Helpers.safeDate(boolVal)).toBeNull();
         expect(H.Helpers.safeDate(objVal)).toBeNull();
         expect(H.Helpers.safeDate(dateVal)).toEqual(dateVal);
+        expect(H.Helpers.safeDate(dateVal.toUTCString())).toEqual(dateVal2);
     });
 
     test('Utils: Helpers.stringify*', async () => {
@@ -460,6 +464,24 @@ describe('Utils: Helpers', () => {
         const output2: string = JSON.stringify(testData, H.Helpers.stringifyDatabaseRow);
         LOG.info(`output: ${output2}`, LOG.LS.eTEST);
         expect(output2).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false}');
+    });
+
+    test('Utils: escapeHTMLEntity', async () => {
+        expect(H.Helpers.escapeHTMLEntity('ABBA')).toEqual('ABBA');
+        expect(H.Helpers.escapeHTMLEntity('AB&BA')).toEqual('AB&amp;BA');
+        expect(H.Helpers.escapeHTMLEntity('AB<BA')).toEqual('AB&lt;BA');
+        expect(H.Helpers.escapeHTMLEntity('AB>BA')).toEqual('AB&gt;BA');
+        expect(H.Helpers.escapeHTMLEntity('AB"BA')).toEqual('AB&quot;BA');
+        expect(H.Helpers.escapeHTMLEntity('AB\'BA')).toEqual('AB&#39;BA');
+        expect(H.Helpers.escapeHTMLEntity('AB/BA')).toEqual('AB&#x2F;BA');
+    });
+
+    test('Utils: computeHref', async () => {
+        expect(H.Helpers.computeHref('/path/to/item', 'anchor text')).toEqual('<a href=\'/path/to/item\'>anchor text</a>');
+        expect(H.Helpers.computeHref('/path/to/item', 'anchor text', true)).toEqual(`<a href='${Config.http.serverUrl}/path/to/item'>anchor text</a>`);
+        expect(H.Helpers.computeHref('item', 'anchor text', true)).toEqual(`<a href='${Config.http.serverUrl}/item'>anchor text</a>`);
+        expect(H.Helpers.computeHref('', 'anchor text')).toEqual('anchor text');
+        expect(H.Helpers.computeHref('', 'anchor text', true)).toEqual('anchor text');
     });
 
     test('Utils: types', async () => {

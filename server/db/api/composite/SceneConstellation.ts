@@ -103,10 +103,10 @@ export class SceneConstellation {
                         }
                     }
 
-                    // Otherwise, look for an existing, matching model using AssetVersion.FileName === MSX.Name, AssetVersion.StorageSize === MSX.FileSize,
+                    // Otherwise, look for an existing, matching model using AssetVersion.FileName === MSX.Name and
                     // Asset.idVAssetType IN [Model, ModelGeometryFile]
-                    const models: Model[] | null = (MSX.Name && MSX.FileSize) ?
-                        await Model.fetchByFileNameSizeAndAssetType(MSX.Name, MSX.FileSize, [idVAssetType1, idVAssetType2]) : null;
+                    const models: Model[] | null = (MSX.Name) ?
+                        await Model.fetchByFileNameAndAssetType(MSX.Name, [idVAssetType1, idVAssetType2]) : null;
                     if (models && models.length > 0)
                         MSX.idModel = models[0].idModel;
                     modelSceneXrefs.push(MSX);

@@ -8,6 +8,7 @@ import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as STORE from '../../../storage/interface';
+import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { eEventKey } from '../../../event/interface/EventEnums';
 import { ZipStream } from '../../../utils/zipStream';
@@ -290,6 +291,14 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
     }
 
     static async extract(output: any, fileName: string | null, dateCreated: Date | null): Promise<JobCookSIPackratInspectOutput> {
+        const JCOutput: JobCookSIPackratInspectOutput = await JobCookSIPackratInspectOutput.extractWorker(output, fileName, dateCreated);
+        const report: REP.IReport | null = await REP.ReportFactory.getReport();
+        if (report)
+            report.append(`Cook si-packrat-inspect ${JCOutput.success ? 'succeeded' : 'failed: ' + JCOutput.error}`);
+        return JCOutput;
+    }
+
+    private static async extractWorker(output: any, fileName: string | null, dateCreated: Date | null): Promise<JobCookSIPackratInspectOutput> {
         // LOG.info(`JobCookSIPackratInspectOutput.extract: ${JSON.stringify(output, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
         const JCOutput: JobCookSIPackratInspectOutput = new JobCookSIPackratInspectOutput();
 
@@ -655,11 +664,11 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectParameters> {
     private parameters: JobCookSIPackratInspectParameters;
 
-    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null,
+    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIPackratInspectParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-packrat-inspect',
             CookRecipe.getCookRecipeID('si-packrat-inspect', 'bb602690-76c9-11eb-9439-0242ac130002'),
-            null, idAssetVersions, dbJobRun);
+            null, idAssetVersions, report, dbJobRun);
         this.parameters = parameters;
     }
 

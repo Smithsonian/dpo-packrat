@@ -174,7 +174,7 @@ function Model(props: ModelProps): React.ReactElement {
             }
         }
     });
-    const idSystemObject: number | undefined = subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject;
+    const idSystemObject: number | undefined = subjects.length > 0 ? subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject : undefined;
 
     const errors = getFieldErrors(metadata);
 

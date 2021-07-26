@@ -118,7 +118,7 @@ export const modelFieldsSchema = yup.object().shape({
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     uvMaps: yup.array().of(uvMapSchema),
     sourceObjects: yup.array().of(sourceObjectSchema),
-    dateCaptured: yup.date().max(Date(), 'Date Captured cannot be set in the future').typeError('Date Captured is required'),
+    dateCaptured: yup.date().typeError('Date Captured is required'),
     creationMethod: yup.number().typeError('Creation method is required'),
     modality: yup.number().typeError('Modality is required'),
     units: yup.number().typeError('Units is required'),

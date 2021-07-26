@@ -10,6 +10,7 @@ import { promises as fsp } from 'fs';
 import * as crypto from 'crypto';
 
 import * as LOG from './logger';
+import { Config } from '../config';
 
 export type IOResults = {
     success: boolean;
@@ -503,5 +504,29 @@ export class Helpers {
                 return undefined;
         }
         return Helpers.saferStringify(key, value);
+    }
+
+    /* c.f. https://coderwall.com/p/ostduq/escape-html-with-javascript */
+    static escapeHTMLEntity(input: string): string {
+        return input.replace(/[&<>"'\/]/g, function (s) {
+            const entityMap = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                '\'': '&#39;',
+                '/': '&#x2F;'
+            };
+            return entityMap[s];
+        });
+    }
+
+    static computeHref(path: string, anchor: string, prependServerRoot?: boolean | undefined): string {
+        if (!path)
+            return anchor;
+        if (prependServerRoot)
+            path = Config.http.serverUrl + (path.startsWith('/') ? path : '/' + path);
+
+        return `<a href='${path}'>${Helpers.escapeHTMLEntity(anchor)}</a>`;
     }
 }

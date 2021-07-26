@@ -99,6 +99,7 @@ export enum eVocabularyID {
     eJobJobTypeCookSIVoyagerScene,
     eJobJobTypeCookUnwrap,
     eWorkflowTypeCookJob,
+    eWorkflowTypeIngestion,
     eWorkflowStepTypeStart,
     eNone = -1
 }

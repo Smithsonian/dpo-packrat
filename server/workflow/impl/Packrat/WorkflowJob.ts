@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types, no-constant-condition */
-
 import * as WF from '../../interface';
 import * as JOB from '../../../job/interface';
+import * as REP from '../../../report/interface';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
@@ -25,12 +25,13 @@ export class WorkflowJob implements WF.IWorkflow {
     private workflowParams: WF.WorkflowParameters;
     private workflowData: DBAPI.WorkflowConstellation;
     private workflowJobParameters: WorkflowJobParameters | null = null;
+    private workflowReport: REP.IReport | null = null;
     private idAssetVersions: number[] | null = null;
     private completionMutexes: MutexInterface[] = [];
     private complete: boolean = false;
     private results: H.IOResults = { success: false, error: 'Workflow Job Not Initialized' };
 
-    static async constructWorkflowJob(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowJob | null> {
+    static async constructWorkflow(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowJob | null> {
         const workflowJob: WorkflowJob = new WorkflowJob(workflowParams, WFC);
         const res: H.IOResults = await workflowJob.extractParameters();
         if (!res.success)
@@ -50,6 +51,16 @@ export class WorkflowJob implements WF.IWorkflow {
         if (!this.workflowJobParameters)
             return { success: false, error: 'Invalid Job Parameters' };
 
+        // fetch workflow report
+        if (!this.workflowReport) {
+            this.workflowReport = await REP.ReportFactory.getReport();
+            if (!this.workflowReport) {
+                const error: string = 'WorkflowJob.start unable to create/fetch workflow report';
+                LOG.error(error, LOG.LS.eWF);
+                // return { success: false, error };
+            }
+        }
+
         // fetch IJobEngine; use IJobEngine to create IJob; use IJob to start job
         // expect job to update WorkflowStep
         const jobEngine: JOB.IJobEngine | null = await JOB.JobFactory.getInstance();
@@ -63,6 +74,7 @@ export class WorkflowJob implements WF.IWorkflow {
             idJob: null,
             eJobType: this.workflowJobParameters.eCookJob,
             idAssetVersions: this.idAssetVersions,
+            report: this.workflowReport,
             parameters: this.workflowJobParameters.cookJobParameters,
             frequency: null               // null means create but don't run
         };

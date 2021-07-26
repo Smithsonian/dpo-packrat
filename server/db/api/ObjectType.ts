@@ -55,6 +55,8 @@ export enum eNonSystemObjectType {
     eVocabulary = 55,
     eVocabularySet = 56,
     eWorkflow = 57,
+    eWorkflowReport = 61,
+    eWorkflowSet = 62,
     eWorkflowStep = 58,
     eWorkflowStepSystemObjectXref = 59,
 }
@@ -177,6 +179,8 @@ export function DBObjectTypeToName(dbType: eDBObjectType | null): string {
         case eNonSystemObjectType.eVocabulary:                          return 'Vocabulary';
         case eNonSystemObjectType.eVocabularySet:                       return 'VocabularySet';
         case eNonSystemObjectType.eWorkflow:                            return 'Workflow';
+        case eNonSystemObjectType.eWorkflowReport:                      return 'WorkflowReport';
+        case eNonSystemObjectType.eWorkflowSet:                         return 'WorkflowSet';
         case eNonSystemObjectType.eWorkflowStep:                        return 'WorkflowStep';
         case eNonSystemObjectType.eWorkflowStepSystemObjectXref:        return 'WorkflowStepSystemObjectXref';
 
@@ -257,6 +261,10 @@ export function DBObjectNameToType(objectTypeName: string | null): eDBObjectType
         case 'VocabularySet': return eNonSystemObjectType.eVocabularySet;
         case 'Vocabulary Set': return eNonSystemObjectType.eVocabularySet;
         case 'Workflow': return eNonSystemObjectType.eWorkflow;
+        case 'WorkflowReport': return eNonSystemObjectType.eWorkflowReport;
+        case 'Workflow Report': return eNonSystemObjectType.eWorkflowReport;
+        case 'WorkflowSet': return eNonSystemObjectType.eWorkflowSet;
+        case 'Workflow Set': return eNonSystemObjectType.eWorkflowSet;
         case 'WorkflowStep': return eNonSystemObjectType.eWorkflowStep;
         case 'Workflow Step': return eNonSystemObjectType.eWorkflowStep;
         case 'WorkflowStepSystemObjectXref': return eNonSystemObjectType.eWorkflowStepSystemObjectXref;

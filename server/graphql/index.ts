@@ -31,6 +31,10 @@ const ApolloServerOptions: ApolloServerExpressConfig = {
             user,
             isAuthenticated
         };
+    },
+    formatError: (err) => {
+        LOG.error('ApolloServer Error:', LOG.LS.eGQL, err);
+        return err;
     }
 };
 
