@@ -57,9 +57,15 @@ export class LocalStore {
 }
 
 export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
-    getOrCreateStore(): LocalStore {
-        const LS: LocalStore | undefined = this.getStore();
-        return (LS) ? LS : new LocalStore(true, undefined);
+    async getOrCreateStore(): Promise<LocalStore> {
+        let LS: LocalStore | undefined = this.getStore();
+        if (LS)
+            return LS;
+
+        return new Promise<LocalStore>((resolve) => {
+            LS = new LocalStore(true, undefined);
+            this.run(LS, () => { resolve(LS!); }); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        });
     }
 }
 

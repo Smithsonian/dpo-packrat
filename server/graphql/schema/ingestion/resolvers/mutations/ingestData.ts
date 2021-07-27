@@ -16,7 +16,7 @@ import * as REP from '../../../../../report/interface';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
-import { RouteBuilder } from '../../../../../http/routes/routeBuilder';
+import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 
 type AssetPair = {
     asset: DBAPI.Asset;
@@ -439,8 +439,8 @@ class IngestDataWorker extends ResolverBase {
             return false;
         }
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromCaptureData(captureDataDB);
-        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, captureDataDB.Name, H.eHrefMode.ePrependClientURL);
+        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+        const href: string = H.Helpers.computeHref(path, captureDataDB.Name);
         await this.appendToWFReport(`CaptureData Photogrammetry: ${href}`);
 
         const captureDataPhotoDB: DBAPI.CaptureDataPhoto = new DBAPI.CaptureDataPhoto({
@@ -612,8 +612,8 @@ class IngestDataWorker extends ResolverBase {
         modelDB = JCOutput.modelConstellation.Model; // retrieve again, as we may have swapped the object above, in JCOutput.persist
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(modelDB);
-        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, modelDB.Name, H.eHrefMode.ePrependClientURL);
+        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+        const href: string = H.Helpers.computeHref(path, modelDB.Name);
         await this.appendToWFReport(`Model: ${href}`);
 
         if (!await this.handleIdentifiers(modelDB, model.systemCreated, model.identifiers))
@@ -684,8 +684,8 @@ class IngestDataWorker extends ResolverBase {
         let success: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(sceneDB);
-        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, sceneDB.Name, H.eHrefMode.ePrependClientURL);
+        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+        const href: string = H.Helpers.computeHref(path, sceneDB.Name);
         await this.appendToWFReport(`Scene: ${href}`);
 
         if (!await this.handleIdentifiers(sceneDB, scene.systemCreated, scene.identifiers))
@@ -855,10 +855,10 @@ class IngestDataWorker extends ResolverBase {
                 if (ISR.assetVersions) {
                     for (const assetVersion of ISR.assetVersions) {
                         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
-                        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-                        const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName, H.eHrefMode.ePrependClientURL);
-                        const pathDownload: string = RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion);
-                        const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Download', H.eHrefMode.ePrependServerURL);
+                        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+                        const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName);
+                        const pathDownload: string = RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL);
+                        const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Download');
                         await this.appendToWFReport(`Ingested ${hrefObject}: ${hrefDownload}`);
                     }
                 }

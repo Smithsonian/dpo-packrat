@@ -1995,4 +1995,7 @@ type WorkflowListResult {
   Owner: User
   Workflow: Workflow
   WorkflowSet: WorkflowSet
+  HyperlinkReport: String
+  HyperlinkSet: String
+  HyperlinkJob: String
 }

@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as T from '../../utils/types';
-import { Config } from '../../config';
 
 const n1: number = 3;
 const n2: number = 5;
@@ -478,17 +477,8 @@ describe('Utils: Helpers', () => {
 
     test('Utils: computeHref', async () => {
         expect(H.Helpers.computeHref('/path/to/item', 'anchor text')).toEqual('<a href=\'/path/to/item\'>anchor text</a>');
-        expect(H.Helpers.computeHref('/path/to/item', 'anchor text', H.eHrefMode.eNone)).toEqual('<a href=\'/path/to/item\'>anchor text</a>');
-        expect(H.Helpers.computeHref('/path/to/item', 'anchor text', H.eHrefMode.ePrependClientURL)).toEqual(`<a href='${Config.http.clientUrl}/path/to/item'>anchor text</a>`);
-        expect(H.Helpers.computeHref('/path/to/item', 'anchor text', H.eHrefMode.ePrependServerURL)).toEqual(`<a href='${Config.http.serverUrl}/path/to/item'>anchor text</a>`);
-
         expect(H.Helpers.computeHref('item', 'anchor text')).toEqual('<a href=\'item\'>anchor text</a>');
-        expect(H.Helpers.computeHref('item', 'anchor text', H.eHrefMode.eNone)).toEqual('<a href=\'item\'>anchor text</a>');
-        expect(H.Helpers.computeHref('item', 'anchor text', H.eHrefMode.ePrependClientURL)).toEqual(`<a href='${Config.http.clientUrl}/item'>anchor text</a>`);
-        expect(H.Helpers.computeHref('item', 'anchor text', H.eHrefMode.ePrependServerURL)).toEqual(`<a href='${Config.http.serverUrl}/item'>anchor text</a>`);
-
         expect(H.Helpers.computeHref('', 'anchor text')).toEqual('anchor text');
-        expect(H.Helpers.computeHref('', 'anchor text', H.eHrefMode.ePrependServerURL)).toEqual('anchor text');
     });
 
     test('Utils: types', async () => {

@@ -11,7 +11,7 @@ import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { ASL, LocalStore } from '../../../utils/localStore';
-import { RouteBuilder } from '../../../http/routes/routeBuilder';
+import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 
 import * as path from 'path';
 
@@ -206,7 +206,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             }
 
             // ingest model assets, and associate them with the correct model
-            const LS: LocalStore = ASL.getOrCreateStore();
+            const LS: LocalStore = await ASL.getOrCreateStore();
             const idUserCreator: number = LS?.idUser ?? 0;
             const ISI: STORE.IngestStreamOrFileInput = {
                 readStream: RSR.readStream,
@@ -231,10 +231,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
                 idSystemObjectModel = SOI ? SOI.idSystemObject : null;
             }
-            const pathObject: string = idSystemObjectModel ? RouteBuilder.RepositoryDetails(idSystemObjectModel) : '';
-            const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name, H.eHrefMode.ePrependClientURL);
-            const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion) : '';
-            const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', H.eHrefMode.ePrependServerURL) : '';
+            const pathObject: string = idSystemObjectModel ? RouteBuilder.RepositoryDetails(idSystemObjectModel, eHrefMode.ePrependClientURL) : '';
+            const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
+            const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
+            const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
             await this.appendToReportAndLog(`${this.name()} ingested generated download model ${hrefObject}${hrefDownload}`);
 
             if (ISR.assetVersion)
