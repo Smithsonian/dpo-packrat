@@ -10,7 +10,6 @@ import { promises as fsp } from 'fs';
 import * as crypto from 'crypto';
 
 import * as LOG from './logger';
-import { Config } from '../config';
 
 export type IOResults = {
     success: boolean;
@@ -35,12 +34,6 @@ export type StatResults = {
     success: boolean;
     error: string;
 };
-
-export enum eHrefMode {
-    eNone = 0,
-    ePrependClientURL = 1,
-    ePrependServerURL = 2,
-}
 
 export class Helpers {
     static arraysEqual(input1: any, input2: any): boolean {
@@ -527,21 +520,9 @@ export class Helpers {
         });
     }
 
-    static computeHref(path: string, anchor: string, eMode?: eHrefMode | undefined): string {
+    static computeHref(path: string, anchor: string): string {
         if (!path)
             return anchor;
-
-        let prefix: string = '';
-        switch (eMode) {
-            case undefined: break;
-            case eHrefMode.eNone: break;
-            case eHrefMode.ePrependClientURL: prefix = Config.http.clientUrl; break;
-            case eHrefMode.ePrependServerURL: prefix = Config.http.serverUrl; break;
-        }
-
-        if (prefix)
-            path = prefix + (path.startsWith('/') ? path : '/' + path);
-
         return `<a href='${path}'>${Helpers.escapeHTMLEntity(anchor)}</a>`;
     }
 }

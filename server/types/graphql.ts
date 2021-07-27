@@ -2503,4 +2503,7 @@ export type WorkflowListResult = {
   Owner?: Maybe<User>;
   Workflow?: Maybe<Workflow>;
   WorkflowSet?: Maybe<WorkflowSet>;
+  HyperlinkReport?: Maybe<Scalars['String']>;
+  HyperlinkSet?: Maybe<Scalars['String']>;
+  HyperlinkJob?: Maybe<Scalars['String']>;
 };

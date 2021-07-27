@@ -6,6 +6,7 @@ import * as REP from '../../../report/interface';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import * as NS from 'node-schedule';
+import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 
 export abstract class JobPackrat implements JOB.IJob {
     protected _jobEngine: JOB.IJobEngine;
@@ -134,6 +135,13 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eDone);
             this._dbJobRun.Output = output;
             await this._dbJobRun.update();
+
+            if (this._report) {
+                const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
+                const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Cook Job Output');
+                await this._report.append(`<br/>\n${hrefDownload}`);
+            }
+
             this.updateEngines(true, true); // don't block
         }
     }

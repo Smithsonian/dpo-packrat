@@ -2506,6 +2506,9 @@ export type WorkflowListResult = {
   Owner?: Maybe<User>;
   Workflow?: Maybe<Workflow>;
   WorkflowSet?: Maybe<WorkflowSet>;
+  HyperlinkReport?: Maybe<Scalars['String']>;
+  HyperlinkSet?: Maybe<Scalars['String']>;
+  HyperlinkJob?: Maybe<Scalars['String']>;
 };
 
 export type DiscardUploadedAssetVersionsMutationVariables = Exact<{
@@ -3864,7 +3867,7 @@ export type GetWorkflowListQuery = (
     { __typename?: 'GetWorkflowListResult' }
     & { WorkflowList?: Maybe<Array<Maybe<(
       { __typename?: 'WorkflowListResult' }
-      & Pick<WorkflowListResult, 'idWorkflow' | 'idWorkflowSet' | 'idWorkflowReport' | 'idJobRun' | 'Type' | 'State' | 'DateStart' | 'DateLast' | 'Error'>
+      & Pick<WorkflowListResult, 'idWorkflow' | 'idWorkflowSet' | 'idWorkflowReport' | 'idJobRun' | 'Type' | 'State' | 'DateStart' | 'DateLast' | 'HyperlinkReport' | 'HyperlinkSet' | 'HyperlinkJob' | 'Error'>
       & { Owner?: Maybe<(
         { __typename?: 'User' }
         & Pick<User, 'Name'>
@@ -7087,6 +7090,9 @@ export const GetWorkflowListDocument = gql`
       }
       DateStart
       DateLast
+      HyperlinkReport
+      HyperlinkSet
+      HyperlinkJob
       Error
     }
   }

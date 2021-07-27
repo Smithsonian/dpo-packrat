@@ -8,7 +8,7 @@ export class ReportFactory {
     static async getReport(): Promise<IReport | null> {
         let workflowReport: DBAPI.WorkflowReport | null = null;
 
-        const LS: LocalStore = ASL.getOrCreateStore();
+        const LS: LocalStore = await ASL.getOrCreateStore();
         const idWorkflowReport: number | undefined = LS.getWorkflowReportID();
         if (idWorkflowReport) {
             workflowReport = await DBAPI.WorkflowReport.fetch(idWorkflowReport);

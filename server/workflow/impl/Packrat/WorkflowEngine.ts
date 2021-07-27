@@ -98,7 +98,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             const updateRes: WF.WorkflowUpdateResults = await workflow.update(workflowStep, jobRun);
             if (updateRes.workflowComplete) {
                 this.workflowMap.delete(WFC.workflow.idWorkflow);
-                this.unsetActiveWorkflowStep(true);
+                await this.unsetActiveWorkflowStep(true);
                 LOG.info(`WorkflowEngine.jobUpdated completed workflow [${this.workflowMap.size}]: ${idJobRun}`, LOG.LS.eWF);
             }
             result = updateRes.success && result;
@@ -452,7 +452,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         WFC.workflowStep = [];
         WFC.workflowStep.push(workflowStep);
 
-        this.setActiveWorkflowStep(workflowStep);
+        await this.setActiveWorkflowStep(workflowStep);
 
         // *****************************************************
         // WorkflowStepSystemObjectXref for linked system objects
@@ -666,20 +666,20 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return retValue;
     }
 
-    private setActiveWorkflowStep(workflowStep: DBAPI.WorkflowStep): void {
-        const LS: LocalStore = ASL.getOrCreateStore();
+    private async setActiveWorkflowStep(workflowStep: DBAPI.WorkflowStep): Promise<void> {
+        const LS: LocalStore = await ASL.getOrCreateStore();
         LS.pushWorkflow(workflowStep.idWorkflow, workflowStep.idWorkflowStep);
     }
 
-    private unsetActiveWorkflowStep(workflowComplete: boolean): void {
-        const LS: LocalStore = ASL.getOrCreateStore();
+    private async unsetActiveWorkflowStep(workflowComplete: boolean): Promise<void> {
+        const LS: LocalStore = await ASL.getOrCreateStore();
         if (workflowComplete && LS.getWorkflowID())
             LS.popWorkflowID();
         LS.setWorkflowStepID(undefined);
     }
 
     private async getActiveWorkflowSet(): Promise<DBAPI.WorkflowSet | null> {
-        const LS: LocalStore = ASL.getOrCreateStore();
+        const LS: LocalStore = await ASL.getOrCreateStore();
         let workflowSet: DBAPI.WorkflowSet | null = null;
         if (LS.idWorkflowSet) {
             workflowSet = await DBAPI.WorkflowSet.fetch(LS.idWorkflowSet);

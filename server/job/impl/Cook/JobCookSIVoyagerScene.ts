@@ -12,7 +12,7 @@ import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { SvxReader } from '../../../utils/parser';
 import { ASL, LocalStore } from '../../../utils/localStore';
-import { RouteBuilder } from '../../../http/routes/routeBuilder';
+import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 
 import * as path from 'path';
 // import cloneable from 'cloneable-readable';
@@ -170,7 +170,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         }
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] retrieve svx.json 2`, LOG.LS.eJOB);
 
-        const LS: LocalStore = ASL.getOrCreateStore();
+        const LS: LocalStore = await ASL.getOrCreateStore();
         const idUserCreator: number = LS?.idUser ?? 0;
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream: RSR.readStream,
@@ -191,10 +191,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         }
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(scene);
-        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name, H.eHrefMode.ePrependClientURL);
-        const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion) : '';
-        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', H.eHrefMode.ePrependServerURL) : '';
+        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+        const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name);
+        const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
+        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
         await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
 
         const SOV: DBAPI.SystemObjectVersion | null | undefined = ISR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
@@ -292,10 +292,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                     }
 
                     const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
-                    const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-                    const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name, H.eHrefMode.ePrependClientURL);
-                    const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion) : '';
-                    const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download', H.eHrefMode.ePrependServerURL) : '';
+                    const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+                    const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
+                    const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
+                    const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
                     await this.appendToReportAndLog(`${this.name()} ingested model ${hrefObject}${hrefDownload}`);
 
                     // if an asset version was created for ingestion of this model, and if a system object version was created for scene ingestion,

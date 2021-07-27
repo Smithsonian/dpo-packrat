@@ -57,9 +57,9 @@ export class HttpServer {
         this.app.use('/auth', AuthRouter);
         this.app.use('/graphql', HttpServer.idRequestMiddleware2);
         this.app.use('/graphql', HttpServer.graphqlLoggingMiddleware);
+        this.app.use('/graphql', graphqlUploadExpress());
 
         const server = new ApolloServer(ApolloServerOptions);
-        this.app.use(graphqlUploadExpress());
         server.applyMiddleware({ app: this.app, cors: false });
 
         this.app.get('/logtest', logtest);
