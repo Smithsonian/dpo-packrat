@@ -46,11 +46,11 @@ export class WorkflowListResult {
                 queryRawParams.push(`${idVWorkflowType}`);
             }
             if (idVJobTypeSupplied) {
-                whereConditions.push('(JOB.JobType = ?)');
+                whereConditions.push('(JOB.idVJobType = ?)');
                 queryRawParams.push(`${idVJobType}`);
             }
             if (StateSupplied) {
-                whereConditions.push('(JOB.WFState = ? OR JOB.JobStatus = ?)');
+                whereConditions.push('(WFL.WFState = ? OR JOB.JobStatus = ?)');
                 queryRawParams.push(`${State}`);
                 queryRawParams.push(`${State}`);
             }
@@ -67,7 +67,7 @@ export class WorkflowListResult {
                 queryRawParams.push(`${idUserInitiator}`);
             }
             if (idUserOwnerSupplied) {
-                whereConditions.push('(JOB.idWFSOwner = ?)');
+                whereConditions.push('(WFL.idWFSOwner = ?)');
                 queryRawParams.push(`${idUserOwner}`);
             }
             const where: string = whereConditions.length > 0 ? `\nWHERE ${whereConditions.join(' AND ')}` : '';

@@ -76,20 +76,22 @@ type WorkflowStepSystemObjectXref {
 
 type WorkflowListResult {
     idWorkflow: Int!
-    idWorkflowSet: Int!
-    idWorkflowReport: Int!
-    idJobRun: Int!
-    Type: String!
-    State: String!
-    idUserInitiator: Int!
-    idOwner: Int!
-    DateStart: DateTime!
-    DateLast: DateTime!
-    Error: String!
+    idWorkflowSet: Int
+    idWorkflowReport: Int
+    idJobRun: Int
+    Type: String
+    State: String
+    idUserInitiator: Int
+    idOwner: Int
+    DateStart: DateTime
+    DateLast: DateTime
+    Error: String
     UserInitiator: User
     Owner: User
     Workflow: Workflow
+    WorkflowReport: WorkflowReport
     WorkflowSet: WorkflowSet
+    JobRun: JobRun
     HyperlinkReport: String
     HyperlinkSet: String
     HyperlinkJob: String
