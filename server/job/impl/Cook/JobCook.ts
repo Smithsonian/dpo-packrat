@@ -4,6 +4,7 @@ import { JobPackrat } from  '../NS/JobPackrat';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as STORE from '../../../storage/interface';
+import * as REP from '../../../report/interface';
 import { Config } from '../../../config';
 // import * as CACHE from '../../cache';
 import * as H from '../../../utils/helpers';
@@ -79,9 +80,9 @@ export abstract class JobCook<T> extends JobPackrat {
 
     // null jobId means create a new one
     constructor(jobEngine: JOB.IJobEngine, clientId: string, jobName: string,
-        recipeId: string, jobId: string | null,
-        idAssetVersions: number[] | null, dbJobRun: DBAPI.JobRun) {
-        super(jobEngine, dbJobRun);
+        recipeId: string, jobId: string | null, idAssetVersions: number[] | null,
+        report: REP.IReport | null, dbJobRun: DBAPI.JobRun) {
+        super(jobEngine, dbJobRun, report);
         this._configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId, dbJobRun);
         this._idAssetVersions = idAssetVersions;
     }
@@ -385,7 +386,10 @@ export abstract class JobCook<T> extends JobPackrat {
                                 sizeLast = size;
                                 await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                             } catch (error) {
-                                LOG.error('JobCook.stageFiles stat', LOG.LS.eJOB, error);
+                                if (error?.status === 404)
+                                    LOG.info('JobCook.stageFiles stat received 404 Not Found', LOG.LS.eJOB);
+                                else
+                                    LOG.error('JobCook.stageFiles stat', LOG.LS.eJOB, error);
                                 await H.Helpers.sleep(CookRetryDelay); // sleep for CookRetryDelay ms before retrying
                             }
                         }

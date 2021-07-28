@@ -59,7 +59,7 @@ export class LicenseResolver {
         let LR: LicenseResolver | null = null;
         if (assignments && assignments.length > 0)
             LR = await LicenseResolver.pickMostRestrictiveLicense(assignments, inherited);
-        LOG.info(`LR.fetchSpecificLicense found ${JSON.stringify(LR)}`, LOG.LS.eDB);
+        // LOG.info(`LR.fetchSpecificLicense found ${JSON.stringify(LR)}`, LOG.LS.eDB);
         return LR;
     }
 
@@ -91,7 +91,7 @@ export class LicenseResolver {
                 continue;
             }
         }
-        LOG.info(`LR.fetchParentsLicense found ${JSON.stringify(LR)}`, LOG.LS.eDB);
+        // LOG.info(`LR.fetchParentsLicense found ${JSON.stringify(LR)}`, LOG.LS.eDB);
         return LR;
     }
 }

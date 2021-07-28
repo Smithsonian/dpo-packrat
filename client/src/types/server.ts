@@ -99,6 +99,7 @@ export enum eVocabularyID {
     eJobJobTypeCookSIVoyagerScene,
     eJobJobTypeCookUnwrap,
     eWorkflowTypeCookJob,
+    eWorkflowTypeIngestion,
     eWorkflowStepTypeStart,
     eNone = -1
 }
@@ -237,3 +238,11 @@ export enum eAssetGridColumntype {
     eDate,
     eFileSize
 }
+export const subjectUnitIdentifierStringToEnum = (col: string): eSubjectUnitIdentifierSortColumns => {
+    switch (col) {
+        case 'Unit': return eSubjectUnitIdentifierSortColumns.eUnitAbbreviation;
+        case 'Name': return eSubjectUnitIdentifierSortColumns.eSubjectName;
+        case 'Identifier': return eSubjectUnitIdentifierSortColumns.eIdentifierValue;
+        default: return eSubjectUnitIdentifierSortColumns.eDefault;
+    }
+};

@@ -45,7 +45,7 @@ const useStyles = makeStyles({
         display: 'flex',
         justifyContent: 'space-around',
         height: '70px',
-        width: '900px',
+        width: 'fit-content',
         backgroundColor: '#FFFCD1',
         paddingLeft: '20px',
         paddingRight: '20px'
@@ -55,14 +55,17 @@ const useStyles = makeStyles({
         justifyContent: 'space-between',
         alignItems: 'center',
         height: '100%',
-        width: '80%'
+        width: '85%',
+        '& > *': {
+            marginRight: '8px'
+        }
     },
     searchFilterSettingsContainer2: {
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'center',
         height: '100%',
-        width: '20%'
+        width: '15%'
     },
     formField: {
         backgroundColor: 'white',
@@ -113,6 +116,7 @@ type DataGridWithPaginationProps = {
     Search: Search;
     PaginationSettings: PaginationSettings;
     SortSettings: SortSettings;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rows: any[];
     columnHeader: GridColumns;
     loading: boolean;
@@ -149,6 +153,16 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
 
     const handleSearchKeyword = ({ target }) => handleSearchKeywordChange(target.value);
 
+    const calculateRowCountFooter = (): number => {
+        if (PaginationSettings.pageNumber === 0 && rows.length < PaginationSettings.rowCount) {
+            return rows.length;
+        } else if (rows.length < PaginationSettings.rowCount) {
+            return PaginationSettings.pageNumber * PaginationSettings.rowCount + rows.length;
+        }
+        // +1 allows pagination to work
+        return (PaginationSettings.pageNumber + 1) * PaginationSettings.rowCount + 1;
+    };
+
     return (
         <Box className={classes.Container}>
             <Box className={classes.searchFilterContainer}>
@@ -164,8 +178,13 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                     {DropDown && (
                         <React.Fragment>
                             <p>{DropDown.name}</p>
-                            <FormControl variant='outlined' style={{ right: '25px' }}>
-                                <Select value={DropDown.value} className={classes.formField} style={{ height: '30px', width: '100px' }} onChange={handleDropDown}>
+                            <FormControl variant='outlined' style={{ width: 'fit-content', marginRight: '40px' }}>
+                                <Select
+                                    value={DropDown.value}
+                                    className={classes.formField}
+                                    style={{ minWidth: '50px', height: '30px', fontSize: 'inherit', width: 'inherit' }}
+                                    onChange={handleDropDown}
+                                >
                                     {DropDown.options.map(option => (
                                         <MenuItem value={option.value} key={option.value}>
                                             {option.label}
@@ -175,7 +194,7 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                             </FormControl>
                         </React.Fragment>
                     )}
-                    <Button className={classes.FilterBtn} style={{ right: '25px' }} onClick={handleSearch}>
+                    <Button className={classes.FilterBtn} onClick={handleSearch}>
                         {Search.btnText || 'Search'}
                     </Button>
                 </Box>
@@ -208,6 +227,9 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                     onSortModelChange={handleSortChange}
                     onPageSizeChange={handlePaginationChange}
                     onPageChange={handlePaginationChange}
+                    hideFooterRowCount
+                    rowCount={calculateRowCountFooter()}
+                    sortingOrder={['asc', 'desc']}
                 />
             </Box>
         </Box>

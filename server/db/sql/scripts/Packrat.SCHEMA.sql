@@ -594,9 +594,23 @@ CREATE TABLE IF NOT EXISTS `Workflow` (
   `DateInitiated` datetime NOT NULL,
   `DateUpdated` datetime NOT NULL,
   `Parameters` text NULL,
+  `idWorkflowSet` int(11) DEFAULT NULL,
   PRIMARY KEY (`idWorkflow`),
   KEY `Workflow_idProject` (`idProject`),
   KEY `Workflow_idUserInitiator` (`idUserInitiator`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `WorkflowReport` (
+  `idWorkflowReport` int(11) NOT NULL AUTO_INCREMENT,
+  `idWorkflow` int(11) NOT NULL,
+  `MimeType` varchar(256) NOT NULL,
+  `Data` longtext NOT NULL,
+  PRIMARY KEY (`idWorkflowReport`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `WorkflowSet` (
+  `idWorkflowSet` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`idWorkflowSet`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `WorkflowStep` (
@@ -1176,8 +1190,20 @@ ADD CONSTRAINT `fk_workflow_vocabulary1`
   FOREIGN KEY (`idVWorkflowType`)
   REFERENCES `Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_workflow_workflowset1`
+  FOREIGN KEY (`idWorkflowSet`)
+  REFERENCES `WorkflowSet` (`idWorkflowSet`)
+  ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
+ALTER TABLE `WorkflowReport` 
+ADD CONSTRAINT `fk_workflowreport_workflow1`
+  FOREIGN KEY (`idWorkflow`)
+  REFERENCES `Workflow` (`idWorkflow`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
 ALTER TABLE `WorkflowStep` 
 ADD CONSTRAINT `fk_workflowstep_workflow1`
   FOREIGN KEY (`idWorkflow`)
