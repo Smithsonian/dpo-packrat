@@ -228,3 +228,12 @@ export enum eSubjectUnitIdentifierSortColumns {
 export enum eIcon {
     eIconDownload
 }
+
+export enum eAssetGridColumntype {
+    eString,
+    eNumber,
+    eBoolean,
+    eHyperLink,
+    eDate,
+    eFileSize
+}

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/jsx-key */
 /* eslint-disable react/jsx-max-props-per-line */
 
@@ -7,11 +8,10 @@
  * This component renders asset grid tab for the DetailsTab component.
  */
 
-import { Box, Button /*, Typography */ } from '@material-ui/core';
+import { Box, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-// // import clsx from 'clsx';
 import { NewTabLink, EmptyTable } from '../../../../../components';
-import { eSystemObjectType, eIcon } from '../../../../../types/server';
+import { eSystemObjectType, eIcon, eAssetGridColumntype } from '../../../../../types/server';
 import { useObjectAssets } from '../../../hooks/useDetailsView';
 import { getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
@@ -22,44 +22,25 @@ import React, { useEffect, useState } from 'react';
 import MUIDataTable, { MUIDataTableOptions, MUIDataTableColumn } from 'mui-datatables';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
+import clsx from 'clsx';
 
 export const useStyles = makeStyles(({ palette }) => ({
-    container: {
-        width: '100%',
-        background: palette.secondary.light,
-        padding: 5,
-        borderRadius: 5,
-        marginBottom: 7
+    btn: sharedButtonProps,
+    tableContainer: {
+        height: 'fit-content',
+        backgroundColor: palette.secondary.light,
+        paddingBottom: '5px',
+        borderBottomLeftRadius: '5px',
+        borderBottomRightRadius: '5px',
+        // need to specify top radius in table container AND MuiToolbar override
+        borderTopRightRadius: '5px',
+        borderTopLeftRadius: '5px'
     },
-    dataGrid: {
-        '& > *': {
-            minHeight: 'fit-content',
-            // wordBreak: 'break-all',
-            overflowWrap: 'break-word'
+    centeredTableHead: {
+        '& > span': {
+            justifyContent: 'center'
         }
-    },
-    header: {
-        fontSize: '0.9em',
-        color: palette.primary.dark,
-        fontWeight: 'bold'
-    },
-    value: {
-        fontSize: '0.8em',
-        color: palette.primary.dark
-    },
-    empty: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flex: 1,
-        background: palette.secondary.light,
-        padding: 40,
-        borderRadius: 5
-    },
-    link: {
-        textDecoration: 'underline'
-    },
-    btn: sharedButtonProps
+    }
 }));
 
 interface AssetGridProps {
@@ -72,17 +53,36 @@ const getMuiTheme = () =>
         overrides: {
             MuiTableCell: {
                 root: {
-                    backgroundColor: 'pink',
+                    backgroundColor: '#FFFCD1',
                     height: 'fit-content',
-                    padding: '2px'
-                    // '& > *': {
-                    //     display: 'flex'
-                    // }
+                    padding: '0px',
+                    margin: '1px',
+                    fontSize: '0.8em'
+                },
+                body: { color: '#2C405A', borderBottomColor: '#FFFCD1', align: 'center' }
+            },
+            MuiToolbar: {
+                regular: {
+                    // this is to address the default height behavior at this width
+                    '@media (min-width: 600px)': {
+                        minHeight: 'fit-content'
+                    }
+                },
+                root: {
+                    backgroundColor: '#FFFCD1',
+                    borderTopRightRadius: '5px',
+                    borderTopLeftRadius: '5px'
                 }
             },
-            MuiTableRow: {
+            MuiIconButton: {
                 root: {
-                    alignSelf: 'center'
+                    border: '0px',
+                    padding: '0px'
+                }
+            },
+            MuiTableHead: {
+                root: {
+                    borderBottom: '1.2px solid rgb(128,128,128)'
                 }
             }
         }
@@ -95,34 +95,38 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
     const { data } = useObjectAssets(idSystemObject);
     const history = useHistory();
     const [assetColumns, setAssetColumns] = useState<any>([]);
-    // const [assetRows, setAssetRows] = useState<any[]>([]);
-    /*
-        TODO
-        type the column object, data row, appropriately
-        write row creation handler
-        write row hiding handler
-        style row height and color
-        customize the rest of the datagrid to exclude the unnecessary features
-    */
+    const [assetRows, setAssetRows] = useState<any[]>([]);
 
-    const formatToDataTableColumns = (fields: any[]): MUIDataTableColumn[] => {
+    const formatToDataTableColumns = (fields: any[], classes): MUIDataTableColumn[] => {
         const result: MUIDataTableColumn[] = [];
-        fields.forEach(async ({ colName, colType, colDisplay, colLabel }) => {
+        fields.forEach(async ({ colName, colType, colDisplay, colLabel, colAlign }) => {
             const gridColumnObject: MUIDataTableColumn = {
                 name: colName,
                 label: colLabel,
                 options: {
-                    display: !colDisplay
+                    display: colDisplay,
+                    setCellHeaderProps: () => ({
+                        className: clsx({
+                            [classes.centeredTableHead]: true
+                        })
+                    }),
+                    setCellProps:
+                        colAlign === 'center'
+                            ? () => ({
+                                align: 'center'
+                            })
+                            : () => ({
+                                align: 'left'
+                            })
                 }
             };
 
             switch (colType) {
-                // TODO refactor to enum
-                case 'boolean':
-                case 'string':
-                case 'number':
+                case eAssetGridColumntype.eString:
+                case eAssetGridColumntype.eBoolean:
+                case eAssetGridColumntype.eNumber:
                     break;
-                case 'date':
+                case eAssetGridColumntype.eDate:
                     gridColumnObject.options = {
                         ...gridColumnObject.options,
                         customBodyRender(value) {
@@ -130,7 +134,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                         }
                     };
                     break;
-                case 'fileSize':
+                case eAssetGridColumntype.eFileSize:
                     gridColumnObject.options = {
                         ...gridColumnObject.options,
                         customBodyRender(value) {
@@ -138,14 +142,13 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                         }
                     };
                     break;
-                case 'hyperlink':
+                case eAssetGridColumntype.eHyperLink:
                     gridColumnObject.options = {
                         ...gridColumnObject.options,
                         customBodyRender(value) {
-                            console.log('value', value);
                             if (value.label) {
                                 return (
-                                    <NewTabLink to={value.path} style={{ textDecoration: 'underline' }}>
+                                    <NewTabLink to={value.path} style={{ textDecoration: 'underline', color: '#2C405A' }}>
                                         {value.label}
                                     </NewTabLink>
                                 );
@@ -153,7 +156,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
 
                             if (value.icon !== null) {
                                 return (
-                                    <NewTabLink to={value.path} style={{ display: 'flex' }}>
+                                    <NewTabLink to={value.path} style={{ color: 'black', display: 'flex' }}>
                                         {renderIcon(value.icon)}
                                     </NewTabLink>
                                 );
@@ -173,39 +176,10 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         return result;
     };
 
-    //     // const formatToDataGridRows = () => {
-    //     //     // Replace this with actual GQL data fetching and/or formatting
-    //     //     // Will need to inject an id per row
-    //     //     return [
-    //     //         {
-    //     //             id: 1,
-    //     //             Link: { label: null, path: '/admin', icon: eIcon.eIconDownload },
-    //     //             Name: { label: 'helmet.jpeg', path: '/repository/details/1232', icon: null },
-    //     //             AssetType: 'Photogrammetry',
-    //     //             Version: 1,
-    //     //             DateCreated: '7/2/2021',
-    //     //             Size: 2348799003
-    //     //         },
-    //     //         {
-    //     //             id: 2,
-    //     //             Link: { label: null, path: '/repository', icon: eIcon.eIconDownload },
-    //     //             Name: { label: 'nmah-1981_0706_06-clemente_helmet-100k-2048_std_draco.glb', path: '/repository/details/1232', icon: null },
-    //     //             AssetType: 'Photogrammetry',
-    //     //             Version: 88,
-    //     //             DateCreated: '7/2/2021',
-    //     //             Size: 799003
-    //     //         },
-    //     //         {
-    //     //             id: 3,
-    //     //             Link: { label: null, path: '/dashboard', icon: eIcon.eIconDownload },
-    //     //             Name: { label: 'nmah-1981_0706_06-clemente_helmet-100k-2048-high.glb.jpeg', path: '/repository/details/1232', icon: null },
-    //     //             AssetType: 'Photogrammetry',
-    //     //             Version: 2,
-    //     //             DateCreated: '7/2/2021',
-    //     //             Size: 2348
-    //     //         }
-    //     //     ];
-    //     // };
+    // const formatToDataGridRows = () => {
+    //     // TODO: Write this out if rows data needs processing
+    //     return [];
+    // };
 
     const renderIcon = (type: eIcon) => {
         if (type === eIcon.eIconDownload) {
@@ -216,47 +190,56 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
 
     useEffect(() => {
         const initializeColumnsAndRows = async () => {
+            // TODO: Replace this sampleColumns with columns definition from GQL
+            // {
+            //     colName: string
+            //     colLabel: string
+            //     colDisplay: boolean
+            //     colType: eAssetGridColumnType
+            //     colAlign: string
+            // }
             const sampleColumns = [
-                // { colName: 'Link', colType: 'hyperlink', colDisplay: true, colLabel: 'Link' },
-                // {
-                //     colName: 'Name',
-                //     colType: 'hyperlink',
-                //     colDisplay: true,
-                //     colLabel: 'Name'
-                // },
-                // {
-                //     colName: 'AssetType',
-                //     colType: 'string',
-                //     colDisplay: true,
-                //     colLabel: 'Asset Type'
-                // },
-                // {
-                //     colName: 'Version',
-                //     colType: 'number',
-                //     colDisplay: true,
-                //     colLabel: 'Version'
-                // },
-                // {
-                //     colName: 'DateCreated',
-                //     colType: 'date',
-                //     colDisplay: true,
-                //     colLabel: 'Date Created'
-                // },
-                // {
-                //     colName: 'Size',
-                //     colType: 'fileSize',
-                //     colDisplay: true,
-                //     colLabel: 'Size'
-                // }
-                { colName: 'Name', colLabel: 'Name', coDisplay: true, colType: 'string' },
-                { colName: 'Title', colLabel: 'Title', coDisplay: true, colType: 'hyperlink' },
-                { colName: 'Location', colLabel: 'Location', coDisplay: true, colType: 'string' },
-                { colName: 'Age', colLabel: 'Age', coDisplay: true, colType: 'number' },
-                { colName: 'Salary', colLabel: 'Salary', coDisplay: true, colType: 'fileSize' }
+                { colName: 'Link', colLabel: 'Link', colDisplay: true, colType: eAssetGridColumntype.eHyperLink, colAlign: 'center' },
+                { colName: 'Name', colLabel: 'Name', colDisplay: true, colType: eAssetGridColumntype.eHyperLink, colAlign: 'left' },
+                { colName: 'Path', colLabel: 'Path', colDisplay: true, colType: eAssetGridColumntype.eString, colAlign: 'left' },
+                { colName: 'AssetType', colLabel: 'Asset Type', colDisplay: true, colType: eAssetGridColumntype.eString, colAlign: 'center' },
+                { colName: 'Version', colLabel: 'Version', colDisplay: true, colType: eAssetGridColumntype.eNumber, colAlign: 'center' },
+                { colName: 'DateCreated', colLabel: 'Date Created', colDisplay: true, colType: eAssetGridColumntype.eDate, colAlign: 'center' },
+                { colName: 'Size', colLabel: 'Size', colDisplay: true, colType: eAssetGridColumntype.eFileSize, colAlign: 'center' }
             ];
 
-            await setAssetColumns(formatToDataTableColumns(sampleColumns));
-            // await setAssetRows(formatToDataGridRows());
+            await setAssetColumns(formatToDataTableColumns(sampleColumns, classes));
+            // TODO: Replace this sampleColumns with columns definition from GQL
+            const sampleRows = [
+                {
+                    Size: 2348799003,
+                    Link: { label: null, path: '/admin', icon: eIcon.eIconDownload },
+                    Name: { label: 'helmet.jpeg', path: '/repository/details/1232', icon: null },
+                    Path: '92c986d0-2b8d-43c1-8354-e9a2e80d0f9e.manual',
+                    AssetType: 'Other',
+                    Version: 1,
+                    DateCreated: '7/2/2021'
+                },
+                {
+                    Size: 799003,
+                    Name: { label: 'nmah-1981_0706_06-clemente_helmet-100k-2048_std_draco.glb', path: '/repository/details/1232', icon: null },
+                    Path: '92c986d0-2b8d-43c1-8354-e9a2e80d0f9e.manual/articles',
+                    AssetType: 'Model Geometry File',
+                    Version: 88,
+                    DateCreated: '7/2/2021',
+                    Link: { label: null, path: '/repository', icon: eIcon.eIconDownload }
+                },
+                {
+                    Size: 2348,
+                    Link: { label: null, path: '/dashboard', icon: eIcon.eIconDownload },
+                    Name: { label: 'nmah-1981_0706_06-clemente_helmet-100k-2048-high.glb.jpeg', path: '/repository/details/1232', icon: null },
+                    Path: '92c986d0-2b8d-43c1-8354-e9a2e80d0f9e.manual',
+                    AssetType: 'Photogrammetry',
+                    Version: 2,
+                    DateCreated: '7/2/2021'
+                }
+            ];
+            await setAssetRows(sampleRows);
         };
 
         initializeColumnsAndRows();
@@ -266,14 +249,14 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         return <EmptyTable />;
     }
 
-    //     // const toggleColumn = async params => {
-    //     //     const assetColumnsCopy = [...assetColumns];
-    //     //     const column = assetColumnsCopy.find(col => col.field === params.field);
-    //     //     if (column) {
-    //     //         column.hide = !column.hide;
-    //     //         setAssetColumns(assetColumnsCopy);
-    //     //     }
-    //     // };
+    const toggleColumn = (changedColumn: string, _action: string) => {
+        const assetColumnsCopy = [...assetColumns];
+        const column = assetColumnsCopy.find(col => col.field === changedColumn);
+        if (column) {
+            column.options.hide = !column.options.hide;
+            setAssetColumns(assetColumnsCopy);
+        }
+    };
 
     const { assetDetails } = data.getAssetDetailsForSystemObject;
 
@@ -286,52 +269,29 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         };
     }
 
-    const rows = [
-        // [<GetAppIcon />, 'Business Analyst', 'Minneapolis', 30, 100000],
-        // [null, 'Business Consultant', 'Dallas', 55, 200000],
-        // [null, 'Attorney', 'Santa Ana', 27, 500000],
-        ['Franky Rees', { label: null, path: '/admin', icon: eIcon.eIconDownload }, 'St. Petersburg', 22, 50000],
-        ['Aaren Rose', { label: null, path: '/admin', icon: eIcon.eIconDownload }, 'Toledo', 28, 75000],
-        // ['Blake Duncan', 'Business Management Analyst Business Management Analyst', 'San Diego', 65, 94000],
-        // ['Frankie Parry', 'Agency Legal Counsel', 'Jacksonville', 71, 210000],
-        // ['Lane Wilson', 'Commercial Specialist', 'Omaha', 19, 65000],
-        // ['Robin Duncan', 'Business Analyst', 'Los Angeles', 20, 77000],
-        ['Mel Brooks', { label: null, path: '/admin', icon: eIcon.eIconDownload }, 'Oklahoma City', 37, 135000],
-        // ['Harper White', 'Attorney', 'Pittsburgh', 52, 420000],
-        // ['Kris Humphrey', 'Agency Legal Counsel', 'Laredo', 30, 150000],
-        // ['Frankie Long', 'Industrial Analyst', 'Austin', 31, 170000],
-        // ['Brynn Robbins', 'Business Analyst', 'Norfolk', 22, 90000],
-        ['Justice Mann', { label: null, path: '/admin', icon: eIcon.eIconDownload }, 'Chicago', 24, 133000]
-        // ['Addison Navarro', 'Business Management Analyst', 'New York', 50, 295000],
-        // ['Jesse Welch', 'Agency Legal Counsel', 'Seattle', 28, 200000],
-        // ['Eli Mejia', 'Commercial Specialist', 'Long Beach', 65, 400000],
-        // ['Gene Leblanc', 'Industrial Analyst', 'Hartford', 34, 110000],
-        // ['Danny Leon', 'Computer Scientist', 'Newark', 60, 220000],
-        // ['Lane Lee', 'Corporate Counselor', 'Cincinnati', 52, 180000],
-        // ['Jesse Hall', 'Business Analyst', 'Baltimore', 44, 99000],
-        // ['Danni Hudson', 'Agency Legal Counsel', 'Tampa', 37, 90000],
-        // ['Terry Macdonald', 'Commercial Specialist', 'Miami', 39, 140000],
-        // ['Justice Mccarthy', 'Attorney', 'Tucson', 26, 330000],
-        // ['Silver Carey', 'Computer Scientist', 'Memphis', 47, 250000],
-        // ['Franky Miles', 'Industrial Analyst', 'Buffalo', 49, 190000],
-        // ['Glen Nixon', 'Corporate Counselor', 'Arlington', 44, 80000],
-        // ['Gabby Strickland', 'Business Process Consultant', 'Scottsdale', null],
-        // ['Mason Ray', 'Computer Scientist', 'San Francisco', 39, 142000]
-    ];
-
     const options: MUIDataTableOptions = {
-        filter: true,
+        filter: false,
         filterType: 'dropdown',
         responsive: 'standard',
-        selectableRows: 'none'
+        selectableRows: 'none',
+        search: false,
+        download: false,
+        print: false,
+        fixedHeader: false,
+        pagination: false,
+        elevation: 0,
+        onViewColumnsChange: toggleColumn
     };
 
     return (
         <React.Fragment>
             <MuiThemeProvider theme={getMuiTheme()}>
-                <MUIDataTable title={'ACME Employee list'} data={rows} columns={assetColumns} options={options} />
+                <Box className={classes.tableContainer}>
+                    <MUIDataTable title='' data={assetRows} columns={assetColumns} options={options} />
+                </Box>
             </MuiThemeProvider>
-            <Box display='flex' flexDirection='row' alignItems='center'>
+
+            <Box display='flex' flexDirection='row' alignItems='center' mt={1}>
                 {assetDetails.length > 0 && (
                     <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
                         <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ width: 'fit-content', whiteSpace: 'nowrap' }}>
