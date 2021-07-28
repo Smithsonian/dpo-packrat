@@ -165,21 +165,21 @@ export abstract class JobCook<T> extends JobPackrat {
             let axiosResponse: AxiosResponse<any> | null = null;
             const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, await this.getParameters(), eJobCookPriority.eNormal);
 
-            LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl}`, LOG.LS.eJOB);
             while (requestCount < CookRequestRetryCount) {
                 try {
+                    LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl} body ${JSON.stringify(jobCookPostBody, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
                     axiosResponse = await axios.post(requestUrl, jobCookPostBody);
                     if (axiosResponse?.status === 201)
                         break; // success, continue
-                    res = { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed: ${JSON.stringify(axiosResponse)}` };
-                    requestCount++;
                 } catch (error) {
                     const message: string | null = error.message;
+                    LOG.info(`JobCook [${this.name()}] creating job via ${requestUrl} failed with error ${message}`, LOG.LS.eJOB);
+
                     res = (message && message.indexOf('getaddrinfo ENOTFOUND'))
                         ? { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(error)}` }
                         : { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
                 }
-                if (requestCount >= CookRequestRetryCount) {
+                if (++requestCount >= (CookRequestRetryCount * 10)) {
                     LOG.error(`JobCook [${this.name()}] failed after ${CookRequestRetryCount} retries: ${res.error}`, LOG.LS.eJOB);
                     return res;
                 } else
@@ -384,14 +384,17 @@ export abstract class JobCook<T> extends JobPackrat {
                                         return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
                                 }
                                 sizeLast = size;
-                                await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                             } catch (error) {
-                                if (error?.status === 404)
+                                if (error?.status === 404) {
                                     LOG.info('JobCook.stageFiles stat received 404 Not Found', LOG.LS.eJOB);
-                                else
+                                    if (0 === sizeLast) { // detect if we we're stuck unable to initiate staging of files
+                                        if (++stuckCount >= 5)
+                                            return { success: false, error: `Unable to initate staging of file ${fileName}` };
+                                    }
+                                } else
                                     LOG.error('JobCook.stageFiles stat', LOG.LS.eJOB, error);
-                                await H.Helpers.sleep(CookRetryDelay); // sleep for CookRetryDelay ms before retrying
                             }
+                            await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                         }
 
                         if (!stagingSuccess) {
