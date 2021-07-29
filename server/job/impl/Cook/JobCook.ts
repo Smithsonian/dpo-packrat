@@ -20,7 +20,6 @@ const CookWebDAVSimultaneousTransfers: number = 2;
 const CookRequestRetryCount: number = 3;
 const CookWebDAVTransmitRetryCount: number = 5;
 const CookWebDAVStatRetryCount: number = 100;
-const CookWebDAVStatStuckCount: number = 12;
 const CookRetryDelay: number = 5000;
 const CookTimeout: number = 36000000; // ten hours
 
@@ -374,35 +373,24 @@ export abstract class JobCook<T> extends JobPackrat {
                         // poll for filesize of remote file.  Continue polling:
                         // - until we match or exceed our streamed size
                         // - as long as the remote size is less than our streamed size, up to 100 times
-                        // - as long as the remote size is growing, and not "stuck" at the same size more than 5 times
                         // - pause CookRetryDelay ms between stat polls
-                        let sizeLast: number = 0;
-                        let stuckCount: number = 0;
                         let stagingSuccess: boolean = false;
                         for (let statCount: number = 0; statCount < CookWebDAVStatRetryCount; statCount++) {
+                            const pollingLocation: string = `${Config.job.cookServerUrl}${destination.substring(1)}`;
                             try {
                                 const stat: any = await webdavClient.stat(destination);
                                 const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
                                 const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
-                                LOG.info(`JobCook.stageFiles staging polling ${Config.job.cookServerUrl}${destination.substring(1)}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
+                                LOG.info(`JobCook.stageFiles staging polling ${pollingLocation}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
                                 if (size >= res.size) {
                                     stagingSuccess = (baseName === fileName);
                                     break;
                                 }
-                                if (size === sizeLast) {
-                                    if (++stuckCount >= CookWebDAVStatStuckCount)
-                                        return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
-                                }
-                                sizeLast = size;
                             } catch (error) {
-                                if (error?.status === 404) {
-                                    LOG.info('JobCook.stageFiles stat received 404 Not Found', LOG.LS.eJOB);
-                                    if (0 === sizeLast) { // detect if we we're stuck unable to initiate staging of files
-                                        if (++stuckCount >= CookWebDAVStatStuckCount)
-                                            return { success: false, error: `Unable to initate staging of file ${fileName}` };
-                                    }
-                                } else
-                                    LOG.error('JobCook.stageFiles stat', LOG.LS.eJOB, error);
+                                if (error?.status === 404)
+                                    LOG.info(`JobCook.stageFiles stat ${pollingLocation} received 404 Not Found`, LOG.LS.eJOB);
+                                else
+                                    LOG.error(`JobCook.stageFiles stat ${pollingLocation}`, LOG.LS.eJOB, error);
                             }
                             await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                         }
