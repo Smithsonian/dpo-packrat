@@ -1,4 +1,5 @@
 import { eSystemObjectType } from '../../db';
+import { IIndexer } from './IIndexer';
 
 export enum eMetadata {
     eCommonName,
@@ -111,4 +112,5 @@ export type NavigationResult = {
 
 export interface INavigation {
     getObjectChildren(filter: NavigationFilter): Promise<NavigationResult>;
+    getIndexer(): Promise<IIndexer | null>;
 }

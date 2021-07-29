@@ -4,7 +4,7 @@ import { EventConsumer } from './EventConsumer';
 import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
-import { IndexSolr } from '../../../navigation/impl/NavigationSolr/IndexSolr';
+import * as NAV from '../../../navigation/interface';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import { eAuditType } from '../../../db';
@@ -44,20 +44,22 @@ export class EventConsumerDB extends EventConsumer {
                     // index modified system objects
                     // in the event that the audit event is for a SystemObjectXref record, we reindex the "derived" object
                     if (idSystemObject) {
-                        CACHE.SystemObjectCache.flushObject(idSystemObject);    // don't use await so this happens asynchronously
+                        CACHE.SystemObjectCache.flushObject(idSystemObject);        // don't use await so this happens asynchronously
 
-                        const indexer: IndexSolr = new IndexSolr();
-                        indexer.indexObject(idSystemObject);                    // don't use await so this happens asynchronously
+                        const indexer: NAV.IIndexer | null = await EventConsumerDB.fetchIndexer();
+                        if (indexer)
+                            indexer.indexObject(idSystemObject);                    // don't use await so this happens asynchronously
                     } else if (audit.idDBObject && audit.getDBObjectType() === DBAPI.eNonSystemObjectType.eSystemObjectXref) {
                         const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.fetch(audit.idDBObject);
                         if (xref) {
-                            const indexer: IndexSolr = new IndexSolr();
-                            indexer.indexObject(xref.idSystemObjectDerived);    // don't use await so this happens asynchronously
+                            const indexer: NAV.IIndexer | null = await EventConsumerDB.fetchIndexer();
+                            if (indexer)
+                                indexer.indexObject(xref.idSystemObjectDerived);    // don't use await so this happens asynchronously
                         }
                     }
 
                     if (audit.idAudit === 0)
-                        audit.create();                                         // don't use await so this happens asynchronously
+                        audit.create();                                             // don't use await so this happens asynchronously
                 } break;
 
                 default:
@@ -65,6 +67,16 @@ export class EventConsumerDB extends EventConsumer {
                     break;
             }
         }
+    }
+
+    private static async fetchIndexer(): Promise<NAV.IIndexer | null> {
+        const nav: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
+        if (!nav) {
+            LOG.error('EventConsumerDB.fetchIndexer unable to fetch INavigation', LOG.LS.eEVENT);
+            return null;
+        }
+
+        return await nav.getIndexer();
     }
 
     static convertDataToAudit(data: any): DBAPI.Audit {
