@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import DataGridWithPagination, { Search, DropDown, PaginationSettings, SortSettings } from '../../../../components/shared/DataGridWithPagination';
 import { Tooltip, Box } from '@material-ui/core';
-import { Columns, PageChangeParams, SortModelParams } from '@material-ui/data-grid';
+import { GridColumns, GridPageChangeParams, GridSortModelParams } from '@material-ui/data-grid';
 import { makeStyles } from '@material-ui/core/styles';
 import { useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
@@ -61,15 +61,15 @@ function SubjectView(): React.ReactElement {
     const [loading, setLoading] = useState(false);
     const [subjectListState, setSubjectListState] = useState<Subject[]>([]);
 
-    const columnHeader: Columns = [
+    const columnHeader: GridColumns = [
         {
             field: 'Unit',
             headerName: 'Unit',
             flex: 1,
             headerAlign: 'center',
             renderCell: params => (
-                <Tooltip placement='left' title={`${params.getValue('Unit')}`} arrow>
-                    <div>{`${params.getValue('Unit')}`}</div>
+                <Tooltip placement='left' title={`${params.row.Unit}`} arrow>
+                    <div>{`${params.row.Unit}`}</div>
                 </Tooltip>
             )
         },
@@ -78,8 +78,8 @@ function SubjectView(): React.ReactElement {
             headerName: 'Name',
             flex: 1.7,
             renderCell: params => (
-                <Tooltip placement='left' title={`${params.getValue('Name')}`} arrow>
-                    <div>{`${params.getValue('Name')}`}</div>
+                <Tooltip placement='left' title={`${params.row.Name}`} arrow>
+                    <div>{`${params.row.Name}`}</div>
                 </Tooltip>
             )
         },
@@ -87,7 +87,7 @@ function SubjectView(): React.ReactElement {
             field: 'Identifier',
             headerName: 'Identifier',
             flex: 1.7,
-            renderCell: params => <div>{`${params.getValue('Identifier')}`}</div>
+            renderCell: params => <div>{`${params.row.Identifier}`}</div>
         },
         {
             field: 'Action',
@@ -155,11 +155,9 @@ function SubjectView(): React.ReactElement {
         setLoading(false);
     };
 
-    const handlePaginationChange = async (params: PageChangeParams) => await setPaginationState({ ...paginationState, pageNumber: params.page, rowCount: params.pageSize });
+    const handlePaginationChange = async (params: GridPageChangeParams) => setPaginationState({ ...paginationState, pageNumber: params.page, rowCount: params.pageSize });
 
-    const handleSortChange = async (params: SortModelParams) => {
-        await setSortState({ sortModel: params.sortModel });
-    };
+    const handleSortChange = (params: GridSortModelParams) => setSortState({ sortModel: params.sortModel });
 
     const handleDropDownChange = value => setDropDownState({ ...dropDownState, value });
 
