@@ -10,6 +10,7 @@ import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import { eSystemObjectType } from '../../../db';
 import { SolrClient } from './SolrClient';
+import { IndexSolr } from './IndexSolr';
 import { Vocabulary } from '../../../types/graphql';
 import { eMetadata } from '../../interface';
 
@@ -29,6 +30,10 @@ export class NavigationSolr implements NAV.INavigation {
     async getObjectChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
         const SQ: solr.Query = await this.computeSolrQuery(filter);
         return await this.executeSolrQuery(filter, SQ);
+    }
+
+    async getIndexer(): Promise<NAV.IIndexer | null> {
+        return new IndexSolr();
     }
     // #endregion
 

@@ -12,6 +12,10 @@ export class NavigationDB implements NAV.INavigation {
             : await NavigationDB.getChildren(filter);
     }
 
+    async getIndexer(): Promise<NAV.IIndexer | null> {
+        return null;
+    }
+
     private static async getRoot(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
         let entries: NAV.NavigationResultEntry[] = [];
 
