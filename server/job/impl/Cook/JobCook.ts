@@ -20,6 +20,7 @@ const CookWebDAVSimultaneousTransfers: number = 2;
 const CookRequestRetryCount: number = 3;
 const CookWebDAVTransmitRetryCount: number = 5;
 const CookWebDAVStatRetryCount: number = 100;
+const CookWebDAVStatStuckCount: number = 12;
 const CookRetryDelay: number = 5000;
 const CookTimeout: number = 36000000; // ten hours
 
@@ -389,7 +390,7 @@ export abstract class JobCook<T> extends JobPackrat {
                                     break;
                                 }
                                 if (size === sizeLast) {
-                                    if (++stuckCount >= 5)
+                                    if (++stuckCount >= CookWebDAVStatStuckCount)
                                         return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
                                 }
                                 sizeLast = size;
@@ -397,7 +398,7 @@ export abstract class JobCook<T> extends JobPackrat {
                                 if (error?.status === 404) {
                                     LOG.info('JobCook.stageFiles stat received 404 Not Found', LOG.LS.eJOB);
                                     if (0 === sizeLast) { // detect if we we're stuck unable to initiate staging of files
-                                        if (++stuckCount >= 5)
+                                        if (++stuckCount >= CookWebDAVStatStuckCount)
                                             return { success: false, error: `Unable to initate staging of file ${fileName}` };
                                     }
                                 } else
