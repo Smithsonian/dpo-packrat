@@ -17,7 +17,7 @@ import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } 
 import * as path from 'path';
 
 const CookWebDAVSimultaneousTransfers: number = 2;
-const CookRequestRetryCount: number = 3;
+const CookRequestRetryCount: number = 30;
 const CookWebDAVTransmitRetryCount: number = 5;
 const CookWebDAVStatRetryCount: number = 100;
 const CookRetryDelay: number = 5000;
@@ -155,34 +155,35 @@ export abstract class JobCook<T> extends JobPackrat {
     // #endregion
 
     // #region JobPackrat interface
-    async startJobWorker(fireDate: Date): Promise<H.IOResults> {
-        fireDate;
-
+    async startJobWorker(_fireDate: Date): Promise<H.IOResults> {
         let requestCount: number = 0;
         let res: H.IOResults = { success: false, error: '' };
 
         try {
             // Create job via POST to /job
             let requestUrl: string = Config.job.cookServerUrl + 'job';
-            let axiosResponse: AxiosResponse<any> | null = null;
             const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, await this.getParameters(), eJobCookPriority.eNormal);
 
-            while (requestCount < CookRequestRetryCount) {
+            while (true) {
                 try {
                     LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl} body ${JSON.stringify(jobCookPostBody, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
-                    axiosResponse = await axios.post(requestUrl, jobCookPostBody);
+                    const axiosResponse: AxiosResponse<any> | null = await axios.post(requestUrl, jobCookPostBody);
+
                     if (axiosResponse?.status === 201)
                         break; // success, continue
+                    else
+                        LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl} unexpected response ${axiosResponse?.status}`, LOG.LS.eJOB);
                 } catch (error) {
                     const message: string | null = error.message;
                     LOG.info(`JobCook [${this.name()}] creating job via ${requestUrl} failed with error ${message}`, LOG.LS.eJOB);
 
-                    res = (message && message.indexOf('getaddrinfo ENOTFOUND'))
+                    res = (message && message.indexOf('getaddrinfo ENOTFOUND') > -1)
                         ? { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(error)}` }
                         : { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
                 }
-                if (++requestCount >= (CookRequestRetryCount * 10)) {
-                    LOG.error(`JobCook [${this.name()}] failed after ${CookRequestRetryCount} retries: ${res.error}`, LOG.LS.eJOB);
+
+                if (++requestCount >= CookRequestRetryCount) {
+                    LOG.error(`${res.error} failed after ${CookRequestRetryCount} retries`, LOG.LS.eJOB);
                     return res;
                 } else
                     await H.Helpers.sleep(CookRetryDelay);
@@ -198,7 +199,7 @@ export abstract class JobCook<T> extends JobPackrat {
             res = { success: false, error: '' };
             requestUrl = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
             LOG.info(`JobCook [${this.name()}] running job: ${requestUrl}`, LOG.LS.eJOB);
-            while (requestCount++ < CookRequestRetryCount) {
+            while (true) {
                 try {
                     const axiosResponse = await axios.patch(requestUrl);
                     if (axiosResponse.status === 202)
@@ -207,8 +208,9 @@ export abstract class JobCook<T> extends JobPackrat {
                 } catch (error) {
                     res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(error)}` };
                 }
-                if (requestCount === CookRequestRetryCount) {
-                    LOG.error(`${res.error} Retries Failed`, LOG.LS.eJOB);
+
+                if (++requestCount >= CookRequestRetryCount) {
+                    LOG.error(`${res.error} failed to start after ${CookRequestRetryCount} retries`, LOG.LS.eJOB);
                     return res;
                 } else
                     await H.Helpers.sleep(CookRetryDelay);
@@ -230,7 +232,7 @@ export abstract class JobCook<T> extends JobPackrat {
         let res: H.IOResults = { success: false, error: '' };
         const requestUrl: string = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/cancel`;
         LOG.info(`JobCook [${this.name()}] cancelling job: ${requestUrl}`, LOG.LS.eJOB);
-        while (requestCount++ < CookRequestRetryCount) {
+        while (true) {
             try {
                 const axiosResponse = await axios.patch(requestUrl);
                 if (axiosResponse.status !== 200)
@@ -240,13 +242,11 @@ export abstract class JobCook<T> extends JobPackrat {
             }
             if (res.success)
                 break;
-            else {
-                if (requestCount === CookRequestRetryCount) {
-                    LOG.error(`${res.error} Retries Failed`, LOG.LS.eJOB);
-                    return res;
-                } else
-                    await H.Helpers.sleep(CookRetryDelay);
-            }
+            else if (++requestCount >= CookRequestRetryCount) {
+                LOG.error(`${res.error} failed to cancel after ${CookRequestRetryCount} retries`, LOG.LS.eJOB);
+                return res;
+            } else
+                await H.Helpers.sleep(CookRetryDelay);
         }
 
         LOG.info(`JobCook [${this.name()}] cancelled`, LOG.LS.eJOB);
