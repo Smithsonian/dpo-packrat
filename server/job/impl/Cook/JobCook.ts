@@ -376,7 +376,7 @@ export abstract class JobCook<T> extends JobPackrat {
                         // - pause CookRetryDelay ms between stat polls
                         let stagingSuccess: boolean = false;
                         for (let statCount: number = 0; statCount < CookWebDAVStatRetryCount; statCount++) {
-                            const pollingLocation: string = `${Config.job.cookServerUrl}${destination.substring(1)}`;
+                            const pollingLocation: string = `${Config.job.cookServerUrl}${destination.substring(1)} [${statCount + 1}/${CookWebDAVStatRetryCount}]`;
                             try {
                                 const stat: any = await webdavClient.stat(destination);
                                 const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
