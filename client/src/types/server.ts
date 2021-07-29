@@ -226,6 +226,19 @@ export enum eSubjectUnitIdentifierSortColumns {
     eDefault = 0
 }
 
+export enum eIcon {
+    eIconDownload
+}
+
+export enum eAssetGridColumntype {
+    eString,
+    eNumber,
+    eBoolean,
+    eHyperLink,
+    eDate,
+    eFileSize
+}
+
 export const subjectUnitIdentifierStringToEnum = (col: string): eSubjectUnitIdentifierSortColumns => {
     switch (col) {
         case 'Unit': return eSubjectUnitIdentifierSortColumns.eUnitAbbreviation;

@@ -25,7 +25,7 @@
     "@apollo/client": "3.1.5",
     "@date-io/date-fns": "1.3.13",
     "@material-ui/core": "4.11.0",
-    "@material-ui/data-grid": "4.0.0-alpha.20",
+    "@material-ui/data-grid": "4.0.0-alpha.33",
     "@material-ui/icons": "4.9.1",
     "@material-ui/lab": "4.0.0-alpha.56",
     "@material-ui/pickers": "3.2.10",
@@ -34,6 +34,7 @@
     "@testing-library/user-event": "12.1.4",
     "@types/jest": "26.0.13",
     "@types/lodash": "4.14.161",
+    "@types/mui-datatables": "^3.7.5",
     "@types/node": "14.10.1",
     "@types/react": "16.9.49",
     "@types/react-dom": "16.9.8",
@@ -51,6 +52,7 @@
     "graphql": "15.3.0",
     "graphql.macro": "1.4.2",
     "lodash": "4.17.20",
+    "mui-datatables": "3.7.7",
     "prop-types": "15.7.2",
     "query-string": "6.13.2",
     "randomatic": "3.1.1",
@@ -77,6 +79,10 @@
     "jest": "24.9.0",
     "ts-jest": "24.3.0"
   },
+  "resolutions": {
+    "**/frontend-collective-react-dnd-scrollzone/react": "16.13.1",
+    "**/frontend-collective-react-dnd-scrollzone/react-dom": "16.13.1"
+  },  
   "scripts": {
     "start": "cross-env TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling react-app-rewired start",
     "start:watchcontainer": "cross-env TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling CHOKIDAR_USEPOLLING=1 react-app-rewired start",
