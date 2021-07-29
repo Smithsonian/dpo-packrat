@@ -1884,13 +1884,13 @@ input GetWorkflowInput {
 }
 
 input GetWorkflowListInput {
-  idVWorkflowType: Int
-  idVJobType: Int
-  State: Int
+  idVWorkflowType: [Int!]
+  idVJobType: [Int!]
+  State: [Int!]
   DateFrom: DateTime
   DateTo: DateTime
-  idUserInitiator: Int
-  idUserOwner: Int
+  idUserInitiator: [Int!]
+  idUserOwner: [Int!]
   pageNumber: Int
   rowCount: Int
   sortBy: Int

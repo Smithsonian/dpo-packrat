@@ -18,6 +18,8 @@ import * as path from 'path';
 
 const CookWebDAVSimultaneousTransfers: number = 2;
 const CookRequestRetryCount: number = 3;
+const CookWebDAVTransmitRetryCount: number = 5;
+const CookWebDAVStatRetryCount: number = 100;
 const CookRetryDelay: number = 5000;
 const CookTimeout: number = 36000000; // ten hours
 
@@ -349,8 +351,15 @@ export abstract class JobCook<T> extends JobPackrat {
                         const webdavWSOpts: CreateWriteStreamOptions = {
                             headers: { 'Content-Type': 'application/octet-stream' }
                         };
-                        const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
-                        const res: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
+
+                        let res: H.IOResultsSized = { success: false, error: 'Not Executed', size: -1 };
+                        for (let transmitCount: number = 0; transmitCount < CookWebDAVTransmitRetryCount; transmitCount++) {
+                            const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
+                            res = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
+                            if (res.success)
+                                break;
+                            await H.Helpers.sleep(CookRetryDelay);
+                        }
 
                         if (!res.success) {
                             const error = `JobCook.stageFiles unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
@@ -369,7 +378,7 @@ export abstract class JobCook<T> extends JobPackrat {
                         let sizeLast: number = 0;
                         let stuckCount: number = 0;
                         let stagingSuccess: boolean = false;
-                        for (let statCount: number = 0; statCount < 100; statCount++) {
+                        for (let statCount: number = 0; statCount < CookWebDAVStatRetryCount; statCount++) {
                             try {
                                 const stat: any = await webdavClient.stat(destination);
                                 const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;

@@ -26,33 +26,30 @@ export class WorkflowListResult {
     DateLast: Date = new Date();
     Error: string = '';
 
-    static async search(idVWorkflowType: number | undefined | null, idVJobType: number | undefined | null, State: number | undefined | null,
-        DateFrom: Date | undefined | null, DateTo: Date | undefined | null, idUserInitiator: number | undefined | null, idUserOwner: number | undefined | null,
+    static async search(idVWorkflowType: number[] | undefined | null, idVJobType: number[] | undefined | null, State: number[] | undefined | null,
+        DateFrom: Date | undefined | null, DateTo: Date | undefined | null, idUserInitiator: number[] | undefined | null, idUserOwner: number[] | undefined | null,
         pageNumber: number | undefined | null, rowCount: number | undefined | null,
         sortBy: eWorkflowListSortColumns | undefined | null, sortOrder: boolean | undefined | null): Promise<WorkflowListResult[] | null> {
         try {
+            const whereConditions: string[] = [];
             const queryRawParams: string[] = [];
-            const idVWorkflowTypeSupplied: boolean = ((idVWorkflowType ?? 0) !== 0);
-            const idVJobTypeSupplied: boolean = ((idVJobType ?? 0) !== 0);
-            const StateSupplied: boolean = ((State ?? 0) !== 0);
+
+            const idVWorkflowTypeSupplied: boolean = ((idVWorkflowType ?? []).length !== 0);
+            const idVJobTypeSupplied: boolean = ((idVJobType ?? []).length !== 0);
+            const StateSupplied: boolean = ((State ?? []).length !== 0);
             const DateFromSupplied: boolean = (DateFrom !== undefined);
             const DateToSupplied: boolean = (DateTo !== undefined);
-            const idUserInitiatorSupplied: boolean = ((idUserInitiator ?? 0) !== 0);
-            const idUserOwnerSupplied: boolean = ((idUserOwner ?? 0) !== 0);
+            const idUserInitiatorSupplied: boolean = ((idUserInitiator ?? []).length !== 0);
+            const idUserOwnerSupplied: boolean = ((idUserOwner ?? []).length !== 0);
 
-            const whereConditions: string[] = [];
-            if (idVWorkflowTypeSupplied) {
-                whereConditions.push('(VWF.idVocabulary = ?)');
-                queryRawParams.push(`${idVWorkflowType}`);
-            }
-            if (idVJobTypeSupplied) {
-                whereConditions.push('(JOB.idVJobType = ?)');
-                queryRawParams.push(`${idVJobType}`);
-            }
+            if (idVWorkflowTypeSupplied)
+                whereConditions.push(WorkflowListResult.addInIdArrayParameter('VWF.idVocabulary', idVWorkflowType, queryRawParams));
+            if (idVJobTypeSupplied)
+                whereConditions.push(WorkflowListResult.addInIdArrayParameter('JOB.idVJobType', idVJobType, queryRawParams));
             if (StateSupplied) {
-                whereConditions.push('(WFL.WFState = ? OR JOB.JobStatus = ?)');
-                queryRawParams.push(`${State}`);
-                queryRawParams.push(`${State}`);
+                const wfStateSql: string = WorkflowListResult.addInIdArrayParameter('WFL.WFState', State, queryRawParams);
+                const jobStateSql: string = WorkflowListResult.addInIdArrayParameter('JOB.JobStatus', State, queryRawParams);
+                whereConditions.push(`(${wfStateSql} OR ${jobStateSql})`);
             }
             if (DateFromSupplied) {
                 whereConditions.push('(? <= WF.DateInitiated)');
@@ -62,14 +59,11 @@ export class WorkflowListResult {
                 whereConditions.push('(WF.DateInitiated <= ?)');
                 queryRawParams.push(`${DateTo}`);
             }
-            if (idUserInitiatorSupplied) {
-                whereConditions.push('(WF.idUserInitiator = ?)');
-                queryRawParams.push(`${idUserInitiator}`);
-            }
-            if (idUserOwnerSupplied) {
-                whereConditions.push('(WFL.idWFSOwner = ?)');
-                queryRawParams.push(`${idUserOwner}`);
-            }
+            if (idUserInitiatorSupplied)
+                whereConditions.push(WorkflowListResult.addInIdArrayParameter('WF.idUserInitiator', idUserInitiator, queryRawParams));
+            if (idUserOwnerSupplied)
+                whereConditions.push(WorkflowListResult.addInIdArrayParameter('WFL.idWFSOwner', idUserOwner, queryRawParams));
+
             const where: string = whereConditions.length > 0 ? `\nWHERE ${whereConditions.join(' AND ')}` : '';
 
             let orderBy: string = '';
@@ -157,5 +151,22 @@ export class WorkflowListResult {
             LOG.error('DBAPI.WorkflowListResult.search', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    private static addInIdArrayParameter(field: string, values: number[] | undefined | null, queryRawParams: string[]): string {
+        if (!values || values.length === 0)
+            return '';
+        let first: boolean = true;
+        let sql: string = `(${field} IN (`;
+        for (const value of values) {
+            if (first)
+                first = false;
+            else
+                sql += ', ';
+            sql += '?';
+            queryRawParams.push(`${value}`);
+        }
+        sql += '))';
+        return sql;
     }
 }
