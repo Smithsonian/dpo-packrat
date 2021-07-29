@@ -139,7 +139,7 @@ export abstract class JobPackrat implements JOB.IJob {
             if (this._report) {
                 const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
                 const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Cook Job Output');
-                await this._report.append(`<br/>\n${hrefDownload}`);
+                await this._report.append(`${hrefDownload}<br/>\n`);
             }
 
             this.updateEngines(true, true); // don't block

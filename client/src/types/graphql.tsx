@@ -2385,13 +2385,13 @@ export type GetWorkflowInput = {
 };
 
 export type GetWorkflowListInput = {
-  idVWorkflowType?: Maybe<Scalars['Int']>;
-  idVJobType?: Maybe<Scalars['Int']>;
-  State?: Maybe<Scalars['Int']>;
+  idVWorkflowType?: Maybe<Array<Scalars['Int']>>;
+  idVJobType?: Maybe<Array<Scalars['Int']>>;
+  State?: Maybe<Array<Scalars['Int']>>;
   DateFrom?: Maybe<Scalars['DateTime']>;
   DateTo?: Maybe<Scalars['DateTime']>;
-  idUserInitiator?: Maybe<Scalars['Int']>;
-  idUserOwner?: Maybe<Scalars['Int']>;
+  idUserInitiator?: Maybe<Array<Scalars['Int']>>;
+  idUserOwner?: Maybe<Array<Scalars['Int']>>;
   pageNumber?: Maybe<Scalars['Int']>;
   rowCount?: Maybe<Scalars['Int']>;
   sortBy?: Maybe<Scalars['Int']>;
