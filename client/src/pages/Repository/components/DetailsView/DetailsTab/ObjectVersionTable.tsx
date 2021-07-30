@@ -7,7 +7,7 @@ import { EmptyTable } from '../../../../../components';
 import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repository';
 import { extractISOMonthDateYear, updateSystemObjectUploadRedirect } from '../../../../../constants/helperfunctions';
 import { rollbackSystemObjectVersion, useObjectAssets } from '../../../hooks/useDetailsView';
-import { useStyles } from './AssetDetailsTable';
+import { useStyles } from './AssetGrid';
 import { PublishedStateEnumToString, eSystemObjectType } from '../../../../../types/server';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { SystemObjectVersion } from '../../../../../types/graphql';
@@ -46,8 +46,8 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     };
 
     let redirect = () => {};
-    if (data && data.getAssetDetailsForSystemObject?.assetDetails?.[0]) {
-        const { idAsset, idAssetVersion, assetType } = data.getAssetDetailsForSystemObject?.assetDetails?.[0];
+    if (data && data.getAssetDetailsForSystemObject?.assetDetailRows?.[0]) {
+        const { idAsset, idAssetVersion, assetType } = data.getAssetDetailsForSystemObject?.assetDetailRows?.[0];
         redirect = () => {
             const newEndpoint = updateSystemObjectUploadRedirect(idAsset, idAssetVersion, systemObjectType, assetType);
             history.push(newEndpoint);

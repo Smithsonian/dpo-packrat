@@ -31,7 +31,6 @@ import { eSystemObjectType } from '../../../../../types/server';
 import RelatedObjectsList from '../../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
 import ActorDetails from './ActorDetails';
 import AssetDetails from './AssetDetails';
-import AssetDetailsTable from './AssetDetailsTable';
 import AssetVersionDetails from './AssetVersionDetails';
 import AssetVersionsTable from './AssetVersionsTable';
 import CaptureDataDetails from './CaptureDataDetails';
@@ -49,6 +48,7 @@ import { deleteObjectConnection } from '../../../hooks/useDetailsView';
 import { sharedButtonProps } from '../../../../../utils/shared';
 import { useHistory } from 'react-router-dom';
 import { updateSystemObjectUploadRedirect } from '../../../../../constants';
+import AssetGrid from './AssetGrid';
 
 const useStyles = makeStyles(({ palette }) => ({
     tab: {
@@ -140,7 +140,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     const AssetDetailsTableTab = (index: number, idSystemObject: number, systemObjectType?: eSystemObjectType) => (
         <TabPanel value={tab} index={index}>
-            <AssetDetailsTable idSystemObject={idSystemObject} systemObjectType={systemObjectType} />
+            <AssetGrid idSystemObject={idSystemObject} systemObjectType={systemObjectType} />
         </TabPanel>
     );
 
