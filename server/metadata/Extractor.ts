@@ -3,22 +3,29 @@ import * as LOG from '../utils/logger';
 
 import * as path from 'path';
 import exifr from 'exifr';
-
-export class MetadataExtract {
-    name: string;
-    value: string;
-    constructor(name: string, value: string) {
-        this.name = name;
-        this.value = value;
-    }
-}
-
-export type MetadataCollection = {
-    extract: MetadataExtract[];
-};
+import { imageSize } from 'image-size';
 
 export class Extractor {
-    metadata: MetadataExtract[] = [];
+    metadata: Map<string, string> = new Map<string, string>(); // Map of metadata name -> value
+
+    static exifrFormatOptions = {
+        translateKeys: true,
+        translateValues: true,
+        reviveValues: true,
+        parse: true,
+    };
+
+    static exifrOptions = {
+        tiff: Extractor.exifrFormatOptions,
+        ifd0: Extractor.exifrFormatOptions,
+        ifd1: Extractor.exifrFormatOptions,
+        exif: Extractor.exifrFormatOptions,
+        gps: Extractor.exifrFormatOptions,
+        xmp: Extractor.exifrFormatOptions,
+        iptc: Extractor.exifrFormatOptions,
+        sanitize: true,
+        mergeOutput: true,
+    };
 
     async extractMetadata(fileName: string, inputStream?: NodeJS.ReadableStream | undefined): Promise<H.IOResults> {
         // try image extraction:
@@ -29,14 +36,14 @@ export class Extractor {
     }
 
     clear(): void {
-        this.metadata = [];
+        this.metadata.clear();
     }
 
     private async extractMetadataImage(fileName: string, inputStream?: NodeJS.ReadableStream | undefined): Promise<H.IOResults> {
         // Handle image extraction
         const extension: string = path.extname(fileName).toLowerCase();
         switch (extension) {
-            default: return { success: true, error: '' };
+            default: return { success: false, error: `Extractor.extractMetadataImage does not support image type ${extension}` };
             case '.jpg':
             case '.tif':
             case '.png':
@@ -45,37 +52,15 @@ export class Extractor {
             case '.iiq': break;
         }
 
-        const exifrFormatOptions = {
-            translateKeys: true,
-            translateValues: true,
-            reviveValues: true,
-            parse: true,
-        };
-
-        const exifrOptions = {
-            tiff: exifrFormatOptions,
-            ifd0: exifrFormatOptions,
-            ifd1: exifrFormatOptions,
-            exif: exifrFormatOptions,
-            gps: exifrFormatOptions,
-            xmp: exifrFormatOptions,
-            iptc: exifrFormatOptions,
-            sanitize: true,
-            mergeOutpu: true,
-        };
-
         try {
             let extractions: any = { }; // eslint-disable-line @typescript-eslint/no-explicit-any
             if (inputStream) {
-                const buffer: Buffer | null = await H.Helpers.readFileFromStream(inputStream); /* istanbul ignore next */
-                if (!buffer) {
-                    const error: string = 'Extractor.extractMetadataImage could not load buffer from inputstream';
-                    LOG.error(error, LOG.LS.eMETA);
-                    return { success: false, error };
-                }
-                extractions = await exifr.parse(buffer, exifrOptions);
+                const buffer: Buffer | null = await H.Helpers.readFileFromStream(inputStream);
+                if (!buffer)
+                    return { success: false, error: 'Extractor.extractMetadataImage could not load buffer from inputstream' };
+                extractions = await exifr.parse(buffer, Extractor.exifrOptions);
             } else
-                extractions = await exifr.parse(fileName, exifrOptions);
+                extractions = await exifr.parse(fileName, Extractor.exifrOptions);
 
             for (const [name, valueU] of Object.entries(extractions)) {
                 let value: string;
@@ -88,13 +73,23 @@ export class Extractor {
                 else if (typeof(valueU) === 'object')
                     value = JSON.stringify(valueU, H.Helpers.saferStringify);
                 else
-                    value = String(valueU);
-                this.metadata.push(new MetadataExtract(name, value));
+                    value = String(valueU); /* istanbul ignore next */
+
+                if (this.metadata.has(name))
+                    LOG.info(`Extractor.extractMetadataImage already has value for ${name}`, LOG.LS.eMETA);
+                this.metadata.set(name, value);
             }
-        } catch (err) /* istanbul ignore next */ {
-            const error: string = `Extractor.extractMetadataImage failed: ${JSON.stringify(err, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eMETA);
-            return { success: false, error };
+
+            // If our exif/iptc/jfif info does not contain height & width, calculate that directly using image-size:
+            if (!this.metadata.has('ImageHeight') || !this.metadata.has('ImageWidth')) {
+                const dimensions = imageSize(fileName); /* istanbul ignore next */
+                if (dimensions.height)
+                    this.metadata.set('ImageHeight', dimensions.height.toString()); /* istanbul ignore next */
+                if (dimensions.width)
+                    this.metadata.set('ImageWidth', dimensions.width.toString());
+            }
+        } catch (err) {
+            return { success: false, error: `Extractor.extractMetadataImage failed: ${JSON.stringify(err, H.Helpers.saferStringify)}` };
         }
 
         return { success: true, error: '' };
