@@ -6,7 +6,7 @@ module.exports = {
     // collectCoverage: true,
     testMatch: [
         // The complete test suite, on one line, to aid in quick commenting out
-        '**/tests/auth/**', '**/tests/cache/cache.test.ts', '**/tests/collections/*.test.ts', '**/tests/db/**/*.test.ts', '**/tests/graphql/graphql.test.ts', '**/tests/job/**/*.test.ts', '**/tests/navigation/**/*.test.ts', '**/tests/storage/**/*.test.ts', '**/tests/utils/**/*.test.ts',
+        '**/tests/auth/**', '**/tests/cache/cache.test.ts', '**/tests/collections/*.test.ts', '**/tests/db/**/*.test.ts', '**/tests/graphql/graphql.test.ts', '**/tests/metadata/*.test.ts', '**/tests/job/**/*.test.ts', '**/tests/navigation/**/*.test.ts', '**/tests/storage/**/*.test.ts', '**/tests/utils/**/*.test.ts',
         // '**/tests/job/impl/JobNS.test.ts',
         // '**/tests/db/dbcreation.test.ts',
 
@@ -16,6 +16,7 @@ module.exports = {
         // '**/tests/collections/*.test.ts',
         // '**/tests/db/**/*.test.ts',
         // '**/tests/graphql/graphql.test.ts',
+        // '**/tests/metadata/*.test.ts'
         // '**/tests/navigation/**/*.test.ts',
         // '**/tests/storage/**/*.test.ts',
         // '**/tests/utils/**/*.test.ts',
@@ -31,6 +32,7 @@ module.exports = {
         // '**/tests/db/composite/ObjectGraph.test.ts',
         // '**/tests/db/composite/SubjectUnitIdentifier.test.ts',
         // '**/tests/job/impl/JobNS.test.ts',
+        // '**/tests/metadata/Extractor.test.ts',
         // '**/tests/navigation/impl/NavigationDB.test.ts',
         // '**/tests/storage/interface/AssetStorageAdapter.test.ts',
         // '**/tests/storage/impl/LocalStorage/OCFL.test.ts',
