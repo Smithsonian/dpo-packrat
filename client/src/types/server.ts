@@ -230,7 +230,7 @@ export enum eIcon {
     eIconDownload
 }
 
-export enum eAssetGridColumntype {
+export enum eAssetGridColumnType {
     eString,
     eNumber,
     eBoolean,

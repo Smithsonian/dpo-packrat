@@ -1,27 +1,34 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as LOG from '../../../../../utils/logger';
-import { AssetDetail, GetAssetDetailsForSystemObjectResult, QueryGetAssetDetailsForSystemObjectArgs } from '../../../../../types/graphql';
+import { GetAssetDetailsForSystemObjectResult, QueryGetAssetDetailsForSystemObjectArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
+import { AssetGridDetail } from './AssetGridDetail';
+import { VocabularyCache } from '../../../../../cache';
+
+export enum eIcon {
+    eIconDownload
+}
 
 export default async function getAssetDetailsForSystemObject(_: Parent, args: QueryGetAssetDetailsForSystemObjectArgs): Promise<GetAssetDetailsForSystemObjectResult> {
     const { input } = args;
     const { idSystemObject } = input;
 
-    const assetDetails: AssetDetail[] = [];
+    const assetDetailRows: any[] = [];
     const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObject);
     if (!assetVersions) {
         LOG.info(`getAssetDetailsForSystemObject retrieved no asset versions for ${idSystemObject}`, LOG.LS.eGQL);
-        return { assetDetails };
+        return { columns: [], assetDetailRows };
     }
 
     const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     if (!SO) {
         LOG.info(`getAssetDetailsForSystemObject unable to retrieve system object for ${idSystemObject}`, LOG.LS.eGQL);
-        return { assetDetails };
+        return { columns: [], assetDetailRows };
     }
 
-    let assetDetailPreferred: AssetDetail | null = null;
+    let assetDetailPreferred: AssetGridDetail | null = null;
     for (const assetVersion of assetVersions) {
         // We need the idSystemObject for the asset
         const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAsset, eObjectType: DBAPI.eSystemObjectType.eAsset };
@@ -37,17 +44,24 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
             continue;
         }
 
-        const assetDetail: AssetDetail = {
+        const vocabularyCache = await VocabularyCache.vocabulary(asset.idVAssetType);
+        if (!vocabularyCache?.Term) {
+            LOG.error(`vocabularyCache could not retrieve vocabulary for asset ${JSON.stringify(asset.idAsset)}`, LOG.LS.eGQL);
+            continue;
+        }
+
+        const assetDetail = new AssetGridDetail({
             idSystemObject: sID ? sID.idSystemObject : 0,
             idAsset: assetVersion.idAsset,
             idAssetVersion: assetVersion.idAssetVersion,
-            name: assetVersion.FileName,
-            path: asset.FilePath,
-            assetType: asset.idVAssetType,
+            name: { label: assetVersion.FileName, path: `${sID.idSystemObject}`, icon: null, origin: 'client' },
+            link: { label: null, path: `${assetVersion.idAssetVersion}`, icon: eIcon.eIconDownload, origin: 'server' },
+            filePath: asset.FilePath,
+            assetType: vocabularyCache.Term,
             version: assetVersion.Version,
             dateCreated: assetVersion.DateCreated,
-            size: assetVersion.StorageSize
-        };
+            size: assetVersion.StorageSize.toString()
+        });
 
         // If we haven't yet identified a preferred assetDetail record, examine this asset's asset type,
         // and compare that to the system object that we've fetched.
@@ -104,11 +118,10 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
             }
         }
 
-        assetDetails.push(assetDetail);
+        assetDetailRows.push(assetDetail);
     }
 
-    if (assetDetailPreferred)
-        assetDetails.unshift(assetDetailPreferred);
+    if (assetDetailPreferred) assetDetailRows.unshift(assetDetailPreferred);
 
-    return { assetDetails };
+    return { columns: AssetGridDetail.getColumns(), assetDetailRows };
 }

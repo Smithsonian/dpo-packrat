@@ -12,6 +12,7 @@ export type Scalars = {
   DateTime: any;
   Upload: any;
   BigInt: any;
+  JSON: any;
 };
 
 export type Query = {
@@ -1590,6 +1591,7 @@ export type CreateIdentifierInput = {
   selected: Scalars['Boolean'];
 };
 
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -1785,17 +1787,13 @@ export type GetSourceObjectIdentiferResult = {
   sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
 };
 
-export type AssetDetail = {
-  __typename?: 'AssetDetail';
-  idSystemObject: Scalars['Int'];
-  idAsset: Scalars['Int'];
-  idAssetVersion: Scalars['Int'];
-  name: Scalars['String'];
-  path: Scalars['String'];
-  assetType: Scalars['Int'];
-  version: Scalars['Int'];
-  dateCreated: Scalars['DateTime'];
-  size: Scalars['BigInt'];
+export type ColumnDefinition = {
+  __typename?: 'ColumnDefinition';
+  colName: Scalars['String'];
+  colLabel: Scalars['String'];
+  colDisplay: Scalars['Boolean'];
+  colType: Scalars['Int'];
+  colAlign: Scalars['String'];
 };
 
 export type GetAssetDetailsForSystemObjectInput = {
@@ -1804,7 +1802,8 @@ export type GetAssetDetailsForSystemObjectInput = {
 
 export type GetAssetDetailsForSystemObjectResult = {
   __typename?: 'GetAssetDetailsForSystemObjectResult';
-  assetDetails: Array<AssetDetail>;
+  columns: Array<ColumnDefinition>;
+  assetDetailRows: Array<Scalars['JSON']>;
 };
 
 export type DetailVersion = {

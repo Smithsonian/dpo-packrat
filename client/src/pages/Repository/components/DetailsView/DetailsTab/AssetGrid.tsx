@@ -12,17 +12,18 @@
 import { Box, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { NewTabLink, EmptyTable } from '../../../../../components';
-import { eSystemObjectType, eIcon, eAssetGridColumntype } from '../../../../../types/server';
-import { useObjectAssets } from '../../../hooks/useDetailsView';
+import { eSystemObjectType, eIcon, eAssetGridColumnType } from '../../../../../types/server';
+import { getObjectAssets } from '../../../hooks/useDetailsView';
 import { getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { sharedButtonProps, formatDate } from '../../../../../utils/shared';
 import { updateSystemObjectUploadRedirect } from '../../../../../constants';
 import { useHistory } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
-import MUIDataTable, { MUIDataTableOptions, MUIDataTableColumn } from 'mui-datatables';
+import MUIDataTable from 'mui-datatables';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
+import { getDetailsUrlForObject, getDownloadAssetUrlForObject } from '../../../../../utils/repository';
 import clsx from 'clsx';
 
 export const useStyles = makeStyles(({ palette }) => ({
@@ -41,8 +42,50 @@ export const useStyles = makeStyles(({ palette }) => ({
         '& > span': {
             justifyContent: 'center'
         }
-    }
+    },
+    container: {
+        width: '100%',
+        background: palette.secondary.light,
+        padding: 5,
+        borderRadius: 5,
+        marginBottom: 7
+    },
+    header: {
+        fontSize: '0.9em',
+        color: palette.primary.dark,
+        fontWeight: 'bold'
+    },
+    value: {
+        fontSize: '0.8em',
+        color: palette.primary.dark
+    },
+    empty: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+        background: palette.secondary.light,
+        padding: 40,
+        borderRadius: 5
+    },
+    link: {
+        textDecoration: 'underline'
+    },
 }));
+
+interface DataTableOptions {
+    filter: boolean;
+    filterType: string;
+    responsive: string;
+    selectableRows: string;
+    search: boolean;
+    download: boolean;
+    print: boolean;
+    fixedHeader: boolean;
+    pagination: boolean;
+    elevation: number;
+    onViewColumnsChange: (change: string, action: string) => void;
+}
 
 interface AssetGridProps {
     idSystemObject: number;
@@ -93,15 +136,35 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
     const classes = useStyles();
     const { idSystemObject, systemObjectType } = props;
     const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
-    const { data } = useObjectAssets(idSystemObject);
     const history = useHistory();
     const [assetColumns, setAssetColumns] = useState<any>([]);
     const [assetRows, setAssetRows] = useState<any[]>([]);
 
-    const formatToDataTableColumns = (fields: any[], classes): MUIDataTableColumn[] => {
-        const result: MUIDataTableColumn[] = [];
+    useEffect(() => {
+        const initializeColumnsAndRows = async () => {
+            const {
+                data: {
+                    getAssetDetailsForSystemObject: { columns, assetDetailRows }
+                }
+            } = await getObjectAssets(idSystemObject);
+
+            if (columns) {
+                const formattedColumns = formatToDataTableColumns(columns, classes);
+                await setAssetColumns(formattedColumns);
+            }
+
+            if (assetDetailRows) {
+                await setAssetRows(assetDetailRows);
+            }
+        };
+
+        initializeColumnsAndRows();
+    }, []);
+
+    const formatToDataTableColumns = (fields: any[], classes): any[] => {
+        const result: any[] = [];
         fields.forEach(async ({ colName, colType, colDisplay, colLabel, colAlign }) => {
-            const gridColumnObject: MUIDataTableColumn = {
+            const gridColumnObject: any = {
                 name: colName,
                 label: colLabel,
                 options: {
@@ -114,20 +177,20 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                     setCellProps:
                         colAlign === 'center'
                             ? () => ({
-                                  align: 'center'
-                              })
+                                align: 'center'
+                            })
                             : () => ({
-                                  align: 'left'
-                              })
+                                align: 'left'
+                            })
                 }
             };
 
             switch (colType) {
-                case eAssetGridColumntype.eString:
-                case eAssetGridColumntype.eBoolean:
-                case eAssetGridColumntype.eNumber:
+                case eAssetGridColumnType.eString:
+                case eAssetGridColumnType.eBoolean:
+                case eAssetGridColumnType.eNumber:
                     break;
-                case eAssetGridColumntype.eDate:
+                case eAssetGridColumnType.eDate:
                     gridColumnObject.options = {
                         ...gridColumnObject.options,
                         customBodyRender(value) {
@@ -135,36 +198,58 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                         }
                     };
                     break;
-                case eAssetGridColumntype.eFileSize:
+                case eAssetGridColumnType.eFileSize:
                     gridColumnObject.options = {
                         ...gridColumnObject.options,
                         customBodyRender(value) {
-                            return formatBytes(value as number);
+                            return formatBytes(Number(value));
                         }
                     };
                     break;
-                case eAssetGridColumntype.eHyperLink:
+                case eAssetGridColumnType.eHyperLink:
                     gridColumnObject.options = {
                         ...gridColumnObject.options,
                         customBodyRender(value) {
                             if (value.label) {
-                                return (
-                                    <NewTabLink to={value.path} style={{ textDecoration: 'underline', color: '#2C405A' }}>
-                                        {value.label}
-                                    </NewTabLink>
-                                );
+                                if (value.origin === 'client') {
+                                    return (
+                                        <NewTabLink to={getDetailsUrlForObject(value.path)} style={{ textDecoration: 'underline', color: '#2C405A' }}>
+                                            {value.label}
+                                        </NewTabLink>
+                                    );
+                                } else if (value.origin === 'server') {
+                                    return (
+                                        <a
+                                            href={getDownloadAssetUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, value.path)}
+                                            style={{ textDecoration: 'underline', color: '#2C405A' }}
+                                        >
+                                            {value.label}
+                                        </a>
+                                    );
+                                }
                             }
 
                             if (value.icon !== null) {
-                                return (
-                                    <NewTabLink to={value.path} style={{ color: 'black', display: 'flex' }}>
-                                        {renderIcon(value.icon)}
-                                    </NewTabLink>
-                                );
+                                if (value.origin === 'client') {
+                                    return (
+                                        <NewTabLink to={getDetailsUrlForObject(value.path)} style={{ color: 'black', display: 'flex' }}>
+                                            {renderIcon(value.icon)}
+                                        </NewTabLink>
+                                    );
+                                } else if (value.origin === 'server') {
+                                    return (
+                                        <a
+                                            href={getDownloadAssetUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, value.path)}
+                                            style={{ textDecoration: 'underline', color: '#2C405A', display: 'flex' }}
+                                        >
+                                            {renderIcon(value.icon)}
+                                        </a>
+                                    );
+                                }
                             }
 
                             return (
-                                <NewTabLink to={value.path} style={{ textDecoration: 'underline' }}>
+                                <NewTabLink to={getDetailsUrlForObject(value.path)} style={{ textDecoration: 'underline' }}>
                                     {value.path}
                                 </NewTabLink>
                             );
@@ -177,11 +262,6 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         return result;
     };
 
-    // const formatToDataGridRows = () => {
-    //     // TODO: Write this out if rows data needs processing
-    //     return [];
-    // };
-
     const renderIcon = (type: eIcon) => {
         if (type === eIcon.eIconDownload) {
             return <GetAppIcon />;
@@ -189,64 +269,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         return;
     };
 
-    useEffect(() => {
-        const initializeColumnsAndRows = async () => {
-            // TODO: Replace this sampleColumns with columns definition from GQL
-            // {
-            //     colName: string
-            //     colLabel: string
-            //     colDisplay: boolean
-            //     colType: eAssetGridColumnType
-            //     colAlign: string
-            // }
-            const sampleColumns = [
-                { colName: 'Link', colLabel: 'Link', colDisplay: true, colType: eAssetGridColumntype.eHyperLink, colAlign: 'center' },
-                { colName: 'Name', colLabel: 'Name', colDisplay: true, colType: eAssetGridColumntype.eHyperLink, colAlign: 'left' },
-                { colName: 'Path', colLabel: 'Path', colDisplay: true, colType: eAssetGridColumntype.eString, colAlign: 'left' },
-                { colName: 'AssetType', colLabel: 'Asset Type', colDisplay: true, colType: eAssetGridColumntype.eString, colAlign: 'center' },
-                { colName: 'Version', colLabel: 'Version', colDisplay: true, colType: eAssetGridColumntype.eNumber, colAlign: 'center' },
-                { colName: 'DateCreated', colLabel: 'Date Created', colDisplay: true, colType: eAssetGridColumntype.eDate, colAlign: 'center' },
-                { colName: 'Size', colLabel: 'Size', colDisplay: true, colType: eAssetGridColumntype.eFileSize, colAlign: 'center' }
-            ];
-
-            await setAssetColumns(formatToDataTableColumns(sampleColumns, classes));
-            // TODO: Replace this sampleColumns with columns definition from GQL
-            const sampleRows = [
-                {
-                    Size: 2348799003,
-                    Link: { label: null, path: '/admin', icon: eIcon.eIconDownload },
-                    Name: { label: 'helmet.jpeg', path: '/repository/details/1232', icon: null },
-                    Path: '92c986d0-2b8d-43c1-8354-e9a2e80d0f9e.manual',
-                    AssetType: 'Other',
-                    Version: 1,
-                    DateCreated: '7/2/2021'
-                },
-                {
-                    Size: 799003,
-                    Name: { label: 'nmah-1981_0706_06-clemente_helmet-100k-2048_std_draco.glb', path: '/repository/details/1232', icon: null },
-                    Path: '92c986d0-2b8d-43c1-8354-e9a2e80d0f9e.manual/articles',
-                    AssetType: 'Model Geometry File',
-                    Version: 88,
-                    DateCreated: '7/2/2021',
-                    Link: { label: null, path: '/repository', icon: eIcon.eIconDownload }
-                },
-                {
-                    Size: 2348,
-                    Link: { label: null, path: '/dashboard', icon: eIcon.eIconDownload },
-                    Name: { label: 'nmah-1981_0706_06-clemente_helmet-100k-2048-high.glb.jpeg', path: '/repository/details/1232', icon: null },
-                    Path: '92c986d0-2b8d-43c1-8354-e9a2e80d0f9e.manual',
-                    AssetType: 'Photogrammetry',
-                    Version: 2,
-                    DateCreated: '7/2/2021'
-                }
-            ];
-            await setAssetRows(sampleRows);
-        };
-
-        initializeColumnsAndRows();
-    }, []);
-
-    if (!assetColumns || !data) {
+    if (!assetColumns.length) {
         return <EmptyTable />;
     }
 
@@ -259,18 +282,16 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         }
     };
 
-    const { assetDetails } = data.getAssetDetailsForSystemObject;
-
     let redirect = () => {};
-    if (data.getAssetDetailsForSystemObject?.assetDetails?.[0]) {
-        const { idAsset, idAssetVersion, assetType } = data.getAssetDetailsForSystemObject?.assetDetails?.[0];
+    if (assetRows[0]) {
+        const { idAsset, idAssetVersion, assetType } = assetRows[0];
         redirect = () => {
             const newEndpoint = updateSystemObjectUploadRedirect(idAsset, idAssetVersion, systemObjectType, assetType);
             history.push(newEndpoint);
         };
     }
 
-    const options: MUIDataTableOptions = {
+    const options: DataTableOptions = {
         filter: false,
         filterType: 'dropdown',
         responsive: 'standard',
@@ -293,7 +314,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
             </MuiThemeProvider>
 
             <Box display='flex' flexDirection='row' alignItems='center' mt={1}>
-                {assetDetails.length > 0 && (
+                {assetRows.length > 0 && (
                     <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
                         <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ width: 'fit-content', whiteSpace: 'nowrap' }}>
                             Download All

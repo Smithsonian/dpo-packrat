@@ -13,7 +13,7 @@ import { getDetailsUrlForObject, getDownloadAssetVersionUrlForObject } from '../
 import { formatDate } from '../../../../../utils/shared';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectVersions } from '../../../hooks/useDetailsView';
-import { useStyles } from './AssetDetailsTable';
+import { useStyles } from './AssetGrid';
 import GetAppIcon from '@material-ui/icons/GetApp';
 
 interface AssetVersionsTableProps {
