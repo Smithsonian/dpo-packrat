@@ -5,7 +5,7 @@ import * as META from '../../metadata';
 import * as H from '../../utils/helpers';
 
 const mockPathTurtle: string = path.join(__dirname, '../mock/utils/bagit/PackratTest/data/nmnh_sea_turtle-1_low/camera/');
-const mockPathF1991_46: string = path.join(__dirname, '../mock/captures/f1991_46-dataset/'); // eslint-disable-line camelcase
+const mockPathF1991_46: string = path.join(__dirname, '../mock/captures/f1991_46-dataset/camera/'); // eslint-disable-line camelcase
 const emitMetadata: boolean = false;
 
 afterAll(async done => {
@@ -19,31 +19,28 @@ describe('Metadata: Extractor', () => {
         expect(await extractFromFile('nmnh_sea_turtle-1_low-02.jpg', mockPathTurtle, true)).toBeTruthy();
         expect(await extractFromFile('nmnh_sea_turtle-1_low-02.ZZZ_UNRECOGNIZED_IMAGE_TYPE', mockPathTurtle, false)).toBeTruthy();
 
-        expect(await extractFromFile('f1991_46-1_low-01.jpg', path.join(mockPathF1991_46, 'camera'), true)).toBeTruthy();
-        expect(await extractFromFile('f1991_46-1_low-02.jpg', path.join(mockPathF1991_46, 'camera'), true)).toBeTruthy();
-        expect(await extractFromFile('f1991_46-1_low-03.jpg', path.join(mockPathF1991_46, 'camera'), true)).toBeTruthy();
-        expect(await extractFromFile('f1991_46-1_low-04.jpg', path.join(mockPathF1991_46, 'camera'), true)).toBeTruthy();
-        expect(await extractFromFile('f1991_46-1_low-05.jpg', path.join(mockPathF1991_46, 'camera'), true)).toBeTruthy();
-        expect(await extractFromFile('ZZZ_DOES_NOT_EXIST.tif', path.join(mockPathF1991_46, 'ZZZ_DOES_NOT_EXIST'), false)).toBeTruthy();
+        expect(await extractFromFile('f1991_46-1_low-01.jpg', mockPathF1991_46, true)).toBeTruthy();
+        expect(await extractFromFile('f1991_46-1_low-02.jpg', mockPathF1991_46, true)).toBeTruthy();
+        expect(await extractFromFile('f1991_46-1_low-03.jpg', mockPathF1991_46, true)).toBeTruthy();
+        expect(await extractFromFile('f1991_46-1_low-04.jpg', mockPathF1991_46, true)).toBeTruthy();
+        expect(await extractFromFile('f1991_46-1_low-05.jpg', mockPathF1991_46, true)).toBeTruthy();
+        expect(await extractFromFile('ZZZ_DOES_NOT_EXIST.tif', mockPathF1991_46, false)).toBeTruthy();
     });
 
     test('Extractor.extractMetadata stream', async () => {
         expect(await extractFromStream('nmnh_sea_turtle-1_low-01.jpg', mockPathTurtle, true)).toBeTruthy();
         expect(await extractFromStream('nmnh_sea_turtle-1_low-02.jpg', mockPathTurtle, true)).toBeTruthy();
 
-        expect(await extractFromStream('f1991_46-1_low-01.jpg', path.join(mockPathF1991_46, 'camera'), true)).toBeTruthy();
-        expect(await extractFromStream('f1991_46-1_low-02.jpg', path.join(mockPathF1991_46, 'camera'), true)).toBeTruthy();
-        expect(await extractFromStream('f1991_46-1_low-03.jpg', path.join(mockPathF1991_46, 'camera'), true)).toBeTruthy();
-        expect(await extractFromStream('f1991_46-1_low-04.jpg', path.join(mockPathF1991_46, 'camera'), true)).toBeTruthy();
-        expect(await extractFromStream('f1991_46-1_low-05.jpg', path.join(mockPathF1991_46, 'camera'), true)).toBeTruthy();
-        expect(await extractFromStream('ZZZ_DOES_NOT_EXIST.tif', path.join(mockPathF1991_46, 'ZZZ_DOES_NOT_EXIST'), false)).toBeTruthy();
+        expect(await extractFromStream('f1991_46-1_low-01.jpg', mockPathF1991_46, true)).toBeTruthy();
+        expect(await extractFromStream('f1991_46-1_low-02.jpg', mockPathF1991_46, true)).toBeTruthy();
+        expect(await extractFromStream('f1991_46-1_low-03.jpg', mockPathF1991_46, true)).toBeTruthy();
+        expect(await extractFromStream('f1991_46-1_low-04.jpg', mockPathF1991_46, true)).toBeTruthy();
+        expect(await extractFromStream('f1991_46-1_low-05.jpg', mockPathF1991_46, true)).toBeTruthy();
     });
 });
 
 async function extractFromFile(fileName: string, filePath: string, expectSuccess: boolean): Promise<boolean> {
     const extractor: META.Extractor = new META.Extractor();
-    if (!expectSuccess)
-        LOG.info('Metadata Extractor.extractMetadata error that follows is expected!', LOG.LS.eTEST);
     const results: H.IOResults = await extractor.extractMetadata(path.join(filePath, fileName));
     if (expectSuccess) {
         if (results.success)
@@ -64,14 +61,13 @@ async function extractFromStream(fileName: string, filePath: string, expectSucce
     let success: boolean = false;
 
     try {
-        const extractor: META.Extractor = new META.Extractor();
-        if (!expectSuccess)
-            LOG.info('Metadata Extractor.extractMetadata error that follows is expected!', LOG.LS.eTEST);
-
         const fullName: string = path.join(filePath, fileName);
-        const inputStream: NodeJS.ReadableStream = fs.createReadStream(fullName);
+        const inputStream: NodeJS.ReadableStream | null = await fs.createReadStream(fullName, { autoClose: true });
+
+        const extractor: META.Extractor = new META.Extractor();
         const results: H.IOResults = await extractor.extractMetadata(fullName, inputStream);
         success = results.success;
+
         if (expectSuccess) {
             if (results.success)
                 expect(validateImageMetadata(extractor, fileName)).toBeTruthy();
