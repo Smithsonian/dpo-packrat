@@ -40,12 +40,12 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
             if (idSystemObject) {
                 const {
                     data: {
-                        getAssetDetailsForSystemObject: { assetDetails }
+                        getAssetDetailsForSystemObject: { assetDetailRows }
                     }
                 } = await getObjectAssets(idSystemObject);
-                if (assetDetails && assetDetails.length > 0) {
-                    setRootLink(getRootSceneDownloadUrlForVoyager(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject, assetDetails[0].path));
-                    setDocumentLink(assetDetails[0].name);
+                if (assetDetailRows && assetDetailRows.length > 0) {
+                    setRootLink(getRootSceneDownloadUrlForVoyager(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject, assetDetailRows[0].filePath));
+                    setDocumentLink(assetDetailRows[0].name.label);
                 }
             }
         };

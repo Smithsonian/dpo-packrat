@@ -1,4 +1,5 @@
 scalar DateTime
+scalar JSON
 
 type Query {
     getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
@@ -187,16 +188,12 @@ type GetSourceObjectIdentiferResult {
     sourceObjectIdentifiers: [SourceObjectIdentifier!]!
 }
 
-type AssetDetail {
-    idSystemObject: Int!
-    idAsset: Int!
-    idAssetVersion: Int!
-    name: String!
-    path: String!
-    assetType: Int!
-    version: Int!
-    dateCreated: DateTime!
-    size: BigInt!
+type ColumnDefinition {
+    colName: String!
+    colLabel: String!
+    colDisplay: Boolean!
+    colType: Int!
+    colAlign: String!
 }
 
 input GetAssetDetailsForSystemObjectInput {
@@ -204,7 +201,8 @@ input GetAssetDetailsForSystemObjectInput {
 }
 
 type GetAssetDetailsForSystemObjectResult {
-    assetDetails: [AssetDetail!]!
+    columns: [ColumnDefinition!]!
+    assetDetailRows: [JSON!]!
 }
 
 type DetailVersion {

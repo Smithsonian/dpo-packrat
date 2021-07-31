@@ -69,12 +69,11 @@ function Uploads(): React.ReactElement {
     const [discardingFiles, setDiscardingFiles] = useState(false);
 
     const [updateVocabularyEntries, getEntries] = useVocabularyStore(state => [state.updateVocabularyEntries, state.getEntries]);
-    const [completed, discardFiles, setUpdateMode, setUpdateWorkflowFileType, updateMode, getSelectedFiles, selectFile] = useUploadStore(state => [
+    const [completed, discardFiles, setUpdateMode, setUpdateWorkflowFileType, getSelectedFiles, selectFile] = useUploadStore(state => [
         state.completed,
         state.discardFiles,
         state.setUpdateMode,
         state.setUpdateWorkflowFileType,
-        state.updateMode,
         state.getSelectedFiles,
         state.selectFile
     ]);
@@ -126,7 +125,8 @@ function Uploads(): React.ReactElement {
                     metadataStepRequiredAssetTypesSet.add(assetType.idVocabulary);
             });
 
-            if (updateMode && queuedUploadedFiles.every(file => !metadataStepRequiredAssetTypesSet.has(file.type))) {
+            // Change this line to read the file types
+            if (queuedUploadedFiles.every(file => !metadataStepRequiredAssetTypesSet.has(file.type))) {
                 const { success, message } = await ingestionStart();
                 if (success) {
                     toast.success('Ingestion complete');
@@ -173,7 +173,10 @@ function Uploads(): React.ReactElement {
             }
 
             toast.dismiss();
-            updateMode ? onNext() : await history.push(nextStep);
+            const toBeIngested = getSelectedFiles(completed, true);
+
+            // if every selected file is for update, skip the subject/items step
+            toBeIngested.every(file => file.idAsset) ? onNext() : await history.push(nextStep);
         } catch {
             setGettingAssetDetails(false);
         }
