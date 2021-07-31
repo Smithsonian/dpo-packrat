@@ -15,6 +15,7 @@ export type Scalars = {
   DateTime: any;
   Upload: any;
   BigInt: any;
+  JSON: any;
 };
 
 export type Query = {
@@ -1593,6 +1594,7 @@ export type CreateIdentifierInput = {
   selected: Scalars['Boolean'];
 };
 
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -1788,17 +1790,13 @@ export type GetSourceObjectIdentiferResult = {
   sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
 };
 
-export type AssetDetail = {
-  __typename?: 'AssetDetail';
-  idSystemObject: Scalars['Int'];
-  idAsset: Scalars['Int'];
-  idAssetVersion: Scalars['Int'];
-  name: Scalars['String'];
-  path: Scalars['String'];
-  assetType: Scalars['Int'];
-  version: Scalars['Int'];
-  dateCreated: Scalars['DateTime'];
-  size: Scalars['BigInt'];
+export type ColumnDefinition = {
+  __typename?: 'ColumnDefinition';
+  colName: Scalars['String'];
+  colLabel: Scalars['String'];
+  colDisplay: Scalars['Boolean'];
+  colType: Scalars['Int'];
+  colAlign: Scalars['String'];
 };
 
 export type GetAssetDetailsForSystemObjectInput = {
@@ -1807,7 +1805,8 @@ export type GetAssetDetailsForSystemObjectInput = {
 
 export type GetAssetDetailsForSystemObjectResult = {
   __typename?: 'GetAssetDetailsForSystemObjectResult';
-  assetDetails: Array<AssetDetail>;
+  columns: Array<ColumnDefinition>;
+  assetDetailRows: Array<Scalars['JSON']>;
 };
 
 export type DetailVersion = {
@@ -3271,9 +3270,10 @@ export type GetAssetDetailsForSystemObjectQuery = (
   { __typename?: 'Query' }
   & { getAssetDetailsForSystemObject: (
     { __typename?: 'GetAssetDetailsForSystemObjectResult' }
-    & { assetDetails: Array<(
-      { __typename?: 'AssetDetail' }
-      & Pick<AssetDetail, 'idSystemObject' | 'idAsset' | 'idAssetVersion' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
+    & Pick<GetAssetDetailsForSystemObjectResult, 'assetDetailRows'>
+    & { columns: Array<(
+      { __typename?: 'ColumnDefinition' }
+      & Pick<ColumnDefinition, 'colName' | 'colDisplay' | 'colType' | 'colAlign' | 'colLabel'>
     )> }
   ) }
 );
@@ -5723,17 +5723,14 @@ export type GetSceneForAssetVersionQueryResult = Apollo.QueryResult<GetSceneForA
 export const GetAssetDetailsForSystemObjectDocument = gql`
     query getAssetDetailsForSystemObject($input: GetAssetDetailsForSystemObjectInput!) {
   getAssetDetailsForSystemObject(input: $input) {
-    assetDetails {
-      idSystemObject
-      idAsset
-      idAssetVersion
-      name
-      path
-      assetType
-      version
-      dateCreated
-      size
+    columns {
+      colName
+      colDisplay
+      colType
+      colAlign
+      colLabel
     }
+    assetDetailRows
   }
 }
     `;
