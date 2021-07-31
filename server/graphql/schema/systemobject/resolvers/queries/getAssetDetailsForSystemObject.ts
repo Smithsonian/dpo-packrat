@@ -8,7 +8,13 @@ import { AssetGridDetail } from './AssetGridDetail';
 import { VocabularyCache } from '../../../../../cache';
 
 export enum eIcon {
-    eIconDownload
+    eIconDownload = 1
+}
+
+export enum eLinkOrigin {
+    eClient = 1,
+    eServer = 2,
+    eNone = 0
 }
 
 export default async function getAssetDetailsForSystemObject(_: Parent, args: QueryGetAssetDetailsForSystemObjectArgs): Promise<GetAssetDetailsForSystemObjectResult> {
@@ -54,8 +60,8 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
             idSystemObject: sID ? sID.idSystemObject : 0,
             idAsset: assetVersion.idAsset,
             idAssetVersion: assetVersion.idAssetVersion,
-            name: { label: assetVersion.FileName, path: `${sID.idSystemObject}`, icon: null, origin: 'client' },
-            link: { label: null, path: `${assetVersion.idAssetVersion}`, icon: eIcon.eIconDownload, origin: 'server' },
+            name: { label: assetVersion.FileName, path: `${sID.idSystemObject}`, icon: null, origin: eLinkOrigin.eClient },
+            link: { label: null, path: `${assetVersion.idAssetVersion}`, icon: eIcon.eIconDownload, origin: eLinkOrigin.eServer },
             filePath: asset.FilePath,
             assetType: vocabularyCache.Term,
             version: assetVersion.Version,

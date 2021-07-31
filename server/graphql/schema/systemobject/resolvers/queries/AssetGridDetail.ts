@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export enum eAssetGridColumnType {
-    eString,
-    eNumber,
-    eBoolean,
-    eHyperLink,
-    eDate,
-    eFileSize
+    eString = 0,
+    eNumber = 1,
+    eBoolean = 2,
+    eHyperLink = 3,
+    eDate = 4,
+    eFileSize = 5
 }
 
 export type ColumnObject = {
@@ -21,7 +21,7 @@ export type LinkObject = {
     label: string | null;
     path: string | null;
     icon: number | null;
-    origin: string;
+    origin: number;
 };
 
 export class AssetGridDetail {
