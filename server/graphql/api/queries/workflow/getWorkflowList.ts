@@ -1,0 +1,27 @@
+import { gql } from 'apollo-server-express';
+
+const getWorkflowList = gql`
+    query getWorkflowList($input: GetWorkflowListInput!) {
+        getWorkflowList(input: $input) {
+            WorkflowList {
+                idWorkflow
+                idWorkflowSet
+                idWorkflowReport
+                idJobRun
+                Type
+                State
+                Owner {
+                    Name
+                }
+                DateStart
+                DateLast
+                HyperlinkReport
+                HyperlinkSet
+                HyperlinkJob
+                Error
+            }
+        }
+    }
+`;
+
+export default getWorkflowList;

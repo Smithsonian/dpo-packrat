@@ -1,18 +1,9 @@
 /* eslint-disable camelcase */
 import { JobRun as JobRunBase, Prisma } from '@prisma/client';
+import { eWorkflowJobRunStatus, convertWorkflowJobRunStatusToEnum } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
-
-export enum eJobRunStatus {
-    eUnitialized = 0,
-    eCreated = 1,
-    eRunning = 2,
-    eWaiting = 3,
-    eDone = 4,
-    eError = 5,
-    eCancelled = 6,
-}
 
 export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
     idJobRun!: number;
@@ -48,21 +39,8 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
         });
     }
 
-    static convertJobRunStatusToEnum(Status: number): eJobRunStatus {
-        switch (Status) {
-            default:    return eJobRunStatus.eUnitialized;
-            case 0:     return eJobRunStatus.eUnitialized;
-            case 1:     return eJobRunStatus.eCreated;
-            case 2:     return eJobRunStatus.eRunning;
-            case 3:     return eJobRunStatus.eWaiting;
-            case 4:     return eJobRunStatus.eDone;
-            case 5:     return eJobRunStatus.eError;
-            case 6:     return eJobRunStatus.eCancelled;
-        }
-    }
-
-    getStatus(): eJobRunStatus { return JobRun.convertJobRunStatusToEnum(this.Status); }
-    setStatus(eStatus: eJobRunStatus): void { this.Status = eStatus; }
+    getStatus(): eWorkflowJobRunStatus { return convertWorkflowJobRunStatusToEnum(this.Status); }
+    setStatus(eStatus: eWorkflowJobRunStatus): void { this.Status = eStatus; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -132,7 +110,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
      * @param eStatus job status
      * @param result job result
      */
-    static async fetchMatching(limitRows: number, idVJobType: number, eStatus: eJobRunStatus, result: boolean,
+    static async fetchMatching(limitRows: number, idVJobType: number, eStatus: eWorkflowJobRunStatus, result: boolean,
         assetVersionIDs: number[] | null): Promise<JobRun[] | null> {
         if (limitRows <= 0)
             return null;

@@ -60,6 +60,7 @@ export type Query = {
   getVocabulary: GetVocabularyResult;
   getVocabularyEntries: GetVocabularyEntriesResult;
   getWorkflow: GetWorkflowResult;
+  getWorkflowList: GetWorkflowListResult;
   searchIngestionSubjects: SearchIngestionSubjectsResult;
 };
 
@@ -261,6 +262,11 @@ export type QueryGetVocabularyEntriesArgs = {
 
 export type QueryGetWorkflowArgs = {
   input: GetWorkflowInput;
+};
+
+
+export type QueryGetWorkflowListArgs = {
+  input: GetWorkflowListInput;
 };
 
 
@@ -2374,9 +2380,28 @@ export type GetWorkflowInput = {
   idWorkflow: Scalars['Int'];
 };
 
+export type GetWorkflowListInput = {
+  idVWorkflowType?: Maybe<Array<Scalars['Int']>>;
+  idVJobType?: Maybe<Array<Scalars['Int']>>;
+  State?: Maybe<Array<Scalars['Int']>>;
+  DateFrom?: Maybe<Scalars['DateTime']>;
+  DateTo?: Maybe<Scalars['DateTime']>;
+  idUserInitiator?: Maybe<Array<Scalars['Int']>>;
+  idUserOwner?: Maybe<Array<Scalars['Int']>>;
+  pageNumber?: Maybe<Scalars['Int']>;
+  rowCount?: Maybe<Scalars['Int']>;
+  sortBy?: Maybe<Scalars['Int']>;
+  sortOrder?: Maybe<Scalars['Boolean']>;
+};
+
 export type GetWorkflowResult = {
   __typename?: 'GetWorkflowResult';
   Workflow?: Maybe<Workflow>;
+};
+
+export type GetWorkflowListResult = {
+  __typename?: 'GetWorkflowListResult';
+  WorkflowList?: Maybe<Array<Maybe<WorkflowListResult>>>;
 };
 
 export type Job = {
@@ -2419,6 +2444,21 @@ export type Workflow = {
   WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 
+export type WorkflowReport = {
+  __typename?: 'WorkflowReport';
+  idWorkflowReport: Scalars['Int'];
+  idWorkflow: Scalars['Int'];
+  MimeType: Scalars['String'];
+  Data: Scalars['String'];
+  Workflow?: Maybe<Workflow>;
+};
+
+export type WorkflowSet = {
+  __typename?: 'WorkflowSet';
+  idWorkflowSet: Scalars['Int'];
+  Workflow?: Maybe<Array<Maybe<Workflow>>>;
+};
+
 export type WorkflowStep = {
   __typename?: 'WorkflowStep';
   idWorkflowStep: Scalars['Int'];
@@ -2443,4 +2483,28 @@ export type WorkflowStepSystemObjectXref = {
   Input: Scalars['Boolean'];
   SystemObject?: Maybe<SystemObject>;
   WorkflowStep?: Maybe<WorkflowStep>;
+};
+
+export type WorkflowListResult = {
+  __typename?: 'WorkflowListResult';
+  idWorkflow: Scalars['Int'];
+  idWorkflowSet?: Maybe<Scalars['Int']>;
+  idWorkflowReport?: Maybe<Scalars['Int']>;
+  idJobRun?: Maybe<Scalars['Int']>;
+  Type?: Maybe<Scalars['String']>;
+  State?: Maybe<Scalars['String']>;
+  idUserInitiator?: Maybe<Scalars['Int']>;
+  idOwner?: Maybe<Scalars['Int']>;
+  DateStart?: Maybe<Scalars['DateTime']>;
+  DateLast?: Maybe<Scalars['DateTime']>;
+  Error?: Maybe<Scalars['String']>;
+  UserInitiator?: Maybe<User>;
+  Owner?: Maybe<User>;
+  Workflow?: Maybe<Workflow>;
+  WorkflowReport?: Maybe<WorkflowReport>;
+  WorkflowSet?: Maybe<WorkflowSet>;
+  JobRun?: Maybe<JobRun>;
+  HyperlinkReport?: Maybe<Scalars['String']>;
+  HyperlinkSet?: Maybe<Scalars['String']>;
+  HyperlinkJob?: Maybe<Scalars['String']>;
 };
