@@ -94,7 +94,10 @@ ADD CONSTRAINT `fk_workflow_workflowset1`
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 2, 'Ingestion');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 3, 'Upload');
 
--- 2020-07-25 Jon
+-- 2021-07-25 Jon
 UPDATE WorkflowStep SET State = 4 WHERE State = 2;
 UPDATE WorkflowStep SET State = 2 WHERE State = 1;
 UPDATE WorkflowStep SET State = 1 WHERE State = 0;
+
+-- 2021-07-30 Jon
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 2, 'Image');

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import * as NAV from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
@@ -6,7 +7,7 @@ import * as DBAPI from '../../../db';
 import { eSystemObjectType, ObjectGraphDataEntry } from '../../../db';
 import { SolrClient } from './SolrClient';
 
-export class IndexSolr {
+export class IndexSolr implements NAV.IIndexer {
     private objectGraphDatabase: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
     private hierarchyNameMap: Map<number, string> = new Map<number, string>(); // map of idSystemObject -> object name
     private static fullIndexUnderway: boolean = false;
@@ -26,41 +27,14 @@ export class IndexSolr {
     private countStakeholder:           number = 0;
     private countUnknown:               number = 0;
 
-    async fullIndexProfiled(): Promise<boolean> {
-        LOG.info('****************************************', LOG.LS.eNAV);
-        LOG.info('IndexSolr.fullIndexProfiled() starting', LOG.LS.eNAV);
-        return new Promise<boolean>((resolve) => {
-            const inspector = require('inspector');
-            const fs = require('fs');
-            const session = new inspector.Session();
-            session.connect();
-
-            session.post('Profiler.enable', async () => {
-                session.post('Profiler.start', async () => {
-                    LOG.info('IndexSolr.fullIndexProfiled() fullIndex() starting', LOG.LS.eNAV);
-                    const retValue: boolean = await this.fullIndex();
-                    LOG.info('IndexSolr.fullIndexProfiled() fullIndex() complete', LOG.LS.eNAV);
-                    resolve(retValue);
-
-                    // some time later...
-                    session.post('Profiler.stop', (err, { profile }) => {
-                        // Write profile to disk, upload, etc.
-                        if (!err) {
-                            LOG.info('IndexSolr.fullIndexProfiled() writing profile', LOG.LS.eNAV);
-                            fs.writeFileSync('./profile.cpuprofile', JSON.stringify(profile));
-                        }
-                        LOG.info('IndexSolr.fullIndexProfiled() writing profile ending', LOG.LS.eNAV);
-                    });
-                });
-            });
-        });
-    }
-
-    async fullIndex(): Promise<boolean> {
+    async fullIndex(profiled?: boolean | undefined): Promise<boolean> {
         if (IndexSolr.fullIndexUnderway) {
             LOG.error('IndexSolr.fullIndex() already underway; exiting this additional request early', LOG.LS.eNAV);
             return false;
         }
+
+        if (profiled)
+            return this.fullIndexProfiled();
 
         let retValue: boolean = false;
         try {
@@ -111,6 +85,36 @@ export class IndexSolr {
             LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed in handleObject`, LOG.LS.eNAV);
 
         return true;
+    }
+
+    private async fullIndexProfiled(): Promise<boolean> {
+        LOG.info('****************************************', LOG.LS.eNAV);
+        LOG.info('IndexSolr.fullIndexProfiled() starting', LOG.LS.eNAV);
+        return new Promise<boolean>((resolve) => {
+            const inspector = require('inspector');
+            const fs = require('fs');
+            const session = new inspector.Session();
+            session.connect();
+
+            session.post('Profiler.enable', async () => {
+                session.post('Profiler.start', async () => {
+                    LOG.info('IndexSolr.fullIndexProfiled() fullIndex() starting', LOG.LS.eNAV);
+                    const retValue: boolean = await this.fullIndex();
+                    LOG.info('IndexSolr.fullIndexProfiled() fullIndex() complete', LOG.LS.eNAV);
+                    resolve(retValue);
+
+                    // some time later...
+                    session.post('Profiler.stop', (err, { profile }) => {
+                        // Write profile to disk, upload, etc.
+                        if (!err) {
+                            LOG.info('IndexSolr.fullIndexProfiled() writing profile', LOG.LS.eNAV);
+                            fs.writeFileSync('./profile.cpuprofile', JSON.stringify(profile));
+                        }
+                        LOG.info('IndexSolr.fullIndexProfiled() writing profile ending', LOG.LS.eNAV);
+                    });
+                });
+            });
+        });
     }
 
     private async handleAncestors(docs: any[], OGDE: ObjectGraphDataEntry): Promise<boolean> {
