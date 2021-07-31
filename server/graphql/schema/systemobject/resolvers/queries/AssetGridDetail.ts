@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { eLinkOrigin } from './getAssetDetailsForSystemObject';
+
 export enum eAssetGridColumnType {
     eString = 0,
     eNumber = 1,
@@ -21,7 +23,7 @@ export type LinkObject = {
     label: string | null;
     path: string | null;
     icon: number | null;
-    origin: number;
+    origin: eLinkOrigin;
 };
 
 export class AssetGridDetail {
