@@ -12,7 +12,7 @@
 import { Box, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { NewTabLink, EmptyTable } from '../../../../../components';
-import { eSystemObjectType, eIcon, eAssetGridColumnType } from '../../../../../types/server';
+import { eSystemObjectType, eIcon, eAssetGridColumnType, eLinkOrigin } from '../../../../../types/server';
 import { getObjectAssets } from '../../../hooks/useDetailsView';
 import { getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
@@ -70,7 +70,7 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     link: {
         textDecoration: 'underline'
-    },
+    }
 }));
 
 interface DataTableOptions {
@@ -211,13 +211,13 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                         ...gridColumnObject.options,
                         customBodyRender(value) {
                             if (value.label) {
-                                if (value.origin === 'client') {
+                                if (value.origin === eLinkOrigin.eClient) {
                                     return (
                                         <NewTabLink to={getDetailsUrlForObject(value.path)} style={{ textDecoration: 'underline', color: '#2C405A' }}>
                                             {value.label}
                                         </NewTabLink>
                                     );
-                                } else if (value.origin === 'server') {
+                                } else if (value.origin === eLinkOrigin.eServer) {
                                     return (
                                         <a
                                             href={getDownloadAssetUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, value.path)}
@@ -230,13 +230,13 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                             }
 
                             if (value.icon !== null) {
-                                if (value.origin === 'client') {
+                                if (value.origin === eLinkOrigin.eClient) {
                                     return (
                                         <NewTabLink to={getDetailsUrlForObject(value.path)} style={{ color: 'black', display: 'flex' }}>
                                             {renderIcon(value.icon)}
                                         </NewTabLink>
                                     );
-                                } else if (value.origin === 'server') {
+                                } else if (value.origin === eLinkOrigin.eServer) {
                                     return (
                                         <a
                                             href={getDownloadAssetUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, value.path)}

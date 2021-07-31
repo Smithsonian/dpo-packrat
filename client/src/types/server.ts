@@ -227,16 +227,22 @@ export enum eSubjectUnitIdentifierSortColumns {
 }
 
 export enum eIcon {
-    eIconDownload
+    eIconDownload = 1
 }
 
 export enum eAssetGridColumnType {
-    eString,
-    eNumber,
-    eBoolean,
-    eHyperLink,
-    eDate,
-    eFileSize
+    eString = 0,
+    eNumber = 1,
+    eBoolean = 2,
+    eHyperLink = 3,
+    eDate = 4,
+    eFileSize = 5
+}
+
+export enum eLinkOrigin {
+    eClient = 1,
+    eServer = 2,
+    eNone = 0
 }
 
 export const subjectUnitIdentifierStringToEnum = (col: string): eSubjectUnitIdentifierSortColumns => {
