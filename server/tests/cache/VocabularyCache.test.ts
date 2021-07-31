@@ -175,6 +175,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eModelMaterialChannelMaterialTypeUnknown: testVocabulary(vocabulary, 'Unknown'); break;
 
                     case eVocabularyID.eMetadataMetadataSourceBulkIngestion:    testVocabulary(vocabulary, 'Bulk Ingestion'); break;
+                    case eVocabularyID.eMetadataMetadataSourceImage:            testVocabulary(vocabulary, 'Image'); break;
 
                     case eVocabularyID.eJobJobTypeCookBake:                     testVocabulary(vocabulary, 'Cook: bake'); break;
                     case eVocabularyID.eJobJobTypeCookDecimateUnwrap:           testVocabulary(vocabulary, 'Cook: decimate-unwrap'); break;
@@ -427,6 +428,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierTypeActor, 'ORCID');
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierTypeActor, 'ISNI');
             await testVocabularyBySetAndTerm(eVocabularySetID.eMetadataMetadataSource, 'Bulk Ingestion');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eMetadataMetadataSource, 'Image');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Bulk Ingestion');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Photogrammetry');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Diconde');

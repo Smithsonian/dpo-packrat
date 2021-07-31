@@ -143,6 +143,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (23, 1, 'Ingest
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (23, 2, 'Ingestion: Ingest Object');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 2, 'Ingestion');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 3, 'Upload');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 2, 'Image');
 
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary 
 WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');

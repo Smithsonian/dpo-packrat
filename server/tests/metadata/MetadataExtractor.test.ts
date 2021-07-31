@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as META from '../../metadata';
 import * as H from '../../utils/helpers';
@@ -7,10 +8,25 @@ import * as H from '../../utils/helpers';
 const mockPathTurtle: string = path.join(__dirname, '../mock/utils/bagit/PackratTest/data/nmnh_sea_turtle-1_low/camera/');
 const mockPathF1991_46: string = path.join(__dirname, '../mock/captures/f1991_46-dataset/camera/'); // eslint-disable-line camelcase
 const emitMetadata: boolean = false;
+let idVMetadataSource: number | undefined = undefined;
 
+/*
 afterAll(async done => {
     await H.Helpers.sleep(2000);
     done();
+});
+*/
+describe('Metadata Setup', () => {
+    test('Setup', async () => {
+        idVMetadataSource = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eMetadataMetadataSourceImage);
+        expect(idVMetadataSource).toBeTruthy();
+    });
+
+    test('Empty', async () => {
+        const extractor: META.MetadataExtractor = new META.MetadataExtractor();
+        expect(extractor.metadata.size).toEqual(0);
+        expect(await extractor.idVMetadataSource()).toBeUndefined();
+    });
 });
 
 describe('Metadata: Extractor', () => {
@@ -40,19 +56,18 @@ describe('Metadata: Extractor', () => {
 });
 
 async function extractFromFile(fileName: string, filePath: string, expectSuccess: boolean): Promise<boolean> {
-    const extractor: META.Extractor = new META.Extractor();
+    const extractor: META.MetadataExtractor = new META.MetadataExtractor();
     const results: H.IOResults = await extractor.extractMetadata(path.join(filePath, fileName));
     if (expectSuccess) {
-        if (results.success)
+        if (results.success) {
+            expect(await extractor.idVMetadataSource()).toEqual(idVMetadataSource);
             expect(validateImageMetadata(extractor, fileName)).toBeTruthy();
-        else
+            logMetadata(extractor, fileName);
+        } else
             LOG.error(`Metadata Extractor.extractMetadata from file failed: ${results.error}`, LOG.LS.eTEST);
     }
 
     expect(results.success).toEqual(expectSuccess);
-    if (results.success)
-        logMetadata(extractor, fileName);
-
     extractor.clear();
     return results.success === expectSuccess;
 }
@@ -64,21 +79,20 @@ async function extractFromStream(fileName: string, filePath: string, expectSucce
         const fullName: string = path.join(filePath, fileName);
         const inputStream: NodeJS.ReadableStream | null = await fs.createReadStream(fullName, { autoClose: true });
 
-        const extractor: META.Extractor = new META.Extractor();
+        const extractor: META.MetadataExtractor = new META.MetadataExtractor();
         const results: H.IOResults = await extractor.extractMetadata(fullName, inputStream);
         success = results.success;
 
         if (expectSuccess) {
-            if (results.success)
+            if (results.success) {
+                expect(await extractor.idVMetadataSource()).toEqual(idVMetadataSource);
                 expect(validateImageMetadata(extractor, fileName)).toBeTruthy();
-            else
+                logMetadata(extractor, fileName);
+            } else
                 LOG.error(`Metadata Extractor.extractMetadata from stream failed: ${results.error}`, LOG.LS.eTEST);
         }
 
         expect(results.success).toEqual(expectSuccess);
-        if (results.success)
-            logMetadata(extractor, fileName);
-
         extractor.clear();
     } catch (error) {
         success = false;
@@ -91,7 +105,7 @@ async function extractFromStream(fileName: string, filePath: string, expectSucce
     return success === expectSuccess;
 }
 
-function validateImageMetadata(extractor: META.Extractor, fileName: string): boolean {
+function validateImageMetadata(extractor: META.MetadataExtractor, fileName: string): boolean {
     expect(extractor.metadata).toBeTruthy();
     let retValue: boolean = true;
 
@@ -104,7 +118,7 @@ function validateImageMetadata(extractor: META.Extractor, fileName: string): boo
     return retValue;
 }
 
-function validationImageMetadataField(extractor: META.Extractor, fileName: string, field: string): boolean {
+function validationImageMetadataField(extractor: META.MetadataExtractor, fileName: string, field: string): boolean {
     if (extractor.metadata.has(field))
         return true;
 
@@ -112,7 +126,7 @@ function validationImageMetadataField(extractor: META.Extractor, fileName: strin
     return false;
 }
 
-function logMetadata(extractor: META.Extractor, fileName: string): void {
+function logMetadata(extractor: META.MetadataExtractor, fileName: string): void {
     if (!emitMetadata)
         return;
     let extract: string = `\nMetadata extract from ${fileName}:`;

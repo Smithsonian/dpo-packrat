@@ -1,13 +1,15 @@
 import * as H from '../utils/helpers';
 import * as LOG from '../utils/logger';
+import * as CACHE from '../cache';
 
 import * as path from 'path';
 import exifr from 'exifr';
 import { imageSize } from 'image-size';
 import { pathExists } from 'fs-extra';
 
-export class Extractor {
-    metadata: Map<string, string> = new Map<string, string>(); // Map of metadata name -> value
+export class MetadataExtractor {
+    metadata: Map<string, string> = new Map<string, string>();  // Map of metadata name -> value
+    eMetadataSource: CACHE.eVocabularyID | null = null;
 
     static exifrFormatOptions = {
         translateKeys: true,
@@ -17,20 +19,20 @@ export class Extractor {
     };
 
     static exifrOptions = {
-        tiff: Extractor.exifrFormatOptions,
-        ifd0: Extractor.exifrFormatOptions,
-        ifd1: Extractor.exifrFormatOptions,
-        exif: Extractor.exifrFormatOptions,
-        gps: Extractor.exifrFormatOptions,
-        xmp: Extractor.exifrFormatOptions,
-        iptc: Extractor.exifrFormatOptions,
+        tiff: MetadataExtractor.exifrFormatOptions,
+        ifd0: MetadataExtractor.exifrFormatOptions,
+        ifd1: MetadataExtractor.exifrFormatOptions,
+        exif: MetadataExtractor.exifrFormatOptions,
+        gps: MetadataExtractor.exifrFormatOptions,
+        xmp: MetadataExtractor.exifrFormatOptions,
+        iptc: MetadataExtractor.exifrFormatOptions,
         sanitize: true,
         mergeOutput: true,
     };
 
     async extractMetadata(fileName: string, inputStream?: NodeJS.ReadableStream | undefined): Promise<H.IOResults> {
         try {
-            if (!await pathExists(fileName))
+            if (!inputStream && !await pathExists(fileName))
                 return { success: false, error: `Extractor.extractMetadata could not locate ${fileName}` };
         } catch (err) /* istanbul ignore next */ {
             return { success: false, error: `Extractor.extractMetadata could not locate ${fileName}: ${JSON.stringify(err)}` };
@@ -42,7 +44,9 @@ export class Extractor {
             default: break;
 
             case '.jpg':
+            case '.jpeg':
             case '.tif':
+            case '.tiff':
             case '.png':
             case '.heic':
             case '.avif':
@@ -60,16 +64,21 @@ export class Extractor {
         this.metadata.clear();
     }
 
+    async idVMetadataSource(): Promise<number | undefined> {
+        return this.eMetadataSource ? CACHE.VocabularyCache.vocabularyEnumToId(this.eMetadataSource) : undefined;
+    }
+
     private async extractMetadataImage(fileName: string, inputStream?: NodeJS.ReadableStream | undefined): Promise<H.IOResults> {
+        const originalMetadataSize: number = this.metadata.size;
         try {
             let extractions: any = { }; // eslint-disable-line @typescript-eslint/no-explicit-any
             if (inputStream) {
                 const buffer: Buffer | null = await H.Helpers.readFileFromStream(inputStream); /* istanbul ignore next */
                 if (!buffer)
                     return { success: false, error: 'Extractor.extractMetadataImage could not load buffer from inputstream' };
-                extractions = await exifr.parse(buffer, Extractor.exifrOptions);
+                extractions = await exifr.parse(buffer, MetadataExtractor.exifrOptions);
             } else
-                extractions = await exifr.parse(fileName, Extractor.exifrOptions);
+                extractions = await exifr.parse(fileName, MetadataExtractor.exifrOptions);
 
             for (const [name, valueU] of Object.entries(extractions)) {
                 let value: string;
@@ -97,6 +106,11 @@ export class Extractor {
                 if (dimensions.width)
                     this.metadata.set('ImageWidth', dimensions.width.toString());
             }
+
+            // if we picked up any new metadata records, mark the metadata source as image
+            /* istanbul ignore else */
+            if (originalMetadataSize !== this.metadata.size)
+                this.eMetadataSource = CACHE.eVocabularyID.eMetadataMetadataSourceImage;
         } catch (err) /* istanbul ignore next */ {
             return { success: false, error: `Extractor.extractMetadataImage failed: ${JSON.stringify(err, H.Helpers.saferStringify)}` };
         }
