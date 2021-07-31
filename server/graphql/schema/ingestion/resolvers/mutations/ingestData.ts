@@ -16,7 +16,7 @@ import * as REP from '../../../../../report/interface';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
-import { RouteBuilder } from '../../../../../http/routes/routeBuilder';
+import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 
 type AssetPair = {
     asset: DBAPI.Asset;
@@ -54,6 +54,10 @@ class IngestDataWorker extends ResolverBase {
 
     async ingest(): Promise<IngestDataResult> {
         const IDR: IngestDataResult = await this.ingestWorker();
+
+        if (this.workflowHelper?.workflow)
+            await this.workflowHelper.workflow.updateStatus(IDR.success ? DBAPI.eWorkflowJobRunStatus.eDone : DBAPI.eWorkflowJobRunStatus.eError);
+
         if (IDR.success)
             await this.appendToWFReport('<b>Ingest validation succeeded</b>');
         else
@@ -435,8 +439,8 @@ class IngestDataWorker extends ResolverBase {
             return false;
         }
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromCaptureData(captureDataDB);
-        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, captureDataDB.Name, false);
+        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+        const href: string = H.Helpers.computeHref(path, captureDataDB.Name);
         await this.appendToWFReport(`CaptureData Photogrammetry: ${href}`);
 
         const captureDataPhotoDB: DBAPI.CaptureDataPhoto = new DBAPI.CaptureDataPhoto({
@@ -608,8 +612,8 @@ class IngestDataWorker extends ResolverBase {
         modelDB = JCOutput.modelConstellation.Model; // retrieve again, as we may have swapped the object above, in JCOutput.persist
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(modelDB);
-        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, modelDB.Name, false);
+        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+        const href: string = H.Helpers.computeHref(path, modelDB.Name);
         await this.appendToWFReport(`Model: ${href}`);
 
         if (!await this.handleIdentifiers(modelDB, model.systemCreated, model.identifiers))
@@ -680,8 +684,8 @@ class IngestDataWorker extends ResolverBase {
         let success: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(sceneDB);
-        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-        const href: string = H.Helpers.computeHref(path, sceneDB.Name, false);
+        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+        const href: string = H.Helpers.computeHref(path, sceneDB.Name);
         await this.appendToWFReport(`Scene: ${href}`);
 
         if (!await this.handleIdentifiers(sceneDB, scene.systemCreated, scene.identifiers))
@@ -851,11 +855,11 @@ class IngestDataWorker extends ResolverBase {
                 if (ISR.assetVersions) {
                     for (const assetVersion of ISR.assetVersions) {
                         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
-                        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject) : '';
-                        const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName, false);
-                        const pathDownload: string = RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion);
-                        const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Download', true);
-                        await this.appendToWFReport(`Ingested ${hrefObject}: ${hrefDownload}`);
+                        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+                        const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName);
+                        const pathDownload: string = RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL);
+                        const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Download');
+                        await this.appendToWFReport(`Ingested ${hrefObject}: ${hrefDownload}, size ${assetVersion.StorageSize}, hash ${assetVersion.StorageHash}`);
                     }
                 }
                 if (ISR.assets) {
@@ -885,25 +889,53 @@ class IngestDataWorker extends ResolverBase {
 
         const user: User = this.user!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
+        // prepare to wire together ingestion workflow step with output asset versions (in systemObjectSet)
+        const WFC: DBAPI.WorkflowConstellation | null = (this.workflowHelper && this.workflowHelper.workflow)
+            ? await this.workflowHelper.workflow.workflowConstellation() : null;
+        const workflowSteps: DBAPI.WorkflowStep[] | null = WFC ? WFC.workflowStep : null;
+        const workflowStep: DBAPI.WorkflowStep | null = (workflowSteps && workflowSteps.length > 0) ? workflowSteps[workflowSteps.length - 1] : null;
+
         // compute set of unique asset versions ingested:
         let ret: boolean = true;
-        const idSystemObject: number[] = [];
         for (const IAR of ingestResMap.values()) {
-            if (IAR && IAR.assetVersions) {
-                for (const assetVersion of IAR.assetVersions) {
-                    const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion };
-                    const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
-                    if (!sysInfo) {
-                        LOG.error(`ingestData sendWorkflowIngestionEvent could not find system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
-                        ret = false;
-                        continue;
-                    }
-                    idSystemObject.push(sysInfo.idSystemObject);
+            if (!IAR || !IAR.assetVersions)
+                continue;
+
+            const systemObjectSet: Set<number> = new Set<number>();
+            for (const assetVersion of IAR.assetVersions) {
+                const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion };
+                const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
+                if (!sysInfo) {
+                    LOG.error(`ingestData sendWorkflowIngestionEvent could not find system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                    ret = false;
+                    continue;
+                }
+                systemObjectSet.add(sysInfo.idSystemObject);
+            }
+
+            const idSystemObject: number[] = [];
+            for (const idSystemObjectDistinct of systemObjectSet.values()) {
+                idSystemObject.push(idSystemObjectDistinct);
+                if (workflowStep) {
+                    const WSSOX: DBAPI.WorkflowStepSystemObjectXref = new DBAPI.WorkflowStepSystemObjectXref({
+                        idWorkflowStep: workflowStep.idWorkflowStep,
+                        idSystemObject: idSystemObjectDistinct,
+                        Input: false,
+                        idWorkflowStepSystemObjectXref: 0
+                    });
+                    if (!await WSSOX.create())
+                        LOG.error(`ingestData sendWorkflowIngestionEvent failed to create WorkflowStepSystemObjectXref ${JSON.stringify(WSSOX, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                 }
             }
-        }
 
-        if (idSystemObject.length > 0) {
+            let message: string = 'Sending WorkflowEngine IngestObject event';
+            if (IAR.systemObjectVersion?.idSystemObject) {
+                const pathObject: string = RouteBuilder.RepositoryDetails(IAR.systemObjectVersion.idSystemObject, eHrefMode.ePrependClientURL);
+                const hrefObject: string = H.Helpers.computeHref(pathObject, `System Object ${IAR.systemObjectVersion.idSystemObject}`);
+                message += ` for ${hrefObject}`;
+            }
+            await this.appendToWFReport(message);
+
             const workflowParams: WF.WorkflowParameters = {
                 eWorkflowType: null,
                 idSystemObject,
@@ -911,8 +943,6 @@ class IngestDataWorker extends ResolverBase {
                 idUserInitiator: user.idUser,
                 parameters: modelTransformUpdated ? { modelTransformUpdated } : null
             };
-
-            await this.appendToWFReport('Sending WorkflowEngine IngestObject event');
 
             // send workflow engine event, but don't wait for results
             workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);

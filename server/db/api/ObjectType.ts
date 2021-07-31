@@ -302,3 +302,42 @@ export function PublishedStateEnumToString(eState: ePublishedState): string {
         case ePublishedState.eNotPublished:             return 'Not Published';
     }
 }
+
+// Keep this in sync with SQL in WorkflowListResult.search()
+export enum eWorkflowJobRunStatus {
+    eUnitialized = 0,
+    eCreated = 1,
+    eRunning = 2,
+    eWaiting = 3,
+    eDone = 4,
+    eError = 5,
+    eCancelled = 6,
+}
+
+// Keep this in sync with SQL in WorkflowListResult.search()
+export function convertWorkflowJobRunStatusEnumToString(eStatus: eWorkflowJobRunStatus): string {
+    switch (eStatus) {
+        default: return 'Uninitialized';
+        case eWorkflowJobRunStatus.eUnitialized: return 'Uninitialized';
+        case eWorkflowJobRunStatus.eCreated: return 'Created';
+        case eWorkflowJobRunStatus.eRunning: return 'Running';
+        case eWorkflowJobRunStatus.eWaiting: return 'Waiting';
+        case eWorkflowJobRunStatus.eDone: return 'Done';
+        case eWorkflowJobRunStatus.eError: return 'Error';
+        case eWorkflowJobRunStatus.eCancelled: return 'Cancelled';
+    }
+}
+
+export function convertWorkflowJobRunStatusToEnum(Status: number): eWorkflowJobRunStatus {
+    switch (Status) {
+        default:    return eWorkflowJobRunStatus.eUnitialized;
+        case 0:     return eWorkflowJobRunStatus.eUnitialized;
+        case 1:     return eWorkflowJobRunStatus.eCreated;
+        case 2:     return eWorkflowJobRunStatus.eRunning;
+        case 3:     return eWorkflowJobRunStatus.eWaiting;
+        case 4:     return eWorkflowJobRunStatus.eDone;
+        case 5:     return eWorkflowJobRunStatus.eError;
+        case 6:     return eWorkflowJobRunStatus.eCancelled;
+    }
+}
+

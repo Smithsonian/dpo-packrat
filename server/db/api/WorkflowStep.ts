@@ -1,14 +1,8 @@
 /* eslint-disable camelcase */
 import { WorkflowStep as WorkflowStepBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, eWorkflowJobRunStatus, convertWorkflowJobRunStatusToEnum } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
-
-export enum eWorkflowStepState {
-    eCreated,
-    eStarted,
-    eFinished,
-}
 
 export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements WorkflowStepBase {
     idWorkflowStep!: number;
@@ -73,27 +67,11 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
         }
     }
 
-    static stateValueToEnum(State: number): eWorkflowStepState {
-        switch (State) {
-            default:
-            case 0: return eWorkflowStepState.eCreated;
-            case 1: return eWorkflowStepState.eStarted;
-            case 2: return eWorkflowStepState.eFinished;
-        }
+    getState(): eWorkflowJobRunStatus {
+        return convertWorkflowJobRunStatusToEnum(this.State);
     }
-    static stateEnumToValue(eState: eWorkflowStepState): number {
-        switch (eState) {
-            case eWorkflowStepState.eCreated: return 0;
-            case eWorkflowStepState.eStarted: return 1;
-            case eWorkflowStepState.eFinished: return 2;
-        }
-    }
-
-    getState(): eWorkflowStepState {
-        return WorkflowStep.stateValueToEnum(this.State);
-    }
-    setState(eState: eWorkflowStepState): void {
-        this.State = WorkflowStep.stateEnumToValue(eState);
+    setState(eState: eWorkflowJobRunStatus): void {
+        this.State = eState;
     }
 
     static async fetch(idWorkflowStep: number): Promise<WorkflowStep | null> {

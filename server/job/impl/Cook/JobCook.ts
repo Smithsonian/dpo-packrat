@@ -18,6 +18,8 @@ import * as path from 'path';
 
 const CookWebDAVSimultaneousTransfers: number = 2;
 const CookRequestRetryCount: number = 3;
+const CookWebDAVTransmitRetryCount: number = 5;
+const CookWebDAVStatRetryCount: number = 100;
 const CookRetryDelay: number = 5000;
 const CookTimeout: number = 36000000; // ten hours
 
@@ -165,21 +167,21 @@ export abstract class JobCook<T> extends JobPackrat {
             let axiosResponse: AxiosResponse<any> | null = null;
             const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, await this.getParameters(), eJobCookPriority.eNormal);
 
-            LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl}`, LOG.LS.eJOB);
             while (requestCount < CookRequestRetryCount) {
                 try {
+                    LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl} body ${JSON.stringify(jobCookPostBody, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
                     axiosResponse = await axios.post(requestUrl, jobCookPostBody);
                     if (axiosResponse?.status === 201)
                         break; // success, continue
-                    res = { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed: ${JSON.stringify(axiosResponse)}` };
-                    requestCount++;
                 } catch (error) {
                     const message: string | null = error.message;
+                    LOG.info(`JobCook [${this.name()}] creating job via ${requestUrl} failed with error ${message}`, LOG.LS.eJOB);
+
                     res = (message && message.indexOf('getaddrinfo ENOTFOUND'))
                         ? { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(error)}` }
                         : { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
                 }
-                if (requestCount >= CookRequestRetryCount) {
+                if (++requestCount >= (CookRequestRetryCount * 10)) {
                     LOG.error(`JobCook [${this.name()}] failed after ${CookRequestRetryCount} retries: ${res.error}`, LOG.LS.eJOB);
                     return res;
                 } else
@@ -349,8 +351,15 @@ export abstract class JobCook<T> extends JobPackrat {
                         const webdavWSOpts: CreateWriteStreamOptions = {
                             headers: { 'Content-Type': 'application/octet-stream' }
                         };
-                        const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
-                        const res: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
+
+                        let res: H.IOResultsSized = { success: false, error: 'Not Executed', size: -1 };
+                        for (let transmitCount: number = 0; transmitCount < CookWebDAVTransmitRetryCount; transmitCount++) {
+                            const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
+                            res = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
+                            if (res.success)
+                                break;
+                            await H.Helpers.sleep(CookRetryDelay);
+                        }
 
                         if (!res.success) {
                             const error = `JobCook.stageFiles unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
@@ -364,34 +373,26 @@ export abstract class JobCook<T> extends JobPackrat {
                         // poll for filesize of remote file.  Continue polling:
                         // - until we match or exceed our streamed size
                         // - as long as the remote size is less than our streamed size, up to 100 times
-                        // - as long as the remote size is growing, and not "stuck" at the same size more than 5 times
                         // - pause CookRetryDelay ms between stat polls
-                        let sizeLast: number = 0;
-                        let stuckCount: number = 0;
                         let stagingSuccess: boolean = false;
-                        for (let statCount: number = 0; statCount < 100; statCount++) {
+                        for (let statCount: number = 0; statCount < CookWebDAVStatRetryCount; statCount++) {
+                            const pollingLocation: string = `${Config.job.cookServerUrl}${destination.substring(1)} [${statCount + 1}/${CookWebDAVStatRetryCount}]`;
                             try {
                                 const stat: any = await webdavClient.stat(destination);
                                 const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
                                 const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
-                                LOG.info(`JobCook.stageFiles staging polling ${Config.job.cookServerUrl}${destination.substring(1)}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
+                                LOG.info(`JobCook.stageFiles staging polling ${pollingLocation}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
                                 if (size >= res.size) {
                                     stagingSuccess = (baseName === fileName);
                                     break;
                                 }
-                                if (size === sizeLast) {
-                                    if (++stuckCount >= 5)
-                                        return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
-                                }
-                                sizeLast = size;
-                                await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                             } catch (error) {
                                 if (error?.status === 404)
-                                    LOG.info('JobCook.stageFiles stat received 404 Not Found', LOG.LS.eJOB);
+                                    LOG.info(`JobCook.stageFiles stat ${pollingLocation} received 404 Not Found`, LOG.LS.eJOB);
                                 else
-                                    LOG.error('JobCook.stageFiles stat', LOG.LS.eJOB, error);
-                                await H.Helpers.sleep(CookRetryDelay); // sleep for CookRetryDelay ms before retrying
+                                    LOG.error(`JobCook.stageFiles stat ${pollingLocation}`, LOG.LS.eJOB, error);
                             }
+                            await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                         }
 
                         if (!stagingSuccess) {

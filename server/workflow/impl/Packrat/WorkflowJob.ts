@@ -112,34 +112,27 @@ export class WorkflowJob implements WF.IWorkflow {
 
     async update(workflowStep: DBAPI.WorkflowStep, jobRun: DBAPI.JobRun): Promise<WF.WorkflowUpdateResults> {
         // update workflowStep based on job run data
-        const eWorkflowStepStateOrig: DBAPI.eWorkflowStepState = workflowStep.getState();
-        if (eWorkflowStepStateOrig == DBAPI.eWorkflowStepState.eFinished) {
-            LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} Already Completed`, LOG.LS.eWF);
-            return { success: true, workflowComplete: true, error: '' }; // job is already done
+        const eWorkflowStepStateOrig: DBAPI.eWorkflowJobRunStatus = workflowStep.getState();
+        switch (eWorkflowStepStateOrig) {
+            case DBAPI.eWorkflowJobRunStatus.eDone:
+            case DBAPI.eWorkflowJobRunStatus.eError:
+            case DBAPI.eWorkflowJobRunStatus.eCancelled:
+                LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} Already Completed`, LOG.LS.eWF);
+                return { success: true, workflowComplete: true, error: '' }; // job is already done
         }
 
-        let eWorkflowStepState: DBAPI.eWorkflowStepState = eWorkflowStepStateOrig;
         let dateCompleted: Date | null = null;
         let updateWFSNeeded: boolean = false;
         let workflowComplete: boolean = false;
 
-        switch (jobRun.getStatus()) {
-            case DBAPI.eJobRunStatus.eUnitialized:
-            case DBAPI.eJobRunStatus.eCreated:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eCreated;
-                break;
-            case DBAPI.eJobRunStatus.eRunning:
-            case DBAPI.eJobRunStatus.eWaiting:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eStarted;
-                break;
-            case DBAPI.eJobRunStatus.eDone:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eFinished;
+        const eWorkflowStepState: DBAPI.eWorkflowJobRunStatus = jobRun.getStatus();
+        switch (eWorkflowStepState) {
+            case DBAPI.eWorkflowJobRunStatus.eDone:
                 dateCompleted = new Date();
                 this.results = { success: true, error: '' };
                 break;
-            case DBAPI.eJobRunStatus.eError:
-            case DBAPI.eJobRunStatus.eCancelled:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eFinished;
+            case DBAPI.eWorkflowJobRunStatus.eError:
+            case DBAPI.eWorkflowJobRunStatus.eCancelled:
                 dateCompleted = new Date();
                 this.results = { success: false, error: jobRun.Error || '' };
                 break;
@@ -168,13 +161,28 @@ export class WorkflowJob implements WF.IWorkflow {
             dbUpdateResult = await this.workflowData.workflow.update() && dbUpdateResult;
 
         if (workflowComplete) {
-            LOG.info(`WorkflowJob.update releasing ${this.completionMutexes.length} waiter(s) ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`, LOG.LS.eWF);
+            LOG.info(`WorkflowJob.update releasing ${this.completionMutexes.length} waiter(s) ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eWorkflowJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowJobRunStatus[eWorkflowStepState]}`, LOG.LS.eWF);
             this.signalCompletion();
         } else
-            LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`, LOG.LS.eWF);
+            LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eWorkflowJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowJobRunStatus[eWorkflowStepState]}`, LOG.LS.eWF);
         // LOG.error(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${JSON.stringify(jobRun)} - ${JSON.stringify(workflowStep)}`, new Error(), LOG.LS.eWF);
 
         return (dbUpdateResult) ? { success: true, workflowComplete, error: '' } : { success: false, workflowComplete, error: 'Database Error' };
+    }
+
+    async updateStatus(eStatus: DBAPI.eWorkflowJobRunStatus): Promise<WF.WorkflowUpdateResults> {
+        const workflowComplete: boolean = (eStatus === DBAPI.eWorkflowJobRunStatus.eDone
+            || eStatus === DBAPI.eWorkflowJobRunStatus.eError
+            || eStatus === DBAPI.eWorkflowJobRunStatus.eCancelled);
+
+        const workflowStep: DBAPI.WorkflowStep | null = (!this.workflowData.workflowStep || this.workflowData.workflowStep.length <= 0)
+            ? null : this.workflowData.workflowStep[this.workflowData.workflowStep.length - 1];
+
+        if (!workflowStep)
+            return { success: false, workflowComplete, error: 'Missing WorkflowStep' };
+        workflowStep.setState(eStatus);
+        const success: boolean = await workflowStep.update();
+        return { success, workflowComplete, error: success ? '' : 'Database Error' };
     }
 
     signalCompletion() {

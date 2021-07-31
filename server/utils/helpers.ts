@@ -10,7 +10,6 @@ import { promises as fsp } from 'fs';
 import * as crypto from 'crypto';
 
 import * as LOG from './logger';
-import { Config } from '../config';
 
 export type IOResults = {
     success: boolean;
@@ -521,12 +520,9 @@ export class Helpers {
         });
     }
 
-    static computeHref(path: string, anchor: string, prependServerRoot?: boolean | undefined): string {
+    static computeHref(path: string, anchor: string): string {
         if (!path)
             return anchor;
-        if (prependServerRoot)
-            path = Config.http.serverUrl + (path.startsWith('/') ? path : '/' + path);
-
         return `<a href='${path}'>${Helpers.escapeHTMLEntity(anchor)}</a>`;
     }
 }

@@ -24,6 +24,7 @@ import path from 'path';
  * /download?idWorkflow=ID:             Downloads the WorkflowReport(s) for the specified workflow ID
  * /download?idWorkflowReport=ID:       Downloads the specified WorkflowReport
  * /download?idWorkflowSet=ID:          Downloads the WorkflowReport(s) for workflows in the specified workflow set
+ * /download?idJobRun=ID:               Downloads the JobRun output for idJobRun with the specified ID
  */
 export async function download(request: Request, response: Response): Promise<boolean> {
     const DL: Downloader = new Downloader(request, response);
@@ -43,6 +44,7 @@ enum eDownloadMode {
     eWorkflow,
     eWorkflowReport,
     eWorkflowSet,
+    eJobRun,
     eUnknown
 }
 
@@ -59,6 +61,7 @@ class Downloader {
     private idWorkflow: number | null = null;
     private idWorkflowReport: number | null = null;
     private idWorkflowSet: number | null = null;
+    private idJobRun: number | null = null;
 
     private systemObjectPath: string | null = null;         // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
 
@@ -172,6 +175,15 @@ class Downloader {
                 }
                 return this.emitDownloadReports(WFReports);
             }
+
+            case eDownloadMode.eJobRun: {
+                const jobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(this.idJobRun!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                if (!jobRun) {
+                    LOG.error(`/download?idJobRun=${this.idJobRun} invalid parameter`, LOG.LS.eHTTP);
+                    return this.sendError(404);
+                }
+                return this.emitDownloadJobRun(jobRun);
+            }
         }
         return this.sendError(404);
     }
@@ -197,9 +209,11 @@ class Downloader {
         const idWorkflowU = this.request.query.idWorkflow;
         const idWorkflowReportU = this.request.query.idWorkflowReport;
         const idWorkflowSetU = this.request.query.idWorkflowSet;
+        const idJobRunU = this.request.query.idJobRun;
 
         const urlParamCount: number = (idSystemObjectU ? 1 : 0) + (idSystemObjectVersionU ? 1 : 0) + (idAssetU ? 1 : 0)
-            + (idAssetVersionU ? 1 : 0) + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0);
+            + (idAssetVersionU ? 1 : 0) + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0)
+            + (idJobRunU ? 1 : 0);
         if (urlParamCount != 1) {
             LOG.error(`/download called with ${urlParamCount} parameters, expected 1`, LOG.LS.eHTTP);
             return this.sendError(404);
@@ -266,6 +280,15 @@ class Downloader {
                 return this.sendError(404);
             }
             this.eMode = eDownloadMode.eWorkflowSet;
+        }
+
+        if (idJobRunU) {
+            this.idJobRun = H.Helpers.safeNumber(idJobRunU);
+            if (!this.idJobRun) {
+                LOG.error(`/download?idJobRun=${idJobRunU} invalid parameter`, LOG.LS.eHTTP);
+                return this.sendError(404);
+            }
+            this.eMode = eDownloadMode.eJobRun;
         }
         return true;
     }
@@ -343,8 +366,9 @@ class Downloader {
         if (WFReports.length === 0)
             return false;
         const mimeType: string = WFReports[0].MimeType;
+        const idWorkflowReport: number = WFReports[0].idWorkflowReport;
 
-        this.response.setHeader('Content-disposition', 'attachment; filename=WorkflowReport.htm');
+        this.response.setHeader('Content-disposition', `attachment; filename=WorkflowReport.${idWorkflowReport}.htm`);
         if (mimeType)
             this.response.setHeader('Content-type', mimeType);
         let first: boolean = true;
@@ -355,6 +379,14 @@ class Downloader {
                 this.response.write('<br/>\n<br/>\n');
             this.response.write(report.Data);
         }
+        this.response.end();
+        return true;
+    }
+
+    private async emitDownloadJobRun(jobRun: DBAPI.JobRun): Promise<boolean> {
+        this.response.setHeader('Content-disposition', `attachment; filename=JobRun.${jobRun.idJobRun}.htm`);
+        this.response.setHeader('Content-type', 'application/json');
+        this.response.write(jobRun.Output);
         this.response.end();
         return true;
     }
@@ -371,7 +403,6 @@ class Downloader {
         readStream.pipe(this.response);
         return true;
     }
-
 
     private sendError(statusCode: number, message?: string | undefined): boolean {
         this.response.status(statusCode);
