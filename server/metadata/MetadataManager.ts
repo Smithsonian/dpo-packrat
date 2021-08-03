@@ -17,6 +17,7 @@ export class MetadataManager {
             return { success: false, error };
         }
 
+        /* istanbul ignore next */
         const idVMetadataSource: number | null = await extractor.idVMetadataSource() ?? null;
 
         for (const [key, value] of extractor.metadata) {
@@ -25,13 +26,14 @@ export class MetadataManager {
                 Name: key,
                 ValueShort: len < 256 ? value : null,
                 ValueExtended: len >= 256 ? value : null,
-                idAssetValue: null,
                 idUser,
                 idVMetadataSource,
                 idSystemObject: SO.idSystemObject,
+                idAssetVersionValue: null,
                 idMetadata: 0
             });
 
+            /* istanbul ignore next */
             if (!await metadataDB.create()) {
                 const error: string = `MetadataManager.persistExtractor failed creating metadata ${JSON.stringify(metadataDB, H.Helpers.saferStringify)}`;
                 LOG.error(error, LOG.LS.eMETA);

@@ -101,3 +101,13 @@ UPDATE WorkflowStep SET State = 1 WHERE State = 0;
 
 -- 2021-07-30 Jon
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 2, 'Image');
+
+-- 2021-08-02 Jon
+ALTER TABLE Metadata DROP FOREIGN KEY fk_metadata_asset1;
+ALTER TABLE Metadata DROP COLUMN 'idAssetValue';
+ALTER TABLE Metadata ADD COLUMN idAssetVersionValue int(11) DEFAULT NULL;
+ALTER TABLE Metadata ADD CONSTRAINT `fk_metadata_assetversion1`
+  FOREIGN KEY (`idAssetVersionValue`)
+  REFERENCES `AssetVersion` (`idAssetVersion`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;

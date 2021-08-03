@@ -1927,13 +1927,13 @@ export type Metadata = {
   __typename?: 'Metadata';
   idMetadata: Scalars['Int'];
   Name: Scalars['String'];
-  idAssetValue?: Maybe<Scalars['Int']>;
   idSystemObject?: Maybe<Scalars['Int']>;
   idUser?: Maybe<Scalars['Int']>;
   idVMetadataSource?: Maybe<Scalars['Int']>;
+  idAssetVersionValue?: Maybe<Scalars['Int']>;
   ValueExtended?: Maybe<Scalars['String']>;
   ValueShort?: Maybe<Scalars['String']>;
-  AssetValue?: Maybe<Asset>;
+  AssetVersionValue?: Maybe<AssetVersion>;
   SystemObject?: Maybe<SystemObject>;
   User?: Maybe<User>;
   VMetadataSource?: Maybe<Vocabulary>;

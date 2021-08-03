@@ -3,21 +3,32 @@ import solr from 'solr-client';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 
+export enum eSolrCore {
+    ePackrat,
+    ePackratMeta,
+}
+
 export class SolrClient {
     _client: solr.Client;
     private _host: string;
     private _port: number;
     private _core: string;
 
-    constructor(host: string | null, port: number | null, core: string | null) {
+    constructor(host: string | null, port: number | null, eCore: eSolrCore | null) {
         if (!host) {
             const { PACKRAT_SOLR_HOST } = process.env;
             host = PACKRAT_SOLR_HOST || 'packrat-solr';
         }
         if (!port)
             port = 8983;
-        if (!core)
-            core = 'packrat';
+
+        let core: string | null = null;
+        switch (eCore) {
+            default:
+            case eSolrCore.ePackrat: core = 'packrat'; break;
+            case eSolrCore.ePackratMeta: core = 'packratMeta'; break;
+        }
+
         this._host = host;
         this._port = port;
         this._core = core;
@@ -26,6 +37,10 @@ export class SolrClient {
 
     solrUrl(): string {
         return `http://${this._host}:${this._port}/solr/${this._core}`;
+    }
+
+    core(): string {
+        return this._core;
     }
 
     async add(docs: any[]): Promise<H.IOResults> {

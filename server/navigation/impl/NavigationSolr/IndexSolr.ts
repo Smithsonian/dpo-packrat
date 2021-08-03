@@ -5,7 +5,7 @@ import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import { eSystemObjectType, ObjectGraphDataEntry } from '../../../db';
-import { SolrClient } from './SolrClient';
+import { SolrClient, eSolrCore } from './SolrClient';
 
 export class IndexSolr implements NAV.IIndexer {
     private objectGraphDatabase: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
@@ -26,15 +26,16 @@ export class IndexSolr implements NAV.IIndexer {
     private countActor:                 number = 0;
     private countStakeholder:           number = 0;
     private countUnknown:               number = 0;
+    private countMetadata:              number = 0;
 
     async fullIndex(profiled?: boolean | undefined): Promise<boolean> {
+        if (profiled)
+            return this.fullIndexProfiled();
+
         if (IndexSolr.fullIndexUnderway) {
             LOG.error('IndexSolr.fullIndex() already underway; exiting this additional request early', LOG.LS.eNAV);
             return false;
         }
-
-        if (profiled)
-            return this.fullIndexProfiled();
 
         let retValue: boolean = false;
         try {
@@ -88,6 +89,11 @@ export class IndexSolr implements NAV.IIndexer {
     }
 
     private async fullIndexProfiled(): Promise<boolean> {
+        if (IndexSolr.fullIndexUnderway) {
+            LOG.error('IndexSolr.fullIndexProfiled() already underway; exiting this additional request early', LOG.LS.eNAV);
+            return false;
+        }
+
         LOG.info('****************************************', LOG.LS.eNAV);
         LOG.info('IndexSolr.fullIndexProfiled() starting', LOG.LS.eNAV);
         return new Promise<boolean>((resolve) => {
@@ -98,8 +104,16 @@ export class IndexSolr implements NAV.IIndexer {
 
             session.post('Profiler.enable', async () => {
                 session.post('Profiler.start', async () => {
-                    LOG.info('IndexSolr.fullIndexProfiled() fullIndex() starting', LOG.LS.eNAV);
-                    const retValue: boolean = await this.fullIndex();
+                    let retValue: boolean = false;
+                    try {
+                        IndexSolr.fullIndexUnderway = true;
+                        retValue = await this.fullIndexWorker();
+                    } catch (error) {
+                        LOG.error('IndexSolr.fullIndexProfiled', LOG.LS.eNAV, error);
+                    } finally {
+                        IndexSolr.fullIndexUnderway = false;
+                    }
+
                     LOG.info('IndexSolr.fullIndexProfiled() fullIndex() complete', LOG.LS.eNAV);
                     resolve(retValue);
 
@@ -133,9 +147,17 @@ export class IndexSolr implements NAV.IIndexer {
     }
 
     private async fullIndexWorker(): Promise<boolean> {
-        const solrClient: SolrClient = new SolrClient(null, null, null);
+        if (!await this.fullIndexWorkerOG())
+            return false;
+
+        return await this.fullIndexWorkerMeta();
+    }
+
+    private async fullIndexWorkerOG(): Promise<boolean> {
+        const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackrat);
+
         if (!(await this.objectGraphDatabase.fetch())) {
-            LOG.error('IndexSolr.fullIndex failed on ObjectGraphDatabase.fetch()', LOG.LS.eNAV);
+            LOG.error('IndexSolr.fullIndexWorkerOG failed on ObjectGraphDatabase.fetch()', LOG.LS.eNAV);
             return false;
         }
 
@@ -147,36 +169,19 @@ export class IndexSolr implements NAV.IIndexer {
                 docs.push(doc);
 
                 if (docs.length >= 1000) {
-                    try {
-                        let res: H.IOResults = await solrClient.add(docs);
-                        if (res.success)
-                            res = await solrClient.commit();
-                        if (!res.success)
-                            LOG.error(`IndexSolr.fullIndexWorker failed: ${res.error}`, LOG.LS.eNAV);
-                    } catch (error) {
-                        LOG.error('IndexSolr.fullIndexWorker failed', LOG.LS.eNAV, error);
+                    documentCount = await this.addDocumentsToSolr(solrClient, docs, documentCount, 'fullIndexWorkerOG');
+                    if (documentCount === -1)
                         return false;
-                    }
-                    documentCount += docs.length;
-                    LOG.info(`IndexSolr.fullIndex committed ${documentCount} total documents`, LOG.LS.eNAV);
                     docs = [];
                 }
             } else
-                LOG.error('IndexSolr.fullIndex failed in handleObject', LOG.LS.eNAV);
+                LOG.error('IndexSolr.fullIndexWorkerOG failed in handleObject', LOG.LS.eNAV);
         }
 
         if (docs.length > 0) {
-            try {
-                let res: H.IOResults = await solrClient.add(docs);
-                if (res.success)
-                    res = await solrClient.commit();
-                if (!res.success)
-                    LOG.error(`IndexSolr.fullIndexWorker failed: ${res.error}`, LOG.LS.eNAV);
-            } catch (error) {
-                LOG.error('IndexSolr.fullIndexWorker failed', LOG.LS.eNAV, error);
+            documentCount = await this.addDocumentsToSolr(solrClient, docs, documentCount, 'fullIndexWorkerOG');
+            if (documentCount === -1)
                 return false;
-            }
-            documentCount += docs.length;
         }
 
         LOG.info(`IndexSolr.fullIndex indexed units: ${this.countUnit}`, LOG.LS.eNAV);
@@ -195,6 +200,75 @@ export class IndexSolr implements NAV.IIndexer {
         LOG.info(`IndexSolr.fullIndex indexed unknown: ${this.countUnknown}`, LOG.LS.eNAV);
         LOG.info(`IndexSolr.fullIndex committed ${documentCount} total documents`, LOG.LS.eNAV);
         return true;
+    }
+
+    private async fullIndexWorkerMeta(): Promise<boolean> {
+        const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackratMeta);
+
+        let result: boolean = true;
+        let documentCount: number = 0;
+        let idMetadataLast: number = 0;
+        while (true) { // eslint-disable-line no-constant-condition
+            const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchAllByPage(idMetadataLast, 1000);
+            if (!metadataList) {
+                LOG.error('IndexSolr.fullIndexWorkerMeta could not fetch metadata', LOG.LS.eNAV);
+                return false;
+            }
+            if (metadataList.length <= 0)
+                break;
+
+            const docs: any[] = [];
+            for (const metadata of metadataList) {
+                const doc: any = {};
+                doc.id = metadata.idMetadata;
+                doc.idSystemObject = metadata.idSystemObject;
+
+                const key: string = `${metadata.Name}_value`;
+                if (metadata.ValueShort) {
+                    doc[key] = metadata.ValueShort;
+                    doc._text_ = metadata.ValueShort;
+                } else if (metadata.ValueExtended) {
+                    doc[key] = metadata.ValueExtended.substring(0, 2048);
+                    doc._text_ = doc[key];
+                }
+
+                if (metadata.idVMetadataSource) {
+                    const metadataSourceV: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(metadata.idVMetadataSource);
+                    if (metadataSourceV)
+                        doc.MetadataSource = metadataSourceV.Term;
+                    else
+                        LOG.error(`IndexSolr.fullIndexWorkerMeta could not fetch metadata source ${metadata.idVMetadataSource}`, LOG.LS.eNAV);
+                }
+
+                docs.push(doc);
+                this.countMetadata++;
+            }
+
+            idMetadataLast = metadataList[metadataList.length - 1].idMetadata;
+
+            documentCount = await this.addDocumentsToSolr(solrClient, docs, documentCount, 'fullIndexWorkerMeta');
+            if (documentCount === -1)
+                result = false;
+        }
+
+        LOG.info(`IndexSolr.fullIndex indexed metadata: ${this.countMetadata}`, LOG.LS.eNAV);
+        return result;
+    }
+
+    private async addDocumentsToSolr(solrClient: SolrClient, docs: any[], documentCount: number, callerForLog: string): Promise<number> {
+        try {
+            let res: H.IOResults = await solrClient.add(docs);
+            if (res.success)
+                res = await solrClient.commit();
+            if (!res.success)
+                LOG.error(`IndexSolr.${callerForLog} failed: ${res.error}`, LOG.LS.eNAV);
+        } catch (error) {
+            LOG.error(`IndexSolr.${callerForLog} failed`, LOG.LS.eNAV, error);
+            return -1;
+        }
+        documentCount += docs.length;
+        LOG.info(`IndexSolr.${callerForLog} committed ${documentCount} total documents to ${solrClient.core()}`, LOG.LS.eNAV);
+        return documentCount;
     }
 
     private async handleObject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
