@@ -993,9 +993,10 @@ describe('DB Creation Test Suite', () => {
                 ValueShort: 'Test Value Short',
                 ValueExtended: 'Test Value Ext',
                 idUser: userActive.idUser,
+                idAssetVersionValue: assetVersion.idAssetVersion,
                 idVMetadataSource: vocabulary.idVocabulary,
                 idSystemObject: systemObjectScene.idSystemObject,
-                idAssetVersionValue: assetVersion.idAssetVersion,
+                idSystemObjectParent: systemObjectScene.idSystemObject,
                 idMetadata: 0,
             });
         expect(metadata).toBeTruthy();
@@ -1010,10 +1011,11 @@ describe('DB Creation Test Suite', () => {
             Name: 'Test Metadata',
             ValueShort: null,
             ValueExtended: null,
+            idAssetVersionValue: null,
             idUser: null,
             idVMetadataSource: null,
             idSystemObject: null,
-            idAssetVersionValue: null,
+            idSystemObjectParent: null,
             idMetadata: 0,
         });
         expect(metadataNull).toBeTruthy();
@@ -6203,10 +6205,11 @@ describe('DB Update Test Suite', () => {
             const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadata.idMetadata);
             expect(metadataFetch).toBeTruthy();
             if (metadataFetch) {
+                expect(metadataFetch.idAssetVersionValue).toBeNull();
                 expect(metadataFetch.idUser).toBeNull();
                 expect(metadataFetch.idVMetadataSource).not.toBeNull();
                 expect(metadataFetch.idSystemObject).not.toBeNull();
-                expect(metadataFetch.idAssetVersionValue).toBeNull();
+                expect(metadataFetch.idSystemObjectParent).not.toBeNull();
             }
         }
         expect(bUpdated).toBeTruthy();
@@ -6218,16 +6221,18 @@ describe('DB Update Test Suite', () => {
             metadata.idUser = null;
             metadata.idVMetadataSource = null;
             metadata.idSystemObject = null;
+            metadata.idSystemObjectParent = null;
             metadata.idAssetVersionValue = null;
             bUpdated = await metadata.update();
 
             const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadata.idMetadata);
             expect(metadataFetch).toBeTruthy();
             if (metadataFetch) {
+                expect(metadataFetch.idAssetVersionValue).toBeNull();
                 expect(metadataFetch.idUser).toBeNull();
                 expect(metadataFetch.idVMetadataSource).toBeNull();
                 expect(metadataFetch.idSystemObject).toBeNull();
-                expect(metadataFetch.idAssetVersionValue).toBeNull();
+                expect(metadataFetch.idSystemObjectParent).toBeNull();
             }
         }
         expect(bUpdated).toBeTruthy();

@@ -7,7 +7,8 @@
 <schema name="packratMeta-config" version="1.6">
     <!-- Metadata fields -->
     <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
-    <field name="idSystemObject" type="pints" />
+    <field name="idSystemObject" type="pint" />
+    <field name="idSystemObjectParent" type="pint" />
     <field name="MetadataSource" type="string" indexed="true" stored="true" multiValued="false" />
     <dynamicField name="*_value" type="string" indexed="true" stored="true" />
 

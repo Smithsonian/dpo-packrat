@@ -102,12 +102,46 @@ UPDATE WorkflowStep SET State = 1 WHERE State = 0;
 -- 2021-07-30 Jon
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 2, 'Image');
 
--- 2021-08-02 Jon
-ALTER TABLE Metadata DROP FOREIGN KEY fk_metadata_asset1;
-ALTER TABLE Metadata DROP COLUMN 'idAssetValue';
-ALTER TABLE Metadata ADD COLUMN idAssetVersionValue int(11) DEFAULT NULL;
-ALTER TABLE Metadata ADD CONSTRAINT `fk_metadata_assetversion1`
+-- 2021-08-03 Jon
+DROP TABLE Metadata;
+
+CREATE TABLE IF NOT EXISTS `Metadata` (
+  `idMetadata` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` VARCHAR(100) NOT NULL,
+  `ValueShort` varchar(255) DEFAULT NULL,
+  `ValueExtended` longtext DEFAULT NULL,
+  `idAssetVersionValue` int(11) DEFAULT NULL,
+  `idUser` int(11) DEFAULT NULL,
+  `idVMetadataSource` int(11) DEFAULT NULL,
+  `idSystemObject` int(11) DEFAULT NULL,
+  `idSystemObjectParent` int(11) DEFAULT NULL,
+  PRIMARY KEY (`idMetadata`),
+  KEY `Metadata_Name` (`Name`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+ALTER TABLE `Metadata` 
+ADD CONSTRAINT `fk_metadata_assetversion1`
   FOREIGN KEY (`idAssetVersionValue`)
   REFERENCES `AssetVersion` (`idAssetVersion`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_metadata_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_metadata_vocabulary1`
+  FOREIGN KEY (`idVMetadataSource`)
+  REFERENCES `Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_metadata_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_metadata_systemobject2`
+  FOREIGN KEY (`idSystemObjectParent`)
+  REFERENCES `SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;

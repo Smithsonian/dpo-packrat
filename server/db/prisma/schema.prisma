@@ -333,22 +333,25 @@ model LicenseAssignment {
 }
 
 model Metadata {
-  idMetadata          Int           @id @default(autoincrement())
-  Name                String        @mariasql.VarChar(100)
-  ValueShort          String?       @mariasql.VarChar(255)
-  ValueExtended       String?       @mariasql.LongText
-  idUser              Int?
-  idVMetadataSource   Int?
-  idSystemObject      Int?
-  idAssetVersionValue Int?
-  AssetVersion        AssetVersion? @relation(fields: [idAssetVersionValue], references: [idAssetVersion])
-  SystemObject        SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
-  User                User?         @relation(fields: [idUser], references: [idUser])
-  Vocabulary          Vocabulary?   @relation(fields: [idVMetadataSource], references: [idVocabulary])
+  idMetadata                                               Int           @id @default(autoincrement())
+  Name                                                     String        @mariasql.VarChar(100)
+  ValueShort                                               String?       @mariasql.VarChar(255)
+  ValueExtended                                            String?       @mariasql.LongText
+  idAssetVersionValue                                      Int?
+  idUser                                                   Int?
+  idVMetadataSource                                        Int?
+  idSystemObject                                           Int?
+  idSystemObjectParent                                     Int?
+  AssetVersion                                             AssetVersion? @relation(fields: [idAssetVersionValue], references: [idAssetVersion])
+  SystemObject                                             SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
+  SystemObject_Metadata_idSystemObjectParentToSystemObject SystemObject? @relation("Metadata_idSystemObjectParentToSystemObject", fields: [idSystemObjectParent], references: [idSystemObject])
+  User                                                     User?         @relation(fields: [idUser], references: [idUser])
+  Vocabulary                                               Vocabulary?   @relation(fields: [idVMetadataSource], references: [idVocabulary])
 
   @@index([Name], name: "Metadata_Name")
-  @@index([idSystemObject], name: "Metadata_idSystemObject")
   @@index([idAssetVersionValue], name: "fk_metadata_assetversion1")
+  @@index([idSystemObject], name: "fk_metadata_systemobject1")
+  @@index([idSystemObjectParent], name: "fk_metadata_systemobject2")
   @@index([idUser], name: "fk_metadata_user1")
   @@index([idVMetadataSource], name: "fk_metadata_vocabulary1")
 }
@@ -640,6 +643,7 @@ model SystemObject {
   Identifier                                                            Identifier[]
   LicenseAssignment                                                     LicenseAssignment[]
   Metadata                                                              Metadata[]
+  Metadata_Metadata_idSystemObjectParentToSystemObject                  Metadata[]                        @relation("Metadata_idSystemObjectParentToSystemObject")
   SystemObjectVersion                                                   SystemObjectVersion[]
   SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived")
   SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster  SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectMaster")
