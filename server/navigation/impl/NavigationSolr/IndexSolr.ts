@@ -88,6 +88,19 @@ export class IndexSolr implements NAV.IIndexer {
         return true;
     }
 
+    /** Returns count of indexed metadata, or -1 if there's an error */
+    async indexMetadata(metadataList: DBAPI.Metadata[]): Promise<boolean> {
+        const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackratMeta);
+        const documentCount: number = await this.indexMetadataWorker(solrClient, metadataList);
+        if (documentCount >= -1) {
+            LOG.info(`IndexSolr.indexMetadata succeeded, updating ${documentCount} documents`, LOG.LS.eNAV);
+            return true;
+        } else {
+            LOG.error('IndexSolr.indexMetadata failed', LOG.LS.eNAV);
+            return false;
+        }
+    }
+
     private async fullIndexProfiled(): Promise<boolean> {
         if (IndexSolr.fullIndexUnderway) {
             LOG.error('IndexSolr.fullIndexProfiled() already underway; exiting this additional request early', LOG.LS.eNAV);
@@ -208,6 +221,7 @@ export class IndexSolr implements NAV.IIndexer {
         let result: boolean = true;
         let documentCount: number = 0;
         let idMetadataLast: number = 0;
+
         while (true) { // eslint-disable-line no-constant-condition
             const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchAllByPage(idMetadataLast, 1000);
             if (!metadataList) {
@@ -217,42 +231,52 @@ export class IndexSolr implements NAV.IIndexer {
             if (metadataList.length <= 0)
                 break;
 
-            const docs: any[] = [];
-            for (const metadata of metadataList) {
-                const doc: any = {};
-                doc.id = metadata.idMetadata;
-                doc.idSystemObject = metadata.idSystemObject;
-
-                const key: string = `${metadata.Name}_value`;
-                if (metadata.ValueShort) {
-                    doc[key] = metadata.ValueShort;
-                    doc._text_ = metadata.ValueShort;
-                } else if (metadata.ValueExtended) {
-                    doc[key] = metadata.ValueExtended.substring(0, 2048);
-                    doc._text_ = doc[key];
-                }
-
-                if (metadata.idVMetadataSource) {
-                    const metadataSourceV: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(metadata.idVMetadataSource);
-                    if (metadataSourceV)
-                        doc.MetadataSource = metadataSourceV.Term;
-                    else
-                        LOG.error(`IndexSolr.fullIndexWorkerMeta could not fetch metadata source ${metadata.idVMetadataSource}`, LOG.LS.eNAV);
-                }
-
-                docs.push(doc);
-                this.countMetadata++;
-            }
-
-            idMetadataLast = metadataList[metadataList.length - 1].idMetadata;
-
-            documentCount = await this.addDocumentsToSolr(solrClient, docs, documentCount, 'fullIndexWorkerMeta');
-            if (documentCount === -1)
+            documentCount = await this.indexMetadataWorker(solrClient, metadataList, documentCount);
+            if (documentCount === -1) {
+                documentCount = 0;
                 result = false;
+            }
+            idMetadataLast = metadataList[metadataList.length - 1].idMetadata;
         }
 
         LOG.info(`IndexSolr.fullIndex indexed metadata: ${this.countMetadata}`, LOG.LS.eNAV);
         return result;
+    }
+
+    private async indexMetadataWorker(solrClient: SolrClient, metadataList: DBAPI.Metadata[], documentCount?: number | undefined): Promise<number> {
+        documentCount = documentCount ?? 0;
+        if (metadataList.length <= 0)
+            return documentCount;
+
+        const docs: any[] = [];
+        for (const metadata of metadataList) {
+            const doc: any = {};
+            doc.id = metadata.idMetadata;
+            doc.idSystemObject = metadata.idSystemObject;
+            doc.idSystemObjectParent = metadata.idSystemObjectParent;
+
+            const key: string = `${metadata.Name}_value`;
+            if (metadata.ValueShort) {
+                doc[key] = metadata.ValueShort;
+                doc._text_ = metadata.ValueShort;
+            } else if (metadata.ValueExtended) {
+                doc[key] = metadata.ValueExtended.substring(0, 2048);
+                doc._text_ = doc[key];
+            }
+
+            if (metadata.idVMetadataSource) {
+                const metadataSourceV: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(metadata.idVMetadataSource);
+                if (metadataSourceV)
+                    doc.MetadataSource = metadataSourceV.Term;
+                else
+                    LOG.error(`IndexSolr.fullIndexWorkerMeta could not fetch metadata source ${metadata.idVMetadataSource}`, LOG.LS.eNAV);
+            }
+
+            docs.push(doc);
+            this.countMetadata++;
+        }
+
+        return await this.addDocumentsToSolr(solrClient, docs, documentCount, 'indexObjectMetadata');
     }
 
     private async addDocumentsToSolr(solrClient: SolrClient, docs: any[], documentCount: number, callerForLog: string): Promise<number> {

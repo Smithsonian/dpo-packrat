@@ -351,10 +351,11 @@ export class AssetStorageAdapter {
             Name: 'Bulk Ingestion',
             ValueShort: null,
             ValueExtended: JSON.stringify(ingestedObject, H.Helpers.saferStringify),
+            idAssetVersionValue: null,
             idUser: idUserCreator,
             idVMetadataSource: vocabulary ? vocabulary.idVocabulary : /* istanbul ignore next */ null,
             idSystemObject: SO.idSystemObject,
-            idAssetVersionValue: null,
+            idSystemObjectParent: SO.idSystemObject,
             idMetadata: 0
         }); /* istanbul ignore next */
 
@@ -730,8 +731,12 @@ export class AssetStorageAdapter {
 
         // Persist extracted metadata
         if (res.success) {
+            const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+            if (!SO)
+                LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to fetch system object for asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
             LOG.info(`AssetStorageAdapter.promoteAssetWorker persisting ${extractor.metadata.size} metadata key/values for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
-            res = await META.MetadataManager.persistExtractor(objectGraph.idSystemObject, extractor, assetVersion.idUserCreator);
+            const idSystemObject: number = SO ? SO.idSystemObject : objectGraph.idSystemObject;
+            res = await META.MetadataManager.persistExtractor(idSystemObject, objectGraph.idSystemObject, extractor, assetVersion.idUserCreator);
             if (!res.success)
                 LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to persist metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
         } else

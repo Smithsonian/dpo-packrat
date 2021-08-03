@@ -8,10 +8,11 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
     Name!: string;
     ValueShort!: string | null;
     ValueExtended!: string | null;
+    idAssetVersionValue!: number | null;
     idUser!: number | null;
     idVMetadataSource!: number | null;
     idSystemObject!: number | null;
-    idAssetVersionValue!: number | null;
+    idSystemObjectParent!: number | null;
 
     constructor(input: MetadataBase) {
         super(input);
@@ -22,7 +23,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, ValueShort, ValueExtended, idUser, idVMetadataSource, idSystemObject, idAssetVersionValue } = this;
+            const { Name, ValueShort, ValueExtended, idAssetVersionValue, idUser, idVMetadataSource, idSystemObject, idSystemObjectParent } = this;
             ({ idMetadata: this.idMetadata, Name: this.Name, ValueShort: this.ValueShort,
                 ValueExtended: this.ValueExtended, idUser: this.idUser,
                 idVMetadataSource: this.idVMetadataSource, idSystemObject: this.idSystemObject, idAssetVersionValue: this.idAssetVersionValue } =
@@ -31,10 +32,11 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                         Name,
                         ValueShort:     ValueShort          ? ValueShort : undefined,
                         ValueExtended:  ValueExtended       ? ValueExtended : undefined,
+                        AssetVersion:   idAssetVersionValue ? { connect: { idAssetVersion: idAssetVersionValue }, } : undefined,
                         User:           idUser              ? { connect: { idUser }, } : undefined,
                         Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : undefined,
                         SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : undefined,
-                        AssetVersion:   idAssetVersionValue ? { connect: { idAssetVersion: idAssetVersionValue }, } : undefined,
+                        SystemObject_Metadata_idSystemObjectParentToSystemObject: idSystemObjectParent    ? { connect: { idSystemObject: idSystemObjectParent }, } : undefined,
                     },
                 }));
             return true;
@@ -46,17 +48,18 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idMetadata, Name, ValueShort, ValueExtended, idUser, idVMetadataSource, idSystemObject, idAssetVersionValue } = this;
+            const { idMetadata, Name, ValueShort, ValueExtended, idAssetVersionValue, idUser, idVMetadataSource, idSystemObject, idSystemObjectParent } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.metadata.update({
                 where: { idMetadata, },
                 data: {
                     Name,
                     ValueShort:     ValueShort          ? ValueShort : undefined,
                     ValueExtended:  ValueExtended       ? ValueExtended : undefined,
+                    AssetVersion:   idAssetVersionValue ? { connect: { idAssetVersion: idAssetVersionValue }, } : { disconnect: true, },
                     User:           idUser              ? { connect: { idUser }, } : { disconnect: true, },
                     Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : { disconnect: true, },
                     SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : { disconnect: true, },
-                    AssetVersion:   idAssetVersionValue ? { connect: { idAssetVersion: idAssetVersionValue }, } : { disconnect: true, },
+                    SystemObject_Metadata_idSystemObjectParentToSystemObject: idSystemObjectParent    ? { connect: { idSystemObject: idSystemObjectParent }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
