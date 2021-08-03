@@ -101,7 +101,6 @@ model Asset {
   CaptureDataFile                                 CaptureDataFile[]
   IntermediaryFile                                IntermediaryFile[]
   Item                                            Item[]
-  Metadata                                        Metadata[]
   Model                                           Model[]
   ModelMaterialUVMap                              ModelMaterialUVMap[]
   Scene                                           Scene[]
@@ -132,6 +131,7 @@ model AssetVersion {
   BulkIngest                          Boolean
   Asset                               Asset                                 @relation(fields: [idAsset], references: [idAsset])
   User                                User                                  @relation(fields: [idUserCreator], references: [idUser])
+  Metadata                            Metadata[]
   SystemObject                        SystemObject?
   SystemObjectVersionAssetVersionXref SystemObjectVersionAssetVersionXref[]
 
@@ -333,22 +333,22 @@ model LicenseAssignment {
 }
 
 model Metadata {
-  idMetadata        Int           @id @default(autoincrement())
-  Name              String        @mariasql.VarChar(100)
-  ValueShort        String?       @mariasql.VarChar(255)
-  ValueExtended     String?       @mariasql.LongText
-  idAssetValue      Int?
-  idUser            Int?
-  idVMetadataSource Int?
-  idSystemObject    Int?
-  Asset             Asset?        @relation(fields: [idAssetValue], references: [idAsset])
-  SystemObject      SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
-  User              User?         @relation(fields: [idUser], references: [idUser])
-  Vocabulary        Vocabulary?   @relation(fields: [idVMetadataSource], references: [idVocabulary])
+  idMetadata          Int           @id @default(autoincrement())
+  Name                String        @mariasql.VarChar(100)
+  ValueShort          String?       @mariasql.VarChar(255)
+  ValueExtended       String?       @mariasql.LongText
+  idUser              Int?
+  idVMetadataSource   Int?
+  idSystemObject      Int?
+  idAssetVersionValue Int?
+  AssetVersion        AssetVersion? @relation(fields: [idAssetVersionValue], references: [idAssetVersion])
+  SystemObject        SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
+  User                User?         @relation(fields: [idUser], references: [idUser])
+  Vocabulary          Vocabulary?   @relation(fields: [idVMetadataSource], references: [idVocabulary])
 
   @@index([Name], name: "Metadata_Name")
-  @@index([idAssetValue], name: "Metadata_idAssetValue")
   @@index([idSystemObject], name: "Metadata_idSystemObject")
+  @@index([idAssetVersionValue], name: "fk_metadata_assetversion1")
   @@index([idUser], name: "fk_metadata_user1")
   @@index([idVMetadataSource], name: "fk_metadata_vocabulary1")
 }

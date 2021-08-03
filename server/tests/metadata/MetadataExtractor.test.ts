@@ -3,12 +3,15 @@ import * as fs from 'fs';
 import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as META from '../../metadata';
+import * as DBAPI from '../../db';
 import * as H from '../../utils/helpers';
+import * as UTIL from '../db/api';
 
 const mockPathTurtle: string = path.join(__dirname, '../mock/utils/bagit/PackratTest/data/nmnh_sea_turtle-1_low/camera/');
 const mockPathF1991_46: string = path.join(__dirname, '../mock/captures/f1991_46-dataset/camera/'); // eslint-disable-line camelcase
 const emitMetadata: boolean = false;
 let idVMetadataSource: number | undefined = undefined;
+let itemNumber: number = 0;
 
 /*
 afterAll(async done => {
@@ -68,6 +71,8 @@ async function extractFromFile(fileName: string, filePath: string, expectSuccess
     }
 
     expect(results.success).toEqual(expectSuccess);
+    expect(await persistExtractions(extractor)).toBeTruthy();
+
     extractor.clear();
     return results.success === expectSuccess;
 }
@@ -103,6 +108,28 @@ async function extractFromStream(fileName: string, filePath: string, expectSucce
     }
 
     return success === expectSuccess;
+}
+
+async function persistExtractions(extractor: META.MetadataExtractor): Promise<boolean> {
+    const item: DBAPI.Item = await UTIL.createItemTest({
+        idAssetThumbnail: null,
+        idGeoLocation: null,
+        Name: `Test Item ${++itemNumber}`,
+        EntireSubject: true,
+        idItem: 0
+    });
+    const SO: DBAPI.SystemObject | null = await item.fetchSystemObject();
+    expect(SO).toBeTruthy();
+
+    let results: H.IOResults = await META.MetadataManager.persistExtractor(-1, extractor, null);
+    expect(results.success).toEqual(extractor.metadata.size === 0); // should succeed if there is nothing to persist; should fail otherwise due to -1
+
+    if (SO) {
+        results = await META.MetadataManager.persistExtractor(SO.idSystemObject, extractor, null);
+        return results.success;
+    }
+
+    return false;
 }
 
 function validateImageMetadata(extractor: META.MetadataExtractor, fileName: string): boolean {

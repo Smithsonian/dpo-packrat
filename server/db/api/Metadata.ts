@@ -8,10 +8,10 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
     Name!: string;
     ValueShort!: string | null;
     ValueExtended!: string | null;
-    idAssetValue!: number | null;
     idUser!: number | null;
     idVMetadataSource!: number | null;
     idSystemObject!: number | null;
+    idAssetVersionValue!: number | null;
 
     constructor(input: MetadataBase) {
         super(input);
@@ -22,19 +22,19 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, ValueShort, ValueExtended, idAssetValue, idUser, idVMetadataSource, idSystemObject } = this;
+            const { Name, ValueShort, ValueExtended, idUser, idVMetadataSource, idSystemObject, idAssetVersionValue } = this;
             ({ idMetadata: this.idMetadata, Name: this.Name, ValueShort: this.ValueShort,
-                ValueExtended: this.ValueExtended, idAssetValue: this.idAssetValue, idUser: this.idUser,
-                idVMetadataSource: this.idVMetadataSource, idSystemObject: this.idSystemObject } =
+                ValueExtended: this.ValueExtended, idUser: this.idUser,
+                idVMetadataSource: this.idVMetadataSource, idSystemObject: this.idSystemObject, idAssetVersionValue: this.idAssetVersionValue } =
                 await DBC.DBConnection.prisma.metadata.create({
                     data: {
                         Name,
                         ValueShort:     ValueShort          ? ValueShort : undefined,
                         ValueExtended:  ValueExtended       ? ValueExtended : undefined,
-                        Asset:          idAssetValue        ? { connect: { idAsset: idAssetValue }, } : undefined,
                         User:           idUser              ? { connect: { idUser }, } : undefined,
                         Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : undefined,
                         SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : undefined,
+                        AssetVersion:   idAssetVersionValue ? { connect: { idAssetVersion: idAssetVersionValue }, } : undefined,
                     },
                 }));
             return true;
@@ -46,17 +46,17 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idMetadata, Name, ValueShort, ValueExtended, idAssetValue, idUser, idVMetadataSource, idSystemObject } = this;
+            const { idMetadata, Name, ValueShort, ValueExtended, idUser, idVMetadataSource, idSystemObject, idAssetVersionValue } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.metadata.update({
                 where: { idMetadata, },
                 data: {
                     Name,
                     ValueShort:     ValueShort          ? ValueShort : undefined,
                     ValueExtended:  ValueExtended       ? ValueExtended : undefined,
-                    Asset:          idAssetValue        ? { connect: { idAsset: idAssetValue }, } : { disconnect: true, },
                     User:           idUser              ? { connect: { idUser }, } : { disconnect: true, },
                     Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : { disconnect: true, },
                     SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : { disconnect: true, },
+                    AssetVersion:   idAssetVersionValue ? { connect: { idAssetVersion: idAssetVersionValue }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -98,6 +98,26 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                 await DBC.DBConnection.prisma.metadata.findMany({ where: { idSystemObject } }), Metadata);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Metadata.fetchFromSystemObject', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchAllByPage(idMetadataLast: number, pageSize: number): Promise<Metadata[] | null> {
+        try {
+            const rawResult: MetadataBase[] = (idMetadataLast == 0)
+                ? await DBC.DBConnection.prisma.metadata.findMany({
+                    take: pageSize,
+                    orderBy: { idMetadata: 'asc', },
+                })
+                : await DBC.DBConnection.prisma.metadata.findMany({
+                    take: pageSize,
+                    skip: 1,
+                    cursor:  { idMetadata: idMetadataLast, },
+                    orderBy: { idMetadata: 'asc', },
+                });
+            return DBC.CopyArray<MetadataBase, Metadata>(rawResult, Metadata);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Metadata.fetchAllByPage', LOG.LS.eDB, error);
             return null;
         }
     }

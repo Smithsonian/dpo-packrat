@@ -64,13 +64,13 @@ type Identifier {
 type Metadata {
     idMetadata: Int!
     Name: String!
-    idAssetValue: Int
     idSystemObject: Int
     idUser: Int
     idVMetadataSource: Int
+    idAssetVersionValue: Int
     ValueExtended: String
     ValueShort: String
-    AssetValue: Asset
+    AssetVersionValue: AssetVersion
     SystemObject: SystemObject
     User: User
     VMetadataSource: Vocabulary

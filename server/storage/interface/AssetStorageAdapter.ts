@@ -351,10 +351,10 @@ export class AssetStorageAdapter {
             Name: 'Bulk Ingestion',
             ValueShort: null,
             ValueExtended: JSON.stringify(ingestedObject, H.Helpers.saferStringify),
-            idAssetValue: null,
             idUser: idUserCreator,
             idVMetadataSource: vocabulary ? vocabulary.idVocabulary : /* istanbul ignore next */ null,
             idSystemObject: SO.idSystemObject,
+            idAssetVersionValue: null,
             idMetadata: 0
         }); /* istanbul ignore next */
 
