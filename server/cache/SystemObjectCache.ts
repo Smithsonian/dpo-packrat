@@ -88,7 +88,7 @@ export class SystemObjectCache {
                 this.systemIDToObjectMap.set(SO.idSystemObject, oIDCleansed);
             } else if (!isASystemObject) {
                 if (idObject) {
-                    LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal storing idSystemObject 0 for ${JSON.stringify(oIDCleansed)}`, LOG.LS.eCACHE);
+                    // LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal storing idSystemObject 0 for ${JSON.stringify(oIDCleansed)}`, LOG.LS.eCACHE);
                     sID = { idSystemObject: 0, Retired: false };
                     this.objectIDToSystemMap.set(oIDCleansed, sID);
                 }

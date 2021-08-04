@@ -46,7 +46,7 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
         // Process results, creating a map from idSystemObject of asset version -> { a map of { metadata name -> value } }
         const navigation: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
         if (navigation) {
-            const metadataColumns: string[] = ['iso', 'lens', 'fnumber', 'imageheight', 'imagewidth'];
+            const metadataColumns: string[] = ['variant', 'iso', 'lens', 'fnumber', 'imageheight', 'imagewidth'];
             const metadataFilter: NAV.MetadataFilter = { idRoot: idSystemObject, forAssetChildren: true, metadataColumns };
             const metadataResult: NAV.MetadataResult = await navigation.getMetadata(metadataFilter);
             const metadataColLen: number = metadataFilter.metadataColumns.length;

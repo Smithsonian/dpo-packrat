@@ -8,7 +8,7 @@ import { AssetGridDetailBase, ColumnObject, LinkObject, eAssetGridColumnType, eI
 export class AssetGridDetailCaptureData extends AssetGridDetailBase {
     link: LinkObject;
     name: LinkObject;
-    filePath: string;
+    variant: string | null;
     version: number;
     size: string;
     dateCreated: Date;
@@ -18,11 +18,11 @@ export class AssetGridDetailCaptureData extends AssetGridDetailBase {
     imageHeight: number | null;
     imageWidth: number | null;
 
-    constructor(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, metadataMap: Map<string, string>) {
+    constructor(_asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, metadataMap: Map<string, string>) {
         super(idSystemObject, assetVersion.idAsset, assetVersion.idAssetVersion);
         this.link = { label: null, path: `${RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion)}`, icon: eIcon.eIconDownload, origin: eLinkOrigin.eServer };
         this.name = { label: assetVersion.FileName, path: `${RouteBuilder.RepositoryDetails(idSystemObject)}`, icon: null, origin: eLinkOrigin.eClient };
-        this.filePath = asset.FilePath;
+        this.variant = H.Helpers.safeString(metadataMap.get('variant'));
         this.version = assetVersion.Version;
         this.size = assetVersion.StorageSize.toString();
         this.dateCreated = assetVersion.DateCreated;
@@ -38,15 +38,15 @@ export class AssetGridDetailCaptureData extends AssetGridDetailBase {
         return [
             { colName: 'link', colLabel: 'Link', colDisplay: true, colType: eAssetGridColumnType.eHyperLink, colAlign: 'center' },
             { colName: 'name', colLabel: 'Name', colDisplay: true, colType: eAssetGridColumnType.eHyperLink, colAlign: 'left' },
-            { colName: 'filePath', colLabel: 'Path', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
-            { colName: 'version', colLabel: 'Version', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'center' },
+            { colName: 'variant', colLabel: 'Variant', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'center' },
             { colName: 'size', colLabel: 'Size', colDisplay: true, colType: eAssetGridColumnType.eFileSize, colAlign: 'left' },
-            { colName: 'dateCreated', colLabel: 'Date Created', colDisplay: true, colType: eAssetGridColumnType.eDate, colAlign: 'left' },
-            { colName: 'iso', colLabel: 'ISO', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'left' },
-            { colName: 'lens', colLabel: 'Lens', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
-            { colName: 'fNumber', colLabel: 'FNumber', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'left' },
-            { colName: 'imageHeight', colLabel: 'Image Height', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'left' },
-            { colName: 'imageWidth', colLabel: 'Image Width', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'left' }
+            { colName: 'imageHeight', colLabel: 'Height', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'center' },
+            { colName: 'imageWidth', colLabel: 'Width', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'center' },
+            { colName: 'iso', colLabel: 'ISO', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'center' },
+            { colName: 'lens', colLabel: 'Lens', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'center' },
+            { colName: 'fNumber', colLabel: 'FNumber', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'center' },
+            { colName: 'version', colLabel: 'Version', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'center' },
+            { colName: 'dateCreated', colLabel: 'Date Created', colDisplay: true, colType: eAssetGridColumnType.eDate, colAlign: 'center' },
         ];
     }
 }
