@@ -12,6 +12,10 @@ export class NavigationDB implements NAV.INavigation {
             : await NavigationDB.getChildren(filter);
     }
 
+    async getMetadata(filter: NAV.MetadataFilter): Promise<NAV.MetadataResult> {
+        return { success: false, error: 'Not Implemented', entries: [], metadataColumns: filter.metadataColumns };
+    }
+
     async getIndexer(): Promise<NAV.IIndexer | null> {
         return null;
     }

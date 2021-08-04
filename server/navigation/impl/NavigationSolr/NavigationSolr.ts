@@ -9,7 +9,7 @@ import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import { eSystemObjectType } from '../../../db';
-import { SolrClient } from './SolrClient';
+import { SolrClient, eSolrCore } from './SolrClient';
 import { IndexSolr } from './IndexSolr';
 import { Vocabulary } from '../../../types/graphql';
 import { eMetadata } from '../../interface';
@@ -20,16 +20,24 @@ interface SolrQueryResult {
 }
 
 export class NavigationSolr implements NAV.INavigation {
-    private _solrClient: SolrClient;
+    private _solrClientPackrat: SolrClient;
+    private _solrClientMeta: SolrClient;
 
     constructor() {
-        this._solrClient = new SolrClient(null, null, null);
+        this._solrClientPackrat = new SolrClient(null, null, eSolrCore.ePackrat);
+        this._solrClientMeta = new SolrClient(null, null, eSolrCore.ePackratMeta);
     }
 
     // #region INavigation interface
     async getObjectChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
-        const SQ: solr.Query = await this.computeSolrQuery(filter);
-        return await this.executeSolrQuery(filter, SQ);
+        const SQ: solr.Query = await this.computeSolrNavQuery(filter);
+        return await this.executeSolrNavQuery(filter, SQ);
+    }
+
+    async getMetadata(filter: NAV.MetadataFilter): Promise<NAV.MetadataResult> {
+        const SQ: solr.Query = await this.computeSolrMetaQuery(filter);
+        return await this.executeSolrMetaQuery(filter, SQ);
+        // return { success: false, error: 'Not Implemented', entries: [], metadataColumns: filter.metadataColumns };
     }
 
     async getIndexer(): Promise<NAV.IIndexer | null> {
@@ -37,9 +45,9 @@ export class NavigationSolr implements NAV.INavigation {
     }
     // #endregion
 
-    // #region Compute Query
-    private async computeSolrQuery(filter: NAV.NavigationFilter): Promise<solr.Query> {
-        let SQ: solr.Query = this._solrClient._client.query().edismax();    // use edismax query parser instead of lucene default
+    // #region Compute Nav Query
+    private async computeSolrNavQuery(filter: NAV.NavigationFilter): Promise<solr.Query> {
+        let SQ: solr.Query = this._solrClientPackrat._client.query().edismax();    // use edismax query parser instead of lucene default
 
         // For now, do not show retired assets to anyone:
         SQ = SQ.matchFilter('CommonRetired', 0);
@@ -119,7 +127,7 @@ export class NavigationSolr implements NAV.INavigation {
             if (filterColumn)
                 filterColumns.push(filterColumn.substring(1)); // strip of "e" prefix (eHierarchyUnit -> HierarchyUnit)
             else
-                LOG.error(`NavigationSolr.computeSolrQuery called with unexpected metadata column ${metadataColumn}`, LOG.LS.eNAV);
+                LOG.error(`NavigationSolr.computeSolrNavQuery called with unexpected metadata column ${metadataColumn}`, LOG.LS.eNAV);
         }
 
         if (filterColumns.length > 0)
@@ -127,7 +135,7 @@ export class NavigationSolr implements NAV.INavigation {
 
         if (filter.rows > 0)
             SQ = SQ.rows(filter.rows);
-        LOG.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}:\n${this._solrClient.solrUrl()}/select?${SQ.build()}`, LOG.LS.eNAV);
+        LOG.info(`NavigationSolr.computeSolrNavQuery ${JSON.stringify(filter)}:\n${this._solrClientPackrat.solrUrl()}/select?${SQ.build()}`, LOG.LS.eNAV);
         return SQ;
     }
 
@@ -183,7 +191,7 @@ export class NavigationSolr implements NAV.INavigation {
         for (const systemObjectType of systemObjectTypes) {
             const filterValue = DBAPI.SystemObjectTypeToName(systemObjectType);
             if (!filterValue) {
-                LOG.error(`NavigationSolr.computeSolrQuery handling invalid system object type ${systemObjectType}`, LOG.LS.eNAV);
+                LOG.error(`NavigationSolr.transformSystemObjectTypeArrayToStrings handling invalid system object type ${systemObjectType}`, LOG.LS.eNAV);
                 continue;
             }
             termList.push(filterValue);
@@ -197,7 +205,7 @@ export class NavigationSolr implements NAV.INavigation {
         for (const idVocabFilter of vocabFilterIDs) {
             const vocabFilter: Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabFilter);
             if (!vocabFilter) {
-                LOG.error(`NavigationSolr.computeSolrQuery handling invalid vocabulary value ${idVocabFilter}`, LOG.LS.eNAV);
+                LOG.error(`NavigationSolr.transformVocabIDArrayToStrings handling invalid vocabulary value ${idVocabFilter}`, LOG.LS.eNAV);
                 continue;
             }
             termList.push(vocabFilter.Term);
@@ -207,40 +215,40 @@ export class NavigationSolr implements NAV.INavigation {
     }
     // #endregion
 
-    // #region Execute Query
-    private async executeSolrQuery(filter: NAV.NavigationFilter, SQ: solr.Query): Promise<NAV.NavigationResult> {
+    // #region Execute Nav Query
+    private async executeSolrNavQuery(filter: NAV.NavigationFilter, SQ: solr.Query): Promise<NAV.NavigationResult> {
         let error: string = '';
         const entries: NAV.NavigationResultEntry[] = [];
-        const queryResult: SolrQueryResult = await this.executeSolrQueryWorker(SQ);
+        const queryResult: SolrQueryResult = await this.executeSolrQueryWorker(this._solrClientPackrat, SQ);
         if (queryResult.error) {
-            error = `Solr Query Failure: ${JSON.stringify(queryResult.error)}`;
-            LOG.error(`NavigationSolr.executeSolrQuery: ${error}`, LOG.LS.eNAV);
+            error = `Solr Nav Query Failure: ${JSON.stringify(queryResult.error)}`;
+            LOG.error(`NavigationSolr.executeSolrNavQuery: ${error}`, LOG.LS.eNAV);
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
         if (!queryResult.result || !queryResult.result.response || queryResult.result.response.numFound === undefined ||
             (queryResult.result.response.numFound > 0 && !queryResult.result.response.docs)) {
-            error = `Solr Query Response malformed: ${JSON.stringify(queryResult.result)}`;
-            LOG.error(`NavigationSolr.executeSolrQuery: ${error}`, LOG.LS.eNAV);
+            error = `Solr Nav Query Response malformed: ${JSON.stringify(queryResult.result)}`;
+            LOG.error(`NavigationSolr.executeSolrNavQuery: ${error}`, LOG.LS.eNAV);
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
 
-        LOG.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, ` +
+        LOG.info(`NavigationSolr.executeSolrNavQuery: { numFound: ${queryResult.result.response.numFound}, ` +
             `start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length}, ` +
             `nextCursorMark: ${queryResult.result.nextCursorMark} }`, LOG.LS.eNAV);
         // let docNumber: number = 1;
         for (const doc of queryResult.result.response.docs) {
             if (!doc.id || !doc.CommonObjectType || !doc.CommonidObject || (doc.CommonName === null)) {
-                LOG.error(`NavigationSolr.executeSolrQuery: malformed query response document ${JSON.stringify(doc)}`, LOG.LS.eNAV);
+                LOG.error(`NavigationSolr.executeSolrNavQuery: malformed query response document ${JSON.stringify(doc)}`, LOG.LS.eNAV);
                 continue;
             }
-            // LOG.info(`NavigationSolr.executeSolrQuery [${docNumber++}]: ${JSON.stringify(doc)}`, LOG.LS.eNAV);
+            // LOG.info(`NavigationSolr.executeSolrNavQuery [${docNumber++}]: ${JSON.stringify(doc)}`, LOG.LS.eNAV);
 
             const entry: NAV.NavigationResultEntry = {
                 idSystemObject: parseInt(doc.id),
                 name: doc.CommonName || '<UNKNOWN>',
                 objectType: DBAPI.SystemObjectNameToType(doc.CommonObjectType),
                 idObject: doc.CommonidObject,
-                metadata: this.computeMetadata(doc, filter.metadataColumns)
+                metadata: this.computeNavMetadata(doc, filter.metadataColumns)
             };
 
             entries.push(entry);
@@ -253,21 +261,7 @@ export class NavigationSolr implements NAV.INavigation {
         return { success: true, error: '', entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
-    private executeSolrQueryWorker(SQ: solr.Query): Promise<SolrQueryResult> {
-        return new Promise<any>((resolve) => {
-            const request: ClientRequest = this._solrClient._client.search(SQ,
-                function (err, obj) {
-                    if (err) {
-                        LOG.error('NavigationSolr.executeSolrQueryWorker', LOG.LS.eNAV, err);
-                        resolve({ result: null, error: err });
-                    } else
-                        resolve({ result: obj, error: null });
-                });
-            request;
-        });
-    }
-
-    private computeMetadata(doc: any, metadataColumns: NAV.eMetadata[]): string[] {
+    private computeNavMetadata(doc: any, metadataColumns: NAV.eMetadata[]): string[] {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
@@ -345,6 +339,95 @@ export class NavigationSolr implements NAV.INavigation {
             }
         }
         return metadata;
+    }
+    // #endregion
+
+    // #region Compute Meta Query
+    private async computeSolrMetaQuery(filter: NAV.MetadataFilter): Promise<solr.Query> {
+        let SQ: solr.Query = this._solrClientMeta._client.query().edismax();    // use edismax query parser instead of lucene default
+        SQ = SQ.q('*:*');
+
+        // idRoot: number;                         // idSystemObject for whom to fetch metadata, either its own metadata (forAssetChildren === false) or that of its asset version childrens' metadata (forAssetChildren === true)
+        // forAssetChildren: boolean;              // true means metadata of asset version children; false means metadata of idRoot. True is typically desired when fetching a set of metadata for an asset grid.
+        if (!filter.forAssetChildren)
+            SQ = SQ.matchFilter('id', filter.idRoot);
+        else
+            SQ = SQ.matchFilter('idSystemObjectParent', filter.idRoot);
+
+        // metadataColumns: string[];              // empty array means retrieve no metadata, which is an error condition
+        const filterColumns: string[] = ['id', 'idSystemObjectParent']; // fetch standard fields
+        for (const metadataColumn of filter.metadataColumns)
+            filterColumns.push(metadataColumn.toLowerCase() + '_v');
+        SQ = SQ.fl(filterColumns);
+
+        LOG.info(`NavigationSolr.computeSolrMetaQuery ${JSON.stringify(filter)}:\n${this._solrClientMeta.solrUrl()}/select?${SQ.build()}`, LOG.LS.eNAV);
+        return SQ;
+    }
+    // #endregion
+
+    // #region Execute Meta Query
+    async executeSolrMetaQuery(filter: NAV.MetadataFilter, SQ: solr.Query): Promise<NAV.MetadataResult> {
+        let error: string = '';
+        const entries: NAV.MetadataResultEntry[] = [];
+        const queryResult: SolrQueryResult = await this.executeSolrQueryWorker(this._solrClientMeta, SQ);
+        if (queryResult.error) {
+            error = `Solr Meta Query Failure: ${JSON.stringify(queryResult.error)}`;
+            LOG.error(`NavigationSolr.executeSolrMetaQuery: ${error}`, LOG.LS.eNAV);
+            return { success: false, error, entries, metadataColumns: filter.metadataColumns };
+        }
+        if (!queryResult.result || !queryResult.result.response || queryResult.result.response.numFound === undefined ||
+            (queryResult.result.response.numFound > 0 && !queryResult.result.response.docs)) {
+            error = `Solr Meta Query Response malformed: ${JSON.stringify(queryResult.result)}`;
+            LOG.error(`NavigationSolr.executeSolrMetaQuery: ${error}`, LOG.LS.eNAV);
+            return { success: false, error, entries, metadataColumns: filter.metadataColumns };
+        }
+
+        LOG.info(`NavigationSolr.executeSolrMetaQuery: { numFound: ${queryResult.result.response.numFound}, ` +
+            `start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length} }`, LOG.LS.eNAV);
+        // let docNumber: number = 1;
+        for (const doc of queryResult.result.response.docs) {
+            if (!doc.id || !doc.idSystemObjectParent) {
+                LOG.error(`NavigationSolr.executeSolrMetaQuery: malformed query response document ${JSON.stringify(doc)}`, LOG.LS.eNAV);
+                continue;
+            }
+            // LOG.info(`NavigationSolr.executeSolrMetaQuery [${docNumber++}]: ${JSON.stringify(doc)}`, LOG.LS.eNAV);
+
+            const entry: NAV.MetadataResultEntry = {
+                idSystemObject: parseInt(doc.id),
+                idSystemObjectParent: parseInt(doc.idSystemObjectParent),
+                metadata: this.computeMetaMetadata(doc, filter.metadataColumns)
+            };
+
+            entries.push(entry);
+        }
+
+        // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
+        // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(entries)}`, LOG.LS.eNAV);
+        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns };
+    }
+
+    private computeMetaMetadata(doc: any, metadataColumns: string[]): string [] {
+        const metadata: string[] = [];
+        for (const metadataColumn of metadataColumns)
+            metadata.push(this.computeMetadataFromString(doc[metadataColumn + '_v']));
+
+        return metadata;
+    }
+    // #endregion
+
+    // #region Execute Nav Helpers
+    private executeSolrQueryWorker(solrClient: SolrClient, SQ: solr.Query): Promise<SolrQueryResult> {
+        return new Promise<any>((resolve) => {
+            const request: ClientRequest = solrClient._client.search(SQ,
+                function (err, obj) {
+                    if (err) {
+                        LOG.error('NavigationSolr.executeSolrQueryWorker', LOG.LS.eNAV, err);
+                        resolve({ result: null, error: err });
+                    } else
+                        resolve({ result: obj, error: null });
+                });
+            request;
+        });
     }
 
     private computeMetadataFromString(value: string | undefined): string {

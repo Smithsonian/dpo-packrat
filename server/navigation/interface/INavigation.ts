@@ -110,7 +110,27 @@ export type NavigationResult = {
     cursorMark?: string | null;             // when provided, additional results are available by requesting another navigation, using this returned value for the NavigationFilter.cursorMark
 };
 
+export type MetadataFilter = {
+    idRoot: number;                         // idSystemObject for whom to fetch metadata, either its own metadata (forAssetChildren === false) or that of its asset version childrens' metadata (forAssetChildren === true)
+    forAssetChildren: boolean;              // true means metadata of asset version children; false means metadata of idRoot. True is typically desired when fetching a set of metadata for an asset grid.
+    metadataColumns: string[];              // empty array means retrieve no metadata, which is an error condition
+};
+
+export type MetadataResultEntry = {
+    idSystemObject: number;                 // idSystemObject of the entry
+    idSystemObjectParent: number;           // idSystemObject of the owning item (if the entry is an asset version owned by another system object)
+    metadata: string[];                     // array of metadata values, in the order of MetadataResult.metadataColumns, matching the order of MetadataFilter.metadataColumns
+};
+
+export type MetadataResult = {
+    success: boolean;
+    error: string;
+    entries: MetadataResultEntry[];
+    metadataColumns: string[];
+};
+
 export interface INavigation {
     getObjectChildren(filter: NavigationFilter): Promise<NavigationResult>;
+    getMetadata(filter: MetadataFilter): Promise<MetadataResult>;
     getIndexer(): Promise<IIndexer | null>;
 }
