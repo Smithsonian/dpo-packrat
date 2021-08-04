@@ -248,29 +248,48 @@ export class IndexSolr implements NAV.IIndexer {
         if (metadataList.length <= 0)
             return documentCount;
 
-        const docs: any[] = [];
+        const metadataMap: Map<number, DBAPI.Metadata[]> = new Map<number, DBAPI.Metadata[]>(); // map of idSystemObject -> array of Metadata
         for (const metadata of metadataList) {
+            if (!metadata.idSystemObject)
+                continue;
+            let metadataList: DBAPI.Metadata[] | undefined = metadataMap.get(metadata.idSystemObject);
+            if (!metadataList) {
+                metadataList = [];
+                metadataMap.set(metadata.idSystemObject, metadataList);
+            }
+            metadataList.push(metadata);
+        }
+
+        const docs: any[] = [];
+        for (const [idSystemObject, metadataList] of metadataMap) {
             const doc: any = {};
-            doc.id = metadata.idMetadata;
-            doc.idSystemObject = metadata.idSystemObject;
-            doc.idSystemObjectParent = metadata.idSystemObjectParent;
+            const textGrabAll: string[] = [];
+            let idSystemObjectParent: number = idSystemObject;
 
-            const key: string = `${metadata.Name}_value`;
-            if (metadata.ValueShort) {
-                doc[key] = metadata.ValueShort;
-                doc._text_ = metadata.ValueShort;
-            } else if (metadata.ValueExtended) {
-                doc[key] = metadata.ValueExtended.substring(0, 2048);
-                doc._text_ = doc[key];
-            }
+            doc.id = idSystemObject;
+            for (const metadata of metadataList) {
+                if (metadata.idSystemObjectParent)
+                    idSystemObjectParent = metadata.idSystemObjectParent;
 
-            if (metadata.idVMetadataSource) {
-                const metadataSourceV: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(metadata.idVMetadataSource);
-                if (metadataSourceV)
-                    doc.MetadataSource = metadataSourceV.Term;
-                else
-                    LOG.error(`IndexSolr.fullIndexWorkerMeta could not fetch metadata source ${metadata.idVMetadataSource}`, LOG.LS.eNAV);
+                const key: string = `${metadata.Name.toLowerCase()}_v`;
+                if (metadata.ValueShort) {
+                    doc[key] = metadata.ValueShort;
+                    textGrabAll.push(metadata.ValueShort);
+                } else if (metadata.ValueExtended) {
+                    doc[key] = metadata.ValueExtended.substring(0, 4096);
+                    textGrabAll.push(doc[key]);
+                }
+
+                if (metadata.idVMetadataSource) {
+                    const metadataSourceV: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(metadata.idVMetadataSource);
+                    if (metadataSourceV)
+                        doc.MetadataSource = metadataSourceV.Term;
+                    else
+                        LOG.error(`IndexSolr.fullIndexWorkerMeta could not fetch metadata source ${metadata.idVMetadataSource}`, LOG.LS.eNAV);
+                }
             }
+            doc.idSystemObjectParent = idSystemObjectParent;
+            doc._text_ = textGrabAll.length ? textGrabAll : [''];
 
             docs.push(doc);
             this.countMetadata++;
