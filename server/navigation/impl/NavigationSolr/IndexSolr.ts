@@ -69,7 +69,7 @@ export class IndexSolr implements NAV.IIndexer {
                 return false;
 
             // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(doc, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eNAV);
-            const solrClient: SolrClient = new SolrClient(null, null, null);
+            const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackrat);
             try {
                 let res: H.IOResults = await solrClient.add(docs);
                 if (res.success)
@@ -91,7 +91,7 @@ export class IndexSolr implements NAV.IIndexer {
     /** Returns count of indexed metadata, or -1 if there's an error */
     async indexMetadata(metadataList: DBAPI.Metadata[]): Promise<boolean> {
         const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackratMeta);
-        const documentCount: number = await this.indexMetadataWorker(solrClient, metadataList);
+        const documentCount: number = await this.indexMetadataWorker(solrClient, metadataList, false);
         if (documentCount >= -1) {
             LOG.info(`IndexSolr.indexMetadata succeeded, updating ${documentCount} documents`, LOG.LS.eNAV);
             return true;
@@ -231,7 +231,7 @@ export class IndexSolr implements NAV.IIndexer {
             if (metadataList.length <= 0)
                 break;
 
-            documentCount = await this.indexMetadataWorker(solrClient, metadataList, documentCount);
+            documentCount = await this.indexMetadataWorker(solrClient, metadataList, true, documentCount);
             if (documentCount === -1) {
                 documentCount = 0;
                 result = false;
@@ -243,7 +243,7 @@ export class IndexSolr implements NAV.IIndexer {
         return result;
     }
 
-    private async indexMetadataWorker(solrClient: SolrClient, metadataList: DBAPI.Metadata[], documentCount?: number | undefined): Promise<number> {
+    private async indexMetadataWorker(solrClient: SolrClient, metadataList: DBAPI.Metadata[], create: boolean, documentCount?: number | undefined): Promise<number> {
         documentCount = documentCount ?? 0;
         if (metadataList.length <= 0)
             return documentCount;
@@ -273,23 +273,26 @@ export class IndexSolr implements NAV.IIndexer {
 
                 const key: string = `${metadata.Name.toLowerCase()}_v`;
                 if (metadata.ValueShort) {
-                    doc[key] = metadata.ValueShort;
+                    doc[key] = create ? metadata.ValueShort : { 'set': metadata.ValueShort };
                     textGrabAll.push(metadata.ValueShort);
                 } else if (metadata.ValueExtended) {
-                    doc[key] = metadata.ValueExtended.substring(0, 4096);
-                    textGrabAll.push(doc[key]);
+                    const value: string = metadata.ValueExtended.substring(0, 4096);
+                    doc[key] = create ? value : { 'set': value };
+                    textGrabAll.push(value);
                 }
 
                 if (metadata.idVMetadataSource) {
                     const metadataSourceV: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(metadata.idVMetadataSource);
                     if (metadataSourceV)
-                        doc.MetadataSource = metadataSourceV.Term;
+                        doc.MetadataSource = create ? metadataSourceV.Term : { 'set': metadataSourceV.Term };
                     else
                         LOG.error(`IndexSolr.fullIndexWorkerMeta could not fetch metadata source ${metadata.idVMetadataSource}`, LOG.LS.eNAV);
                 }
             }
-            doc.idSystemObjectParent = idSystemObjectParent;
-            doc._text_ = textGrabAll.length ? textGrabAll : [''];
+            doc.idSystemObjectParent = create ? idSystemObjectParent : { 'set': idSystemObjectParent };
+            if (!textGrabAll.length)
+                textGrabAll.push('');
+            doc._text_ = create ? textGrabAll : { 'set': textGrabAll };
 
             docs.push(doc);
             this.countMetadata++;
