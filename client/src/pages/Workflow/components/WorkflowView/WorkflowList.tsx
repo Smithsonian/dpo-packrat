@@ -8,6 +8,8 @@ import { formatDate } from '../../../../utils/shared';
 import SetIcon from '../../../../assets/images/Workflow_Set_Icon.svg';
 import ReportIcon from '../../../../assets/images/Workflow_Report_Icon.svg';
 import JobIcon from '../../../../assets/images/Workflow_Job_Icon.svg';
+import { workflowListSortEnumToString } from '../../../../types/server';
+import { ePaginationChange } from '../../../../store';
 
 export const useStyles = makeStyles(({ palette }) => ({
     tableContainer: {
@@ -19,7 +21,7 @@ export const useStyles = makeStyles(({ palette }) => ({
         // need to specify top radius in table container AND MuiToolbar override
         borderTopRightRadius: '5px',
         borderTopLeftRadius: '5px',
-        width: 'fit-content'
+        width: '80%'
     },
     centeredTableHead: {
         '& > span': {
@@ -65,15 +67,28 @@ interface DataTableOptions {
     download?: boolean;
     print?: boolean;
     fixedHeader?: boolean;
+    page?: number;
     pagination?: boolean;
     elevation?: number;
     viewColumns?: boolean;
+    rowsPerPage?: number;
+    rowsPerPageOptions?: number[];
+    sortOrder?: SortOrderOptions;
     onViewColumnsChange?: (change: string, action: string) => void;
+    onTableChange?: (change: string, action: string) => void;
+    onColumnSortChange?: (changedColumn: string, direction: string) => void;
+    onChangeRowsPerPage?: (numberOfRows: number) => void;
+    onChangePage?: (currentPage: number) => void;
 }
 
 interface WorkflowIconProps {
     reportType: eWorkflowLinkType;
     path: string;
+}
+
+interface SortOrderOptions {
+    name: string | null;
+    direction: 'asc' | 'desc' | null;
 }
 
 export enum eWorkflowLinkType {
@@ -127,16 +142,14 @@ const getMuiTheme = () =>
 
 function WorkflowList(): React.ReactElement {
     const classes = useStyles();
-    const [rows] = useWorkflowStore(state => [state.workflowRowData]);
-
-    // const toggleColumn = (changedColumn: string, _action: string) => {
-    //     const assetColumnsCopy = [...assetColumns];
-    //     const column = assetColumnsCopy.find(col => col.field === changedColumn);
-    //     if (column) {
-    //         column.options.hide = !column.options.hide;
-    //         setAssetColumns(assetColumnsCopy);
-    //     }
-    // };
+    const [rows, rowCount, sortBy, sortOrder, pageNumber, paginationUpdateAndRefetchList] = useWorkflowStore(state => [
+        state.workflowRowData,
+        state.rowCount,
+        state.sortBy,
+        state.sortOrder,
+        state.pageNumber,
+        state.paginationUpdateAndRefetchList
+    ]);
 
     /*
     DateLast: "2021-08-03T22:23:53+00:00"
@@ -163,10 +176,16 @@ function WorkflowList(): React.ReactElement {
         download: false,
         print: false,
         fixedHeader: false,
-        pagination: false,
+        // pagination: true,
+        page: pageNumber,
         elevation: 0,
-        viewColumns: false
-        // onViewColumnsChange: toggleColumn
+        viewColumns: false,
+        rowsPerPage: rowCount,
+        rowsPerPageOptions: [25, 50, 100],
+        sortOrder: { name: workflowListSortEnumToString(sortBy), direction: sortOrder ? 'asc' : 'desc' },
+        onColumnSortChange: async (changedColumn: string, direction: string) => await paginationUpdateAndRefetchList(ePaginationChange.eSort, null, changedColumn, direction),
+        onChangeRowsPerPage: async (numberOfRows: number) => await paginationUpdateAndRefetchList(ePaginationChange.eRowCount, numberOfRows, null, null),
+        onChangePage: async (currentPage: number) => await paginationUpdateAndRefetchList(ePaginationChange.ePage, currentPage, null, null)
     };
 
     const columns = [
@@ -190,6 +209,7 @@ function WorkflowList(): React.ReactElement {
             label: 'Owner',
             options: {
                 customBodyRender(value) {
+                    if (!value) return '';
                     return value.Name;
                 }
             }
@@ -199,6 +219,7 @@ function WorkflowList(): React.ReactElement {
             label: 'Start',
             options: {
                 customBodyRender(value) {
+                    if (!value) return '';
                     return formatDate(value);
                 }
             }
@@ -208,6 +229,7 @@ function WorkflowList(): React.ReactElement {
             label: 'Last',
             options: {
                 customBodyRender(value) {
+                    if (!value) return '';
                     return formatDate(value);
                 }
             }
@@ -232,7 +254,8 @@ function WorkflowList(): React.ReactElement {
                 customBodyRender(value) {
                     if (!value) return '';
                     return <WorkflowIcon reportType={eWorkflowLinkType.eSet} path={value} />;
-                }
+                },
+                setCellProps: () => ({ align: 'center' })
             }
         },
         {
@@ -243,7 +266,8 @@ function WorkflowList(): React.ReactElement {
                 customBodyRender(value) {
                     if (!value) return '';
                     return <WorkflowIcon reportType={eWorkflowLinkType.eJob} path={value} />;
-                }
+                },
+                setCellProps: () => ({ align: 'center' })
             }
         },
         {
@@ -254,11 +278,19 @@ function WorkflowList(): React.ReactElement {
                 customBodyRender(value) {
                     if (!value) return '';
                     return value[0];
-                }
+                },
+                setCellProps: () => ({ align: 'center' })
             }
         }
     ];
     // add a day, convert to utc and then send the days
+    // change the font size to be larger
+    // format the padding between columns
+    // add padding to the left and right column
+    // write the pagination handler
+    //  -fix sort by state pagination
+    //  -allow traversal to next page if possible
+    // set the height of the container to be fixed on vh
 
     return (
         <MuiThemeProvider theme={getMuiTheme()}>
@@ -281,7 +313,7 @@ function WorkflowIcon(props: WorkflowIconProps): React.ReactElement {
 
     return (
         <a href={path} style={{ display: 'flex' }}>
-            <img src={source} style={{ height: '20px', width: '20px' }} />
+            <img src={source} style={{ height: '20px', width: '20px' }} alt='This icon indicates a clickable hyperlink.' />
         </a>
     );
 }

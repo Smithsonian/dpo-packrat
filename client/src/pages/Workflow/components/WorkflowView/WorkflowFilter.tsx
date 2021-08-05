@@ -235,7 +235,9 @@ export default WorkflowFilter;
         xcreate a search and a clear button
         xinclude pagination controls into the state store
         xrewrite filterDate component
-        write the dataGrid component
+        xwrite the dataGrid component
         style the dataGrid
-        connect pagination settings to workflow store
+            -left and right padding
+            -centering of columns
+            -font (size, style, color)
 */

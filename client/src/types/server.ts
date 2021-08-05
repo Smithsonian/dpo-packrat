@@ -263,3 +263,40 @@ export enum eWorkflowJobRunStatus {
     eError = 5,
     eCancelled = 6,
 }
+
+export enum eWorkflowListSortColumns {
+    eSet = 1,
+    eType = 2,
+    eState = 3,
+    eOwner = 4,
+    eStart = 5,
+    eLast = 6,
+    eError = 7,
+    eDefault = 0
+}
+
+export const workflowListSortStringToEnum = (col: string): eWorkflowListSortColumns => {
+    switch (col) {
+        case 'idWorkflowSet': return eWorkflowListSortColumns.eSet;
+        case 'Type': return eWorkflowListSortColumns.eType;
+        case 'State': return eWorkflowListSortColumns.eState;
+        case 'Owner': return eWorkflowListSortColumns.eOwner;
+        case 'DateStart': return eWorkflowListSortColumns.eStart;
+        case 'DateLast': return eWorkflowListSortColumns.eLast;
+        case 'Error': return eWorkflowListSortColumns.eError;
+        default: return eWorkflowListSortColumns.eDefault;
+    }
+};
+
+export const workflowListSortEnumToString = (col: eWorkflowListSortColumns): string => {
+    switch (col) {
+        case eWorkflowListSortColumns.eType: return 'Type';
+        case eWorkflowListSortColumns.eState: return 'State';
+        case eWorkflowListSortColumns.eOwner: return 'Owner';
+        case eWorkflowListSortColumns.eStart: return 'DateStart';
+        case eWorkflowListSortColumns.eLast: return 'DateLast';
+        case eWorkflowListSortColumns.eError: return 'Error';
+        case eWorkflowListSortColumns.eSet: return 'idWorkflowSet';
+        default: return 'idWorkflowSet';
+    }
+};
