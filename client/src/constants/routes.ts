@@ -50,6 +50,10 @@ export const REPOSITORY_ROUTE = {
     ROUTES: REPOSITORY_ROUTES_TYPE
 };
 
+export const WORKFLOW_ROUTE = {
+    TYPE: 'workflow'
+};
+
 export const ADMIN_EDIT = {
     USER: 'users/:idUser',
     LICENSE: 'licenses/:idLicense'

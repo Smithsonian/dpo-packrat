@@ -84,13 +84,13 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
             isExpanded,
             isSelected: selectedOption === HOME_ROUTES.INGESTION
         },
-        // {
-        //     title: 'Workflow',
-        //     type: HOME_ROUTES.WORKFLOW,
-        //     color: Colors.sidebarOptions.workflow,
-        //     isExpanded,
-        //     isSelected: selectedOption === HOME_ROUTES.WORKFLOW
-        // },
+        {
+            title: 'Workflow',
+            type: HOME_ROUTES.WORKFLOW,
+            color: Colors.sidebarOptions.workflow,
+            isExpanded,
+            isSelected: selectedOption === HOME_ROUTES.WORKFLOW
+        },
         // {
         //     title: 'Reporting',
         //     type: HOME_ROUTES.REPORTING,

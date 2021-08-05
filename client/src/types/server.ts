@@ -253,3 +253,13 @@ export const subjectUnitIdentifierStringToEnum = (col: string): eSubjectUnitIden
         default: return eSubjectUnitIdentifierSortColumns.eDefault;
     }
 };
+
+export enum eWorkflowJobRunStatus {
+    eUnitialized = 0,
+    eCreated = 1,
+    eRunning = 2,
+    eWaiting = 3,
+    eDone = 4,
+    eError = 5,
+    eCancelled = 6,
+}
