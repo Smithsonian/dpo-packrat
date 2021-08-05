@@ -47,7 +47,7 @@ export class MetadataExtractor {
             let fileNameToParse: string = fileName;
             if (inputStream) {
                 const extension: string = path.extname(fileName);
-                tempFile = await tmp.file({ mode: 644, postfix: extension });
+                tempFile = await tmp.file({ mode: 0o666, postfix: extension });
 
                 const results: H.IOResults = await H.Helpers.writeStreamToFile(inputStream, tempFile.path); /* istanbul ignore next */
                 if (!results.success) {
