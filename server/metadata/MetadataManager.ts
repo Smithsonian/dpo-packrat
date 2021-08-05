@@ -47,10 +47,10 @@ export class MetadataManager {
 
         // update Solr metadata core
         const navigation: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
-        const indexer: NAV.IIndexer | null = navigation ? await navigation.getIndexer() : null; /* istanbul ignore else */
+        const indexer: NAV.IIndexer | null = navigation ? await navigation.getIndexer() : /* istanbul ignore next */ null; /* istanbul ignore else */
         if (indexer) {
             const success: boolean = await indexer.indexMetadata(metadataList);
-            return { success, error: success ? '' : 'IIndexer.indexMetadata failed' };
+            return { success, error: success ? '' : /* istanbul ignore next */ 'IIndexer.indexMetadata failed' };
         } else {
             const error: string = 'MetadataManager.persistExtractor unable to fetch navigation indexer';
             LOG.error(error, LOG.LS.eMETA);
