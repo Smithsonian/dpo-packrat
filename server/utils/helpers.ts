@@ -388,6 +388,18 @@ export class Helpers {
         }
     }
 
+    static async writeStreamToFile(readStream: NodeJS.ReadableStream, fileName: string): Promise<IOResults> {
+        try {
+            const writeStream: NodeJS.WritableStream = await fs.createWriteStream(fileName);
+            const retValue: IOResults = await Helpers.writeStreamToStream(readStream, writeStream);
+            writeStream.end();
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('Helpers.writeStreamToFile', LOG.LS.eSYS, error);
+            return { success: false, error: `Helpers.writeStreamToFile: ${JSON.stringify(error)}` };
+        }
+    }
+
     static async writeFileToStream(fileName: string, writeStream: NodeJS.WritableStream): Promise<IOResults> {
         try {
             const readStream: NodeJS.ReadableStream = await fs.createReadStream(fileName);

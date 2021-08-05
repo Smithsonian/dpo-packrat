@@ -121,11 +121,8 @@ async function persistExtractions(extractor: META.MetadataExtractor): Promise<bo
     const SO: DBAPI.SystemObject | null = await item.fetchSystemObject();
     expect(SO).toBeTruthy();
 
-    let results: H.IOResults = await META.MetadataManager.persistExtractor(-1, -1, extractor, null);
-    expect(results.success).toEqual(extractor.metadata.size === 0); // should succeed if there is nothing to persist; should fail otherwise due to -1
-
     if (SO) {
-        results = await META.MetadataManager.persistExtractor(SO.idSystemObject, SO.idSystemObject, extractor, null);
+        const results: H.IOResults = await META.MetadataManager.persistExtractor(SO.idSystemObject, SO.idSystemObject, extractor, null);
         return results.success;
     }
 
