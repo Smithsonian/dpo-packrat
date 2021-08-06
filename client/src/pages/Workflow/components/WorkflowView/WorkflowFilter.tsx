@@ -1,7 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Typography, Select, MenuItem } from '@material-ui/core';
-// import FilterDate from '../../../Repository/components/RepositoryFilterView/FilterDate';
 import { useWorkflowStore, useVocabularyStore, useUsersStore } from '../../../../store';
 import { getWorkflowFilterOptions } from '../WorkflowFilterOptions';
 import { LoadingButton } from '../../../../components';
@@ -98,8 +97,6 @@ function WorkflowFilter(): React.ReactElement {
     const [loading, resetWorkflowFilters, fetchWorkflowList] = useWorkflowStore(state => [state.loading, state.resetWorkflowFilters, state.fetchWorkflowList]);
     const { workflowTypeOptions, jobTypeOptions, stateOptions, initiatorOptions, ownerOptions } = getWorkflowFilterOptions(getUsersFilterOptions(), getEntries);
 
-    // const onSearch = async () => {};
-
     return (
         <Box className={classes.container} mt={2}>
             <Box className={classes.selectContainer}>
@@ -109,12 +106,30 @@ function WorkflowFilter(): React.ReactElement {
             </Box>
 
             <Box className={classes.selectContainer}>
-                <FilterSelect multiple label='Initiator' name='initiator' options={initiatorOptions} long />
-                <FilterSelect multiple label='Owner' name='owner' options={ownerOptions} long />
+                <FilterSelect
+                    multiple
+                    label='Initiator'
+                    name='initiator'
+                    options={initiatorOptions}
+                    long
+                />
+                <FilterSelect
+                    multiple
+                    label='Owner'
+                    name='owner'
+                    options={ownerOptions}
+                    long
+                />
                 <FilterDate label='Date from' name='dateCreated' />
             </Box>
             <Box display='flex' flexDirection='row'>
-                <LoadingButton className={classes.btn} disableElevation loaderSize={15} loading={loading} onClick={() => fetchWorkflowList()}>
+                <LoadingButton
+                    className={classes.btn}
+                    disableElevation
+                    loaderSize={15}
+                    loading={loading}
+                    onClick={() => fetchWorkflowList()}
+                >
                     Search
                 </LoadingButton>
                 <LoadingButton className={classes.btn} disableElevation loading={false} onClick={() => resetWorkflowFilters()}>
@@ -227,17 +242,3 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
 }
 
 export default WorkflowFilter;
-
-/*
-    ToDo:
-        xpopulate selects with the appropriate options
-            xstill need to get the state options
-        xcreate a search and a clear button
-        xinclude pagination controls into the state store
-        xrewrite filterDate component
-        xwrite the dataGrid component
-        style the dataGrid
-            -left and right padding
-            -centering of columns
-            -font (size, style, color)
-*/

@@ -13,9 +13,9 @@ import { ePaginationChange } from '../../../../store';
 
 export const useStyles = makeStyles(({ palette }) => ({
     tableContainer: {
-        height: 'fit-content',
         backgroundColor: palette.secondary.light,
-        paddingBottom: '5px',
+        // paddingBottom: '5px',
+        marginBottom: '5px',
         borderBottomLeftRadius: '5px',
         borderBottomRightRadius: '5px',
         // need to specify top radius in table container AND MuiToolbar override
@@ -29,7 +29,7 @@ export const useStyles = makeStyles(({ palette }) => ({
         }
     },
     container: {
-        width: '100%',
+        width: 'calc(100% + 10px)',
         background: palette.secondary.light,
         padding: 5,
         borderRadius: 5,
@@ -70,6 +70,7 @@ interface DataTableOptions {
     page?: number;
     pagination?: boolean;
     elevation?: number;
+    tableBodyMaxHeight?: string;
     viewColumns?: boolean;
     rowsPerPage?: number;
     rowsPerPageOptions?: number[];
@@ -106,8 +107,8 @@ const getMuiTheme = () =>
                     height: 'fit-content',
                     paddingLeft: '1px',
                     paddingRight: '1px',
-                    paddingTop: '0px',
-                    paddingBottom: '0px',
+                    paddingTop: '1px',
+                    paddingBottom: '1px',
                     margin: '1px',
                     fontSize: '0.8em'
                 },
@@ -135,6 +136,11 @@ const getMuiTheme = () =>
             MuiTableHead: {
                 root: {
                     borderBottom: '1.2px solid rgb(128,128,128)'
+                }
+            },
+            MuiTableRow: {
+                root: {
+                    paddingLeft: '20px'
                 }
             }
         }
@@ -274,7 +280,6 @@ function WorkflowList(): React.ReactElement {
             name: 'Error',
             label: 'Error',
             options: {
-                sort: false,
                 customBodyRender(value) {
                     if (!value) return '';
                     return value[0];
@@ -284,13 +289,14 @@ function WorkflowList(): React.ReactElement {
         }
     ];
     // add a day, convert to utc and then send the days
-    // change the font size to be larger
-    // format the padding between columns
+    // xchange the font size to be larger
+    // xformat the padding between columns
     // add padding to the left and right column
-    // write the pagination handler
-    //  -fix sort by state pagination
+    // xwrite the pagination handler
+    //  xfix sort by state pagination
     //  -allow traversal to next page if possible
-    // set the height of the container to be fixed on vh
+    // xfix padding below the datatable
+    // xadd space between rows
 
     return (
         <MuiThemeProvider theme={getMuiTheme()}>

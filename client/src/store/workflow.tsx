@@ -94,20 +94,11 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
     paginationUpdateAndRefetchList: async (changeType: ePaginationChange, value?: number | null, column?: string | null, direction?: string | null): Promise<void> => {
         const { fetchWorkflowList } = get();
 
-        if (changeType === ePaginationChange.ePage && value) {
-            set({ pageNumber: value });
-            console.log('change page');
-        }
+        if (changeType === ePaginationChange.ePage && value) set({ pageNumber: value });
 
-        if (changeType === ePaginationChange.eRowCount && value) {
-            set({ rowCount: value });
-            console.log('change row count');
-        }
+        if (changeType === ePaginationChange.eRowCount && value) set({ rowCount: value });
 
-        if (changeType === ePaginationChange.eSort && column) {
-            set({ sortBy: workflowListSortStringToEnum(column), sortOrder: direction === 'asc' ? true : false });
-            console.log('change sort');
-        }
+        if (changeType === ePaginationChange.eSort && column) set({ sortBy: workflowListSortStringToEnum(column), sortOrder: direction === 'asc' ? true : false });
 
         await fetchWorkflowList();
     }
