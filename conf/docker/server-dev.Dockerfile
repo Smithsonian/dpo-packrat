@@ -1,4 +1,4 @@
-FROM node:12.18.4-alpine AS base
+FROM node:14.17.1-alpine AS base
 # Add a work directory
 WORKDIR /app
 # Copy package.json for caching
@@ -10,9 +10,18 @@ COPY . .
 FROM base AS server
 # Remove client to prevent duplication
 RUN rm -rf client
+# Install perl, needed by exiftool
+RUN apk add perl
 # Expose port(s)
 EXPOSE 4000
-# Install dependencies and build
-RUN yarn && yarn build:dev
+# Install dependencies
+WORKDIR /app
+RUN yarn
+# Install linux-specific dependency
+WORKDIR /app/server
+RUN yarn add exiftool-vendored.pl
+# build
+WORKDIR /app
+RUN yarn build:dev
 # Start on excecution
 CMD [ "yarn", "start:server" ]
