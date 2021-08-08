@@ -17,11 +17,7 @@ EXPOSE 4000
 # Install dependencies
 WORKDIR /app
 RUN yarn
-# Install linux-specific dependency
-WORKDIR /app/server
-RUN yarn add exiftool-vendored.pl
 # build
-WORKDIR /app
 RUN yarn build:dev
 # Start on excecution
 CMD [ "yarn", "start:server" ]
