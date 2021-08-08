@@ -9,6 +9,7 @@ export abstract class DBObject<T> {
     protected abstract createWorker(): Promise<boolean>;
     protected abstract updateWorker(): Promise<boolean>;
     protected async deleteWorker(): Promise<boolean> { return false; }
+    protected static async createManyWorker<T>(_data: DBObject<T>[]): Promise<boolean> { return false; }
     protected updateCachedValues(): void { }
 
     constructor(input: T) {
@@ -49,6 +50,15 @@ export abstract class DBObject<T> {
         const retVal: boolean = await this.deleteWorker(); /* istanbul ignore else */
         if (retVal)
             this.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
+        return retVal;
+    }
+
+    static async createMany<T>(data: DBObject<T>[]): Promise<boolean> {
+        const retVal: boolean = await this.createManyWorker<T>(data); /* istanbul ignore else */
+        if (retVal) {
+            for (const dataItem of data)
+                dataItem.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
+        }
         return retVal;
     }
 }

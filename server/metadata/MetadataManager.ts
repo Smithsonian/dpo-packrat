@@ -11,12 +11,6 @@ export class MetadataManager {
             return { success: true, error: '' };
 
         LOG.info(`MetadataManager.persistExtractor(${idSystemObject}, ${idSystemObjectParent}) persisting ${metadataCount} key/value pairs`, LOG.LS.eMETA);
-        // const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
-        // if (!SO) {
-        //     const error: string = `MetadataManager.persistExtractor failed fetching idSystemObject ${idSystemObject}`;
-        //     LOG.error(error, LOG.LS.eMETA);
-        //     return { success: false, error };
-        // }
 
         /* istanbul ignore next */
         const idVMetadataSource: number | null = await extractor.idVMetadataSource() ?? null;
@@ -35,21 +29,22 @@ export class MetadataManager {
                 idSystemObjectParent,
                 idMetadata: 0
             });
-
-            /* istanbul ignore next */
-            if (!await metadataDB.create()) {
-                const error: string = `MetadataManager.persistExtractor failed creating metadata ${JSON.stringify(metadataDB, H.Helpers.saferStringify)}`;
-                LOG.error(error, LOG.LS.eMETA);
-                return { success: false, error };
-            }
             metadataList.push(metadataDB);
         }
+
+        if (!await DBAPI.Metadata.createMany(metadataList)) {
+            const error: string = `MetadataManager.persistExtractor failed creating metadata ${JSON.stringify(metadataList, H.Helpers.saferStringify)}`;
+            LOG.error(error, LOG.LS.eMETA);
+            return { success: false, error };
+        }
+        // LOG.info(`MetadataManager.persistExtractor(${idSystemObject}, ${idSystemObjectParent}) wrote ${metadataCount} DB Records`, LOG.LS.eMETA);
 
         // update Solr metadata core
         const navigation: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
         const indexer: NAV.IIndexer | null = navigation ? await navigation.getIndexer() : /* istanbul ignore next */ null; /* istanbul ignore else */
         if (indexer) {
             const success: boolean = await indexer.indexMetadata(metadataList);
+            // LOG.info(`MetadataManager.persistExtractor(${idSystemObject}, ${idSystemObjectParent}) indexed ${metadataCount} Solr Records`, LOG.LS.eMETA);
             return { success, error: success ? '' : /* istanbul ignore next */ 'IIndexer.indexMetadata failed' };
         } else {
             const error: string = 'MetadataManager.persistExtractor unable to fetch navigation indexer';

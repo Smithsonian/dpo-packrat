@@ -1025,6 +1025,39 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
+    test('DB Creation: Metadata.createMany', async () => {
+        const metadata1 = new DBAPI.Metadata({
+            Name: 'Test Metadata Null 1',
+            ValueShort: null,
+            ValueExtended: null,
+            idAssetVersionValue: null,
+            idUser: null,
+            idVMetadataSource: null,
+            idSystemObject: null,
+            idSystemObjectParent: null,
+            idMetadata: 0,
+        });
+        const metadata2 = new DBAPI.Metadata({
+            Name: 'Test Metadata Null 2',
+            ValueShort: null,
+            ValueExtended: null,
+            idAssetVersionValue: null,
+            idUser: null,
+            idVMetadataSource: null,
+            idSystemObject: null,
+            idSystemObjectParent: null,
+            idMetadata: 0,
+        });
+
+        const data: DBAPI.Metadata[] = [metadata1, metadata2];
+        expect(await DBAPI.Metadata.createMany(data)).toBeTruthy();
+    });
+
+    test('DB Creation: Model.createMany', async () => {
+        const data2: DBAPI.Model[] = [];
+        expect(await DBAPI.Model.createMany(data2)).toBeFalsy();
+    });
+
     test('DB Creation: Model', async () => {
         if (vocabulary && assetThumbnail)
             model = await UTIL.createModelTest({
@@ -4157,6 +4190,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObject)).toEqual('SystemObject');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectVersion)).toEqual('SystemObjectVersion');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectXref)).toEqual('SystemObjectXref');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectVersionAssetVersionXref)).toEqual('SystemObjectVersionAssetVersionXref');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUnitEdan)).toEqual('UnitEdan');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUser)).toEqual('User');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUserPersonalizationSystemObject)).toEqual('UserPersonalizationSystemObject');

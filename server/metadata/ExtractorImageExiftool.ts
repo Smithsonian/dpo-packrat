@@ -24,6 +24,7 @@ export class ExtractorImageExiftool implements IExtractor  {
     }
 
     async extractMetadata(fileName: string, inputStream?: NodeJS.ReadableStream | undefined): Promise<IExtractorResults> {
+        // LOG.info(`ExtractorImageExiftool.extractMetadata(${fileName}, ${inputStream ? 'with stream' : 'without stream'})`, LOG.LS.eMETA);
         const metadata: Map<string, string> = new Map<string, string>();  // Map of metadata name -> value
         let tempFile: tmp.FileResult | null = null;
         for (let retryCount: number = 0; retryCount < exiftoolRetryLimit; retryCount++) {

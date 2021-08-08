@@ -4,7 +4,7 @@ import * as CACHE from '../cache';
 import { IExtractor, IExtractorResults } from './IExtractor';
 
 import { pathExists } from 'fs-extra';
-import { ExtractorImageExiftool } from './ExtractorImageExiftool';
+// import { ExtractorImageExiftool } from './ExtractorImageExiftool'; Loaded dynamically due to install issues with exiftool-vendored when performed in a linux container from a non-linux system (windows or macos)
 import { ExtractorImageExifr } from './ExtractorImageExifr';
 
 export class MetadataExtractor {
@@ -28,7 +28,8 @@ export class MetadataExtractor {
                 results = this.mergeResults(await MetadataExtractor.extractorImage.extractMetadata(fileName, inputStream));
                 if (results.success && results.metadata && results.metadata.size > 0)
                     this.eMetadataSource = MetadataExtractor.extractorImage.eMetadataSource();
-            }
+            } else
+                LOG.info(`MetadataExtractor.extractMetadata does not handle filetype for ${fileName}`, LOG.LS.eMETA);
         }
 
         if (!results.success)
@@ -66,7 +67,8 @@ export class MetadataExtractor {
             return results;
 
         try {
-            const extractor: IExtractor = new ExtractorImageExiftool();
+            const exiftool = await this.importModule('./ExtractorImageExiftool.ts');
+            const extractor: IExtractor = new exiftool.ExtractorImageExiftool();
             results = await extractor.initialize();
             if (results.success) {
                 LOG.info('MetadataExtractor.initializeExtractorImage using exiftool', LOG.LS.eMETA);
@@ -91,5 +93,15 @@ export class MetadataExtractor {
 
         LOG.error(`MetadataExtractor.initializeExtractorImage unable to load exiftool and exifr: ${results.error}`, LOG.LS.eMETA);
         return results;
+    }
+
+    private async importModule(moduleName: string): Promise<any> { // eslint-disable-line @typescript-eslint/no-explicit-any
+        try {
+            LOG.info(`MetadataExtractor.importModule ${moduleName}`, LOG.LS.eMETA);
+            return await import(moduleName);
+        } catch (err) {
+            LOG.error(`MetadataExtractor.importModule ${moduleName} FAILED`, LOG.LS.eMETA, err);
+            return null;
+        }
     }
 }
