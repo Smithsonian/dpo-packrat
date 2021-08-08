@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Metadata as MetadataBase } from '@prisma/client';
+import { Metadata as MetadataBase, Prisma } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -65,6 +65,16 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Metadata.update', LOG.LS.eDB, error);
+            return false;
+        }
+    }
+
+    protected static async createManyWorker(data: Metadata[]): Promise<boolean> {
+        try {
+            const retValue: Prisma.BatchPayload = await DBC.DBConnection.prisma.metadata.createMany({ data });
+            return retValue.count === data.length;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Metadata.createManyWorker', LOG.LS.eDB, error);
             return false;
         }
     }

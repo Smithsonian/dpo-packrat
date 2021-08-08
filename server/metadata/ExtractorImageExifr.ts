@@ -29,6 +29,7 @@ export class ExtractorImageExifr implements IExtractor  {
     }
 
     async extractMetadata(fileName: string, inputStream?: NodeJS.ReadableStream | undefined): Promise<IExtractorResults> {
+        // LOG.info(`ExtractorImageExifr.extractMetadata(${fileName}, ${inputStream ? 'with stream' : 'without stream'})`, LOG.LS.eMETA);
         const metadata: Map<string, string> = new Map<string, string>();  // Map of metadata name -> value
         try {
             let extractions: any = { }; // eslint-disable-line @typescript-eslint/no-explicit-any
