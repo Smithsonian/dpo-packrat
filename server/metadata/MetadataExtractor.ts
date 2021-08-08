@@ -23,11 +23,10 @@ export class MetadataExtractor {
         let results: IExtractorResults = await this.initializeExtractorImage();
         if (!results.success)
             return results;
-
         if (MetadataExtractor.extractorImage) {
             if (MetadataExtractor.extractorImage.fileTypeHandled(fileName)) {
-                results = await MetadataExtractor.extractorImage.extractMetadata(fileName, inputStream);
-                if (results.metadata && results.metadata.size > 0)
+                results = this.mergeResults(await MetadataExtractor.extractorImage.extractMetadata(fileName, inputStream));
+                if (results.success && results.metadata && results.metadata.size > 0)
                     this.eMetadataSource = MetadataExtractor.extractorImage.eMetadataSource();
             }
         }
@@ -45,7 +44,23 @@ export class MetadataExtractor {
         return this.eMetadataSource ? CACHE.VocabularyCache.vocabularyEnumToId(this.eMetadataSource) : undefined;
     }
 
-    async initializeExtractorImage(): Promise<IExtractorResults> {
+    private mergeResults(results: IExtractorResults): IExtractorResults {
+        if (!results.success)
+            return results;
+        if (!results.metadata || results.metadata.size <= 0)
+            return results;
+        if (this.metadata.size === 0)
+            this.metadata = results.metadata;
+        else {
+            for (const [name, value] of results.metadata) {
+                if (!this.metadata.has(name))
+                    this.metadata.set(name, value);
+            }
+        }
+        return results;
+    }
+
+    private async initializeExtractorImage(): Promise<IExtractorResults> {
         let results: IExtractorResults = { success: true, error: '' };
         if (MetadataExtractor.extractorImage)
             return results;
