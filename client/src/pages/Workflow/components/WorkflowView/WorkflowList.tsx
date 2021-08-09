@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import MUIDataTable from 'mui-datatables';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { makeStyles } from '@material-ui/core/styles';
@@ -68,6 +68,7 @@ interface DataTableOptions {
     print?: boolean;
     fixedHeader?: boolean;
     page?: number;
+    count?: number;
     pagination?: boolean;
     elevation?: number;
     tableBodyMaxHeight?: string;
@@ -80,6 +81,11 @@ interface DataTableOptions {
     onColumnSortChange?: (changedColumn: string, direction: string) => void;
     onChangeRowsPerPage?: (numberOfRows: number) => void;
     onChangePage?: (currentPage: number) => void;
+    textLabels?: {
+        pagination?: {
+            displayRows?: string;
+        };
+    };
 }
 
 interface WorkflowIconProps {
@@ -156,23 +162,25 @@ function WorkflowList(): React.ReactElement {
         state.pageNumber,
         state.paginationUpdateAndRefetchList
     ]);
+    const [dataRows, setDataRows] = useState(rows);
 
-    /*
-    DateLast: "2021-08-03T22:23:53+00:00"
-    DateStart: "2021-08-03T22:23:53+00:00"
-    Error: null
-    HyperlinkJob: null
-    HyperlinkReport: "https://packrat.si.edu:8443/server/download?idWorkflowReport=3"
-    HyperlinkSet: "https://packrat.si.edu:8443/server/download?idWorkflowSet=3"
-    Owner: {Name: "Shin Tung", __typename: "User"}
-    State: "Done"
-    Type: "Upload"
-    idJobRun: null
-    idWorkflow: 3
-    idWorkflowReport: 3
-    idWorkflowSet: 3
-    */
+    useEffect(() => {
+        console.log('useEffect!');
+        setDataRows(rows);
+    }, [sortBy, sortOrder, pageNumber, rows]);
 
+    const calculateRowCountFooter = (): number => {
+        if (pageNumber === 0 && rows.length < rowCount) {
+            return rows.length;
+        } else if (rows.length < rowCount) {
+            return pageNumber * rowCount + rows.length;
+        }
+        // +1 allows pagination to work
+        return (pageNumber + 1) * rowCount + 1;
+    };
+
+    const count = calculateRowCountFooter();
+    console.log('RowCount', count, 'page', pageNumber, 'rows', rows);
     const options: DataTableOptions = {
         filter: false,
         filterType: 'dropdown',
@@ -187,6 +195,7 @@ function WorkflowList(): React.ReactElement {
         elevation: 0,
         viewColumns: false,
         rowsPerPage: rowCount,
+        count,
         rowsPerPageOptions: [25, 50, 100],
         sortOrder: { name: workflowListSortEnumToString(sortBy), direction: sortOrder ? 'asc' : 'desc' },
         onColumnSortChange: async (changedColumn: string, direction: string) => await paginationUpdateAndRefetchList(ePaginationChange.eSort, null, changedColumn, direction),
@@ -289,19 +298,21 @@ function WorkflowList(): React.ReactElement {
         }
     ];
     // add a day, convert to utc and then send the days
-    // xchange the font size to be larger
-    // xformat the padding between columns
     // add padding to the left and right column
+    // change the alignment of the header
+    // fix date vertical alignment
     // xwrite the pagination handler
     //  xfix sort by state pagination
     //  -allow traversal to next page if possible
+    // xchange the font size to be larger
+    // xformat the padding between columns
     // xfix padding below the datatable
     // xadd space between rows
 
     return (
         <MuiThemeProvider theme={getMuiTheme()}>
             <Box className={classes.tableContainer}>
-                <MUIDataTable title='' data={rows} columns={columns} options={options} />
+                <MUIDataTable title='' data={dataRows} columns={columns} options={options} />
             </Box>
         </MuiThemeProvider>
     );

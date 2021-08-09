@@ -94,7 +94,7 @@ function WorkflowFilter(): React.ReactElement {
     const classes = useStyles(false);
     const getEntries = useVocabularyStore(state => state.getEntries);
     const getUsersFilterOptions = useUsersStore(state => state.getUsersFilterOptions);
-    const [loading, resetWorkflowFilters, fetchWorkflowList] = useWorkflowStore(state => [state.loading, state.resetWorkflowFilters, state.fetchWorkflowList]);
+    const [/*loading,*/ resetWorkflowFilters, fetchWorkflowList] = useWorkflowStore(state => [/*state.loading,*/ state.resetWorkflowFilters, state.fetchWorkflowList]);
     const { workflowTypeOptions, jobTypeOptions, stateOptions, initiatorOptions, ownerOptions } = getWorkflowFilterOptions(getUsersFilterOptions(), getEntries);
 
     return (
@@ -106,30 +106,12 @@ function WorkflowFilter(): React.ReactElement {
             </Box>
 
             <Box className={classes.selectContainer}>
-                <FilterSelect
-                    multiple
-                    label='Initiator'
-                    name='initiator'
-                    options={initiatorOptions}
-                    long
-                />
-                <FilterSelect
-                    multiple
-                    label='Owner'
-                    name='owner'
-                    options={ownerOptions}
-                    long
-                />
+                <FilterSelect multiple label='Initiator' name='initiator' options={initiatorOptions} long />
+                <FilterSelect multiple label='Owner' name='owner' options={ownerOptions} long />
                 <FilterDate label='Date from' name='dateCreated' />
             </Box>
             <Box display='flex' flexDirection='row'>
-                <LoadingButton
-                    className={classes.btn}
-                    disableElevation
-                    loaderSize={15}
-                    loading={loading}
-                    onClick={() => fetchWorkflowList()}
-                >
+                <LoadingButton className={classes.btn} disableElevation loaderSize={15} loading={false} onClick={() => fetchWorkflowList()}>
                     Search
                 </LoadingButton>
                 <LoadingButton className={classes.btn} disableElevation loading={false} onClick={() => resetWorkflowFilters()}>
