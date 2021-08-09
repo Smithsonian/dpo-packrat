@@ -1,5 +1,5 @@
 import create, { GetState, SetState } from 'zustand';
-import { GetWorkflowListInput, WorkflowListResult } from '../types/graphql';
+import { WorkflowListResult } from '../types/graphql';
 import { getWorkflowList } from '../pages/Workflow/hooks/useWorkflow';
 import { workflowListSortStringToEnum, eWorkflowListSortColumns } from '../types/server';
 
@@ -26,11 +26,10 @@ type WorkflowStore = {
     rowCount: number;
     sortBy: eWorkflowListSortColumns;
     sortOrder: boolean | null;
-    loading: boolean;
+    // loading: boolean;
     workflowRowData: WorkflowListResult[];
     updateFilterValue: (name: string, value: number | number[] | Date | null) => void;
     resetWorkflowFilters: () => void;
-    getWorkflowSearchFilterState: () => GetWorkflowListInput;
     fetchWorkflowList: () => Promise<void>;
     paginationUpdateAndRefetchList: (changeType: ePaginationChange, value?: number | null, column?: string | null, direction?: string | null) => Promise<void>;
 };
@@ -46,8 +45,8 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
     pageNumber: 0,
     rowCount: 25,
     sortBy: eWorkflowListSortColumns.eDefault,
-    sortOrder: null,
-    loading: false,
+    sortOrder: true,
+    // loading: false,
     workflowRowData: [],
     updateFilterValue: (name: string, value: number | number[] | Date | null): void => {
         set({ [name]: value });
@@ -64,10 +63,10 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
         };
         set({ ...resetState });
     },
-    getWorkflowSearchFilterState: () => {
-        // TODO format time
+
+    fetchWorkflowList: async (): Promise<void> => {
         const { workflowType, jobType, state, initiator, owner, dateFrom, dateTo, pageNumber, rowCount, sortBy, sortOrder } = get();
-        return {
+        const filter = {
             idVWorkflowType: workflowType,
             idVJobType: jobType,
             State: state,
@@ -75,25 +74,22 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
             idUserOwner: owner,
             DateFrom: dateFrom,
             DateTo: dateTo,
-            pageNumber,
+            pageNumber: pageNumber + 1,
             rowCount,
             sortBy,
             sortOrder
         };
-    },
-    fetchWorkflowList: async (): Promise<void> => {
-        const { getWorkflowSearchFilterState } = get();
-        const { data } = await getWorkflowList(getWorkflowSearchFilterState());
+        console.log('filter', filter);
+        const { data } = await getWorkflowList(filter);
         if (data?.getWorkflowList?.WorkflowList) {
             const rows = data.getWorkflowList.WorkflowList as WorkflowListResult[];
             set({ workflowRowData: rows });
         }
         console.log('list', data.getWorkflowList.WorkflowList);
-        // console.log('workflowRowData', workflowRowData);
     },
     paginationUpdateAndRefetchList: async (changeType: ePaginationChange, value?: number | null, column?: string | null, direction?: string | null): Promise<void> => {
         const { fetchWorkflowList } = get();
-
+        console.log('changeType', changeType, 'value', value, column, direction);
         if (changeType === ePaginationChange.ePage && value) set({ pageNumber: value });
 
         if (changeType === ePaginationChange.eRowCount && value) set({ rowCount: value });
