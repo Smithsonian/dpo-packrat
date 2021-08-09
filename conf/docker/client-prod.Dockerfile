@@ -1,4 +1,4 @@
-FROM node:12.18.4-alpine AS base
+FROM node:14.17.1-alpine AS base
 # Add a work directory
 WORKDIR /app
 # Copy package.json for caching
@@ -13,7 +13,7 @@ RUN rm -rf server
 RUN yarn install --frozen-lockfile && yarn build:prod
 
 # Client's production image
-FROM node:12.18.4-alpine AS client
+FROM node:14.17.1-alpine AS client
 # Add a work directory
 WORKDIR /app
 # Copy from client-builder

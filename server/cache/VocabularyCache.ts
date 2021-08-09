@@ -56,6 +56,7 @@ export enum eVocabularyID {
     eAssetAssetTypeIntermediaryFile,
     eAssetAssetTypeOther,
     eMetadataMetadataSourceBulkIngestion,
+    eMetadataMetadataSourceImage,
     eCaptureDataCaptureMethodPhotogrammetry,
     eCaptureDataCaptureMethodCT,
     eCaptureDataCaptureMethodStructuredLight,
@@ -284,6 +285,7 @@ export class VocabularyCache {
                 case eVocabularySetID.eMetadataMetadataSource: {
                     switch (vocabulary.Term) {
                         case 'Bulk Ingestion':      eVocabEnum = eVocabularyID.eMetadataMetadataSourceBulkIngestion; break;
+                        case 'Image':               eVocabEnum = eVocabularyID.eMetadataMetadataSourceImage; break;
                     }
                 } break;
 

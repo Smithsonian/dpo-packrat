@@ -8,6 +8,7 @@ import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as COL from '../../../../../collections/interface';
+import * as META from '../../../../../metadata';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 import { SvxReader, SvxExtraction } from '../../../../../utils/parser';
@@ -525,6 +526,13 @@ class IngestDataWorker extends ResolverBase {
                 // LOG.info(`ingestData mapping ${folder.name.toLowerCase()} -> ${folder.variantType}`, LOG.LS.eGQL);
             }
 
+            const SOParent: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
+
+            // build mapping of idAsset -> assetVersion
+            const assetToVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>(); // map of idAsset -> AssetVersion
+            for (const assetVersion of ingestAssetRes.assetVersions || [])
+                assetToVersionMap.set(assetVersion.idAsset, assetVersion);
+
             for (const asset of ingestAssetRes.assets || []) {
                 // map asset's file path to variant type
                 let idVVariantType: number = folderVariantMap.get(asset.FilePath.toLowerCase()) || 0;
@@ -549,6 +557,26 @@ class IngestDataWorker extends ResolverBase {
                     LOG.error(`ingestData unable to create CaptureDataFile for idAssetVersion ${idAssetVersion}, asset ${JSON.stringify(asset)}`, LOG.LS.eGQL);
                     res = false;
                     continue;
+                }
+
+                // look up asset.idAsset -> assetVersion -> SO
+                if (SOParent) {
+                    const assetVersion: DBAPI.AssetVersion | undefined = assetToVersionMap.get(asset.idAsset);
+                    const SOAssetVersion: DBAPI.SystemObject | null = assetVersion ? await assetVersion.fetchSystemObject() : null;
+
+                    // gather metadata in extractor
+                    // create metadata for variant type here
+                    const vocabulary: DBAPI.Vocabulary | undefined = idVVariantType ? await CACHE.VocabularyCache.vocabulary(idVVariantType) : undefined;
+                    if (vocabulary) {
+                        const extractor: META.MetadataExtractor = new META.MetadataExtractor();
+                        extractor.metadata.set('variant', vocabulary.Term);
+
+                        if (SOAssetVersion) {
+                            const results: H.IOResults = await META.MetadataManager.persistExtractor(SOAssetVersion.idSystemObject, SOParent.idSystemObject, extractor, this.user?.idUser ?? null);
+                            if (!results.success)
+                                LOG.error(`ingestData unable to persist capture data variant type metadata: ${results.error}`, LOG.LS.eGQL);
+                        }
+                    }
                 }
             }
         }

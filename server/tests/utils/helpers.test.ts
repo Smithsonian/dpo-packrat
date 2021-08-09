@@ -56,6 +56,7 @@ describe('Utils: Helpers', () => {
     const filePath4: string = H.Helpers.randomFilename(directoryPath, '');
     const filePath5: string = H.Helpers.randomFilename(directoryPath, '');
     const filePathRandom: string = H.Helpers.randomFilename(directoryPath, '');
+    const filePathRandom2: string = H.Helpers.randomFilename(directoryPath, '');
     const dirNestEmpty: string = path.join(directoryPath, H.Helpers.randomSlug());
     const dirNestNotEmpty: string = path.join(directoryPath, H.Helpers.randomSlug());
 
@@ -225,6 +226,18 @@ describe('Utils: Helpers', () => {
         expect(buffer4).toBeTruthy();
     });
 
+    test('Utils: Helpers.writeStreamToFile', async () => {
+        const stream: NodeJS.ReadableStream = fs.createReadStream(filePathRandom);
+        const results: H.IOResults = await H.Helpers.writeStreamToFile(stream, filePathRandom2);
+        expect(results.success).toBeTruthy();
+
+        const statResults: H.StatResults = await H.Helpers.stat(filePathRandom2);
+        expect(statResults.success).toBeTruthy();
+        expect(statResults.stat).toBeTruthy();
+        if (statResults.stat)
+            expect(statResults.stat.size).toBe(RANDOM_FILE_SIZE);
+    });
+
     test('Utils: Helpers.writeFileToStream', async () => {
         const filePathTemp: string = H.Helpers.randomFilename(directoryPath, '');
         const stream: NodeJS.WritableStream = fs.createWriteStream(filePathTemp);
@@ -336,6 +349,8 @@ describe('Utils: Helpers', () => {
         res = await H.Helpers.removeFile(filePath4);
         expect(res.success).toBeFalsy();
         res = await H.Helpers.removeFile(filePathRandom);
+        expect(res.success).toBeTruthy();
+        res = await H.Helpers.removeFile(filePathRandom2);
         expect(res.success).toBeTruthy();
     });
 

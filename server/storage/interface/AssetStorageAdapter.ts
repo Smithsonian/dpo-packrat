@@ -1,6 +1,7 @@
 import * as STORE from '../interface';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
+import * as META from '../../metadata';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ST from '../impl/LocalStorage/SharedTypes';
@@ -93,6 +94,13 @@ export type IngestStreamOrFileResult = {
     asset?: DBAPI.Asset | null | undefined;
     assetVersion?: DBAPI.AssetVersion | null | undefined;
     systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined;
+};
+
+type AssetFileOrStreamResult = {
+    success: boolean,
+    fileName?: string,
+    stream?: NodeJS.ReadableStream,
+    error?: string
 };
 
 /**
@@ -343,10 +351,11 @@ export class AssetStorageAdapter {
             Name: 'Bulk Ingestion',
             ValueShort: null,
             ValueExtended: JSON.stringify(ingestedObject, H.Helpers.saferStringify),
-            idAssetValue: null,
+            idAssetVersionValue: null,
             idUser: idUserCreator,
             idVMetadataSource: vocabulary ? vocabulary.idVocabulary : /* istanbul ignore next */ null,
             idSystemObject: SO.idSystemObject,
+            idSystemObjectParent: SO.idSystemObject,
             idMetadata: 0
         }); /* istanbul ignore next */
 
@@ -709,6 +718,30 @@ export class AssetStorageAdapter {
             return { asset, assetVersion, success: false, error };
         }
 
+        // Extract metadata; note that we do this using the promoted asset & asset version
+        // Staged content would be easier to fetch, but it may be coming in via a zip stream,
+        // which we cannot simply read and then re-read for ingestion.
+        let res: H.IOResults = { success: true, error: '' };
+        const extractor: META.MetadataExtractor = new META.MetadataExtractor();
+        const AFOSR: AssetFileOrStreamResult = await AssetStorageAdapter.assetFileOrStream(storage, asset, assetVersion);
+        if (AFOSR.success && (AFOSR.fileName || AFOSR.stream))
+            res = await extractor.extractMetadata(AFOSR.fileName ?? '', AFOSR.stream);
+        else
+            LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to compute metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${AFOSR.error}`, LOG.LS.eSTR);
+
+        // Persist extracted metadata
+        if (res.success) {
+            const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+            if (!SO)
+                LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to fetch system object for asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+            LOG.info(`AssetStorageAdapter.promoteAssetWorker persisting ${extractor.metadata.size} metadata key/values for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+            const idSystemObject: number = SO ? SO.idSystemObject : objectGraph.idSystemObject;
+            res = await META.MetadataManager.persistExtractor(idSystemObject, objectGraph.idSystemObject, extractor, assetVersion.idUserCreator);
+            if (!res.success)
+                LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to persist metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
+        } else
+            LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to extract metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
+
         return { asset, assetVersion, success: true, error: '' };
     }
 
@@ -907,9 +940,40 @@ export class AssetStorageAdapter {
         return await AssetStorageAdapter.crackAssetWorker(storage, asset, assetVersion);
     }
 
-    private static async crackAssetWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<CrackAssetResult> {
+    /** Computes storage key/ingested, then creates either a read stream or a filename for use in accessing the file. */
+    private static async assetFileOrStream(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<AssetFileOrStreamResult> {
         const { storageKey, ingested, error } = AssetStorageAdapter.computeStorageKeyAndIngested(asset, assetVersion); /* istanbul ignore next */
         if (!storageKey) {
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+
+        LOG.info(`AssetStorageAdapter.assetFileOrStream fileName ${assetVersion.FileName} extension ${path.extname(assetVersion.FileName).toLowerCase()} storageKey ${storageKey} ingested ${ingested}`, LOG.LS.eSTR);
+
+        if (!ingested)  // non-ingested content is staged locally
+            return { success: true, fileName: await storage.stagingFileName(storageKey) };
+
+        // ingested content lives on remote storage; we'll need to stream it back to the server for processing
+        const readStreamInput: STORE.ReadStreamInput = {
+            storageKey,
+            fileName: asset.FileName,
+            version: assetVersion.Version,
+            staging: !assetVersion.Ingested
+        };
+
+        const RSR: STORE.ReadStreamResult = await storage.readStream(readStreamInput); /* istanbul ignore next */
+        if (!RSR.success|| !RSR.readStream) {
+            LOG.error(RSR.error, LOG.LS.eSTR);
+            return { success: true, error: RSR.error };
+        }
+
+        return { success: true, stream: RSR.readStream, fileName: assetVersion.FileName };
+    }
+
+    private static async crackAssetWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<CrackAssetResult> {
+        const AFOSR: AssetFileOrStreamResult = await AssetStorageAdapter.assetFileOrStream(storage, asset, assetVersion);
+        if (!AFOSR.success) {
+            const error: string = AFOSR.error ?? '';
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error, zip: null, asset: null, isBagit: false };
         }
@@ -919,33 +983,18 @@ export class AssetStorageAdapter {
 
         let reader: IZip | null = null;
         try {
-            LOG.info(`AssetStorageAdapter.crackAssetWorker fileName ${assetVersion.FileName} extension ${path.extname(assetVersion.FileName).toLowerCase()} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`, LOG.LS.eSTR);
+            LOG.info(`AssetStorageAdapter.crackAssetWorker fileName ${assetVersion.FileName} extension ${path.extname(assetVersion.FileName).toLowerCase()} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`, LOG.LS.eSTR);
 
-            if (ingested) {
-                // ingested content lives on remote storage; we'll need to stream it back to the server for processing
-                const readStreamInput: STORE.ReadStreamInput = {
-                    storageKey,
-                    fileName: asset.FileName,
-                    version: assetVersion.Version,
-                    staging: !assetVersion.Ingested
-                };
-
-                const RSR: STORE.ReadStreamResult = await storage.readStream(readStreamInput); /* istanbul ignore next */
-                if (!RSR.success|| !RSR.readStream) {
-                    LOG.error(RSR.error, LOG.LS.eSTR);
-                    return { success: false, error: RSR.error, zip: null, asset: null, isBagit: false };
-                }
-
+            if (AFOSR.stream) { // ingested content
                 reader = (isBulkIngest) /* istanbul ignore next */ // We don't ingest bulk ingest files as is -- they end up getting cracked apart, so we're unlikely to hit this branch of code
-                    ? new BagitReader({ zipFileName: null, zipStream: RSR.readStream, directory: null, validate: true, validateContent: false })
-                    : new ZipStream(RSR.readStream, isZipFilename); // use isZipFilename to determine if errors should be logged
-            } else {
-                // non-ingested content is staged locally
-                const stagingFileName: string = await storage.stagingFileName(storageKey);
+                    ? new BagitReader({ zipFileName: null, zipStream: AFOSR.stream, directory: null, validate: true, validateContent: false })
+                    : new ZipStream(AFOSR.stream, isZipFilename); // use isZipFilename to determine if errors should be logged
+            } else if (AFOSR.fileName) { // non-ingested content is staged locally
                 reader = (isBulkIngest)
-                    ? new BagitReader({ zipFileName: stagingFileName, zipStream: null, directory: null, validate: true, validateContent: false })
-                    : new ZipFile(stagingFileName, isZipFilename); // use isZipFilename to determine if errors should be logged
-            }
+                    ? new BagitReader({ zipFileName: AFOSR.fileName, zipStream: null, directory: null, validate: true, validateContent: false })
+                    : new ZipFile(AFOSR.fileName, isZipFilename); // use isZipFilename to determine if errors should be logged
+            } else
+                return { success: false, error: 'AssetStorageAdapter.crackAsset unable to determine filename or stream', zip: null, asset: null, isBagit: false };
 
             const ioResults: IOResults = await reader.load(); /* istanbul ignore next */
             if (!ioResults.success) {

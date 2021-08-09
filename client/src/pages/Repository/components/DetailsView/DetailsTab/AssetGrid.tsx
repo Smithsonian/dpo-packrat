@@ -23,7 +23,6 @@ import React, { useEffect, useState } from 'react';
 import MUIDataTable from 'mui-datatables';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
-import { getDetailsUrlForObject, getDownloadAssetUrlForObject } from '../../../../../utils/repository';
 import clsx from 'clsx';
 
 export const useStyles = makeStyles(({ palette }) => ({
@@ -213,14 +212,14 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                             if (value.label) {
                                 if (value.origin === eLinkOrigin.eClient) {
                                     return (
-                                        <NewTabLink to={getDetailsUrlForObject(value.path)} style={{ textDecoration: 'underline', color: '#2C405A' }}>
+                                        <NewTabLink to={value.path} style={{ textDecoration: 'underline', color: '#2C405A' }}>
                                             {value.label}
                                         </NewTabLink>
                                     );
                                 } else if (value.origin === eLinkOrigin.eServer) {
                                     return (
                                         <a
-                                            href={getDownloadAssetUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, value.path)}
+                                            href={REACT_APP_PACKRAT_SERVER_ENDPOINT + value.path}
                                             style={{ textDecoration: 'underline', color: '#2C405A' }}
                                         >
                                             {value.label}
@@ -232,14 +231,14 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                             if (value.icon !== null) {
                                 if (value.origin === eLinkOrigin.eClient) {
                                     return (
-                                        <NewTabLink to={getDetailsUrlForObject(value.path)} style={{ color: 'black', display: 'flex' }}>
+                                        <NewTabLink to={value.path} style={{ color: 'black', display: 'flex' }}>
                                             {renderIcon(value.icon)}
                                         </NewTabLink>
                                     );
                                 } else if (value.origin === eLinkOrigin.eServer) {
                                     return (
                                         <a
-                                            href={getDownloadAssetUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, value.path)}
+                                            href={REACT_APP_PACKRAT_SERVER_ENDPOINT + value.path}
                                             style={{ textDecoration: 'underline', color: '#2C405A', display: 'flex' }}
                                         >
                                             {renderIcon(value.icon)}
@@ -249,7 +248,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                             }
 
                             return (
-                                <NewTabLink to={getDetailsUrlForObject(value.path)} style={{ textDecoration: 'underline' }}>
+                                <NewTabLink to={value.path} style={{ textDecoration: 'underline' }}>
                                     {value.path}
                                 </NewTabLink>
                             );
