@@ -4,8 +4,9 @@ import * as CACHE from '../cache';
 import { IExtractor, IExtractorResults } from './IExtractor';
 
 import { pathExists } from 'fs-extra';
-// import { ExtractorImageExiftool } from './ExtractorImageExiftool'; Loaded dynamically due to install issues with exiftool-vendored when performed in a linux container from a non-linux system (windows or macos)
 import { ExtractorImageExifr } from './ExtractorImageExifr';
+// import { ExtractorImageExiftool } from './ExtractorImageExiftool'; Loaded dynamically due to install issues with exiftool-vendored when performed in a linux container from a non-linux system (windows or macos)
+type ExifModule = typeof import('./ExtractorImageExiftool.ts');
 
 export class MetadataExtractor {
     metadata: Map<string, string> = new Map<string, string>();  // Map of metadata name -> value
@@ -67,8 +68,8 @@ export class MetadataExtractor {
             return results;
 
         try {
-            const exiftool = await this.importModule('./ExtractorImageExiftool.ts');
-            const extractor: IExtractor = new exiftool.ExtractorImageExiftool();
+            const exifModule: ExifModule = await this.importModule('./ExtractorImageExiftool.ts');
+            const extractor: IExtractor = new exifModule.ExtractorImageExiftool();
             results = await extractor.initialize();
             if (results.success) {
                 LOG.info('MetadataExtractor.initializeExtractorImage using exiftool', LOG.LS.eMETA);
@@ -95,7 +96,7 @@ export class MetadataExtractor {
         return results;
     }
 
-    private async importModule(moduleName: string): Promise<any> { // eslint-disable-line @typescript-eslint/no-explicit-any
+    private async importModule(moduleName: string): Promise<ExifModule> { // eslint-disable-line @typescript-eslint/no-explicit-any
         try {
             LOG.info(`MetadataExtractor.importModule ${moduleName}`, LOG.LS.eMETA);
             return await import(moduleName);
