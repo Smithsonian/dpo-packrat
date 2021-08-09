@@ -987,15 +987,16 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Metadata', async () => {
-        if (assetThumbnail && userActive && vocabulary && systemObjectScene)
+        if (assetVersion && userActive && vocabulary && systemObjectScene)
             metadata = new DBAPI.Metadata({
                 Name: 'Test Metadata',
                 ValueShort: 'Test Value Short',
                 ValueExtended: 'Test Value Ext',
-                idAssetValue: assetThumbnail.idAsset,
                 idUser: userActive.idUser,
+                idAssetVersionValue: assetVersion.idAssetVersion,
                 idVMetadataSource: vocabulary.idVocabulary,
                 idSystemObject: systemObjectScene.idSystemObject,
+                idSystemObjectParent: systemObjectScene.idSystemObject,
                 idMetadata: 0,
             });
         expect(metadata).toBeTruthy();
@@ -1010,10 +1011,11 @@ describe('DB Creation Test Suite', () => {
             Name: 'Test Metadata',
             ValueShort: null,
             ValueExtended: null,
-            idAssetValue: null,
+            idAssetVersionValue: null,
             idUser: null,
             idVMetadataSource: null,
             idSystemObject: null,
+            idSystemObjectParent: null,
             idMetadata: 0,
         });
         expect(metadataNull).toBeTruthy();
@@ -1021,6 +1023,39 @@ describe('DB Creation Test Suite', () => {
             expect(await metadataNull.create()).toBeTruthy();
             expect(metadataNull.idMetadata).toBeGreaterThan(0);
         }
+    });
+
+    test('DB Creation: Metadata.createMany', async () => {
+        const metadata1 = new DBAPI.Metadata({
+            Name: 'Test Metadata Null 1',
+            ValueShort: null,
+            ValueExtended: null,
+            idAssetVersionValue: null,
+            idUser: null,
+            idVMetadataSource: null,
+            idSystemObject: null,
+            idSystemObjectParent: null,
+            idMetadata: 0,
+        });
+        const metadata2 = new DBAPI.Metadata({
+            Name: 'Test Metadata Null 2',
+            ValueShort: null,
+            ValueExtended: null,
+            idAssetVersionValue: null,
+            idUser: null,
+            idVMetadataSource: null,
+            idSystemObject: null,
+            idSystemObjectParent: null,
+            idMetadata: 0,
+        });
+
+        const data: DBAPI.Metadata[] = [metadata1, metadata2];
+        expect(await DBAPI.Metadata.createMany(data)).toBeTruthy();
+    });
+
+    test('DB Creation: Model.createMany', async () => {
+        const data2: DBAPI.Model[] = [];
+        expect(await DBAPI.Model.createMany(data2)).toBeFalsy();
     });
 
     test('DB Creation: Model', async () => {
@@ -2489,6 +2524,29 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(metadataFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Metadata: Metadata.fetchAllByPage', async () => {
+        const pageSize: number = 1;
+        let metadataLast: DBAPI.Metadata | null = null;
+        for (let count: number = 0; count < 12; count++) {
+            const metadataFetch: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchAllByPage(metadataLast ? metadataLast.idMetadata : 0, pageSize);
+            expect(metadataFetch).toBeTruthy();
+
+            // LOG.info(`${count + 1}: ${JSON.stringify(metadataFetch)}`, LOG.LS.eTEST);
+
+            if (!metadataFetch || metadataFetch.length <= 0)
+                break;
+
+            expect(metadataFetch.length).toBeGreaterThanOrEqual(0);
+            expect(metadataFetch.length).toBeLessThanOrEqual(pageSize);
+
+            if (metadataLast) {
+                expect(metadataLast).not.toMatchObject(metadataFetch[metadataFetch.length - 1]);
+                expect(metadataLast.idMetadata).not.toEqual(metadataFetch[metadataFetch.length - 1].idMetadata);
+            }
+            metadataLast = metadataFetch[metadataFetch.length - 1];
+        }
     });
 
     test('DB Fetch By ID: Model', async () => {
@@ -4132,6 +4190,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObject)).toEqual('SystemObject');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectVersion)).toEqual('SystemObjectVersion');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectXref)).toEqual('SystemObjectXref');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectVersionAssetVersionXref)).toEqual('SystemObjectVersionAssetVersionXref');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUnitEdan)).toEqual('UnitEdan');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUser)).toEqual('User');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUserPersonalizationSystemObject)).toEqual('UserPersonalizationSystemObject');
@@ -6155,15 +6214,15 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: Metadata.update', async () => {
         let bUpdated: boolean = false;
-        if (metadataNull && assetThumbnail && userActive) {
-            metadataNull.idAssetValue = assetThumbnail.idAsset;
+        if (metadataNull && assetVersion && userActive) {
+            metadataNull.idAssetVersionValue = assetVersion.idAssetVersion;
             metadataNull.idUser = userActive.idUser;
             bUpdated = await metadataNull.update();
 
             const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadataNull.idMetadata);
             expect(metadataFetch).toBeTruthy();
             if (metadataFetch) {
-                expect(metadataFetch.idAssetValue).toBe(assetThumbnail.idAsset);
+                expect(metadataFetch.idAssetVersionValue).toBe(assetVersion.idAssetVersion);
                 expect(metadataFetch.idUser).toEqual(userActive.idUser);
             }
         }
@@ -6173,17 +6232,18 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Metadata.update disconnect partial', async () => {
         let bUpdated: boolean = false;
         if (metadata) {
-            metadata.idAssetValue = null;
             metadata.idUser = null;
+            metadata.idAssetVersionValue = null;
             bUpdated = await metadata.update();
 
             const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadata.idMetadata);
             expect(metadataFetch).toBeTruthy();
             if (metadataFetch) {
-                expect(metadataFetch.idAssetValue).toBeNull();
+                expect(metadataFetch.idAssetVersionValue).toBeNull();
                 expect(metadataFetch.idUser).toBeNull();
                 expect(metadataFetch.idVMetadataSource).not.toBeNull();
                 expect(metadataFetch.idSystemObject).not.toBeNull();
+                expect(metadataFetch.idSystemObjectParent).not.toBeNull();
             }
         }
         expect(bUpdated).toBeTruthy();
@@ -6192,19 +6252,21 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Metadata.update disconnect full', async () => {
         let bUpdated: boolean = false;
         if (metadata) {
-            metadata.idAssetValue = null;
             metadata.idUser = null;
             metadata.idVMetadataSource = null;
             metadata.idSystemObject = null;
+            metadata.idSystemObjectParent = null;
+            metadata.idAssetVersionValue = null;
             bUpdated = await metadata.update();
 
             const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadata.idMetadata);
             expect(metadataFetch).toBeTruthy();
             if (metadataFetch) {
-                expect(metadataFetch.idAssetValue).toBeNull();
+                expect(metadataFetch.idAssetVersionValue).toBeNull();
                 expect(metadataFetch.idUser).toBeNull();
                 expect(metadataFetch.idVMetadataSource).toBeNull();
                 expect(metadataFetch.idSystemObject).toBeNull();
+                expect(metadataFetch.idSystemObjectParent).toBeNull();
             }
         }
         expect(bUpdated).toBeTruthy();

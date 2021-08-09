@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as EVENT from '../../event/interface';
 
-import { eDBObjectType, eSystemObjectType, ObjectIDAndType, DBObjectTypeToName, eAuditType } from '../../db/api/ObjectType';
+import { eDBObjectType, ObjectIDAndType, eAuditType /*, eSystemObjectType, DBObjectTypeToName */ } from '../../db/api/ObjectType';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import { ASL, LocalStore } from '../../utils/localStore';
@@ -20,9 +20,9 @@ export class AuditEventGenerator {
     public static singleton: AuditEventGenerator = new AuditEventGenerator();
 
     public async audit(obj: any, oID: ObjectIDAndType, key: EVENT.eEventKey): Promise<boolean> {
-        const oIDRep: string = ((oID.eObjectType !== eSystemObjectType.eUnknown) || (oID.idObject !== 0))
-            ? ` {${DBObjectTypeToName(oID.eObjectType)}, id: ${oID.idObject}}` : '';
-        LOG.info(`AuditEventGenerator.audit${oIDRep}: ${EVENT.eEventKey[key]}`, LOG.LS.eAUDIT);
+        // const oIDRep: string = ((oID.eObjectType !== eSystemObjectType.eUnknown) || (oID.idObject !== 0))
+        //     ? ` {${DBObjectTypeToName(oID.eObjectType)}, id: ${oID.idObject}}` : '';
+        // LOG.info(`AuditEventGenerator.audit${oIDRep}: ${EVENT.eEventKey[key]}`, LOG.LS.eAUDIT);
         if (!this.eventProducer) {
             if (AuditEventGenerator.eventEngine)
                 this.eventProducer = await AuditEventGenerator.eventEngine.createProducer();

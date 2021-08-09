@@ -259,14 +259,13 @@ CREATE TABLE IF NOT EXISTS `Metadata` (
   `Name` VARCHAR(100) NOT NULL,
   `ValueShort` varchar(255) DEFAULT NULL,
   `ValueExtended` longtext DEFAULT NULL,
-  `idAssetValue` int(11) DEFAULT NULL,
+  `idAssetVersionValue` int(11) DEFAULT NULL,
   `idUser` int(11) DEFAULT NULL,
   `idVMetadataSource` int(11) DEFAULT NULL,
   `idSystemObject` int(11) DEFAULT NULL,
+  `idSystemObjectParent` int(11) DEFAULT NULL,
   PRIMARY KEY (`idMetadata`),
-  KEY `Metadata_idAssetValue` (`idAssetValue`),
-  KEY `Metadata_Name` (`Name`),
-  KEY `Metadata_idSystemObject` (`idSystemObject`)
+  KEY `Metadata_Name` (`Name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `Model` (
@@ -871,9 +870,9 @@ ADD CONSTRAINT `fk_licenseassignment_systemobject1`
   ON UPDATE NO ACTION;
 
 ALTER TABLE `Metadata` 
-ADD CONSTRAINT `fk_metadata_asset1`
-  FOREIGN KEY (`idAssetValue`)
-  REFERENCES `Asset` (`idAsset`)
+ADD CONSTRAINT `fk_metadata_assetversion1`
+  FOREIGN KEY (`idAssetVersionValue`)
+  REFERENCES `AssetVersion` (`idAssetVersion`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_metadata_user1`
@@ -888,6 +887,11 @@ ADD CONSTRAINT `fk_metadata_vocabulary1`
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_metadata_systemobject1`
   FOREIGN KEY (`idSystemObject`)
+  REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_metadata_systemobject2`
+  FOREIGN KEY (`idSystemObjectParent`)
   REFERENCES `SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;

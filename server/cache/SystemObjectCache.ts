@@ -57,7 +57,9 @@ export class SystemObjectCache {
     // #region Private Interface
     // *************************
     private async getSystemFromObjectIDInternal(oID: DBAPI.ObjectIDAndType): Promise<DBAPI.SystemObjectInfo | undefined> {
-        let sID: DBAPI.SystemObjectInfo | undefined = this.objectIDToSystemMap.get(oID); /* istanbul ignore else */
+        // Ensure that SystemObjectCache lookups by ObjectIDAndType use a cleaned object in case the caller has stuffed additional information in the object
+        const oIDCleansed: DBAPI.ObjectIDAndType = { idObject: oID.idObject, eObjectType: oID.eObjectType };
+        let sID: DBAPI.SystemObjectInfo | undefined = this.objectIDToSystemMap.get(oIDCleansed); /* istanbul ignore else */
         if (!sID) {  // if we have a cache miss, look it up
             let SO: SystemObject | null = null;
             let isASystemObject: boolean = true;
@@ -79,7 +81,6 @@ export class SystemObjectCache {
                 default: isASystemObject = false; break;
             }
 
-            const oIDCleansed: DBAPI.ObjectIDAndType = { idObject: oID.idObject, eObjectType: oID.eObjectType };
             /* istanbul ignore else */
             if (SO) {
                 sID = { idSystemObject: SO.idSystemObject, Retired: SO.Retired };
@@ -87,7 +88,7 @@ export class SystemObjectCache {
                 this.systemIDToObjectMap.set(SO.idSystemObject, oIDCleansed);
             } else if (!isASystemObject) {
                 if (idObject) {
-                    LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal storing idSystemObject 0 for ${JSON.stringify(oIDCleansed)}`, LOG.LS.eCACHE);
+                    // LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal storing idSystemObject 0 for ${JSON.stringify(oIDCleansed)}`, LOG.LS.eCACHE);
                     sID = { idSystemObject: 0, Retired: false };
                     this.objectIDToSystemMap.set(oIDCleansed, sID);
                 }

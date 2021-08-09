@@ -6,8 +6,8 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const Metadata = {
-    AssetValue: async (parent: Parent): Promise<DBAPI.Asset | null> => {
-        return await DBAPI.Asset.fetch(parent.idAssetValue);
+    AssetVersionValue: async (parent: Parent): Promise<DBAPI.AssetVersion | null> => {
+        return await DBAPI.AssetVersion.fetch(parent.idAssetVersionValue);
     },
     SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
         return await DBAPI.SystemObject.fetch(parent.idSystemObject);
