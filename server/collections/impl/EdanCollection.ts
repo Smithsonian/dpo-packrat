@@ -17,14 +17,8 @@ const NAME_MAPPING_AUTHORITY: string = 'http://n2t.net/';
 const NAME_ASSIGNING_AUTHORITY: string = '65665';
 const DEFAULT_ARK_SHOULDER: string = 'p2b'; // TODO: replace with real value
 
-/** EdanCollection.queryCollection accepts the following for options:
- * options = {
- *    searchMetadata: boolean; // false is the default, which means we only search edanMDM records; true means we search edanMDM as well as other types of data
- *    recordType: string;      // the EDAN record type (e.g. 'edanmdm', '3d_package'); transformed into query parameter fq[]=type${recordType}
- * };
- */
 class EdanCollection implements COL.ICollection {
-    async queryCollection(query: string, rows: number, start: number, options: any): Promise<COL.CollectionQueryResults | null> {
+    async queryCollection(query: string, rows: number, start: number, options: COL.CollectionQueryOptions | null): Promise<COL.CollectionQueryResults | null> {
         const records: COL.CollectionQueryResultRecord[] = [];
         const result: COL.CollectionQueryResults = {
             records,
@@ -32,6 +26,7 @@ class EdanCollection implements COL.ICollection {
             error: ''
         };
 
+        let gatherRaw: boolean | undefined = false;
         let path: string = 'metadata/v2.0/collections/search.htm';
         let filter: string = '';
         const filters: string[] = [];
@@ -45,6 +40,7 @@ class EdanCollection implements COL.ICollection {
                 for (let filterIndex = 0; filterIndex < filters.length; filterIndex++)
                     filter = filter + (filterIndex == 0 ? '' : /* istanbul ignore next */ ',') + filters[filterIndex];
             }
+            gatherRaw = options.gatherRaw ?? false;
         }
 
         const params: string                = `q=${escape(query)}${filter}&rows=${rows}&start=${start}`;
@@ -93,7 +89,7 @@ class EdanCollection implements COL.ICollection {
                             identifierPublic = description.guid;
                     }
 
-                    records.push({ name, unit, identifierPublic, identifierCollection });
+                    records.push({ name, unit, identifierPublic, identifierCollection, raw: gatherRaw ? row : undefined });
                 }
             }
         }
