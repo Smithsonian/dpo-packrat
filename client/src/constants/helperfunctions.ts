@@ -122,4 +122,4 @@ export const ingestSystemObjectUploadRedirect = (fileName: string) => {
     return `/ingestion/uploads?name=${fileName}&mode=2`;
 };
 
-export const truncateWithEllipses = (text: string, max: number) => text.substr(0, max - 1) + (text.length > max ? '...' : '');
+export const truncateWithEllipses = (text: string, max: number) => text.substr(0, max - 1) + (text.length > max ? ' ...' : '');
