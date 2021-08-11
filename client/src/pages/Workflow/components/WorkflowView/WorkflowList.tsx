@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import MUIDataTable from 'mui-datatables';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { makeStyles } from '@material-ui/core/styles';
-import { Box } from '@material-ui/core';
+import { Box, TablePagination, Tooltip } from '@material-ui/core';
 import { useWorkflowStore } from '../../../../store';
 import { formatDate } from '../../../../utils/shared';
 import SetIcon from '../../../../assets/images/Workflow_Set_Icon.svg';
@@ -10,53 +10,9 @@ import ReportIcon from '../../../../assets/images/Workflow_Report_Icon.svg';
 import JobIcon from '../../../../assets/images/Workflow_Job_Icon.svg';
 import { workflowListSortEnumToString } from '../../../../types/server';
 import { ePaginationChange } from '../../../../store';
-
-export const useStyles = makeStyles(({ palette }) => ({
-    tableContainer: {
-        backgroundColor: palette.secondary.light,
-        // paddingBottom: '5px',
-        marginBottom: '5px',
-        borderBottomLeftRadius: '5px',
-        borderBottomRightRadius: '5px',
-        // need to specify top radius in table container AND MuiToolbar override
-        borderTopRightRadius: '5px',
-        borderTopLeftRadius: '5px',
-        width: '80%'
-    },
-    centeredTableHead: {
-        '& > span': {
-            justifyContent: 'center'
-        }
-    },
-    container: {
-        width: 'calc(100% + 10px)',
-        background: palette.secondary.light,
-        padding: 5,
-        borderRadius: 5,
-        marginBottom: 7
-    },
-    header: {
-        fontSize: '0.9em',
-        color: palette.primary.dark,
-        fontWeight: 'bold'
-    },
-    value: {
-        fontSize: '0.8em',
-        color: palette.primary.dark
-    },
-    empty: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flex: 1,
-        background: palette.secondary.light,
-        padding: 40,
-        borderRadius: 5
-    },
-    link: {
-        textDecoration: 'underline'
-    }
-}));
+import { EmptyTable } from '../../../../components';
+import { truncateWithEllipses } from '../../../../constants/helperfunctions';
+import clsx from 'clsx';
 
 interface DataTableOptions {
     filter?: boolean;
@@ -86,6 +42,7 @@ interface DataTableOptions {
             displayRows?: string;
         };
     };
+    customFooter?: () => any;
 }
 
 interface WorkflowIconProps {
@@ -104,6 +61,51 @@ export enum eWorkflowLinkType {
     eJob
 }
 
+export const useStyles = makeStyles(({ palette }) => ({
+    tableContainer: {
+        backgroundColor: palette.secondary.light,
+        marginBottom: '5px',
+        borderBottomLeftRadius: '5px',
+        borderBottomRightRadius: '5px',
+        // need to specify top radius in table container AND MuiToolbar override
+        borderTopRightRadius: '5px',
+        borderTopLeftRadius: '5px',
+        width: '80%'
+    },
+    centeredTableHead: {
+        '& > span': {
+            '& > button': {
+                marginRight: 0,
+                marginLeft: '0px'
+            },
+            justifyContent: 'center'
+        }
+    },
+    container: {
+        width: 'calc(100% + 10px)',
+        background: palette.secondary.light,
+        padding: 5,
+        borderRadius: 5,
+        marginBottom: 7
+    },
+    header: {
+        fontSize: '0.9em',
+        color: palette.primary.dark,
+        fontWeight: 'bold'
+    },
+    value: {
+        fontSize: '0.8em',
+        color: palette.primary.dark
+    },
+    empty: {
+        height: '400px',
+        width: '80%'
+    },
+    link: {
+        textDecoration: 'underline'
+    }
+}));
+
 const getMuiTheme = () =>
     createMuiTheme({
         overrides: {
@@ -111,11 +113,7 @@ const getMuiTheme = () =>
                 root: {
                     backgroundColor: '#FFFCD1',
                     height: 'fit-content',
-                    paddingLeft: '1px',
-                    paddingRight: '1px',
-                    paddingTop: '1px',
-                    paddingBottom: '1px',
-                    margin: '1px',
+                    padding: '1px',
                     fontSize: '0.8em'
                 },
                 body: { color: '#2C405A', borderBottomColor: '#FFFCD1', align: 'center' }
@@ -143,44 +141,33 @@ const getMuiTheme = () =>
                 root: {
                     borderBottom: '1.2px solid rgb(128,128,128)'
                 }
-            },
-            MuiTableRow: {
-                root: {
-                    paddingLeft: '20px'
-                }
             }
         }
     });
 
 function WorkflowList(): React.ReactElement {
     const classes = useStyles();
-    const [rows, rowCount, sortBy, sortOrder, pageNumber, paginationUpdateAndRefetchList] = useWorkflowStore(state => [
+    const [rows, rowCount, sortBy, sortOrder, pageNumber, loading, paginationUpdateAndRefetchList] = useWorkflowStore(state => [
         state.workflowRowData,
         state.rowCount,
         state.sortBy,
         state.sortOrder,
         state.pageNumber,
+        state.loading,
         state.paginationUpdateAndRefetchList
     ]);
-    const [dataRows, setDataRows] = useState(rows);
 
-    useEffect(() => {
-        console.log('useEffect!');
-        setDataRows(rows);
-    }, [sortBy, sortOrder, pageNumber, rows]);
-
-    const calculateRowCountFooter = (): number => {
+    const calculateTotalRowCount = (): number => {
         if (pageNumber === 0 && rows.length < rowCount) {
             return rows.length;
         } else if (rows.length < rowCount) {
             return pageNumber * rowCount + rows.length;
         }
-        // +1 allows pagination to work
-        return (pageNumber + 1) * rowCount + 1;
+        return -1;
     };
 
-    const count = calculateRowCountFooter();
-    console.log('RowCount', count, 'page', pageNumber, 'rows', rows);
+    const count = calculateTotalRowCount();
+
     const options: DataTableOptions = {
         filter: false,
         filterType: 'dropdown',
@@ -190,34 +177,72 @@ function WorkflowList(): React.ReactElement {
         download: false,
         print: false,
         fixedHeader: false,
-        // pagination: true,
-        page: pageNumber,
+        pagination: false,
         elevation: 0,
         viewColumns: false,
         rowsPerPage: rowCount,
-        count,
-        rowsPerPageOptions: [25, 50, 100],
+        rowsPerPageOptions: [10, 25, 100],
         sortOrder: { name: workflowListSortEnumToString(sortBy), direction: sortOrder ? 'asc' : 'desc' },
-        onColumnSortChange: async (changedColumn: string, direction: string) => await paginationUpdateAndRefetchList(ePaginationChange.eSort, null, changedColumn, direction),
-        onChangeRowsPerPage: async (numberOfRows: number) => await paginationUpdateAndRefetchList(ePaginationChange.eRowCount, numberOfRows, null, null),
-        onChangePage: async (currentPage: number) => await paginationUpdateAndRefetchList(ePaginationChange.ePage, currentPage, null, null)
+        onColumnSortChange: (changedColumn: string, direction: string) => paginationUpdateAndRefetchList(ePaginationChange.eSort, null, changedColumn, direction),
+        customFooter: function Pagination() {
+            return (
+                <tfoot>
+                    <tr>
+                        <TablePagination
+                            page={pageNumber}
+                            rowsPerPage={rowCount}
+                            count={count}
+                            onChangeRowsPerPage={({ target: { value } }) => paginationUpdateAndRefetchList(ePaginationChange.eRowCount, Number(value), null, null)}
+                            onChangePage={(_e, currentPage) => paginationUpdateAndRefetchList(ePaginationChange.ePage, currentPage, null, null)}
+                        />
+                    </tr>
+                </tfoot>
+            );
+        }
     };
+
+    if (loading) {
+        return (
+            <Box className={classes.empty}>
+                <EmptyTable />
+            </Box>
+        );
+    }
+
+    const setCenterHeader = () => {
+        return {
+            className: clsx({
+                [classes.centeredTableHead]: true
+            })
+        };
+    };
+
+    const setCenterCell = () => ({ align: 'center' });
 
     const columns = [
         {
             name: 'idWorkflowSet',
             label: 'Set',
-            options: {}
+            options: {
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
+            }
         },
         {
             name: 'Type',
             label: 'Type',
-            options: {}
+            options: {
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
+            }
         },
         {
             name: 'State',
             label: 'State',
-            options: {}
+            options: {
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
+            }
         },
         {
             name: 'Owner',
@@ -226,7 +251,9 @@ function WorkflowList(): React.ReactElement {
                 customBodyRender(value) {
                     if (!value) return '';
                     return value.Name;
-                }
+                },
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
             }
         },
         {
@@ -236,7 +263,9 @@ function WorkflowList(): React.ReactElement {
                 customBodyRender(value) {
                     if (!value) return '';
                     return formatDate(value);
-                }
+                },
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
             }
         },
         {
@@ -246,43 +275,45 @@ function WorkflowList(): React.ReactElement {
                 customBodyRender(value) {
                     if (!value) return '';
                     return formatDate(value);
-                }
+                },
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
             }
         },
         {
             name: 'HyperlinkReport',
             label: 'Report',
             options: {
-                sort: false,
                 customBodyRender(value) {
                     if (!value) return '';
                     return <WorkflowIcon reportType={eWorkflowLinkType.eReport} path={value} />;
                 },
-                setCellProps: () => ({ align: 'center' })
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
             }
         },
         {
             name: 'HyperlinkSet',
             label: 'Set',
             options: {
-                sort: false,
                 customBodyRender(value) {
                     if (!value) return '';
                     return <WorkflowIcon reportType={eWorkflowLinkType.eSet} path={value} />;
                 },
-                setCellProps: () => ({ align: 'center' })
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
             }
         },
         {
             name: 'HyperlinkJob',
             label: 'Job',
             options: {
-                sort: false,
                 customBodyRender(value) {
                     if (!value) return '';
                     return <WorkflowIcon reportType={eWorkflowLinkType.eJob} path={value} />;
                 },
-                setCellProps: () => ({ align: 'center' })
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
             }
         },
         {
@@ -291,28 +322,22 @@ function WorkflowList(): React.ReactElement {
             options: {
                 customBodyRender(value) {
                     if (!value) return '';
-                    return value[0];
+                    return (
+                        <Tooltip placement='left' title={value} arrow>
+                            <p>{truncateWithEllipses(value, 40)}</p>
+                        </Tooltip>
+                    );
                 },
-                setCellProps: () => ({ align: 'center' })
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
             }
         }
     ];
-    // add a day, convert to utc and then send the days
-    // add padding to the left and right column
-    // change the alignment of the header
-    // fix date vertical alignment
-    // xwrite the pagination handler
-    //  xfix sort by state pagination
-    //  -allow traversal to next page if possible
-    // xchange the font size to be larger
-    // xformat the padding between columns
-    // xfix padding below the datatable
-    // xadd space between rows
 
     return (
         <MuiThemeProvider theme={getMuiTheme()}>
             <Box className={classes.tableContainer}>
-                <MUIDataTable title='' data={dataRows} columns={columns} options={options} />
+                <MUIDataTable title='' data={rows} columns={columns} options={options} />
             </Box>
         </MuiThemeProvider>
     );
@@ -329,7 +354,7 @@ function WorkflowIcon(props: WorkflowIconProps): React.ReactElement {
     if (reportType === eWorkflowLinkType.eSet) source = SetIcon;
 
     return (
-        <a href={path} style={{ display: 'flex' }}>
+        <a href={path} style={{ display: 'flex', justifyContent: 'center' }}>
             <img src={source} style={{ height: '20px', width: '20px' }} alt='This icon indicates a clickable hyperlink.' />
         </a>
     );
