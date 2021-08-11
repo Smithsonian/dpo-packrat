@@ -1,5 +1,5 @@
 import create, { GetState, SetState } from 'zustand';
-import { WorkflowListResult } from '../types/graphql';
+import { WorkflowListResult, GetWorkflowListInput } from '../types/graphql';
 import { getWorkflowList } from '../pages/Workflow/hooks/useWorkflow';
 import { workflowListSortStringToEnum, eWorkflowListSortColumns } from '../types/server';
 
@@ -20,13 +20,13 @@ type WorkflowStore = {
     state: number[];
     initiator: number[];
     owner: number[];
-    dateFrom: Date | string | null;
-    dateTo: Date | string | null;
+    dateFrom: Date | null;
+    dateTo: Date | null;
     pageNumber: number;
     rowCount: number;
     sortBy: eWorkflowListSortColumns;
     sortOrder: boolean | null;
-    // loading: boolean;
+    loading: boolean;
     workflowRowData: WorkflowListResult[];
     updateFilterValue: (name: string, value: number | number[] | Date | null) => void;
     resetWorkflowFilters: () => void;
@@ -43,10 +43,10 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
     dateFrom: null,
     dateTo: null,
     pageNumber: 0,
-    rowCount: 25,
+    rowCount: 10,
     sortBy: eWorkflowListSortColumns.eDefault,
     sortOrder: true,
-    // loading: false,
+    loading: false,
     workflowRowData: [],
     updateFilterValue: (name: string, value: number | number[] | Date | null): void => {
         set({ [name]: value });
@@ -66,36 +66,46 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
 
     fetchWorkflowList: async (): Promise<void> => {
         const { workflowType, jobType, state, initiator, owner, dateFrom, dateTo, pageNumber, rowCount, sortBy, sortOrder } = get();
-        const filter = {
+        set({ loading: true });
+        const filter: GetWorkflowListInput = {
             idVWorkflowType: workflowType,
             idVJobType: jobType,
             State: state,
             idUserInitiator: initiator,
             idUserOwner: owner,
-            DateFrom: dateFrom,
-            DateTo: dateTo,
             pageNumber: pageNumber + 1,
+            DateFrom: dateFrom,
             rowCount,
             sortBy,
             sortOrder
         };
-        console.log('filter', filter);
+
+        // setting DateTo to null will return empty array
+        if (dateTo) filter.DateTo = handleEndDate(dateTo);
+
         const { data } = await getWorkflowList(filter);
         if (data?.getWorkflowList?.WorkflowList) {
             const rows = data.getWorkflowList.WorkflowList as WorkflowListResult[];
             set({ workflowRowData: rows });
         }
-        console.log('list', data.getWorkflowList.WorkflowList);
+        set({ loading: false });
+        // console.log('list', data.getWorkflowList.WorkflowList);
     },
     paginationUpdateAndRefetchList: async (changeType: ePaginationChange, value?: number | null, column?: string | null, direction?: string | null): Promise<void> => {
         const { fetchWorkflowList } = get();
         console.log('changeType', changeType, 'value', value, column, direction);
-        if (changeType === ePaginationChange.ePage && value) set({ pageNumber: value });
+        if (changeType === ePaginationChange.ePage && value !== null) set({ pageNumber: value });
 
-        if (changeType === ePaginationChange.eRowCount && value) set({ rowCount: value });
+        if (changeType === ePaginationChange.eRowCount && value !== null) set({ rowCount: value });
 
         if (changeType === ePaginationChange.eSort && column) set({ sortBy: workflowListSortStringToEnum(column), sortOrder: direction === 'asc' ? true : false });
 
         await fetchWorkflowList();
     }
 }));
+
+const handleEndDate = (input: Date | null) => {
+    if (!input) return null;
+    const date = new Date(input.getUTCFullYear(), input.getUTCMonth(), input.getUTCDate() + 1);
+    return date;
+};

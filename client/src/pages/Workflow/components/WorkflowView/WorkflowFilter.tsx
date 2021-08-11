@@ -106,12 +106,29 @@ function WorkflowFilter(): React.ReactElement {
             </Box>
 
             <Box className={classes.selectContainer}>
-                <FilterSelect multiple label='Initiator' name='initiator' options={initiatorOptions} long />
-                <FilterSelect multiple label='Owner' name='owner' options={ownerOptions} long />
+                <FilterSelect multiple
+                    label='Initiator'
+                    name='initiator'
+                    options={initiatorOptions}
+                    long
+                />
+                <FilterSelect
+                    multiple
+                    label='Owner'
+                    name='owner'
+                    options={ownerOptions}
+                    long
+                />
                 <FilterDate label='Date from' name='dateCreated' />
             </Box>
             <Box display='flex' flexDirection='row'>
-                <LoadingButton className={classes.btn} disableElevation loaderSize={15} loading={false} onClick={() => fetchWorkflowList()}>
+                <LoadingButton
+                    className={classes.btn}
+                    disableElevation
+                    loaderSize={15}
+                    loading={false}
+                    onClick={() => fetchWorkflowList()}
+                >
                     Search
                 </LoadingButton>
                 <LoadingButton className={classes.btn} disableElevation loading={false} onClick={() => resetWorkflowFilters()}>
@@ -215,7 +232,11 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
         <Box display='flex' alignItems='center' mb={1}>
             <Typography className={classes.label}>{label}</Typography>
             <div className={classes.dateDiv}>
-                <DatePicker selected={dateFrom} onChange={date => onDate('dateFrom', date)} isClearable />
+                <DatePicker
+                    selected={dateFrom}
+                    onChange={date => onDate('dateFrom', date)}
+                    isClearable
+                />
                 <Typography className={classes.toText}>to</Typography>
                 <DatePicker selected={dateTo} onChange={date => onDate('dateTo', date)} isClearable />
             </div>
