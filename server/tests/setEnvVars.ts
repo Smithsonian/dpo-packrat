@@ -5,6 +5,8 @@ if (!process.env.PACKRAT_EDAN_AUTH_KEY)
     process.env.PACKRAT_EDAN_AUTH_KEY = 'testing1234';
 if (!process.env.PACKRAT_EDAN_SERVER)
     process.env.PACKRAT_EDAN_SERVER = 'https://edan.si.edu/';
+if (!process.env.PACKRAT_EDAN_3D_API)
+    process.env.PACKRAT_EDAN_3D_API = 'http://dev.3d.api.si.edu/';
 if (!process.env.PACKRAT_EDAN_APPID)
     process.env.PACKRAT_EDAN_APPID = 'OCIO3D';
 if (!process.env.PACKRAT_OCFL_STORAGE_ROOT)

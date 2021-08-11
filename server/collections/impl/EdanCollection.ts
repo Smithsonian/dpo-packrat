@@ -17,6 +17,11 @@ const NAME_MAPPING_AUTHORITY: string = 'http://n2t.net/';
 const NAME_ASSIGNING_AUTHORITY: string = '65665';
 const DEFAULT_ARK_SHOULDER: string = 'p2b'; // TODO: replace with real value
 
+enum eAPIType {
+    eEDAN = 1,
+    eEDAN3dApi = 2,
+}
+
 class EdanCollection implements COL.ICollection {
     async queryCollection(query: string, rows: number, start: number, options: COL.CollectionQueryOptions | null): Promise<COL.CollectionQueryResults | null> {
         const records: COL.CollectionQueryResultRecord[] = [];
@@ -44,7 +49,7 @@ class EdanCollection implements COL.ICollection {
         }
 
         const params: string                = `q=${escape(query)}${filter}&rows=${rows}&start=${start}`;
-        const reqResult: GetRequestResults  = await this.sendGetRequest(path, params);
+        const reqResult: GetRequestResults  = await this.sendGetRequest(path, params, eAPIType.eEDAN);
         let jsonResult: any | null          = null;
         try {
             jsonResult                      = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
@@ -157,8 +162,21 @@ class EdanCollection implements COL.ICollection {
      * @param path The URL path
      * @param params The URL params, which specify the query details
      */
-    private async sendGetRequest(path: string, params: string): Promise<GetRequestResults> {
-        const url: string = Config.collection.edan.server + path + '?' + params;
+    private async sendGetRequest(path: string, params: string, eType?: eAPIType | undefined): Promise<GetRequestResults> {
+        let server: string = '';
+        switch (eType) {
+            default:
+            case undefined:
+            case eAPIType.eEDAN:
+                server = Config.collection.edan.server;
+                break;
+
+            case eAPIType.eEDAN3dApi:
+                server = Config.collection.edan.api3d;
+                break;
+        }
+
+        const url: string = `${server}${path}${params ? '?' + params : ''}`;
         try {
             const res = await fetch(url, { headers: this.encodeHeader(params) });
             return {
