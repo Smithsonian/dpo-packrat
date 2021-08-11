@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, camelcase */
 import * as fs from 'fs-extra';
 import * as COL from '../../collections/interface/';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import * as L from 'lodash';
 
 afterAll(async done => {
-    H.Helpers.sleep(3000);
+    // await H.Helpers.sleep(3000);
     done();
 });
 
@@ -14,6 +15,11 @@ enum eTestType {
     eScrapeDPO = 2,
     eScrapeEDAN = 3
 }
+
+const now: Date = new Date();
+const yyyymmdd: string = now.toISOString().split('T')[0];
+const slug: string = (Math.random().toString(16) + '0000000').substr(2, 12);
+let idCounter: number = 0;
 
 const eTYPE: eTestType = +eTestType.eRegressionSuite; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eRegressionSuite!
 
@@ -42,6 +48,9 @@ describe('Collections: EdanCollection', () => {
             executeTestQuery(ICol, '<WHACKADOODLE>', true, false, '3d_package');
             executeTestQuery(ICol, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false, false, '3d_package');
 
+            // edanmdm creation
+            executeTestCreateMDM(ICol);
+
             test('Collections: EdanCollection Ark Tests', () => {
                 executeArkTests(ICol);
             });
@@ -61,10 +70,11 @@ describe('Collections: EdanCollection', () => {
     }
 });
 
+
 function executeTestQuery(ICol: COL.ICollection, query: string, expectNoResults: boolean,
     searchCollections: boolean = true, edanRecordType: string = ''): void {
     test('Collections: EdanCollection.queryCollection ' + query, async () => {
-        let options: any = null;
+        let options: COL.CollectionQueryOptions | null = null;
         if (!searchCollections || edanRecordType)
             options = {
                 searchMetadata: !searchCollections,
@@ -87,6 +97,91 @@ function executeTestQuery(ICol: COL.ICollection, query: string, expectNoResults:
     });
 }
 
+// #region Create EDANMDM
+function executeTestCreateMDM(ICol: COL.ICollection): void {
+    const edanmdm: COL.EdanMDMContent = {
+        descriptiveNonRepeating: {
+            title: { label: 'Title', content: 'Packrat Test' },
+            record_ID: 'dpo_3d_test_',
+            unit_code: 'OCIO_DPO3D',
+            metadata_usage: { access: 'Usage conditions apply' }
+        },
+        indexedStructured: { },
+        freeText: { }
+    };
+
+    let edanmdmClone: COL.EdanMDMContent = edanmdm;
+    let status: number = 0;
+    let publicSearch: boolean = true;
+    for (let testCase: number = 0; testCase <= 9; testCase++) {
+        const recordId: string = nextID();
+        edanmdmClone = L.cloneDeep(edanmdmClone);
+        edanmdmClone.descriptiveNonRepeating.title.content = 'Packrat Test Subject ' + recordId;
+        edanmdmClone.descriptiveNonRepeating.record_ID = recordId;
+
+        switch (testCase) {
+            default: break;
+            case 1:  edanmdmClone.descriptiveNonRepeating.data_source = 'NMNH - Anthropology Dept.'; break;
+            case 2:  edanmdmClone.descriptiveNonRepeating.online_media = { media: [{
+                'thumbnail': 'https://3d-api.si.edu/content/document/3d_package:6ddc70e2-bdef-46fe-b5cb-90eb991afb15/scene-image-thumb.jpg',
+                'content': 'https://3d-api.si.edu/voyager/3d_package:6ddc70e2-bdef-46fe-b5cb-90eb991afb15',
+                'type': '3d_voyager',
+                'voyagerId': '3d_package:6ddc70e2-bdef-46fe-b5cb-90eb991afb15',
+                'usage': {
+                    'access': 'Usage Conditions Apply',
+                    'text': '',
+                    'codes': ''
+                }
+            }], mediaCount: 1 }; break;
+            case 3: edanmdmClone.indexedStructured!.date = ['2010s']; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 4: edanmdmClone.indexedStructured!.object_type = ['Reliquaries']; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 5: edanmdmClone.freeText!.notes = [{ label: 'Summary', content: 'Foobar' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 6: edanmdmClone.freeText!.name = [{ label: 'Collector', content: 'Zeebap' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 7: edanmdmClone.freeText!.place = [{ label: 'Site Name', content: 'CooVee' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 8: edanmdmClone.freeText!.dataSource = [{ label: 'Data Source', content: 'Vipers' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 9: edanmdmClone.freeText!.objectRights = [{ label: 'Credit Line', content: 'Foxtrot' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        }
+        executeTestCreateMDMWorker(ICol, edanmdmClone, status, publicSearch);   // status: 0 and publicSearch: true are linked somehow
+        status = 1 - status;                                                    // status: 1 and publicSearch: false are linked (not published to edan, not published API)
+        publicSearch = !publicSearch;
+    }
+}
+
+function executeTestCreateMDMWorker(ICol: COL.ICollection, edanmdm: COL.EdanMDMContent, status: number, publicSearch: boolean): void {
+    test(`Collections: EdanCollection.createEdanMDM ${edanmdm.descriptiveNonRepeating.title.content}`, async () => {
+        const edanRecord: COL.EdanRecord | null = await ICol.createEdanMDM(edanmdm, status, publicSearch);
+        expect(edanRecord).toBeTruthy();
+        LOG.info(`EdanCollection.test.executeTestCreateMDM created record ${JSON.stringify(edanRecord, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+
+        if (edanRecord) {
+            expect(edanRecord.status).toEqual(status);
+            expect(edanRecord.publicSearch).toEqual(publicSearch);
+            expect(edanRecord.content).toEqual(edanmdm);
+        }
+
+        /*
+        // now query and compare query results to created subjects
+        // Note that this query is done against EDAN production, whereas EDANMDM creation is done against EDAN 3D DEV ... so this won't work!
+        const results: COL.CollectionQueryResults | null = await ICol.queryCollection(`edanmdm:${edanmdm.descriptiveNonRepeating.record_ID}`, 10, 0, { gatherRaw: true });
+        expect(results).toBeTruthy();
+        if (results) {
+            expect(results.records.length).toBeGreaterThan(0);
+            if (results.records.length) {
+                expect(results.records[0].raw).toBeTruthy();
+                expect(results.records[0].raw?.content).toMatchObject(edanmdm); // not sure if this works ... but we expect .raw to contain our edanmdm element as 'content'
+            }
+        }
+        */
+    });
+}
+
+function nextID(): string {
+    const counter: string = ('00000' + (++idCounter).toString()).substr(-5);
+    return `dpo_3d_test_${yyyymmdd}-${slug}-${counter}`;
+}
+// #endregion
+
+// #region SCRAPE EDAN
 const EDAN_SCRAPE_MAX_INIT: number = 14000000;
 const EDAN_QUERY_MAX_ROWS: number = 100;
 const EDAN_SIMUL: number = 4; // set to a higher number only with permission from OCIO, as even a moderate load seems to cause alarm!
@@ -153,6 +248,7 @@ function logUnitMap(unitMap: Map<string, number>, queryNumber: number, resultCou
 
     LOG.info(logArray.join('\n'), LOG.LS.eTEST);
 }
+// #endregion
 
 function executeArkTests(ICol: COL.ICollection) {
     const customShoulder: string = 'custom';
@@ -206,6 +302,7 @@ function executeArkTests(ICol: COL.ICollection) {
     expect(ArkCustomShoulderPrependUrl).toEqual(ArkCustomShoulderPrepend);
 }
 
+// #region SCRAPE DPO
 export async function scrapeDPOEdanMDM(ICol: COL.ICollection, fileName: string): Promise<void> {
     jest.setTimeout(1000 * 60 * 60);   // 1 hour
 
@@ -363,3 +460,4 @@ function handleResults(results: COL.CollectionQueryResults | null, WS: NodeJS.Wr
     }
     return results;
 }
+// #endregion
