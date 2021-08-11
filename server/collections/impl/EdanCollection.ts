@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import fetch from 'node-fetch';
+import fetch, { RequestInit } from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
 import * as COL from '../interface';
 import { Config } from '../../config';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
-interface GetRequestResults {
+interface HttpRequestResult {
     output: string;
     statusText: string;
     success: boolean;
@@ -22,7 +22,12 @@ enum eAPIType {
     eEDAN3dApi = 2,
 }
 
-class EdanCollection implements COL.ICollection {
+enum eHTTPMethod {
+    eGet = 1,
+    ePost = 2,
+}
+
+export class EdanCollection implements COL.ICollection {
     async queryCollection(query: string, rows: number, start: number, options: COL.CollectionQueryOptions | null): Promise<COL.CollectionQueryResults | null> {
         const records: COL.CollectionQueryResultRecord[] = [];
         const result: COL.CollectionQueryResults = {
@@ -49,7 +54,7 @@ class EdanCollection implements COL.ICollection {
         }
 
         const params: string                = `q=${escape(query)}${filter}&rows=${rows}&start=${start}`;
-        const reqResult: GetRequestResults  = await this.sendGetRequest(path, params, eAPIType.eEDAN);
+        const reqResult: HttpRequestResult  = await this.sendRequest(eAPIType.eEDAN, eHTTPMethod.eGet, path, params);
         let jsonResult: any | null          = null;
         try {
             jsonResult                      = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
@@ -104,6 +109,31 @@ class EdanCollection implements COL.ICollection {
         return result;
     }
 
+    async createEdanMDM(edanmdm: COL.EdanMDMContent, status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {
+        const body: any = {
+            url: `edanmdm:${edanmdm.descriptiveNonRepeating.record_ID}`,
+            status,
+            publicSearch,
+            type: 'edanmdm',
+            content: edanmdm,
+        };
+
+        // LOG.info(`EdanCollection.createEdanMDM: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
+        const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertContent', '', JSON.stringify(body), 'application/json');
+        if (!reqResult.success) {
+            LOG.error(`EdanCollection.createEdanMDM failed: ${reqResult.statusText}`, LOG.LS.eCOLL);
+            return null;
+        }
+
+        try {
+            return JSON.parse(reqResult.output)?.response ?? null;
+        } catch (error) {
+            LOG.error(`EdanCollection.createEdanMDM parse error: ${JSON.stringify(reqResult)}`, LOG.LS.eCOLL, error);
+            return null;
+        }
+    }
+
+    // #region Identifier services
     /** c.f. https://ezid.cdlib.org/learn/id_concepts
      * prefix typically comes from the collecting unit or from the scanning organization (SI DPO);
      * specify true for prependNameAuthority to create an identifier which is a URL
@@ -131,14 +161,16 @@ class EdanCollection implements COL.ICollection {
     getArkNameAssigningAuthority(): string {
         return NAME_ASSIGNING_AUTHORITY;
     }
+    // #endregion
 
+    // #region HTTP Helpers
     /**
      * Creates the header for the request to EDAN. Takes a uri, prepends a nonce, and appends
      * the date and appID key. Hashes as sha1() and base64_encode() the result.
      * @param uri The URI (string) to be hashed and encoded.
      * @returns Array containing all the header elements and signed header value
      */
-    private encodeHeader(uri: string): [string, string][] {
+    private encodeHeader(uri: string, contentType?: string | undefined): [string, string][] {
         const headers: [string, string][]   = [];
         const ipnonce: string               = (Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)).substring(0, 15);
         const dtNow: Date                   = new Date();
@@ -154,6 +186,8 @@ class EdanCollection implements COL.ICollection {
         headers.push(['X-AppVersion', 'Packrat-' + process.env.npm_package_version]);
         headers.push(['X-Nonce', ipnonce]);
         headers.push(['X-AuthContent', authContent]);
+        if (contentType !== undefined)
+            headers.push(['Content-Type', contentType]);
         return headers;
     }
 
@@ -162,30 +196,38 @@ class EdanCollection implements COL.ICollection {
      * @param path The URL path
      * @param params The URL params, which specify the query details
      */
-    private async sendGetRequest(path: string, params: string, eType?: eAPIType | undefined): Promise<GetRequestResults> {
-        let server: string = '';
+    private async sendRequest(eType: eAPIType, eMethod: eHTTPMethod, path: string, params: string,
+        body?: string | undefined, contentType?: string | undefined): Promise<HttpRequestResult> {
+
+        let method: string = 'GET';
+        switch (eMethod) {
+            default:
+            case undefined:
+            case eHTTPMethod.eGet: method = 'GET'; break;
+            case eHTTPMethod.ePost: method = 'POST'; break;
+        }
+
+        let server: string = Config.collection.edan.server;
         switch (eType) {
             default:
             case undefined:
-            case eAPIType.eEDAN:
-                server = Config.collection.edan.server;
-                break;
-
-            case eAPIType.eEDAN3dApi:
-                server = Config.collection.edan.api3d;
-                break;
+            case eAPIType.eEDAN:  server = Config.collection.edan.server; break;
+            case eAPIType.eEDAN3dApi: server = Config.collection.edan.api3d; break;
         }
 
         const url: string = `${server}${path}${params ? '?' + params : ''}`;
         try {
-            const res = await fetch(url, { headers: this.encodeHeader(params) });
+            // LOG.info(`EdanCollection.sendRequest: ${url}, ${body}`, LOG.LS.eCOLL);
+            LOG.info(`EdanCollection.sendRequest: ${url}`, LOG.LS.eCOLL);
+            const init: RequestInit = { method, body: body ?? undefined, headers: this.encodeHeader(params, contentType) };
+            const res = await fetch(url, init);
             return {
                 output: await res.text(),
                 statusText: res.statusText,
                 success: res.ok
             };
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('EdanCollection.sendGetRequest', LOG.LS.eCOLL, error);
+            LOG.error('EdanCollection.sendRequest', LOG.LS.eCOLL, error);
             return {
                 output: JSON.stringify(error),
                 statusText: 'node-fetch error',
@@ -193,6 +235,5 @@ class EdanCollection implements COL.ICollection {
             };
         }
     }
+    // #endregion
 }
-
-export default EdanCollection;
