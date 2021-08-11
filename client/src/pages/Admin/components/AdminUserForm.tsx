@@ -21,6 +21,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
+import { useUsersStore } from '../../../store';
 
 const useStyles = makeStyles({
     AdminUsersViewContainer: {
@@ -109,6 +110,7 @@ function AdminUserForm(): React.ReactElement {
     const [workflowNotificationTime, setWorkflowNotificationTime] = useState<string | null | undefined>('17:00');
     const [validNameInput, setValidNameInput] = useState<boolean | null>(null);
     const [validEmailInput, setValidEmailInput] = useState<boolean | null>(null);
+    const updateUsersEntries = useUsersStore(state => state.updateUsersEntries);
 
     const location = useLocation();
     const create: boolean = idUser === 'create';
@@ -185,6 +187,7 @@ function AdminUserForm(): React.ReactElement {
             refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
             awaitRefetchQueries: true
         });
+        updateUsersEntries();
         history.push('/admin/users');
     };
 
@@ -207,12 +210,12 @@ function AdminUserForm(): React.ReactElement {
             refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
             awaitRefetchQueries: true
         });
+        updateUsersEntries();
         history.push('/admin/users');
     };
 
     return (
         <Box className={classes.AdminUsersViewContainer}>
-            {/* {!create && <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />} */}
             <Box className={classes.AdminBreadCrumbsContainer}>
                 <GenericBreadcrumbsView items={location.pathname.slice(1)} end={create ? null : `${fetchedUser?.Name} <${fetchedUser?.EmailAddress}>`} />
             </Box>

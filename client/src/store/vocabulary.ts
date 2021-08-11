@@ -52,7 +52,9 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eModelPurpose,
                     eVocabularySetID.eModelFileType,
                     eVocabularySetID.eModelMaterialChannelMaterialType,
-                    eVocabularySetID.eCaptureDataCaptureMethod
+                    eVocabularySetID.eCaptureDataCaptureMethod,
+                    eVocabularySetID.eJobJobType,
+                    eVocabularySetID.eWorkflowType
                 ]
             }
         };
