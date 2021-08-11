@@ -9,49 +9,55 @@ afterAll(async done => {
     done();
 });
 
-const REGRESSION_SUITE: boolean = true;
-const SCRAPE_DPO: boolean = false;
-const SCRAPE_EDAN: boolean = false;
+enum eTestType {
+    eRegressionSuite = 1,
+    eScrapeDPO = 2,
+    eScrapeEDAN = 3
+}
+
+const eTYPE: eTestType = +eTestType.eRegressionSuite; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eRegressionSuite!
 
 describe('Collections: EdanCollection', () => {
     jest.setTimeout(180000);
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
 
-    if (REGRESSION_SUITE) {
-        executeTestQuery(ICol, 'Armstrong Space Suit', false);
-        executeTestQuery(ICol, 'A19730040000', false);
-        executeTestQuery(ICol, 'edanmdm:nasm_A19730040000', false);
-        executeTestQuery(ICol, 'http://n2t.net/ark:/65665/nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
-        executeTestQuery(ICol, '', false);
-        executeTestQuery(ICol, 'jimmybobimmy', true);
-        executeTestQuery(ICol, '<WHACKADOODLE>', true);
-        executeTestQuery(ICol, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
+    switch (eTYPE) {
+        case eTestType.eRegressionSuite:
+            executeTestQuery(ICol, 'Armstrong Space Suit', false);
+            executeTestQuery(ICol, 'A19730040000', false);
+            executeTestQuery(ICol, 'edanmdm:nasm_A19730040000', false);
+            executeTestQuery(ICol, 'http://n2t.net/ark:/65665/nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
+            executeTestQuery(ICol, '', false);
+            executeTestQuery(ICol, 'jimmybobimmy', true);
+            executeTestQuery(ICol, '<WHACKADOODLE>', true);
+            executeTestQuery(ICol, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
 
-        // custom search options:
-        executeTestQuery(ICol, 'Armstrong Space Suit', false, false, '3d_package');
-        executeTestQuery(ICol, 'A19730040000', false, true, '3d_package');
-        executeTestQuery(ICol, 'edanmdm:nasm_A19730040000', false, false, '');
-        executeTestQuery(ICol, 'http://n2t.net/ark:/65665/nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false, true, '');
-        executeTestQuery(ICol, '', false, false, '3d_package');
-        executeTestQuery(ICol, 'jimmybobimmy', true, false, '3d_package');
-        executeTestQuery(ICol, '<WHACKADOODLE>', true, false, '3d_package');
-        executeTestQuery(ICol, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false, false, '3d_package');
+            // custom search options:
+            executeTestQuery(ICol, 'Armstrong Space Suit', false, false, '3d_package');
+            executeTestQuery(ICol, 'A19730040000', false, true, '3d_package');
+            executeTestQuery(ICol, 'edanmdm:nasm_A19730040000', false, false, '');
+            executeTestQuery(ICol, 'http://n2t.net/ark:/65665/nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false, true, '');
+            executeTestQuery(ICol, '', false, false, '3d_package');
+            executeTestQuery(ICol, 'jimmybobimmy', true, false, '3d_package');
+            executeTestQuery(ICol, '<WHACKADOODLE>', true, false, '3d_package');
+            executeTestQuery(ICol, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false, false, '3d_package');
 
-        test('Collections: EdanCollection Ark Tests', () => {
-            executeArkTests(ICol);
-        });
-    }
+            test('Collections: EdanCollection Ark Tests', () => {
+                executeArkTests(ICol);
+            });
+            break;
 
-    if (SCRAPE_DPO) {
-        test('Collections: EdanCollection.scrape DPO', async () => {
-            await scrapeDPOEdanMDM(ICol, 'd:\\Work\\SI\\EdanScrape.txt');
-        });
-    }
+        case eTestType.eScrapeDPO:
+            test('Collections: EdanCollection.scrape DPO', async () => {
+                await scrapeDPOEdanMDM(ICol, 'd:\\Work\\SI\\EdanScrape.txt');
+            });
+            break;
 
-    if (SCRAPE_EDAN) {
-        test('Collections: EdanCollection.scrape EDAN', async () => {
-            await executeScrapeQuery(ICol, 'd:\\Work\\SI\\EdanScrape.txt', 0);
-        });
+        case eTestType.eScrapeEDAN:
+            test('Collections: EdanCollection.scrape EDAN', async () => {
+                await executeScrapeQuery(ICol, 'd:\\Work\\SI\\EdanScrape.txt', 0);
+            });
+            break;
     }
 });
 
@@ -207,62 +213,151 @@ export async function scrapeDPOEdanMDM(ICol: COL.ICollection, fileName: string):
     if (!WS)
         LOG.info(`Unable to create writeStream for ${fileName}`, LOG.LS.eTEST);
 
-    let results: COL.CollectionQueryResults | null = null;
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200027', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`850|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200039', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`851|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200040', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`852|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200041', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`853|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200042', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`854|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200043', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`855|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200044', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`856|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200045', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`857|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200046', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`858|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200047', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`859|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200048', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`860|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200049', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`861|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200050', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`862|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200051', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`863|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200052', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`864|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200053', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`865|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200054', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`866|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200055', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`867|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200056', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`868|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200057', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`869|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200058', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`870|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200059', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`871|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200060', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`872|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200061', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`873|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200062', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`874|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200063', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`875|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200064', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`876|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200065', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`877|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200066', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`878|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200067', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`879|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200068', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`880|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200069', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`881|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200070', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`882|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200107', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`883|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200117', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`884|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200118', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`885|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200119', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`886|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200120', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`887|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200121', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`888|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200122', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`889|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200123', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`890|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200124', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`891|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200125', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`892|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200126', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`893|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200127', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`894|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
-    results = handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200128', 10, 0, { gatherRaw: true }), WS); if (results && results.records && results.records.length > 0) {  WS.write(`895|${results.records[0].name}|${results.records[0].unit}|${results.records[0].identifierPublic}|${results.records[0].identifierCollection}|${results.rowCount}\n`); }
+    // let results: COL.CollectionQueryResults | null = null;
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200001', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200001');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200002', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200002');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200003', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200003');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200004', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200004');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200005', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200005');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200006', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200006');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200007', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200007');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200008', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200008');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200009', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200009');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200010', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200010');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200011', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200011');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200012', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200012');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200013', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200013');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200014', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200014');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200015', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200015');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200016', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200016');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200017', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200017');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200018', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200018');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200019', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200019');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200020', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200020');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200021', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200021');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200022', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200022');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200023', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200023');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200024', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200024');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200025', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200025');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200026', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200026');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200027', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200027');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200028', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200028');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200029', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200029');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200030', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200030');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200031', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200031');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200032', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200032');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200033', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200033');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200034', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200034');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200035', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200035');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200036', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200036');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200037', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200037');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200038', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200038');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200039', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200039');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200040', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200040');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200041', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200041');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200042', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200042');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200043', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200043');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200044', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200044');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200045', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200045');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200046', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200046');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200047', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200047');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200048', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200048');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200049', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200049');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200050', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200050');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200051', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200051');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200052', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200052');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200053', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200053');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200054', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200054');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200055', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200055');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200056', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200056');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200057', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200057');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200058', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200058');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200059', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200059');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200060', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200060');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200061', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200061');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200062', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200062');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200063', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200063');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200064', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200064');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200065', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200065');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200066', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200066');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200067', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200067');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200068', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200068');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200069', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200069');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200070', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200070');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200071', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200071');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200072', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200072');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200073', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200073');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200074', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200074');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200075', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200075');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200076', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200076');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200077', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200077');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200078', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200078');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200079', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200079');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200080', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200080');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200081', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200081');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200082', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200082');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200083', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200083');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200084', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200084');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200085', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200085');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200086', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200086');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200087', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200087');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200088', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200088');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200089', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200089');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200090', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200090');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200091', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200091');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200092', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200092');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200093', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200093');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200094', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200094');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200095', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200095');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200096', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200096');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200097', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200097');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200098', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200098');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200099', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200099');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200100', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200100');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200101', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200101');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200102', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200102');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200103', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200103');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200104', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200104');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200105', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200105');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200106', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200106');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200107', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200107');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200108', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200108');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200109', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200109');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200110', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200110');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200111', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200111');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200112', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200112');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200113', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200113');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200114', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200114');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200115', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200115');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200116', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200116');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200117', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200117');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200118', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200118');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200119', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200119');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200120', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200120');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200121', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200121');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200122', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200122');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200123', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200123');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200124', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200124');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200125', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200125');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200126', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200126');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200127', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200127');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200128', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200128');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200129', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200129');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200130', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200130');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200131', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200131');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200132', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200132');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200133', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200133');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200134', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200134');
+    handleResults(await ICol.queryCollection('edanmdm:dpo_3d_200135', 10, 0, { gatherRaw: true }), WS, 'dpo_3d_200135');
 }
 
-function handleResults(results: COL.CollectionQueryResults | null, WS: NodeJS.WritableStream): COL.CollectionQueryResults | null {
+function handleResults(results: COL.CollectionQueryResults | null, WS: NodeJS.WritableStream, id: string): COL.CollectionQueryResults | null {
     if (results) {
         if (results.error)
             LOG.info(`*** Edan Scrape: encountered error ${results.error}`, LOG.LS.eTEST);
 
         for (const record of results.records) {
-            WS.write(`${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${record.name}\n`);
+            WS.write(`${id}\t${record.name.replace(/\r?\n|\r/g, ' ')}\t${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${JSON.stringify(record.raw, H.Helpers.saferStringify)}\n`);
             LOG.info(`EDAN Query: ${JSON.stringify(record)}`, LOG.LS.eTEST);
         }
     }

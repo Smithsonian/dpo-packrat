@@ -62,6 +62,7 @@ export type ConfigType = {
         type: COLLECTION_TYPE;
         edan: {
             server: string;
+            api3d: string;
             appId: string;
             authKey: string;
         }
@@ -119,6 +120,7 @@ export const Config: ConfigType = {
         type: COLLECTION_TYPE.EDAN,
         edan: {
             server: process.env.PACKRAT_EDAN_SERVER ? process.env.PACKRAT_EDAN_SERVER : /* istanbul ignore next */ 'https://edan.si.edu/',
+            api3d: process.env.PACKRAT_EDAN_3D_API ? process.env.PACKRAT_EDAN_3D_API : /* istanbul ignore next */ 'https://3d-api.si.edu/',
             appId: process.env.PACKRAT_EDAN_APPID ? process.env.PACKRAT_EDAN_APPID : /* istanbul ignore next */ 'OCIO3D',
             authKey: process.env.PACKRAT_EDAN_AUTH_KEY ? process.env.PACKRAT_EDAN_AUTH_KEY : /* istanbul ignore next */  ''
         }
