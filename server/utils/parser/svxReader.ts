@@ -37,6 +37,7 @@ export class SvxExtraction {
             CountMeta: this.metaCount,
             CountSetup: this.setupCount,
             CountTour: this.tourCount,
+            EdanUUID: null,
             idScene: 0
         });
     }
@@ -89,7 +90,7 @@ export class SvxExtraction {
                 for (const asset of derivative.assets) {
                     const xref: DBAPI.ModelSceneXref = new DBAPI.ModelSceneXref({
                         idModelSceneXref: 0, idModel: 0, idScene: 0, Name: asset.uri, Usage: derivative.usage, Quality: derivative.quality,
-                        FileSize: BigInt(asset.byteSize) || null, UVResolution: asset.imageSize || null,
+                        FileSize: asset.byteSize !== undefined ? BigInt(asset.byteSize) : null, UVResolution: asset.imageSize || null,
                         BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
                         TS0, TS1, TS2, R0, R1, R2, R3
                     });

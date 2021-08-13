@@ -145,3 +145,6 @@ ADD CONSTRAINT `fk_metadata_systemobject2`
   REFERENCES `SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
+
+-- 2021-08-12 Jon
+ALTER TABLE Scene ADD COLUMN EdanUUID varchar(64) NULL;

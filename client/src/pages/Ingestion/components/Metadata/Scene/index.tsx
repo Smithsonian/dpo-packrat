@@ -71,7 +71,8 @@ function Scene(props: SceneProps): React.ReactElement {
         CountModel: 0,
         CountMeta: 0,
         CountSetup: 0,
-        CountTour: 0
+        CountTour: 0,
+        EdanUUID: ''
     });
     const [modalOpen, setModalOpen] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState('');
@@ -122,9 +123,7 @@ function Scene(props: SceneProps): React.ReactElement {
         const { name, value } = target;
         updateMetadataField(metadataIndex, name, value, MetadataType.scene);
     };
-    console.log('idAssetVersion from Scene', idAssetVersion);
 
-    //
     const openSourceObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship('Source');
@@ -197,6 +196,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 name={scene.name}
                 hasBeenQCd={scene.hasBeenQCd}
                 isOriented={scene.isOriented}
+                EdanUUID={scene.EdanUUID}
             />
             <ObjectSelectModal
                 open={modalOpen}

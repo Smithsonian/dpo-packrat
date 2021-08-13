@@ -14,6 +14,7 @@ type Scene {
     CountMeta: Int
     CountSetup: Int
     CountTour: Int
+    EdanUUID: String
     AssetThumbnail: Asset
     ModelSceneXref: [ModelSceneXref]
     SystemObject: SystemObject

@@ -153,7 +153,8 @@ export const defaultSceneFields: SceneFields = {
     hasBeenQCd: false,
     isOriented: false,
     name: '',
-    directory: ''
+    directory: '',
+    EdanUUID: '',
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;
