@@ -87,6 +87,7 @@ type SceneDetailFields {
     CountMeta: Int
     CountSetup: Int
     CountTour: Int
+    EdanUUID: String
     idScene: Int
 }
 

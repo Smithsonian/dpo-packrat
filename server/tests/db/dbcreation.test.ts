@@ -431,6 +431,7 @@ describe('DB Creation Test Suite', () => {
                 CountMeta: 0,
                 CountSetup: 0,
                 CountTour: 0,
+                EdanUUID: null,
                 idScene: 0
             });
         expect(scene).toBeTruthy();
@@ -450,6 +451,7 @@ describe('DB Creation Test Suite', () => {
             CountMeta: 0,
             CountSetup: 0,
             CountTour: 0,
+            EdanUUID: null,
             idScene: 0
         });
         expect(sceneNulls).toBeTruthy();

@@ -64,6 +64,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                 updateDetailField(eSystemObjectType.eScene, 'CountMeta', getScene?.Scene?.CountMeta);
                 updateDetailField(eSystemObjectType.eScene, 'CountSetup', getScene?.Scene?.CountSetup);
                 updateDetailField(eSystemObjectType.eScene, 'CountTour', getScene?.Scene?.CountTour);
+                updateDetailField(eSystemObjectType.eScene, 'EdanUUID', getScene?.Scene?.EdanUUID);
             }
         };
 
@@ -97,6 +98,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                 <FieldType required label='Is Oriented' direction='row' containerProps={rowFieldProps}>
                     <Checkbox name='IsOriented' checked={SceneDetails.IsOriented} color='primary' onChange={setCheckboxField} />
                 </FieldType>
+                <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} />
                 <ReadOnlyRow label='Scene Count' value={SceneDetails.CountScene} padding={15} />
                 <ReadOnlyRow label='Node Count' value={SceneDetails.CountNode} padding={15} />
                 <ReadOnlyRow label='Camera Count' value={SceneDetails.CountCamera} padding={15} />
