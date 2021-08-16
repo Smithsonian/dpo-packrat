@@ -81,7 +81,7 @@ export class WorkflowListResult {
                     break;
 
                 case eWorkflowListSortColumns.eState:
-                    orderBy = 'ORDER BY IFNULL(JOB.WFState, JOB.JobStatus)' + ((sortOrder === false) ? ' DESC' : '');
+                    orderBy = 'ORDER BY IFNULL(JOB.JobStatus, WFL.WFState)' + ((sortOrder === false) ? ' DESC' : '');
                     break;
 
                 case eWorkflowListSortColumns.eOwner:
