@@ -22,9 +22,8 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     container: {
         marginBottom: 10,
+        width: 'fit-content',
         '& > *': {
-            width: '20%',
-            maxWidth: '300px',
             minWidth: '200px',
             height: '20px',
             '&:not(:last-child)': {
@@ -54,7 +53,6 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     },
                     fetchPolicy: 'no-cache'
                 });
-
                 updateDetailField(eSystemObjectType.eScene, 'ModelSceneXref', getScene?.Scene?.ModelSceneXref);
                 updateDetailField(eSystemObjectType.eScene, 'CountScene', getScene?.Scene?.CountScene);
                 updateDetailField(eSystemObjectType.eScene, 'CountNode', getScene?.Scene?.CountNode);
