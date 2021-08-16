@@ -158,7 +158,6 @@ function Scene(props: SceneProps): React.ReactElement {
         updateMetadataField(metadataIndex, objectRelationship === 'Source' ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.scene);
         onModalClose();
     };
-    //
 
     return (
         <Box className={classes.container}>
