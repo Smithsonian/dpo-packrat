@@ -300,3 +300,5 @@ export const workflowListSortEnumToString = (col: eWorkflowListSortColumns): str
         default: return 'idWorkflowSet';
     }
 };
+
+export const repositoryRowCount = 300;

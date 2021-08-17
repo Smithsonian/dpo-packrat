@@ -28,6 +28,7 @@ import RepositoryTreeHeader from './RepositoryTreeHeader';
 import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
 import InViewTreeItem from './InViewTreeItem';
+import { repositoryRowCount } from '../../../../types/server';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
@@ -154,7 +155,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             );
 
             // non-root case for end of list
-            if ((index + 1) % 300 === 0 && index + 1 === children.length && isChild) {
+            if ((index + 1) % repositoryRowCount === 0 && index + 1 === children.length && isChild) {
                 return (
                     <InViewTreeItem
                         key={idSystemObject}
@@ -177,7 +178,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             }
 
             // root case for end of list
-            if ((index + 1) % 300 === 0 && index + 1 === children.length) {
+            if ((index + 1) % repositoryRowCount === 0 && index + 1 === children.length) {
                 return (
                     <InViewTreeItem
                         key={idSystemObject}
