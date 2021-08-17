@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { InView } from 'react-intersection-observer';
 import StyledTreeItem from './StyledTreeItem';
+import { TreeLabelEllipsis, TreeLabelLoading } from './TreeLabel';
 
 interface InViewTreeItemProps {
     nodeId: string;
@@ -14,11 +15,16 @@ interface InViewTreeItemProps {
 
 function InViewTreeItem(props: InViewTreeItemProps): React.ReactElement {
     const { nodeId, triggerOnce, childNodesContent, icon, color, label, onView } = props;
+    const [loading, setLoading] = useState(false);
     return (
         <InView
             triggerOnce={triggerOnce}
-            onChange={inView => {
-                if (inView) onView();
+            onChange={async inView => {
+                if (inView) {
+                    setLoading(true);
+                    await onView();
+                    setLoading(false);
+                }
             }}
         >
             {({ ref }) => {
@@ -27,6 +33,7 @@ function InViewTreeItem(props: InViewTreeItemProps): React.ReactElement {
                         <StyledTreeItem nodeId={nodeId} color={color} label={label} icon={icon}>
                             {childNodesContent}
                         </StyledTreeItem>
+                        {loading ? <TreeLabelLoading /> : <TreeLabelEllipsis />}
                     </div>
                 );
             }}

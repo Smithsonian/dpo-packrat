@@ -130,6 +130,16 @@ export function TreeLabelLoading(): React.ReactElement {
     );
 }
 
+
+export function TreeLabelEllipsis(): React.ReactElement {
+    const classes = useLabelStyle();
+    return (
+        <div className={classes.container}>
+            <span title='possibly more results'>...</span>
+        </div>
+    );
+}
+
 interface TreeLabelEmptyProps {
     label: string;
     objectType: number;
