@@ -9,6 +9,10 @@ if (!process.env.PACKRAT_EDAN_3D_API)
     process.env.PACKRAT_EDAN_3D_API = 'http://dev.3d.api.si.edu/';
 if (!process.env.PACKRAT_EDAN_APPID)
     process.env.PACKRAT_EDAN_APPID = 'OCIO3D';
+if (!process.env.PACKRAT_EDAN_UPSERT_RESOURCE_ROOT)
+    process.env.PACKRAT_EDAN_UPSERT_RESOURCE_ROOT = 'nfs:///ifs/smb/ocio/ocio-3ddigip01/upload/';
+if (!process.env.PACKRAT_EDAN_STAGING_ROOT)
+    process.env.PACKRAT_EDAN_STAGING_ROOT = './var/Storage/StagingEdan';
 if (!process.env.PACKRAT_OCFL_STORAGE_ROOT)
     process.env.PACKRAT_OCFL_STORAGE_ROOT = './var/Storage/Repository';
 if (!process.env.PACKRAT_OCFL_STAGING_ROOT)
