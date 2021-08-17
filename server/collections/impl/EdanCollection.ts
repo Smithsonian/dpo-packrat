@@ -117,18 +117,45 @@ export class EdanCollection implements COL.ICollection {
             type: 'edanmdm',
             content: edanmdm,
         };
+        return this.upsertContent(body, 'createEdanMDM');
+    }
 
-        // LOG.info(`EdanCollection.createEdanMDM: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
+    async createEdan3DPackage(path: string, sceneFile?: string | undefined): Promise<COL.EdanRecord | null> {
+        const body: any = sceneFile ? { resource: path, document: sceneFile } : { resource: path };
+        return this.upsertResource(body, 'createEdan3DPackage');
+    }
+
+    /** c.f. http://dev.3d.api.si.edu/apidocs/#api-admin-upsertContent */
+    private async upsertContent(body: any, caller: string): Promise<COL.EdanRecord | null> {
+        // LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertContent', '', JSON.stringify(body), 'application/json');
         if (!reqResult.success) {
-            LOG.error(`EdanCollection.createEdanMDM failed: ${reqResult.statusText}`, LOG.LS.eCOLL);
+            LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
             return null;
         }
 
         try {
             return JSON.parse(reqResult.output)?.response ?? null;
         } catch (error) {
-            LOG.error(`EdanCollection.createEdanMDM parse error: ${JSON.stringify(reqResult)}`, LOG.LS.eCOLL, error);
+            LOG.error(`EdanCollection.${caller} parse error: ${JSON.stringify(reqResult)}`, LOG.LS.eCOLL, error);
+            return null;
+        }
+    }
+
+    /** c.f. http://dev.3d.api.si.edu/apidocs/#api-admin-upsertResource */
+    private async upsertResource(body: any, caller: string): Promise<COL.EdanRecord | null> {
+        // LOG.info(`EdanCollection.upsertResource: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
+        const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertResource', '', JSON.stringify(body), 'application/json');
+        LOG.info(`EdanCollection.upsertResource: ${JSON.stringify(body)}: ${reqResult.output}`, LOG.LS.eCOLL);
+        if (!reqResult.success) {
+            LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
+            return null;
+        }
+
+        try {
+            return JSON.parse(reqResult.output)?.response ?? null;
+        } catch (error) {
+            LOG.error(`EdanCollection.${caller} parse error: ${JSON.stringify(reqResult)}`, LOG.LS.eCOLL, error);
             return null;
         }
     }

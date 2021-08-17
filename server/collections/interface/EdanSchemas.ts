@@ -1,35 +1,50 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, camelcase */
+import { IDocument } from '../../types/voyager';
+
+// c.f. https://github.com/Smithsonian/edan-schemas
 export type EdanLabelContent = {
     label: string;
     content: string;
 };
 
 export type EdanMedia = {
-    thumbnail: string;
     content: string;
     type: string;
+    thumbnail: string;
+    summary?: string;
+    guid?: string;
     voyagerId?: string;
-    usage: {
-        access: string;
-        text: string;
-        codes: string;
+    idsId?: string;
+    caption?: string;
+    alt?: string;
+    credit?: string;
+    rights?: string;
+    mime_type?: string;
+    usage?: {
+        access?: string;
+        text?: string;
+        codes?: string;
     }
 };
 
 export type EdanMDMContent = {
     descriptiveNonRepeating: {
         title: EdanLabelContent;
+        data_source: string;
         record_ID: string;
         unit_code: string;
-        metadata_usage: {
-            access: string;
-            content?: string;
-        }
-        data_source?: string;
+        title_sort?: string;
         online_media?: {
             media: EdanMedia[];
-            mediaCount: number;
+            mediaCount: string;
         }
+        guid?: string;
+        metadata_usage?: {
+            access?: string;
+            text?: string;
+            content?: string;
+        }
+        record_link?: string;
     }
 
     indexedStructured?: {
@@ -49,6 +64,10 @@ export type EdanMDMContent = {
         notes?: EdanLabelContent[];
         physicalDescription?: EdanLabelContent[];
     }
+};
+
+export type Edan3DPackageContent = {
+    document: IDocument;
 };
 
 export type EdanRecord = {

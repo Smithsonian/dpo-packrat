@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { EdanMDMContent, EdanRecord }  from './EdanMDM';
+import { EdanMDMContent, EdanRecord }  from './EdanSchemas';
 
 export type CollectionQueryResultRecord = {
     name: string;
@@ -24,6 +24,7 @@ export type CollectionQueryOptions = {
 export interface ICollection {
     queryCollection(query: string, rows: number, start: number, options: CollectionQueryOptions | null): Promise<CollectionQueryResults | null>;
     createEdanMDM(edanmdm: EdanMDMContent, status: number, publicSearch: boolean): Promise<EdanRecord | null>;
+    createEdan3DPackage(path: string, sceneFile?: string | undefined): Promise<EdanRecord | null>;
 
     /** Identifier services */
     /** Pass in a null shoulder to use the system shoulder */

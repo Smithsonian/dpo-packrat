@@ -1,3 +1,3 @@
 export * from './CollectionFactory';
 export * from './ICollection';
-export * from './EdanMDM';
+export * from './EdanSchemas';
