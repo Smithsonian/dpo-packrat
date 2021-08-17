@@ -120,7 +120,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const { getObjectChildren } = data;
             const { entries, cursorMark } = getObjectChildren;
             if (cursorMark) {
-                const newCursors = cursors;
+                const newCursors = new Map(cursors);
                 if (cursorMark !== rootCursor) {
                     newCursors.set('root', cursorMark);
                 } else {
@@ -147,7 +147,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             set({ tree: updatedTree });
 
             if (cursorMark) {
-                const newCursors = cursors;
+                const newCursors = new Map(cursors);
                 newCursors.set(nodeId, cursorMark);
                 set({ cursors: newCursors });
             }
@@ -171,7 +171,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 if (cursorMark !== cursors.get(nodeId)) {
                     newCursors.set(nodeId, cursorMark);
                 } else {
-                    newCursors.set(nodeId, '');
+                    newCursors.delete(nodeId);
                 }
                 set({ cursors: newCursors });
             }
@@ -231,7 +231,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 captureMethod: validateArray<number>(filter.captureMethod, captureMethod),
                 variantType: validateArray<number>(filter.variantType, variantType),
                 modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
-                modelFileType: validateArray<number>(filter.modelFileType, modelFileType),
+                modelFileType: validateArray<number>(filter.modelFileType, modelFileType)
                 // dateCreatedFrom: filter.dateCreatedFrom,
                 // dateCreatedTo: filter.dateCreatedTo,
             };
@@ -256,7 +256,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelPurpose: [],
             modelFileType: [],
             dateCreatedFrom: null,
-            dateCreatedTo: null,
+            dateCreatedTo: null
         };
         set({ ...stateValues, loading: true });
         if (modifyCookie) {
@@ -282,7 +282,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelPurpose,
             modelFileType,
             dateCreatedFrom,
-            dateCreatedTo,
+            dateCreatedTo
         } = get();
 
         return {
@@ -300,7 +300,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelPurpose,
             modelFileType,
             dateCreatedFrom,
-            dateCreatedTo,
+            dateCreatedTo
         };
     },
     setCookieToState: (): void => {
@@ -318,7 +318,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelPurpose,
             modelFileType,
             dateCreatedFrom,
-            dateCreatedTo,
+            dateCreatedTo
         } = getFilterState();
         const currentFilterState = {
             repositoryRootType,
