@@ -15,6 +15,7 @@ type RepositoryStore = {
     search: string;
     keyword: string;
     tree: Map<string, NavigationResultEntry[]>;
+    cursors: Map<string, string>;
     loading: boolean;
     updateSearch: (value: string) => void;
     toggleFilter: () => void;
@@ -38,7 +39,9 @@ type RepositoryStore = {
     resetRepositoryFilter: (modifyCookie?: boolean) => void;
     resetKeywordSearch: () => void;
     initializeTree: () => Promise<void>;
+    getMoreRoot: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
+    getMoreChildren: (nodeId: string, cursorMark: string) => Promise<void>;
     updateRepositoryFilter: (filter: RepositoryFilter) => void;
     setCookieToState: () => void;
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined) => void;
@@ -54,6 +57,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     search: '',
     keyword: '',
     tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
+    cursors: new Map<string, string>(),
     loading: true,
     repositoryRootType: [],
     objectsToDisplay: [],
@@ -84,7 +88,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ isExpanded: !isExpanded });
     },
     initializeTree: async (): Promise<void> => {
-        const { getFilterState, getChildrenForIngestion, repositoryBrowserRoot } = get();
+        const { getFilterState, getChildrenForIngestion, cursors, repositoryBrowserRoot } = get();
         const filter = getFilterState();
         if (repositoryBrowserRoot) {
             getChildrenForIngestion(repositoryBrowserRoot);
@@ -92,25 +96,85 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const { data, error } = await getObjectChildrenForRoot(filter);
             if (data && !error) {
                 const { getObjectChildren } = data;
-                const { entries } = getObjectChildren;
+                const { entries, cursorMark } = getObjectChildren;
+                if (cursorMark) {
+                    const newCursors = cursors;
+                    newCursors.set('root', cursorMark);
+                    set({ cursors: newCursors });
+                }
                 const entry: [string, NavigationResultEntry[]] = [treeRootKey, entries];
                 const updatedTree = new Map([entry]);
                 set({ tree: updatedTree, loading: false });
             }
         }
-
+    },
+    getMoreRoot: async (): Promise<void> => {
+        const { tree, cursors, getFilterState } = get();
+        const filter = getFilterState();
+        const rootCursor = cursors.get('root');
+        if (rootCursor) {
+            filter.cursorMark = rootCursor;
+        }
+        const { data, error } = await getObjectChildrenForRoot(filter);
+        if (data && !error) {
+            const { getObjectChildren } = data;
+            const { entries, cursorMark } = getObjectChildren;
+            if (cursorMark) {
+                const newCursors = cursors;
+                if (cursorMark !== rootCursor) {
+                    newCursors.set('root', cursorMark);
+                } else {
+                    newCursors.set('root', '');
+                }
+                set({ cursors: newCursors });
+            }
+            const newRoot = tree.get('root')?.concat(entries) as NavigationResultEntry[];
+            const entry: [string, NavigationResultEntry[]] = [treeRootKey, newRoot];
+            const updatedTree = new Map([entry]);
+            set({ tree: updatedTree, loading: false });
+        }
     },
     getChildren: async (nodeId: string): Promise<void> => {
-        const { tree, getFilterState } = get();
+        const { tree, getFilterState, cursors } = get();
         const filter = getFilterState();
         const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
         const { data, error } = await getObjectChildren(idSystemObject, filter);
         if (data && !error) {
             const { getObjectChildren } = data;
-            const { entries } = getObjectChildren;
+            const { entries, cursorMark } = getObjectChildren;
             const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
             updatedTree.set(nodeId, entries);
             set({ tree: updatedTree });
+
+            if (cursorMark) {
+                const newCursors = cursors;
+                newCursors.set(nodeId, cursorMark);
+                set({ cursors: newCursors });
+            }
+        }
+    },
+    getMoreChildren: async (nodeId: string, cursorMark: string): Promise<void> => {
+        const { tree, cursors, getFilterState } = get();
+        const filter = getFilterState();
+        const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
+        if (cursorMark) filter.cursorMark = cursorMark;
+        const { data, error } = await getObjectChildren(idSystemObject, filter);
+        if (data && !error) {
+            const { getObjectChildren } = data;
+            const { entries, cursorMark } = getObjectChildren;
+            const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
+            const previousEntries = updatedTree.get(nodeId) || [];
+            updatedTree.set(nodeId, [...previousEntries, ...entries]);
+            set({ tree: updatedTree });
+            if (cursorMark) {
+                const newCursors = cursors;
+                if (cursorMark !== cursors.get(nodeId)) {
+                    newCursors.set(nodeId, cursorMark);
+                } else {
+                    newCursors.set(nodeId, '');
+                }
+                set({ cursors: newCursors });
+            }
         }
     },
     removeUnitsOrProjects: (id: number, type: eSystemObjectType): void => {

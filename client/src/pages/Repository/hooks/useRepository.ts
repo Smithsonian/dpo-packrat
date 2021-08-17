@@ -30,7 +30,7 @@ function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0):
                 dateCreatedFrom: filter.dateCreatedFrom,
                 dateCreatedTo: filter.dateCreatedTo,
                 rows: 300,
-                cursorMark: ''
+                cursorMark: filter.cursorMark ?? ''
             }
         }
     });
@@ -58,7 +58,7 @@ function getObjectChildren(idRoot: number, filter: RepositoryFilter): Promise<Ap
                 dateCreatedFrom: filter.dateCreatedFrom,
                 dateCreatedTo: filter.dateCreatedTo,
                 rows: 300,
-                cursorMark: ''
+                cursorMark: filter.cursorMark ?? ''
             }
         }
     });

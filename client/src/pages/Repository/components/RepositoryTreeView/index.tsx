@@ -27,6 +27,7 @@ import {
 import RepositoryTreeHeader from './RepositoryTreeHeader';
 import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
+import InViewTreeItem from './InViewTreeItem';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
@@ -67,14 +68,19 @@ interface RepositoryTreeViewProps {
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { isModal = false, selectedItems = [], onSelect, onUnSelect } = props;
+    const [tree, getChildren, getMoreRoot, getMoreChildren, cursors] = useRepositoryStore(state => [
+        state.tree,
+        state.getChildren,
+        state.getMoreRoot,
+        state.getMoreChildren,
+        state.cursors
+    ]);
+    const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
 
     const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
 
     const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
-
-    const [tree, getChildren] = useRepositoryStore(state => [state.tree, state.getChildren]);
-    const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
 
     const onNodeToggle = useCallback(
         async (_, nodeIds: string[]) => {
@@ -90,11 +96,11 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     );
 
     // recursive
-    const renderTree = (children: NavigationResultEntry[] | undefined) => {
-        if (!children)
-            return null;
+    const renderTree = (children: NavigationResultEntry[] | undefined, isChild?: boolean, parentNodeId?: string) => {
+        if (!children) return null;
         return children.map((child: NavigationResultEntry, index: number) => {
             const { idSystemObject, objectType, idObject, name, metadata } = child;
+
             const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject);
             const childNodes = tree.get(nodeId);
 
@@ -102,7 +108,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
             if (childNodes) {
                 if (childNodes.length) {
-                    childNodesContent = renderTree(childNodes);
+                    childNodesContent = renderTree(childNodes, true, nodeId);
                 } else {
                     childNodesContent = <TreeLabelEmpty label={name} objectType={objectType} />;
                 }
@@ -147,6 +153,46 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                 />
             );
 
+            // non-root case for end of list
+            if ((index + 1) % 300 === 0 && index + 1 === children.length && isChild) {
+                return (
+                    <InViewTreeItem
+                        key={idSystemObject}
+                        nodeId={nodeId}
+                        icon={icon}
+                        color={color}
+                        label={label}
+                        childNodesContent={childNodesContent}
+                        triggerOnce
+                        onView={async () => {
+                            if (parentNodeId) {
+                                const parentCursor = cursors.get(parentNodeId);
+                                if (parentCursor && parentCursor.length) {
+                                    await getMoreChildren(parentNodeId, parentCursor);
+                                }
+                            }
+                        }}
+                    />
+                );
+            }
+
+            // root case for end of list
+            if ((index + 1) % 300 === 0 && index + 1 === children.length) {
+                return (
+                    <InViewTreeItem
+                        key={idSystemObject}
+                        nodeId={nodeId}
+                        icon={icon}
+                        color={color}
+                        label={label}
+                        childNodesContent={childNodesContent}
+                        triggerOnce
+                        onView={async () => getMoreRoot()}
+                    />
+                );
+            }
+
+            // base case
             return (
                 <StyledTreeItem key={idSystemObject} nodeId={nodeId} icon={icon} color={color} label={label}>
                     {childNodesContent}

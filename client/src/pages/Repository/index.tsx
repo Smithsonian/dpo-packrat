@@ -52,6 +52,7 @@ export type RepositoryFilter = {
     modelFileType: number[];
     dateCreatedFrom?: Date | string | null;
     dateCreatedTo?: Date | string | null;
+    cursorMark?: string | null;
 };
 
 function Repository(): React.ReactElement {
