@@ -88,7 +88,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ isExpanded: !isExpanded });
     },
     initializeTree: async (): Promise<void> => {
-        const { getFilterState, getChildrenForIngestion, cursors, repositoryBrowserRoot } = get();
+        const { getFilterState, getChildrenForIngestion, repositoryBrowserRoot } = get();
         const filter = getFilterState();
         if (repositoryBrowserRoot) {
             getChildrenForIngestion(repositoryBrowserRoot);
@@ -98,7 +98,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 const { getObjectChildren } = data;
                 const { entries, cursorMark } = getObjectChildren;
                 if (cursorMark) {
-                    const newCursors = cursors;
+                    const newCursors = new Map<string, string>();
                     newCursors.set('root', cursorMark);
                     set({ cursors: newCursors });
                 }
