@@ -124,15 +124,16 @@ export class WorkflowListResult {
                 JOIN WorkflowStep AS WFS ON (WFLI.idWorkflowStep = WFS.idWorkflowStep)
             ),
             
-            JobLast (idWorkflow, idJobRun, idVJobType, JobType, JobStatus, JobStart, JobEnd, JobError) AS (
+            JobLast (idWorkflow, idJobRun, idVJobType, JobType, JobStatus, JobStart, JobEnd, JobError, JobOutputPresent) AS (
                 SELECT WFLI.idWorkflow,
-                     JR.idJobRun, J.idVJobType, J.Name AS 'JobType', JR.Status AS 'JobStatus', JR.DateStart AS 'JobStart', JR.DateEnd AS 'JobEnd', JR.Error AS 'JobError'
+                     JR.idJobRun, J.idVJobType, J.Name AS 'JobType', JR.Status AS 'JobStatus', JR.DateStart AS 'JobStart',
+                     JR.DateEnd AS 'JobEnd', JR.Error AS 'JobError', CASE WHEN JR.Output IS NULL THEN 0 ELSE 1 END AS 'JobOutputPresent'
                 FROM WFLastIDs AS WFLI
                 JOIN JobRun AS JR ON (WFLI.idJobRun = JR.idJobRun)
                 JOIN Job AS J ON (JR.idJob = J.idJob)
             )
             
-            SELECT WF.idWorkflow, WF.idWorkflowSet, WR.idWorkflowReport, JOB.idJobRun,
+            SELECT WF.idWorkflow, WF.idWorkflowSet, WR.idWorkflowReport, CASE WHEN JOB.JobOutputPresent = 1 THEN JOB.idJobRun ELSE NULL END AS 'idJobRun',
                 IFNULL(JOB.JobType, IFNULL(VWF.Term, 'Unknown')) AS 'Type',
                 CASE IFNULL(JOB.JobStatus, WFL.WFState) WHEN 0 THEN 'Uninitialized' WHEN 1 THEN 'Created' WHEN 2 THEN 'Running' WHEN 3 THEN 'Waiting' WHEN 4 THEN 'Done' WHEN 5 THEN 'Error' WHEN 6 THEN 'Canceled' ELSE 'Uninitialized' END AS 'State',
                 WF.idUserInitiator AS 'idUserInitiator', WFL.idWFSOwner AS 'idOwner', WF.DateInitiated AS 'DateStart', WF.DateUpdated AS 'DateLast',

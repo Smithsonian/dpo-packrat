@@ -4,6 +4,7 @@ import * as COL from '../../collections/interface/';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as L from 'lodash';
+// import { join } from 'path';
 
 afterAll(async done => {
     // await H.Helpers.sleep(3000);
@@ -13,21 +14,27 @@ afterAll(async done => {
 enum eTestType {
     eRegressionSuite = 1,
     eScrapeDPO = 2,
-    eScrapeEDAN = 3
+    eScrapeEDAN = 3,
+    eOneOff
 }
+
+const eTYPE: eTestType = +eTestType.eRegressionSuite; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eRegressionSuite!
 
 const now: Date = new Date();
 const yyyymmdd: string = now.toISOString().split('T')[0];
 const slug: string = (Math.random().toString(16) + '0000000').substr(2, 12);
 let idCounter: number = 0;
 
-const eTYPE: eTestType = +eTestType.eRegressionSuite; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eRegressionSuite!
-
 describe('Collections: EdanCollection', () => {
     jest.setTimeout(180000);
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
 
     switch (eTYPE) {
+        case eTestType.eOneOff:
+            executeTestCreateEdan3DPackage(ICol);
+            executeTestCreateMDM(ICol);
+            break;
+
         case eTestType.eRegressionSuite:
             executeTestQuery(ICol, 'Armstrong Space Suit', false);
             executeTestQuery(ICol, 'A19730040000', false);
@@ -49,7 +56,8 @@ describe('Collections: EdanCollection', () => {
             executeTestQuery(ICol, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false, false, '3d_package');
 
             // edanmdm creation
-            executeTestCreateMDM(ICol);
+            // executeTestCreateMDM(ICol);
+            // executeTestCreateEdan3DPackage(ICol);
 
             test('Collections: EdanCollection Ark Tests', () => {
                 executeArkTests(ICol);
@@ -102,6 +110,7 @@ function executeTestCreateMDM(ICol: COL.ICollection): void {
     const edanmdm: COL.EdanMDMContent = {
         descriptiveNonRepeating: {
             title: { label: 'Title', content: 'Packrat Test' },
+            data_source: 'NMNH - Anthropology Dept.',
             record_ID: 'dpo_3d_test_',
             unit_code: 'OCIO_DPO3D',
             metadata_usage: { access: 'Usage conditions apply' }
@@ -113,7 +122,7 @@ function executeTestCreateMDM(ICol: COL.ICollection): void {
     let edanmdmClone: COL.EdanMDMContent = edanmdm;
     let status: number = 0;
     let publicSearch: boolean = true;
-    for (let testCase: number = 0; testCase <= 9; testCase++) {
+    for (let testCase: number = 0; testCase <= 8; testCase++) {
         const recordId: string = nextID();
         edanmdmClone = L.cloneDeep(edanmdmClone);
         edanmdmClone.descriptiveNonRepeating.title.content = 'Packrat Test Subject ' + recordId;
@@ -121,8 +130,7 @@ function executeTestCreateMDM(ICol: COL.ICollection): void {
 
         switch (testCase) {
             default: break;
-            case 1:  edanmdmClone.descriptiveNonRepeating.data_source = 'NMNH - Anthropology Dept.'; break;
-            case 2:  edanmdmClone.descriptiveNonRepeating.online_media = { media: [{
+            case 1:  edanmdmClone.descriptiveNonRepeating.online_media = { media: [{
                 'thumbnail': 'https://3d-api.si.edu/content/document/3d_package:6ddc70e2-bdef-46fe-b5cb-90eb991afb15/scene-image-thumb.jpg',
                 'content': 'https://3d-api.si.edu/voyager/3d_package:6ddc70e2-bdef-46fe-b5cb-90eb991afb15',
                 'type': '3d_voyager',
@@ -132,14 +140,14 @@ function executeTestCreateMDM(ICol: COL.ICollection): void {
                     'text': '',
                     'codes': ''
                 }
-            }], mediaCount: 1 }; break;
-            case 3: edanmdmClone.indexedStructured!.date = ['2010s']; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-            case 4: edanmdmClone.indexedStructured!.object_type = ['Reliquaries']; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-            case 5: edanmdmClone.freeText!.notes = [{ label: 'Summary', content: 'Foobar' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-            case 6: edanmdmClone.freeText!.name = [{ label: 'Collector', content: 'Zeebap' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-            case 7: edanmdmClone.freeText!.place = [{ label: 'Site Name', content: 'CooVee' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-            case 8: edanmdmClone.freeText!.dataSource = [{ label: 'Data Source', content: 'Vipers' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-            case 9: edanmdmClone.freeText!.objectRights = [{ label: 'Credit Line', content: 'Foxtrot' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            }], mediaCount: '1' }; break;
+            case 2: edanmdmClone.indexedStructured!.date = ['2010s']; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 3: edanmdmClone.indexedStructured!.object_type = ['Reliquaries']; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 4: edanmdmClone.freeText!.notes = [{ label: 'Summary', content: 'Foobar' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 5: edanmdmClone.freeText!.name = [{ label: 'Collector', content: 'Zeebap' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 6: edanmdmClone.freeText!.place = [{ label: 'Site Name', content: 'CooVee' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 7: edanmdmClone.freeText!.dataSource = [{ label: 'Data Source', content: 'Vipers' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            case 8: edanmdmClone.freeText!.objectRights = [{ label: 'Credit Line', content: 'Foxtrot' }]; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         }
         executeTestCreateMDMWorker(ICol, edanmdmClone, status, publicSearch);   // status: 0 and publicSearch: true are linked somehow
         status = 1 - status;                                                    // status: 1 and publicSearch: false are linked (not published to edan, not published API)
@@ -178,6 +186,26 @@ function executeTestCreateMDMWorker(ICol: COL.ICollection, edanmdm: COL.EdanMDMC
 function nextID(): string {
     const counter: string = ('00000' + (++idCounter).toString()).substr(-5);
     return `dpo_3d_test_${yyyymmdd}-${slug}-${counter}`;
+}
+// #endregion
+
+// #region Create EDAN 3D Package
+function executeTestCreateEdan3DPackage(ICol: COL.ICollection): void {
+    // executeTestCreateEdan3DPackageWorker(ICol, 'file:///' + mockScenePath.replace(/\\/g, '/'), 'scene.svx.json');
+    // executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///ifs/smb/ocio/ocio-3ddigip01/upload/ff607e3c-3d88-4422-a246-3976aa4839dc.zip', 'scene.svx.json');
+    // executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///ifs/smb/ocio/ocio-3ddigip01/upload/fbcc6998-41a8-41cf-af57-81a82098f3ca.zip', 'scene.svx.json');
+    executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///ifs/smb/ocio/ocio-3ddigip01/upload/f550015a-7e43-435b-90dc-e7c1367bc5fb.zip', 'scene.svx.json');
+}
+
+function executeTestCreateEdan3DPackageWorker(ICol: COL.ICollection, path: string, scene: string): void {
+    test(`Collections: EdanCollection.createEdan3DPackage ${path}, ${scene}`, async () => {
+        const edanRecord: COL.EdanRecord | null = await ICol.createEdan3DPackage(path);
+        expect(edanRecord).toBeTruthy();
+        LOG.info(`EdanCollection.test.executeTestCreateEdan3DPackage created record ${JSON.stringify(edanRecord, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+
+        // if (edanRecord)
+        //     expect(edanRecord.content).toMatch(path);
+    });
 }
 // #endregion
 

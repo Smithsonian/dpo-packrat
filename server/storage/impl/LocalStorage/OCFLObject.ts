@@ -128,7 +128,14 @@ export class OCFLObject {
             } else if (inputStream) {
                 // We need to both compute the hash and stream bytes to the right location
                 const hashResultsPromise = H.Helpers.computeHashFromStream(inputStream, ST.OCFLDigestAlgorithm);
-                const writeFilesPromise = H.Helpers.writeStreamToStream(inputStream, fs.createWriteStream(destName));
+                let writeFilesPromise: Promise<H.IOResults> | null = null;
+                try {
+                    writeFilesPromise = H.Helpers.writeStreamToStream(inputStream, fs.createWriteStream(destName));
+                } catch (err) {
+                    const error: string = 'OCFLObject.addOrUpdateWorker createWriteStream exception';
+                    LOG.error(error, LOG.LS.eSTR, err);
+                    return { success: false, error };
+                }
                 const resultsArray = await Promise.all([hashResultsPromise, writeFilesPromise]);
                 [ hashResults, results ] = resultsArray; /* istanbul ignore next */
                 if (!hashResults.success)
