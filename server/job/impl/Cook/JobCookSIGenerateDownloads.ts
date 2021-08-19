@@ -256,7 +256,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                     idModel: model.idModel,
                     idScene: sceneSource.idScene,
                     Name: model.Name,
-                    Usage: null,
+                    Usage: `Download ${downloadType}`,
                     Quality: null,
                     FileSize,
                     UVResolution: null,

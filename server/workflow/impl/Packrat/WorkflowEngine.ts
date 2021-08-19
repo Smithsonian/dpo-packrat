@@ -356,7 +356,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if (SOMTL)
             idSystemObject.push(SOMTL.idSystemObject);
 
-        // initiate WorkflowJob for cook si-voyager-scene
+        // initiate WorkflowJob for cook si-generate-download
         const baseName: string = path.parse(CSIR.assetVersionGeometry.FileName).name;
         const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
             new WFP.WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,

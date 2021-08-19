@@ -125,6 +125,18 @@ export class EdanCollection implements COL.ICollection {
         return this.upsertResource(body, 'createEdan3DPackage');
     }
 
+    async updateEdan3DPackage(url: string, sceneContent: COL.Edan3DPackageContent, status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {
+        const body: any = {
+            url,
+            status,
+            publicSearch,
+            type: '3d_package',
+            content: sceneContent,
+        };
+        return this.upsertContent(body, 'updateEdan3DPackage');
+    }
+
+
     /** c.f. http://dev.3d.api.si.edu/apidocs/#api-admin-upsertContent */
     private async upsertContent(body: any, caller: string): Promise<COL.EdanRecord | null> {
         // LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);

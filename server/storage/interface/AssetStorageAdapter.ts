@@ -679,7 +679,7 @@ export class AssetStorageAdapter {
         const promoteStagedAssetInput: STORE.PromoteStagedAssetInput = {
             storageKeyStaged: assetVersion.StorageKeyStaging,
             storageKeyFinal: storageKey,
-            fileName: asset.FileName,
+            fileName: assetVersion.FileName,
             inputStream,
             metadata: await objectGraph.toPersist(),
             opInfo
@@ -956,7 +956,7 @@ export class AssetStorageAdapter {
         // ingested content lives on remote storage; we'll need to stream it back to the server for processing
         const readStreamInput: STORE.ReadStreamInput = {
             storageKey,
-            fileName: asset.FileName,
+            fileName: assetVersion.FileName,
             version: assetVersion.Version,
             staging: !assetVersion.Ingested
         };
