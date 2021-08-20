@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 export function toTitleCase(str: string): string {
     return str.replace(/\w\S*/g, txt => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -101,3 +102,24 @@ export function extractModelConstellation(data: any) {
 
     return { ingestionModel, modelObjects, assets };
 }
+
+
+export const updateSystemObjectUploadRedirect = (idAsset: number | undefined | null, idAssetVersion: number | undefined | null, ObjectType: number | undefined | null, assetType: number | undefined | null = null) => {
+    if (!idAsset || !ObjectType) return '/';
+
+    let assetVersion = '';
+    let asset = '';
+    let fileType = '';
+
+    if (idAsset) asset = `idAsset=${idAsset}`;
+    if (idAssetVersion) assetVersion = `&idAssetVersion=${idAssetVersion}`;
+    if (assetType) fileType = `&fileType=${assetType}`;
+
+    return `/ingestion/uploads?${asset}${assetVersion}${fileType}&type=${ObjectType}&mode=1`;
+};
+
+export const ingestSystemObjectUploadRedirect = (fileName: string) => {
+    return `/ingestion/uploads?name=${fileName}&mode=2`;
+};
+
+export const truncateWithEllipses = (text: string, max: number) => text.substr(0, max - 1) + (text.length > max ? ' ...' : '');

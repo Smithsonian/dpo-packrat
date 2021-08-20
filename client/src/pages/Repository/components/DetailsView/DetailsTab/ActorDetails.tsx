@@ -5,29 +5,20 @@
  * This component renders details tab for Actor specific details used in DetailsTab component.
  */
 import { Box } from '@material-ui/core';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { InputField, Loader } from '../../../../../components';
-import { ActorDetailFields } from '../../../../../types/graphql';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
+import { eSystemObjectType } from '../../../../../types/server';
+import { useDetailTabStore } from '../../../../../store';
 
 function ActorDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
-
-    const [details, setDetails] = useState<ActorDetailFields>({});
-
-    useEffect(() => {
-        if (data && !loading) {
-            const { Actor } = data.getDetailsTabDataForObject;
-            setDetails({
-                OrganizationName: Actor?.OrganizationName,
-            });
-        }
-    }, [data, loading]);
+    const [ActorDetails, updateDetailField] = useDetailTabStore(state => [state.ActorDetails, state.updateDetailField]);
 
     useEffect(() => {
-        onUpdateDetail(objectType, details);
-    }, [details]);
+        onUpdateDetail(objectType, ActorDetails);
+    }, [ActorDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -35,7 +26,7 @@ function ActorDetails(props: DetailComponentProps): React.ReactElement {
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
-        setDetails(details => ({ ...details, [name]: value }));
+        updateDetailField(eSystemObjectType.eActor, name, value);
     };
 
     const actorData = data.getDetailsTabDataForObject?.Actor;
@@ -45,10 +36,10 @@ function ActorDetails(props: DetailComponentProps): React.ReactElement {
             <InputField
                 viewMode
                 required
-                updated={isFieldUpdated(details, actorData, 'OrganizationName')}
+                updated={isFieldUpdated(ActorDetails, actorData, 'OrganizationName')}
                 disabled={disabled}
                 label='OrganizationName'
-                value={details?.OrganizationName}
+                value={ActorDetails?.OrganizationName}
                 name='OrganizationName'
                 onChange={onSetField}
             />

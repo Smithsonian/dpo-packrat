@@ -1,25 +1,41 @@
+/* eslint-disable react/jsx-max-props-per-line */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * ReferenceModels
  *
  * This component renders the reference model list for Scene metadata ingestion component.
+ * The list also provides links to allow individual ingestion/update of models depending
+ * on whether they exist in system or not.
  */
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../../components';
-import { ReferenceModelAction, StateReferenceModel } from '../../../../../store';
 import { getDetailsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
+import { updateSystemObjectUploadRedirect, ingestSystemObjectUploadRedirect } from '../../../../../constants';
+import { eSystemObjectType } from '../../../../../types/server';
+import { apolloClient } from '../../../../../graphql';
+import { GetModelDocument, GetAssetDetailsForSystemObjectDocument } from '../../../../../types/graphql';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
-        width: '52vw',
+        [breakpoints.up('lg')]: {
+            width: '60vw'
+        },
+        [breakpoints.only('md')]: {
+            width: '54vw'
+        },
+        minWidth: '880px',
+        maxWidth: '1100px',
         flexDirection: 'column',
         borderRadius: 5,
         padding: 10,
-        backgroundColor: palette.primary.light
+        backgroundColor: palette.primary.light,
+        marginBottom: 10
     },
     list: {
         padding: 10,
@@ -40,6 +56,9 @@ const useStyles = makeStyles(({ palette }) => ({
         textDecoration: 'underline',
         cursor: 'pointer'
     },
+    labelItalics: {
+        fontStyle: 'italic'
+    },
     empty: {
         textAlign: 'center',
         margin: '15px 0px',
@@ -48,38 +67,43 @@ const useStyles = makeStyles(({ palette }) => ({
     }
 }));
 
-const mockReferenceModels: StateReferenceModel[] = [
-    {
-        idSystemObject: 1,
-        name: 'Armstrong1.obj (mock)',
-        fileSize: 1.27e+7,
-        resolution: 2000,
-        boundingBoxP1X: 1.0,
-        boundingBoxP1Y: 1.0,
-        boundingBoxP1Z: 1.0,
-        boundingBoxP2X: 10.0,
-        boundingBoxP2Y: 10.0,
-        boundingBoxP2Z: 10.0,
-        action: ReferenceModelAction.Update
-    },
-    {
-        idSystemObject: 1,
-        name: 'Armstrong2.obj (mock)',
-        fileSize: 1.27e+7,
-        resolution: 2000,
-        boundingBoxP1X: 1.0,
-        boundingBoxP1Y: 1.0,
-        boundingBoxP1Z: 1.0,
-        boundingBoxP2X: 10.0,
-        boundingBoxP2Y: 10.0,
-        boundingBoxP2Z: 10.0,
-        action: ReferenceModelAction.Update
-    }
-];
+interface ReferenceModel {
+    BoundingBoxP1X: number;
+    BoundingBoxP1Y: number;
+    BoundingBoxP1Z: number;
+    BoundingBoxP2X: number;
+    BoundingBoxP2Y: number;
+    BoundingBoxP2Z: number;
+    FileSize: number;
+    Model: any;
+    Name: string;
+    Quality: string;
+    UVResolution: number;
+    Usage: string;
+    idModel: number;
+    idModelSceneXref: number;
+    idScene: number;
+}
 
-function ReferenceModels(): React.ReactElement {
+interface ReferenceModelsProps {
+    referenceModels: ReferenceModel[];
+    idAssetVersion?: number | null;
+}
+
+interface ReferenceModelItemProps {
+    referenceModel: ReferenceModel;
+    idAssetVersion?: number | null;
+}
+
+const roundBoundingBox = (BB: number) => {
+    if (BB == null) return '';
+    return BB < 1 ? Number(BB.toPrecision(3)) : BB.toFixed(2);
+};
+
+function ReferenceModels(props: ReferenceModelsProps): React.ReactElement {
+    const { referenceModels, idAssetVersion } = props;
     const classes = useStyles();
-    const hasModels = !!mockReferenceModels.length;
+    const hasModels = !!(referenceModels?.length ?? 0);
 
     return (
         <Box className={classes.container}>
@@ -87,7 +111,9 @@ function ReferenceModels(): React.ReactElement {
             {!hasModels && <Empty />}
             {hasModels && (
                 <Box className={classes.list}>
-                    {mockReferenceModels.map((referenceModel: StateReferenceModel, index: number) => <Item key={index} referenceModel={referenceModel} />)}
+                    {referenceModels.map((referenceModel, index: number) => (
+                        <Item key={index} referenceModel={referenceModel} idAssetVersion={idAssetVersion} />
+                    ))}
                 </Box>
             )}
         </Box>
@@ -98,23 +124,23 @@ function Header(): React.ReactElement {
     const classes = useStyles();
 
     return (
-        <Box
-            display='flex'
-            flex={1}
-            flexDirection='row'
-            px={1}
-            marginBottom={1}
-        >
-            <Box display='flex' flex={2}>
+        <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
+            <Box display='flex' flex={3.5}>
                 <Typography className={classes.header}>Reference Models(s)</Typography>
             </Box>
-            <Box display='flex' flex={1}>
-                <Typography className={classes.header}>Geometry File Size</Typography>
+            <Box display='flex' flex={0.75}>
+                <Typography className={classes.header}>Usage</Typography>
+            </Box>
+            <Box display='flex' flex={0.75}>
+                <Typography className={classes.header}>Quality</Typography>
+            </Box>
+            <Box display='flex' flex={0.75}>
+                <Typography className={classes.header}>File Size</Typography>
             </Box>
             <Box display='flex' flex={1} justifyContent='center'>
                 <Typography className={classes.header}>UV Resolution</Typography>
             </Box>
-            <Box display='flex' flex={2} justifyContent='center'>
+            <Box display='flex' flex={2.5} justifyContent='center'>
                 <Typography className={classes.header}>Bounding Box</Typography>
             </Box>
             <Box display='flex' flex={0.5}>
@@ -124,46 +150,89 @@ function Header(): React.ReactElement {
     );
 }
 
-interface ItemProps {
-    referenceModel: StateReferenceModel;
-}
-
-function Item(props: ItemProps): React.ReactElement {
-    const { referenceModel } = props;
-    const { idSystemObject, name, fileSize, resolution, action } = referenceModel;
-    const { boundingBoxP1X, boundingBoxP1Y, boundingBoxP1Z, boundingBoxP2X, boundingBoxP2Y, boundingBoxP2Z } = referenceModel;
+function Item(props: ReferenceModelItemProps): React.ReactElement {
+    const { referenceModel, idAssetVersion } = props;
+    const { Name, FileSize, UVResolution, Quality, Usage, idModel } = referenceModel;
+    const { BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z } = referenceModel;
+    const [idAsset, setIdAsset] = useState<null | number>(null);
+    const [idSystemObject, setIdSystemObject] = useState<null | number>(null);
+    const [assetType, setAssetType] = useState<null | number>(null);
     const classes = useStyles();
 
-    const onAction = () => {
-        alert(`TODO: KARAN: Handle ${action.toString()} action`);
-    };
+    useEffect(() => {
+        const getModelDetails = async () => {
+            const { data } = await apolloClient.query({
+                query: GetModelDocument,
+                variables: {
+                    input: {
+                        idModel
+                    }
+                }
+            });
+            setIdSystemObject(data?.getModel.Model?.SystemObject?.idSystemObject);
+            if (idSystemObject) {
+                const assetDetail = await apolloClient.query({
+                    query: GetAssetDetailsForSystemObjectDocument,
+                    variables: {
+                        input: {
+                            idSystemObject
+                        }
+                    }
+                });
+                setIdAsset(assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.idAsset);
+                setAssetType(assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.assetType);
+            }
+        };
 
-    const boundingBox: string = `(${boundingBoxP1X}, ${boundingBoxP1Y}, ${boundingBoxP1Z}) - (${boundingBoxP2X}, ${boundingBoxP2Y}, ${boundingBoxP2Z})`;
+        getModelDetails();
+    }, [idAsset, idAssetVersion, idModel, idSystemObject]);
+
+    const isModelInSystem = idModel > 0;
+
+    let boundingBox: string = '';
+    if (BoundingBoxP1X != null && BoundingBoxP1Y != null && BoundingBoxP1Z != null && BoundingBoxP2X != null && BoundingBoxP2Y != null && BoundingBoxP2Z != null)
+        boundingBox = `(${roundBoundingBox(BoundingBoxP1X)}, ${roundBoundingBox(BoundingBoxP1Y)}, ${roundBoundingBox(BoundingBoxP1Z)}) - (${roundBoundingBox(
+            BoundingBoxP2X
+        )}, ${roundBoundingBox(BoundingBoxP2Y)}, ${roundBoundingBox(BoundingBoxP2Z)})`;
 
     return (
-        <Box
-            display='flex'
-            flex={1}
-            flexDirection='row'
-            px={1}
-            marginBottom={1}
-        >
-            <Box display='flex' flex={2}>
-                <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
-                    <Typography className={clsx(classes.label, classes.labelUnderline)}>{name}</Typography>
-                </NewTabLink>
+        <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
+            <Box display='flex' flex={3}>
+                {isModelInSystem && idSystemObject && (
+                    <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
+                        <Typography className={clsx(classes.label, classes.labelUnderline)}>{Name}</Typography>
+                    </NewTabLink>
+                )}
+                {!isModelInSystem && <Typography className={clsx(classes.label, classes.labelItalics)}>{Name}</Typography>}
             </Box>
-            <Box display='flex' flex={1} justifyContent='center'>
-                <Typography className={classes.label}>{formatBytes(fileSize)}</Typography>
+
+            <Box display='flex' flex={0.75} justifyContent='center'>
+                <Typography className={classes.label}>{Usage}</Typography>
             </Box>
-            <Box display='flex' flex={1} justifyContent='center'>
-                <Typography className={classes.label}>{resolution}</Typography>
+            <Box display='flex' flex={0.75} justifyContent='center'>
+                <Typography className={classes.label}>{Quality}</Typography>
             </Box>
-            <Box display='flex' flex={2} justifyContent='center'>
+
+            <Box display='flex' flex={0.75} justifyContent='center'>
+                <Typography className={classes.label}>{formatBytes(FileSize)}</Typography>
+            </Box>
+            <Box display='flex' flex={0.5} justifyContent='center'>
+                <Typography className={classes.label}>{UVResolution}</Typography>
+            </Box>
+            <Box display='flex' flex={2.5} justifyContent='center'>
                 <Typography className={classes.label}>{boundingBox}</Typography>
             </Box>
             <Box display='flex' flex={0.5} justifyContent='center'>
-                <Typography onClick={onAction} className={clsx(classes.label, classes.labelUnderline)}>{action.toString()}</Typography>
+                {!isModelInSystem && (
+                    <Typography className={clsx(classes.label, classes.labelUnderline)}>
+                        <NewTabLink to={ingestSystemObjectUploadRedirect(Name)}>Ingest</NewTabLink>
+                    </Typography>
+                )}
+                {isModelInSystem && (
+                    <Typography className={clsx(classes.label, classes.labelUnderline)}>
+                        <NewTabLink to={updateSystemObjectUploadRedirect(idAsset, idAssetVersion, eSystemObjectType.eModel, assetType)}>Update</NewTabLink>
+                    </Typography>
+                )}
             </Box>
         </Box>
     );

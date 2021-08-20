@@ -1,8 +1,15 @@
-import { app } from '../../../index';
+import { HttpServer } from '../../../http';
 import request from 'supertest';
 import * as DBAPI from '../../../db';
 
 describe('Auth implementation: local logout', () => {
+    let httpServer: HttpServer | null = null;
+
+    test('initialize', async () => {
+        httpServer = await HttpServer.getInstance();
+        expect(httpServer).toBeTruthy();
+    });
+
     test('should logout user correctly', async done => {
         const randomNumber: number = Math.random() * 100000000;
         const userInput = {
@@ -29,13 +36,15 @@ describe('Auth implementation: local logout', () => {
             password: userInput.EmailAddress
         };
 
-        const mockApp = request(app);
+        if (httpServer) {
+            const mockApp = request(httpServer.app);
 
-        const { body: loginBody } = await mockApp.post('/auth/login').send(authBody).expect(200);
-        expect(loginBody.success).toBeTruthy();
+            const { body: loginBody } = await mockApp.post('/auth/login').send(authBody).expect(200);
+            expect(loginBody.success).toBeTruthy();
 
-        const { body: logoutBody } = await mockApp.get('/auth/logout').expect(200);
-        expect(logoutBody.success).toBeTruthy();
+            const { body: logoutBody } = await mockApp.get('/auth/logout').expect(200);
+            expect(logoutBody.success).toBeTruthy();
+        }
         done();
     });
 });

@@ -10,7 +10,7 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
-import { Redirect, useHistory, useLocation } from 'react-router';
+import { Redirect, useLocation } from 'react-router';
 import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, REPOSITORY_ROUTE, resolveRoute, resolveSubRoute } from '../../constants';
 import { useControlStore, useRepositoryStore } from '../../store';
@@ -50,6 +50,9 @@ export type RepositoryFilter = {
     variantType: number[];
     modelPurpose: number[];
     modelFileType: number[];
+    dateCreatedFrom?: Date | string | null;
+    dateCreatedTo?: Date | string | null;
+    cursorMark?: string | null;
 };
 
 function Repository(): React.ReactElement {
@@ -70,11 +73,9 @@ function Repository(): React.ReactElement {
 }
 
 function TreeViewPage(): React.ReactElement {
-    const history = useHistory();
     const location = useLocation();
     const {
         search,
-        keyword,
         repositoryRootType,
         objectsToDisplay,
         metadataToDisplay,
@@ -86,33 +87,16 @@ function TreeViewPage(): React.ReactElement {
         variantType,
         modelPurpose,
         modelFileType,
+        dateCreatedFrom,
+        dateCreatedTo,
         updateRepositoryFilter
     } = useRepositoryStore();
-
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
-
-    const filterState: RepositoryFilter = React.useMemo(
-        () => ({
-            search,
-            keyword,
-            repositoryRootType,
-            objectsToDisplay,
-            metadataToDisplay,
-            units,
-            projects,
-            has,
-            missing,
-            captureMethod,
-            variantType,
-            modelPurpose,
-            modelFileType
-        }),
-        [search, keyword, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
-    );
+    const isRepository = location.pathname.startsWith('/repository');
 
     const setDefaultFilterSelectionsCookie = () => {
         document.cookie = `filterSelections=${JSON.stringify({
-            repositoryRootType: [eSystemObjectType.eUnit],
+            repositoryRootType: [],
             objectsToDisplay: [],
             metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
             units: [],
@@ -122,8 +106,10 @@ function TreeViewPage(): React.ReactElement {
             captureMethod: [],
             variantType: [],
             modelPurpose: [],
-            modelFileType: []
-        })}`;
+            modelFileType: [],
+            dateCreatedFrom: null,
+            dateCreatedTo: null
+        })};path=/`;
     };
 
     /*
@@ -133,39 +119,44 @@ function TreeViewPage(): React.ReactElement {
     */
     let cookieFilterSelections;
     (function setRepositoryViewCookies() {
-        if (!document.cookie.length || document.cookie.indexOf('filterSelections') === -1) {
+        if ((!document.cookie.length || document.cookie.indexOf('filterSelections') === -1) && isRepository) {
             setDefaultFilterSelectionsCookie();
         }
         cookieFilterSelections = document.cookie.split(';');
         cookieFilterSelections = cookieFilterSelections.find(entry => entry.trim().startsWith('filterSelections'));
-        cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
+        if (cookieFilterSelections) cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
     })();
 
     const initialFilterState = Object.keys(queries).length ? queries : cookieFilterSelections;
 
     useEffect(() => {
+        const newUrl = generateRepositoryUrl(initialFilterState);
+        console.log(`*** src/pages/Repository/index.tsx TreeViewPage useEffect window.history.pushState(path: ${route}, '', ${newUrl})`);
+        window.history.pushState({ path: route }, '', newUrl);
         updateRepositoryFilter(initialFilterState);
     }, [updateRepositoryFilter, location.search]);
 
-    useEffect(() => {
-        const newRepositoryFilterState: any = {
-            search,
-            repositoryRootType,
-            objectsToDisplay,
-            metadataToDisplay,
-            units,
-            projects,
-            has,
-            missing,
-            captureMethod,
-            variantType,
-            modelPurpose,
-            modelFileType
-        };
-
-        const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
-        history.push(route);
-    }, [history, filterState]);
+    const newRepositoryFilterState: any = {
+        search,
+        repositoryRootType,
+        objectsToDisplay,
+        metadataToDisplay,
+        units,
+        projects,
+        has,
+        missing,
+        captureMethod,
+        variantType,
+        modelPurpose,
+        modelFileType,
+        dateCreatedFrom,
+        dateCreatedTo
+    };
+    const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
+    if (route !== location.search) {
+        console.log(`*** src/pages/Repository/index.tsx TreeViewPage window.history.pushState(path: ${route}, '', ${route})`);
+        window.history.pushState({ path: route }, '', route);
+    }
 
     return (
         <React.Fragment>

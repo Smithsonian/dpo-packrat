@@ -5,6 +5,8 @@
  */
 import { Checkbox } from '@material-ui/core';
 import React from 'react';
+import { withStyles } from '@material-ui/core/styles';
+
 import { ViewableProps } from '../../types/repository';
 import { getUpdatedCheckboxProps } from '../../utils/repository';
 import { withDefaultValueBoolean } from '../../utils/shared';
@@ -18,6 +20,13 @@ interface CheckboxFieldProps extends ViewableProps {
     required?: boolean;
 }
 
+const CheckboxNoPadding = withStyles({
+    root: {
+        border: '0px',
+        padding: '0px'
+    }
+})(Checkbox);
+
 function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
     const { label, name, value, onChange, required = false, viewMode = false, disabled = false, updated = false } = props;
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
@@ -30,7 +39,7 @@ function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
             containerProps={rowFieldProps}
             width={viewMode ? 'auto' : undefined}
         >
-            <Checkbox
+            <CheckboxNoPadding
                 name={name}
                 disabled={disabled}
                 checked={withDefaultValueBoolean(value, false)}

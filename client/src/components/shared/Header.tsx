@@ -5,7 +5,7 @@
  */
 import { Box, Typography, Button } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
 import { Link, useHistory, useLocation } from 'react-router-dom';
@@ -92,7 +92,8 @@ function Header(): React.ReactElement {
     const history = useHistory();
     const { pathname } = useLocation();
     const { user, logout } = useUserStore();
-    const [keyword, updateSearch, getFilterState, initializeTree, resetRepositoryFilter, updateRepositoryFilter, resetKeywordSearch] = useRepositoryStore(state => [
+    const [search, keyword, updateSearch, getFilterState, initializeTree, resetRepositoryFilter, updateRepositoryFilter, resetKeywordSearch] = useRepositoryStore(state => [
+        state.search,
         state.keyword,
         state.updateSearch,
         state.getFilterState,
@@ -101,6 +102,10 @@ function Header(): React.ReactElement {
         state.updateRepositoryFilter,
         state.resetKeywordSearch
     ]);
+
+    useEffect(() => {
+        updateSearch(search);
+    }, [search, updateSearch]);
 
     const onLogout = async (): Promise<void> => {
         const isConfirmed = global.confirm('Are you sure you want to logout?');
@@ -122,12 +127,12 @@ function Header(): React.ReactElement {
     // Specific to search while in repository view
     const updateRepositorySearch = (): void => {
         const filterState = getFilterState();
-        filterState.repositoryRootType = [];
         filterState.search = filterState.keyword;
         updateRepositoryFilter(filterState);
         const updatedFilterState = getFilterState();
         const repositoryURL = generateRepositoryUrl(updatedFilterState);
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
+        console.log(`*** src/components/shared/Header.tsx Header updateRepositorySearch history.push(${route + repositoryURL}`);
         history.push(route + repositoryURL);
         initializeTree();
     };
@@ -139,6 +144,7 @@ function Header(): React.ReactElement {
         const filterState = getFilterState();
         filterState.search = filterState.keyword;
         updateRepositoryFilter(filterState);
+        console.log(`*** src/components/shared/Header.tsx Header onSearch history.push(${route}`);
         history.push(route);
     };
 

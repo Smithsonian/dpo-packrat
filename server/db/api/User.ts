@@ -11,20 +11,23 @@ export enum eUserStatus {
 
 export class User extends DBC.DBObject<UserBase> implements UserBase {
     idUser!: number;
+    Name!: string;
+    EmailAddress!: string;
+    SecurityID!: string;
     Active!: boolean;
     DateActivated!: Date;
     DateDisabled!: Date | null;
-    EmailAddress!: string;
-    EmailSettings!: number | null;
-    Name!: string;
-    SecurityID!: string;
     WorkflowNotificationTime!: Date | null;
+    EmailSettings!: number | null;
 
     private ActiveOrig!: boolean;
 
     constructor(input: UserBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'User'; }
+    public fetchID(): number { return this.idUser; }
 
     protected updateCachedValues(): void {
         this.ActiveOrig = this.Active;

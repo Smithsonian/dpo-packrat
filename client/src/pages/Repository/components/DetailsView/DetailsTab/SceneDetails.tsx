@@ -4,45 +4,78 @@
  *
  * This component renders details tab for Scene specific details used in DetailsTab component.
  */
-import { Box, makeStyles, Typography } from '@material-ui/core';
-import React, { useEffect, useState } from 'react';
-import { CheckboxField, FieldType, Loader } from '../../../../../components';
-import { SceneDetailFields } from '../../../../../types/graphql';
-import { isFieldUpdated } from '../../../../../utils/repository';
+import { Box, makeStyles, Checkbox /*, Typography */ } from '@material-ui/core';
+import React, { useEffect, useRef } from 'react';
+import { Loader } from '../../../../../components';
+import { GetSceneDocument } from '../../../../../types/graphql';
 import { DetailComponentProps } from './index';
+import { apolloClient } from '../../../../../graphql/index';
+import ReferenceModels from '../../../../Ingestion/components/Metadata/Scene/ReferenceModels';
+import { ReadOnlyRow, FieldType } from '../../../../../components/index';
+import { useDetailTabStore } from '../../../../../store';
+import { eSystemObjectType } from '../../../../../types/server';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {
         fontSize: '0.8em',
         color: palette.primary.dark
+    },
+    container: {
+        display: 'flex',
+        flexDirection: 'column',
+        marginBottom: 10,
+        width: 'fit-content',
+        '& > *': {
+            minWidth: '200px',
+            height: '20px',
+            '&:not(:last-child)': {
+                borderBottom: '1px solid #D8E5EE'
+            }
+        }
     }
 }));
 
 function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
+    const isMounted = useRef(false);
     const { data, loading, onUpdateDetail, objectType } = props;
-
-    const [details, setDetails] = useState<SceneDetailFields>({
-        Links: []
-    });
+    const [SceneDetails, updateDetailField] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField]);
 
     useEffect(() => {
-        if (data && !loading) {
-            const { Scene } = data.getDetailsTabDataForObject;
-            setDetails({
-                Links: Scene?.Links ?? [],
-                AssetType: Scene?.AssetType,
-                Tours: Scene?.Tours,
-                Annotation: Scene?.Annotation,
-                HasBeenQCd: Scene?.HasBeenQCd,
-                IsOriented: Scene?.IsOriented,
-            });
-        }
-    }, [data, loading]);
+        const retrieveSceneData = async () => {
+            if (data && !loading) {
+                const { Scene } = data.getDetailsTabDataForObject;
+                const {
+                    data: { getScene }
+                } = await apolloClient.query({
+                    query: GetSceneDocument,
+                    variables: {
+                        input: {
+                            idScene: Scene?.idScene
+                        }
+                    },
+                    fetchPolicy: 'no-cache'
+                });
+                updateDetailField(eSystemObjectType.eScene, 'ModelSceneXref', getScene?.Scene?.ModelSceneXref);
+                updateDetailField(eSystemObjectType.eScene, 'CountScene', getScene?.Scene?.CountScene);
+                updateDetailField(eSystemObjectType.eScene, 'CountNode', getScene?.Scene?.CountNode);
+                updateDetailField(eSystemObjectType.eScene, 'CountCamera', getScene?.Scene?.CountCamera);
+                updateDetailField(eSystemObjectType.eScene, 'CountLight', getScene?.Scene?.CountLight);
+                updateDetailField(eSystemObjectType.eScene, 'CountModel', getScene?.Scene?.CountModel);
+                updateDetailField(eSystemObjectType.eScene, 'CountMeta', getScene?.Scene?.CountMeta);
+                updateDetailField(eSystemObjectType.eScene, 'CountSetup', getScene?.Scene?.CountSetup);
+                updateDetailField(eSystemObjectType.eScene, 'CountTour', getScene?.Scene?.CountTour);
+                updateDetailField(eSystemObjectType.eScene, 'EdanUUID', getScene?.Scene?.EdanUUID);
+                isMounted.current = true;
+            }
+        };
+
+        retrieveSceneData();
+    }, []);
 
     useEffect(() => {
-        onUpdateDetail(objectType, details);
-    }, [details]);
+        if (isMounted.current) onUpdateDetail(objectType, SceneDetails);
+    }, [SceneDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -50,68 +83,50 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
 
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
-        setDetails(details => ({ ...details, [name]: checked }));
+        updateDetailField(eSystemObjectType.eScene, name, checked);
     };
 
-    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
-
-    const sceneData = data.getDetailsTabDataForObject?.Scene;
+    const gridTemplateColumns = '100px 1fr';
+    const rowFieldProps = { alignItems: 'center', alignContent: 'center', style: { borderRadius: 0, display: 'grid', gridTemplateColumns } };
 
     return (
         <Box>
-            {details.Links.map((link: string, index: number) => (
+            <ReferenceModels referenceModels={SceneDetails.ModelSceneXref} />
+
+            <Box className={classes.container}>
                 <FieldType
-                    key={index}
                     required
-                    label='Link'
+                    label="Has been QC'd"
                     direction='row'
+                    width='100%'
                     containerProps={rowFieldProps}
-                    width='auto'
                 >
-                    <Typography className={classes.value}>{link}</Typography>
+                    <Box width='fit-content' textAlign='right'>
+                        <Checkbox name='HasBeenQCd' checked={SceneDetails.HasBeenQCd} color='primary' onChange={setCheckboxField} />
+                    </Box>
                 </FieldType>
-            ))}
 
-            <FieldType
-                required
-                label='Tours'
-                direction='row'
-                containerProps={rowFieldProps}
-                width='auto'
-            >
-                <Typography className={classes.value}>{details.Tours}</Typography>
-            </FieldType>
-            <FieldType
-                required
-                label='Annotation'
-                direction='row'
-                containerProps={rowFieldProps}
-                width='auto'
-            >
-                <Typography className={classes.value}>{details.Annotation}</Typography>
-            </FieldType>
-
-            <CheckboxField
-                viewMode
-                required
-                updated={isFieldUpdated(details, sceneData, 'HasBeenQCd')}
-                disabled
-                name='HasBeenQCd'
-                label='HasBeenQCd'
-                value={details.HasBeenQCd ?? false}
-                onChange={setCheckboxField}
-            />
-
-            <CheckboxField
-                viewMode
-                required
-                updated={isFieldUpdated(details, sceneData, 'IsOriented')}
-                disabled
-                name='IsOriented'
-                label='IsOriented'
-                value={details.IsOriented ?? false}
-                onChange={setCheckboxField}
-            />
+                <FieldType
+                    required
+                    label='Is Oriented'
+                    direction='row'
+                    width='100%'
+                    containerProps={rowFieldProps}
+                >
+                    <Box width='fit-content' textAlign='right'>
+                        <Checkbox name='IsOriented' checked={SceneDetails.IsOriented} color='primary' onChange={setCheckboxField} />
+                    </Box>
+                </FieldType>
+                <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} padding={15} gridTemplate={gridTemplateColumns} />
+                <ReadOnlyRow label='Scene Count' value={SceneDetails.CountScene} padding={15} gridTemplate={gridTemplateColumns} />
+                <ReadOnlyRow label='Node Count' value={SceneDetails.CountNode} padding={15} gridTemplate={gridTemplateColumns} />
+                <ReadOnlyRow label='Camera Count' value={SceneDetails.CountCamera} padding={15} gridTemplate={gridTemplateColumns} />
+                <ReadOnlyRow label='Light Count' value={SceneDetails.CountLight} padding={15} gridTemplate={gridTemplateColumns} />
+                <ReadOnlyRow label='Model Count' value={SceneDetails.CountModel} padding={15} gridTemplate={gridTemplateColumns} />
+                <ReadOnlyRow label='Meta Count' value={SceneDetails.CountMeta} padding={15} gridTemplate={gridTemplateColumns} />
+                <ReadOnlyRow label='Setup Count' value={SceneDetails.CountSetup} padding={15} gridTemplate={gridTemplateColumns} />
+                <ReadOnlyRow label='Tour Count' value={SceneDetails.CountTour} padding={15} gridTemplate={gridTemplateColumns} />
+            </Box>
         </Box>
     );
 }

@@ -39,6 +39,8 @@ const identifiersWhenValidation = {
 export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     systemCreated: true,
     identifiers: [],
+    sourceObjects: [],
+    derivedObjects: [],
     folders: [],
     name: '',
     description: '',
@@ -98,10 +100,9 @@ export const defaultModelFields: ModelFields = {
     systemCreated: true,
     identifiers: [],
     sourceObjects: [],
+    derivedObjects: [],
     dateCaptured: null,
     creationMethod: null,
-    master: true,
-    authoritative: true,
     modality: null,
     units: null,
     purpose: null,
@@ -112,15 +113,13 @@ export const defaultModelFields: ModelFields = {
 export type ModelSchemaType = typeof modelFieldsSchema;
 
 export const modelFieldsSchema = yup.object().shape({
-    name: yup.string(),
+    name: yup.string().min(1, 'Name must have at least one character').required('Name is required'),
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     uvMaps: yup.array().of(uvMapSchema),
     sourceObjects: yup.array().of(sourceObjectSchema),
     dateCaptured: yup.date().typeError('Date Captured is required'),
     creationMethod: yup.number().typeError('Creation method is required'),
-    master: yup.boolean().required(),
-    authoritative: yup.boolean().required(),
     modality: yup.number().typeError('Modality is required'),
     units: yup.number().typeError('Units is required'),
     purpose: yup.number().typeError('Purpose is required'),
@@ -148,7 +147,14 @@ export const modelFieldsSchema = yup.object().shape({
 export const defaultSceneFields: SceneFields = {
     systemCreated: true,
     identifiers: [],
-    referenceModels: []
+    sourceObjects: [],
+    derivedObjects: [],
+    referenceModels: [],
+    hasBeenQCd: false,
+    isOriented: false,
+    name: '',
+    directory: '',
+    EdanUUID: '',
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;
@@ -170,7 +176,8 @@ export const referenceModelSchema = yup.object().shape({
 export const sceneFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
-    referenceModels: yup.array().of(referenceModelSchema)
+    referenceModels: yup.array().of(referenceModelSchema),
+    directory: yup.string()
 });
 
 export const defaultOtherFields: OtherFields = {

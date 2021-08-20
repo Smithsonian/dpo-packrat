@@ -8,7 +8,9 @@ import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as STORE from '../../../storage/interface';
+import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
+import { eEventKey } from '../../../event/interface/EventEnums';
 import { ZipStream } from '../../../utils/zipStream';
 import { maybe, maybeString } from '../../../utils/types';
 
@@ -100,11 +102,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             return { success: false, error };
         }
 
-        const modelSource: DBAPI.Model = this.modelConstellation.Model;
         const modelObjectIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
         const modelMaterialIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
         const modelMaterialUVMapIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
         const assetIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
+
+        // if we're updating, grab the *current* model constellation, so that we can delete support records after persisting new records
+        const origModelConstellation: DBAPI.ModelConstellation | null = (idModel > 0) ? await DBAPI.ModelConstellation.fetch(idModel) : null;
 
         // map and validate assets:
         if (this.modelConstellation.ModelAssets) {
@@ -113,7 +117,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (!mappedId) // try again, with just filename
                     mappedId = assetMap.get(path.basename(modelAsset.Asset.FileName));
                 if (!mappedId) {
-                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.stringifyMapsAndBigints)}`;
+                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.saferStringify)}`;
                     LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
@@ -131,6 +135,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 return { success: false, error };
             }
 
+            const modelSource: DBAPI.Model = this.modelConstellation.Model;
             if (modelSource.CountAnimations)
                 model.CountAnimations = modelSource.CountAnimations;
             if (modelSource.CountCameras)
@@ -151,6 +156,21 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 model.CountLinkedTextures = modelSource.CountLinkedTextures;
             if (modelSource.FileEncoding)
                 model.FileEncoding = modelSource.FileEncoding;
+            if (modelSource.IsDracoCompressed != null)
+                model.IsDracoCompressed = modelSource.IsDracoCompressed;
+
+            model.Name = modelSource.Name;
+            model.DateCreated = modelSource.DateCreated;
+            if (modelSource.idVCreationMethod)
+                model.idVCreationMethod = modelSource.idVCreationMethod;
+            if (modelSource.idVModality)
+                model.idVModality = modelSource.idVModality;
+            if (modelSource.idVPurpose)
+                model.idVPurpose = modelSource.idVPurpose;
+            if (modelSource.idVUnits)
+                model.idVUnits = modelSource.idVUnits;
+            if (modelSource.idVFileType)
+                model.idVFileType = modelSource.idVFileType;
 
             if (!await model.update())
                 return { success: false, error: 'Model.update() failed' };
@@ -259,10 +279,27 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     return { success: false, error: 'ModelObjectModelMaterialXref.create() failed' };
             }
         }
+
+        if (origModelConstellation) {
+            if (!await origModelConstellation.deleteSupportObjects())
+                LOG.error('JobCookSIPackratInspectOutput.persist unable to delete original model support objects', LOG.LS.eJOB);
+        }
+
+        // Send audit update for model, now that we've finished writing dependent objects, to help ensure full indexing of this model
+        await this.modelConstellation.Model.audit(eEventKey.eDBUpdate);
         return { success: true, error: '' };
     }
 
     static async extract(output: any, fileName: string | null, dateCreated: Date | null): Promise<JobCookSIPackratInspectOutput> {
+        const JCOutput: JobCookSIPackratInspectOutput = await JobCookSIPackratInspectOutput.extractWorker(output, fileName, dateCreated);
+        const report: REP.IReport | null = await REP.ReportFactory.getReport();
+        if (report)
+            report.append(`Cook si-packrat-inspect ${JCOutput.success ? 'succeeded' : 'failed: ' + JCOutput.error}`);
+        return JCOutput;
+    }
+
+    private static async extractWorker(output: any, fileName: string | null, dateCreated: Date | null): Promise<JobCookSIPackratInspectOutput> {
+        // LOG.info(`JobCookSIPackratInspectOutput.extract: ${JSON.stringify(output, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
         const JCOutput: JobCookSIPackratInspectOutput = new JobCookSIPackratInspectOutput();
 
         const modelObjects: DBAPI.ModelObject[] = [];
@@ -300,6 +337,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let idAssetVersion: number = 0;
 
         const model: DBAPI.Model = await JobCookSIPackratInspectOutput.createModel(++idModel, modelStats, sourceMeshFile ? sourceMeshFile : fileName, dateCreated);
+        // LOG.info(`JobCookSIPackratInspectOutput.extract model: ${JSON.stringify(model, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
         if (sourceMeshFile) {
             if (!modelAssets)
@@ -492,7 +530,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             return null;
         }
 
-        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eJobRunStatus.eDone, true, [idAssetVersion]);
+        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eWorkflowJobRunStatus.eDone, true, [idAssetVersion]);
         if (!jobRuns || jobRuns.length != 1) {
             LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}`, LOG.LS.eJOB);
             return null;
@@ -535,8 +573,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         // LOG.info(`JobCookPackratInspect createModel ${fileName} -> ${JSON.stringify(vFileType)}`, LOG.LS.eJOB);
         return new DBAPI.Model({
             Name: fileName || '',
-            Master: true,
-            Authoritative: true,
             DateCreated: dateCreated || new Date(),
             idVCreationMethod: 0,
             idVModality: 0,
@@ -554,6 +590,8 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             CountEmbeddedTextures: modelStats ? maybe<number>(modelStats?.numEmbeddedTextures) : null,
             CountLinkedTextures: modelStats ? maybe<number>(modelStats?.numLinkedTextures) : null,
             FileEncoding: modelStats ? maybe<string>(modelStats?.fileEncoding) : null,
+            IsDracoCompressed: modelStats ? maybe<boolean>(modelStats?.isDracoCompressed) : null,
+            AutomationTag: null,
             idModel
         });
     }
@@ -608,7 +646,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         });
         const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
             idAsset,
-            Version: 1,
+            Version: 0,
             FileName,
             idUserCreator: 0,
             DateCreated: new Date(),
@@ -626,11 +664,11 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectParameters> {
     private parameters: JobCookSIPackratInspectParameters;
 
-    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null,
+    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIPackratInspectParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-packrat-inspect',
             CookRecipe.getCookRecipeID('si-packrat-inspect', 'bb602690-76c9-11eb-9439-0242ac130002'),
-            null, idAssetVersions, dbJobRun);
+            null, idAssetVersions, report, dbJobRun);
         this.parameters = parameters;
     }
 
@@ -665,8 +703,13 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
 
         const files: string[] = await ZS.getJustFiles(null);
+        const RSRs: STORE.ReadStreamResult[] = [];
         for (const file of files) {
-            if (await CACHE.VocabularyCache.mapModelFileByExtension(file) === undefined)
+            const eVocabID: CACHE.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
+            const extension: string = path.extname(file).toLowerCase() || file.toLowerCase();
+
+            // for the time being, only handle model geometry files, OBJ .mtl files, and GLTF .bin files
+            if (eVocabID === undefined && extension !== '.mtl' && extension !== '.bin')
                 continue;
 
             const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(file);
@@ -675,16 +718,24 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 return false;
             }
 
-            this.parameters.sourceMeshFile = path.basename(file);
-            this._streamOverrideMap.set(this._idAssetVersions[0], {
+            RSRs.push({
                 readStream,
                 fileName: file,
                 storageHash: null,
                 success: true,
                 error: ''
             });
+            this.parameters.sourceMeshFile = path.basename(file);
+            this._dbJobRun.Parameters = JSON.stringify(this.parameters, H.Helpers.saferStringify);
+            if (!await this._dbJobRun.update())
+                LOG.error(`JobCookSIPackratInspect.testForZip failed to update JobRun.parameters for ${JSON.stringify(this._dbJobRun, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+        }
+
+        if (RSRs.length > 0) {
+            this._streamOverrideMap.set(this._idAssetVersions[0], RSRs);
             return true;
         }
+
         return false;
     }
 }

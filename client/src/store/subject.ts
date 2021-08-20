@@ -15,7 +15,9 @@ import {
     Project,
     GetIngestionItemsForSubjectsQuery,
     GetIngestionItemsForSubjectsDocument,
-    Item
+    Item,
+    GetProjectListQuery,
+    GetProjectListDocument,
 } from '../types/graphql';
 import { useItemStore, StateItem } from './item';
 import { useProjectStore, StateProject } from './project';
@@ -25,6 +27,8 @@ export type StateSubject = {
     arkId: string;
     unit: string;
     name: string;
+    // collectionId is used as an identifier in admin subject view
+    collectionId?: string;
 };
 
 type SubjectStore = {
@@ -86,15 +90,39 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
         try {
             loadingProjects();
             loadingItems();
+
+            // fetch list of all projects
+            const projectListQuery: ApolloQueryResult<GetProjectListQuery> = await apolloClient.query({
+                query: GetProjectListDocument,
+                variables: {
+                    input: {
+                        search: ''
+                    }
+                }
+            });
+            const { data: { getProjectList: { projects: defaultProjectsList } } } = projectListQuery;
+
+            // fetch list of projects associated with subject
             const projectsQueryResult: ApolloQueryResult<GetIngestionProjectsForSubjectsQuery> = await apolloClient.query({
                 query: GetIngestionProjectsForSubjectsDocument,
                 variables
             });
 
+            // hash the associated projects and push the rest of projects
+            const projectQueryResultMap = new Map();
             const { data } = projectsQueryResult;
             if (data) {
                 const { Project: foundProjects } = data.getIngestionProjectsForSubjects;
+                foundProjects.forEach((project) => projectQueryResultMap.set(project.idProject, project));
+
                 const projects: StateProject[] = foundProjects.map((project: Project, index: number) => parseProjectToState(project, !index));
+
+                for (let i = 0; i < defaultProjectsList.length; i++) {
+                    if (projectQueryResultMap.has(defaultProjectsList[i].idProject)) continue;
+
+                    projects.push(parseProjectToState(defaultProjectsList[i] as Project, false));
+                }
+
                 addProjects(projects);
             }
         } catch (error) {

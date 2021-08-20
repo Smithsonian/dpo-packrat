@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { AssetVersion as AssetVersionBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject, SystemObjectBased } from '..';
+import { SystemObject, SystemObjectBased, SystemObjectVersion } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -17,9 +17,20 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     Ingested!: boolean | null;  // null means uploaded, not processed; false means uploaded and processed, true means uploaded, processed, and ingested
     BulkIngest!: boolean;
 
+    IngestedOrig: boolean | null;
+
     constructor(input: AssetVersionBase) {
         super(input);
+        this.IngestedOrig = this.Ingested;
     }
+
+    protected updateCachedValues(): void {
+        this.IngestedOrig = this.Ingested;
+    }
+
+
+    public fetchTableName(): string { return 'AssetVersion'; }
+    public fetchID(): number { return this.idAssetVersion; }
 
     static constructFromPrisma(assetVersion: AssetVersionBase): AssetVersion {
         return new AssetVersion({
@@ -37,15 +48,14 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         });
     }
 
-    protected updateCachedValues(): void { }
-
     // TODO: replace two-step query with a call to AssetVersionCreate stored procedure
     // We likely need to engage Prisma for a fix, as well as write directly to the Node.js connector for MariaDB
     // until Prisma has fixed this issue.  https://mariadb.com/kb/en/getting-started-with-the-nodejs-connector/
     protected async createWorker(): Promise<boolean> {
         try {
             const { DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest } = this;
-            const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset);
+            const Version: number = (Ingested) ? (await AssetVersion.computeNextVersionNumber(idAsset) || /* istanbul ignore next */ 1) : 0;   // only bump version number for Ingested asset versions
+            this.Version = Version;
 
             ({ idAssetVersion: this.idAssetVersion, DateCreated: this.DateCreated, idAsset: this.idAsset,
                 FileName: this.FileName, idUserCreator: this.idUserCreator, StorageHash: this.StorageHash, StorageSize: this.StorageSize,
@@ -61,7 +71,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                         StorageKeyStaging,
                         Ingested,
                         BulkIngest,
-                        Version: nextVersion ? nextVersion : /* istanbul ignore next */ 1,
+                        Version,
                         SystemObject:       { create: { Retired: false }, },
                     },
                 }));
@@ -90,7 +100,6 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         */
     }
 
-    // TODO: remove this abhorent method and approach once we can call stored procedures from createWorker
     static async computeNextVersionNumber(idAsset: number): Promise<number | null> {
         if (!idAsset)
             return null;
@@ -109,7 +118,20 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAssetVersion, DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest, Version } = this;
+            const { idAssetVersion, DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest, IngestedOrig } = this;
+            let { Version } = this; // may be updated!
+
+            // if we're updating from not ingested to ingested, and if we don't have a version number, compute and use the next version number:
+            if (!IngestedOrig && Ingested && !Version) {
+                const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset); /* istanbul ignore next*/
+                if (!nextVersion) {
+                    LOG.error('DBAPI.AssetVersion.updateWorker failed to compute nextVersion', LOG.LS.eDB);
+                    return false;
+                }
+                Version = nextVersion;
+                this.Version = Version;
+            }
+
             return await DBC.DBConnection.prisma.assetVersion.update({
                 where: { idAssetVersion, },
                 data: {
@@ -176,12 +198,28 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         }
     }
 
-    static async fetchFromAsset(idAsset: number): Promise<AssetVersion[] | null> {
+    static async fetchFromAsset(idAsset: number, retired?: boolean): Promise<AssetVersion[] | null> {
         if (!idAsset)
             return null;
         try {
-            return DBC.CopyArray<AssetVersionBase, AssetVersion>(
-                await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idAsset } }), AssetVersion);
+            if (retired === undefined)
+                return DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                    await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idAsset } }), AssetVersion);
+            const assetVersions: AssetVersionBase[] | null = // DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                SELECT AV.*
+                FROM AssetVersion AS AV
+                JOIN SystemObject AS SO ON (AV.idAssetVersion = SO.idAssetVersion)
+                WHERE AV.idAsset = ${idAsset}
+                  AND SO.Retired = ${retired}
+                ORDER BY AV.idAsset, AV.Ingested DESC, AV.Version;`; //, AssetVersion);
+            /* istanbul ignore if */
+            if (!assetVersions)
+                return null;
+            const res: AssetVersion[] = [];
+            for (const assetVersion of assetVersions)   // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
+                res.push(AssetVersion.constructFromPrisma(assetVersion));
+            return res;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.AssetVersion.fetchFromAsset', LOG.LS.eDB, error);
             return null;
@@ -212,6 +250,52 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             LOG.error('DBAPI.AssetVersion.fetchFromSystemObject', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    static async fetchFromSystemObjectVersion(idSystemObjectVersion: number): Promise<AssetVersion[] | null> {
+        if (!idSystemObjectVersion)
+            return null;
+        try {
+            const assetVersions: AssetVersionBase[] | null = // DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                SELECT AV.*
+                FROM AssetVersion AS AV
+                JOIN SystemObjectVersionAssetVersionXref AS SOX ON (AV.idAssetVersion = SOX.idAssetVersion)
+                WHERE SOX.idSystemObjectVersion = ${idSystemObjectVersion};`; //, AssetVersion);
+            /* istanbul ignore if */
+            if (!assetVersions || assetVersions.length == 0)
+                return null;
+            const res: AssetVersion[] = [];
+            for (const assetVersion of assetVersions)   // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
+                res.push(AssetVersion.constructFromPrisma(assetVersion));
+            return res;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.AssetVersion.fetchFromSystemObjectVersion', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** First attempts to retrieve asset versions associated with the latest SystemObjectVersion for idSystemObject;
+     * if there is no SystemObjectVersion, falls back to assets connected to idSystemObject */
+    static async fetchLatestFromSystemObject(idSystemObject: number): Promise<AssetVersion[] | null> {
+        if (!idSystemObject)
+            return null;
+        let assetVersions: AssetVersion[] | null = null;
+
+        const SOV: SystemObjectVersion | null = await SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
+        if (SOV) {
+            assetVersions = await AssetVersion.fetchFromSystemObjectVersion(SOV.idSystemObjectVersion); /* istanbul ignore next */
+            if (!assetVersions)
+                LOG.error(`DBAPI.AssetVersion.fetchLatestFromSystemObject failed to retrieve asset versions from SystemObjectVersion ${JSON.stringify(SOV)}; falling back to all asset versions for idSystemObject ${idSystemObject}`, LOG.LS.eDB);
+        }
+
+        if (!assetVersions)
+            assetVersions = await AssetVersion.fetchFromSystemObject(idSystemObject); /* istanbul ignore next */
+        if (!assetVersions) {
+            LOG.info(`DBAPI.AssetVersion.fetchLatestFromSystemObject retrieved no asset versions for ${idSystemObject}`, LOG.LS.eDB);
+            return null;
+        }
+        return assetVersions;
     }
 
     static async fetchLatestFromAsset(idAsset: number): Promise<AssetVersion | null> {
@@ -269,7 +353,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                       AND AV.Ingested = ${Ingested}
                       AND SO.Retired = ${Retired}`; //, AssetVersion);
                 /* istanbul ignore if */
-                if (!assetVersions || assetVersions.length == 0)
+                if (!assetVersions)
                     return null;
                 const res: AssetVersion[] = [];
                 for (const assetVersion of assetVersions)   // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
@@ -298,6 +382,31 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { StorageKeyStaging } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.AssetVersion.fetchByStorageKeyStaging', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async countStorageKeyStaging(StorageKeyStaging: string, Ingested: boolean | null = false, Retired: boolean = false): Promise<number | null> {
+        try {
+            const storageKeyStagingCount: { RowCount: number }[] =
+                await DBC.DBConnection.prisma.$queryRaw<{ RowCount: number }[]>`
+                SELECT COUNT(*) AS 'RowCount'
+                FROM AssetVersion AS AV
+                JOIN SystemObject AS SO ON (AV.idAssetVersion = SO.idAssetVersion)
+                WHERE SO.Retired = ${Retired}
+                  AND AV.Ingested = ${Ingested}
+                  AND AV.StorageKeyStaging = ${StorageKeyStaging};`;
+            // LOG.info(`AssetVersion.countStorageKeyStaging ${JSON.stringify(this)}: ${JSON.stringify(subjectItemLinkCount)} relationships`, LOG.LS.eDB);
+
+            /* istanbul ignore next */
+            if (storageKeyStagingCount.length != 1) { // array of wrong length returned, error ... should never happen
+                LOG.error(`AssetVersion.countStorageKeyStaging received invalid query response ${JSON.stringify(storageKeyStagingCount)}`, LOG.LS.eDB);
+                return null;
+            }
+
+            return storageKeyStagingCount[0].RowCount;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.AssetVersion.countStorageKeyStaging', LOG.LS.eDB, error);
             return null;
         }
     }

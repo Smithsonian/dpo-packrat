@@ -5,23 +5,18 @@ import * as LOG from '../../utils/logger';
 
 export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> implements LicenseAssignmentBase {
     idLicenseAssignment!: number;
-    DateEnd!: Date | null;
-    DateStart!: Date | null;
     idLicense!: number;
-    idSystemObject!: number | null;
     idUserCreator!: number | null;
-
-    private idSystemObjectOrig!: number | null;
-    private idUserCreatorOrig!: number | null;
+    DateStart!: Date | null;
+    DateEnd!: Date | null;
+    idSystemObject!: number | null;
 
     constructor(input: LicenseAssignmentBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idSystemObjectOrig = this.idSystemObject;
-        this.idUserCreatorOrig = this.idUserCreator;
-    }
+    public fetchTableName(): string { return 'LicenseAssignment'; }
+    public fetchID(): number { return this.idLicenseAssignment; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -46,16 +41,15 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idLicenseAssignment, idLicense, idUserCreator, DateStart, DateEnd, idSystemObject,
-                idSystemObjectOrig, idUserCreatorOrig } = this;
+            const { idLicenseAssignment, idLicense, idUserCreator, DateStart, DateEnd, idSystemObject } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.licenseAssignment.update({
                 where: { idLicenseAssignment, },
                 data: {
                     License:        { connect: { idLicense }, },
-                    User:           idUserCreator ? { connect: { idUser: idUserCreator }, } : idUserCreatorOrig ? { disconnect: true, } : undefined,
+                    User:           idUserCreator ? { connect: { idUser: idUserCreator }, } : { disconnect: true, },
                     DateStart,
                     DateEnd,
-                    SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
+                    SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -63,6 +57,13 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
             LOG.error('DBAPI.LicenseAssignment.update', LOG.LS.eDB, error);
             return false;
         }
+    }
+
+    public assignmentActive(): boolean {
+        const now: Date = new Date();
+        const started: boolean = (this.DateStart === null) || (this.DateStart <= now);
+        const ended: boolean = (this.DateEnd !== null) && (this.DateEnd <= now);
+        return started && !ended;
     }
 
     static async fetch(idLicenseAssignment: number): Promise<LicenseAssignment | null> {

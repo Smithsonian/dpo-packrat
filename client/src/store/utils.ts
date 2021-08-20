@@ -15,13 +15,14 @@ export function parseFileId(id: FileId): number {
 }
 
 export function parseSubjectUnitIdentifierToState(subjectUnitIdentifier: SubjectUnitIdentifier): StateSubject {
-    const { idSubject, SubjectName, UnitAbbreviation, IdentifierPublic } = subjectUnitIdentifier;
+    const { idSubject, SubjectName, UnitAbbreviation, IdentifierPublic, IdentifierCollection } = subjectUnitIdentifier;
 
     return {
         id: idSubject,
         name: SubjectName,
         arkId: IdentifierPublic || '',
-        unit: UnitAbbreviation
+        unit: UnitAbbreviation,
+        collectionId: IdentifierCollection || ''
     };
 }
 
@@ -51,13 +52,12 @@ export function parseProjectToState(project: Project, selected: boolean): StateP
     };
 }
 
-export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary: Vocabulary): IngestionFile {
+export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary: Vocabulary, idAsset: number | null = null): IngestionFile {
     const { idAssetVersion, StorageSize, FileName } = assetVersion;
     const { idVocabulary } = vocabulary;
 
     const id = String(idAssetVersion);
-
-    return {
+    const result: IngestionFile = {
         id,
         name: FileName,
         size: StorageSize,
@@ -68,15 +68,18 @@ export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary:
         selected: false,
         cancel: null
     };
+    if (idAsset) result.idAsset = idAsset;
+    return result;
 }
 
 export function parseIdentifiersToState(identifiers: IngestIdentifier[], defaultIdentifierField: StateIdentifier[]): StateIdentifier[] {
     const parsedIdentifiers = identifiers.map(
-        ({ identifier, identifierType }: IngestIdentifier, index: number): StateIdentifier => ({
+        ({ identifier, identifierType, idIdentifier }: IngestIdentifier, index: number): StateIdentifier => ({
             id: index,
             identifier,
             identifierType,
-            selected: true
+            selected: true,
+            idIdentifier
         })
     );
 

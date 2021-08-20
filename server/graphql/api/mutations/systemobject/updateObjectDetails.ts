@@ -4,6 +4,7 @@ const updateObjectDetails = gql`
     mutation updateObjectDetails($input: UpdateObjectDetailsInput!) {
         updateObjectDetails(input: $input) {
           success
+          message
         }
     }
 `;

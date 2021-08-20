@@ -13,6 +13,7 @@ enum API_ROUTES {
 export type AuthResponseType = {
     success: boolean;
     message?: string;
+    originalUrl?: string;
 };
 
 export default class API {
@@ -31,10 +32,10 @@ export default class API {
     }
 
     static async request(route: string, options: RequestInit = {}): Promise<any> {
-        const { REACT_APP_SERVER_ENDPOINT } = process.env;
+        const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
 
-        if (!REACT_APP_SERVER_ENDPOINT) {
-            throw new Error('REACT_APP_SERVER_ENDPOINT was not provided to rest api client');
+        if (!REACT_APP_PACKRAT_SERVER_ENDPOINT) {
+            throw new Error('REACT_APP_PACKRAT_SERVER_ENDPOINT was not provided to rest api client');
         }
 
         const defaultOptions: RequestInit = {
@@ -45,6 +46,6 @@ export default class API {
             ...options
         };
 
-        return fetch(`${REACT_APP_SERVER_ENDPOINT}/${route}`, defaultOptions).then(response => response.json());
+        return fetch(`${REACT_APP_PACKRAT_SERVER_ENDPOINT}/${route}`, defaultOptions).then(response => response.json());
     }
 }

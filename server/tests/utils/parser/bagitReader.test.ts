@@ -133,9 +133,9 @@ describe('BagitReader', () => {
     });
 
     test('BagitReader externally validate contents', async () => {
-        expect(await testBagitContents(bagitZipStream)).toBeTruthy();
-        expect(await testBagitContents(bagitZipFile)).toBeTruthy();
-        expect(await testBagitContents(bagitDir)).toBeTruthy();
+        expect(await testBagitContents(bagitZipStream, true)).toBeTruthy();
+        expect(await testBagitContents(bagitZipFile, true)).toBeTruthy();
+        expect(await testBagitContents(bagitDir, false)).toBeTruthy();
     });
 
     test('BagitReader.close', async () => {
@@ -179,6 +179,13 @@ describe('BagitReader', () => {
         await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path, initialValidate: true, subsequentValidate: false, subsequentIsValid: true, expectFailure: true });
         path = join(mockPathDir, 'PackratTestInvalidManifestEntry.zip');
         await testBagitLoad({ loadMethod: eLoadMethod.eError, path, initialValidate: true, subsequentValidate: false, subsequentIsValid: true, expectFailure: true });
+
+        // expected failure from not-yet implemented 'add'
+        const path2 = join(mockPathZip, 'PackratTest.zip');
+        const bagitZipStream: BagitReader = await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path: path2, initialValidate: true, subsequentValidate: true, subsequentIsValid: true, expectFailure: false });
+        const zipStream = fs.createReadStream(path2);
+        const res: H.IOResults = await bagitZipStream.add('fakey', zipStream);
+        expect(res.success).toBeFalsy();
     });
 });
 
@@ -237,7 +244,7 @@ async function testBagitLoad(options: BagitLoadOptions): Promise<BagitReader> {
     return bagit;
 }
 
-async function testBagitContents(bagit: BagitReader): Promise<boolean> {
+async function testBagitContents(bagit: BagitReader, expectSuccessFullContents: boolean): Promise<boolean> {
     expect(bagit).toBeTruthy();
     if (!bagit)
         return false;
@@ -266,6 +273,9 @@ async function testBagitContents(bagit: BagitReader): Promise<boolean> {
         if (hashResults.hash != hash)
             results = false;
     }
+
+    const fileStream: NodeJS.ReadableStream | null = await bagit.streamContent(null);
+    expect(fileStream != null).toEqual(expectSuccessFullContents);
     return results;
 }
 

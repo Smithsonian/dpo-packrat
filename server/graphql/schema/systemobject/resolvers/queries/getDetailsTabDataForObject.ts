@@ -92,7 +92,17 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 fields = {
                     ...fields,
                     HasBeenQCd: Scene?.HasBeenQCd,
-                    IsOriented: Scene?.IsOriented
+                    IsOriented: Scene?.IsOriented,
+                    CountScene: Scene?.CountScene,
+                    CountNode: Scene?.CountNode,
+                    CountCamera: Scene?.CountCamera,
+                    CountLight: Scene?.CountLight,
+                    CountModel: Scene?.CountModel,
+                    CountMeta: Scene?.CountMeta,
+                    CountSetup: Scene?.CountSetup,
+                    CountTour: Scene?.CountTour,
+                    EdanUUID: Scene?.EdanUUID,
+                    idScene: systemObject.idScene,
                 };
                 result.Scene = fields;
             }
@@ -163,7 +173,6 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
     };
 
     const CaptureDataPhoto = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(idCaptureData);
-
     if (CaptureDataPhoto && CaptureDataPhoto[0]) {
         const [CD] = CaptureDataPhoto;
 
@@ -180,6 +189,12 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
             backgroundRemovalMethod: CD.idVBackgroundRemovalMethod,
             clusterType: CD.idVClusterType,
             clusterGeometryFieldId: CD.ClusterGeometryFieldID,
+            isValidData: true
+        };
+    } else {
+        fields = {
+            ...fields,
+            isValidData: false
         };
     }
 
@@ -199,8 +214,6 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
 //     fields = {
 //         ...fields,
 //         name: model?.Name,
-//         master: model?.Master,
-//         authoritative: model?.Authoritative,
 //         creationMethod: model?.idVCreationMethod,
 //         modality: model?.idVModality,
 //         purpose: model?.idVPurpose,

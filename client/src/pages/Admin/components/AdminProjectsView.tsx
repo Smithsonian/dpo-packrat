@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Tooltip, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { DataGrid, Columns } from '@material-ui/data-grid';
+import { DataGrid, GridColumns } from '@material-ui/data-grid';
 import { useLocation } from 'react-router';
 import { GetProjectListDocument, GetProjectListResult } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
@@ -105,14 +105,14 @@ function AdminProjectsList({ projects }): React.ReactElement {
         };
     });
 
-    const columnHeader: Columns = [
+    const columnHeader: GridColumns = [
         {
             field: 'Name',
             headerName: 'Name',
             flex: 3,
             renderCell: params => (
-                <Tooltip placement='left' title={`${params.getValue('Name')}`} arrow>
-                    <div>{`${params.getValue('Name')}`}</div>
+                <Tooltip placement='left' title={`${params.row.Name}`} arrow>
+                    <div>{`${params.row.Name}`}</div>
                 </Tooltip>
             )
         },

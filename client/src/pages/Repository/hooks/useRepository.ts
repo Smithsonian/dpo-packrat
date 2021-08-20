@@ -7,6 +7,7 @@ import { ApolloQueryResult } from '@apollo/client';
 import { RepositoryFilter } from '..';
 import { apolloClient } from '../../../graphql';
 import { GetObjectChildrenDocument, GetObjectChildrenQuery } from '../../../types/graphql';
+import { repositoryRowCount } from '../../../types/server';
 
 function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
     return apolloClient.query({
@@ -27,6 +28,10 @@ function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0):
                 variantType: filter.variantType,
                 modelPurpose: filter.modelPurpose,
                 modelFileType: filter.modelFileType,
+                dateCreatedFrom: filter.dateCreatedFrom,
+                dateCreatedTo: filter.dateCreatedTo,
+                rows: repositoryRowCount,
+                cursorMark: filter.cursorMark ?? ''
             }
         }
     });
@@ -51,6 +56,10 @@ function getObjectChildren(idRoot: number, filter: RepositoryFilter): Promise<Ap
                 variantType: filter.variantType,
                 modelPurpose: filter.modelPurpose,
                 modelFileType: filter.modelFileType,
+                dateCreatedFrom: filter.dateCreatedFrom,
+                dateCreatedTo: filter.dateCreatedTo,
+                rows: repositoryRowCount,
+                cursorMark: filter.cursorMark ?? ''
             }
         }
     });

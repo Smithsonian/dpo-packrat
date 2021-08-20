@@ -1,6 +1,7 @@
 export * from './Actor.util';
 export * from './Asset.util';
 export * from './AssetVersion.util';
+export * from './Audit.util';
 export * from './CaptureData.util';
 export * from './Identifier.util';
 export * from './IntermediaryFile.util';
@@ -17,6 +18,8 @@ export * from './Unit.util';
 export * from './UnitEdan.util';
 export * from './User.util';
 export * from './Workflow.util';
+export * from './WorkflowReport.util';
+export * from './WorkflowSet.util';
 export * from './WorkflowStep.util';
 
 export function randomStorageKey(baseName: string): string {

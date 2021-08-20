@@ -5,29 +5,20 @@
  * This component renders details tab for Unit specific details used in DetailsTab component.
  */
 import { Box } from '@material-ui/core';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { InputField, Loader } from '../../../../../components';
-import { UnitDetailFields } from '../../../../../types/graphql';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
+import { useDetailTabStore } from '../../../../../store';
+import { eSystemObjectType } from '../../../../../types/server';
 
 function UnitDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
-    const [details, setDetails] = useState<UnitDetailFields>({});
+    const [UnitDetails, updateDetailField] = useDetailTabStore(state => [state.UnitDetails, state.updateDetailField]);
 
     useEffect(() => {
-        onUpdateDetail(objectType, details);
-    }, [details]);
-
-    useEffect(() => {
-        if (data && !loading) {
-            const { Unit } = data.getDetailsTabDataForObject;
-            setDetails({
-                Abbreviation: Unit?.Abbreviation,
-                ARKPrefix: Unit?.ARKPrefix
-            });
-        }
-    }, [data, loading]);
+        onUpdateDetail(objectType, UnitDetails);
+    }, [UnitDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -35,7 +26,7 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
-        setDetails(details => ({ ...details, [name]: value }));
+        updateDetailField(eSystemObjectType.eUnit, name, value);
     };
 
     const unitData = data.getDetailsTabDataForObject?.Unit;
@@ -45,20 +36,20 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
             <InputField
                 viewMode
                 required
-                updated={isFieldUpdated(details, unitData, 'Abbreviation')}
+                updated={isFieldUpdated(UnitDetails, unitData, 'Abbreviation')}
                 disabled={disabled}
                 label='Abbreviation'
-                value={details?.Abbreviation}
+                value={UnitDetails?.Abbreviation}
                 name='Abbreviation'
                 onChange={onSetField}
             />
             <InputField
                 viewMode
                 required
-                updated={isFieldUpdated(details, unitData, 'ARKPrefix')}
+                updated={isFieldUpdated(UnitDetails, unitData, 'ARKPrefix')}
                 disabled={disabled}
                 label='ARKPrefix'
-                value={details?.ARKPrefix}
+                value={UnitDetails?.ARKPrefix}
                 name='ARKPrefix'
                 onChange={onSetField}
             />

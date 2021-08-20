@@ -8,7 +8,6 @@ import create, { GetState, SetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
 import { eVocabularyID, eVocabularySetID } from '../types/server';
-import { multiIncludes } from '../utils/shared';
 
 export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
 export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
@@ -53,7 +52,9 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eModelPurpose,
                     eVocabularySetID.eModelFileType,
                     eVocabularySetID.eModelMaterialChannelMaterialType,
-                    eVocabularySetID.eCaptureDataCaptureMethod
+                    eVocabularySetID.eCaptureDataCaptureMethod,
+                    eVocabularySetID.eJobJobType,
+                    eVocabularySetID.eWorkflowType
                 ]
             }
         };
@@ -76,7 +77,6 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
         });
 
         set({ vocabularies, vocabularyMap });
-
         return vocabularies;
     },
     getEntries: (eVocabularySetID: eVocabularySetID): VocabularyOption[] => {
@@ -127,16 +127,15 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
         };
 
         if (vocabularyEntry) {
-            const foundVocabulary = lodash.find(vocabularyEntry, option => option.idVocabulary === idVocabulary);
+            const foundVocabulary = lodash.find(vocabularyEntry, vocab => vocab.idVocabulary === idVocabulary);
 
             if (foundVocabulary) {
                 const { Term } = foundVocabulary;
-                const term = Term.toLowerCase();
 
-                assetType.photogrammetry = term.includes('photogrammetry');
-                assetType.scene = term.includes('scene');
-                assetType.model = term.includes('model');
-                assetType.other = !multiIncludes(term, ['photogrammetry', 'scene', 'model']);
+                assetType.photogrammetry = (Term === 'Capture Data Set: Photogrammetry');
+                assetType.scene = (Term === 'Scene');
+                assetType.model = (Term === 'Model');
+                assetType.other = !assetType.photogrammetry && !assetType.scene && !assetType.model;
             }
         }
 

@@ -4,6 +4,7 @@ type Query {
     getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
     getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
     getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput!): GetModelConstellationForAssetVersionResult!
+    getSceneForAssetVersion(input: GetSceneForAssetVersionInput!): GetSceneForAssetVersionResult!
 }
 
 input GetAssetVersionsDetailsInput {
@@ -13,6 +14,7 @@ input GetAssetVersionsDetailsInput {
 type IngestIdentifier {
     identifier: String!
     identifierType: Int!
+    idIdentifier: Int!
 }
 
 type IngestFolder {
@@ -40,6 +42,8 @@ type IngestPhotogrammetry {
     directory: String!
     folders: [IngestFolder!]!
     identifiers: [IngestIdentifier!]!
+    sourceObjects: [RelatedObject!]!
+    derivedObjects: [RelatedObject!]!
 }
 
 enum RelatedObjectType {
@@ -58,8 +62,6 @@ type IngestModel {
     idAssetVersion: Int!
     systemCreated: Boolean!
     name: String!
-    master: Boolean!
-    authoritative: Boolean!
     creationMethod: Int!
     modality: Int!
     purpose: Int!
@@ -69,6 +71,7 @@ type IngestModel {
     directory: String!
     identifiers: [IngestIdentifier!]!
     sourceObjects: [RelatedObject!]!
+    derivedObjects: [RelatedObject!]!
 }
 
 enum ReferenceModelAction {
@@ -79,6 +82,8 @@ enum ReferenceModelAction {
 type ReferenceModel {
     idSystemObject: Int!
     name: String!
+    usage: String!
+    quality: String!
     fileSize: BigInt!
     resolution: Int
     boundingBoxP1X: Float
@@ -93,8 +98,14 @@ type ReferenceModel {
 type IngestScene {
     idAssetVersion: Int!
     systemCreated: Boolean!
+    name: String!
+    hasBeenQCd: Boolean!
+    isOriented: Boolean!
+    directory: String!
     identifiers: [IngestIdentifier!]!
     referenceModels: [ReferenceModel!]!
+    sourceObjects: [RelatedObject!]!
+    derivedObjects: [RelatedObject!]!
 }
 
 type GetAssetVersionDetailResult {
@@ -122,6 +133,7 @@ type GetAssetResult {
 
 type GetUploadedAssetVersionResult {
     AssetVersion: [AssetVersion!]!
+    idAssetVersionsUpdated: [Int!]!
 }
 
 input GetContentsForAssetVersionsInput {
@@ -145,4 +157,14 @@ input GetModelConstellationForAssetVersionInput {
 type GetModelConstellationForAssetVersionResult {
     idAssetVersion: Int!
     ModelConstellation: ModelConstellation
+}
+
+input GetSceneForAssetVersionInput {
+    idAssetVersion: Int!
+    directory: String
+}
+
+type GetSceneForAssetVersionResult {
+    idAssetVersion: Int!
+    SceneConstellation: SceneConstellation
 }

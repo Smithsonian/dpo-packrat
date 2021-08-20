@@ -10,7 +10,8 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'CaptureDataGroup'; }
+    public fetchID(): number { return this.idCaptureDataGroup; }
 
     protected async createWorker(): Promise<boolean> {
         try {

@@ -7,11 +7,12 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
     idModelMaterial!: number;
     Name!: string | null;
 
+    public fetchTableName(): string { return 'ModelMaterial'; }
+    public fetchID(): number { return this.idModelMaterial; }
+
     constructor(input: ModelMaterialBase) {
         super(input);
     }
-
-    protected updateCachedValues(): void { }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -41,6 +42,18 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.ModelMaterial.update', LOG.LS.eDB, error);
+            return false;
+        }
+    }
+    /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
+    protected async deleteWorker(): Promise<boolean> {
+        try {
+            const { idModelMaterial } = this;
+            return await DBC.DBConnection.prisma.modelMaterial.delete({
+                where: { idModelMaterial, },
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.ModelMaterial.delete', LOG.LS.eDB, error);
             return false;
         }
     }

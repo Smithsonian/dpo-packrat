@@ -38,7 +38,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         }
     },
     identifierSelect: {
-        minWidth: 180,
+        width: 'fit-content',
         padding: '0px 10px',
         marginLeft: 20,
         background: palette.background.paper,
@@ -64,9 +64,9 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 
 interface IdentifierListProps extends ViewableProps {
     identifiers: StateIdentifier[];
-    onAdd: (initialEntry: number | null) => void;
+    onAdd: (initialEntry: number | null, name?: string) => void;
     onUpdate: (id: number, fieldName: string, fieldValue: number | string | boolean) => void;
-    onRemove: (id: number) => void;
+    onRemove: (idIdentifier: number, id: number) => void;
     identifierTypes: VocabularyOption[];
 }
 
@@ -75,9 +75,8 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
     const classes = useStyles();
 
     const hasIdentifiers: boolean = !!identifiers.length;
-
     return (
-        <Box overflow='hidden' display={identifiers.length ? 'block' : 'none'}>
+        <Box overflow='hidden'>
             <FieldType required={false} renderLabel={false} width='auto'>
                 {hasIdentifiers && <Header />}
                 {!hasIdentifiers && viewMode && (
@@ -85,8 +84,8 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                         <Typography className={classes.empty}>No Identifiers</Typography>
                     </Box>
                 )}
-                {identifiers.map(({ id, selected, identifier, identifierType }, index) => {
-                    const remove = () => onRemove(id);
+                {identifiers.map(({ id, selected, identifier, identifierType, idIdentifier }, index) => {
+                    const remove = () => onRemove(idIdentifier, id);
                     const updateCheckbox = ({ target }) => onUpdate(id, target.name, target.checked);
                     const update = ({ target }) => onUpdate(id, target.name, target.value);
 
@@ -137,7 +136,7 @@ function Header(): React.ReactElement {
             <Box display='flex' flex={1}>
                 <Typography className={classes.header}>Identifer</Typography>
             </Box>
-            <Box display='flex' style={{ width: 220 }}>
+            <Box display='flex' style={{ width: 140 }}>
                 <Typography className={classes.header}>Identifer Type</Typography>
             </Box>
         </Box>

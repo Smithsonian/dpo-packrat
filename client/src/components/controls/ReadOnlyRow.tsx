@@ -13,17 +13,23 @@ import FieldType from '../shared/FieldType';
 interface ReadOnlyRowProps extends ViewableProps {
     label: string;
     value?: number | string | null;
+    padding?: number;
+    gridTemplate?: string;
 }
 
 function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
-    const { label, value } = props;
+    const { label, value, padding, gridTemplate } = props;
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
+    if (gridTemplate) {
+        rowFieldProps['style']['display'] = 'grid';
+        rowFieldProps['style']['gridTemplateColumns'] = gridTemplate;
+    }
 
     return (
-        <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps} width='auto'>
+        <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps} width='100%'>
             <Box width='fit-content' textAlign='right'>
-                <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A', overflowWrap: 'break-word' }}>
+                <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A', overflowWrap: 'break-word', padding }}>
                     {value}
                 </Typography>
             </Box>

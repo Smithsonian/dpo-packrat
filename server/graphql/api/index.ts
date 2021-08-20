@@ -5,7 +5,7 @@
  * us to use it in a non-graphql context such as custom REST
  * routes and testing environment
  */
-import schema from '../schema';
+import schema, { schemaForTest } from '../schema';
 import { graphql, print, DocumentNode } from 'graphql';
 import {
     GetUserInput,
@@ -38,6 +38,8 @@ import {
     GetVocabularyResult,
     GetWorkflowInput,
     GetWorkflowResult,
+    GetWorkflowListInput,
+    GetWorkflowListResult,
     CreateUserInput,
     CreateUserResult,
     CreateCaptureDataInput,
@@ -99,8 +101,8 @@ import {
     GetSystemObjectDetailsResult,
     GetAssetDetailsForSystemObjectInput,
     GetAssetDetailsForSystemObjectResult,
-    GetVersionsForSystemObjectInput,
-    GetVersionsForSystemObjectResult,
+    GetVersionsForAssetInput,
+    GetVersionsForAssetResult,
     GetDetailsTabDataForObjectInput,
     GetDetailsTabDataForObjectResult,
     GetFilterViewDataResult,
@@ -132,6 +134,7 @@ import getItem from './queries/unit/getItem';
 import getSubject from './queries/unit/getSubject';
 import getVocabulary from './queries/vocabulary/getVocabulary';
 import getWorkflow from './queries/workflow/getWorkflow';
+import getWorkflowList from './queries/workflow/getWorkflowList';
 import getUploadedAssetVersion from './queries/asset/getUploadedAssetVersion';
 import searchIngestionSubjects from './queries/unit/searchIngestionSubjects';
 import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSubjects';
@@ -150,7 +153,7 @@ import getObjectChildren from './queries/repository/getObjectChildren';
 import getSourceObjectIdentifer from './queries/systemobject/getSourceObjectIdentifer';
 import getSystemObjectDetails from './queries/systemobject/getSystemObjectDetails';
 import getAssetDetailsForSystemObject from './queries/systemobject/getAssetDetailsForSystemObject';
-import getVersionsForSystemObject from './queries/systemobject/getVersionsForSystemObject';
+import getVersionsForAsset from './queries/systemobject/getVersionsForAsset';
 import getDetailsTabDataForObject from './queries/systemobject/getDetailsTabDataForObject';
 import getFilterViewData from './queries/repository/getFilterViewData';
 import getAllUsers from './queries/user/getAllUsers';
@@ -193,6 +196,7 @@ const allQueries = {
     getSubject,
     getVocabulary,
     getWorkflow,
+    getWorkflowList,
     createUser,
     createCaptureData,
     createCaptureDataPhoto,
@@ -224,7 +228,7 @@ const allQueries = {
     getSourceObjectIdentifer,
     getSystemObjectDetails,
     getAssetDetailsForSystemObject,
-    getVersionsForSystemObject,
+    getVersionsForAsset,
     getDetailsTabDataForObject,
     getFilterViewData,
     updateObjectDetails,
@@ -242,6 +246,11 @@ type GraphQLRequest = {
 };
 
 class GraphQLApi {
+    private test: boolean = false;
+    constructor(test: boolean = false) {
+        this.test = test;
+    }
+
     async getUser(input: GetUserInput, context?: Context): Promise<GetUserResult> {
         const operationName = 'getUser';
         const variables = { input };
@@ -602,8 +611,8 @@ class GraphQLApi {
         });
     }
 
-    async getVersionsForSystemObject(input: GetVersionsForSystemObjectInput, context?: Context): Promise<GetVersionsForSystemObjectResult> {
-        const operationName = 'getVersionsForSystemObject';
+    async getVersionsForAsset(input: GetVersionsForAssetInput, context?: Context): Promise<GetVersionsForAssetResult> {
+        const operationName = 'getVersionsForAsset';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
@@ -752,6 +761,16 @@ class GraphQLApi {
         });
     }
 
+    async getWorkflowList(input: GetWorkflowListInput, context?: Context): Promise<GetWorkflowListResult> {
+        const operationName = 'getWorkflowList';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
     async getAllUsers(input: GetAllUsersInput, context?: Context): Promise<GetAllUsersResult> {
         const operationName = 'getAllUsers';
         const variables = { input };
@@ -798,7 +817,7 @@ class GraphQLApi {
         const source: string = query || queryNodeString;
 
         const contextValue = { ...context };
-        const { data, errors } = await graphql({ schema, source, variableValues: variables, contextValue });
+        const { data, errors } = await graphql({ schema: (!this.test) ? schema : schemaForTest, source, variableValues: variables, contextValue });
 
         if (errors && errors.length) {
             throw errors[0];

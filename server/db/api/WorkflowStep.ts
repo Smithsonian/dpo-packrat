@@ -1,14 +1,8 @@
 /* eslint-disable camelcase */
 import { WorkflowStep as WorkflowStepBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, eWorkflowJobRunStatus, convertWorkflowJobRunStatusToEnum } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
-
-export enum eWorkflowStepState {
-    eCreated,
-    eStarted,
-    eFinished,
-}
 
 export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements WorkflowStepBase {
     idWorkflowStep!: number;
@@ -20,17 +14,12 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
     DateCreated!: Date;
     DateCompleted!: Date | null;
 
-    idJobRunOrig!: number | null;
-    idUserOwnerOrig!: number | null;
-
     constructor(input: WorkflowStepBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idJobRunOrig = this.idJobRun;
-        this.idUserOwnerOrig = this.idUserOwner;
-    }
+    public fetchTableName(): string { return 'WorkflowStep'; }
+    public fetchID(): number { return this.idWorkflowStep; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -59,13 +48,13 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflowStep, idJobRun, DateCompleted, DateCreated, idUserOwner, idVWorkflowStepType,
-                idWorkflow, State, idJobRunOrig, idUserOwnerOrig } = this;
+                idWorkflow, State } = this;
             return await DBC.DBConnection.prisma.workflowStep.update({
                 where: { idWorkflowStep, },
                 data: {
-                    JobRun:             idJobRun ? { connect: { idJobRun }, } : idJobRunOrig ? { disconnect: true, } : undefined,
+                    JobRun:             idJobRun ? { connect: { idJobRun }, } : { disconnect: true, },
                     Workflow:           { connect: { idWorkflow }, },
-                    User:               idUserOwner ? { connect: { idUser: idUserOwner }, } : idUserOwnerOrig ? { disconnect: true, } : undefined,
+                    User:               idUserOwner ? { connect: { idUser: idUserOwner }, } : { disconnect: true, },
                     Vocabulary:         { connect: { idVocabulary: idVWorkflowStepType }, },
                     State,
                     DateCreated,
@@ -78,27 +67,11 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
         }
     }
 
-    static stateValueToEnum(State: number): eWorkflowStepState {
-        switch (State) {
-            default:
-            case 0: return eWorkflowStepState.eCreated;
-            case 1: return eWorkflowStepState.eStarted;
-            case 2: return eWorkflowStepState.eFinished;
-        }
+    getState(): eWorkflowJobRunStatus {
+        return convertWorkflowJobRunStatusToEnum(this.State);
     }
-    static stateEnumToValue(eState: eWorkflowStepState): number {
-        switch (eState) {
-            case eWorkflowStepState.eCreated: return 0;
-            case eWorkflowStepState.eStarted: return 1;
-            case eWorkflowStepState.eFinished: return 2;
-        }
-    }
-
-    getState(): eWorkflowStepState {
-        return WorkflowStep.stateValueToEnum(this.State);
-    }
-    setState(eState: eWorkflowStepState): void {
-        this.State = WorkflowStep.stateEnumToValue(eState);
+    setState(eState: eWorkflowJobRunStatus): void {
+        this.State = eState;
     }
 
     static async fetch(idWorkflowStep: number): Promise<WorkflowStep | null> {

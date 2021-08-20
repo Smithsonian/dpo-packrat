@@ -1,3 +1,5 @@
+scalar DateTime
+
 type Query {
     getObjectChildren(input: GetObjectChildrenInput!): GetObjectChildrenResult!
     getFilterViewData: GetFilterViewDataResult!
@@ -17,6 +19,10 @@ input GetObjectChildrenInput {
     variantType: [Int!]!
     modelPurpose: [Int!]!
     modelFileType: [Int!]!
+    dateCreatedFrom: DateTime
+    dateCreatedTo: DateTime
+    rows: Int!
+    cursorMark: String!
 }
 
 type NavigationResultEntry {
@@ -32,6 +38,7 @@ type GetObjectChildrenResult {
     error: String!
     entries: [NavigationResultEntry!]!
     metadataColumns: [Int!]!
+    cursorMark: String
 }
 
 type GetFilterViewDataResult {

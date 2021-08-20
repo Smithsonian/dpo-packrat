@@ -1,8 +1,15 @@
-import { app } from '../../../index';
+import { HttpServer } from '../../../http';
 import request from 'supertest';
 import * as DBAPI from '../../../db';
 
 describe('Auth implementation: local login', () => {
+    let httpServer: HttpServer | null = null;
+
+    test('initialize', async () => {
+        httpServer = await HttpServer.getInstance();
+        expect(httpServer).toBeTruthy();
+    });
+
     test('should work with correct user credentials', async done => {
         const randomNumber: number = Math.random() * 100000000;
         const userInput = {
@@ -30,8 +37,10 @@ describe('Auth implementation: local login', () => {
             password: userInput.EmailAddress
         };
 
-        const { body } = await request(app).post('/auth/login').send(authBody).expect(200);
-        expect(body.success).toBe(true);
+        if (httpServer) {
+            const { body } = await request(httpServer.app).post('/auth/login').send(authBody).expect(200);
+            expect(body.success).toBe(true);
+        }
         done();
     });
 
@@ -60,9 +69,11 @@ describe('Auth implementation: local login', () => {
             password: 'incorrect-password'
         };
 
-        const { body } = await request(app).post('/auth/login').send(authBody).expect(200);
-        expect(body.success).toBe(false);
-        expect(body.message).toBeTruthy();
+        if (httpServer) {
+            const { body } = await request(httpServer.app).post('/auth/login').send(authBody).expect(200);
+            expect(body.success).toBe(false);
+            expect(body.message).toBeTruthy();
+        }
         done();
     });
 
@@ -72,8 +83,10 @@ describe('Auth implementation: local login', () => {
             password: null
         };
 
-        const response = await request(app).post('/auth/login').send(authBody).expect(500);
-        expect(response.accepted).toBe(false);
+        if (httpServer) {
+            const response = await request(httpServer.app).post('/auth/login').send(authBody).expect(500);
+            expect(response.accepted).toBe(false);
+        }
         done();
     });
 });

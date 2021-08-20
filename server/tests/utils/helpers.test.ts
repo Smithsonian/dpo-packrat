@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import * as T from '../../utils/types';
 
 const n1: number = 3;
 const n2: number = 5;
@@ -55,6 +56,7 @@ describe('Utils: Helpers', () => {
     const filePath4: string = H.Helpers.randomFilename(directoryPath, '');
     const filePath5: string = H.Helpers.randomFilename(directoryPath, '');
     const filePathRandom: string = H.Helpers.randomFilename(directoryPath, '');
+    const filePathRandom2: string = H.Helpers.randomFilename(directoryPath, '');
     const dirNestEmpty: string = path.join(directoryPath, H.Helpers.randomSlug());
     const dirNestNotEmpty: string = path.join(directoryPath, H.Helpers.randomSlug());
 
@@ -218,6 +220,22 @@ describe('Utils: Helpers', () => {
         const stream3: NodeJS.ReadableStream = fs.createReadStream(filePathRandom);
         const buffer3: Buffer | null = await H.Helpers.readFileFromStream(stream3);
         expect(buffer3).toBeTruthy();
+
+        const stream4: NodeJS.ReadableStream = fs.createReadStream(filePathRandom);
+        const buffer4: Buffer | null = await H.Helpers.readFileFromStreamThrowErrors(stream4);
+        expect(buffer4).toBeTruthy();
+    });
+
+    test('Utils: Helpers.writeStreamToFile', async () => {
+        const stream: NodeJS.ReadableStream = fs.createReadStream(filePathRandom);
+        const results: H.IOResults = await H.Helpers.writeStreamToFile(stream, filePathRandom2);
+        expect(results.success).toBeTruthy();
+
+        const statResults: H.StatResults = await H.Helpers.stat(filePathRandom2);
+        expect(statResults.success).toBeTruthy();
+        expect(statResults.stat).toBeTruthy();
+        if (statResults.stat)
+            expect(statResults.stat.size).toBe(RANDOM_FILE_SIZE);
     });
 
     test('Utils: Helpers.writeFileToStream', async () => {
@@ -332,6 +350,8 @@ describe('Utils: Helpers', () => {
         expect(res.success).toBeFalsy();
         res = await H.Helpers.removeFile(filePathRandom);
         expect(res.success).toBeTruthy();
+        res = await H.Helpers.removeFile(filePathRandom2);
+        expect(res.success).toBeTruthy();
     });
 
     test('Utils: Helpers.removeDirectory', async () => {
@@ -361,6 +381,7 @@ describe('Utils: Helpers', () => {
         const numVal: number = 3.14;
         const strVal: string = 'string';
         const boolVal: boolean = false;
+        const dateVal: Date = new Date();
         const objVal = {
             foo: 'abba',
             bar: 'dabba'
@@ -369,6 +390,7 @@ describe('Utils: Helpers', () => {
         expect(H.Helpers.safeNumber(numVal)).toEqual(numVal);
         expect(H.Helpers.safeNumber(strVal)).toBeNaN();
         expect(H.Helpers.safeNumber(boolVal)).toBeNaN();
+        expect(H.Helpers.safeNumber(dateVal)).toBeNaN();
         expect(H.Helpers.safeNumber(objVal)).toBeNaN();
     });
 
@@ -377,6 +399,7 @@ describe('Utils: Helpers', () => {
         const numVal: number = 3.14;
         const strVal: string = 'string';
         const boolVal: boolean = false;
+        const dateVal: Date = new Date();
         const objVal = {
             foo: 'abba',
             bar: 'dabba'
@@ -386,7 +409,47 @@ describe('Utils: Helpers', () => {
         expect(H.Helpers.safeBoolean(strVal)).toBeTruthy();
         expect(H.Helpers.safeBoolean(boolVal)).toBeFalsy();
         expect(H.Helpers.safeBoolean(true)).toBeTruthy();
+        expect(H.Helpers.safeBoolean(dateVal)).toBeTruthy();
         expect(H.Helpers.safeBoolean(objVal)).toBeTruthy();
+    });
+
+    test('Utils: Helpers.safeString', async () => {
+        const nullVal: null = null;
+        const numVal: number = 3.14;
+        const strVal: string = 'string';
+        const boolVal: boolean = false;
+        const dateVal: Date = new Date();
+        const objVal = {
+            foo: 'abba',
+            bar: 'dabba'
+        };
+        expect(H.Helpers.safeString(nullVal)).toBeNull();
+        expect(H.Helpers.safeString(numVal)).toBeNull();
+        expect(H.Helpers.safeString(strVal)).toEqual(strVal);
+        expect(H.Helpers.safeString(boolVal)).toBeNull();
+        expect(H.Helpers.safeString(dateVal)).toBeNull();
+        expect(H.Helpers.safeString(objVal)).toBeNull();
+    });
+
+    test('Utils: Helpers.safeDate', async () => {
+        const nullVal: null = null;
+        const numVal: number = 3.14;
+        const strVal: string = 'string';
+        const boolVal: boolean = false;
+        const dateVal: Date = new Date();
+        const dateVal2: Date = dateVal;
+        dateVal2.setMilliseconds(0);
+        const objVal = {
+            foo: 'abba',
+            bar: 'dabba'
+        };
+        expect(H.Helpers.safeDate(nullVal)).toBeNull();
+        expect(H.Helpers.safeDate(numVal)).toBeNull();
+        expect(H.Helpers.safeDate(strVal)).toBeNull();
+        expect(H.Helpers.safeDate(boolVal)).toBeNull();
+        expect(H.Helpers.safeDate(objVal)).toBeNull();
+        expect(H.Helpers.safeDate(dateVal)).toEqual(dateVal);
+        expect(H.Helpers.safeDate(dateVal.toUTCString())).toEqual(dateVal2);
     });
 
     test('Utils: Helpers.stringify*', async () => {
@@ -408,13 +471,43 @@ describe('Utils: Helpers', () => {
             valueOrig: 39
         };
 
-        const output1: string = JSON.stringify(testData, H.Helpers.stringifyMapsAndBigints);
+        const output1: string = JSON.stringify(testData, H.Helpers.saferStringify);
         LOG.info(`output: ${output1}`, LOG.LS.eTEST);
         expect(output1).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"valueOrig":39}');
 
         const output2: string = JSON.stringify(testData, H.Helpers.stringifyDatabaseRow);
         LOG.info(`output: ${output2}`, LOG.LS.eTEST);
         expect(output2).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false}');
+    });
+
+    test('Utils: escapeHTMLEntity', async () => {
+        expect(H.Helpers.escapeHTMLEntity('ABBA')).toEqual('ABBA');
+        expect(H.Helpers.escapeHTMLEntity('AB&BA')).toEqual('AB&amp;BA');
+        expect(H.Helpers.escapeHTMLEntity('AB<BA')).toEqual('AB&lt;BA');
+        expect(H.Helpers.escapeHTMLEntity('AB>BA')).toEqual('AB&gt;BA');
+        expect(H.Helpers.escapeHTMLEntity('AB"BA')).toEqual('AB&quot;BA');
+        expect(H.Helpers.escapeHTMLEntity('AB\'BA')).toEqual('AB&#39;BA');
+        expect(H.Helpers.escapeHTMLEntity('AB/BA')).toEqual('AB&#x2F;BA');
+    });
+
+    test('Utils: computeHref', async () => {
+        expect(H.Helpers.computeHref('/path/to/item', 'anchor text')).toEqual('<a href=\'/path/to/item\'>anchor text</a>');
+        expect(H.Helpers.computeHref('item', 'anchor text')).toEqual('<a href=\'item\'>anchor text</a>');
+        expect(H.Helpers.computeHref('', 'anchor text')).toEqual('anchor text');
+    });
+
+    test('Utils: types', async () => {
+        expect(T.maybe('ABBA')).toEqual('ABBA');
+        expect(T.maybe('')).toEqual('');
+        expect(T.maybe(3)).toEqual(3);
+        expect(T.maybe(null)).toEqual(null);
+        expect(T.maybe(undefined)).toEqual(null);
+
+        expect(T.maybeString('ABBA')).toEqual('ABBA');
+        expect(T.maybeString('')).toEqual('');
+        expect(T.maybeString(3)).toEqual(null);
+        expect(T.maybeString(null)).toEqual(null);
+        expect(T.maybeString(undefined)).toEqual(null);
     });
 });
 

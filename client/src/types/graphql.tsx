@@ -15,6 +15,7 @@ export type Scalars = {
   DateTime: any;
   Upload: any;
   BigInt: any;
+  JSON: any;
 };
 
 export type Query = {
@@ -37,6 +38,7 @@ export type Query = {
   getItem: GetItemResult;
   getItemsForSubject: GetItemsForSubjectResult;
   getLicense: GetLicenseResult;
+  getLicenseList: GetLicenseListResult;
   getModel: GetModelResult;
   getModelConstellation: GetModelConstellationResult;
   getModelConstellationForAssetVersion: GetModelConstellationForAssetVersionResult;
@@ -46,18 +48,22 @@ export type Query = {
   getProjectDocumentation: GetProjectDocumentationResult;
   getProjectList: GetProjectListResult;
   getScene: GetSceneResult;
+  getSceneForAssetVersion: GetSceneForAssetVersionResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
+  getSubjectList: GetSubjectListResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
+  getUnitsFromEdanAbbreviation: GetUnitsFromEdanAbbreviationResult;
   getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
-  getVersionsForSystemObject: GetVersionsForSystemObjectResult;
+  getVersionsForAsset: GetVersionsForAssetResult;
   getVocabulary: GetVocabularyResult;
   getVocabularyEntries: GetVocabularyEntriesResult;
   getWorkflow: GetWorkflowResult;
+  getWorkflowList: GetWorkflowListResult;
   searchIngestionSubjects: SearchIngestionSubjectsResult;
 };
 
@@ -142,6 +148,11 @@ export type QueryGetLicenseArgs = {
 };
 
 
+export type QueryGetLicenseListArgs = {
+  input: GetLicenseListInput;
+};
+
+
 export type QueryGetModelArgs = {
   input: GetModelInput;
 };
@@ -187,6 +198,11 @@ export type QueryGetSceneArgs = {
 };
 
 
+export type QueryGetSceneForAssetVersionArgs = {
+  input: GetSceneForAssetVersionInput;
+};
+
+
 export type QueryGetSourceObjectIdentiferArgs = {
   input: GetSourceObjectIdentiferInput;
 };
@@ -194,6 +210,11 @@ export type QueryGetSourceObjectIdentiferArgs = {
 
 export type QueryGetSubjectArgs = {
   input: GetSubjectInput;
+};
+
+
+export type QueryGetSubjectListArgs = {
+  input: GetSubjectListInput;
 };
 
 
@@ -212,6 +233,11 @@ export type QueryGetUnitArgs = {
 };
 
 
+export type QueryGetUnitsFromEdanAbbreviationArgs = {
+  input: GetUnitsFromEdanAbbreviationInput;
+};
+
+
 export type QueryGetUnitsFromNameSearchArgs = {
   input: GetUnitsFromNameSearchInput;
 };
@@ -222,8 +248,8 @@ export type QueryGetUserArgs = {
 };
 
 
-export type QueryGetVersionsForSystemObjectArgs = {
-  input: GetVersionsForSystemObjectInput;
+export type QueryGetVersionsForAssetArgs = {
+  input: GetVersionsForAssetInput;
 };
 
 
@@ -239,6 +265,11 @@ export type QueryGetVocabularyEntriesArgs = {
 
 export type QueryGetWorkflowArgs = {
   input: GetWorkflowInput;
+};
+
+
+export type QueryGetWorkflowListArgs = {
+  input: GetWorkflowListInput;
 };
 
 
@@ -307,21 +338,42 @@ export type AccessRole = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  assignLicense: AssignLicenseResult;
+  clearLicenseAssignment: ClearLicenseAssignmentResult;
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
+  createGeoLocation: CreateGeoLocationResult;
   createItem: CreateItemResult;
+  createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
   createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
+  createSubjectWithIdentifiers: CreateSubjectWithIdentifiersResult;
   createUnit: CreateUnitResult;
   createUser: CreateUserResult;
   createVocabulary: CreateVocabularyResult;
   createVocabularySet: CreateVocabularySetResult;
+  deleteIdentifier: DeleteIdentifierResult;
+  deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
+  updateDerivedObjects: UpdateDerivedObjectsResult;
+  updateLicense: CreateLicenseResult;
   updateObjectDetails: UpdateObjectDetailsResult;
+  updateSourceObjects: UpdateSourceObjectsResult;
   updateUser: CreateUserResult;
   uploadAsset: UploadAssetResult;
+};
+
+
+export type MutationAssignLicenseArgs = {
+  input: AssignLicenseInput;
+};
+
+
+export type MutationClearLicenseAssignmentArgs = {
+  input: ClearLicenseAssignmentInput;
 };
 
 
@@ -335,8 +387,18 @@ export type MutationCreateCaptureDataPhotoArgs = {
 };
 
 
+export type MutationCreateGeoLocationArgs = {
+  input: CreateGeoLocationInput;
+};
+
+
 export type MutationCreateItemArgs = {
   input: CreateItemInput;
+};
+
+
+export type MutationCreateLicenseArgs = {
+  input: CreateLicenseInput;
 };
 
 
@@ -352,6 +414,11 @@ export type MutationCreateSceneArgs = {
 
 export type MutationCreateSubjectArgs = {
   input: CreateSubjectInput;
+};
+
+
+export type MutationCreateSubjectWithIdentifiersArgs = {
+  input: CreateSubjectWithIdentifiersInput;
 };
 
 
@@ -375,6 +442,16 @@ export type MutationCreateVocabularySetArgs = {
 };
 
 
+export type MutationDeleteIdentifierArgs = {
+  input: DeleteIdentifierInput;
+};
+
+
+export type MutationDeleteObjectConnectionArgs = {
+  input: DeleteObjectConnectionInput;
+};
+
+
 export type MutationDiscardUploadedAssetVersionsArgs = {
   input: DiscardUploadedAssetVersionsInput;
 };
@@ -385,8 +462,28 @@ export type MutationIngestDataArgs = {
 };
 
 
+export type MutationRollbackSystemObjectVersionArgs = {
+  input: RollbackSystemObjectVersionInput;
+};
+
+
+export type MutationUpdateDerivedObjectsArgs = {
+  input: UpdateDerivedObjectsInput;
+};
+
+
+export type MutationUpdateLicenseArgs = {
+  input: UpdateLicenseInput;
+};
+
+
 export type MutationUpdateObjectDetailsArgs = {
   input: UpdateObjectDetailsInput;
+};
+
+
+export type MutationUpdateSourceObjectsArgs = {
+  input: UpdateSourceObjectsInput;
 };
 
 
@@ -398,12 +495,14 @@ export type MutationUpdateUserArgs = {
 export type MutationUploadAssetArgs = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export type UploadAssetInput = {
   __typename?: 'UploadAssetInput';
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -435,6 +534,7 @@ export type IngestIdentifier = {
   __typename?: 'IngestIdentifier';
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
 };
 
 export type IngestFolder = {
@@ -464,6 +564,8 @@ export type IngestPhotogrammetry = {
   directory: Scalars['String'];
   folders: Array<IngestFolder>;
   identifiers: Array<IngestIdentifier>;
+  sourceObjects: Array<RelatedObject>;
+  derivedObjects: Array<RelatedObject>;
 };
 
 export enum RelatedObjectType {
@@ -484,8 +586,6 @@ export type IngestModel = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  master: Scalars['Boolean'];
-  authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -495,6 +595,7 @@ export type IngestModel = {
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   sourceObjects: Array<RelatedObject>;
+  derivedObjects: Array<RelatedObject>;
 };
 
 export enum ReferenceModelAction {
@@ -506,6 +607,8 @@ export type ReferenceModel = {
   __typename?: 'ReferenceModel';
   idSystemObject: Scalars['Int'];
   name: Scalars['String'];
+  usage: Scalars['String'];
+  quality: Scalars['String'];
   fileSize: Scalars['BigInt'];
   resolution?: Maybe<Scalars['Int']>;
   boundingBoxP1X?: Maybe<Scalars['Float']>;
@@ -521,8 +624,14 @@ export type IngestScene = {
   __typename?: 'IngestScene';
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
+  name: Scalars['String'];
+  hasBeenQCd: Scalars['Boolean'];
+  isOriented: Scalars['Boolean'];
+  directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   referenceModels: Array<ReferenceModel>;
+  sourceObjects: Array<RelatedObject>;
+  derivedObjects: Array<RelatedObject>;
 };
 
 export type GetAssetVersionDetailResult = {
@@ -554,6 +663,7 @@ export type GetAssetResult = {
 export type GetUploadedAssetVersionResult = {
   __typename?: 'GetUploadedAssetVersionResult';
   AssetVersion: Array<AssetVersion>;
+  idAssetVersionsUpdated: Array<Scalars['Int']>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -580,6 +690,17 @@ export type GetModelConstellationForAssetVersionResult = {
   __typename?: 'GetModelConstellationForAssetVersionResult';
   idAssetVersion: Scalars['Int'];
   ModelConstellation?: Maybe<ModelConstellation>;
+};
+
+export type GetSceneForAssetVersionInput = {
+  idAssetVersion: Scalars['Int'];
+  directory?: Maybe<Scalars['String']>;
+};
+
+export type GetSceneForAssetVersionResult = {
+  __typename?: 'GetSceneForAssetVersionResult';
+  idAssetVersion: Scalars['Int'];
+  SceneConstellation?: Maybe<SceneConstellation>;
 };
 
 
@@ -751,6 +872,7 @@ export type IngestItemInput = {
 export type IngestIdentifierInput = {
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
 };
 
 export type IngestFolderInput = {
@@ -760,6 +882,7 @@ export type IngestFolderInput = {
 
 export type IngestPhotogrammetryInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   name: Scalars['String'];
   dateCaptured: Scalars['String'];
   datasetType: Scalars['Int'];
@@ -778,12 +901,8 @@ export type IngestPhotogrammetryInput = {
   directory: Scalars['String'];
   folders: Array<IngestFolderInput>;
   identifiers: Array<IngestIdentifierInput>;
-};
-
-export type IngestUvMapInput = {
-  name: Scalars['String'];
-  edgeLength: Scalars['Int'];
-  mapType: Scalars['Int'];
+  sourceObjects: Array<RelatedObjectInput>;
+  derivedObjects: Array<RelatedObjectInput>;
 };
 
 export type RelatedObjectInput = {
@@ -795,10 +914,9 @@ export type RelatedObjectInput = {
 
 export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  master: Scalars['Boolean'];
-  authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -808,31 +926,25 @@ export type IngestModelInput = {
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
-};
-
-export type ReferenceModelInput = {
-  idSystemObject: Scalars['Int'];
-  name: Scalars['String'];
-  fileSize: Scalars['BigInt'];
-  resolution?: Maybe<Scalars['Int']>;
-  boundingBoxP1X?: Maybe<Scalars['Float']>;
-  boundingBoxP1Y?: Maybe<Scalars['Float']>;
-  boundingBoxP1Z?: Maybe<Scalars['Float']>;
-  boundingBoxP2X?: Maybe<Scalars['Float']>;
-  boundingBoxP2Y?: Maybe<Scalars['Float']>;
-  boundingBoxP2Z?: Maybe<Scalars['Float']>;
-  action: ReferenceModelAction;
+  derivedObjects: Array<RelatedObjectInput>;
 };
 
 export type IngestSceneInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
+  name: Scalars['String'];
+  hasBeenQCd: Scalars['Boolean'];
+  isOriented: Scalars['Boolean'];
+  directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
-  referenceModels: Array<ReferenceModelInput>;
+  sourceObjects: Array<RelatedObjectInput>;
+  derivedObjects: Array<RelatedObjectInput>;
 };
 
 export type IngestOtherInput = {
   idAssetVersion: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
 };
@@ -850,6 +962,7 @@ export type IngestDataInput = {
 export type IngestDataResult = {
   __typename?: 'IngestDataResult';
   success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type AreCameraSettingsUniformInput = {
@@ -861,6 +974,46 @@ export type AreCameraSettingsUniformResult = {
   isUniform: Scalars['Boolean'];
 };
 
+export type CreateLicenseInput = {
+  Name: Scalars['String'];
+  Description: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
+};
+
+export type CreateLicenseResult = {
+  __typename?: 'CreateLicenseResult';
+  License?: Maybe<License>;
+};
+
+export type UpdateLicenseInput = {
+  idLicense: Scalars['Int'];
+  Name: Scalars['String'];
+  Description: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
+};
+
+export type ClearLicenseAssignmentInput = {
+  idSystemObject: Scalars['Int'];
+  clearAll?: Maybe<Scalars['Boolean']>;
+};
+
+export type ClearLicenseAssignmentResult = {
+  __typename?: 'ClearLicenseAssignmentResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type AssignLicenseInput = {
+  idSystemObject: Scalars['Int'];
+  idLicense: Scalars['Int'];
+};
+
+export type AssignLicenseResult = {
+  __typename?: 'AssignLicenseResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
 export type GetLicenseInput = {
   idLicense: Scalars['Int'];
 };
@@ -870,11 +1023,21 @@ export type GetLicenseResult = {
   License?: Maybe<License>;
 };
 
+export type GetLicenseListInput = {
+  search?: Maybe<Scalars['String']>;
+};
+
+export type GetLicenseListResult = {
+  __typename?: 'GetLicenseListResult';
+  Licenses: Array<License>;
+};
+
 export type License = {
   __typename?: 'License';
   idLicense: Scalars['Int'];
   Description: Scalars['String'];
   Name: Scalars['String'];
+  RestrictLevel: Scalars['Int'];
   LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
 };
 
@@ -914,13 +1077,11 @@ export type Model = {
   idModel: Scalars['Int'];
   Name: Scalars['String'];
   DateCreated: Scalars['DateTime'];
-  Master: Scalars['Boolean'];
-  Authoritative: Scalars['Boolean'];
-  idVCreationMethod: Scalars['Int'];
-  idVModality: Scalars['Int'];
-  idVPurpose: Scalars['Int'];
-  idVUnits: Scalars['Int'];
-  idVFileType: Scalars['Int'];
+  idVCreationMethod?: Maybe<Scalars['Int']>;
+  idVModality?: Maybe<Scalars['Int']>;
+  idVPurpose?: Maybe<Scalars['Int']>;
+  idVUnits?: Maybe<Scalars['Int']>;
+  idVFileType?: Maybe<Scalars['Int']>;
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   CountAnimations?: Maybe<Scalars['Int']>;
   CountCameras?: Maybe<Scalars['Int']>;
@@ -932,6 +1093,7 @@ export type Model = {
   CountEmbeddedTextures?: Maybe<Scalars['Int']>;
   CountLinkedTextures?: Maybe<Scalars['Int']>;
   FileEncoding?: Maybe<Scalars['String']>;
+  IsDracoCompressed?: Maybe<Scalars['Boolean']>;
   ModelConstellation?: Maybe<ModelConstellation>;
   VCreationMethod?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
@@ -1049,13 +1211,24 @@ export type ModelSceneXref = {
   idModelSceneXref: Scalars['Int'];
   idModel: Scalars['Int'];
   idScene: Scalars['Int'];
+  Name?: Maybe<Scalars['String']>;
+  Usage?: Maybe<Scalars['String']>;
+  Quality?: Maybe<Scalars['String']>;
+  FileSize?: Maybe<Scalars['BigInt']>;
+  UVResolution?: Maybe<Scalars['Int']>;
+  BoundingBoxP1X?: Maybe<Scalars['Float']>;
+  BoundingBoxP1Y?: Maybe<Scalars['Float']>;
+  BoundingBoxP1Z?: Maybe<Scalars['Float']>;
+  BoundingBoxP2X?: Maybe<Scalars['Float']>;
+  BoundingBoxP2Y?: Maybe<Scalars['Float']>;
+  BoundingBoxP2Z?: Maybe<Scalars['Float']>;
+  TS0?: Maybe<Scalars['Float']>;
+  TS1?: Maybe<Scalars['Float']>;
+  TS2?: Maybe<Scalars['Float']>;
   R0?: Maybe<Scalars['Float']>;
   R1?: Maybe<Scalars['Float']>;
   R2?: Maybe<Scalars['Float']>;
   R3?: Maybe<Scalars['Float']>;
-  TS0?: Maybe<Scalars['Float']>;
-  TS1?: Maybe<Scalars['Float']>;
-  TS2?: Maybe<Scalars['Float']>;
   Model?: Maybe<Model>;
   Scene?: Maybe<Scene>;
 };
@@ -1100,6 +1273,10 @@ export type GetObjectChildrenInput = {
   variantType: Array<Scalars['Int']>;
   modelPurpose: Array<Scalars['Int']>;
   modelFileType: Array<Scalars['Int']>;
+  dateCreatedFrom?: Maybe<Scalars['DateTime']>;
+  dateCreatedTo?: Maybe<Scalars['DateTime']>;
+  rows: Scalars['Int'];
+  cursorMark: Scalars['String'];
 };
 
 export type NavigationResultEntry = {
@@ -1117,6 +1294,7 @@ export type GetObjectChildrenResult = {
   error: Scalars['String'];
   entries: Array<NavigationResultEntry>;
   metadataColumns: Array<Scalars['Int']>;
+  cursorMark?: Maybe<Scalars['String']>;
 };
 
 export type GetFilterViewDataResult = {
@@ -1130,6 +1308,15 @@ export type CreateSceneInput = {
   HasBeenQCd: Scalars['Boolean'];
   IsOriented: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
+  CountScene?: Maybe<Scalars['Int']>;
+  CountNode?: Maybe<Scalars['Int']>;
+  CountCamera?: Maybe<Scalars['Int']>;
+  CountLight?: Maybe<Scalars['Int']>;
+  CountModel?: Maybe<Scalars['Int']>;
+  CountMeta?: Maybe<Scalars['Int']>;
+  CountSetup?: Maybe<Scalars['Int']>;
+  CountTour?: Maybe<Scalars['Int']>;
+  EdanUUID?: Maybe<Scalars['String']>;
 };
 
 export type CreateSceneResult = {
@@ -1162,6 +1349,15 @@ export type Scene = {
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   IsOriented: Scalars['Boolean'];
   Name: Scalars['String'];
+  CountScene?: Maybe<Scalars['Int']>;
+  CountNode?: Maybe<Scalars['Int']>;
+  CountCamera?: Maybe<Scalars['Int']>;
+  CountLight?: Maybe<Scalars['Int']>;
+  CountModel?: Maybe<Scalars['Int']>;
+  CountMeta?: Maybe<Scalars['Int']>;
+  CountSetup?: Maybe<Scalars['Int']>;
+  CountTour?: Maybe<Scalars['Int']>;
+  EdanUUID?: Maybe<Scalars['String']>;
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1184,6 +1380,12 @@ export type IntermediaryFile = {
   idAsset: Scalars['Int'];
   Asset?: Maybe<Asset>;
   SystemObject?: Maybe<SystemObject>;
+};
+
+export type SceneConstellation = {
+  __typename?: 'SceneConstellation';
+  Scene?: Maybe<Scene>;
+  ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
 };
 
 export type UpdateObjectDetailsInput = {
@@ -1250,8 +1452,6 @@ export type CaptureDataDetailFieldsInput = {
 
 export type ModelDetailFieldsInput = {
   Name?: Maybe<Scalars['String']>;
-  Master?: Maybe<Scalars['Boolean']>;
-  Authoritative?: Maybe<Scalars['Boolean']>;
   CreationMethod?: Maybe<Scalars['Int']>;
   Modality?: Maybe<Scalars['Int']>;
   Purpose?: Maybe<Scalars['Int']>;
@@ -1261,7 +1461,6 @@ export type ModelDetailFieldsInput = {
 };
 
 export type SceneDetailFieldsInput = {
-  Links: Array<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
@@ -1301,6 +1500,7 @@ export type StakeholderDetailFieldsInput = {
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
+  License?: Maybe<Scalars['Int']>;
   Unit?: Maybe<UnitDetailFieldsInput>;
   Project?: Maybe<ProjectDetailFieldsInput>;
   Subject?: Maybe<SubjectDetailFieldsInput>;
@@ -1313,12 +1513,95 @@ export type UpdateObjectDetailsDataInput = {
   AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
   Actor?: Maybe<ActorDetailFieldsInput>;
   Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+  Identifiers?: Maybe<Array<UpdateIdentifier>>;
 };
 
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
 };
+
+export type UpdateDerivedObjectsInput = {
+  idSystemObject: Scalars['Int'];
+  Derivatives: Array<Scalars['Int']>;
+  PreviouslySelected: Array<Scalars['Int']>;
+};
+
+export type UpdateDerivedObjectsResult = {
+  __typename?: 'UpdateDerivedObjectsResult';
+  success: Scalars['Boolean'];
+};
+
+export type UpdateSourceObjectsInput = {
+  idSystemObject: Scalars['Int'];
+  Sources: Array<Scalars['Int']>;
+  PreviouslySelected: Array<Scalars['Int']>;
+};
+
+export type UpdateSourceObjectsResult = {
+  __typename?: 'UpdateSourceObjectsResult';
+  success: Scalars['Boolean'];
+};
+
+export type UpdateIdentifier = {
+  id: Scalars['Int'];
+  identifier: Scalars['String'];
+  identifierType: Scalars['Int'];
+  selected: Scalars['Boolean'];
+  idSystemObject: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
+};
+
+export type DeleteObjectConnectionResult = {
+  __typename?: 'DeleteObjectConnectionResult';
+  success: Scalars['Boolean'];
+  details: Scalars['String'];
+};
+
+export type DeleteObjectConnectionInput = {
+  idSystemObjectMaster: Scalars['Int'];
+  idSystemObjectDerived: Scalars['Int'];
+};
+
+export type DeleteIdentifierResult = {
+  __typename?: 'DeleteIdentifierResult';
+  success: Scalars['Boolean'];
+};
+
+export type DeleteIdentifierInput = {
+  idIdentifier: Scalars['Int'];
+};
+
+export type RollbackSystemObjectVersionResult = {
+  __typename?: 'RollbackSystemObjectVersionResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type RollbackSystemObjectVersionInput = {
+  idSystemObjectVersion: Scalars['Int'];
+};
+
+export type CreateSubjectWithIdentifiersResult = {
+  __typename?: 'CreateSubjectWithIdentifiersResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type CreateSubjectWithIdentifiersInput = {
+  identifiers: Array<CreateIdentifierInput>;
+  subject: CreateSubjectInput;
+  systemCreated: Scalars['Boolean'];
+};
+
+export type CreateIdentifierInput = {
+  identifierValue: Scalars['String'];
+  identifierType: Scalars['Int'];
+  idSystemObject?: Maybe<Scalars['Int']>;
+  selected: Scalars['Boolean'];
+};
+
 
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
@@ -1383,6 +1666,7 @@ export type CaptureDataDetailFields = {
   clusterType?: Maybe<Scalars['Int']>;
   clusterGeometryFieldId?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolder>;
+  isValidData?: Maybe<Scalars['Boolean']>;
 };
 
 export type SceneDetailFields = {
@@ -1393,6 +1677,16 @@ export type SceneDetailFields = {
   Annotation?: Maybe<Scalars['Int']>;
   HasBeenQCd?: Maybe<Scalars['Boolean']>;
   IsOriented?: Maybe<Scalars['Boolean']>;
+  CountScene?: Maybe<Scalars['Int']>;
+  CountNode?: Maybe<Scalars['Int']>;
+  CountCamera?: Maybe<Scalars['Int']>;
+  CountLight?: Maybe<Scalars['Int']>;
+  CountModel?: Maybe<Scalars['Int']>;
+  CountMeta?: Maybe<Scalars['Int']>;
+  CountSetup?: Maybe<Scalars['Int']>;
+  CountTour?: Maybe<Scalars['Int']>;
+  EdanUUID?: Maybe<Scalars['String']>;
+  idScene?: Maybe<Scalars['Int']>;
 };
 
 export type IntermediaryFileDetailFields = {
@@ -1409,6 +1703,8 @@ export type AssetDetailFields = {
   __typename?: 'AssetDetailFields';
   FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
+  Asset?: Maybe<Asset>;
+  idAsset?: Maybe<Scalars['Int']>;
 };
 
 export type AssetVersionDetailFields = {
@@ -1418,6 +1714,9 @@ export type AssetVersionDetailFields = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
   StorageSize?: Maybe<Scalars['BigInt']>;
+  AssetVersion?: Maybe<AssetVersion>;
+  idAsset?: Maybe<Scalars['Int']>;
+  idAssetVersion?: Maybe<Scalars['Int']>;
 };
 
 export type ActorDetailFields = {
@@ -1464,6 +1763,7 @@ export type RepositoryPath = {
 
 export type GetSystemObjectDetailsResult = {
   __typename?: 'GetSystemObjectDetailsResult';
+  idSystemObject: Scalars['Int'];
   idObject: Scalars['Int'];
   name: Scalars['String'];
   retired: Scalars['Boolean'];
@@ -1475,10 +1775,13 @@ export type GetSystemObjectDetailsResult = {
   objectAncestors: Array<Array<RepositoryPath>>;
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
+  objectVersions: Array<SystemObjectVersion>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  license?: Maybe<License>;
+  licenseInherited?: Maybe<Scalars['Boolean']>;
 };
 
 export type GetSourceObjectIdentiferInput = {
@@ -1496,15 +1799,13 @@ export type GetSourceObjectIdentiferResult = {
   sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
 };
 
-export type AssetDetail = {
-  __typename?: 'AssetDetail';
-  idSystemObject: Scalars['Int'];
-  name: Scalars['String'];
-  path: Scalars['String'];
-  assetType: Scalars['Int'];
-  version: Scalars['Int'];
-  dateCreated: Scalars['DateTime'];
-  size: Scalars['BigInt'];
+export type ColumnDefinition = {
+  __typename?: 'ColumnDefinition';
+  colName: Scalars['String'];
+  colLabel: Scalars['String'];
+  colDisplay: Scalars['Boolean'];
+  colType: Scalars['Int'];
+  colAlign: Scalars['String'];
 };
 
 export type GetAssetDetailsForSystemObjectInput = {
@@ -1513,25 +1814,28 @@ export type GetAssetDetailsForSystemObjectInput = {
 
 export type GetAssetDetailsForSystemObjectResult = {
   __typename?: 'GetAssetDetailsForSystemObjectResult';
-  assetDetails: Array<AssetDetail>;
+  columns: Array<ColumnDefinition>;
+  assetDetailRows: Array<Scalars['JSON']>;
 };
 
 export type DetailVersion = {
   __typename?: 'DetailVersion';
   idSystemObject: Scalars['Int'];
+  idAssetVersion: Scalars['Int'];
   version: Scalars['Int'];
   name: Scalars['String'];
   creator: Scalars['String'];
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
+  ingested: Scalars['Boolean'];
 };
 
-export type GetVersionsForSystemObjectInput = {
+export type GetVersionsForAssetInput = {
   idSystemObject: Scalars['Int'];
 };
 
-export type GetVersionsForSystemObjectResult = {
-  __typename?: 'GetVersionsForSystemObjectResult';
+export type GetVersionsForAssetResult = {
+  __typename?: 'GetVersionsForAssetResult';
   versions: Array<DetailVersion>;
 };
 
@@ -1542,6 +1846,20 @@ export type GetProjectListResult = {
 
 export type GetProjectListInput = {
   search: Scalars['String'];
+};
+
+export type GetSubjectListResult = {
+  __typename?: 'GetSubjectListResult';
+  subjects: Array<SubjectUnitIdentifier>;
+};
+
+export type GetSubjectListInput = {
+  search: Scalars['String'];
+  idUnit?: Maybe<Scalars['Int']>;
+  pageNumber?: Maybe<Scalars['Int']>;
+  rowCount?: Maybe<Scalars['Int']>;
+  sortBy?: Maybe<Scalars['Int']>;
+  sortOrder?: Maybe<Scalars['Boolean']>;
 };
 
 export type SystemObject = {
@@ -1594,6 +1912,7 @@ export type SystemObjectVersion = {
   idSystemObjectVersion: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   PublishedState: Scalars['Int'];
+  DateCreated: Scalars['DateTime'];
   SystemObject?: Maybe<SystemObject>;
 };
 
@@ -1611,13 +1930,13 @@ export type Metadata = {
   __typename?: 'Metadata';
   idMetadata: Scalars['Int'];
   Name: Scalars['String'];
-  idAssetValue?: Maybe<Scalars['Int']>;
   idSystemObject?: Maybe<Scalars['Int']>;
   idUser?: Maybe<Scalars['Int']>;
   idVMetadataSource?: Maybe<Scalars['Int']>;
+  idAssetVersionValue?: Maybe<Scalars['Int']>;
   ValueExtended?: Maybe<Scalars['String']>;
   ValueShort?: Maybe<Scalars['String']>;
-  AssetValue?: Maybe<Asset>;
+  AssetVersionValue?: Maybe<AssetVersion>;
   SystemObject?: Maybe<SystemObject>;
   User?: Maybe<User>;
   VMetadataSource?: Maybe<Vocabulary>;
@@ -1669,6 +1988,24 @@ export type CreateItemResult = {
   Item?: Maybe<Item>;
 };
 
+export type CreateGeoLocationInput = {
+  Latitude?: Maybe<Scalars['Int']>;
+  Longitude?: Maybe<Scalars['Int']>;
+  Altitude?: Maybe<Scalars['Int']>;
+  TS0?: Maybe<Scalars['Int']>;
+  TS1?: Maybe<Scalars['Int']>;
+  TS2?: Maybe<Scalars['Int']>;
+  R0?: Maybe<Scalars['Int']>;
+  R1?: Maybe<Scalars['Int']>;
+  R2?: Maybe<Scalars['Int']>;
+  R3?: Maybe<Scalars['Int']>;
+};
+
+export type CreateGeoLocationResult = {
+  __typename?: 'CreateGeoLocationResult';
+  GeoLocation?: Maybe<GeoLocation>;
+};
+
 export type GetSubjectsForUnitInput = {
   idUnit: Scalars['Int'];
   pagination?: Maybe<PaginationInput>;
@@ -1692,6 +2029,7 @@ export type GetItemsForSubjectResult = {
 export type SubjectUnitIdentifier = {
   __typename?: 'SubjectUnitIdentifier';
   idSubject: Scalars['Int'];
+  idSystemObject: Scalars['Int'];
   SubjectName: Scalars['String'];
   UnitAbbreviation: Scalars['String'];
   IdentifierPublic?: Maybe<Scalars['String']>;
@@ -1713,6 +2051,7 @@ export type GetObjectsForItemResult = {
 
 export type SearchIngestionSubjectsInput = {
   query: Scalars['String'];
+  EdanOnly?: Maybe<Scalars['Boolean']>;
 };
 
 export type SearchIngestionSubjectsResult = {
@@ -1790,6 +2129,15 @@ export type GetUnitsFromNameSearchResult = {
 
 export type GetUnitsFromNameSearchInput = {
   search: Scalars['String'];
+};
+
+export type GetUnitsFromEdanAbbreviationResult = {
+  __typename?: 'GetUnitsFromEdanAbbreviationResult';
+  Units: Array<Unit>;
+};
+
+export type GetUnitsFromEdanAbbreviationInput = {
+  abbreviation: Scalars['String'];
 };
 
 export type Unit = {
@@ -2038,9 +2386,28 @@ export type GetWorkflowInput = {
   idWorkflow: Scalars['Int'];
 };
 
+export type GetWorkflowListInput = {
+  idVWorkflowType?: Maybe<Array<Scalars['Int']>>;
+  idVJobType?: Maybe<Array<Scalars['Int']>>;
+  State?: Maybe<Array<Scalars['Int']>>;
+  DateFrom?: Maybe<Scalars['DateTime']>;
+  DateTo?: Maybe<Scalars['DateTime']>;
+  idUserInitiator?: Maybe<Array<Scalars['Int']>>;
+  idUserOwner?: Maybe<Array<Scalars['Int']>>;
+  pageNumber?: Maybe<Scalars['Int']>;
+  rowCount?: Maybe<Scalars['Int']>;
+  sortBy?: Maybe<Scalars['Int']>;
+  sortOrder?: Maybe<Scalars['Boolean']>;
+};
+
 export type GetWorkflowResult = {
   __typename?: 'GetWorkflowResult';
   Workflow?: Maybe<Workflow>;
+};
+
+export type GetWorkflowListResult = {
+  __typename?: 'GetWorkflowListResult';
+  WorkflowList?: Maybe<Array<Maybe<WorkflowListResult>>>;
 };
 
 export type Job = {
@@ -2083,6 +2450,21 @@ export type Workflow = {
   WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 
+export type WorkflowReport = {
+  __typename?: 'WorkflowReport';
+  idWorkflowReport: Scalars['Int'];
+  idWorkflow: Scalars['Int'];
+  MimeType: Scalars['String'];
+  Data: Scalars['String'];
+  Workflow?: Maybe<Workflow>;
+};
+
+export type WorkflowSet = {
+  __typename?: 'WorkflowSet';
+  idWorkflowSet: Scalars['Int'];
+  Workflow?: Maybe<Array<Maybe<Workflow>>>;
+};
+
 export type WorkflowStep = {
   __typename?: 'WorkflowStep';
   idWorkflowStep: Scalars['Int'];
@@ -2109,6 +2491,30 @@ export type WorkflowStepSystemObjectXref = {
   WorkflowStep?: Maybe<WorkflowStep>;
 };
 
+export type WorkflowListResult = {
+  __typename?: 'WorkflowListResult';
+  idWorkflow: Scalars['Int'];
+  idWorkflowSet?: Maybe<Scalars['Int']>;
+  idWorkflowReport?: Maybe<Scalars['Int']>;
+  idJobRun?: Maybe<Scalars['Int']>;
+  Type?: Maybe<Scalars['String']>;
+  State?: Maybe<Scalars['String']>;
+  idUserInitiator?: Maybe<Scalars['Int']>;
+  idOwner?: Maybe<Scalars['Int']>;
+  DateStart?: Maybe<Scalars['DateTime']>;
+  DateLast?: Maybe<Scalars['DateTime']>;
+  Error?: Maybe<Scalars['String']>;
+  UserInitiator?: Maybe<User>;
+  Owner?: Maybe<User>;
+  Workflow?: Maybe<Workflow>;
+  WorkflowReport?: Maybe<WorkflowReport>;
+  WorkflowSet?: Maybe<WorkflowSet>;
+  JobRun?: Maybe<JobRun>;
+  HyperlinkReport?: Maybe<Scalars['String']>;
+  HyperlinkSet?: Maybe<Scalars['String']>;
+  HyperlinkJob?: Maybe<Scalars['String']>;
+};
+
 export type DiscardUploadedAssetVersionsMutationVariables = Exact<{
   input: DiscardUploadedAssetVersionsInput;
 }>;
@@ -2125,6 +2531,7 @@ export type DiscardUploadedAssetVersionsMutation = (
 export type UploadAssetMutationVariables = Exact<{
   file: Scalars['Upload'];
   type: Scalars['Int'];
+  idAsset?: Maybe<Scalars['Int']>;
 }>;
 
 
@@ -2177,7 +2584,65 @@ export type IngestDataMutation = (
   { __typename?: 'Mutation' }
   & { ingestData: (
     { __typename?: 'IngestDataResult' }
-    & Pick<IngestDataResult, 'success'>
+    & Pick<IngestDataResult, 'success' | 'message'>
+  ) }
+);
+
+export type AssignLicenseMutationVariables = Exact<{
+  input: AssignLicenseInput;
+}>;
+
+
+export type AssignLicenseMutation = (
+  { __typename?: 'Mutation' }
+  & { assignLicense: (
+    { __typename?: 'AssignLicenseResult' }
+    & Pick<AssignLicenseResult, 'success' | 'message'>
+  ) }
+);
+
+export type ClearLicenseAssignmentMutationVariables = Exact<{
+  input: ClearLicenseAssignmentInput;
+}>;
+
+
+export type ClearLicenseAssignmentMutation = (
+  { __typename?: 'Mutation' }
+  & { clearLicenseAssignment: (
+    { __typename?: 'ClearLicenseAssignmentResult' }
+    & Pick<ClearLicenseAssignmentResult, 'success' | 'message'>
+  ) }
+);
+
+export type CreateLicenseMutationVariables = Exact<{
+  input: CreateLicenseInput;
+}>;
+
+
+export type CreateLicenseMutation = (
+  { __typename?: 'Mutation' }
+  & { createLicense: (
+    { __typename?: 'CreateLicenseResult' }
+    & { License?: Maybe<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
+    )> }
+  ) }
+);
+
+export type UpdateLicenseMutationVariables = Exact<{
+  input: UpdateLicenseInput;
+}>;
+
+
+export type UpdateLicenseMutation = (
+  { __typename?: 'Mutation' }
+  & { updateLicense: (
+    { __typename?: 'CreateLicenseResult' }
+    & { License?: Maybe<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
+    )> }
   ) }
 );
 
@@ -2197,6 +2662,71 @@ export type CreateSceneMutation = (
   ) }
 );
 
+export type CreateSubjectWithIdentifiersMutationVariables = Exact<{
+  input: CreateSubjectWithIdentifiersInput;
+}>;
+
+
+export type CreateSubjectWithIdentifiersMutation = (
+  { __typename?: 'Mutation' }
+  & { createSubjectWithIdentifiers: (
+    { __typename?: 'CreateSubjectWithIdentifiersResult' }
+    & Pick<CreateSubjectWithIdentifiersResult, 'success' | 'message'>
+  ) }
+);
+
+export type DeleteIdentifierMutationVariables = Exact<{
+  input: DeleteIdentifierInput;
+}>;
+
+
+export type DeleteIdentifierMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteIdentifier: (
+    { __typename?: 'DeleteIdentifierResult' }
+    & Pick<DeleteIdentifierResult, 'success'>
+  ) }
+);
+
+export type DeleteObjectConnectionMutationVariables = Exact<{
+  input: DeleteObjectConnectionInput;
+}>;
+
+
+export type DeleteObjectConnectionMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteObjectConnection: (
+    { __typename?: 'DeleteObjectConnectionResult' }
+    & Pick<DeleteObjectConnectionResult, 'success' | 'details'>
+  ) }
+);
+
+export type RollbackSystemObjectVersionMutationVariables = Exact<{
+  input: RollbackSystemObjectVersionInput;
+}>;
+
+
+export type RollbackSystemObjectVersionMutation = (
+  { __typename?: 'Mutation' }
+  & { rollbackSystemObjectVersion: (
+    { __typename?: 'RollbackSystemObjectVersionResult' }
+    & Pick<RollbackSystemObjectVersionResult, 'success' | 'message'>
+  ) }
+);
+
+export type UpdateDerivedObjectsMutationVariables = Exact<{
+  input: UpdateDerivedObjectsInput;
+}>;
+
+
+export type UpdateDerivedObjectsMutation = (
+  { __typename?: 'Mutation' }
+  & { updateDerivedObjects: (
+    { __typename?: 'UpdateDerivedObjectsResult' }
+    & Pick<UpdateDerivedObjectsResult, 'success'>
+  ) }
+);
+
 export type UpdateObjectDetailsMutationVariables = Exact<{
   input: UpdateObjectDetailsInput;
 }>;
@@ -2206,7 +2736,36 @@ export type UpdateObjectDetailsMutation = (
   { __typename?: 'Mutation' }
   & { updateObjectDetails: (
     { __typename?: 'UpdateObjectDetailsResult' }
-    & Pick<UpdateObjectDetailsResult, 'success'>
+    & Pick<UpdateObjectDetailsResult, 'success' | 'message'>
+  ) }
+);
+
+export type UpdateSourceObjectsMutationVariables = Exact<{
+  input: UpdateSourceObjectsInput;
+}>;
+
+
+export type UpdateSourceObjectsMutation = (
+  { __typename?: 'Mutation' }
+  & { updateSourceObjects: (
+    { __typename?: 'UpdateSourceObjectsResult' }
+    & Pick<UpdateSourceObjectsResult, 'success'>
+  ) }
+);
+
+export type CreateGeoLocationMutationVariables = Exact<{
+  input: CreateGeoLocationInput;
+}>;
+
+
+export type CreateGeoLocationMutation = (
+  { __typename?: 'Mutation' }
+  & { createGeoLocation: (
+    { __typename?: 'CreateGeoLocationResult' }
+    & { GeoLocation?: Maybe<(
+      { __typename?: 'GeoLocation' }
+      & Pick<GeoLocation, 'idGeoLocation'>
+    )> }
   ) }
 );
 
@@ -2373,7 +2932,7 @@ export type GetAssetQuery = (
     { __typename?: 'GetAssetResult' }
     & { Asset?: Maybe<(
       { __typename?: 'Asset' }
-      & Pick<Asset, 'idAsset'>
+      & Pick<Asset, 'idAsset' | 'idVAssetType'>
     )> }
   ) }
 );
@@ -2393,7 +2952,7 @@ export type GetAssetVersionsDetailsQuery = (
       & Pick<GetAssetVersionDetailResult, 'idAssetVersion'>
       & { SubjectUnitIdentifier?: Maybe<(
         { __typename?: 'SubjectUnitIdentifier' }
-        & Pick<SubjectUnitIdentifier, 'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
+        & Pick<SubjectUnitIdentifier, 'idSubject' | 'idSystemObject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
       )>, Project?: Maybe<Array<(
         { __typename?: 'Project' }
         & Pick<Project, 'idProject' | 'Name'>
@@ -2408,21 +2967,21 @@ export type GetAssetVersionsDetailsQuery = (
           & Pick<IngestFolder, 'name' | 'variantType'>
         )>, identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
-          & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+          & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
         )> }
       )>, Model?: Maybe<(
         { __typename?: 'IngestModel' }
-        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory'>
+        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
-          & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+          & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
         )> }
       )>, Scene?: Maybe<(
         { __typename?: 'IngestScene' }
-        & Pick<IngestScene, 'idAssetVersion'>
+        & Pick<IngestScene, 'idAssetVersion' | 'systemCreated' | 'name' | 'hasBeenQCd' | 'isOriented' | 'directory'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
-          & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+          & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
         )> }
       )> }
     )> }
@@ -2459,7 +3018,7 @@ export type GetModelConstellationForAssetVersionQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name' | 'idVFileType'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
         & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
@@ -2487,6 +3046,7 @@ export type GetUploadedAssetVersionQuery = (
   { __typename?: 'Query' }
   & { getUploadedAssetVersion: (
     { __typename?: 'GetUploadedAssetVersionResult' }
+    & Pick<GetUploadedAssetVersionResult, 'idAssetVersionsUpdated'>
     & { AssetVersion: Array<(
       { __typename?: 'AssetVersion' }
       & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated'>
@@ -2558,7 +3118,23 @@ export type GetLicenseQuery = (
     { __typename?: 'GetLicenseResult' }
     & { License?: Maybe<(
       { __typename?: 'License' }
-      & Pick<License, 'idLicense'>
+      & Pick<License, 'idLicense' | 'Description' | 'Name' | 'RestrictLevel'>
+    )> }
+  ) }
+);
+
+export type GetLicenseListQueryVariables = Exact<{
+  input: GetLicenseListInput;
+}>;
+
+
+export type GetLicenseListQuery = (
+  { __typename?: 'Query' }
+  & { getLicenseList: (
+    { __typename?: 'GetLicenseListResult' }
+    & { Licenses: Array<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Description' | 'Name' | 'RestrictLevel'>
     )> }
   ) }
 );
@@ -2575,6 +3151,10 @@ export type GetModelQuery = (
     & { Model?: Maybe<(
       { __typename?: 'Model' }
       & Pick<Model, 'idModel'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject' | 'idAsset' | 'idAssetVersion'>
+      )> }
     )> }
   ) }
 );
@@ -2592,7 +3172,7 @@ export type GetModelConstellationQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'Master' | 'Authoritative' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding'>
+        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed'>
         & { VCreationMethod?: Maybe<(
           { __typename?: 'Vocabulary' }
           & Pick<Vocabulary, 'Term'>
@@ -2674,7 +3254,7 @@ export type GetObjectChildrenQuery = (
   { __typename?: 'Query' }
   & { getObjectChildren: (
     { __typename?: 'GetObjectChildrenResult' }
-    & Pick<GetObjectChildrenResult, 'success' | 'error' | 'metadataColumns'>
+    & Pick<GetObjectChildrenResult, 'success' | 'error' | 'metadataColumns' | 'cursorMark'>
     & { entries: Array<(
       { __typename?: 'NavigationResultEntry' }
       & Pick<NavigationResultEntry, 'idSystemObject' | 'name' | 'objectType' | 'idObject' | 'metadata'>
@@ -2709,7 +3289,41 @@ export type GetSceneQuery = (
     { __typename?: 'GetSceneResult' }
     & { Scene?: Maybe<(
       { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene'>
+      & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'EdanUUID'>
+      & { ModelSceneXref?: Maybe<Array<Maybe<(
+        { __typename?: 'ModelSceneXref' }
+        & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
+      )>>> }
+    )> }
+  ) }
+);
+
+export type GetSceneForAssetVersionQueryVariables = Exact<{
+  input: GetSceneForAssetVersionInput;
+}>;
+
+
+export type GetSceneForAssetVersionQuery = (
+  { __typename?: 'Query' }
+  & { getSceneForAssetVersion: (
+    { __typename?: 'GetSceneForAssetVersionResult' }
+    & Pick<GetSceneForAssetVersionResult, 'idAssetVersion'>
+    & { SceneConstellation?: Maybe<(
+      { __typename?: 'SceneConstellation' }
+      & { Scene?: Maybe<(
+        { __typename?: 'Scene' }
+        & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'idAssetThumbnail' | 'IsOriented' | 'Name' | 'CountScene' | 'CountNode' | 'CountCamera' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour'>
+      )>, ModelSceneXref?: Maybe<Array<Maybe<(
+        { __typename?: 'ModelSceneXref' }
+        & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
+        & { Model?: Maybe<(
+          { __typename?: 'Model' }
+          & { SystemObject?: Maybe<(
+            { __typename?: 'SystemObject' }
+            & Pick<SystemObject, 'idSystemObject' | 'idAsset'>
+          )> }
+        )> }
+      )>>> }
     )> }
   ) }
 );
@@ -2723,9 +3337,10 @@ export type GetAssetDetailsForSystemObjectQuery = (
   { __typename?: 'Query' }
   & { getAssetDetailsForSystemObject: (
     { __typename?: 'GetAssetDetailsForSystemObjectResult' }
-    & { assetDetails: Array<(
-      { __typename?: 'AssetDetail' }
-      & Pick<AssetDetail, 'idSystemObject' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
+    & Pick<GetAssetDetailsForSystemObjectResult, 'assetDetailRows'>
+    & { columns: Array<(
+      { __typename?: 'ColumnDefinition' }
+      & Pick<ColumnDefinition, 'colName' | 'colDisplay' | 'colType' | 'colAlign' | 'colLabel'>
     )> }
   ) }
 );
@@ -2753,7 +3368,7 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<ItemDetailFields, 'EntireSubject' | 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
     )>, CaptureData?: Maybe<(
       { __typename?: 'CaptureDataDetailFields' }
-      & Pick<CaptureDataDetailFields, 'captureMethod' | 'dateCaptured' | 'datasetType' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId'>
+      & Pick<CaptureDataDetailFields, 'captureMethod' | 'dateCaptured' | 'datasetType' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId' | 'isValidData'>
       & { folders: Array<(
         { __typename?: 'IngestFolder' }
         & Pick<IngestFolder, 'name' | 'variantType'>
@@ -2762,7 +3377,7 @@ export type GetDetailsTabDataForObjectQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name' | 'DateCreated' | 'Master' | 'Authoritative' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'DateCreated' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
         & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
@@ -2781,7 +3396,7 @@ export type GetDetailsTabDataForObjectQuery = (
       )>> }
     )>, Scene?: Maybe<(
       { __typename?: 'SceneDetailFields' }
-      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented'>
+      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented' | 'EdanUUID' | 'idScene'>
     )>, IntermediaryFile?: Maybe<(
       { __typename?: 'IntermediaryFileDetailFields' }
       & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>
@@ -2790,10 +3405,10 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<ProjectDocumentationDetailFields, 'Description'>
     )>, Asset?: Maybe<(
       { __typename?: 'AssetDetailFields' }
-      & Pick<AssetDetailFields, 'FilePath' | 'AssetType'>
+      & Pick<AssetDetailFields, 'FilePath' | 'AssetType' | 'idAsset'>
     )>, AssetVersion?: Maybe<(
       { __typename?: 'AssetVersionDetailFields' }
-      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version'>
+      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion'>
     )>, Actor?: Maybe<(
       { __typename?: 'ActorDetailFields' }
       & Pick<ActorDetailFields, 'OrganizationName'>
@@ -2840,6 +3455,22 @@ export type GetSourceObjectIdentiferQuery = (
   ) }
 );
 
+export type GetSubjectListQueryVariables = Exact<{
+  input: GetSubjectListInput;
+}>;
+
+
+export type GetSubjectListQuery = (
+  { __typename?: 'Query' }
+  & { getSubjectList: (
+    { __typename?: 'GetSubjectListResult' }
+    & { subjects: Array<(
+      { __typename?: 'SubjectUnitIdentifier' }
+      & Pick<SubjectUnitIdentifier, 'idSubject' | 'idSystemObject' | 'UnitAbbreviation' | 'SubjectName' | 'IdentifierPublic'>
+    )> }
+  ) }
+);
+
 export type GetSystemObjectDetailsQueryVariables = Exact<{
   input: GetSystemObjectDetailsInput;
 }>;
@@ -2849,10 +3480,10 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail' | 'licenseInherited'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
-      & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+      & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
     )>, unit?: Maybe<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
@@ -2874,22 +3505,28 @@ export type GetSystemObjectDetailsQuery = (
     )>, derivedObjects: Array<(
       { __typename?: 'RelatedObject' }
       & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
+    )>, objectVersions: Array<(
+      { __typename?: 'SystemObjectVersion' }
+      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated'>
+    )>, license?: Maybe<(
+      { __typename?: 'License' }
+      & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
     )> }
   ) }
 );
 
-export type GetVersionsForSystemObjectQueryVariables = Exact<{
-  input: GetVersionsForSystemObjectInput;
+export type GetVersionsForAssetQueryVariables = Exact<{
+  input: GetVersionsForAssetInput;
 }>;
 
 
-export type GetVersionsForSystemObjectQuery = (
+export type GetVersionsForAssetQuery = (
   { __typename?: 'Query' }
-  & { getVersionsForSystemObject: (
-    { __typename?: 'GetVersionsForSystemObjectResult' }
+  & { getVersionsForAsset: (
+    { __typename?: 'GetVersionsForAssetResult' }
     & { versions: Array<(
       { __typename?: 'DetailVersion' }
-      & Pick<DetailVersion, 'idSystemObject' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size'>
+      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested'>
     )> }
   ) }
 );
@@ -2972,7 +3609,7 @@ export type GetObjectsForItemQuery = (
       & Pick<CaptureData, 'idCaptureData' | 'DateCaptured' | 'Description'>
     )>, Model: Array<(
       { __typename?: 'Model' }
-      & Pick<Model, 'idModel' | 'Authoritative' | 'DateCreated'>
+      & Pick<Model, 'idModel' | 'DateCreated'>
     )>, Scene: Array<(
       { __typename?: 'Scene' }
       & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name'>
@@ -3074,6 +3711,22 @@ export type GetUnitQuery = (
   ) }
 );
 
+export type GetUnitsFromEdanAbbreviationQueryVariables = Exact<{
+  input: GetUnitsFromEdanAbbreviationInput;
+}>;
+
+
+export type GetUnitsFromEdanAbbreviationQuery = (
+  { __typename?: 'Query' }
+  & { getUnitsFromEdanAbbreviation: (
+    { __typename?: 'GetUnitsFromEdanAbbreviationResult' }
+    & { Units: Array<(
+      { __typename?: 'Unit' }
+      & Pick<Unit, 'idUnit' | 'Name'>
+    )> }
+  ) }
+);
+
 export type GetUnitsFromNameSearchQueryVariables = Exact<{
   input: GetUnitsFromNameSearchInput;
 }>;
@@ -3105,7 +3758,7 @@ export type SearchIngestionSubjectsQuery = (
     { __typename?: 'SearchIngestionSubjectsResult' }
     & { SubjectUnitIdentifier: Array<(
       { __typename?: 'SubjectUnitIdentifier' }
-      & Pick<SubjectUnitIdentifier, 'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
+      & Pick<SubjectUnitIdentifier, 'idSubject' | 'idSystemObject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
     )> }
   ) }
 );
@@ -3208,6 +3861,26 @@ export type GetWorkflowQuery = (
   ) }
 );
 
+export type GetWorkflowListQueryVariables = Exact<{
+  input: GetWorkflowListInput;
+}>;
+
+
+export type GetWorkflowListQuery = (
+  { __typename?: 'Query' }
+  & { getWorkflowList: (
+    { __typename?: 'GetWorkflowListResult' }
+    & { WorkflowList?: Maybe<Array<Maybe<(
+      { __typename?: 'WorkflowListResult' }
+      & Pick<WorkflowListResult, 'idWorkflow' | 'idWorkflowSet' | 'idWorkflowReport' | 'idJobRun' | 'Type' | 'State' | 'DateStart' | 'DateLast' | 'HyperlinkReport' | 'HyperlinkSet' | 'HyperlinkJob' | 'Error'>
+      & { Owner?: Maybe<(
+        { __typename?: 'User' }
+        & Pick<User, 'Name'>
+      )> }
+    )>>> }
+  ) }
+);
+
 
 export const DiscardUploadedAssetVersionsDocument = gql`
     mutation discardUploadedAssetVersions($input: DiscardUploadedAssetVersionsInput!) {
@@ -3243,8 +3916,8 @@ export type DiscardUploadedAssetVersionsMutationHookResult = ReturnType<typeof u
 export type DiscardUploadedAssetVersionsMutationResult = Apollo.MutationResult<DiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
 export const UploadAssetDocument = gql`
-    mutation uploadAsset($file: Upload!, $type: Int!) {
-  uploadAsset(file: $file, type: $type) {
+    mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int) {
+  uploadAsset(file: $file, type: $type, idAsset: $idAsset) {
     status
     idAssetVersions
     error
@@ -3268,6 +3941,7 @@ export type UploadAssetMutationFn = Apollo.MutationFunction<UploadAssetMutation,
  *   variables: {
  *      file: // value for 'file'
  *      type: // value for 'type'
+ *      idAsset: // value for 'idAsset'
  *   },
  * });
  */
@@ -3352,6 +4026,7 @@ export const IngestDataDocument = gql`
     mutation ingestData($input: IngestDataInput!) {
   ingestData(input: $input) {
     success
+    message
   }
 }
     `;
@@ -3381,6 +4056,150 @@ export function useIngestDataMutation(baseOptions?: Apollo.MutationHookOptions<I
 export type IngestDataMutationHookResult = ReturnType<typeof useIngestDataMutation>;
 export type IngestDataMutationResult = Apollo.MutationResult<IngestDataMutation>;
 export type IngestDataMutationOptions = Apollo.BaseMutationOptions<IngestDataMutation, IngestDataMutationVariables>;
+export const AssignLicenseDocument = gql`
+    mutation assignLicense($input: AssignLicenseInput!) {
+  assignLicense(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type AssignLicenseMutationFn = Apollo.MutationFunction<AssignLicenseMutation, AssignLicenseMutationVariables>;
+
+/**
+ * __useAssignLicenseMutation__
+ *
+ * To run a mutation, you first call `useAssignLicenseMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAssignLicenseMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [assignLicenseMutation, { data, loading, error }] = useAssignLicenseMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAssignLicenseMutation(baseOptions?: Apollo.MutationHookOptions<AssignLicenseMutation, AssignLicenseMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AssignLicenseMutation, AssignLicenseMutationVariables>(AssignLicenseDocument, options);
+      }
+export type AssignLicenseMutationHookResult = ReturnType<typeof useAssignLicenseMutation>;
+export type AssignLicenseMutationResult = Apollo.MutationResult<AssignLicenseMutation>;
+export type AssignLicenseMutationOptions = Apollo.BaseMutationOptions<AssignLicenseMutation, AssignLicenseMutationVariables>;
+export const ClearLicenseAssignmentDocument = gql`
+    mutation clearLicenseAssignment($input: ClearLicenseAssignmentInput!) {
+  clearLicenseAssignment(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type ClearLicenseAssignmentMutationFn = Apollo.MutationFunction<ClearLicenseAssignmentMutation, ClearLicenseAssignmentMutationVariables>;
+
+/**
+ * __useClearLicenseAssignmentMutation__
+ *
+ * To run a mutation, you first call `useClearLicenseAssignmentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useClearLicenseAssignmentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [clearLicenseAssignmentMutation, { data, loading, error }] = useClearLicenseAssignmentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useClearLicenseAssignmentMutation(baseOptions?: Apollo.MutationHookOptions<ClearLicenseAssignmentMutation, ClearLicenseAssignmentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ClearLicenseAssignmentMutation, ClearLicenseAssignmentMutationVariables>(ClearLicenseAssignmentDocument, options);
+      }
+export type ClearLicenseAssignmentMutationHookResult = ReturnType<typeof useClearLicenseAssignmentMutation>;
+export type ClearLicenseAssignmentMutationResult = Apollo.MutationResult<ClearLicenseAssignmentMutation>;
+export type ClearLicenseAssignmentMutationOptions = Apollo.BaseMutationOptions<ClearLicenseAssignmentMutation, ClearLicenseAssignmentMutationVariables>;
+export const CreateLicenseDocument = gql`
+    mutation createLicense($input: CreateLicenseInput!) {
+  createLicense(input: $input) {
+    License {
+      idLicense
+      Name
+      Description
+      RestrictLevel
+    }
+  }
+}
+    `;
+export type CreateLicenseMutationFn = Apollo.MutationFunction<CreateLicenseMutation, CreateLicenseMutationVariables>;
+
+/**
+ * __useCreateLicenseMutation__
+ *
+ * To run a mutation, you first call `useCreateLicenseMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateLicenseMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createLicenseMutation, { data, loading, error }] = useCreateLicenseMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateLicenseMutation(baseOptions?: Apollo.MutationHookOptions<CreateLicenseMutation, CreateLicenseMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateLicenseMutation, CreateLicenseMutationVariables>(CreateLicenseDocument, options);
+      }
+export type CreateLicenseMutationHookResult = ReturnType<typeof useCreateLicenseMutation>;
+export type CreateLicenseMutationResult = Apollo.MutationResult<CreateLicenseMutation>;
+export type CreateLicenseMutationOptions = Apollo.BaseMutationOptions<CreateLicenseMutation, CreateLicenseMutationVariables>;
+export const UpdateLicenseDocument = gql`
+    mutation updateLicense($input: UpdateLicenseInput!) {
+  updateLicense(input: $input) {
+    License {
+      idLicense
+      Name
+      Description
+      RestrictLevel
+    }
+  }
+}
+    `;
+export type UpdateLicenseMutationFn = Apollo.MutationFunction<UpdateLicenseMutation, UpdateLicenseMutationVariables>;
+
+/**
+ * __useUpdateLicenseMutation__
+ *
+ * To run a mutation, you first call `useUpdateLicenseMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateLicenseMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateLicenseMutation, { data, loading, error }] = useUpdateLicenseMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateLicenseMutation(baseOptions?: Apollo.MutationHookOptions<UpdateLicenseMutation, UpdateLicenseMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateLicenseMutation, UpdateLicenseMutationVariables>(UpdateLicenseDocument, options);
+      }
+export type UpdateLicenseMutationHookResult = ReturnType<typeof useUpdateLicenseMutation>;
+export type UpdateLicenseMutationResult = Apollo.MutationResult<UpdateLicenseMutation>;
+export type UpdateLicenseMutationOptions = Apollo.BaseMutationOptions<UpdateLicenseMutation, UpdateLicenseMutationVariables>;
 export const CreateSceneDocument = gql`
     mutation createScene($input: CreateSceneInput!) {
   createScene(input: $input) {
@@ -3416,10 +4235,179 @@ export function useCreateSceneMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateSceneMutationHookResult = ReturnType<typeof useCreateSceneMutation>;
 export type CreateSceneMutationResult = Apollo.MutationResult<CreateSceneMutation>;
 export type CreateSceneMutationOptions = Apollo.BaseMutationOptions<CreateSceneMutation, CreateSceneMutationVariables>;
+export const CreateSubjectWithIdentifiersDocument = gql`
+    mutation createSubjectWithIdentifiers($input: CreateSubjectWithIdentifiersInput!) {
+  createSubjectWithIdentifiers(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type CreateSubjectWithIdentifiersMutationFn = Apollo.MutationFunction<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>;
+
+/**
+ * __useCreateSubjectWithIdentifiersMutation__
+ *
+ * To run a mutation, you first call `useCreateSubjectWithIdentifiersMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateSubjectWithIdentifiersMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createSubjectWithIdentifiersMutation, { data, loading, error }] = useCreateSubjectWithIdentifiersMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateSubjectWithIdentifiersMutation(baseOptions?: Apollo.MutationHookOptions<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>(CreateSubjectWithIdentifiersDocument, options);
+      }
+export type CreateSubjectWithIdentifiersMutationHookResult = ReturnType<typeof useCreateSubjectWithIdentifiersMutation>;
+export type CreateSubjectWithIdentifiersMutationResult = Apollo.MutationResult<CreateSubjectWithIdentifiersMutation>;
+export type CreateSubjectWithIdentifiersMutationOptions = Apollo.BaseMutationOptions<CreateSubjectWithIdentifiersMutation, CreateSubjectWithIdentifiersMutationVariables>;
+export const DeleteIdentifierDocument = gql`
+    mutation deleteIdentifier($input: DeleteIdentifierInput!) {
+  deleteIdentifier(input: $input) {
+    success
+  }
+}
+    `;
+export type DeleteIdentifierMutationFn = Apollo.MutationFunction<DeleteIdentifierMutation, DeleteIdentifierMutationVariables>;
+
+/**
+ * __useDeleteIdentifierMutation__
+ *
+ * To run a mutation, you first call `useDeleteIdentifierMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteIdentifierMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteIdentifierMutation, { data, loading, error }] = useDeleteIdentifierMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteIdentifierMutation(baseOptions?: Apollo.MutationHookOptions<DeleteIdentifierMutation, DeleteIdentifierMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteIdentifierMutation, DeleteIdentifierMutationVariables>(DeleteIdentifierDocument, options);
+      }
+export type DeleteIdentifierMutationHookResult = ReturnType<typeof useDeleteIdentifierMutation>;
+export type DeleteIdentifierMutationResult = Apollo.MutationResult<DeleteIdentifierMutation>;
+export type DeleteIdentifierMutationOptions = Apollo.BaseMutationOptions<DeleteIdentifierMutation, DeleteIdentifierMutationVariables>;
+export const DeleteObjectConnectionDocument = gql`
+    mutation deleteObjectConnection($input: DeleteObjectConnectionInput!) {
+  deleteObjectConnection(input: $input) {
+    success
+    details
+  }
+}
+    `;
+export type DeleteObjectConnectionMutationFn = Apollo.MutationFunction<DeleteObjectConnectionMutation, DeleteObjectConnectionMutationVariables>;
+
+/**
+ * __useDeleteObjectConnectionMutation__
+ *
+ * To run a mutation, you first call `useDeleteObjectConnectionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteObjectConnectionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteObjectConnectionMutation, { data, loading, error }] = useDeleteObjectConnectionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteObjectConnectionMutation(baseOptions?: Apollo.MutationHookOptions<DeleteObjectConnectionMutation, DeleteObjectConnectionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteObjectConnectionMutation, DeleteObjectConnectionMutationVariables>(DeleteObjectConnectionDocument, options);
+      }
+export type DeleteObjectConnectionMutationHookResult = ReturnType<typeof useDeleteObjectConnectionMutation>;
+export type DeleteObjectConnectionMutationResult = Apollo.MutationResult<DeleteObjectConnectionMutation>;
+export type DeleteObjectConnectionMutationOptions = Apollo.BaseMutationOptions<DeleteObjectConnectionMutation, DeleteObjectConnectionMutationVariables>;
+export const RollbackSystemObjectVersionDocument = gql`
+    mutation rollbackSystemObjectVersion($input: RollbackSystemObjectVersionInput!) {
+  rollbackSystemObjectVersion(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type RollbackSystemObjectVersionMutationFn = Apollo.MutationFunction<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>;
+
+/**
+ * __useRollbackSystemObjectVersionMutation__
+ *
+ * To run a mutation, you first call `useRollbackSystemObjectVersionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRollbackSystemObjectVersionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [rollbackSystemObjectVersionMutation, { data, loading, error }] = useRollbackSystemObjectVersionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRollbackSystemObjectVersionMutation(baseOptions?: Apollo.MutationHookOptions<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>(RollbackSystemObjectVersionDocument, options);
+      }
+export type RollbackSystemObjectVersionMutationHookResult = ReturnType<typeof useRollbackSystemObjectVersionMutation>;
+export type RollbackSystemObjectVersionMutationResult = Apollo.MutationResult<RollbackSystemObjectVersionMutation>;
+export type RollbackSystemObjectVersionMutationOptions = Apollo.BaseMutationOptions<RollbackSystemObjectVersionMutation, RollbackSystemObjectVersionMutationVariables>;
+export const UpdateDerivedObjectsDocument = gql`
+    mutation updateDerivedObjects($input: UpdateDerivedObjectsInput!) {
+  updateDerivedObjects(input: $input) {
+    success
+  }
+}
+    `;
+export type UpdateDerivedObjectsMutationFn = Apollo.MutationFunction<UpdateDerivedObjectsMutation, UpdateDerivedObjectsMutationVariables>;
+
+/**
+ * __useUpdateDerivedObjectsMutation__
+ *
+ * To run a mutation, you first call `useUpdateDerivedObjectsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateDerivedObjectsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateDerivedObjectsMutation, { data, loading, error }] = useUpdateDerivedObjectsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateDerivedObjectsMutation(baseOptions?: Apollo.MutationHookOptions<UpdateDerivedObjectsMutation, UpdateDerivedObjectsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateDerivedObjectsMutation, UpdateDerivedObjectsMutationVariables>(UpdateDerivedObjectsDocument, options);
+      }
+export type UpdateDerivedObjectsMutationHookResult = ReturnType<typeof useUpdateDerivedObjectsMutation>;
+export type UpdateDerivedObjectsMutationResult = Apollo.MutationResult<UpdateDerivedObjectsMutation>;
+export type UpdateDerivedObjectsMutationOptions = Apollo.BaseMutationOptions<UpdateDerivedObjectsMutation, UpdateDerivedObjectsMutationVariables>;
 export const UpdateObjectDetailsDocument = gql`
     mutation updateObjectDetails($input: UpdateObjectDetailsInput!) {
   updateObjectDetails(input: $input) {
     success
+    message
   }
 }
     `;
@@ -3449,6 +4437,74 @@ export function useUpdateObjectDetailsMutation(baseOptions?: Apollo.MutationHook
 export type UpdateObjectDetailsMutationHookResult = ReturnType<typeof useUpdateObjectDetailsMutation>;
 export type UpdateObjectDetailsMutationResult = Apollo.MutationResult<UpdateObjectDetailsMutation>;
 export type UpdateObjectDetailsMutationOptions = Apollo.BaseMutationOptions<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables>;
+export const UpdateSourceObjectsDocument = gql`
+    mutation updateSourceObjects($input: UpdateSourceObjectsInput!) {
+  updateSourceObjects(input: $input) {
+    success
+  }
+}
+    `;
+export type UpdateSourceObjectsMutationFn = Apollo.MutationFunction<UpdateSourceObjectsMutation, UpdateSourceObjectsMutationVariables>;
+
+/**
+ * __useUpdateSourceObjectsMutation__
+ *
+ * To run a mutation, you first call `useUpdateSourceObjectsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSourceObjectsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateSourceObjectsMutation, { data, loading, error }] = useUpdateSourceObjectsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateSourceObjectsMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSourceObjectsMutation, UpdateSourceObjectsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateSourceObjectsMutation, UpdateSourceObjectsMutationVariables>(UpdateSourceObjectsDocument, options);
+      }
+export type UpdateSourceObjectsMutationHookResult = ReturnType<typeof useUpdateSourceObjectsMutation>;
+export type UpdateSourceObjectsMutationResult = Apollo.MutationResult<UpdateSourceObjectsMutation>;
+export type UpdateSourceObjectsMutationOptions = Apollo.BaseMutationOptions<UpdateSourceObjectsMutation, UpdateSourceObjectsMutationVariables>;
+export const CreateGeoLocationDocument = gql`
+    mutation createGeoLocation($input: CreateGeoLocationInput!) {
+  createGeoLocation(input: $input) {
+    GeoLocation {
+      idGeoLocation
+    }
+  }
+}
+    `;
+export type CreateGeoLocationMutationFn = Apollo.MutationFunction<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>;
+
+/**
+ * __useCreateGeoLocationMutation__
+ *
+ * To run a mutation, you first call `useCreateGeoLocationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateGeoLocationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createGeoLocationMutation, { data, loading, error }] = useCreateGeoLocationMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateGeoLocationMutation(baseOptions?: Apollo.MutationHookOptions<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>(CreateGeoLocationDocument, options);
+      }
+export type CreateGeoLocationMutationHookResult = ReturnType<typeof useCreateGeoLocationMutation>;
+export type CreateGeoLocationMutationResult = Apollo.MutationResult<CreateGeoLocationMutation>;
+export type CreateGeoLocationMutationOptions = Apollo.BaseMutationOptions<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>;
 export const CreateItemDocument = gql`
     mutation createItem($input: CreateItemInput!) {
   createItem(input: $input) {
@@ -3789,6 +4845,7 @@ export const GetAssetDocument = gql`
   getAsset(input: $input) {
     Asset {
       idAsset
+      idVAssetType
     }
   }
 }
@@ -3829,6 +4886,7 @@ export const GetAssetVersionsDetailsDocument = gql`
       idAssetVersion
       SubjectUnitIdentifier {
         idSubject
+        idSystemObject
         SubjectName
         UnitAbbreviation
         IdentifierPublic
@@ -3867,14 +4925,13 @@ export const GetAssetVersionsDetailsDocument = gql`
         identifiers {
           identifier
           identifierType
+          idIdentifier
         }
       }
       Model {
         idAssetVersion
         systemCreated
         name
-        master
-        authoritative
         creationMethod
         modality
         purpose
@@ -3885,13 +4942,20 @@ export const GetAssetVersionsDetailsDocument = gql`
         identifiers {
           identifier
           identifierType
+          idIdentifier
         }
       }
       Scene {
         idAssetVersion
+        systemCreated
+        name
+        hasBeenQCd
+        isOriented
+        directory
         identifiers {
           identifier
           identifierType
+          idIdentifier
         }
       }
     }
@@ -3982,6 +5046,7 @@ export const GetModelConstellationForAssetVersionDocument = gql`
         CountEmbeddedTextures
         CountLinkedTextures
         FileEncoding
+        IsDracoCompressed
         Name
         idVFileType
       }
@@ -4078,6 +5143,7 @@ export const GetUploadedAssetVersionDocument = gql`
         }
       }
     }
+    idAssetVersionsUpdated
   }
 }
     `;
@@ -4222,6 +5288,9 @@ export const GetLicenseDocument = gql`
   getLicense(input: $input) {
     License {
       idLicense
+      Description
+      Name
+      RestrictLevel
     }
   }
 }
@@ -4254,11 +5323,56 @@ export function useGetLicenseLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions
 export type GetLicenseQueryHookResult = ReturnType<typeof useGetLicenseQuery>;
 export type GetLicenseLazyQueryHookResult = ReturnType<typeof useGetLicenseLazyQuery>;
 export type GetLicenseQueryResult = Apollo.QueryResult<GetLicenseQuery, GetLicenseQueryVariables>;
+export const GetLicenseListDocument = gql`
+    query getLicenseList($input: GetLicenseListInput!) {
+  getLicenseList(input: $input) {
+    Licenses {
+      idLicense
+      Description
+      Name
+      RestrictLevel
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetLicenseListQuery__
+ *
+ * To run a query within a React component, call `useGetLicenseListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLicenseListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLicenseListQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetLicenseListQuery(baseOptions: Apollo.QueryHookOptions<GetLicenseListQuery, GetLicenseListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLicenseListQuery, GetLicenseListQueryVariables>(GetLicenseListDocument, options);
+      }
+export function useGetLicenseListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLicenseListQuery, GetLicenseListQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLicenseListQuery, GetLicenseListQueryVariables>(GetLicenseListDocument, options);
+        }
+export type GetLicenseListQueryHookResult = ReturnType<typeof useGetLicenseListQuery>;
+export type GetLicenseListLazyQueryHookResult = ReturnType<typeof useGetLicenseListLazyQuery>;
+export type GetLicenseListQueryResult = Apollo.QueryResult<GetLicenseListQuery, GetLicenseListQueryVariables>;
 export const GetModelDocument = gql`
     query getModel($input: GetModelInput!) {
   getModel(input: $input) {
     Model {
       idModel
+      SystemObject {
+        idSystemObject
+        idAsset
+        idAssetVersion
+      }
     }
   }
 }
@@ -4299,8 +5413,6 @@ export const GetModelConstellationDocument = gql`
         idModel
         Name
         DateCreated
-        Master
-        Authoritative
         VCreationMethod {
           Term
         }
@@ -4327,6 +5439,7 @@ export const GetModelConstellationDocument = gql`
         CountEmbeddedTextures
         CountLinkedTextures
         FileEncoding
+        IsDracoCompressed
       }
       ModelObjects {
         idModelObject
@@ -4487,6 +5600,7 @@ export const GetObjectChildrenDocument = gql`
       metadata
     }
     metadataColumns
+    cursorMark
   }
 }
     `;
@@ -4560,6 +5674,34 @@ export const GetSceneDocument = gql`
   getScene(input: $input) {
     Scene {
       idScene
+      HasBeenQCd
+      IsOriented
+      Name
+      CountCamera
+      CountScene
+      CountNode
+      CountLight
+      CountModel
+      CountMeta
+      CountSetup
+      CountTour
+      EdanUUID
+      ModelSceneXref {
+        idModelSceneXref
+        idModel
+        idScene
+        Name
+        Usage
+        Quality
+        FileSize
+        UVResolution
+        BoundingBoxP1X
+        BoundingBoxP1Y
+        BoundingBoxP1Z
+        BoundingBoxP2X
+        BoundingBoxP2Y
+        BoundingBoxP2Z
+      }
     }
   }
 }
@@ -4592,18 +5734,91 @@ export function useGetSceneLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetSceneQueryHookResult = ReturnType<typeof useGetSceneQuery>;
 export type GetSceneLazyQueryHookResult = ReturnType<typeof useGetSceneLazyQuery>;
 export type GetSceneQueryResult = Apollo.QueryResult<GetSceneQuery, GetSceneQueryVariables>;
+export const GetSceneForAssetVersionDocument = gql`
+    query getSceneForAssetVersion($input: GetSceneForAssetVersionInput!) {
+  getSceneForAssetVersion(input: $input) {
+    idAssetVersion
+    SceneConstellation {
+      Scene {
+        idScene
+        HasBeenQCd
+        idAssetThumbnail
+        IsOriented
+        Name
+        CountScene
+        CountNode
+        CountCamera
+        CountLight
+        CountModel
+        CountMeta
+        CountSetup
+        CountTour
+      }
+      ModelSceneXref {
+        idModelSceneXref
+        idModel
+        idScene
+        Name
+        Usage
+        Quality
+        FileSize
+        UVResolution
+        BoundingBoxP1X
+        BoundingBoxP1Y
+        BoundingBoxP1Z
+        BoundingBoxP2X
+        BoundingBoxP2Y
+        BoundingBoxP2Z
+        Model {
+          SystemObject {
+            idSystemObject
+            idAsset
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSceneForAssetVersionQuery__
+ *
+ * To run a query within a React component, call `useGetSceneForAssetVersionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSceneForAssetVersionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSceneForAssetVersionQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSceneForAssetVersionQuery(baseOptions: Apollo.QueryHookOptions<GetSceneForAssetVersionQuery, GetSceneForAssetVersionQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSceneForAssetVersionQuery, GetSceneForAssetVersionQueryVariables>(GetSceneForAssetVersionDocument, options);
+      }
+export function useGetSceneForAssetVersionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSceneForAssetVersionQuery, GetSceneForAssetVersionQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSceneForAssetVersionQuery, GetSceneForAssetVersionQueryVariables>(GetSceneForAssetVersionDocument, options);
+        }
+export type GetSceneForAssetVersionQueryHookResult = ReturnType<typeof useGetSceneForAssetVersionQuery>;
+export type GetSceneForAssetVersionLazyQueryHookResult = ReturnType<typeof useGetSceneForAssetVersionLazyQuery>;
+export type GetSceneForAssetVersionQueryResult = Apollo.QueryResult<GetSceneForAssetVersionQuery, GetSceneForAssetVersionQueryVariables>;
 export const GetAssetDetailsForSystemObjectDocument = gql`
     query getAssetDetailsForSystemObject($input: GetAssetDetailsForSystemObjectInput!) {
   getAssetDetailsForSystemObject(input: $input) {
-    assetDetails {
-      idSystemObject
-      name
-      path
-      assetType
-      version
-      dateCreated
-      size
+    columns {
+      colName
+      colDisplay
+      colType
+      colAlign
+      colLabel
     }
+    assetDetailRows
   }
 }
     `;
@@ -4689,6 +5904,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
         name
         variantType
       }
+      isValidData
     }
     Model {
       Model {
@@ -4703,10 +5919,9 @@ export const GetDetailsTabDataForObjectDocument = gql`
         CountEmbeddedTextures
         CountLinkedTextures
         FileEncoding
+        IsDracoCompressed
         Name
         DateCreated
-        Master
-        Authoritative
         idVCreationMethod
         idVModality
         idVUnits
@@ -4766,6 +5981,8 @@ export const GetDetailsTabDataForObjectDocument = gql`
       Annotation
       HasBeenQCd
       IsOriented
+      EdanUUID
+      idScene
     }
     IntermediaryFile {
       idIntermediaryFile
@@ -4776,6 +5993,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
     Asset {
       FilePath
       AssetType
+      idAsset
     }
     AssetVersion {
       Creator
@@ -4783,6 +6001,8 @@ export const GetDetailsTabDataForObjectDocument = gql`
       StorageSize
       Ingested
       Version
+      idAsset
+      idAssetVersion
     }
     Actor {
       OrganizationName
@@ -4904,9 +6124,51 @@ export function useGetSourceObjectIdentiferLazyQuery(baseOptions?: Apollo.LazyQu
 export type GetSourceObjectIdentiferQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferQuery>;
 export type GetSourceObjectIdentiferLazyQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferLazyQuery>;
 export type GetSourceObjectIdentiferQueryResult = Apollo.QueryResult<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>;
+export const GetSubjectListDocument = gql`
+    query getSubjectList($input: GetSubjectListInput!) {
+  getSubjectList(input: $input) {
+    subjects {
+      idSubject
+      idSystemObject
+      UnitAbbreviation
+      SubjectName
+      IdentifierPublic
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSubjectListQuery__
+ *
+ * To run a query within a React component, call `useGetSubjectListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSubjectListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSubjectListQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSubjectListQuery(baseOptions: Apollo.QueryHookOptions<GetSubjectListQuery, GetSubjectListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSubjectListQuery, GetSubjectListQueryVariables>(GetSubjectListDocument, options);
+      }
+export function useGetSubjectListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSubjectListQuery, GetSubjectListQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSubjectListQuery, GetSubjectListQueryVariables>(GetSubjectListDocument, options);
+        }
+export type GetSubjectListQueryHookResult = ReturnType<typeof useGetSubjectListQuery>;
+export type GetSubjectListLazyQueryHookResult = ReturnType<typeof useGetSubjectListLazyQuery>;
+export type GetSubjectListQueryResult = Apollo.QueryResult<GetSubjectListQuery, GetSubjectListQueryVariables>;
 export const GetSystemObjectDetailsDocument = gql`
     query getSystemObjectDetails($input: GetSystemObjectDetailsInput!) {
   getSystemObjectDetails(input: $input) {
+    idSystemObject
     idObject
     name
     retired
@@ -4917,6 +6179,7 @@ export const GetSystemObjectDetailsDocument = gql`
     identifiers {
       identifier
       identifierType
+      idIdentifier
     }
     unit {
       idSystemObject
@@ -4955,6 +6218,19 @@ export const GetSystemObjectDetailsDocument = gql`
       identifier
       objectType
     }
+    objectVersions {
+      idSystemObjectVersion
+      idSystemObject
+      PublishedState
+      DateCreated
+    }
+    licenseInherited
+    license {
+      idLicense
+      Name
+      Description
+      RestrictLevel
+    }
   }
 }
     `;
@@ -4986,48 +6262,50 @@ export function useGetSystemObjectDetailsLazyQuery(baseOptions?: Apollo.LazyQuer
 export type GetSystemObjectDetailsQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsQuery>;
 export type GetSystemObjectDetailsLazyQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsLazyQuery>;
 export type GetSystemObjectDetailsQueryResult = Apollo.QueryResult<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>;
-export const GetVersionsForSystemObjectDocument = gql`
-    query getVersionsForSystemObject($input: GetVersionsForSystemObjectInput!) {
-  getVersionsForSystemObject(input: $input) {
+export const GetVersionsForAssetDocument = gql`
+    query getVersionsForAsset($input: GetVersionsForAssetInput!) {
+  getVersionsForAsset(input: $input) {
     versions {
       idSystemObject
+      idAssetVersion
       version
       name
       creator
       dateCreated
       size
+      ingested
     }
   }
 }
     `;
 
 /**
- * __useGetVersionsForSystemObjectQuery__
+ * __useGetVersionsForAssetQuery__
  *
- * To run a query within a React component, call `useGetVersionsForSystemObjectQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetVersionsForSystemObjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useGetVersionsForAssetQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetVersionsForAssetQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetVersionsForSystemObjectQuery({
+ * const { data, loading, error } = useGetVersionsForAssetQuery({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useGetVersionsForSystemObjectQuery(baseOptions: Apollo.QueryHookOptions<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>) {
+export function useGetVersionsForAssetQuery(baseOptions: Apollo.QueryHookOptions<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>(GetVersionsForSystemObjectDocument, options);
+        return Apollo.useQuery<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>(GetVersionsForAssetDocument, options);
       }
-export function useGetVersionsForSystemObjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>) {
+export function useGetVersionsForAssetLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>(GetVersionsForSystemObjectDocument, options);
+          return Apollo.useLazyQuery<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>(GetVersionsForAssetDocument, options);
         }
-export type GetVersionsForSystemObjectQueryHookResult = ReturnType<typeof useGetVersionsForSystemObjectQuery>;
-export type GetVersionsForSystemObjectLazyQueryHookResult = ReturnType<typeof useGetVersionsForSystemObjectLazyQuery>;
-export type GetVersionsForSystemObjectQueryResult = Apollo.QueryResult<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>;
+export type GetVersionsForAssetQueryHookResult = ReturnType<typeof useGetVersionsForAssetQuery>;
+export type GetVersionsForAssetLazyQueryHookResult = ReturnType<typeof useGetVersionsForAssetLazyQuery>;
+export type GetVersionsForAssetQueryResult = Apollo.QueryResult<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>;
 export const GetIngestionItemsForSubjectsDocument = gql`
     query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
   getIngestionItemsForSubjects(input: $input) {
@@ -5190,7 +6468,6 @@ export const GetObjectsForItemDocument = gql`
     }
     Model {
       idModel
-      Authoritative
       DateCreated
     }
     Scene {
@@ -5431,6 +6708,44 @@ export function useGetUnitLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ge
 export type GetUnitQueryHookResult = ReturnType<typeof useGetUnitQuery>;
 export type GetUnitLazyQueryHookResult = ReturnType<typeof useGetUnitLazyQuery>;
 export type GetUnitQueryResult = Apollo.QueryResult<GetUnitQuery, GetUnitQueryVariables>;
+export const GetUnitsFromEdanAbbreviationDocument = gql`
+    query getUnitsFromEdanAbbreviation($input: GetUnitsFromEdanAbbreviationInput!) {
+  getUnitsFromEdanAbbreviation(input: $input) {
+    Units {
+      idUnit
+      Name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetUnitsFromEdanAbbreviationQuery__
+ *
+ * To run a query within a React component, call `useGetUnitsFromEdanAbbreviationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUnitsFromEdanAbbreviationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUnitsFromEdanAbbreviationQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetUnitsFromEdanAbbreviationQuery(baseOptions: Apollo.QueryHookOptions<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>(GetUnitsFromEdanAbbreviationDocument, options);
+      }
+export function useGetUnitsFromEdanAbbreviationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>(GetUnitsFromEdanAbbreviationDocument, options);
+        }
+export type GetUnitsFromEdanAbbreviationQueryHookResult = ReturnType<typeof useGetUnitsFromEdanAbbreviationQuery>;
+export type GetUnitsFromEdanAbbreviationLazyQueryHookResult = ReturnType<typeof useGetUnitsFromEdanAbbreviationLazyQuery>;
+export type GetUnitsFromEdanAbbreviationQueryResult = Apollo.QueryResult<GetUnitsFromEdanAbbreviationQuery, GetUnitsFromEdanAbbreviationQueryVariables>;
 export const GetUnitsFromNameSearchDocument = gql`
     query getUnitsFromNameSearch($input: GetUnitsFromNameSearchInput!) {
   getUnitsFromNameSearch(input: $input) {
@@ -5478,6 +6793,7 @@ export const SearchIngestionSubjectsDocument = gql`
   searchIngestionSubjects(input: $input) {
     SubjectUnitIdentifier {
       idSubject
+      idSystemObject
       SubjectName
       UnitAbbreviation
       IdentifierPublic
@@ -5763,3 +7079,54 @@ export function useGetWorkflowLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type GetWorkflowQueryHookResult = ReturnType<typeof useGetWorkflowQuery>;
 export type GetWorkflowLazyQueryHookResult = ReturnType<typeof useGetWorkflowLazyQuery>;
 export type GetWorkflowQueryResult = Apollo.QueryResult<GetWorkflowQuery, GetWorkflowQueryVariables>;
+export const GetWorkflowListDocument = gql`
+    query getWorkflowList($input: GetWorkflowListInput!) {
+  getWorkflowList(input: $input) {
+    WorkflowList {
+      idWorkflow
+      idWorkflowSet
+      idWorkflowReport
+      idJobRun
+      Type
+      State
+      Owner {
+        Name
+      }
+      DateStart
+      DateLast
+      HyperlinkReport
+      HyperlinkSet
+      HyperlinkJob
+      Error
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetWorkflowListQuery__
+ *
+ * To run a query within a React component, call `useGetWorkflowListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetWorkflowListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetWorkflowListQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetWorkflowListQuery(baseOptions: Apollo.QueryHookOptions<GetWorkflowListQuery, GetWorkflowListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetWorkflowListQuery, GetWorkflowListQueryVariables>(GetWorkflowListDocument, options);
+      }
+export function useGetWorkflowListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetWorkflowListQuery, GetWorkflowListQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetWorkflowListQuery, GetWorkflowListQueryVariables>(GetWorkflowListDocument, options);
+        }
+export type GetWorkflowListQueryHookResult = ReturnType<typeof useGetWorkflowListQuery>;
+export type GetWorkflowListLazyQueryHookResult = ReturnType<typeof useGetWorkflowListLazyQuery>;
+export type GetWorkflowListQueryResult = Apollo.QueryResult<GetWorkflowListQuery, GetWorkflowListQueryVariables>;

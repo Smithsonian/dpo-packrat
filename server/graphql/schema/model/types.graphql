@@ -4,13 +4,11 @@ type Model {
     idModel: Int!
     Name: String!
     DateCreated: DateTime!
-    Master: Boolean!
-    Authoritative: Boolean!
-    idVCreationMethod: Int!
-    idVModality: Int!
-    idVPurpose: Int!
-    idVUnits: Int!
-    idVFileType: Int!
+    idVCreationMethod: Int
+    idVModality: Int
+    idVPurpose: Int
+    idVUnits: Int
+    idVFileType: Int
     idAssetThumbnail: Int
     CountAnimations: Int
     CountCameras: Int
@@ -22,6 +20,7 @@ type Model {
     CountEmbeddedTextures: Int
     CountLinkedTextures: Int
     FileEncoding: String
+    IsDracoCompressed: Boolean
     ModelConstellation: ModelConstellation
     VCreationMethod: Vocabulary
     VModality: Vocabulary
@@ -131,13 +130,24 @@ type ModelSceneXref {
     idModelSceneXref: Int!
     idModel: Int!
     idScene: Int!
+    Name: String
+    Usage: String
+    Quality: String
+    FileSize: BigInt
+    UVResolution: Int
+    BoundingBoxP1X: Float
+    BoundingBoxP1Y: Float
+    BoundingBoxP1Z: Float
+    BoundingBoxP2X: Float
+    BoundingBoxP2Y: Float
+    BoundingBoxP2Z: Float
+    TS0: Float
+    TS1: Float
+    TS2: Float
     R0: Float
     R1: Float
     R2: Float
     R3: Float
-    TS0: Float
-    TS1: Float
-    TS2: Float
     Model: Model
     Scene: Scene
 }

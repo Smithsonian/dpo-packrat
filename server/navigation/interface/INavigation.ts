@@ -1,4 +1,5 @@
 import { eSystemObjectType } from '../../db';
+import { IIndexer } from './IIndexer';
 
 export enum eMetadata {
     eCommonName,
@@ -27,8 +28,6 @@ export enum eMetadata {
     eCDCameraSettingsUniform,
     eCDVariantType,
     eModelCreationMethod,
-    eModelMaster,
-    eModelAuthoritative,
     eModelModality,
     eModelUnits,
     eModelPurpose,
@@ -53,6 +52,14 @@ export enum eMetadata {
     eModelUVMapType,
     eSceneIsOriented,
     eSceneHasBeenQCd,
+    eSceneCountScene,
+    eSceneCountNode,
+    eSceneCountCamera,
+    eSceneCountLight,
+    eSceneCountModel,
+    eSceneCountMeta,
+    eSceneCountSetup,
+    eSceneCountTour,
     eAssetFileName,
     eAssetFilePath,
     eAssetType,
@@ -81,6 +88,8 @@ export type NavigationFilter = {
     variantType: number[];                  // idVocabulary[] for variant type filter
     modelPurpose: number[];                 // idVocabulary[] for model purpose filter
     modelFileType: number[];                // idVocabulary[] for model file type filter
+    dateCreatedFrom: Date | null;           // Date Created filter
+    dateCreatedTo: Date | null;             // Date Created filter
     rows: number;                           // max result row count; a value of 0 means "all"
     cursorMark: string;                     // a non-empty value indicates a cursor position through a set of result values, used to request the next set of values
 };
@@ -101,6 +110,27 @@ export type NavigationResult = {
     cursorMark?: string | null;             // when provided, additional results are available by requesting another navigation, using this returned value for the NavigationFilter.cursorMark
 };
 
+export type MetadataFilter = {
+    idRoot: number;                         // idSystemObject for whom to fetch metadata, either its own metadata (forAssetChildren === false) or that of its asset version childrens' metadata (forAssetChildren === true)
+    forAssetChildren: boolean;              // true means metadata of asset version children; false means metadata of idRoot. True is typically desired when fetching a set of metadata for an asset grid.
+    metadataColumns: string[];              // empty array means retrieve no metadata, which is an error condition
+};
+
+export type MetadataResultEntry = {
+    idSystemObject: number;                 // idSystemObject of the entry
+    idSystemObjectParent: number;           // idSystemObject of the owning item (if the entry is an asset version owned by another system object)
+    metadata: string[];                     // array of metadata values, in the order of MetadataResult.metadataColumns, matching the order of MetadataFilter.metadataColumns
+};
+
+export type MetadataResult = {
+    success: boolean;
+    error: string;
+    entries: MetadataResultEntry[];
+    metadataColumns: string[];
+};
+
 export interface INavigation {
     getObjectChildren(filter: NavigationFilter): Promise<NavigationResult>;
+    getMetadata(filter: MetadataFilter): Promise<MetadataResult>;
+    getIndexer(): Promise<IIndexer | null>;
 }

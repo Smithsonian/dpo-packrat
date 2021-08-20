@@ -5,34 +5,23 @@
  * This component renders details tab for Asset specific details used in DetailsTab component.
  */
 import { Box } from '@material-ui/core';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { InputField, Loader, SelectField } from '../../../../../components';
 import { useVocabularyStore } from '../../../../../store';
-import { AssetDetailFields } from '../../../../../types/graphql';
-import { eVocabularySetID } from '../../../../../types/server';
+import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import { DetailComponentProps } from './index';
+import { useDetailTabStore } from '../../../../../store';
 
 function AssetDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
-
-    const [details, setDetails] = useState<AssetDetailFields>({});
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
+    const [AssetDetails, updateDetailField] = useDetailTabStore(state => [state.AssetDetails, state.updateDetailField]);
 
     useEffect(() => {
-        if (data && !loading) {
-            const { Asset } = data.getDetailsTabDataForObject;
-            setDetails({
-                FilePath: Asset?.FilePath,
-                AssetType: Asset?.AssetType
-            });
-        }
-    }, [data, loading]);
-
-    useEffect(() => {
-        onUpdateDetail(objectType, details);
-    }, [details]);
+        onUpdateDetail(objectType, AssetDetails);
+    }, [AssetDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -40,7 +29,7 @@ function AssetDetails(props: DetailComponentProps): React.ReactElement {
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
-        setDetails(details => ({ ...details, [name]: value }));
+        updateDetailField(eSystemObjectType.eAsset, name, value);
     };
 
     const setIdField = ({ target }): void => {
@@ -51,7 +40,7 @@ function AssetDetails(props: DetailComponentProps): React.ReactElement {
             idFieldValue = Number.parseInt(value, 10);
         }
 
-        setDetails(details => ({ ...details, [name]: idFieldValue }));
+        updateDetailField(eSystemObjectType.eAsset, name, idFieldValue);
     };
 
     const assetData = data.getDetailsTabDataForObject?.Asset;
@@ -61,10 +50,10 @@ function AssetDetails(props: DetailComponentProps): React.ReactElement {
             <SelectField
                 required
                 viewMode
-                updated={isFieldUpdated(details, assetData, 'AssetType')}
+                updated={isFieldUpdated(AssetDetails, assetData, 'AssetType')}
                 disabled={disabled}
                 label='Asset Type'
-                value={withDefaultValueNumber(details?.AssetType as never, getInitialEntry(eVocabularySetID.eAssetAssetType))}
+                value={withDefaultValueNumber(AssetDetails.AssetType as never, getInitialEntry(eVocabularySetID.eAssetAssetType))}
                 name='AssetType'
                 onChange={setIdField}
                 options={getEntries(eVocabularySetID.eAssetAssetType)}
@@ -72,10 +61,10 @@ function AssetDetails(props: DetailComponentProps): React.ReactElement {
             <InputField
                 viewMode
                 required
-                updated={isFieldUpdated(details, assetData, 'FilePath')}
+                updated={isFieldUpdated(AssetDetails, assetData, 'FilePath')}
                 disabled={disabled}
                 label='FilePath'
-                value={details?.FilePath}
+                value={AssetDetails?.FilePath}
                 name='FilePath'
                 onChange={onSetField}
             />

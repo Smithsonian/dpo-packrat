@@ -1,23 +1,21 @@
 /* eslint-disable camelcase */
 import { Identifier as IdentifierBase } from '@prisma/client';
+import { Subject } from './Subject';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
 export class Identifier extends DBC.DBObject<IdentifierBase> implements IdentifierBase {
     idIdentifier!: number;
     IdentifierValue!: string;
-    idSystemObject!: number | null;
     idVIdentifierType!: number;
-
-    private idSystemObjectOrig!: number | null;
+    idSystemObject!: number | null;
 
     constructor(input: IdentifierBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idSystemObjectOrig = this.idSystemObject;
-    }
+    public fetchTableName(): string { return 'Identifier'; }
+    public fetchID(): number { return this.idIdentifier; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -40,18 +38,37 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idIdentifier, IdentifierValue, idVIdentifierType, idSystemObject, idSystemObjectOrig } = this;
+            const { idIdentifier, IdentifierValue, idVIdentifierType, idSystemObject } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.identifier.update({
                 where: { idIdentifier, },
                 data: {
                     IdentifierValue,
                     Vocabulary: { connect: { idVocabulary: idVIdentifierType }, },
-                    SystemObject: idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
+                    SystemObject: idSystemObject ? { connect: { idSystemObject }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Identifier.update', LOG.LS.eDB, error);
+            return false;
+        }
+    }
+
+    /** Don't call this directly; instead, let DBObject.delete() call this.
+     * Code needing to delete a record should call this.delete(); */
+    protected async deleteWorker(): Promise<boolean> {
+        try {
+            // LOG.info(`Identifier.deleteWorker ${JSON.stringify(this)}`, LOG.LS.eDB);
+            // First, remove this identifier from subject.idIdentifierPreferred, for any such subjects that reference it
+            const { idIdentifier } = this; /* istanbul ignore next */
+            if (!await Subject.clearPreferredIdentifier(idIdentifier))
+                return false;
+
+            return await DBC.DBConnection.prisma.identifier.delete({
+                where: { idIdentifier, },
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Identifier.delete', LOG.LS.eDB, error);
             return false;
         }
     }

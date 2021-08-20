@@ -1,12 +1,14 @@
 scalar DateTime
+scalar JSON
 
 type Query {
     getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
     getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
     getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
-    getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
+    getVersionsForAsset(input: GetVersionsForAssetInput!): GetVersionsForAssetResult!
     getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
     getProjectList(input: GetProjectListInput!): GetProjectListResult!
+    getSubjectList(input: GetSubjectListInput!): GetSubjectListResult!
 }
 
 input GetDetailsTabDataForObjectInput {
@@ -67,6 +69,7 @@ type CaptureDataDetailFields {
     clusterType: Int
     clusterGeometryFieldId: Int
     folders: [IngestFolder!]!
+    isValidData: Boolean
 }
 
 type SceneDetailFields {
@@ -76,6 +79,16 @@ type SceneDetailFields {
     Annotation: Int
     HasBeenQCd: Boolean
     IsOriented: Boolean
+    CountScene: Int
+    CountNode: Int
+    CountCamera: Int
+    CountLight: Int
+    CountModel: Int
+    CountMeta: Int
+    CountSetup: Int
+    CountTour: Int
+    EdanUUID: String
+    idScene: Int
 }
 
 type IntermediaryFileDetailFields {
@@ -88,6 +101,8 @@ type ProjectDocumentationDetailFields {
 type AssetDetailFields {
     FilePath: String
     AssetType: Int
+    Asset: Asset
+    idAsset: Int
 }
 
 type AssetVersionDetailFields {
@@ -96,6 +111,9 @@ type AssetVersionDetailFields {
     Ingested: Boolean
     Version: Int
     StorageSize: BigInt
+    AssetVersion: AssetVersion
+    idAsset: Int
+    idAssetVersion: Int
 }
 
 type ActorDetailFields {
@@ -137,6 +155,7 @@ type RepositoryPath {
 }
 
 type GetSystemObjectDetailsResult {
+    idSystemObject: Int!
     idObject: Int!
     name: String!
     retired: Boolean!
@@ -148,10 +167,13 @@ type GetSystemObjectDetailsResult {
     objectAncestors: [[RepositoryPath!]!]!
     sourceObjects: [RelatedObject!]!
     derivedObjects: [RelatedObject!]!
+    objectVersions: [SystemObjectVersion!]!
     unit: RepositoryPath
     project: RepositoryPath
     subject: RepositoryPath
     item: RepositoryPath
+    license: License
+    licenseInherited: Boolean
 }
 
 input GetSourceObjectIdentiferInput {
@@ -167,14 +189,12 @@ type GetSourceObjectIdentiferResult {
     sourceObjectIdentifiers: [SourceObjectIdentifier!]!
 }
 
-type AssetDetail {
-    idSystemObject: Int!
-    name: String!
-    path: String!
-    assetType: Int!
-    version: Int!
-    dateCreated: DateTime!
-    size: BigInt!
+type ColumnDefinition {
+    colName: String!
+    colLabel: String!
+    colDisplay: Boolean!
+    colType: Int!
+    colAlign: String!
 }
 
 input GetAssetDetailsForSystemObjectInput {
@@ -182,23 +202,26 @@ input GetAssetDetailsForSystemObjectInput {
 }
 
 type GetAssetDetailsForSystemObjectResult {
-    assetDetails: [AssetDetail!]!
+    columns: [ColumnDefinition!]!
+    assetDetailRows: [JSON!]!
 }
 
 type DetailVersion {
     idSystemObject: Int!
+    idAssetVersion: Int!
     version: Int!
     name: String!
     creator: String!
     dateCreated: DateTime!
     size: BigInt!
+    ingested: Boolean!
 }
 
-input GetVersionsForSystemObjectInput {
+input GetVersionsForAssetInput {
     idSystemObject: Int!
 }
 
-type GetVersionsForSystemObjectResult {
+type GetVersionsForAssetResult {
     versions: [DetailVersion!]!
 }
 
@@ -208,4 +231,17 @@ type GetProjectListResult {
 
 input GetProjectListInput {
     search: String!
+}
+
+type GetSubjectListResult {
+    subjects: [SubjectUnitIdentifier!]!
+}
+
+input GetSubjectListInput {
+    search: String!
+    idUnit: Int
+    pageNumber: Int
+    rowCount: Int
+    sortBy: Int
+    sortOrder: Boolean
 }

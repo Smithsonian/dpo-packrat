@@ -1,7 +1,10 @@
 import * as DBAPI from '../../../db';
 import * as COL from '../../../collections/interface/';
+import * as LOG from '../../../utils/logger';
+// import * as H from '../../../utils/helpers';
 
 afterAll(async done => {
+    // awaitH.Helpers.sleep(4000);
     done();
 });
 
@@ -23,6 +26,20 @@ describe('DB Composite SubjectUnitIdentifier Test', () => {
     executeQueryCollection(ICollection, 'Armstrong', false, true);
     executeQueryCollection(ICollection, '', false, true);
     executeQueryCollection(ICollection, '1 = 1; DROP Database Packrat', false, false);
+
+    executeSearch('', false, true);
+    executeSearch('Mount', false, true);
+    executeSearch('Armstrong', false, true);
+    executeSearch('Armstrong', false, true, 12);
+    executeSearch('Armstrong', false, false, 1);
+    executeSearch('65665', false, true);
+    executeSearch('65665', false, false, -1);
+    executeSearch('65665', false, true, 12, 1, 100);
+    executeSearch('65665', false, true, 12, 2, 10);
+    executeSearch('65665', false, true, 12, 2, 10, DBAPI.eSubjectUnitIdentifierSortColumns.eDefault, true);
+    executeSearch('65665', false, true, 12, 2, 10, DBAPI.eSubjectUnitIdentifierSortColumns.eIdentifierValue, false);
+    executeSearch('65665', false, true, 12, 2, 10, DBAPI.eSubjectUnitIdentifierSortColumns.eSubjectName, true);
+    executeSearch('65665', false, true, 12, 2, 10, DBAPI.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation, false);
 });
 
 function executeQuery(query: string, expectNull: boolean, expectResults: boolean): void {
@@ -55,6 +72,7 @@ function executeQueryCollection(ICollection: COL.ICollection, query: string, exp
             for (const record of resultsCOL.records)
                 resultsDB.push({
                     idSubject: 0,
+                    idSystemObject: 0,
                     SubjectName: record.name,
                     UnitAbbreviation: record.unit,
                     IdentifierPublic: record.identifierPublic,
@@ -71,6 +89,28 @@ function executeQueryCollection(ICollection: COL.ICollection, query: string, exp
                 expect(resultsDB.length).toBeGreaterThan(0);
             else
                 expect(resultsDB.length).toBe(0);
+        }
+    });
+}
+
+function executeSearch(query: string, expectNull: boolean, expectResults: boolean,
+    idUnit?: number | undefined, pageNumber?: number | undefined, rowCount?: number | undefined,
+    sortBy?: DBAPI.eSubjectUnitIdentifierSortColumns | undefined,
+    sortDirection?: boolean | undefined): void {
+    test(`DB Composite SubjectUnitIdentifier.search '${query}', ${idUnit}, ${pageNumber}, ${rowCount}, ${sortBy}, ${sortDirection}`, async () => {
+        const results: DBAPI.SubjectUnitIdentifier[] | null = await DBAPI.SubjectUnitIdentifier.search(query, idUnit, pageNumber, rowCount, sortBy, sortDirection);
+        LOG.info(`SubjectUnitIdentifier.search result count=${results?.length}`, LOG.LS.eTEST);
+
+        if (!expectNull)
+            expect(results).toBeTruthy();
+        else
+            expect(results).toBeFalsy();
+
+        if (results) {
+            if (expectResults)
+                expect(results.length).toBeGreaterThan(0);
+            else
+                expect(results.length).toBe(0);
         }
     });
 }

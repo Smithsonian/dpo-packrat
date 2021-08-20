@@ -8,6 +8,7 @@ const getAssetVersionsDetails = gql`
                 idAssetVersion
                 SubjectUnitIdentifier {
                     idSubject
+                    idSystemObject
                     SubjectName
                     UnitAbbreviation
                     IdentifierPublic
@@ -46,14 +47,13 @@ const getAssetVersionsDetails = gql`
                     identifiers {
                         identifier
                         identifierType
+                        idIdentifier
                     }
                 }
                 Model {
                     idAssetVersion
                     systemCreated
                     name
-                    master
-                    authoritative
                     creationMethod
                     modality
                     purpose
@@ -64,13 +64,20 @@ const getAssetVersionsDetails = gql`
                     identifiers {
                         identifier
                         identifierType
+                        idIdentifier
                     }
                 }
                 Scene {
                     idAssetVersion
+                    systemCreated
+                    name
+                    hasBeenQCd
+                    isOriented
+                    directory
                     identifiers {
                         identifier
                         identifierType
+                        idIdentifier
                     }
                 }
             }

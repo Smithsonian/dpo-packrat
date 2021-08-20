@@ -46,16 +46,17 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
             id: identifiers.length + 1,
             identifier: '',
             identifierType: getInitialEntry(eVocabularySetID.eIdentifierIdentifierType) || initialEntry,
-            selected: false
+            selected: false,
+            idIdentifier: 0
         };
 
         const updatedIdentifiers = lodash.concat(identifiers, [newIdentifier]);
         onAddIdentifer(updatedIdentifiers);
     };
 
-    const removeIdentifier = (id: number) => {
+    const removeIdentifier = (_idIdentifier: number, id: number) => {
         const updatedIdentifiers = lodash.filter(identifiers, identifier => identifier.id !== id);
-        onUpdateIdentifer(updatedIdentifiers);
+        onRemoveIdentifer(updatedIdentifiers);
     };
 
     const updateIdentifierFields = (id: number, name: string, value: string | number | boolean) => {
@@ -68,7 +69,7 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
             }
             return identifier;
         });
-        onRemoveIdentifer(updatedIdentifiers);
+        onUpdateIdentifer(updatedIdentifiers);
     };
 
     return (
@@ -93,14 +94,15 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
                         </Button>
                     )}
                 </Box>
-
-                <IdentifierList
-                    identifiers={identifiers}
-                    identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
-                    onAdd={addIdentifer}
-                    onRemove={removeIdentifier}
-                    onUpdate={updateIdentifierFields}
-                />
+                {identifiers.length > 0 && (
+                    <IdentifierList
+                        identifiers={identifiers}
+                        identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
+                        onAdd={addIdentifer}
+                        onRemove={removeIdentifier}
+                        onUpdate={updateIdentifierFields}
+                    />
+                )}
             </FieldType>
         </Box>
     );

@@ -1,9 +1,10 @@
 import * as L from 'lodash';
 import { QueryGetAssetVersionsDetailsArgs, GetAssetVersionsDetailsResult,
-    Item, IngestPhotogrammetry, IngestModel, SubjectUnitIdentifier } from '../../../../../types/graphql';
+    Item, IngestPhotogrammetry, IngestModel, IngestScene, SubjectUnitIdentifier } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import { AssetStorageAdapter } from '../../../../../storage/interface';
-import { AssetVersion, Project } from '../../../../../db';
+import { AssetVersion, Project, eSystemObjectType, SystemObjectInfo } from '../../../../../db';
+import* as CACHE from '../../../../../cache';
 import { IngestMetadata, BulkIngestReader } from '../../../../../utils/parser';
 import * as LOG from '../../../../../utils/logger';
 
@@ -29,8 +30,10 @@ export default async function getAssetVersionsDetails(_: Parent, args: QueryGetA
         const Project: Project[] | null = await BulkIngestReader.computeProjects(ingestMetadata);
 
         const { idSubject, SubjectName, UnitAbbreviation, IdentifierPublic, IdentifierCollection } = ingestMetadata;
+        const SOI: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ idObject: idSubject, eObjectType: eSystemObjectType.eSubject });
         const SubjectUnitIdentifier: SubjectUnitIdentifier = {
             idSubject,
+            idSystemObject: SOI ? SOI.idSystemObject : 0,
             SubjectName,
             UnitAbbreviation,
             IdentifierPublic,
@@ -40,11 +43,14 @@ export default async function getAssetVersionsDetails(_: Parent, args: QueryGetA
         const Item: Item = { ...ingestMetadata };
         let CaptureDataPhoto: IngestPhotogrammetry | null = null;
         let Model: IngestModel | null = null;
+        let Scene: IngestScene | null = null;
 
         if (BulkIngestReader.ingestedObjectIsPhotogrammetry(ingestMetadata))
             CaptureDataPhoto = { ...ingestMetadata };
         else if (BulkIngestReader.ingestedObjectIsModel(ingestMetadata))
             Model = { ...ingestMetadata };
+        else if (BulkIngestReader.ingestedObjectIsScene(ingestMetadata))
+            Scene = { ...ingestMetadata };
 
         if (!firstSubject)
             firstSubject = SubjectUnitIdentifier;
@@ -56,7 +62,7 @@ export default async function getAssetVersionsDetails(_: Parent, args: QueryGetA
         else if (!L.isEqual(firstItem, Item))
             results.valid = false;
 
-        results.Details.push({ idAssetVersion, Project, SubjectUnitIdentifier, Item, Model, CaptureDataPhoto });
+        results.Details.push({ idAssetVersion, Project, SubjectUnitIdentifier, Item, CaptureDataPhoto, Model, Scene });
     }
 
     return results;
