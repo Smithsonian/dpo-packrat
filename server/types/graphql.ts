@@ -1313,6 +1313,7 @@ export type CreateSceneInput = {
   CountMeta?: Maybe<Scalars['Int']>;
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
+  EdanUUID?: Maybe<Scalars['String']>;
 };
 
 export type CreateSceneResult = {
@@ -1353,6 +1354,7 @@ export type Scene = {
   CountMeta?: Maybe<Scalars['Int']>;
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
+  EdanUUID?: Maybe<Scalars['String']>;
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1680,6 +1682,7 @@ export type SceneDetailFields = {
   CountMeta?: Maybe<Scalars['Int']>;
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
+  EdanUUID?: Maybe<Scalars['String']>;
   idScene?: Maybe<Scalars['Int']>;
 };
 

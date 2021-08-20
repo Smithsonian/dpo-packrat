@@ -115,6 +115,7 @@ export type SceneFields = {
     isOriented: boolean;
     name: string;
     directory: string;
+    EdanUUID: string;
     idAsset?: number;
 };
 

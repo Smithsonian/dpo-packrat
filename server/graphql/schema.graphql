@@ -895,6 +895,7 @@ input CreateSceneInput {
   CountMeta: Int
   CountSetup: Int
   CountTour: Int
+  EdanUUID: String
 }
 
 type CreateSceneResult {
@@ -931,6 +932,7 @@ type Scene {
   CountMeta: Int
   CountSetup: Int
   CountTour: Int
+  EdanUUID: String
   AssetThumbnail: Asset
   ModelSceneXref: [ModelSceneXref]
   SystemObject: SystemObject
@@ -1243,6 +1245,7 @@ type SceneDetailFields {
   CountMeta: Int
   CountSetup: Int
   CountTour: Int
+  EdanUUID: String
   idScene: Int
 }
 

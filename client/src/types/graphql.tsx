@@ -1316,6 +1316,7 @@ export type CreateSceneInput = {
   CountMeta?: Maybe<Scalars['Int']>;
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
+  EdanUUID?: Maybe<Scalars['String']>;
 };
 
 export type CreateSceneResult = {
@@ -1356,6 +1357,7 @@ export type Scene = {
   CountMeta?: Maybe<Scalars['Int']>;
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
+  EdanUUID?: Maybe<Scalars['String']>;
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1683,6 +1685,7 @@ export type SceneDetailFields = {
   CountMeta?: Maybe<Scalars['Int']>;
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
+  EdanUUID?: Maybe<Scalars['String']>;
   idScene?: Maybe<Scalars['Int']>;
 };
 
@@ -3286,7 +3289,7 @@ export type GetSceneQuery = (
     { __typename?: 'GetSceneResult' }
     & { Scene?: Maybe<(
       { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour'>
+      & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'EdanUUID'>
       & { ModelSceneXref?: Maybe<Array<Maybe<(
         { __typename?: 'ModelSceneXref' }
         & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
@@ -3393,7 +3396,7 @@ export type GetDetailsTabDataForObjectQuery = (
       )>> }
     )>, Scene?: Maybe<(
       { __typename?: 'SceneDetailFields' }
-      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented' | 'idScene'>
+      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented' | 'EdanUUID' | 'idScene'>
     )>, IntermediaryFile?: Maybe<(
       { __typename?: 'IntermediaryFileDetailFields' }
       & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>
@@ -5682,6 +5685,7 @@ export const GetSceneDocument = gql`
       CountMeta
       CountSetup
       CountTour
+      EdanUUID
       ModelSceneXref {
         idModelSceneXref
         idModel
@@ -5977,6 +5981,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       Annotation
       HasBeenQCd
       IsOriented
+      EdanUUID
       idScene
     }
     IntermediaryFile {

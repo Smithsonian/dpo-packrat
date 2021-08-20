@@ -298,7 +298,7 @@ function DetailsView(): React.ReactElement {
             // requires the fields to be populated.
             if (objectType === eSystemObjectType.eModel) {
                 const ModelDetails = getDetail(objectType) as ModelDetailsType;
-                const { DateCaptured, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
+                const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
 
                 updatedData.Model = {
                     Name: updatedData?.Name,
@@ -307,7 +307,7 @@ function DetailsView(): React.ReactElement {
                     Purpose: idVPurpose,
                     Units: idVUnits,
                     ModelFileType: idVFileType,
-                    DateCaptured
+                    DateCaptured: DateCreated
                 };
             }
 

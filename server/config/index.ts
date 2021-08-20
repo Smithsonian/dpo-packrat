@@ -62,8 +62,12 @@ export type ConfigType = {
         type: COLLECTION_TYPE;
         edan: {
             server: string;
+            api3d: string;
             appId: string;
             authKey: string;
+            upsertContentRoot: string;
+            stagingRoot: string;
+            resourcesHotFolder: string;
         }
     },
     event: {
@@ -119,8 +123,12 @@ export const Config: ConfigType = {
         type: COLLECTION_TYPE.EDAN,
         edan: {
             server: process.env.PACKRAT_EDAN_SERVER ? process.env.PACKRAT_EDAN_SERVER : /* istanbul ignore next */ 'https://edan.si.edu/',
+            api3d: process.env.PACKRAT_EDAN_3D_API ? process.env.PACKRAT_EDAN_3D_API : /* istanbul ignore next */ 'https://3d-api.si.edu/',
             appId: process.env.PACKRAT_EDAN_APPID ? process.env.PACKRAT_EDAN_APPID : /* istanbul ignore next */ 'OCIO3D',
-            authKey: process.env.PACKRAT_EDAN_AUTH_KEY ? process.env.PACKRAT_EDAN_AUTH_KEY : /* istanbul ignore next */  ''
+            authKey: process.env.PACKRAT_EDAN_AUTH_KEY ? process.env.PACKRAT_EDAN_AUTH_KEY : /* istanbul ignore next */  '',
+            upsertContentRoot: process.env.PACKRAT_EDAN_UPSERT_RESOURCE_ROOT ? process.env.PACKRAT_EDAN_UPSERT_RESOURCE_ROOT : 'nfs:///ifs/smb/ocio/ocio-3ddigip01/upload/',
+            stagingRoot: process.env.PACKRAT_EDAN_STAGING_ROOT ? process.env.PACKRAT_EDAN_STAGING_ROOT : '/3ddigip01/upload',
+            resourcesHotFolder: process.env.PACKRAT_EDAN_RESOURCES_HOTFOLDER ? process.env.PACKRAT_EDAN_RESOURCES_HOTFOLDER : '/3ddigip01/3d_api_hot_folder/dev/3d_api_hot_folder_downloads',
         }
     },
     event: {

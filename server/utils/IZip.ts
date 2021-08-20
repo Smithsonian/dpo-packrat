@@ -2,6 +2,7 @@ import * as H from './helpers';
 
 export interface IZip {
     load(): Promise<H.IOResults>;
+    /** fileNameAndPath should use posix-compliant path separators, i.e. forward slashes */
     add(fileNameAndPath: string, inputStream: NodeJS.ReadableStream): Promise<H.IOResults>;
     close(): Promise<H.IOResults>;
     getAllEntries(filter: string | null): Promise<string[]>;

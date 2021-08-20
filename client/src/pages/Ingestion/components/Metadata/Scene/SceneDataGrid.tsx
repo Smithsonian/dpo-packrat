@@ -31,6 +31,7 @@ interface SceneData {
     CountMeta: number;
     CountSetup: number;
     CountTour: number;
+    EdanUUID: string | null;
 }
 
 interface SceneDataProps {
@@ -38,12 +39,13 @@ interface SceneDataProps {
     name: string;
     hasBeenQCd: boolean;
     isOriented: boolean;
+    EdanUUID: string;
     setNameField: ({ target }: { target: EventTarget }) => void;
     setCheckboxField: ({ target }: { target: EventTarget }) => void;
 }
 
 function SceneDataGrid(props: SceneDataProps): React.ReactElement {
-    const { sceneData, setCheckboxField, setNameField, name, hasBeenQCd, isOriented } = props;
+    const { sceneData, setCheckboxField, setNameField, name, hasBeenQCd, isOriented, EdanUUID } = props;
     const classes = useStyles();
     if (!sceneData)
         return <Box></Box>;
@@ -61,6 +63,8 @@ function SceneDataGrid(props: SceneDataProps): React.ReactElement {
             <FieldType required label='Is Oriented' direction='row' containerProps={rowFieldProps}>
                 <Checkbox name='isOriented' checked={isOriented} color='primary' onChange={setCheckboxField} />
             </FieldType>
+
+            <ReadOnlyRow label='EDAN UUID' value={EdanUUID} />
             <ReadOnlyRow label='Scene Count' value={CountScene} padding={15} />
             <ReadOnlyRow label='Node Count' value={CountNode} padding={15} />
             <ReadOnlyRow label='Camera Count' value={CountCamera} padding={15} />

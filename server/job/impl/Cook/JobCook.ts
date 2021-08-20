@@ -119,9 +119,9 @@ export abstract class JobCook<T> extends JobPackrat {
             if (error === E_CANCELED)                   // we're done
                 return { success: true, error: '' };
             else if (error === E_TIMEOUT)               // we timed out
-                return { success: false, error: `JobCook.waitForCompletion timed out after ${timeout}ms` };
+                return { success: false, error: `JobCook [${this.name()}] JobCook.waitForCompletion timed out after ${timeout}ms` };
             else
-                return { success: false, error: `JobCook.waitForCompletion failure: ${JSON.stringify(error)}` };
+                return { success: false, error: `JobCook [${this.name()}] JobCook.waitForCompletion failure: ${JSON.stringify(error)}` };
         } finally {
             releaseOuter();
         }
@@ -145,7 +145,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 await H.Helpers.sleep(CookRetryDelay);
             }
         } catch (error) {
-            LOG.error('JobCook.pollingLoop', LOG.LS.eJOB, error);
+            LOG.error(`JobCook [${this.name()}] JobCook.pollingLoop`, LOG.LS.eJOB, error);
             return this._results;
         } finally {
             await this.signalCompletion();
@@ -294,7 +294,7 @@ export abstract class JobCook<T> extends JobPackrat {
             try {
                 // transmit file to Cook work folder via WebDAV
                 const destination: string = `/${this._configuration.jobId}/${fileName}`;
-                LOG.info(`JobCook.fetchFile via WebDAV from ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
+                LOG.info(`JobCook [${this.name()}] JobCook.fetchFile via WebDAV from ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
 
                 const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl, {
                     authType: AuthType.None,
@@ -307,7 +307,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 const RS: Readable = webdavClient.createReadStream(destination, webdavWSOpts);
                 return { readStream: RS, fileName, storageHash: null, success: true, error: '' };
             } catch (error) {
-                LOG.error('JobCook.fetchFile', LOG.LS.eJOB, error);
+                LOG.error('JobCook [${this.name()}] JobCook.fetchFile', LOG.LS.eJOB, error);
                 return { readStream: null, fileName, storageHash: null, success: false, error: JSON.stringify(error) };
             }
         });
@@ -334,14 +334,14 @@ export abstract class JobCook<T> extends JobPackrat {
                     let error: string = '';
                     for (const RSR of RSRs) {
                         if (!RSR.success || !RSR.readStream || !RSR.fileName)
-                            return { success: false, error: `JobCook.stageFiles unable to read asset version ${idAssetVersion}: ${RSR.error}` };
+                            return { success: false, error: `JobCook [${this.name()}] JobCook.stageFiles unable to read asset version ${idAssetVersion}: ${RSR.error}` };
 
                         // handle the fact that our asset may be stuffed into a subfolder (due to it being zipped)
                         const fileName: string = path.basename(RSR.fileName);
 
                         // transmit file to Cook work folder via WebDAV
                         const destination: string = `/${this._configuration.jobId}/${fileName}`;
-                        LOG.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
+                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
 
                         const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl, {
                             authType: AuthType.None,
@@ -362,12 +362,12 @@ export abstract class JobCook<T> extends JobPackrat {
                         }
 
                         if (!res.success) {
-                            const error = `JobCook.stageFiles unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
+                            const error = `JobCook [${this.name()}] JobCook.stageFiles unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
                             LOG.error(error, LOG.LS.eJOB);
                             return { success: false, error };
                         }
 
-                        LOG.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}: completed`, LOG.LS.eJOB);
+                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}: completed`, LOG.LS.eJOB);
 
                         // use WebDAV client's stat to detect when file is fully staged and available on the server
                         // poll for filesize of remote file.  Continue polling:
@@ -381,16 +381,16 @@ export abstract class JobCook<T> extends JobPackrat {
                                 const stat: any = await webdavClient.stat(destination);
                                 const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
                                 const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
-                                LOG.info(`JobCook.stageFiles staging polling ${pollingLocation}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
+                                LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging polling ${pollingLocation}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
                                 if (size >= res.size) {
                                     stagingSuccess = (baseName === fileName);
                                     break;
                                 }
                             } catch (error) {
                                 if (error?.status === 404)
-                                    LOG.info(`JobCook.stageFiles stat ${pollingLocation} received 404 Not Found`, LOG.LS.eJOB);
+                                    LOG.info(`JobCook [${this.name()}] JobCook.stageFiles stat ${pollingLocation} received 404 Not Found`, LOG.LS.eJOB);
                                 else
-                                    LOG.error(`JobCook.stageFiles stat ${pollingLocation}`, LOG.LS.eJOB, error);
+                                    LOG.error(`JobCook [${this.name()}] JobCook.stageFiles stat ${pollingLocation}`, LOG.LS.eJOB, error);
                             }
                             await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                         }
@@ -404,7 +404,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     }
                     return { success, error };
                 } catch (error) {
-                    LOG.error('JobCook.stageFiles', LOG.LS.eJOB, error);
+                    LOG.error(`JobCook [${this.name()}] JobCook.stageFiles`, LOG.LS.eJOB, error);
                     return { success: false, error: JSON.stringify(error) };
                 }
             });
