@@ -2,11 +2,14 @@ import * as H from './helpers';
 
 export interface IZip {
     load(): Promise<H.IOResults>;
+    /** fileNameAndPath should use posix-compliant path separators, i.e. forward slashes */
+    add(fileNameAndPath: string, inputStream: NodeJS.ReadableStream): Promise<H.IOResults>;
     close(): Promise<H.IOResults>;
     getAllEntries(filter: string | null): Promise<string[]>;
     getJustFiles(filter: string | null): Promise<string[]>;
     getJustDirectories(filter: string | null): Promise<string[]>;
-    streamContent(entry: string): Promise<NodeJS.ReadableStream | null>;
+    /** Pass in null for entry to stream the entire zip */
+    streamContent(entry: string | null, doNotLogErrors?: boolean | undefined): Promise<NodeJS.ReadableStream | null>;
     uncompressedSize(entry: string): Promise<number | null>;
 }
 

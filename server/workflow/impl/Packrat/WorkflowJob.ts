@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types, no-constant-condition */
-
 import * as WF from '../../interface';
 import * as JOB from '../../../job/interface';
+import * as REP from '../../../report/interface';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
@@ -25,12 +25,13 @@ export class WorkflowJob implements WF.IWorkflow {
     private workflowParams: WF.WorkflowParameters;
     private workflowData: DBAPI.WorkflowConstellation;
     private workflowJobParameters: WorkflowJobParameters | null = null;
+    private workflowReport: REP.IReport | null = null;
     private idAssetVersions: number[] | null = null;
     private completionMutexes: MutexInterface[] = [];
     private complete: boolean = false;
     private results: H.IOResults = { success: false, error: 'Workflow Job Not Initialized' };
 
-    static async constructWorkflowJob(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowJob | null> {
+    static async constructWorkflow(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowJob | null> {
         const workflowJob: WorkflowJob = new WorkflowJob(workflowParams, WFC);
         const res: H.IOResults = await workflowJob.extractParameters();
         if (!res.success)
@@ -50,6 +51,16 @@ export class WorkflowJob implements WF.IWorkflow {
         if (!this.workflowJobParameters)
             return { success: false, error: 'Invalid Job Parameters' };
 
+        // fetch workflow report
+        if (!this.workflowReport) {
+            this.workflowReport = await REP.ReportFactory.getReport();
+            if (!this.workflowReport) {
+                const error: string = 'WorkflowJob.start unable to create/fetch workflow report';
+                LOG.error(error, LOG.LS.eWF);
+                // return { success: false, error };
+            }
+        }
+
         // fetch IJobEngine; use IJobEngine to create IJob; use IJob to start job
         // expect job to update WorkflowStep
         const jobEngine: JOB.IJobEngine | null = await JOB.JobFactory.getInstance();
@@ -63,6 +74,7 @@ export class WorkflowJob implements WF.IWorkflow {
             idJob: null,
             eJobType: this.workflowJobParameters.eCookJob,
             idAssetVersions: this.idAssetVersions,
+            report: this.workflowReport,
             parameters: this.workflowJobParameters.cookJobParameters,
             frequency: null               // null means create but don't run
         };
@@ -100,34 +112,27 @@ export class WorkflowJob implements WF.IWorkflow {
 
     async update(workflowStep: DBAPI.WorkflowStep, jobRun: DBAPI.JobRun): Promise<WF.WorkflowUpdateResults> {
         // update workflowStep based on job run data
-        const eWorkflowStepStateOrig: DBAPI.eWorkflowStepState = workflowStep.getState();
-        if (eWorkflowStepStateOrig == DBAPI.eWorkflowStepState.eFinished) {
-            LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} Already Completed`, LOG.LS.eWF);
-            return { success: true, workflowComplete: true, error: '' }; // job is already done
+        const eWorkflowStepStateOrig: DBAPI.eWorkflowJobRunStatus = workflowStep.getState();
+        switch (eWorkflowStepStateOrig) {
+            case DBAPI.eWorkflowJobRunStatus.eDone:
+            case DBAPI.eWorkflowJobRunStatus.eError:
+            case DBAPI.eWorkflowJobRunStatus.eCancelled:
+                LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} Already Completed`, LOG.LS.eWF);
+                return { success: true, workflowComplete: true, error: '' }; // job is already done
         }
 
-        let eWorkflowStepState: DBAPI.eWorkflowStepState = eWorkflowStepStateOrig;
         let dateCompleted: Date | null = null;
         let updateWFSNeeded: boolean = false;
         let workflowComplete: boolean = false;
 
-        switch (jobRun.getStatus()) {
-            case DBAPI.eJobRunStatus.eUnitialized:
-            case DBAPI.eJobRunStatus.eCreated:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eCreated;
-                break;
-            case DBAPI.eJobRunStatus.eRunning:
-            case DBAPI.eJobRunStatus.eWaiting:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eStarted;
-                break;
-            case DBAPI.eJobRunStatus.eDone:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eFinished;
+        const eWorkflowStepState: DBAPI.eWorkflowJobRunStatus = jobRun.getStatus();
+        switch (eWorkflowStepState) {
+            case DBAPI.eWorkflowJobRunStatus.eDone:
                 dateCompleted = new Date();
                 this.results = { success: true, error: '' };
                 break;
-            case DBAPI.eJobRunStatus.eError:
-            case DBAPI.eJobRunStatus.eCancelled:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eFinished;
+            case DBAPI.eWorkflowJobRunStatus.eError:
+            case DBAPI.eWorkflowJobRunStatus.eCancelled:
                 dateCompleted = new Date();
                 this.results = { success: false, error: jobRun.Error || '' };
                 break;
@@ -156,13 +161,28 @@ export class WorkflowJob implements WF.IWorkflow {
             dbUpdateResult = await this.workflowData.workflow.update() && dbUpdateResult;
 
         if (workflowComplete) {
-            LOG.info(`WorkflowJob.update releasing ${this.completionMutexes.length} waiter(s) ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`, LOG.LS.eWF);
+            LOG.info(`WorkflowJob.update releasing ${this.completionMutexes.length} waiter(s) ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eWorkflowJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowJobRunStatus[eWorkflowStepState]}`, LOG.LS.eWF);
             this.signalCompletion();
         } else
-            LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`, LOG.LS.eWF);
+            LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eWorkflowJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowJobRunStatus[eWorkflowStepState]}`, LOG.LS.eWF);
         // LOG.error(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${JSON.stringify(jobRun)} - ${JSON.stringify(workflowStep)}`, new Error(), LOG.LS.eWF);
 
         return (dbUpdateResult) ? { success: true, workflowComplete, error: '' } : { success: false, workflowComplete, error: 'Database Error' };
+    }
+
+    async updateStatus(eStatus: DBAPI.eWorkflowJobRunStatus): Promise<WF.WorkflowUpdateResults> {
+        const workflowComplete: boolean = (eStatus === DBAPI.eWorkflowJobRunStatus.eDone
+            || eStatus === DBAPI.eWorkflowJobRunStatus.eError
+            || eStatus === DBAPI.eWorkflowJobRunStatus.eCancelled);
+
+        const workflowStep: DBAPI.WorkflowStep | null = (!this.workflowData.workflowStep || this.workflowData.workflowStep.length <= 0)
+            ? null : this.workflowData.workflowStep[this.workflowData.workflowStep.length - 1];
+
+        if (!workflowStep)
+            return { success: false, workflowComplete, error: 'Missing WorkflowStep' };
+        workflowStep.setState(eStatus);
+        const success: boolean = await workflowStep.update();
+        return { success, workflowComplete, error: success ? '' : 'Database Error' };
     }
 
     signalCompletion() {
@@ -222,7 +242,7 @@ export class WorkflowJob implements WF.IWorkflow {
 
         this.idAssetVersions = [];
         for (const idSystemObject of this.workflowParams.idSystemObject) {
-            const OID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+            const OID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
             if (!OID) {
                 const error: string = `WorkflowJob.start unable to compute system object type for ${idSystemObject}`;
                 LOG.error(error, LOG.LS.eWF);

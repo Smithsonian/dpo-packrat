@@ -11,6 +11,7 @@ type Query {
     getSubject(input: GetSubjectInput!): GetSubjectResult!
     getItem(input: GetItemInput!): GetItemResult!
     getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput!): GetUnitsFromNameSearchResult!
+    getUnitsFromEdanAbbreviation(input: GetUnitsFromEdanAbbreviationInput!): GetUnitsFromEdanAbbreviationResult!
 }
 
 input GetSubjectsForUnitInput {
@@ -33,6 +34,7 @@ type GetItemsForSubjectResult {
 
 type SubjectUnitIdentifier {
     idSubject: Int!
+    idSystemObject: Int!
     SubjectName: String!
     UnitAbbreviation: String!
     IdentifierPublic: String
@@ -53,6 +55,7 @@ type GetObjectsForItemResult {
 
 input SearchIngestionSubjectsInput {
     query: String!
+    EdanOnly: Boolean
 }
 
 type SearchIngestionSubjectsResult {
@@ -121,4 +124,12 @@ type GetUnitsFromNameSearchResult {
 
 input GetUnitsFromNameSearchInput {
     search: String!
+}
+
+type GetUnitsFromEdanAbbreviationResult {
+    Units: [Unit!]!
+}
+
+input GetUnitsFromEdanAbbreviationInput {
+    abbreviation: String!
 }

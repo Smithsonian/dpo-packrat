@@ -60,6 +60,10 @@ export class BagitReader implements IZip {
             return { success: false, error: 'Invalid BagitReader constructor params' };
     }
 
+    async add(_fileNameAndPath: string, _inputStream: NodeJS.ReadableStream): Promise<H.IOResults> {
+        return { success: false, error: 'Not Implemented' };
+    }
+
     async getAllEntries(filter: string | null): Promise<string[]> {
         if (!this._validated)
             await this.validate();
@@ -163,21 +167,22 @@ export class BagitReader implements IZip {
         return file;
     }
 
-    async streamContent(file: string): Promise<NodeJS.ReadableStream | null> {
+    async streamContent(file: string | null, doNotLogErrors?: boolean | undefined): Promise<NodeJS.ReadableStream | null> {
         if (!this._validated) { /* istanbul ignore if */
             if (!(await this.validate()).success)
                 return null;
         }
 
         try {
-            const fileName: string = this.prefixedFilename(file);
+            const fileName: string | null = file ? this.prefixedFilename(file) : null;
             // LOG.info(`getFileStream(${file}) looking in ${fileName} with prefixDir of ${this._prefixDir}`, LOG.LS.eSYS);
 
             return (this._zip)
-                ? await this._zip.streamContent(fileName)
-                : await fs.createReadStream(fileName);
+                ? this._zip.streamContent(fileName, doNotLogErrors)
+                : fileName ? fs.createReadStream(fileName) : null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.info(`bagitReader.streamContent unable to read ${file}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
+            if (doNotLogErrors !== true)
+                LOG.error(`bagitReader.streamContent unable to read ${file}`, LOG.LS.eSYS, error);
             return null;
         }
     }
@@ -394,8 +399,8 @@ export class BagitReader implements IZip {
         }
 
         // parse into map of file -> hash
-        const directoryMap: Map<string, boolean> = new Map<string, boolean>();
-        const fileMap: Map<string, boolean> = new Map<string, boolean>();
+        const directorySet: Set<string> = new Set<string>();
+        const fileSet: Set<string> = new Set<string>();
 
         const manifestLines: string[] = manifestData.split(/[\r\n]+/);
         for (const line of manifestLines) {
@@ -434,8 +439,8 @@ export class BagitReader implements IZip {
                 // strip of "data/" ... then split results into folder names and file names
                 const { dirname, basename } = this.extractDirectoryAndBasename(fileName, false);
                 if (dirname)
-                    directoryMap.set(dirname, true);
-                fileMap.set(basename, true);
+                    directorySet.add(dirname);
+                fileSet.add(basename);
             }
 
             // File exists and has a valid hash; record it in our local validation this._fileMap, and record data in our persistent dataFileMap
@@ -444,13 +449,11 @@ export class BagitReader implements IZip {
         }
 
         if (this._dataDirectories.length == 0)
-            for (const [directory, flag] of directoryMap) {
-                this._dataDirectories.push(directory); flag;
-            }
+            for (const directory of directorySet)
+                this._dataDirectories.push(directory);
         if (this._dataFiles.length == 0)
-            for (const [file, flag] of fileMap) {
-                this._dataFiles.push(file); flag;
-            }
+            for (const file of fileSet)
+                this._dataFiles.push(file);
 
         return { success: true, error: '' };
     }

@@ -48,11 +48,12 @@ function SubjectList(props: SubjectListProps): React.ReactElement {
 
     const header: string[] = ['ARK / ID', 'UNIT', 'NAME'];
 
-    const getSubjectList = ({ id, arkId, unit, name }: StateSubject, index: number) => (
+    const getSubjectList = ({ id, arkId, unit, name, collectionId }: StateSubject, index: number) => (
         <SubjectListItem
             key={index}
             id={id}
             arkId={arkId}
+            collectionId={collectionId}
             unit={unit}
             name={name}
             selected={selected}

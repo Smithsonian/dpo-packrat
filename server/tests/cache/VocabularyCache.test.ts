@@ -139,7 +139,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
                     case eVocabularyID.eModelPurposeMaster: testVocabulary(vocabulary, 'Master'); break;
                     case eVocabularyID.eModelPurposeWebDelivery: testVocabulary(vocabulary, 'Web Delivery'); break;
-                    case eVocabularyID.eModelPurposePrintDelivery: testVocabulary(vocabulary, 'Print Delivery'); break;
+                    case eVocabularyID.eModelPurposeDownload: testVocabulary(vocabulary, 'Download'); break;
                     case eVocabularyID.eModelPurposeIntermediateProcessingStep: testVocabulary(vocabulary, 'Intermediate Processing Step'); break;
 
                     case eVocabularyID.eModelFileTypeobj: testVocabulary(vocabulary, 'obj - Alias Wavefront Object'); break;
@@ -175,6 +175,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eModelMaterialChannelMaterialTypeUnknown: testVocabulary(vocabulary, 'Unknown'); break;
 
                     case eVocabularyID.eMetadataMetadataSourceBulkIngestion:    testVocabulary(vocabulary, 'Bulk Ingestion'); break;
+                    case eVocabularyID.eMetadataMetadataSourceImage:            testVocabulary(vocabulary, 'Image'); break;
 
                     case eVocabularyID.eJobJobTypeCookBake:                     testVocabulary(vocabulary, 'Cook: bake'); break;
                     case eVocabularyID.eJobJobTypeCookDecimateUnwrap:           testVocabulary(vocabulary, 'Cook: decimate-unwrap'); break;
@@ -191,10 +192,13 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eJobJobTypeCookUnwrap:                   testVocabulary(vocabulary, 'Cook: unwrap'); break;
 
                     case eVocabularyID.eWorkflowTypeCookJob:                    testVocabulary(vocabulary, 'Cook Job'); break;
+                    case eVocabularyID.eWorkflowTypeIngestion:                  testVocabulary(vocabulary, 'Ingestion'); break;
+                    case eVocabularyID.eWorkflowTypeUpload:                     testVocabulary(vocabulary, 'Upload'); break;
 
                     case eVocabularyID.eWorkflowStepTypeStart:                  testVocabulary(vocabulary, 'Start'); break;
 
                     case eVocabularyID.eWorkflowEventIngestionUploadAssetVersion: testVocabulary(vocabulary, 'Ingestion: Upload Asset Version'); break;
+                    case eVocabularyID.eWorkflowEventIngestionIngestObject:     testVocabulary(vocabulary, 'Ingestion: Ingest Object'); break;
 
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
@@ -386,7 +390,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Astronomical Unit');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Master');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Web Delivery');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Print Delivery');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Download');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Intermediate Processing Step');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'obj - Alias Wavefront Object');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'ply - Stanford Polygon File Format');
@@ -424,6 +428,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierTypeActor, 'ORCID');
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierTypeActor, 'ISNI');
             await testVocabularyBySetAndTerm(eVocabularySetID.eMetadataMetadataSource, 'Bulk Ingestion');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eMetadataMetadataSource, 'Image');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Bulk Ingestion');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Photogrammetry');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Diconde');
@@ -456,6 +461,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowType, 'Cook Job');
             await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowStepWorkflowStepType, 'Start');
             await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowEvent, 'Ingestion: Upload Asset Version');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowEvent, 'Ingestion: Ingest Object');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
             await testVocabularyBySetAndTerm(eVocabularySetID.eNone, 'Other', false);
         });
@@ -469,6 +475,8 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testMapPhotogrammetryVariantType('cam_dng', eVocabularyID.eCaptureDataFileVariantTypeRaw);
             await testMapPhotogrammetryVariantType('tif', eVocabularyID.eCaptureDataFileVariantTypeRaw);
             await testMapPhotogrammetryVariantType('tiff', eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('bmp', eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('png', eVocabularyID.eCaptureDataFileVariantTypeRaw);
             await testMapPhotogrammetryVariantType('processed', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
             await testMapPhotogrammetryVariantType('col_cor', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
             await testMapPhotogrammetryVariantType('zeroed', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
@@ -587,6 +595,8 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eAssetAssetTypeBulkIngestion, eVocabularySetID.eAssetAssetType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eJobJobTypeCookBake, eVocabularySetID.eJobJobType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eWorkflowType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeIngestion, eVocabularySetID.eWorkflowType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeUpload, eVocabularySetID.eWorkflowType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowStepTypeStart, eVocabularySetID.eWorkflowStepWorkflowStepType)).toBeTruthy();
 
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eNone, eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();

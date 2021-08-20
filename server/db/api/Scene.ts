@@ -3,29 +3,46 @@ import { Scene as SceneBase, SystemObject as SystemObjectBase, Prisma } from '@p
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import { eEventKey } from '../../event/interface/EventEnums';
 
 export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemObjectBased {
     idScene!: number;
-    HasBeenQCd!: boolean;
+    Name!: string;
     idAssetThumbnail!: number | null;
     IsOriented!: boolean;
-    Name!: string;
+    HasBeenQCd!: boolean;
+    CountScene!: number | null;
+    CountNode!: number | null;
+    CountCamera!: number | null;
+    CountLight!: number | null;
+    CountModel!: number | null;
+    CountMeta!: number | null;
+    CountSetup!: number | null;
+    CountTour!: number | null;
+    EdanUUID!: string | null;
 
-    private idAssetThumbnailOrig!: number | null;
+    HasBeenQCdOrig!: boolean;
 
     constructor(input: SceneBase) {
         super(input);
     }
 
     protected updateCachedValues(): void {
-        this.idAssetThumbnailOrig = this.idAssetThumbnail;
+        this.HasBeenQCdOrig = this.HasBeenQCd;
     }
+
+    public fetchTableName(): string { return 'Scene'; }
+    public fetchID(): number { return this.idScene; }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
+            const { Name, idAssetThumbnail, IsOriented, HasBeenQCd, CountScene, CountNode, CountCamera,
+                CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID } = this;
             ({ idScene: this.idScene, Name: this.Name, idAssetThumbnail: this.idAssetThumbnail,
-                IsOriented: this.IsOriented, HasBeenQCd: this.HasBeenQCd } =
+                IsOriented: this.IsOriented, HasBeenQCd: this.HasBeenQCd, CountScene: this.CountScene,
+                CountNode: this.CountNode, CountCamera: this.CountCamera, CountLight: this.CountLight,
+                CountModel: this.CountModel, CountMeta: this.CountMeta, CountSetup: this.CountSetup,
+                CountTour: this.CountTour, EdanUUID: this.EdanUUID } =
                 await DBC.DBConnection.prisma.scene.create({
                     data: {
                         Name,
@@ -33,8 +50,13 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                         IsOriented,
                         HasBeenQCd,
                         SystemObject:       { create: { Retired: false }, },
+                        CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID
                     },
                 }));
+
+            // Audit if someone marks this scene as QC'd
+            if (HasBeenQCd)
+                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Scene.create', LOG.LS.eDB, error);
@@ -44,16 +66,22 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd, idAssetThumbnailOrig } = this;
+            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd,
+                CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID, HasBeenQCdOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.scene.update({
                 where: { idScene, },
                 data: {
                     Name,
-                    Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
+                    Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
                     IsOriented,
                     HasBeenQCd,
+                    CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID
                 },
             }) ? true : /* istanbul ignore next */ false;
+
+            // Audit if someone marks this scene as QC'd
+            if (HasBeenQCd && !HasBeenQCdOrig)
+                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Scene.update', LOG.LS.eDB, error);
@@ -126,6 +154,25 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 WHERE SOI.idItem IN (${Prisma.join(idItem)})`, Scene);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Scene.fetchDerivedFromItems', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** fetches scenes which are chilren of the specified idModelParent */
+    static async fetchChildrenScenes(idModelParent: number): Promise<Scene[] | null> {
+        if (!idModelParent)
+            return null;
+        try {
+            return DBC.CopyArray<SceneBase, Scene>(
+                await DBC.DBConnection.prisma.$queryRaw<Scene[]>`
+                SELECT DISTINCT S.*
+                FROM Scene AS S
+                JOIN SystemObject AS SOD ON (S.idScene = SOD.idScene)
+                JOIN SystemObjectXref AS SOX ON (SOD.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOM ON (SOX.idSystemObjectMaster = SOM.idSystemObject)
+                WHERE SOM.idModel = ${idModelParent}`, Scene);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchChildrenScenes', LOG.LS.eDB, error);
             return null;
         }
     }

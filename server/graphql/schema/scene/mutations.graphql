@@ -7,6 +7,15 @@ input CreateSceneInput {
     HasBeenQCd: Boolean!
     IsOriented: Boolean!
     idAssetThumbnail: Int
+    CountScene: Int
+    CountNode: Int
+    CountCamera: Int
+    CountLight: Int
+    CountModel: Int
+    CountMeta: Int
+    CountSetup: Int
+    CountTour: Int
+    EdanUUID: String
 }
 
 type CreateSceneResult {

@@ -40,37 +40,52 @@ import {
 } from '../../../types/graphql';
 import { nonNullValue } from '../../../utils/shared';
 
+type IngestionStartResult = {
+    success: boolean;
+    message: string;
+};
+
 interface UseIngest {
-    ingestionStart: () => Promise<boolean>;
+    ingestionStart: () => Promise<IngestionStartResult>;
     ingestionComplete: () => void;
     ingestionReset: () => void;
 }
 
 function useIngest(): UseIngest {
-    const [removeSelectedUploads, resetUploads] = useUploadStore(state => [state.removeSelectedUploads, state.reset]);
+    const [removeSelectedUploads, resetUploads, getSelectedFiles, completed] = useUploadStore(state => [state.removeSelectedUploads, state.reset, state.getSelectedFiles, state.completed]);
     const [subjects, resetSubjects] = useSubjectStore(state => [state.subjects, state.reset]);
     const [getSelectedProject, resetProjects] = useProjectStore(state => [state.getSelectedProject, state.reset]);
     const [getSelectedItem, resetItems] = useItemStore(state => [state.getSelectedItem, state.reset]);
-    const [metadatas, getSelectedIdentifiers, resetMetadatas] = useMetadataStore(state => [state.metadatas, state.getSelectedIdentifiers, state.reset]);
+    const [metadatas, getSelectedIdentifiers, resetMetadatas, getMetadatas] = useMetadataStore(state => [state.metadatas, state.getSelectedIdentifiers, state.reset, state.getMetadatas]);
     const getAssetType = useVocabularyStore(state => state.getAssetType);
 
     const history = useHistory();
 
-    const ingestionStart = async (): Promise<boolean> => {
+    const ingestionStart = async (): Promise<IngestionStartResult> => {
         try {
-            const ingestSubjects: IngestSubjectInput[] = subjects.map(subject => ({
-                ...subject,
-                id: subject.id || null
+            // This hash will act as an easy check if a selected file contains an idAsset
+            const idToIdAssetMap: Map<string, number> = new Map<string, number>(); // map of file.id (idAssetVersion) -> file.idAsset
+            const selectedFiles = getSelectedFiles(completed, true);
+            selectedFiles.forEach(({ id, idAsset }) => {
+                if (idAsset)
+                    idToIdAssetMap.set(id, idAsset);
+            });
+
+            const ingestSubjects: IngestSubjectInput[] = subjects.map(({ id, arkId, name, unit }) => ({
+                id: id || null,
+                arkId,
+                name,
+                unit
             }));
 
-            const project: StateProject = nonNullValue<StateProject>('project', getSelectedProject());
+            const project: StateProject = getSelectedProject() || { id: 0, name: '', selected: false };
 
             const ingestProject: IngestProjectInput = {
                 id: project.id,
                 name: project.name
             };
 
-            const item: StateItem = nonNullValue<StateItem>('item', getSelectedItem());
+            const item: StateItem = getSelectedItem() || { id: '', entireSubject: false, selected: false, name: '' };
 
             const isDefaultItem = item.id === defaultItem.id;
 
@@ -91,7 +106,9 @@ function useIngest(): UseIngest {
             const ingestScene: IngestSceneInput[] = [];
             const ingestOther: IngestOtherInput[] = [];
 
-            lodash.forEach(metadatas, metadata => {
+            const metadatasList = metadatas.length === 0 ? getMetadatas() : metadatas;
+            lodash.forEach(metadatasList, metadata => {
+                console.log('ingestionStart metadata', metadata);
                 const { file, photogrammetry, model, scene, other } = metadata;
                 const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, other: isOther } = getAssetType(file.type);
 
@@ -114,7 +131,9 @@ function useIngest(): UseIngest {
                         clusterGeometryFieldId,
                         directory,
                         identifiers,
-                        folders
+                        folders,
+                        sourceObjects,
+                        derivedObjects
                     } = photogrammetry;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
@@ -139,8 +158,14 @@ function useIngest(): UseIngest {
                         backgroundRemovalMethod,
                         directory,
                         clusterType,
-                        clusterGeometryFieldId
+                        clusterGeometryFieldId,
+                        sourceObjects,
+                        derivedObjects
                     };
+
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        photogrammetryData.idAsset = idAsset;
 
                     ingestPhotogrammetry.push(photogrammetryData);
                 }
@@ -148,17 +173,16 @@ function useIngest(): UseIngest {
                 if (isModel) {
                     const {
                         identifiers,
-                        sourceObjects,
                         systemCreated,
                         name,
                         creationMethod,
-                        master,
-                        authoritative,
                         modality,
                         units,
                         purpose,
                         modelFileType,
                         directory,
+                        sourceObjects,
+                        derivedObjects
                     } = model;
 
                     let {
@@ -179,8 +203,6 @@ function useIngest(): UseIngest {
                         dateCaptured,
                         identifiers: ingestIdentifiers,
                         creationMethod: nonNullValue<number>('creationMethod', creationMethod),
-                        master,
-                        authoritative,
                         modality: nonNullValue<number>('modality', modality),
                         units: nonNullValue<number>('units', units),
                         purpose: nonNullValue<number>('purpose', purpose),
@@ -188,22 +210,36 @@ function useIngest(): UseIngest {
                         directory,
                         systemCreated,
                         sourceObjects,
+                        derivedObjects
                     };
+
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        modelData.idAsset = idAsset;
 
                     ingestModel.push(modelData);
                 }
 
                 if (isScene) {
-                    const { identifiers, systemCreated, referenceModels } = scene;
-
+                    const { identifiers, systemCreated, hasBeenQCd, isOriented, name, directory, sourceObjects,
+                        derivedObjects } = scene;
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const sceneData: IngestSceneInput = {
                         idAssetVersion: parseFileId(file.id),
                         identifiers: ingestIdentifiers,
                         systemCreated,
-                        referenceModels
+                        name,
+                        hasBeenQCd,
+                        isOriented,
+                        directory,
+                        sourceObjects,
+                        derivedObjects
                     };
+
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset)
+                        sceneData.idAsset = idAsset;
 
                     ingestScene.push(sceneData);
                 }
@@ -212,13 +248,17 @@ function useIngest(): UseIngest {
                     const { identifiers, systemCreated } = other;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-
                     const otherData: IngestOtherInput = {
                         idAssetVersion: parseFileId(file.id),
                         identifiers: ingestIdentifiers,
                         systemCreated
                     };
 
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset) {
+                        otherData.idAsset = idAsset;
+                        otherData.systemCreated = false;
+                    }
                     ingestOther.push(otherData);
                 }
             });
@@ -232,6 +272,7 @@ function useIngest(): UseIngest {
                 scene: ingestScene,
                 other: ingestOther
             };
+            console.log('** IngestDataInput', input);
 
             const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
                 mutation: IngestDataDocument,
@@ -240,18 +281,18 @@ function useIngest(): UseIngest {
             });
 
             const { data } = ingestDataMutation;
-
             if (data) {
                 const { ingestData } = data;
-                const { success } = ingestData;
+                const { success, message } = ingestData;
 
-                return success;
+                return { success, message: message || '' };
             }
+
         } catch (error) {
             toast.error(error);
         }
 
-        return false;
+        return { success: false, message: 'unable to start ingestion process' };
     };
 
     const resetIngestionState = () => {
@@ -279,10 +320,11 @@ function useIngest(): UseIngest {
 
         if (selectedIdentifiers) {
             lodash.forEach(selectedIdentifiers, (data: StateIdentifier) => {
-                const { identifier, identifierType } = data;
+                const { identifier, identifierType, idIdentifier } = data;
 
                 const identifierData: IngestIdentifierInput = {
                     identifier,
+                    idIdentifier,
                     identifierType: nonNullValue<number>('identifierType', identifierType)
                 };
                 ingestIdentifiers.push(identifierData);

@@ -360,6 +360,20 @@ export class Helpers {
         }
     }
 
+    static async readFileFromStreamThrowErrors(stream: NodeJS.ReadableStream): Promise<Buffer> {
+        try {
+            const bufArray: Buffer[] = [];
+            return new Promise<Buffer>((resolve, reject) => {
+                stream.on('data', (chunk: Buffer) => { bufArray.push(chunk); });
+                stream.on('end', () => { resolve(Buffer.concat(bufArray)); }); /* istanbul ignore next */
+                stream.on('error', () => { reject(); });
+            });
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('Helpers.readFileFromStreamThrowErrors', LOG.LS.eSYS, error);
+            throw error;
+        }
+    }
+
     static async computeSizeOfStream(stream: NodeJS.ReadableStream): Promise<number | null> {
         try {
             let size: number = 0;
@@ -371,6 +385,18 @@ export class Helpers {
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.computeSizeOfStream', LOG.LS.eSYS, error);
             return null;
+        }
+    }
+
+    static async writeStreamToFile(readStream: NodeJS.ReadableStream, fileName: string): Promise<IOResults> {
+        try {
+            const writeStream: NodeJS.WritableStream = await fs.createWriteStream(fileName);
+            const retValue: IOResults = await Helpers.writeStreamToStream(readStream, writeStream);
+            writeStream.end();
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('Helpers.writeStreamToFile', LOG.LS.eSYS, error);
+            return { success: false, error: `Helpers.writeStreamToFile: ${JSON.stringify(error)}` };
         }
     }
 
@@ -452,8 +478,27 @@ export class Helpers {
         return value ? true : false;
     }
 
+    static safeString(value: any): string | null {
+        if (value == null)
+            return null;
+        if (typeof(value) === 'string')
+            return value;
+        return null;
+    }
+
+    static safeDate(value: any): Date | null {
+        if (value == null)
+            return null;
+        if (!isNaN(value) && value instanceof Date)
+            return value;
+        if (typeof(value) !== 'string')
+            return null;
+        const timestamp: number = Date.parse(value);
+        return isNaN(timestamp) ? null : new Date(timestamp);
+    }
+
     /** Stringifies Maps and BigInts */
-    static stringifyMapsAndBigints(key: any, value: any): any {
+    static saferStringify(key: any, value: any): any {
         key;
         if (typeof value === 'bigint')
             return value.toString();
@@ -469,6 +514,27 @@ export class Helpers {
             if (key.endsWith('Orig'))
                 return undefined;
         }
-        return Helpers.stringifyMapsAndBigints(key, value);
+        return Helpers.saferStringify(key, value);
+    }
+
+    /* c.f. https://coderwall.com/p/ostduq/escape-html-with-javascript */
+    static escapeHTMLEntity(input: string): string {
+        return input.replace(/[&<>"'\/]/g, function (s) {
+            const entityMap = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                '\'': '&#39;',
+                '/': '&#x2F;'
+            };
+            return entityMap[s];
+        });
+    }
+
+    static computeHref(path: string, anchor: string): string {
+        if (!path)
+            return anchor;
+        return `<a href='${path}'>${Helpers.escapeHTMLEntity(anchor)}</a>`;
     }
 }

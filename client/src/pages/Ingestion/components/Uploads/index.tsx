@@ -12,12 +12,13 @@ import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { useMetadataStore, useUploadStore } from '../../../../store';
+import { useMetadataStore, useUploadStore, useVocabularyStore } from '../../../../store';
 import { Colors } from '../../../../theme';
 import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
 import UploadCompleteList from './UploadCompleteList';
-import UploadFilesPicker from './UploadFilesPicker';
-import UploadList from './UploadList';
+import UploadFilesPicker from './UploadList';
+import useIngest from '../../hooks/useIngest';
+import { eVocabularySetID } from '../../../../types/server';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -32,7 +33,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         flex: 1,
         flexDirection: 'column',
         padding: 20,
-        paddingBottom: 0,
+        paddingBottom: 0
     },
     fileDrop: {
         display: 'flex',
@@ -58,7 +59,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
         color: Colors.defaults.white
-    },
+    }
 }));
 
 function Uploads(): React.ReactElement {
@@ -66,15 +67,97 @@ function Uploads(): React.ReactElement {
     const history = useHistory();
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
-    const [completed, discardFiles] = useUploadStore(state => [state.completed, state.discardFiles]);
-    const updateMetadataSteps = useMetadataStore(state => state.updateMetadataSteps);
+
+    const [updateVocabularyEntries, getEntries] = useVocabularyStore(state => [state.updateVocabularyEntries, state.getEntries]);
+    const [completed, discardFiles, setUpdateMode, setUpdateWorkflowFileType, getSelectedFiles, selectFile] = useUploadStore(state => [
+        state.completed,
+        state.discardFiles,
+        state.setUpdateMode,
+        state.setUpdateWorkflowFileType,
+        state.getSelectedFiles,
+        state.selectFile
+    ]);
+    const [updateMetadataSteps, updateMetadataFolders, getMetadataInfo, getMetadatas] = useMetadataStore(state => [
+        state.updateMetadataSteps,
+        state.updateMetadataFolders,
+        state.getMetadataInfo,
+        state.getMetadatas
+    ]);
+    const { ingestionStart, ingestionComplete } = useIngest();
+
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Responsible for setting UpdateMode state and file type so that it files to be updated will have the appropriate file type
+    useEffect(() => {
+        setUpdateMode(urlParams.get('mode') === '1');
+        if (urlParams.has('fileType')) setUpdateWorkflowFileType(Number(urlParams.get('fileType')));
+    }, [setUpdateMode, window.location.search]);
+
+    // Responsible for checking if there's an uploaded model with the same name as the one intended to be ingested. If there is, automatically select it and start the ingestion workflow
+    useEffect(() => {
+        automatedIngestionProcess();
+    }, [completed]);
+
+    const automatedIngestionProcess = async () => {
+        if (urlParams.has('name')) {
+            let matchingUploadedFileId = -1;
+            if (completed.length > 0) {
+                const matchingUploadedFileIndex = completed.findIndex(uploadedFile => uploadedFile.name === urlParams.get('name'));
+                if (matchingUploadedFileIndex > -1) {
+                    matchingUploadedFileId = +completed[matchingUploadedFileIndex].id;
+                    await selectFile(matchingUploadedFileId.toString(), true);
+                    await onIngest();
+                }
+            }
+        }
+    };
+
+    const onNext = async (): Promise<void> => {
+        try {
+            await updateVocabularyEntries();
+            await updateMetadataFolders();
+
+            const queuedUploadedFiles = getSelectedFiles(completed, true);
+            const assetTypes = getEntries(eVocabularySetID.eAssetAssetType);
+            const metadataStepRequiredAssetTypesSet = new Set();
+            assetTypes.forEach(assetType => {
+                if (assetType.Term === 'Capture Data Set: Photogrammetry' || assetType.Term === 'Model' || assetType.Term === 'Scene')
+                    metadataStepRequiredAssetTypesSet.add(assetType.idVocabulary);
+            });
+
+            // Change this line to read the file types
+            if (queuedUploadedFiles.every(file => !metadataStepRequiredAssetTypesSet.has(file.type))) {
+                const { success, message } = await ingestionStart();
+                if (success) {
+                    toast.success('Ingestion complete');
+                    ingestionComplete();
+                    setUpdateMode(false);
+                } else {
+                    toast.error(`Ingestion failed, please try again later. Error: ${message}`);
+                }
+                return;
+            } else {
+                const metadatas = getMetadatas();
+                const {
+                    file: { id, type }
+                } = metadatas[0];
+                const { isLast } = getMetadataInfo(id);
+                const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
+                toast.dismiss();
+                await history.push(nextRoute);
+            }
+        } catch (error) {
+            toast.error(error);
+            return;
+        }
+    };
 
     const onIngest = async (): Promise<void> => {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
         try {
             setGettingAssetDetails(true);
-            const { valid, selectedFiles, error } = await updateMetadataSteps();
-
+            const data = await updateMetadataSteps();
+            const { valid, selectedFiles, error } = data;
             setGettingAssetDetails(false);
 
             if (error) return;
@@ -88,8 +171,12 @@ function Uploads(): React.ReactElement {
                 toast.warn('Please select valid combination of files');
                 return;
             }
+
             toast.dismiss();
-            history.push(nextStep);
+            const toBeIngested = getSelectedFiles(completed, true);
+
+            // if every selected file is for update, skip the subject/items step
+            toBeIngested.every(file => file.idAsset) ? onNext() : await history.push(nextStep);
         } catch {
             setGettingAssetDetails(false);
         }
@@ -111,23 +198,28 @@ function Uploads(): React.ReactElement {
         <Box className={classes.container}>
             <Box className={classes.content}>
                 <KeepAlive>
-                    <AliveUploadComponents />
+                    <AliveUploadComponents onDiscard={onDiscard} onIngest={onIngest} discardingFiles={discardingFiles} gettingAssetDetails={gettingAssetDetails} />
                 </KeepAlive>
             </Box>
-            <SidebarBottomNavigator
-                leftLabel='Discard'
-                rightLabel='Ingest'
-                leftLoading={discardingFiles}
-                rightLoading={gettingAssetDetails}
-                onClickLeft={onDiscard}
-                onClickRight={onIngest}
-            />
         </Box>
     );
 }
 
-function AliveUploadComponents(): React.ReactElement {
-    const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [state.onProgressEvent, state.onSetCancelledEvent, state.onFailedEvent, state.onCompleteEvent]);
+type AliveUploadComponentsProps = {
+    discardingFiles: boolean;
+    gettingAssetDetails: boolean;
+    onDiscard: () => Promise<void>;
+    onIngest: () => Promise<void>;
+};
+
+function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactElement {
+    const { discardingFiles, gettingAssetDetails, onDiscard, onIngest } = props;
+    const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [
+        state.onProgressEvent,
+        state.onSetCancelledEvent,
+        state.onFailedEvent,
+        state.onCompleteEvent
+    ]);
 
     useEffect(() => {
         const onProgress = data => {
@@ -166,8 +258,16 @@ function AliveUploadComponents(): React.ReactElement {
     return (
         <React.Fragment>
             <UploadFilesPicker />
+            <SidebarBottomNavigator
+                leftLabel='Discard'
+                rightLabel='Ingest'
+                leftLoading={discardingFiles}
+                rightLoading={gettingAssetDetails}
+                onClickLeft={onDiscard}
+                onClickRight={onIngest}
+                uploadVersion
+            />
             <UploadCompleteList />
-            <UploadList />
         </React.Fragment>
     );
 }

@@ -10,11 +10,12 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
     idAsset!: number;
     UVMapEdgeLength!: number;
 
+    public fetchTableName(): string { return 'ModelMaterialUVMap'; }
+    public fetchID(): number { return this.idModelMaterialUVMap; }
+
     constructor(input: ModelMaterialUVMapBase) {
         super(input);
     }
-
-    protected updateCachedValues(): void { }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -48,6 +49,18 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.ModelMaterialUVMap.update', LOG.LS.eDB, error);
+            return false;
+        }
+    }
+    /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
+    protected async deleteWorker(): Promise<boolean> {
+        try {
+            const { idModelMaterialUVMap } = this;
+            return await DBC.DBConnection.prisma.modelMaterialUVMap.delete({
+                where: { idModelMaterialUVMap, },
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.ModelMaterialUVMap.delete', LOG.LS.eDB, error);
             return false;
         }
     }

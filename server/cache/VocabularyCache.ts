@@ -56,6 +56,7 @@ export enum eVocabularyID {
     eAssetAssetTypeIntermediaryFile,
     eAssetAssetTypeOther,
     eMetadataMetadataSourceBulkIngestion,
+    eMetadataMetadataSourceImage,
     eCaptureDataCaptureMethodPhotogrammetry,
     eCaptureDataCaptureMethodCT,
     eCaptureDataCaptureMethodStructuredLight,
@@ -80,7 +81,7 @@ export enum eVocabularyID {
     eModelUnitsAstronomicalUnit,
     eModelPurposeMaster,
     eModelPurposeWebDelivery,
-    eModelPurposePrintDelivery,
+    eModelPurposeDownload,
     eModelPurposeIntermediateProcessingStep,
     eModelFileTypeobj,
     eModelFileTypeply,
@@ -126,8 +127,11 @@ export enum eVocabularyID {
     eJobJobTypeCookSIVoyagerScene,
     eJobJobTypeCookUnwrap,
     eWorkflowTypeCookJob,
+    eWorkflowTypeIngestion,
+    eWorkflowTypeUpload,
     eWorkflowStepTypeStart,
     eWorkflowEventIngestionUploadAssetVersion,
+    eWorkflowEventIngestionIngestObject,
     eNone = -1
 }
 
@@ -281,6 +285,7 @@ export class VocabularyCache {
                 case eVocabularySetID.eMetadataMetadataSource: {
                     switch (vocabulary.Term) {
                         case 'Bulk Ingestion':      eVocabEnum = eVocabularyID.eMetadataMetadataSourceBulkIngestion; break;
+                        case 'Image':               eVocabEnum = eVocabularyID.eMetadataMetadataSourceImage; break;
                     }
                 } break;
 
@@ -317,7 +322,7 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Master':                          eVocabEnum = eVocabularyID.eModelPurposeMaster; break;
                         case 'Web Delivery':                    eVocabEnum = eVocabularyID.eModelPurposeWebDelivery; break;
-                        case 'Print Delivery':                  eVocabEnum = eVocabularyID.eModelPurposePrintDelivery; break;
+                        case 'Download':                        eVocabEnum = eVocabularyID.eModelPurposeDownload; break;
                         case 'Intermediate Processing Step':    eVocabEnum = eVocabularyID.eModelPurposeIntermediateProcessingStep; break;
                     }
                 } break;
@@ -383,6 +388,8 @@ export class VocabularyCache {
                 case eVocabularySetID.eWorkflowType: {
                     switch (vocabulary.Term) {
                         case 'Cook Job':                        eVocabEnum = eVocabularyID.eWorkflowTypeCookJob; break;
+                        case 'Ingestion':                       eVocabEnum = eVocabularyID.eWorkflowTypeIngestion; break;
+                        case 'Upload':                          eVocabEnum = eVocabularyID.eWorkflowTypeUpload; break;
                     }
                 } break;
 
@@ -395,6 +402,7 @@ export class VocabularyCache {
                 case eVocabularySetID.eWorkflowEvent: {
                     switch (vocabulary.Term) {
                         case 'Ingestion: Upload Asset Version': eVocabEnum = eVocabularyID.eWorkflowEventIngestionUploadAssetVersion; break;
+                        case 'Ingestion: Ingest Object':        eVocabEnum = eVocabularyID.eWorkflowEventIngestionIngestObject; break;
                     }
                 } break;
             }
@@ -610,33 +618,33 @@ export class VocabularyCache {
         return await VocabularyCache.vocabularyByEnum(eVocabID);
     }
 
-    static async mapModelFileByExtension(fileName: string): Promise<Vocabulary | undefined> {
-        let eVocabID: eVocabularyID;
+    static mapModelFileByExtensionID(fileName: string): eVocabularyID | undefined {
         const extension: string = path.extname(fileName).toLowerCase() || fileName.toLowerCase();
-
         switch (extension) {
-            case '.obj':  eVocabID = eVocabularyID.eModelFileTypeobj; break;
-            case '.ply':  eVocabID = eVocabularyID.eModelFileTypeply; break;
-            case '.stl':  eVocabID = eVocabularyID.eModelFileTypestl; break;
-            case '.glb':  eVocabID = eVocabularyID.eModelFileTypeglb; break;
-            case '.gltf': eVocabID = eVocabularyID.eModelFileTypegltf; break;
-            case '.usda': eVocabID = eVocabularyID.eModelFileTypeusd; break;
-            case '.usdc': eVocabID = eVocabularyID.eModelFileTypeusd; break;
-            case '.usdz': eVocabID = eVocabularyID.eModelFileTypeusdz; break;
-            case '.x3d':  eVocabID = eVocabularyID.eModelFileTypex3d; break;
-            case '.wrl':  eVocabID = eVocabularyID.eModelFileTypewrl; break;
-            case '.dae':  eVocabID = eVocabularyID.eModelFileTypedae; break;
-            case '.fbx':  eVocabID = eVocabularyID.eModelFileTypefbx; break;
-            case '.ma':   eVocabID = eVocabularyID.eModelFileTypema; break;
-            case '.3ds':  eVocabID = eVocabularyID.eModelFileType3ds; break;
-            case '.ptx':  eVocabID = eVocabularyID.eModelFileTypeptx; break;
-            case '.pts':  eVocabID = eVocabularyID.eModelFileTypepts; break;
-            default:
-                // LOG.info(`VocabularyCache.mapModelFileByExtension(${fileName}) using unrecognized ext ${extension}`, { eLS: LOG.eLS.eCACHE });
-                return undefined;
+            case '.obj':  return eVocabularyID.eModelFileTypeobj;
+            case '.ply':  return eVocabularyID.eModelFileTypeply;
+            case '.stl':  return eVocabularyID.eModelFileTypestl;
+            case '.glb':  return eVocabularyID.eModelFileTypeglb;
+            case '.gltf': return eVocabularyID.eModelFileTypegltf;
+            case '.usda': return eVocabularyID.eModelFileTypeusd;
+            case '.usdc': return eVocabularyID.eModelFileTypeusd;
+            case '.usdz': return eVocabularyID.eModelFileTypeusdz;
+            case '.x3d':  return eVocabularyID.eModelFileTypex3d;
+            case '.wrl':  return eVocabularyID.eModelFileTypewrl;
+            case '.dae':  return eVocabularyID.eModelFileTypedae;
+            case '.fbx':  return eVocabularyID.eModelFileTypefbx;
+            case '.ma':   return eVocabularyID.eModelFileTypema;
+            case '.3ds':  return eVocabularyID.eModelFileType3ds;
+            case '.ptx':  return eVocabularyID.eModelFileTypeptx;
+            case '.pts':  return eVocabularyID.eModelFileTypepts;
+            default: return undefined;
         }
+    }
+
+    static async mapModelFileByExtension(fileName: string): Promise<Vocabulary | undefined> {
+        const eVocabID: eVocabularyID | undefined = VocabularyCache.mapModelFileByExtensionID(fileName);
         // LOG.info(`VocabularyCache.mapModelFileByExtension(${fileName}) = ${eVocabularyID[eVocabID]} using ext ${extension}`, { eLS: LOG.eLS.eCACHE });
-        return await VocabularyCache.vocabularyByEnum(eVocabID);
+        return eVocabID ?  await VocabularyCache.vocabularyByEnum(eVocabID) : undefined;
     }
 
     static async mapModelChannelMaterialType(materialType: string): Promise<Vocabulary | undefined> {

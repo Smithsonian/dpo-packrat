@@ -13,9 +13,11 @@ import { createItemAndIDsForBagitTesting } from '../../db/api/Item.util';
 
 const mockPathBagit1: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestValidMultiHash.zip');
 const mockPathBagit2: string = path.join(__dirname, '../../mock/utils/zip/PackratTest.zip');
-const mockPathBagitInvalid1: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitInvalidModel.zip');
-const mockPathBagitInvalid2: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitInvalidPhoto.zip');
-const mockPathBagitInvalid3: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitNoMetadata.zip');
+const mockPathBagitScene: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBulkIngest.Scene.zip');
+const mockPathBagitInvalidModel: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitInvalidModel.zip');
+const mockPathBagitInvalidPhoto: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitInvalidPhoto.zip');
+const mockPathBagitInvalidScene: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitInvalidScene.zip');
+const mockPathBagitInvalidNoMeta: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestBagitNoMetadata.zip');
 
 type BulkIngestReaderTestCase = {
     assets: DBAPI.Asset[],
@@ -92,6 +94,8 @@ describe('BulkIngestReader Methods', () => {
         await testLoad(mockPathBagit1, null, false, true, OHTS.subject1);
         await testLoad(mockPathBagit2, null, true, true);
         await testLoad(mockPathBagit2, null, false, true, OHTS.subject2);
+        await testLoad(mockPathBagitScene, null, true, true);
+        await testLoad(mockPathBagitScene, null, false, true, OHTS.subject3);
     });
 
     test('BulkIngestReader.loadFromAssetVersion', async() => {
@@ -108,6 +112,13 @@ describe('BulkIngestReader Methods', () => {
             await testLoad(null, tcBagit2.assetVersions[0], true, true);
             await testLoad(null, tcBagit2.assetVersions[0], false, true, OHTS.subject4);
         }
+
+        const tcBagitScene: BulkIngestReaderTestCase = await testCommitNewAsset(null, 0, OHTS.scene1, mockPathBagitScene, vAssetTypeBulk);
+        expect(tcBagitScene.assetVersions.length).toBeGreaterThan(0);
+        if (tcBagitScene.assetVersions.length > 0) {
+            await testLoad(null, tcBagitScene.assetVersions[0], true, true);
+            await testLoad(null, tcBagitScene.assetVersions[0], false, true, OHTS.subject4);
+        }
     });
 
     test('BulkIngestReader Expected Failures', async() => {
@@ -119,9 +130,10 @@ describe('BulkIngestReader Methods', () => {
         expect(tcOther.assetVersions.length).toBeGreaterThan(0);
         expect((await BIR.loadFromAssetVersion(tcOther.assetVersions[0].idAssetVersion, true)).success).toBeFalsy(); // idAssetVersion of 0 doesn't exist
 
-        await testLoad(mockPathBagitInvalid1, null, true, false);
-        await testLoad(mockPathBagitInvalid2, null, true, false);
-        await testLoad(mockPathBagitInvalid3, null, true, false);
+        await testLoad(mockPathBagitInvalidModel, null, true, false);
+        await testLoad(mockPathBagitInvalidPhoto, null, true, false);
+        await testLoad(mockPathBagitInvalidScene, null, true, false);
+        await testLoad(mockPathBagitInvalidNoMeta, null, true, false);
     });
 });
 
@@ -137,7 +149,6 @@ async function testLoad(fileName: string | null, assetVersion: DBAPI.AssetVersio
     } else if (assetVersion)
         ioResults = await BIR.loadFromAssetVersion(assetVersion.idAssetVersion, autoClose);
 
-    LOG.error(ioResults.error, LOG.LS.eTEST);
     if (!ioResults.success && expectSuccess)
         LOG.error(ioResults.error, LOG.LS.eTEST);
     expect(ioResults.success).toEqual(expectSuccess);
@@ -180,7 +191,7 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
         TestCase = { assets: [], assetVersions: [], SOBased };
 
         TestCase.assets.push(new DBAPI.Asset({ idAsset: 0, FileName: fileNameAsset, FilePath: H.Helpers.randomSlug(), idAssetGroup: null, idVAssetType: vocabulary.idVocabulary, idSystemObject: null, StorageKey: '' }));
-        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, Version: 1 }));
+        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, Version: 0 }));
         newAsset = true;
     } else {
         TestCase.SOBased = SOBased;
@@ -218,25 +229,32 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
     }
 
     // Use STORE.AssetStorageAdapter.commitNewAsset();
-    const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
-        storageKey: TestCase.assetVersions[0].StorageKeyStaging,
-        storageHash,
-        FileName: TestCase.assets[0].FileName,
-        FilePath: TestCase.assets[0].FilePath,
-        idAssetGroup: TestCase.assets[0].idAssetGroup,
-        idVAssetType: TestCase.assets[0].idVAssetType,
-        idUserCreator: TestCase.assetVersions[0].idUserCreator,
-        DateCreated: TestCase.assetVersions[0].DateCreated
-    };
 
     let ASRC: STORE.AssetStorageResultCommit;
     if (newAsset) {
         // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset ${TestCase.asset.FileName}`, LOG.LS.eTEST);
+        const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
+            storageKey: TestCase.assetVersions[0].StorageKeyStaging,
+            storageHash,
+            FileName: TestCase.assets[0].FileName,
+            FilePath: TestCase.assets[0].FilePath,
+            idAssetGroup: TestCase.assets[0].idAssetGroup,
+            idVAssetType: TestCase.assets[0].idVAssetType,
+            idUserCreator: TestCase.assetVersions[0].idUserCreator,
+            DateCreated: TestCase.assetVersions[0].DateCreated
+        };
         ASRC = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
     } else {
         // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`, LOG.LS.eTEST);
-        ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: TestCase.assetVersions[0].StorageKeyStaging, storageHash },
-            TestCase.assets[0], TestCase.assetVersions[0].idUserCreator, TestCase.assetVersions[0].DateCreated);
+        const ASCNAVI: STORE.AssetStorageCommitNewAssetVersionInput = {
+            storageKey: TestCase.assetVersions[0].StorageKeyStaging,
+            storageHash,
+            asset: TestCase.assets[0],
+            assetNameOverride: TestCase.assets[0].FileName,
+            idUserCreator: TestCase.assetVersions[0].idUserCreator,
+            DateCreated: TestCase.assetVersions[0].DateCreated
+        };
+        ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAVI);
     }
     expect(ASRC.success).toBeTruthy();
     if (!ASRC.success) {

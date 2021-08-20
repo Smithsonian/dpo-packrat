@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { Redirect, Route, RouteProps } from 'react-router-dom';
-import { ROUTES } from '../../constants';
+import { HOME_ROUTES } from '../../constants';
 import { useUserStore } from '../../store';
 
 interface PublicRouteProps extends RouteProps {
@@ -17,7 +17,7 @@ function PublicRoute({ component: Component, restricted = false, ...rest }: Publ
     const user = useUserStore(state => state.user);
 
     const render = props => (
-        !!user && restricted ? <Redirect to={ROUTES.HOME} /> : <Component {...props} />
+        !!user && restricted ? <Redirect to={HOME_ROUTES.DASHBOARD} /> : <Component {...props} />
     );
 
     return <Route {...rest} render={render} />;

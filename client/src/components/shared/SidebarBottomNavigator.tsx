@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * SidebarBottomNavigator
  *
@@ -12,6 +14,14 @@ import { Colors } from '../../theme';
 import LoadingButton from '../controls/LoadingButton';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
+    uploadContainer: {
+        display: 'flex',
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '10px 0px',
+        background: palette.background.paper
+    },
     container: {
         display: 'flex',
         bottom: 0,
@@ -20,14 +30,14 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         width: '53vw',
         padding: '20px 0px',
         marginLeft: 20,
-        background: palette.background.paper,
+        background: palette.background.paper
     },
     navButton: {
         minHeight: 35,
         minWidth: 100,
         color: Colors.defaults.white,
         [breakpoints.down('lg')]: {
-            height: 30,
+            height: 30
         }
     },
     link: {
@@ -39,37 +49,27 @@ interface SidebarBottomNavigatorProps {
     leftLabel: string;
     leftLoading?: boolean;
     leftRoute?: string;
+    uploadVersion?: boolean;
     onClickLeft?: () => void;
     rightLabel: string;
     rightLoading?: boolean;
     rightRoute?: string;
     onClickRight?: () => void;
+    invalidMetadataStep?: boolean;
 }
 
 function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.ReactElement {
-    const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading } = props;
+    const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading, uploadVersion, invalidMetadataStep } = props;
     const classes = useStyles();
 
     let leftButton = (
-        <LoadingButton
-            className={classes.navButton}
-            disableElevation
-            loaderSize={15}
-            loading={leftLoading || false}
-            onClick={onClickLeft}
-        >
+        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={leftLoading || false} onClick={onClickLeft}>
             {leftLabel}
         </LoadingButton>
     );
 
     let rightButton = (
-        <LoadingButton
-            className={classes.navButton}
-            disableElevation
-            loaderSize={15}
-            loading={rightLoading || false}
-            onClick={onClickRight}
-        >
+        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={rightLoading || false} onClick={onClickRight}>
             {rightLabel}
         </LoadingButton>
     );
@@ -79,22 +79,29 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
             <Link className={classes.link} to={leftRoute}>
                 {leftButton}
             </Link>
-
         );
     }
-
 
     if (rightRoute) {
         rightButton = (
             <Link className={classes.link} to={rightRoute}>
                 {rightButton}
             </Link>
-
         );
     }
 
+    if (invalidMetadataStep) {
+        rightButton = (
+            <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={rightLoading || false} onClick={onClickRight} disabled>
+                {rightLabel}
+            </LoadingButton>
+        );
+    }
+
+    const containerType = uploadVersion ? classes.uploadContainer : classes.container;
+
     return (
-        <Box className={classes.container}>
+        <Box className={containerType}>
             {leftButton}
             {rightButton}
         </Box>

@@ -3,6 +3,7 @@ import { gql } from 'apollo-server-express';
 const getSystemObjectDetails = gql`
     query getSystemObjectDetails($input: GetSystemObjectDetailsInput!) {
         getSystemObjectDetails(input: $input) {
+            idSystemObject
             idObject
             name
             retired
@@ -13,6 +14,7 @@ const getSystemObjectDetails = gql`
             identifiers {
                 identifier
                 identifierType
+                idIdentifier
             }
             unit {
                 idSystemObject
@@ -50,6 +52,19 @@ const getSystemObjectDetails = gql`
                 name
                 identifier
                 objectType
+            }
+            objectVersions {
+                idSystemObjectVersion
+                idSystemObject
+                PublishedState
+                DateCreated
+            }
+            licenseInherited
+            license {
+                idLicense
+                Name
+                Description
+                RestrictLevel
             }
         }
     }

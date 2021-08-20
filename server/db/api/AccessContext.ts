@@ -4,19 +4,20 @@ import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
 export class AccessContext extends DBC.DBObject<AccessContextBase> implements AccessContextBase {
+    idAccessContext!: number;
+    Global!: boolean;
     Authoritative!: boolean;
     CaptureData!: boolean;
-    Global!: boolean;
-    idAccessContext!: number;
-    IntermediaryFile!: boolean;
     Model!: boolean;
     Scene!: boolean;
+    IntermediaryFile!: boolean;
 
     constructor(input: AccessContextBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'AccessContext'; }
+    public fetchID(): number { return this.idAccessContext; }
 
     protected async createWorker(): Promise<boolean> {
         try {

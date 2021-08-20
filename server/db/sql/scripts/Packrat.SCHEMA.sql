@@ -1,3 +1,4 @@
+-- CREATE DATABASE IF NOT EXISTS Packrat DEFAULT CHARACTER SET 'utf8mb4';
 CREATE TABLE IF NOT EXISTS `AccessAction` (
   `idAccessAction` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
@@ -95,6 +96,21 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   KEY `AssetVersion_Ingested_idUserCreator` (`Ingested`,`idUserCreator`),
   KEY `AssetVersion_idUserCreator_Ingested` (`idUserCreator`,`Ingested`),
   KEY `AssetVersion_StorageKeyStaging` (`StorageKeyStaging`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `Audit` (
+  `idAudit` int(11) NOT NULL AUTO_INCREMENT,
+  `idUser` int(11) DEFAULT NULL,
+  `AuditDate` datetime NOT NULL,
+  `AuditType` int(11) NOT NULL,
+  `DBObjectType` int(11) NULL,
+  `idDBObject` int(11) NULL,
+  `idSystemObject` int(11) NULL,
+  `Data` longtext NULL,
+  PRIMARY KEY (`idAudit`),
+  KEY `Audit_idAsset_idUser_AuditDate` (`idUser`,`AuditDate`),
+  KEY `Audit_idAsset_idSystemObject_AuditDate` (`idSystemObject`,`AuditDate`),
+  KEY `Audit_idAsset_DBObjectType_idDBObject_AuditDate` (`DBObjectType`,`idDBObject`,`AuditDate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `CaptureData` (
@@ -212,7 +228,7 @@ CREATE TABLE IF NOT EXISTS `JobRun` (
   `DateEnd` datetime NULL,
   `Configuration` text NULL,
   `Parameters` text NULL,
-  `Output` text NULL,
+  `Output` longtext NULL,
   `Error` text NULL,
   PRIMARY KEY (`idJobRun`),
   KEY `JobRun_idJob` (`idJob`),
@@ -223,6 +239,7 @@ CREATE TABLE IF NOT EXISTS `License` (
   `idLicense` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `Description` varchar(8000) NOT NULL,
+  `RestrictLevel` int(11) NOT NULL,
   PRIMARY KEY (`idLicense`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -241,28 +258,25 @@ CREATE TABLE IF NOT EXISTS `Metadata` (
   `idMetadata` int(11) NOT NULL AUTO_INCREMENT,
   `Name` VARCHAR(100) NOT NULL,
   `ValueShort` varchar(255) DEFAULT NULL,
-  `ValueExtended` TEXT DEFAULT NULL,
-  `idAssetValue` int(11) DEFAULT NULL,
+  `ValueExtended` longtext DEFAULT NULL,
+  `idAssetVersionValue` int(11) DEFAULT NULL,
   `idUser` int(11) DEFAULT NULL,
   `idVMetadataSource` int(11) DEFAULT NULL,
   `idSystemObject` int(11) DEFAULT NULL,
+  `idSystemObjectParent` int(11) DEFAULT NULL,
   PRIMARY KEY (`idMetadata`),
-  KEY `Metadata_idAssetValue` (`idAssetValue`),
-  KEY `Metadata_Name` (`Name`),
-  KEY `Metadata_idSystemObject` (`idSystemObject`)
+  KEY `Metadata_Name` (`Name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `Model` (
   `idModel` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `DateCreated` datetime NOT NULL,
-  `Master` boolean NOT NULL,
-  `Authoritative` boolean NOT NULL,
-  `idVCreationMethod` int(11) NOT NULL,
-  `idVModality` int(11) NOT NULL,
-  `idVUnits` int(11) NOT NULL,
-  `idVPurpose` int(11) NOT NULL,
-  `idVFileType` int(11) NOT NULL,
+  `idVCreationMethod` int(11) NULL,
+  `idVModality` int(11) NULL,
+  `idVUnits` int(11) NULL,
+  `idVPurpose` int(11) NULL,
+  `idVFileType` int(11) NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
   `CountAnimations` int (11) NULL,
   `CountCameras` int (11) NULL,
@@ -274,6 +288,8 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `CountEmbeddedTextures` int (11) NULL,
   `CountLinkedTextures` int (11) NULL,
   `FileEncoding` varchar(40) NULL,
+  `IsDracoCompressed` boolean NULL,
+  `AutomationTag` varchar(256) NULL,
   PRIMARY KEY (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -371,6 +387,17 @@ CREATE TABLE IF NOT EXISTS `ModelSceneXref` (
   `idModelSceneXref` int(11) NOT NULL AUTO_INCREMENT,
   `idModel` int(11) NOT NULL,
   `idScene` int(11) NOT NULL,
+  `Name` varchar(100) DEFAULT NULL,
+  `Usage` varchar(100) DEFAULT NULL,
+  `Quality` varchar(100) DEFAULT NULL,
+  `FileSize` bigint(20) DEFAULT NULL,
+  `UVResolution` int(11) DEFAULT NULL,
+  `BoundingBoxP1X` double DEFAULT NULL,
+  `BoundingBoxP1Y` double DEFAULT NULL,
+  `BoundingBoxP1Z` double DEFAULT NULL,
+  `BoundingBoxP2X` double DEFAULT NULL,
+  `BoundingBoxP2Y` double DEFAULT NULL,
+  `BoundingBoxP2Z` double DEFAULT NULL,
   `TS0` double DEFAULT NULL,
   `TS1` double DEFAULT NULL,
   `TS2` double DEFAULT NULL,
@@ -404,6 +431,15 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `idAssetThumbnail` int(11) DEFAULT NULL,
   `IsOriented` boolean NOT NULL,
   `HasBeenQCd` boolean NOT NULL,
+  `CountScene` int(11) DEFAULT NULL,
+  `CountNode` int(11) DEFAULT NULL,
+  `CountCamera` int(11) DEFAULT NULL,
+  `CountLight` int(11) DEFAULT NULL,
+  `CountModel` int(11) DEFAULT NULL,
+  `CountMeta` int(11) DEFAULT NULL,
+  `CountSetup` int(11) DEFAULT NULL,
+  `CountTour` int(11) DEFAULT NULL,
+  `EdanUUID` varchar(64) NULL,
   PRIMARY KEY (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -464,8 +500,16 @@ CREATE TABLE IF NOT EXISTS `SystemObjectVersion` (
   `idSystemObjectVersion` int(11) NOT NULL AUTO_INCREMENT,
   `idSystemObject` int(11) NOT NULL,
   `PublishedState` int(11) NOT NULL,
+  `DateCreated` datetime NOT NULL,
   PRIMARY KEY (`idSystemObjectVersion`),
   KEY `ObjectVersion_idSystemObject_idObjectVersion` (`idSystemObject`,`idSystemObjectVersion`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `SystemObjectVersionAssetVersionXref` (
+  `idSystemObjectVersionAssetVersionXref` int(11) NOT NULL AUTO_INCREMENT,
+  `idSystemObjectVersion` int(11) NOT NULL,
+  `idAssetVersion` int(11) NOT NULL,
+  PRIMARY KEY (`idSystemObjectVersionAssetVersionXref`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `SystemObjectXref` (
@@ -550,9 +594,23 @@ CREATE TABLE IF NOT EXISTS `Workflow` (
   `DateInitiated` datetime NOT NULL,
   `DateUpdated` datetime NOT NULL,
   `Parameters` text NULL,
+  `idWorkflowSet` int(11) DEFAULT NULL,
   PRIMARY KEY (`idWorkflow`),
   KEY `Workflow_idProject` (`idProject`),
   KEY `Workflow_idUserInitiator` (`idUserInitiator`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `WorkflowReport` (
+  `idWorkflowReport` int(11) NOT NULL AUTO_INCREMENT,
+  `idWorkflow` int(11) NOT NULL,
+  `MimeType` varchar(256) NOT NULL,
+  `Data` longtext NOT NULL,
+  PRIMARY KEY (`idWorkflowReport`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `WorkflowSet` (
+  `idWorkflowSet` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`idWorkflowSet`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `WorkflowStep` (
@@ -657,6 +715,18 @@ ADD CONSTRAINT `fk_assetversion_asset1`
 ADD CONSTRAINT `fk_assetversion_user1`
   FOREIGN KEY (`idUserCreator`)
   REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `Audit` 
+ADD CONSTRAINT `fk_audit_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_audit_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
@@ -801,9 +871,9 @@ ADD CONSTRAINT `fk_licenseassignment_systemobject1`
   ON UPDATE NO ACTION;
 
 ALTER TABLE `Metadata` 
-ADD CONSTRAINT `fk_metadata_asset1`
-  FOREIGN KEY (`idAssetValue`)
-  REFERENCES `Asset` (`idAsset`)
+ADD CONSTRAINT `fk_metadata_assetversion1`
+  FOREIGN KEY (`idAssetVersionValue`)
+  REFERENCES `AssetVersion` (`idAssetVersion`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_metadata_user1`
@@ -818,6 +888,11 @@ ADD CONSTRAINT `fk_metadata_vocabulary1`
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_metadata_systemobject1`
   FOREIGN KEY (`idSystemObject`)
+  REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_metadata_systemobject2`
+  FOREIGN KEY (`idSystemObjectParent`)
   REFERENCES `SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
@@ -1048,6 +1123,18 @@ ADD CONSTRAINT `fk_systemobjectversion_systemobject`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
+ALTER TABLE `SystemObjectVersionAssetVersionXref`
+ADD CONSTRAINT `fk_systemobjectversionassetversionxref_systemobjectversion`
+  FOREIGN KEY (`idSystemObjectVersion`)
+  REFERENCES `SystemObjectVersion` (`idSystemObjectVersion`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_systemobjectversionassetversionxref_assetversion`
+  FOREIGN KEY (`idAssetVersion`)
+  REFERENCES `AssetVersion` (`idAssetVersion`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
 ALTER TABLE `SystemObjectXref` 
 ADD CONSTRAINT `fk_systemobjectxref_systemobject1`
   FOREIGN KEY (`idSystemObjectMaster`)
@@ -1108,8 +1195,20 @@ ADD CONSTRAINT `fk_workflow_vocabulary1`
   FOREIGN KEY (`idVWorkflowType`)
   REFERENCES `Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_workflow_workflowset1`
+  FOREIGN KEY (`idWorkflowSet`)
+  REFERENCES `WorkflowSet` (`idWorkflowSet`)
+  ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
+ALTER TABLE `WorkflowReport` 
+ADD CONSTRAINT `fk_workflowreport_workflow1`
+  FOREIGN KEY (`idWorkflow`)
+  REFERENCES `Workflow` (`idWorkflow`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
 ALTER TABLE `WorkflowStep` 
 ADD CONSTRAINT `fk_workflowstep_workflow1`
   FOREIGN KEY (`idWorkflow`)

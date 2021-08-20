@@ -2,19 +2,23 @@
 import * as JOB from '../../interface';
 import * as DBAPI from '../../../db';
 import * as WF from '../../../workflow/interface';
+import * as REP from '../../../report/interface';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import * as NS from 'node-schedule';
+import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 
 export abstract class JobPackrat implements JOB.IJob {
     protected _jobEngine: JOB.IJobEngine;
     protected _dbJobRun: DBAPI.JobRun;
     protected _nsJob: NS.Job | null = null;
+    protected _report: REP.IReport | null = null;
     protected _results: H.IOResults = { success: false,  error: 'Not Started' };
 
-    constructor(jobEngine: JOB.IJobEngine, dbJobRun: DBAPI.JobRun) {
+    constructor(jobEngine: JOB.IJobEngine, dbJobRun: DBAPI.JobRun, report: REP.IReport | null) {
         this._jobEngine = jobEngine;
         this._dbJobRun = dbJobRun;
+        this._report = report;
     }
 
     // #region IJob interface
@@ -78,79 +82,97 @@ export abstract class JobPackrat implements JOB.IJob {
     }
 
     // #region JobPackrat helper methods
-    async recordCreated(): Promise<void> {
-        const updated: boolean = (this._dbJobRun.getStatus() == DBAPI.eJobRunStatus.eUnitialized);
+    protected async appendToReportAndLog(content: string, error?: boolean | undefined): Promise<H.IOResults> {
+        if (error)
+            LOG.error(content, LOG.LS.eJOB);
+        else
+            LOG.info(content, LOG.LS.eJOB);
+
+        if (!this._report)
+            return { success: false, error: 'No Active WorkflowReport' };
+        return await this._report.append(content);
+    }
+
+    protected async recordCreated(): Promise<void> {
+        const updated: boolean = (this._dbJobRun.getStatus() == DBAPI.eWorkflowJobRunStatus.eUnitialized);
         if (updated) {
-            LOG.info(`JobPackrat [${this.name()}] Created`, LOG.LS.eJOB);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Created`);
             this._dbJobRun.DateStart = new Date();
-            this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
+            this._dbJobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eCreated);
             await this._dbJobRun.update();
             this.updateEngines(true); // don't block
         }
     }
 
-    async recordWaiting(): Promise<void> {
-        const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eWaiting);
+    protected async recordWaiting(): Promise<void> {
+        const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eWorkflowJobRunStatus.eWaiting);
         if (updated) {
-            LOG.info(`JobPackrat [${this.name()}] Waiting`, LOG.LS.eJOB);
-            this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eWaiting);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Waiting`);
+            this._dbJobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eWaiting);
             await this._dbJobRun.update();
             this.updateEngines(true); // don't block
         }
     }
 
-    async recordStart(): Promise<void> {
-        const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eRunning);
+    protected async recordStart(): Promise<void> {
+        const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eWorkflowJobRunStatus.eRunning);
         if (updated) {
-            LOG.info(`JobPackrat [${this.name()}] Starting`, LOG.LS.eJOB);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Starting`);
             this._dbJobRun.DateStart = new Date();
-            this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eRunning);
+            this._dbJobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eRunning);
             await this._dbJobRun.update();
             this.updateEngines(true); // don't block
         }
     }
 
-    async recordSuccess(output: string): Promise<void> {
-        const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eDone);
+    protected async recordSuccess(output: string): Promise<void> {
+        const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eWorkflowJobRunStatus.eDone);
         if (updated) {
-            LOG.info(`JobPackrat [${this.name()}] Success`, LOG.LS.eJOB);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Success`);
             this._results = { success: true, error: '' };   // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = true;
-            this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eDone);
+            this._dbJobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eDone);
             this._dbJobRun.Output = output;
             await this._dbJobRun.update();
+
+            if (this._report) {
+                const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
+                const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Cook Job Output');
+                await this._report.append(`${hrefDownload}<br/>\n`);
+            }
+
             this.updateEngines(true, true); // don't block
         }
     }
 
-    async recordFailure(errorMsg: string): Promise<void> {
-        const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eError);
+    protected async recordFailure(errorMsg: string): Promise<void> {
+        const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eWorkflowJobRunStatus.eError);
         if (updated) {
-            LOG.error(`JobPackrat [${this.name()}] Failure: ${errorMsg}`, LOG.LS.eJOB);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Failure: ${errorMsg}`, true);
             this._results = { success: false, error: errorMsg }; // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = false;
-            this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eError);
+            this._dbJobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eError);
             this._dbJobRun.Error = errorMsg;
             await this._dbJobRun.update();
             this.updateEngines(true, true); // don't block
         }
     }
 
-    async recordCancel(errorMsg: string): Promise<void> {
-        const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eCancelled);
+    protected async recordCancel(errorMsg: string): Promise<void> {
+        const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eWorkflowJobRunStatus.eCancelled);
         if (!updated) {
             if (errorMsg) {
-                LOG.error(`JobPackrat [${this.name()}] Cancel: ${errorMsg}`, LOG.LS.eJOB);
+                this.appendToReportAndLog(`JobPackrat [${this.name()}] Cancel: ${errorMsg}`, true);
                 this._dbJobRun.Error = errorMsg;
             } else
-                LOG.error(`JobPackrat [${this.name()}] Cancel`, LOG.LS.eJOB);
+                this.appendToReportAndLog(`JobPackrat [${this.name()}] Cancel`, true);
 
             this._results = { success: false, error: 'Job Cancelled' + (errorMsg ? ` ${errorMsg}` : '') }; // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = false;
-            this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCancelled);
+            this._dbJobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eCancelled);
             await this._dbJobRun.update();
             this.updateEngines(true, true); // don't block
         }

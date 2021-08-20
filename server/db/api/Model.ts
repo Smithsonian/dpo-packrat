@@ -1,114 +1,18 @@
 /* eslint-disable camelcase */
 import { Model as ModelBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
-import { Asset, AssetVersion, ModelObject, ModelObjectModelMaterialXref, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap, SystemObject, SystemObjectBased, Vocabulary } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
-import * as CACHE from '../../cache';
-
-export class ModelAsset {
-    Asset: Asset;
-    AssetVersion: AssetVersion;
-    AssetName: string;
-    AssetType: string;
-
-    constructor(asset: Asset, assetVersion: AssetVersion, isModel: boolean, channelList: string[] | null) {
-        this.Asset = asset;
-        this.AssetVersion = assetVersion;
-        this.AssetName = asset.FileName;
-        this.AssetType = (isModel) ? 'Model' : 'Texture Map' + (channelList ? ` ${channelList.sort().join(', ')}` : '');
-    }
-
-    static async fetch(assetVersion: AssetVersion): Promise<ModelAsset | null> {
-        const asset: Asset | null = await Asset.fetch(assetVersion.idAsset); /* istanbul ignore next */
-        if (!asset) {
-            LOG.error(`ModelAsset.fetch(${JSON.stringify(assetVersion)}) failed`, LOG.LS.eDB);
-            return null;
-        }
-        const uvMaps: ModelMaterialUVMap[] | null = await ModelMaterialUVMap.fetchFromAsset(assetVersion.idAsset);
-        const isModel: boolean = (uvMaps === null || uvMaps.length === 0); // if we have no maps, then this asset is for the model/geometry
-        const channelList: string[] = []; /* istanbul ignore else */
-        if (uvMaps) {
-            for (const uvMap of uvMaps) {
-                const uvChannels: ModelMaterialChannel[] | null = await ModelMaterialChannel.fetchFromModelMaterialUVMap(uvMap.idModelMaterialUVMap); /* istanbul ignore else */
-                if (uvChannels) {
-                    for (const uvChannel of uvChannels) {
-                        const VMaterialType: Vocabulary | undefined = uvChannel.idVMaterialType
-                            ? await CACHE.VocabularyCache.vocabulary(uvChannel.idVMaterialType) : /* istanbul ignore next */ undefined;  /* istanbul ignore else */
-                        if (VMaterialType)
-                            channelList.push(VMaterialType.Term);
-                        else if (uvChannel.MaterialTypeOther)
-                            channelList.push(uvChannel.MaterialTypeOther);
-                    }
-                }
-            }
-        }
-
-        return new ModelAsset(asset, assetVersion, isModel, channelList.length > 0 ? channelList : null);
-    }
-}
-
-export class ModelConstellation {
-    Model: Model;
-    ModelObjects: ModelObject[] | null;
-    ModelMaterials: ModelMaterial[] | null;
-    ModelMaterialChannels: ModelMaterialChannel[] | null;
-    ModelMaterialUVMaps: ModelMaterialUVMap[] | null;
-    ModelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null;
-    ModelAssets: ModelAsset[] | null;
-
-    constructor(model: Model,
-        modelObjects: ModelObject[] | null, modelMaterials: ModelMaterial[] | null,
-        modelMaterialChannels: ModelMaterialChannel[] | null, modelMaterialUVMaps: ModelMaterialUVMap[] | null,
-        modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null, modelAsset: ModelAsset[] | null) {
-        this.Model = model;
-        this.ModelObjects = modelObjects;
-        this.ModelMaterials = modelMaterials;
-        this.ModelMaterialChannels = modelMaterialChannels;
-        this.ModelMaterialUVMaps = modelMaterialUVMaps;
-        this.ModelObjectModelMaterialXref = modelObjectModelMaterialXref;
-        this.ModelAssets = modelAsset;
-    }
-
-    static async fetch(idModel: number): Promise<ModelConstellation | null> {
-        const model: Model | null = await Model.fetch(idModel);
-        if (!model) {
-            LOG.error(`ModelConstellation.fetch() unable to compute model from ${idModel}`, LOG.LS.eDB);
-            return null;
-        }
-
-        const modelObjects: ModelObject[] | null = await ModelObject.fetchFromModel(idModel);
-        const modelMaterials: ModelMaterial[] | null = await ModelMaterial.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
-        const modelMaterialChannels: ModelMaterialChannel[] | null = await ModelMaterialChannel.fetchFromModelMaterials(modelMaterials || []);
-        const modelMaterialUVMaps: ModelMaterialUVMap[] | null = await ModelMaterialUVMap.fetchFromModel(idModel);
-        const modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null = await ModelObjectModelMaterialXref.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
-
-        const modelAssets: ModelAsset[] = [];
-        const SO: SystemObject | null = await model.fetchSystemObject();
-        const assetVersions: AssetVersion[] | null = SO ? await AssetVersion.fetchFromSystemObject(SO.idSystemObject) : /* istanbul ignore next */ null;
-        if (assetVersions) {
-            for (const assetVersion of assetVersions) {
-                const modelAsset: ModelAsset | null = await ModelAsset.fetch(assetVersion); /* istanbul ignore else */
-                if (modelAsset)
-                    modelAssets.push(modelAsset);
-            }
-        }
-
-        return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels,
-            modelMaterialUVMaps, modelObjectModelMaterialXref, modelAssets.length > 0 ? modelAssets : null);
-    }
-}
 
 export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemObjectBased {
     idModel!: number;
     Name!: string;
     DateCreated!: Date;
-    Master!: boolean;
-    Authoritative!: boolean;
-    idVCreationMethod!: number;
-    idVModality!: number;
-    idVPurpose!: number;
-    idVUnits!: number;
-    idVFileType!: number;
+    idVCreationMethod!: number | null;
+    idVModality!: number | null;
+    idVPurpose!: number | null;
+    idVUnits!: number | null;
+    idVFileType!: number | null;
     idAssetThumbnail!: number | null;
     CountAnimations!: number | null;
     CountCameras!: number | null;
@@ -120,42 +24,40 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     CountEmbeddedTextures!: number | null;
     CountLinkedTextures!: number | null;
     FileEncoding!: string | null;
-
-    private idAssetThumbnailOrig!: number | null;
+    IsDracoCompressed!: boolean | null;
+    AutomationTag!: string | null;
 
     constructor(input: ModelBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idAssetThumbnailOrig = this.idAssetThumbnail;
-    }
+    public fetchTableName(): string { return 'Model'; }
+    public fetchID(): number { return this.idModel; }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, DateCreated, Master, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
+            const { Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose,
                 idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
-                CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding } = this;
+                CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag } = this;
             ({ idModel: this.idModel, Name: this.Name, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
-                Master: this.Master, Authoritative: this.Authoritative, idVModality: this.idVModality, idVUnits: this.idVUnits,
+                idVModality: this.idVModality, idVUnits: this.idVUnits,
                 idVPurpose: this.idVPurpose, idVFileType: this.idVFileType, idAssetThumbnail: this.idAssetThumbnail,
                 CountAnimations: this.CountAnimations, CountCameras: this.CountCameras, CountFaces: this.CountFaces,
                 CountLights: this.CountLights, CountMaterials: this.CountMaterials, CountMeshes: this.CountMeshes,
                 CountVertices: this.CountVertices, CountEmbeddedTextures: this.CountEmbeddedTextures, CountLinkedTextures: this.CountLinkedTextures,
-                FileEncoding: this.FileEncoding } =
+                FileEncoding: this.FileEncoding, IsDracoCompressed: this.IsDracoCompressed, AutomationTag: this.AutomationTag } =
                 await DBC.DBConnection.prisma.model.create({
                     data: {
                         Name,
                         DateCreated,
-                        Master,
-                        Authoritative,
-                        Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
-                        Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality }, },
-                        Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
-                        Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
-                        Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
+                        Vocabulary_Model_idVCreationMethodToVocabulary: idVCreationMethod ? { connect: { idVocabulary: idVCreationMethod }, } : undefined,
+                        Vocabulary_Model_idVModalityToVocabulary:       idVModality ? { connect: { idVocabulary: idVModality }, } : undefined,
+                        Vocabulary_Model_idVPurposeToVocabulary:        idVPurpose ? { connect: { idVocabulary: idVPurpose }, } : undefined,
+                        Vocabulary_Model_idVUnitsToVocabulary:          idVUnits ? { connect: { idVocabulary: idVUnits }, } : undefined,
+                        Vocabulary_Model_idVFileTypeToVocabulary:       idVFileType ? { connect: { idVocabulary: idVFileType }, } : undefined,
                         Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                        CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding,
+                        CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures,
+                        CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag,
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
@@ -168,23 +70,22 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idModel, Name, DateCreated, Master, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
+            const { idModel, Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose,
                 idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes,
-                CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, idAssetThumbnailOrig } = this;
+                CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
                 where: { idModel, },
                 data: {
                     Name,
                     DateCreated,
-                    Master,
-                    Authoritative,
-                    Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
-                    Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality }, },
-                    Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
-                    Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
-                    Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
-                    CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding,
-                    Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
+                    Vocabulary_Model_idVCreationMethodToVocabulary: idVCreationMethod ? { connect: { idVocabulary: idVCreationMethod }, } : { disconnect: true, },
+                    Vocabulary_Model_idVModalityToVocabulary:       idVModality ? { connect: { idVocabulary: idVModality }, } : { disconnect: true, },
+                    Vocabulary_Model_idVPurposeToVocabulary:        idVPurpose ? { connect: { idVocabulary: idVPurpose }, } : { disconnect: true, },
+                    Vocabulary_Model_idVUnitsToVocabulary:          idVUnits ? { connect: { idVocabulary: idVUnits }, } : { disconnect: true, },
+                    Vocabulary_Model_idVFileTypeToVocabulary:       idVFileType ? { connect: { idVocabulary: idVFileType }, } : { disconnect: true, },
+                    Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
+                    CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures,
+                    CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -259,6 +160,59 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 WHERE SOI.idItem IN (${Prisma.join(idItem)})`, Model);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Model.fetchDerivedFromItems', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchByFileNameAndAssetType(FileName: string, idVAssetTypes: number[]): Promise<Model[] | null> {
+        try {
+            return DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.$queryRaw<Model[]>`
+                SELECT DISTINCT M.*
+                FROM Model AS M
+                JOIN SystemObject AS SOM ON (M.idModel = SOM.idModel)
+                JOIN Asset AS ASS ON (SOM.idSystemObject = ASS.idSystemObject)
+                JOIN AssetVersion AS ASV ON (ASS.idAsset = ASV.idAsset)
+                WHERE ASV.FileName = ${FileName}
+                  AND ASS.idVAssetType IN (${Prisma.join(idVAssetTypes)})`, Model);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchByFileNameAndAssetType', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchByFileNameSizeAndAssetType(FileName: string, StorageSize: BigInt, idVAssetTypes: number[]): Promise<Model[] | null> {
+        try {
+            return DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.$queryRaw<Model[]>`
+                SELECT DISTINCT M.*
+                FROM Model AS M
+                JOIN SystemObject AS SOM ON (M.idModel = SOM.idModel)
+                JOIN Asset AS ASS ON (SOM.idSystemObject = ASS.idSystemObject)
+                JOIN AssetVersion AS ASV ON (ASS.idAsset = ASV.idAsset)
+                WHERE ASV.FileName = ${FileName}
+                  AND ASV.StorageSize = ${StorageSize}
+                  AND ASS.idVAssetType IN (${Prisma.join(idVAssetTypes)})`, Model);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchByFileNameSizeAndAssetType', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** fetches models which are chilren of either the specified idModelParent or idSceneParent, and have matching AutomationTag values */
+    static async fetchChildrenModels(idModelParent: number | null, idSceneParent: number | null, AutomationTag: string): Promise<Model[] | null> {
+        try {
+            return DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.$queryRaw<Model[]>`
+                SELECT DISTINCT M.*
+                FROM Model AS M
+                JOIN SystemObject AS SOD ON (M.idModel = SOD.idModel)
+                JOIN SystemObjectXref AS SOX ON (SOD.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOM ON (SOX.idSystemObjectMaster = SOM.idSystemObject)
+                WHERE (SOM.idModel = ${idModelParent ?? -1} OR SOM.idScene = ${idSceneParent ?? -1})
+                  AND M.AutomationTag = ${AutomationTag}`, Model);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchChildrenModels', LOG.LS.eDB, error);
             return null;
         }
     }

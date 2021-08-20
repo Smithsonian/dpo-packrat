@@ -55,6 +55,7 @@ type MetadataStore = {
     updateMetadataFolders: () => Promise<void>;
     updateCameraSettings: (metadatas: StateMetadata[]) => Promise<StateMetadata[]>;
     reset: () => void;
+    getMetadatas: () => StateMetadata[];
 };
 
 export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
@@ -62,13 +63,15 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => lodash.filter(identifiers, { selected: true }),
     getFieldErrors: (metadata: StateMetadata): FieldErrors => {
         const { getAssetType } = useVocabularyStore.getState();
+        // UPDATE these error fields as we include more validation for ingestion
         const errors: FieldErrors = {
             photogrammetry: {
                 dateCaptured: false,
                 datasetType: false
             },
             model: {
-                dateCaptured: true,
+                name: false,
+                dateCaptured: false,
                 creationMethod: false,
                 modality: false,
                 units: false,
@@ -88,6 +91,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         }
 
         if (assetType.model) {
+            errors.model.name = lodash.isNull(metadata.model.name) || metadata.model.name.length < 1;
             errors.model.dateCaptured = lodash.isNull(metadata.model.dateCaptured) || metadata.model.dateCaptured.toString() === 'Invalid Date';
             errors.model.creationMethod = lodash.isNull(metadata.model.creationMethod);
             errors.model.modality = lodash.isNull(metadata.model.modality);
@@ -306,7 +310,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 addSubjects(uniqueSubjects);
                 addProjects(projects);
                 addItems(uniqueItems);
-
                 set({ metadatas });
 
                 return {
@@ -315,8 +318,9 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     error: false
                 };
             }
-        } catch {
+        } catch (error) {
             toast.error('Failed to ingest selected files, please try again later');
+            console.log(`Failed to ingest selected files, please try again later: ${JSON.stringify(error)}`);
         }
 
         return {
@@ -398,11 +402,9 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         }
                     };
                 }
-
                 return metadata;
             });
         });
-
         set({ metadatas: updatedMetadatas });
     },
     updateCameraSettings: async (metadatas: StateMetadata[]): Promise<StateMetadata[]> => {
@@ -444,6 +446,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     },
     reset: () => {
         set({ metadatas: [] });
+    },
+    getMetadatas: () => {
+        const { metadatas } = get();
+        return metadatas;
     }
 }));
 

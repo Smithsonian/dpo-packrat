@@ -50,8 +50,6 @@
 
     <!-- Model, ModelObject, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap fields -->
     <field name="ModelCreationMethod" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="ModelMaster" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="ModelAuthoritative" type="boolean" indexed="true" stored="true" multiValued="false" />
     <field name="ModelModality" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="ModelUnits" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="ModelPurpose" type="string" indexed="true" stored="true" multiValued="false" />
@@ -66,6 +64,7 @@
     <field name="ModelCountEmbeddedTextures" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="ModelCountLinkedTextures" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="ModelFileEncoding" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelIsDracoCompressed" type="boolean" indexed="true" stored="true" multiValued="false" />
 
     <field name="ModelMaterialName" type="strings" indexed="true" stored="true" />
     <field name="ModelMaterialChannelType" type="strings" indexed="true" stored="true" />
@@ -103,6 +102,14 @@
     <!-- Scene fields -->
     <field name="SceneIsOriented" type="boolean" indexed="true" stored="true" multiValued="false" />
     <field name="SceneHasBeenQCd" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountScene" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountNode" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountCamera" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountLight" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountModel" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountMeta" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountSetup" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountTour" type="pint" indexed="true" stored="true" multiValued="false" />
 
     <!-- Asset fields -->
     <field name="AssetFileName" type="strings" indexed="true" stored="true" />
@@ -147,6 +154,7 @@
     <field name="ChildrenVariantTypes" type="strings" indexed="true" stored="true" />
     <field name="ChildrenModelPurposes" type="strings" indexed="true" stored="true" />
     <field name="ChildrenModelFileTypes" type="strings" indexed="true" stored="true" />
+    <field name="ChildrenDateCreated" type="pdaters" indexed="true" stored="true" />
 
     <!-- "Plumbling" fields: needed by the system -->
     <!-- docValues are enabled by default for long type so we don't need to index the version field  -->
@@ -215,6 +223,9 @@
     <!-- KD-tree versions of date fields -->
     <fieldType name="pdate" class="solr.DatePointField" docValues="true"/>
     <fieldType name="pdates" class="solr.DatePointField" docValues="true" multiValued="true"/>
+
+    <fieldType name="pdater" class="solr.DateRangeField" indexed="true"/>
+    <fieldType name="pdaters" class="solr.DateRangeField" indexed="true" multiValued="true"/>
     
     <!--Binary data type. The data should be sent/retrieved in as Base64 encoded Strings -->
     <fieldType name="binary" class="solr.BinaryField"/>

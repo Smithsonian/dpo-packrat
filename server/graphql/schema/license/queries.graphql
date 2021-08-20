@@ -1,5 +1,6 @@
 type Query {
     getLicense(input: GetLicenseInput!): GetLicenseResult!
+    getLicenseList(input: GetLicenseListInput!): GetLicenseListResult!
 }
 
 input GetLicenseInput {
@@ -8,4 +9,12 @@ input GetLicenseInput {
 
 type GetLicenseResult {
     License: License
+}
+
+input GetLicenseListInput {
+    search: String
+}
+
+type GetLicenseListResult {
+    Licenses: [License!]!
 }

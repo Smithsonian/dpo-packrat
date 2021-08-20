@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Asset as AssetBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { Asset as AssetBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import { VocabularyCache, eVocabularyID } from '../../cache';
 import * as DBC from '../connection';
@@ -14,16 +14,23 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
     idSystemObject!: number | null;
     StorageKey!: string | null;
 
-    private idAssetGroupOrig!: number | null;
-    private idSystemObjectOrig!: number | null;
-
     constructor(input: AssetBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idAssetGroupOrig = this.idAssetGroup;
-        this.idSystemObjectOrig = this.idSystemObject;
+    public fetchTableName(): string { return 'Asset'; }
+    public fetchID(): number { return this.idAsset; }
+
+    static constructFromPrisma(asset: AssetBase): Asset {
+        return new Asset({
+            idAsset: asset.idAsset,
+            FileName: asset.FileName,
+            FilePath: asset.FilePath,
+            idAssetGroup: asset.idAssetGroup,
+            idVAssetType: asset.idVAssetType,
+            idSystemObject: asset.idSystemObject,
+            StorageKey: asset.StorageKey
+        });
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -51,15 +58,15 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAsset, FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, StorageKey, idAssetGroupOrig, idSystemObjectOrig } = this;
+            const { idAsset, FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, StorageKey, } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.asset.update({
                 where: { idAsset, },
                 data: {
                     FileName,
                     FilePath,
-                    AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : idAssetGroupOrig ? { disconnect: true, } : undefined,
+                    AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : { disconnect: true, },
                     Vocabulary:     { connect: { idVocabulary: idVAssetType }, },
-                    SystemObject_Asset_idSystemObjectToSystemObject: idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
+                    SystemObject_Asset_idSystemObjectToSystemObject: idSystemObject ? { connect: { idSystemObject }, } : { disconnect: true, },
                     StorageKey,
                 },
             }) ? true : /* istanbul ignore next */ false;
@@ -136,6 +143,59 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                 await DBC.DBConnection.prisma.asset.findMany({ where: { SystemObject_Asset_idSystemObjectToSystemObject: { idSystemObject } } }), Asset);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Asset.fetchFromSystemObject', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** Fetches assets that are connected to the specified idSystemObject (via that object's last SystemObjectVersion,
+     * and that SystemObjectVersionAssetVersionXref's records). For those assets, we look for a match on FileName, FilePath */
+    static async fetchMatching(idSystemObject: number, FileName: string, FilePath: string, idVAssetType: number): Promise<Asset | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            const assets: AssetBase[] | null = // DBC.CopyArray<AssetBase, Asset>(
+                await DBC.DBConnection.prisma.$queryRaw<Asset[]>`
+                SELECT DISTINCT A.*
+                FROM SystemObjectVersion AS SOV
+                JOIN SystemObjectVersionAssetVersionXref AS XREF ON (SOV.idSystemObjectVersion = XREF.idSystemObjectVersion)
+                JOIN AssetVersion AS AV ON (XREF.idAssetVersion = AV.idAssetVersion)
+                JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                WHERE SOV.idSystemObject = ${idSystemObject}
+                  AND SOV.idSystemObjectVersion = (SELECT MAX(idSystemObjectVersion)
+                                                   FROM SystemObjectVersion
+                                                   WHERE idSystemObject = ${idSystemObject})
+                  AND A.FileName = ${FileName} 
+                  AND A.FilePath = ${FilePath}
+                  AND A.idVAssetType = ${idVAssetType}
+                ORDER BY SOV.idSystemObjectVersion DESC
+                LIMIT 1;`; //, Asset);
+            /* istanbul ignore if */
+            if (!assets || assets.length == 0)
+                return null;
+            return Asset.constructFromPrisma(assets[0]);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Asset.fetchMatching', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** Returns a map of idAsset -> Version Count for the specified idAssets */
+    static async computeVersionCountMap(idAssets: number[]): Promise<Map<number, number> | null> {
+        const retValue: Map<number, number> = new Map<number, number>();
+        try {
+            const versionCounts: { idAsset: number, RowCount: number }[] =
+                await DBC.DBConnection.prisma.$queryRaw<{ idAsset: number, RowCount: number }[]>`
+                SELECT A.idAsset, COUNT(*) AS 'RowCount'
+                FROM Asset AS A
+                JOIN AssetVersion AS AV ON (AV.idAsset = A.idAsset)
+                WHERE A.idAsset IN (${Prisma.join(idAssets)})
+                GROUP BY A.idAsset`;
+
+            for (const countInfo of versionCounts)
+                retValue.set(countInfo.idAsset, countInfo.RowCount);
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Asset.computeVersionCountMap', LOG.LS.eDB, error);
             return null;
         }
     }

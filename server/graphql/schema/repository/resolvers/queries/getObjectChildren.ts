@@ -2,6 +2,7 @@ import { GetObjectChildrenResult, QueryGetObjectChildrenArgs } from '../../../..
 import { Parent } from '../../../../../types/resolvers';
 import { NavigationFactory, INavigation, NavigationFilter, NavigationResult } from '../../../../../navigation/interface';
 import * as LOG from '../../../../../utils/logger';
+import * as H from '../../../../../utils/helpers';
 
 export default async function getObjectChildren(_: Parent, args: QueryGetObjectChildrenArgs): Promise<GetObjectChildrenResult> {
     const {
@@ -18,6 +19,10 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         variantType,
         modelPurpose,
         modelFileType,
+        dateCreatedFrom,
+        dateCreatedTo,
+        rows,
+        cursorMark
     } = args.input;
     const navigation: INavigation | null = await NavigationFactory.getInstance();
 
@@ -47,8 +52,10 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         variantType,
         modelPurpose,
         modelFileType,
-        rows: 100,
-        cursorMark: ''
+        dateCreatedFrom: H.Helpers.safeDate(dateCreatedFrom),   // convert ISO representation to Date
+        dateCreatedTo: H.Helpers.safeDate(dateCreatedTo),       // convert ISO representation to Date
+        rows,
+        cursorMark
     };
 
     const result: NavigationResult = await navigation.getObjectChildren(filter);

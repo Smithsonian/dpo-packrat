@@ -6,6 +6,7 @@ import * as JOB from '../../../job/interface';
 import * as COOK from '../../../job/impl/Cook';
 import * as WF from '../../../workflow/interface';
 import * as WFP from '../../../workflow/impl/Packrat';
+import * as REP from '../../../report/interface';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
@@ -69,11 +70,12 @@ describe('JobNS Cook Test Setup', () => {
         testCookExplicit('fbx-stand-alone', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('fbx-with-support', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookExplicit('glb', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('glb-draco', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('obj', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookExplicit('ply', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('stl', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('x3d', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
+        // Not yet supported by cook's si-packrat-inspect, as of 2021-05-07
         // testCookExplicit('usd', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // testCookImplicit('usdz', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // testCookExplicit('wrl', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -91,11 +93,12 @@ describe('JobNS IWorkflow Test Setup', () => {
         testWorkflow('fbx-stand-alone', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('fbx-with-support', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('glb', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('glb-draco', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('obj', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('ply', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('stl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('x3d', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
+        // Not yet supported by cook's si-packrat-inspect, as of 2021-05-07
         // testWorkflow('usd', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // testWorkflow('usdz', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         // testWorkflow('wrl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -250,10 +253,14 @@ async function testCreateJob(idJob: number | null, eJobType: CACHE.eVocabularyID
     frequency: string | null, expectSuccess: boolean = true): Promise<JOB.IJob | null> {
     expect(jobEngine).toBeTruthy(); if (!jobEngine) return null;
 
+    // fetch workflow report
+    const report: REP.IReport | null = await REP.ReportFactory.getReport();
+
     const JPC: JOB.JobCreationParameters = {
         idJob,
         eJobType,
         idAssetVersions: idAssetVersions || null,
+        report,
         parameters,
         frequency
     };
@@ -323,7 +330,7 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
 
             normalizeOutput(JCOutput);
 
-            const JCOutputStr: string = JSON.stringify(JCOutput, H.Helpers.stringifyMapsAndBigints);
+            const JCOutputStr: string = JSON.stringify(JCOutput, H.Helpers.saferStringify);
 
             const MTC: TESTMODEL.ModelTestCase | undefined = MTS.getTestCase(jobData.testCase);
             expect(MTC).toBeTruthy();
@@ -334,21 +341,21 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
 
             const inspectJSON: string | undefined = MTC.inspectJSON;
             expect(inspectJSON).toBeTruthy();
-            expect(JCOutputStr).toEqual(inspectJSON);
             if (JCOutputStr !== inspectJSON)
                 LOG.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`, LOG.LS.eTEST);
+            expect(JCOutputStr).toEqual(inspectJSON);
 
             // Test persistence of data
             const assetFileNameMap: Map<string, number> = MTC.assetFileNameMap();
             const res: H.IOResults = await JCOutput.persist(MTC.model.idModel, assetFileNameMap);
             if (!res.success)
-                LOG.error(`JobNS Persisting ${MTC.testCase} FAILED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyMapsAndBigints)}: ${res.error}`, LOG.LS.eTEST);
+                LOG.error(`JobNS Persisting ${MTC.testCase} FAILED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eTEST);
             else {
                 // expect(res.success).toBeTruthy();
                 expect(JCOutput.modelConstellation).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model?.idModel).toBeTruthy();
-                LOG.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
+                LOG.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
             }
             return JCOutputStr === inspectJSON;
         }

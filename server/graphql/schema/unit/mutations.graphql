@@ -3,6 +3,7 @@ type Mutation {
     createProject(input: CreateProjectInput!): CreateProjectResult!
     createSubject(input: CreateSubjectInput!): CreateSubjectResult!
     createItem(input: CreateItemInput!): CreateItemResult!
+    createGeoLocation(input: CreateGeoLocationInput!): CreateGeoLocationResult!
 }
 
 input CreateUnitInput {
@@ -45,4 +46,21 @@ input CreateItemInput {
 
 type CreateItemResult {
     Item: Item
+}
+
+input CreateGeoLocationInput {
+    Latitude: Int
+    Longitude: Int
+    Altitude: Int
+    TS0: Int
+    TS1: Int
+    TS2: Int
+    R0: Int
+    R1: Int
+    R2: Int
+    R3: Int
+}
+
+type CreateGeoLocationResult {
+    GeoLocation: GeoLocation
 }

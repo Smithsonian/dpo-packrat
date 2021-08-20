@@ -6,7 +6,7 @@
  *
  * This component renders the metadata fields specific to model asset.
  */
-import { Box, Checkbox, makeStyles, Typography } from '@material-ui/core';
+import { Box, makeStyles, Typography } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
@@ -91,6 +91,7 @@ function Model(props: ModelProps): React.ReactElement {
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
+    const [objectRelationship, setObjectRelationship] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
     const [ingestionModel, setIngestionModel] = useState<any>({
         CountVertices: null,
@@ -103,6 +104,7 @@ function Model(props: ModelProps): React.ReactElement {
         CountEmbeddedTextures: null,
         CountLinkedTextures: null,
         FileEncoding: '',
+        IsDracoCompressed: null,
         idVFileType: null
     });
     const [assetFiles, setAssetFiles] = useState([{ assetName: '', assetType: '' }]);
@@ -172,7 +174,7 @@ function Model(props: ModelProps): React.ReactElement {
             }
         }
     });
-    const idSystemObject: number | undefined = subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject;
+    const idSystemObject: number | undefined = subjects.length > 0 ? subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject : undefined;
 
     const errors = getFieldErrors(metadata);
 
@@ -208,9 +210,16 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, value, MetadataType.model);
     };
 
-    const openSourceObjectModal = () => {
+    const openSourceObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
-        setModalOpen(true);
+        await setObjectRelationship('Source');
+        await setModalOpen(true);
+    };
+
+    const openDerivedObjectModal = async () => {
+        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setObjectRelationship('Derived');
+        await setModalOpen(true);
     };
 
     const onRemoveSourceObject = (idSystemObject: number): void => {
@@ -219,13 +228,20 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.model);
     };
 
+    const onRemoveDerivedObject = (idSystemObject: number): void => {
+        const { derivedObjects } = model;
+        const updatedDerivedObjects = derivedObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
+        updateMetadataField(metadataIndex, 'derivedObjects', updatedDerivedObjects, MetadataType.model);
+    };
+
     const onModalClose = () => {
         setModalOpen(false);
+        setObjectRelationship('');
         closeRepositoryBrowser();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
-        updateMetadataField(metadataIndex, 'sourceObjects', newSourceObjects, MetadataType.model);
+        updateMetadataField(metadataIndex, objectRelationship === 'Source' ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.model);
         onModalClose();
     };
 
@@ -245,7 +261,22 @@ function Model(props: ModelProps): React.ReactElement {
                 </Box>
 
                 <Box mb={2}>
-                    <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                    <RelatedObjectsList
+                        type={RelatedObjectType.Source}
+                        relatedObjects={model.sourceObjects}
+                        onAdd={openSourceObjectModal}
+                        onRemove={onRemoveSourceObject}
+                        relationshipLanguage='Parent(s)'
+                    />
+                </Box>
+                <Box mb={2}>
+                    <RelatedObjectsList
+                        type={RelatedObjectType.Derived}
+                        relatedObjects={model.derivedObjects}
+                        onAdd={openDerivedObjectModal}
+                        onRemove={onRemoveDerivedObject}
+                        relationshipLanguage='Child(ren)'
+                    />
                 </Box>
                 <Box mb={2}>
                     <AssetFilesTable files={assetFiles} />
@@ -258,18 +289,10 @@ function Model(props: ModelProps): React.ReactElement {
 
                     <Box className={classes.modelMetricsAndForm}>
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
-                            <InputField required type='string' label='Name' value={model.name} name='name' onChange={setNameField} />
+                            <InputField required type='string' label='Name' value={model.name} name='name' onChange={setNameField} error={errors.model.name} />
 
                             <FieldType error={errors.model.dateCaptured} required label='Date Created' direction='row' containerProps={rowFieldProps}>
                                 <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
-                            </FieldType>
-
-                            <FieldType required label='Master Model' direction='row' containerProps={rowFieldProps}>
-                                <Checkbox name='master' checked={model.master} color='primary' onChange={setCheckboxField} />
-                            </FieldType>
-
-                            <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
-                                <Checkbox name='authoritative' checked={model.authoritative} color='primary' onChange={setCheckboxField} />
                             </FieldType>
 
                             <SelectField
@@ -335,6 +358,7 @@ function Model(props: ModelProps): React.ReactElement {
                             <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} />
                             <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} />
                             <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} />
+                            <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} />
                         </Box>
                         {/* End of  model-level metrics form */}
                     </Box>
@@ -349,7 +373,13 @@ function Model(props: ModelProps): React.ReactElement {
                 />
                 <ObjectMeshTable modelObjects={modelObjects} />
             </Box>
-            <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={model.sourceObjects} />
+            <ObjectSelectModal
+                open={modalOpen}
+                onSelectedObjects={onSelectedObjects}
+                onModalClose={onModalClose}
+                selectedObjects={objectRelationship === 'Source' ? model.sourceObjects : model.derivedObjects}
+                relationship={objectRelationship}
+            />
         </React.Fragment>
     );
 }

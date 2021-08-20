@@ -6,6 +6,15 @@ type Scene {
     idAssetThumbnail: Int
     IsOriented: Boolean!
     Name: String!
+    CountScene: Int
+    CountNode: Int
+    CountCamera: Int
+    CountLight: Int
+    CountModel: Int
+    CountMeta: Int
+    CountSetup: Int
+    CountTour: Int
+    EdanUUID: String
     AssetThumbnail: Asset
     ModelSceneXref: [ModelSceneXref]
     SystemObject: SystemObject
@@ -26,4 +35,9 @@ type IntermediaryFile {
     idAsset: Int!
     Asset: Asset
     SystemObject: SystemObject
+}
+
+type SceneConstellation {
+    Scene: Scene
+    ModelSceneXref: [ModelSceneXref]
 }

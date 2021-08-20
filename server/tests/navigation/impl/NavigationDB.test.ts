@@ -2,10 +2,9 @@ import { INavigation, NavigationFactory, NavigationResult, NavigationResultEntry
 // import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
-import { eSystemObjectType, SystemObjectBased, SystemObject } from '../../../db';
+import { eSystemObjectType, ObjectIDAndType, SystemObjectBased, SystemObject } from '../../../db';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
 import { NAVIGATION_TYPE } from '../../../config';
-
 
 let nav: INavigation | null = null;
 const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
@@ -44,6 +43,8 @@ const mockFilter: NavigationFilter = {
     variantType: [],
     modelPurpose: [],
     modelFileType: [],
+    dateCreatedFrom: null,
+    dateCreatedTo: null,
     rows: 100,
     cursorMark: ''
 };
@@ -133,7 +134,7 @@ async function validateResultEntries(navResultEntries: NavigationResultEntry[], 
         expect(objectTypes).toEqual(expect.arrayContaining([NRE.objectType]));
         expect(NRE.metadata.length).toEqual(metadataColumns.length);
 
-        const oID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(NRE.idSystemObject);
+        const oID: ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(NRE.idSystemObject);
         expect(oID).toBeTruthy();
         if (oID) {
             expect(NRE.idObject).toEqual(oID.idObject);

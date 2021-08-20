@@ -8,15 +8,19 @@ import { ASL, LocalStore } from './localStore';
 
 let logger: winston.Logger;
 export enum LS { // logger section
+    eAUDIT, // audit
     eAUTH,  // authentication
     eCACHE, // cache
     eCOLL,  // collections
     eCONF,  // config
     eDB,    // database
+    eEVENT, // event
     eGQL,   // graphql
     eHTTP,  // http
     eJOB,   // job
+    eMETA,  // metadata
     eNAV,   // navigation
+    eRPT,   // report
     eSTR,   // storage
     eSYS,   // system/utilities
     eTEST,  // test code
@@ -29,26 +33,34 @@ export function info(message: string, eLogSection: LS): void {
 }
 
 export function error(message: string, eLogSection: LS, obj: any | null = null): void {
-    logger.error(message, { ...obj, eLS: eLogSection });
+    if (obj && typeof obj === 'object' && obj !== null) {
+        obj.eLS = eLogSection;
+        logger.error(message, obj);
+    } else
+        logger.error(message, { eLS: eLogSection });
 }
 
 function loggerSectionName(eLogSection: LS | undefined): string {
     switch (eLogSection) {
+        case LS.eAUDIT: return 'AUD';
         case LS.eAUTH:  return 'ATH';
         case LS.eCACHE: return 'CCH';
         case LS.eCOLL:  return 'COL';
         case LS.eCONF:  return 'CNF';
         case LS.eDB:    return 'DB ';
+        case LS.eEVENT: return 'EVE';
         case LS.eGQL:   return 'GQL';
         case LS.eHTTP:  return 'HTP';
         case LS.eJOB:   return 'JOB';
+        case LS.eMETA:  return 'MET';
         case LS.eNAV:   return 'NAV';
+        case LS.eRPT:   return 'RPT';
         case LS.eSTR:   return 'STR';
         case LS.eSYS:   return 'SYS';
         case LS.eTEST:  return 'tst';
         case LS.eWF:    return 'WF ';
-        case LS.eNONE:  return '** NONE **';
-        default: return '   ';
+        case LS.eNONE:  return '***';
+        default:        return '***';
     }
 }
 
@@ -73,9 +85,15 @@ function configureLogger(logPath: string | null): void {
                 const LS: LocalStore | undefined = ASL.getStore();
                 const idRequest: number | undefined = LS?.idRequest;
                 const reqID: string = idRequest ? ('00000' + (idRequest % 100000)).slice(-5) : ' --- ';
+
+                const idUser: number | undefined | null = LS?.idUser;
+                let userID: string = '---';
+                if (idUser)
+                    userID = (idUser < 1000) ? ('000' + (idUser % 1000)).slice(-3) : idUser.toString();
+
                 const logSection: string = loggerSectionName(info.eLS);
-                const stack: string = info.stack ? ` ${info.stack}` : '';
-                return `${info.timestamp} [${reqID}] ${logSection} ${info.level}: ${info.message}${stack}`;
+                const stack: string = info.stack ? `\n${info.stack}` : '';
+                return `${info.timestamp} [${reqID}] U${userID} ${logSection} ${info.level}: ${info.message}${stack}`;
             })
         ),
         transports: [
@@ -91,10 +109,11 @@ function configureLogger(logPath: string | null): void {
         ]
     });
 
-    /* istanbul ignore else */
-    if (process.env.NODE_ENV !== 'production') {
-        logger.add(new winston.transports.Console());
-    }
+    // For the time being, let's emit logs to the Console in production, for use in debugging
+    // /* istanbul ignore else */
+    // if (process.env.NODE_ENV !== 'production') {
+    logger.add(new winston.transports.Console());
+    // }
 
     try {
         /* istanbul ignore if */

@@ -26,7 +26,8 @@ import {
     useItemStore,
     useMetadataStore,
     useProjectStore,
-    useVocabularyStore
+    useVocabularyStore,
+    useUploadStore
 } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
 import Model from './Model';
@@ -62,19 +63,19 @@ type QueryParams = {
 
 function Metadata(): React.ReactElement {
     const classes = useStyles();
-    const { search } = useLocation();
+    const location = useLocation();
     const history = useHistory();
-
     const [ingestionLoading, setIngestionLoading] = useState(false);
+    const [invalidMetadataStep, setInvalidMetadataStep] = useState<boolean>(false);
 
     const getSelectedProject = useProjectStore(state => state.getSelectedProject);
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
     const [metadatas, getMetadataInfo, validateFields] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields]);
     const { ingestionStart, ingestionComplete } = useIngest();
     const getAssetType = useVocabularyStore(state => state.getAssetType);
-
+    const [updateMode, setUpdateMode] = useUploadStore(state => [state.updateMode, state.setUpdateMode]);
     const metadataLength = metadatas.length;
-    const query = qs.parse(search) as QueryParams;
+    const query = qs.parse(location.search) as QueryParams;
     const { fileId, type } = query;
 
     if (!metadataLength || !fileId) {
@@ -86,9 +87,9 @@ function Metadata(): React.ReactElement {
     const item = getSelectedItem();
     const assetType = getAssetType(Number.parseInt(type, 10));
 
-    const onPrevious = () => {
+    const onPrevious = async () => {
         toast.dismiss();
-        history.goBack();
+        await history.goBack();
     };
 
     const onNext = async (): Promise<void> => {
@@ -114,14 +115,15 @@ function Metadata(): React.ReactElement {
 
         if (isLast) {
             setIngestionLoading(true);
-            const success: boolean = await ingestionStart();
+            const { success, message } = await ingestionStart();
             setIngestionLoading(false);
 
             if (success) {
                 toast.success('Ingestion complete');
                 ingestionComplete();
+                setUpdateMode(false);
             } else {
-                toast.error('Ingestion failed, please try again later');
+                toast.error(`Ingestion failed, please try again later. Error: ${message}`);
             }
         } else {
             const nextMetadata = metadatas[metadataIndex + 1];
@@ -140,7 +142,7 @@ function Metadata(): React.ReactElement {
         }
 
         if (assetType.scene) {
-            return <Scene metadataIndex={metadataIndex} />;
+            return <Scene metadataIndex={metadataIndex} setInvalidMetadataStep={setInvalidMetadataStep} />;
         }
 
         if (assetType.model) {
@@ -153,10 +155,17 @@ function Metadata(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
-                <BreadcrumbsHeader project={project} item={item} metadata={metadata} />
+                <BreadcrumbsHeader project={project} item={item} metadata={metadata} updateMode={updateMode} />
                 {getMetadataComponent(metadataIndex)}
             </Box>
-            <SidebarBottomNavigator rightLoading={ingestionLoading} leftLabel='Previous' onClickLeft={onPrevious} rightLabel={isLast ? 'Finish' : 'Next'} onClickRight={onNext} />
+            <SidebarBottomNavigator
+                rightLoading={ingestionLoading}
+                leftLabel='Previous'
+                onClickLeft={onPrevious}
+                rightLabel={isLast ? 'Finish' : 'Next'}
+                onClickRight={onNext}
+                invalidMetadataStep={invalidMetadataStep}
+            />
         </Box>
     );
 }
@@ -165,13 +174,18 @@ interface BreadcrumbsHeaderProps {
     project: StateProject | undefined;
     item: StateItem | undefined;
     metadata: StateMetadata;
+    updateMode: boolean;
 }
 
 function BreadcrumbsHeader(props: BreadcrumbsHeaderProps) {
     const classes = useStyles();
-    const { project, item, metadata } = props;
+    const { project, item, metadata, updateMode } = props;
 
-    return (
+    return updateMode ? (
+        <Breadcrumbs className={classes.breadcrumbs} separator={<MdNavigateNext color='inherit' size={20} />}>
+            <Typography color='inherit'>Specify metadata for: {metadata.file.name}</Typography>
+        </Breadcrumbs>
+    ) : (
         <Breadcrumbs className={classes.breadcrumbs} separator={<MdNavigateNext color='inherit' size={20} />}>
             <Typography color='inherit'>Specify metadata for: {project?.name}</Typography>
             <Typography color='inherit'>{item?.name}</Typography>

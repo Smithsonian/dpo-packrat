@@ -15,6 +15,7 @@ type RepositoryStore = {
     search: string;
     keyword: string;
     tree: Map<string, NavigationResultEntry[]>;
+    cursors: Map<string, string>;
     loading: boolean;
     updateSearch: (value: string) => void;
     toggleFilter: () => void;
@@ -29,16 +30,18 @@ type RepositoryStore = {
     variantType: number[];
     modelPurpose: number[];
     modelFileType: number[];
-    fromDate: Date | null;
-    toDate: Date | null;
+    dateCreatedFrom: Date | string | null;
+    dateCreatedTo: Date | string | null;
     repositoryBrowserRoot: number | null;
     getFilterState: () => RepositoryFilter;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
-    updateFilterValue: (name: string, value: number | number[] | Date) => void;
+    updateFilterValue: (name: string, value: number | number[] | Date | null) => void;
     resetRepositoryFilter: (modifyCookie?: boolean) => void;
     resetKeywordSearch: () => void;
     initializeTree: () => Promise<void>;
+    getMoreRoot: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
+    getMoreChildren: (nodeId: string, cursorMark: string) => Promise<void>;
     updateRepositoryFilter: (filter: RepositoryFilter) => void;
     setCookieToState: () => void;
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined) => void;
@@ -54,8 +57,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     search: '',
     keyword: '',
     tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
+    cursors: new Map<string, string>(),
     loading: true,
-    repositoryRootType: [eSystemObjectType.eUnit],
+    repositoryRootType: [],
     objectsToDisplay: [],
     metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
     units: [],
@@ -66,10 +70,10 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     variantType: [],
     modelPurpose: [],
     modelFileType: [],
-    fromDate: null,
-    toDate: null,
+    dateCreatedFrom: null,
+    dateCreatedTo: null,
     repositoryBrowserRoot: null,
-    updateFilterValue: (name: string, value: number | number[] | Date): void => {
+    updateFilterValue: (name: string, value: number | number[] | Date | null): void => {
         const { initializeTree, setCookieToState, keyword } = get();
         set({ [name]: value, loading: true, search: keyword });
         setCookieToState();
@@ -92,25 +96,85 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const { data, error } = await getObjectChildrenForRoot(filter);
             if (data && !error) {
                 const { getObjectChildren } = data;
-                const { entries } = getObjectChildren;
+                const { entries, cursorMark } = getObjectChildren;
+                if (cursorMark) {
+                    const newCursors = new Map<string, string>();
+                    newCursors.set('root', cursorMark);
+                    set({ cursors: newCursors });
+                }
                 const entry: [string, NavigationResultEntry[]] = [treeRootKey, entries];
                 const updatedTree = new Map([entry]);
                 set({ tree: updatedTree, loading: false });
             }
         }
-
+    },
+    getMoreRoot: async (): Promise<void> => {
+        const { tree, cursors, getFilterState } = get();
+        const filter = getFilterState();
+        const rootCursor = cursors.get('root');
+        if (rootCursor) {
+            filter.cursorMark = rootCursor;
+        }
+        const { data, error } = await getObjectChildrenForRoot(filter);
+        if (data && !error) {
+            const { getObjectChildren } = data;
+            const { entries, cursorMark } = getObjectChildren;
+            if (cursorMark) {
+                const newCursors = new Map(cursors);
+                if (cursorMark !== rootCursor) {
+                    newCursors.set('root', cursorMark);
+                } else {
+                    newCursors.set('root', '');
+                }
+                set({ cursors: newCursors });
+            }
+            const newRoot = tree.get('root')?.concat(entries) as NavigationResultEntry[];
+            const entry: [string, NavigationResultEntry[]] = [treeRootKey, newRoot];
+            const updatedTree = new Map([entry]);
+            set({ tree: updatedTree, loading: false });
+        }
     },
     getChildren: async (nodeId: string): Promise<void> => {
-        const { tree, getFilterState } = get();
+        const { tree, getFilterState, cursors } = get();
         const filter = getFilterState();
         const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
         const { data, error } = await getObjectChildren(idSystemObject, filter);
         if (data && !error) {
             const { getObjectChildren } = data;
-            const { entries } = getObjectChildren;
+            const { entries, cursorMark } = getObjectChildren;
             const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
             updatedTree.set(nodeId, entries);
             set({ tree: updatedTree });
+
+            if (cursorMark) {
+                const newCursors = new Map(cursors);
+                newCursors.set(nodeId, cursorMark);
+                set({ cursors: newCursors });
+            }
+        }
+    },
+    getMoreChildren: async (nodeId: string, cursorMark: string): Promise<void> => {
+        const { tree, cursors, getFilterState } = get();
+        const filter = getFilterState();
+        const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
+        if (cursorMark) filter.cursorMark = cursorMark;
+        const { data, error } = await getObjectChildren(idSystemObject, filter);
+        if (data && !error) {
+            const { getObjectChildren } = data;
+            const { entries, cursorMark } = getObjectChildren;
+            const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
+            const previousEntries = updatedTree.get(nodeId) || [];
+            updatedTree.set(nodeId, [...previousEntries, ...entries]);
+            set({ tree: updatedTree });
+            if (cursorMark) {
+                const newCursors = cursors;
+                if (cursorMark !== cursors.get(nodeId)) {
+                    newCursors.set(nodeId, cursorMark);
+                } else {
+                    newCursors.delete(nodeId);
+                }
+                set({ cursors: newCursors });
+            }
         }
     },
     removeUnitsOrProjects: (id: number, type: eSystemObjectType): void => {
@@ -148,33 +212,39 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             variantType,
             modelPurpose,
             modelFileType,
+            // dateCreatedFrom,
+            // dateCreatedTo,
             initializeTree,
             setCookieToState
         } = get();
 
-        const stateValues: RepositoryFilter = {
-            ...filter,
-            repositoryRootType: validateArray<eSystemObjectType>(filter.repositoryRootType, repositoryRootType),
-            objectsToDisplay: validateArray<eSystemObjectType>(filter.objectsToDisplay, objectsToDisplay),
-            metadataToDisplay: validateArray<eMetadata>(filter.metadataToDisplay, metadataToDisplay),
-            units: validateArray<number>(filter.units, units),
-            projects: validateArray<number>(filter.projects, projects),
-            has: validateArray<eSystemObjectType>(filter.has, has),
-            missing: validateArray<eSystemObjectType>(filter.missing, missing),
-            captureMethod: validateArray<number>(filter.captureMethod, captureMethod),
-            variantType: validateArray<number>(filter.variantType, variantType),
-            modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
-            modelFileType: validateArray<number>(filter.modelFileType, modelFileType),
-        };
+        if (filter) {
+            const stateValues: RepositoryFilter = {
+                ...filter,
+                repositoryRootType: validateArray<eSystemObjectType>(filter.repositoryRootType, repositoryRootType),
+                objectsToDisplay: validateArray<eSystemObjectType>(filter.objectsToDisplay, objectsToDisplay),
+                metadataToDisplay: validateArray<eMetadata>(filter.metadataToDisplay, metadataToDisplay),
+                units: validateArray<number>(filter.units, units),
+                projects: validateArray<number>(filter.projects, projects),
+                has: validateArray<eSystemObjectType>(filter.has, has),
+                missing: validateArray<eSystemObjectType>(filter.missing, missing),
+                captureMethod: validateArray<number>(filter.captureMethod, captureMethod),
+                variantType: validateArray<number>(filter.variantType, variantType),
+                modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
+                modelFileType: validateArray<number>(filter.modelFileType, modelFileType)
+                // dateCreatedFrom: filter.dateCreatedFrom,
+                // dateCreatedTo: filter.dateCreatedTo,
+            };
 
-        set(stateValues);
+            set(stateValues);
+        }
         setCookieToState();
         initializeTree();
     },
     resetRepositoryFilter: (modifyCookie = true): void => {
         const { setCookieToState } = get();
         const stateValues = {
-            repositoryRootType: [eSystemObjectType.eUnit],
+            repositoryRootType: [],
             objectsToDisplay: [],
             metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
             units: [],
@@ -185,8 +255,10 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             variantType: [],
             modelPurpose: [],
             modelFileType: [],
+            dateCreatedFrom: null,
+            dateCreatedTo: null
         };
-        set(stateValues);
+        set({ ...stateValues, loading: true });
         if (modifyCookie) {
             setCookieToState();
         }
@@ -208,7 +280,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            dateCreatedFrom,
+            dateCreatedTo
         } = get();
 
         return {
@@ -224,7 +298,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            dateCreatedFrom,
+            dateCreatedTo
         };
     },
     setCookieToState: (): void => {
@@ -240,7 +316,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            dateCreatedFrom,
+            dateCreatedTo
         } = getFilterState();
         const currentFilterState = {
             repositoryRootType,
@@ -253,10 +331,12 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            dateCreatedFrom,
+            dateCreatedTo
         };
         // 20 years
-        document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};max-age=630700000`;
+        document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};path=/;max-age=630700000`;
     },
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined): void => {
         const { resetKeywordSearch, resetRepositoryFilter, getChildrenForIngestion } = get();
@@ -265,14 +345,27 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         resetRepositoryFilter(false);
 
         if (systemObjectType === eSystemObjectType.eModel) {
-            set({ repositoryRootType: [], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });
-            getChildrenForIngestion(idRoot || 0);
+            set({ repositoryRootType: [eSystemObjectType.eModel, eSystemObjectType.eScene], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });
         }
+
+        if (systemObjectType === eSystemObjectType.eCaptureData) {
+            set({ repositoryRootType: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });
+        }
+
+        if (systemObjectType === eSystemObjectType.eScene) {
+            set({ repositoryRootType: [eSystemObjectType.eModel, eSystemObjectType.eScene], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });
+        }
+
+        getChildrenForIngestion(idRoot || 0);
     },
     getChildrenForIngestion: async (idSystemObject: number): Promise<void> => {
         const { getFilterState } = get();
         const filter = getFilterState();
         const { data, error } = await getObjectChildrenForRoot(filter, idSystemObject);
+
+        // set root to 0 for testing
+        // const { data, error } = await getObjectChildrenForRoot(filter, 0);
+
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;

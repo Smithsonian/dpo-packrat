@@ -23,6 +23,7 @@ input IngestItemInput {
 input IngestIdentifierInput {
     identifier: String!
     identifierType: Int!
+    idIdentifier: Int!
 }
 
 input IngestFolderInput {
@@ -32,6 +33,7 @@ input IngestFolderInput {
 
 input IngestPhotogrammetryInput {
     idAssetVersion: Int!
+    idAsset: Int
     name: String!
     dateCaptured: String!
     datasetType: Int!
@@ -50,12 +52,8 @@ input IngestPhotogrammetryInput {
     directory: String!
     folders: [IngestFolderInput!]!
     identifiers: [IngestIdentifierInput!]!
-}
-
-input IngestUVMapInput {
-    name: String!
-    edgeLength: Int!
-    mapType: Int!
+    sourceObjects: [RelatedObjectInput!]!
+    derivedObjects: [RelatedObjectInput!]!
 }
 
 input RelatedObjectInput {
@@ -67,10 +65,9 @@ input RelatedObjectInput {
 
 input IngestModelInput {
     idAssetVersion: Int!
+    idAsset: Int
     systemCreated: Boolean!
     name: String!
-    master: Boolean!
-    authoritative: Boolean!
     creationMethod: Int!
     modality: Int!
     purpose: Int!
@@ -80,31 +77,25 @@ input IngestModelInput {
     directory: String!
     identifiers: [IngestIdentifierInput!]!
     sourceObjects: [RelatedObjectInput!]!
-}
-
-input ReferenceModelInput {
-    idSystemObject: Int!
-    name: String!
-    fileSize: BigInt!
-    resolution: Int
-    boundingBoxP1X: Float
-    boundingBoxP1Y: Float
-    boundingBoxP1Z: Float
-    boundingBoxP2X: Float
-    boundingBoxP2Y: Float
-    boundingBoxP2Z: Float
-    action: ReferenceModelAction!
+    derivedObjects: [RelatedObjectInput!]!
 }
 
 input IngestSceneInput {
     idAssetVersion: Int!
+    idAsset: Int
     systemCreated: Boolean!
+    name: String!
+    hasBeenQCd: Boolean!
+    isOriented: Boolean!
+    directory: String!
     identifiers: [IngestIdentifierInput!]!
-    referenceModels: [ReferenceModelInput!]!
+    sourceObjects: [RelatedObjectInput!]!
+    derivedObjects: [RelatedObjectInput!]!
 }
 
 input IngestOtherInput {
     idAssetVersion: Int!
+    idAsset: Int
     systemCreated: Boolean!
     identifiers: [IngestIdentifierInput!]!
 }
@@ -121,4 +112,5 @@ input IngestDataInput {
 
 type IngestDataResult {
     success: Boolean!
+    message: String
 }

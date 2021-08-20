@@ -2,6 +2,12 @@ scalar DateTime
 
 type Mutation {
     updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
+    updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
+    updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
+    deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
+    deleteIdentifier(input: DeleteIdentifierInput!): DeleteIdentifierResult!
+    rollbackSystemObjectVersion(input: RollbackSystemObjectVersionInput!): RollbackSystemObjectVersionResult!
+    createSubjectWithIdentifiers(input: CreateSubjectWithIdentifiersInput!): CreateSubjectWithIdentifiersResult!
 }
 
 input UpdateObjectDetailsInput {
@@ -68,8 +74,6 @@ input CaptureDataDetailFieldsInput {
 
 input ModelDetailFieldsInput {
     Name: String
-    Master: Boolean
-    Authoritative: Boolean
     CreationMethod: Int
     Modality: Int
     Purpose: Int
@@ -79,7 +83,6 @@ input ModelDetailFieldsInput {
 }
 
 input SceneDetailFieldsInput {
-    Links: [String!]!
     AssetType: Int
     Tours: Int
     Annotation: Int
@@ -118,6 +121,7 @@ input StakeholderDetailFieldsInput {
 input UpdateObjectDetailsDataInput {
     Name: String
     Retired: Boolean
+    License: Int
     Unit: UnitDetailFieldsInput
     Project: ProjectDetailFieldsInput
     Subject: SubjectDetailFieldsInput
@@ -130,8 +134,84 @@ input UpdateObjectDetailsDataInput {
     AssetVersion: AssetVersionDetailFieldsInput
     Actor: ActorDetailFieldsInput
     Stakeholder: StakeholderDetailFieldsInput
+    Identifiers: [UpdateIdentifier!]
 }
 
 type UpdateObjectDetailsResult {
     success: Boolean!
+    message: String!
+}
+
+input UpdateDerivedObjectsInput {
+    idSystemObject: Int!
+    Derivatives: [Int!]!
+    PreviouslySelected: [Int!]!
+}
+
+type UpdateDerivedObjectsResult {
+    success: Boolean!
+}
+
+input UpdateSourceObjectsInput {
+    idSystemObject: Int!
+    Sources: [Int!]!
+    PreviouslySelected: [Int!]!
+}
+
+type UpdateSourceObjectsResult {
+    success: Boolean!
+}
+
+input UpdateIdentifier {
+    id: Int!
+    identifier: String!
+    identifierType: Int!
+    selected: Boolean!
+    idSystemObject: Int!
+    idIdentifier: Int!
+}
+
+type DeleteObjectConnectionResult {
+    success: Boolean!
+    details: String!
+}
+
+input DeleteObjectConnectionInput {
+    idSystemObjectMaster: Int!
+    idSystemObjectDerived: Int!
+}
+
+type DeleteIdentifierResult {
+    success: Boolean!
+}
+
+input DeleteIdentifierInput {
+    idIdentifier: Int!
+}
+
+type RollbackSystemObjectVersionResult {
+    success: Boolean!
+    message: String!
+}
+
+input RollbackSystemObjectVersionInput {
+    idSystemObjectVersion: Int!
+}
+
+type CreateSubjectWithIdentifiersResult {
+    success: Boolean!
+    message: String!
+}
+
+input CreateSubjectWithIdentifiersInput {
+    identifiers: [CreateIdentifierInput!]!
+    subject: CreateSubjectInput!
+    systemCreated: Boolean!
+}
+
+input CreateIdentifierInput {
+    identifierValue: String!
+    identifierType: Int!
+    idSystemObject: Int
+    selected: Boolean!
 }

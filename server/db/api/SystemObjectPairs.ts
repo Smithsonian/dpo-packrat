@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import * as P from '@prisma/client';
 import { Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model,
-    Project, ProjectDocumentation, Scene, Stakeholder, SystemObject, Subject, Unit } from '..';
+    Project, ProjectDocumentation, Scene, Stakeholder, SystemObject, SystemObjectBased, Subject, Unit } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -327,64 +327,6 @@ export class SystemObjectUnit extends SystemObject implements SystemObjectUnitBa
     }
 }
 
-export enum eSystemObjectType {
-    eUnit,
-    eProject,
-    eSubject,
-    eItem,
-    eCaptureData,
-    eModel,
-    eScene,
-    eIntermediaryFile,
-    eProjectDocumentation,
-    eAsset,
-    eAssetVersion,
-    eActor,
-    eStakeholder,
-    eUnknown
-}
-
-export function SystemObjectTypeToName(eObjectType: eSystemObjectType | null): string {
-    switch (eObjectType) {
-        case eSystemObjectType.eUnit:                   return 'Unit';
-        case eSystemObjectType.eProject:                return 'Project';
-        case eSystemObjectType.eSubject:                return 'Subject';
-        case eSystemObjectType.eItem:                   return 'Item';
-        case eSystemObjectType.eCaptureData:            return 'Capture Data';
-        case eSystemObjectType.eModel:                  return 'Model';
-        case eSystemObjectType.eScene:                  return 'Scene';
-        case eSystemObjectType.eIntermediaryFile:       return 'Intermediary File';
-        case eSystemObjectType.eProjectDocumentation:   return 'Project Documentation';
-        case eSystemObjectType.eAsset:                  return 'Asset';
-        case eSystemObjectType.eAssetVersion:           return 'Asset Version';
-        case eSystemObjectType.eActor:                  return 'Actor';
-        case eSystemObjectType.eStakeholder:            return 'Stakeholder';
-        case eSystemObjectType.eUnknown:                return 'Unknown';
-        default:                                        return 'Unknown';
-    }
-}
-
-export function SystemObjectNameToType(objectTypeName: string | null): eSystemObjectType {
-    switch (objectTypeName) {
-        case 'Unit':                    return eSystemObjectType.eUnit;
-        case 'Project':                 return eSystemObjectType.eProject;
-        case 'Subject':                 return eSystemObjectType.eSubject;
-        case 'Item':                    return eSystemObjectType.eItem;
-        case 'Capture Data':            return eSystemObjectType.eCaptureData;
-        case 'Model':                   return eSystemObjectType.eModel;
-        case 'Scene':                   return eSystemObjectType.eScene;
-        case 'Intermediary File':       return eSystemObjectType.eIntermediaryFile;
-        case 'Project Documentation':   return eSystemObjectType.eProjectDocumentation;
-        case 'Asset':                   return eSystemObjectType.eAsset;
-        case 'Asset Version':           return eSystemObjectType.eAssetVersion;
-        case 'Actor':                   return eSystemObjectType.eActor;
-        case 'Stakeholder':             return eSystemObjectType.eStakeholder;
-
-        default:
-        case 'Unknown':                 return eSystemObjectType.eUnknown;
-    }
-}
-
 export class SystemObjectPairs extends SystemObject implements SystemObjectPairsBase {
     Actor: Actor | null = null;
     Asset_AssetToSystemObject_idAsset: Asset | null = null;
@@ -405,6 +347,23 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
     }
     set Asset(value: Asset | null) {
         this.Asset_AssetToSystemObject_idAsset = value;
+    }
+
+    get SystemObjectBased(): SystemObjectBased | null {
+        if (this.Actor) return this.Actor;
+        if (this.Asset_AssetToSystemObject_idAsset) return this.Asset_AssetToSystemObject_idAsset;
+        if (this.AssetVersion) return this.AssetVersion;
+        if (this.CaptureData) return this.CaptureData;
+        if (this.IntermediaryFile) return this.IntermediaryFile;
+        if (this.Item) return this.Item;
+        if (this.Model) return this.Model;
+        if (this.Project) return this.Project;
+        if (this.ProjectDocumentation) return this.ProjectDocumentation;
+        if (this.Scene) return this.Scene;
+        if (this.Stakeholder) return this.Stakeholder;
+        if (this.Subject) return this.Subject;
+        if (this.Unit) return this.Unit;
+        return null;
     }
 
     constructor(input: SystemObjectPairsBase) {

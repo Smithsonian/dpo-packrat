@@ -8,8 +8,6 @@ const getModelConstellation = gql`
                     idModel
                     Name
                     DateCreated
-                    Master
-                    Authoritative
                     VCreationMethod {
                         Term
                     }
@@ -36,6 +34,7 @@ const getModelConstellation = gql`
                     CountEmbeddedTextures
                     CountLinkedTextures
                     FileEncoding
+                    IsDracoCompressed
                 }
                 ModelObjects {
                     idModelObject

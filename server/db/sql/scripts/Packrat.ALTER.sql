@@ -1,76 +1,150 @@
--- 2021-03-13 Jon
-DROP TABLE IF EXISTS `Job`;
-DROP TABLE IF EXISTS `JobTask`;
-DROP TABLE IF EXISTS `JobTaskCook`;
+-- 2021-05-12 Jon
+UPDATE Model SET MASTER = 0 WHERE MASTER = 1 AND idVPurpose <> 45;
+UPDATE Model SET idVPurpose = 46 WHERE MASTER = 0 AND idVPurpose = 45;
+ALTER TABLE Model DROP COLUMN `Master`;
 
-CREATE TABLE IF NOT EXISTS `Job` (
-  `idJob` int(11) NOT NULL AUTO_INCREMENT,
-  `idVJobType` int(11) NOT NULL,
-  `Name` varchar(80) NOT NULL,
-  `Status` int(11) NOT NULL,
-  `Frequency` varchar(80) NULL,
-  PRIMARY KEY (`idJob`),
-  KEY `Job_idVJobType_idJob` (`idVJobType`, `idJob`),
-  KEY `Job_Name` (`Name`),
-  KEY `Job_Status` (`Status`)
+ALTER TABLE Metadata MODIFY COLUMN `ValueExtended` longtext DEFAULT NULL;
+
+CREATE TABLE IF NOT EXISTS `SystemObjectVersionAssetVersionXref` (
+  `idSystemObjectVersionAssetVersionXref` int(11) NOT NULL AUTO_INCREMENT,
+  `idSystemObjectVersion` int(11) NOT NULL,
+  `idAssetVersion` int(11) NOT NULL,
+  PRIMARY KEY (`idSystemObjectVersionAssetVersionXref`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
-CREATE TABLE IF NOT EXISTS `JobRun` (
-  `idJobRun` int(11) NOT NULL AUTO_INCREMENT,
-  `idJob` int(11) NOT NULL,
-  `Status` int(11) NOT NULL,
-  `Result` boolean NULL,
-  `DateStart` datetime NULL,
-  `DateEnd` datetime NULL,
-  `Configuration` text NULL,
-  `Parameters` text NULL,
-  `Output` text NULL,
-  `Error` text NULL,
-  PRIMARY KEY (`idJobRun`),
-  KEY `JobRun_idJob` (`idJob`),
-  KEY `JobRun_Status` (`Status`)
+ALTER TABLE `SystemObjectVersionAssetVersionXref`
+ADD CONSTRAINT `fk_systemobjectversionassetversionxref_systemobjectversion`
+  FOREIGN KEY (`idSystemObjectVersion`)
+  REFERENCES `SystemObjectVersion` (`idSystemObjectVersion`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_systemobjectversionassetversionxref_assetversion`
+  FOREIGN KEY (`idAssetVersion`)
+  REFERENCES `AssetVersion` (`idAssetVersion`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+-- 2021-05-18 Jon
+ALTER TABLE Model ADD COLUMN `IsDracoCompressed` boolean NULL;
+ALTER TABLE SystemObjectVersion ADD COLUMN `DateCreated` datetime NOT NULL;
+
+-- 2021-05-26 Jon
+ALTER TABLE Model MODIFY COLUMN `idVCreationMethod` int(11) NULL;
+ALTER TABLE Model MODIFY COLUMN `idVModality` int(11) NULL;
+ALTER TABLE Model MODIFY COLUMN `idVUnits` int(11) NULL;
+ALTER TABLE Model MODIFY COLUMN `idVPurpose` int(11) NULL;
+ALTER TABLE Model MODIFY COLUMN `idVFileType` int(11) NULL;
+
+-- 2021-06-01 Jon
+ALTER TABLE Model DROP COLUMN Authoritative;
+UPDATE Vocabulary SET Term = 'Download' WHERE Term = 'Print Delivery';
+
+-- 2021-06-02 Jon
+SELECT idVocabulary INTO @idVocabARK FROM Vocabulary 
+WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
+SELECT idVocabulary INTO @idVocabCMSUnitID FROM Vocabulary 
+WHERE Term = 'Unit CMS ID' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
+
+INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELECT 'ITEM_GUID_4', @idVocabARK, idSystemObject FROM SystemObject WHERE idItem = (SELECT idItem FROM Item WHERE NAME = 'NMAH Baseball Bat');
+
+-- 2021-06-05 Jon
+ALTER TABLE Model ADD COLUMN AutomationTag varchar(256) NULL;
+
+-- 2021-06-06 Deployed to Staging
+
+-- 2021-07-01 Jon
+ALTER TABLE License ADD COLUMN RestrictLevel int(11) NOT NULL;
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View And Download CC0', 'View And Download CC0', 10);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View with Download Restrictions', 'View with Download Restrictions', 20);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View Only', 'View Only', 30);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('Restricted', 'Restricted', 1000);
+
+-- 2021-07-13 Jon
+CREATE TABLE IF NOT EXISTS `WorkflowReport` (
+  `idWorkflowReport` int(11) NOT NULL AUTO_INCREMENT,
+  `idWorkflow` int(11) NOT NULL,
+  `MimeType` varchar(256) NOT NULL,
+  `Data` longtext NOT NULL,
+  PRIMARY KEY (`idWorkflowReport`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
-ALTER TABLE `Job` 
-ADD CONSTRAINT `fk_job_vocabulary1`
-  FOREIGN KEY (`idVJobType`)
+ALTER TABLE `WorkflowReport` 
+ADD CONSTRAINT `fk_workflowreport_workflow1`
+  FOREIGN KEY (`idWorkflow`)
+  REFERENCES `Workflow` (`idWorkflow`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+-- 2021-07-16 Jon
+CREATE TABLE IF NOT EXISTS `WorkflowSet` (
+  `idWorkflowSet` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`idWorkflowSet`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+ALTER TABLE Workflow ADD COLUMN idWorkflowSet int(11) DEFAULT NULL;
+
+ALTER TABLE `Workflow` 
+ADD CONSTRAINT `fk_workflow_workflowset1`
+  FOREIGN KEY (`idWorkflowSet`)
+  REFERENCES `WorkflowSet` (`idWorkflowSet`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+-- 2021-07-20 Jon
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 2, 'Ingestion');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 3, 'Upload');
+
+-- 2021-07-25 Jon
+UPDATE WorkflowStep SET State = 4 WHERE State = 2;
+UPDATE WorkflowStep SET State = 2 WHERE State = 1;
+UPDATE WorkflowStep SET State = 1 WHERE State = 0;
+
+-- 2021-07-30 Jon
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 2, 'Image');
+
+-- 2021-08-03 Jon
+DROP TABLE Metadata;
+
+CREATE TABLE IF NOT EXISTS `Metadata` (
+  `idMetadata` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` VARCHAR(100) NOT NULL,
+  `ValueShort` varchar(255) DEFAULT NULL,
+  `ValueExtended` longtext DEFAULT NULL,
+  `idAssetVersionValue` int(11) DEFAULT NULL,
+  `idUser` int(11) DEFAULT NULL,
+  `idVMetadataSource` int(11) DEFAULT NULL,
+  `idSystemObject` int(11) DEFAULT NULL,
+  `idSystemObjectParent` int(11) DEFAULT NULL,
+  PRIMARY KEY (`idMetadata`),
+  KEY `Metadata_Name` (`Name`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+ALTER TABLE `Metadata` 
+ADD CONSTRAINT `fk_metadata_assetversion1`
+  FOREIGN KEY (`idAssetVersionValue`)
+  REFERENCES `AssetVersion` (`idAssetVersion`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_metadata_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_metadata_vocabulary1`
+  FOREIGN KEY (`idVMetadataSource`)
   REFERENCES `Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `JobRun` 
-ADD CONSTRAINT `fk_jobrun_job1`
-  FOREIGN KEY (`idJob`)
-  REFERENCES `Job` (`idJob`)
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_metadata_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_metadata_systemobject2`
+  FOREIGN KEY (`idSystemObjectParent`)
+  REFERENCES `SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (21, 'Job.JobType', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 1, 'Cook: bake');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 2, 'Cook: decimate-unwrap');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 3, 'Cook: decimate');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 4, 'Cook: generate-usdz');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 5, 'Cook: generate-web-gltf');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 6, 'Cook: inspect-mesh');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 7, 'Cook: si-ar-backfill-fix');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 8, 'Cook: si-generate-downloads');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 9, 'Cook: si-orient-model-to-svx');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 10, 'Cook: si-packrat-inspect');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 11, 'Cook: si-voyager-asset');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 12, 'Cook: si-voyager-scene');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 13, 'Cook: unwrap');
-
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: bake';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: decimate-unwrap';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: decimate';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: generate-usdz';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: generate-web-gltf';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: inspect-mesh';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-ar-backfill-fix';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-generate-downloads';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-orient-model-to-svx';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-packrat-inspect';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-asset';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-scene';
-INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: unwrap';
-
+-- 2021-08-12 Jon
+ALTER TABLE Scene ADD COLUMN EdanUUID varchar(64) NULL;

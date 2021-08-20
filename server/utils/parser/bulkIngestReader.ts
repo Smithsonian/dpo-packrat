@@ -7,12 +7,12 @@ import * as CACHE from '../../cache';
 import * as STORE from '../../storage/interface';
 import * as H from '../helpers';
 import * as LOG from '../logger';
-import { IngestPhotogrammetry, IngestModel, IngestFolder, Item } from '../../types/graphql';
+import { IngestPhotogrammetry, IngestModel, IngestScene, IngestFolder, Item } from '../../types/graphql';
 import { IZip } from '../IZip';
-import { CSVTypes, SubjectsCSVFields, ItemsCSVFields, CaptureDataPhotoCSVFields, ModelsCSVFields } from './csvTypes';
+import { CSVTypes, SubjectsCSVFields, ItemsCSVFields, CaptureDataPhotoCSVFields, ModelsCSVFields, ScenesCSVFields } from './csvTypes';
 import { CSVParser } from './csvParser';
 
-export type IngestMetadata = DBAPI.SubjectUnitIdentifier & Omit<Item, '__typename'> & (Omit<IngestPhotogrammetry, '__typename'> | Omit<IngestModel, '__typename'>);
+export type IngestMetadata = DBAPI.SubjectUnitIdentifier & Omit<Item, '__typename'> & (Omit<IngestPhotogrammetry, '__typename'> | Omit<IngestModel, '__typename'> | Omit<IngestScene, '__typename'>);
 
 /** Provides access to bulk ingestion metadata, either from a bulk ingest bagit zip file, or from extracted metadata:
  * Our bulk ingest files can have any of the following metadata CSV files:
@@ -68,10 +68,9 @@ export class BulkIngestReader {
         if (!this._zip)
             return { success: false, error: 'BulkIngestReader.extractMetadata called with invalid zip' };
 
-        // extract metadata for capture data
-
         let results: H.IOResults;
-        let readStream: NodeJS.ReadableStream | null = await this._zip.streamContent('capture_data_photo.csv');
+        // extract metadata for capture data
+        let readStream: NodeJS.ReadableStream | null = await this._zip.streamContent('capture_data_photo.csv', true);
         if (readStream) {
             results = await this.computeCaptureDataPhotos(readStream); /* istanbul ignore if */
             if (!results.success)
@@ -79,9 +78,17 @@ export class BulkIngestReader {
         }
 
         // extract metadata for models
-        readStream = await this._zip.streamContent('models.csv');
+        readStream = await this._zip.streamContent('models.csv', true);
         if (readStream) {
             results = await this.computeModels(readStream); /* istanbul ignore next */
+            if (!results.success)
+                return results;
+        }
+
+        // extract metadata for scenes
+        readStream = await this._zip.streamContent('scenes.csv', true);
+        if (readStream) {
+            results = await this.computeScenes(readStream); /* istanbul ignore next */
             if (!results.success)
                 return results;
         }
@@ -106,11 +113,14 @@ export class BulkIngestReader {
         return this._ingestedMetadata;
     }
 
-    static ingestedObjectIsPhotogrammetry(obj: (IngestPhotogrammetry | IngestModel)): obj is IngestPhotogrammetry {
+    static ingestedObjectIsPhotogrammetry(obj: (IngestPhotogrammetry | IngestModel | IngestScene)): obj is IngestPhotogrammetry {
         return (obj as IngestPhotogrammetry).lightsourceType !== undefined;
     }
-    static ingestedObjectIsModel(obj: (IngestPhotogrammetry | IngestModel)): obj is IngestModel {
+    static ingestedObjectIsModel(obj: (IngestPhotogrammetry | IngestModel | IngestScene)): obj is IngestModel {
         return (obj as IngestModel).modality !== undefined;
+    }
+    static ingestedObjectIsScene(obj: (IngestPhotogrammetry | IngestModel | IngestScene)): obj is IngestScene {
+        return (obj as IngestScene).hasBeenQCd !== undefined;
     }
 
     static async computeProjects(ingestMetadata: IngestMetadata): Promise<DBAPI.Project[] | null> {
@@ -168,17 +178,48 @@ export class BulkIngestReader {
 
             const subject: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectFromCSV(bagitModel); /* istanbul ignore next */
             if (!subject)
-                return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute subject' };
+                return { success: false, error: 'BulkIngestReader.computeModels could not compute subject' };
 
             const item: DBAPI.Item | null = await this.extractItemFromCSV(bagitModel); /* istanbul ignore next */
             if (!item)
-                return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute item' };
+                return { success: false, error: 'BulkIngestReader.computeModels could not compute item' };
 
             const model: IngestModel | null = await this.extractModelFromCSV(bagitModel); /* istanbul ignore next */
             if (!model)
-                return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute model metadata' };
+                return { success: false, error: 'BulkIngestReader.computeModels could not compute model metadata' };
 
             this._ingestedMetadata.push({ ...subject, ...item, ...model });
+        }
+        return { success: true, error: '' };
+    }
+
+    private async computeScenes(fileStream: NodeJS.ReadableStream): Promise<H.IOResults> {
+        let bagitScenes: (SubjectsCSVFields & ItemsCSVFields & ScenesCSVFields)[];
+        try {
+            bagitScenes = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & ScenesCSVFields>(fileStream, CSVTypes.scenes);
+        } catch (error) {
+            LOG.error('BulkIngestReader.computeScenes scenes.csv not found', LOG.LS.eSYS, error);
+            return { success: true, error: '' };
+        }
+
+        for (const bagitScene of bagitScenes) {
+            LOG.info(`Processing scene ${JSON.stringify(bagitScene, H.Helpers.saferStringify)}`, LOG.LS.eSYS);
+            if (BulkIngestReader.isEmptyRow(bagitScene))
+                continue;
+
+            const subject: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectFromCSV(bagitScene); /* istanbul ignore next */
+            if (!subject)
+                return { success: false, error: 'BulkIngestReader.computeScenes could not compute subject' };
+
+            const item: DBAPI.Item | null = await this.extractItemFromCSV(bagitScene); /* istanbul ignore next */
+            if (!item)
+                return { success: false, error: 'BulkIngestReader.computeScenes could not compute item' };
+
+            const scene: IngestScene | null = await this.extractSceneFromCSV(bagitScene); /* istanbul ignore next */
+            if (!scene)
+                return { success: false, error: 'BulkIngestReader.computeScenes could not compute scene metadata' };
+
+            this._ingestedMetadata.push({ ...subject, ...item, ...scene });
         }
         return { success: true, error: '' };
     }
@@ -213,7 +254,7 @@ export class BulkIngestReader {
             return null;
         }
 
-        return { idSubject: 0, SubjectName: bagitSubject.subject_name, UnitAbbreviation: units[0].Abbreviation || /* istanbul ignore next */ '',
+        return { idSubject: 0, idSystemObject: 0, SubjectName: bagitSubject.subject_name, UnitAbbreviation: units[0].Abbreviation || /* istanbul ignore next */ '',
             IdentifierCollection: bagitSubject.subject_guid, IdentifierPublic: '' };
     }
 
@@ -230,10 +271,16 @@ export class BulkIngestReader {
             return null;
         }
 
+        const SO: DBAPI.SystemObject | null = await subject.fetchSystemObject();
+        if (!SO) {
+            LOG.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load system object from local_subject_id in ${JSON.stringify(bagitSubject)}`, LOG.LS.eSYS);
+            return null;
+        }
+
         const identifier: DBAPI.Identifier | null = (subject.idIdentifierPreferred)
             ? await DBAPI.Identifier.fetch(subject.idIdentifierPreferred)
             : /* istanbul ignore next */ null;
-        return { idSubject: subject.idSubject, SubjectName: subject.Name, UnitAbbreviation: unit.Abbreviation  || /* istanbul ignore next */ '',
+        return { idSubject: subject.idSubject, idSystemObject: SO.idSystemObject, SubjectName: subject.Name, UnitAbbreviation: unit.Abbreviation  || /* istanbul ignore next */ '',
             IdentifierCollection: identifier ? identifier.IdentifierValue : /* istanbul ignore next */ bagitSubject.subject_guid, IdentifierPublic: '' };
     }
 
@@ -338,7 +385,9 @@ export class BulkIngestReader {
             backgroundRemovalMethod,
             clusterType,
             clusterGeometryFieldId: bagitCDP.cluster_geometry_field_id,
-            directory: bagitCDP.directory_path
+            directory: bagitCDP.directory_path,
+            sourceObjects: [],
+            derivedObjects: []
         };
     }
 
@@ -370,8 +419,6 @@ export class BulkIngestReader {
             name: bagitModel.name,
             dateCaptured: bagitModel.date_created,
             creationMethod,
-            master: bagitModel.master != 0,
-            authoritative: bagitModel.authoritative != 0,
             modality,
             units,
             purpose,
@@ -379,7 +426,23 @@ export class BulkIngestReader {
             systemCreated: true,
             modelFileType: 0,
             identifiers: [],
-            sourceObjects: []
+            sourceObjects: [],
+            derivedObjects: []
+        };
+    }
+
+    private async extractSceneFromCSV(bagitScene: ScenesCSVFields): Promise<IngestScene | null> {
+        return {
+            idAssetVersion: 0,
+            systemCreated: true,
+            name: bagitScene.name,
+            hasBeenQCd: bagitScene.has_been_qcd !== 'false' && bagitScene.has_been_qcd !== '0',
+            isOriented: bagitScene.is_oriented !== 'false' && bagitScene.is_oriented !== '0',
+            directory: bagitScene.directory_path,
+            identifiers: [],
+            referenceModels: [],
+            sourceObjects: [],
+            derivedObjects: []
         };
     }
 

@@ -6,14 +6,15 @@ import * as LOG from '../../utils/logger';
 export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlBase> implements UserPersonalizationUrlBase {
     idUserPersonalizationUrl!: number;
     idUser!: number;
-    Personalization!: string;
     URL!: string;
+    Personalization!: string;
 
     constructor(input: UserPersonalizationUrlBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'UserPersonalizationUrl'; }
+    public fetchID(): number { return this.idUserPersonalizationUrl; }
 
     protected async createWorker(): Promise<boolean> {
         try {

@@ -17,6 +17,7 @@ type Query {
   getItem(input: GetItemInput!): GetItemResult!
   getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
+  getLicenseList(input: GetLicenseListInput!): GetLicenseListResult!
   getModel(input: GetModelInput!): GetModelResult!
   getModelConstellation(input: GetModelConstellationInput!): GetModelConstellationResult!
   getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput!): GetModelConstellationForAssetVersionResult!
@@ -26,18 +27,22 @@ type Query {
   getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
   getProjectList(input: GetProjectListInput!): GetProjectListResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  getSceneForAssetVersion(input: GetSceneForAssetVersionInput!): GetSceneForAssetVersionResult!
   getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
+  getSubjectList(input: GetSubjectListInput!): GetSubjectListResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
   getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
+  getUnitsFromEdanAbbreviation(input: GetUnitsFromEdanAbbreviationInput!): GetUnitsFromEdanAbbreviationResult!
   getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput!): GetUnitsFromNameSearchResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
-  getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
+  getVersionsForAsset(input: GetVersionsForAssetInput!): GetVersionsForAssetResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
   getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
+  getWorkflowList(input: GetWorkflowListInput!): GetWorkflowListResult!
   searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
 }
 
@@ -97,26 +102,38 @@ type AccessRole {
 scalar Upload
 
 type Mutation {
+  assignLicense(input: AssignLicenseInput!): AssignLicenseResult!
+  clearLicenseAssignment(input: ClearLicenseAssignmentInput!): ClearLicenseAssignmentResult!
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
+  createGeoLocation(input: CreateGeoLocationInput!): CreateGeoLocationResult!
   createItem(input: CreateItemInput!): CreateItemResult!
+  createLicense(input: CreateLicenseInput!): CreateLicenseResult!
   createProject(input: CreateProjectInput!): CreateProjectResult!
   createScene(input: CreateSceneInput!): CreateSceneResult!
   createSubject(input: CreateSubjectInput!): CreateSubjectResult!
+  createSubjectWithIdentifiers(input: CreateSubjectWithIdentifiersInput!): CreateSubjectWithIdentifiersResult!
   createUnit(input: CreateUnitInput!): CreateUnitResult!
   createUser(input: CreateUserInput!): CreateUserResult!
   createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
+  deleteIdentifier(input: DeleteIdentifierInput!): DeleteIdentifierResult!
+  deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
+  rollbackSystemObjectVersion(input: RollbackSystemObjectVersionInput!): RollbackSystemObjectVersionResult!
+  updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
+  updateLicense(input: UpdateLicenseInput!): CreateLicenseResult!
   updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
+  updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
   updateUser(input: UpdateUserInput!): CreateUserResult!
-  uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
+  uploadAsset(file: Upload!, type: Int!, idAsset: Int): UploadAssetResult!
 }
 
 type UploadAssetInput {
   file: Upload!
   type: Int!
+  idAsset: Int
 }
 
 enum UploadStatus {
@@ -145,6 +162,7 @@ input GetAssetVersionsDetailsInput {
 type IngestIdentifier {
   identifier: String!
   identifierType: Int!
+  idIdentifier: Int!
 }
 
 type IngestFolder {
@@ -172,6 +190,8 @@ type IngestPhotogrammetry {
   directory: String!
   folders: [IngestFolder!]!
   identifiers: [IngestIdentifier!]!
+  sourceObjects: [RelatedObject!]!
+  derivedObjects: [RelatedObject!]!
 }
 
 enum RelatedObjectType {
@@ -190,8 +210,6 @@ type IngestModel {
   idAssetVersion: Int!
   systemCreated: Boolean!
   name: String!
-  master: Boolean!
-  authoritative: Boolean!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
@@ -201,6 +219,7 @@ type IngestModel {
   directory: String!
   identifiers: [IngestIdentifier!]!
   sourceObjects: [RelatedObject!]!
+  derivedObjects: [RelatedObject!]!
 }
 
 enum ReferenceModelAction {
@@ -211,6 +230,8 @@ enum ReferenceModelAction {
 type ReferenceModel {
   idSystemObject: Int!
   name: String!
+  usage: String!
+  quality: String!
   fileSize: BigInt!
   resolution: Int
   boundingBoxP1X: Float
@@ -225,8 +246,14 @@ type ReferenceModel {
 type IngestScene {
   idAssetVersion: Int!
   systemCreated: Boolean!
+  name: String!
+  hasBeenQCd: Boolean!
+  isOriented: Boolean!
+  directory: String!
   identifiers: [IngestIdentifier!]!
   referenceModels: [ReferenceModel!]!
+  sourceObjects: [RelatedObject!]!
+  derivedObjects: [RelatedObject!]!
 }
 
 type GetAssetVersionDetailResult {
@@ -254,6 +281,7 @@ type GetAssetResult {
 
 type GetUploadedAssetVersionResult {
   AssetVersion: [AssetVersion!]!
+  idAssetVersionsUpdated: [Int!]!
 }
 
 input GetContentsForAssetVersionsInput {
@@ -277,6 +305,16 @@ input GetModelConstellationForAssetVersionInput {
 type GetModelConstellationForAssetVersionResult {
   idAssetVersion: Int!
   ModelConstellation: ModelConstellation
+}
+
+input GetSceneForAssetVersionInput {
+  idAssetVersion: Int!
+  directory: String
+}
+
+type GetSceneForAssetVersionResult {
+  idAssetVersion: Int!
+  SceneConstellation: SceneConstellation
 }
 
 scalar BigInt
@@ -438,6 +476,7 @@ input IngestItemInput {
 input IngestIdentifierInput {
   identifier: String!
   identifierType: Int!
+  idIdentifier: Int!
 }
 
 input IngestFolderInput {
@@ -447,6 +486,7 @@ input IngestFolderInput {
 
 input IngestPhotogrammetryInput {
   idAssetVersion: Int!
+  idAsset: Int
   name: String!
   dateCaptured: String!
   datasetType: Int!
@@ -465,12 +505,8 @@ input IngestPhotogrammetryInput {
   directory: String!
   folders: [IngestFolderInput!]!
   identifiers: [IngestIdentifierInput!]!
-}
-
-input IngestUVMapInput {
-  name: String!
-  edgeLength: Int!
-  mapType: Int!
+  sourceObjects: [RelatedObjectInput!]!
+  derivedObjects: [RelatedObjectInput!]!
 }
 
 input RelatedObjectInput {
@@ -482,10 +518,9 @@ input RelatedObjectInput {
 
 input IngestModelInput {
   idAssetVersion: Int!
+  idAsset: Int
   systemCreated: Boolean!
   name: String!
-  master: Boolean!
-  authoritative: Boolean!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
@@ -495,31 +530,25 @@ input IngestModelInput {
   directory: String!
   identifiers: [IngestIdentifierInput!]!
   sourceObjects: [RelatedObjectInput!]!
-}
-
-input ReferenceModelInput {
-  idSystemObject: Int!
-  name: String!
-  fileSize: BigInt!
-  resolution: Int
-  boundingBoxP1X: Float
-  boundingBoxP1Y: Float
-  boundingBoxP1Z: Float
-  boundingBoxP2X: Float
-  boundingBoxP2Y: Float
-  boundingBoxP2Z: Float
-  action: ReferenceModelAction!
+  derivedObjects: [RelatedObjectInput!]!
 }
 
 input IngestSceneInput {
   idAssetVersion: Int!
+  idAsset: Int
   systemCreated: Boolean!
+  name: String!
+  hasBeenQCd: Boolean!
+  isOriented: Boolean!
+  directory: String!
   identifiers: [IngestIdentifierInput!]!
-  referenceModels: [ReferenceModelInput!]!
+  sourceObjects: [RelatedObjectInput!]!
+  derivedObjects: [RelatedObjectInput!]!
 }
 
 input IngestOtherInput {
   idAssetVersion: Int!
+  idAsset: Int
   systemCreated: Boolean!
   identifiers: [IngestIdentifierInput!]!
 }
@@ -536,6 +565,7 @@ input IngestDataInput {
 
 type IngestDataResult {
   success: Boolean!
+  message: String
 }
 
 input AreCameraSettingsUniformInput {
@@ -546,6 +576,43 @@ type AreCameraSettingsUniformResult {
   isUniform: Boolean!
 }
 
+input CreateLicenseInput {
+  Name: String!
+  Description: String!
+  RestrictLevel: Int!
+}
+
+type CreateLicenseResult {
+  License: License
+}
+
+input UpdateLicenseInput {
+  idLicense: Int!
+  Name: String!
+  Description: String!
+  RestrictLevel: Int!
+}
+
+input ClearLicenseAssignmentInput {
+  idSystemObject: Int!
+  clearAll: Boolean
+}
+
+type ClearLicenseAssignmentResult {
+  success: Boolean!
+  message: String!
+}
+
+input AssignLicenseInput {
+  idSystemObject: Int!
+  idLicense: Int!
+}
+
+type AssignLicenseResult {
+  success: Boolean!
+  message: String!
+}
+
 input GetLicenseInput {
   idLicense: Int!
 }
@@ -554,10 +621,19 @@ type GetLicenseResult {
   License: License
 }
 
+input GetLicenseListInput {
+  search: String
+}
+
+type GetLicenseListResult {
+  Licenses: [License!]!
+}
+
 type License {
   idLicense: Int!
   Description: String!
   Name: String!
+  RestrictLevel: Int!
   LicenseAssignment: [LicenseAssignment]
 }
 
@@ -593,13 +669,11 @@ type Model {
   idModel: Int!
   Name: String!
   DateCreated: DateTime!
-  Master: Boolean!
-  Authoritative: Boolean!
-  idVCreationMethod: Int!
-  idVModality: Int!
-  idVPurpose: Int!
-  idVUnits: Int!
-  idVFileType: Int!
+  idVCreationMethod: Int
+  idVModality: Int
+  idVPurpose: Int
+  idVUnits: Int
+  idVFileType: Int
   idAssetThumbnail: Int
   CountAnimations: Int
   CountCameras: Int
@@ -611,6 +685,7 @@ type Model {
   CountEmbeddedTextures: Int
   CountLinkedTextures: Int
   FileEncoding: String
+  IsDracoCompressed: Boolean
   ModelConstellation: ModelConstellation
   VCreationMethod: Vocabulary
   VModality: Vocabulary
@@ -720,13 +795,24 @@ type ModelSceneXref {
   idModelSceneXref: Int!
   idModel: Int!
   idScene: Int!
+  Name: String
+  Usage: String
+  Quality: String
+  FileSize: BigInt
+  UVResolution: Int
+  BoundingBoxP1X: Float
+  BoundingBoxP1Y: Float
+  BoundingBoxP1Z: Float
+  BoundingBoxP2X: Float
+  BoundingBoxP2Y: Float
+  BoundingBoxP2Z: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
   R0: Float
   R1: Float
   R2: Float
   R3: Float
-  TS0: Float
-  TS1: Float
-  TS2: Float
   Model: Model
   Scene: Scene
 }
@@ -769,6 +855,10 @@ input GetObjectChildrenInput {
   variantType: [Int!]!
   modelPurpose: [Int!]!
   modelFileType: [Int!]!
+  dateCreatedFrom: DateTime
+  dateCreatedTo: DateTime
+  rows: Int!
+  cursorMark: String!
 }
 
 type NavigationResultEntry {
@@ -784,6 +874,7 @@ type GetObjectChildrenResult {
   error: String!
   entries: [NavigationResultEntry!]!
   metadataColumns: [Int!]!
+  cursorMark: String
 }
 
 type GetFilterViewDataResult {
@@ -796,6 +887,15 @@ input CreateSceneInput {
   HasBeenQCd: Boolean!
   IsOriented: Boolean!
   idAssetThumbnail: Int
+  CountScene: Int
+  CountNode: Int
+  CountCamera: Int
+  CountLight: Int
+  CountModel: Int
+  CountMeta: Int
+  CountSetup: Int
+  CountTour: Int
+  EdanUUID: String
 }
 
 type CreateSceneResult {
@@ -824,6 +924,15 @@ type Scene {
   idAssetThumbnail: Int
   IsOriented: Boolean!
   Name: String!
+  CountScene: Int
+  CountNode: Int
+  CountCamera: Int
+  CountLight: Int
+  CountModel: Int
+  CountMeta: Int
+  CountSetup: Int
+  CountTour: Int
+  EdanUUID: String
   AssetThumbnail: Asset
   ModelSceneXref: [ModelSceneXref]
   SystemObject: SystemObject
@@ -844,6 +953,11 @@ type IntermediaryFile {
   idAsset: Int!
   Asset: Asset
   SystemObject: SystemObject
+}
+
+type SceneConstellation {
+  Scene: Scene
+  ModelSceneXref: [ModelSceneXref]
 }
 
 input UpdateObjectDetailsInput {
@@ -910,8 +1024,6 @@ input CaptureDataDetailFieldsInput {
 
 input ModelDetailFieldsInput {
   Name: String
-  Master: Boolean
-  Authoritative: Boolean
   CreationMethod: Int
   Modality: Int
   Purpose: Int
@@ -921,7 +1033,6 @@ input ModelDetailFieldsInput {
 }
 
 input SceneDetailFieldsInput {
-  Links: [String!]!
   AssetType: Int
   Tours: Int
   Annotation: Int
@@ -961,6 +1072,7 @@ input StakeholderDetailFieldsInput {
 input UpdateObjectDetailsDataInput {
   Name: String
   Retired: Boolean
+  License: Int
   Unit: UnitDetailFieldsInput
   Project: ProjectDetailFieldsInput
   Subject: SubjectDetailFieldsInput
@@ -973,11 +1085,89 @@ input UpdateObjectDetailsDataInput {
   AssetVersion: AssetVersionDetailFieldsInput
   Actor: ActorDetailFieldsInput
   Stakeholder: StakeholderDetailFieldsInput
+  Identifiers: [UpdateIdentifier!]
 }
 
 type UpdateObjectDetailsResult {
   success: Boolean!
+  message: String!
 }
+
+input UpdateDerivedObjectsInput {
+  idSystemObject: Int!
+  Derivatives: [Int!]!
+  PreviouslySelected: [Int!]!
+}
+
+type UpdateDerivedObjectsResult {
+  success: Boolean!
+}
+
+input UpdateSourceObjectsInput {
+  idSystemObject: Int!
+  Sources: [Int!]!
+  PreviouslySelected: [Int!]!
+}
+
+type UpdateSourceObjectsResult {
+  success: Boolean!
+}
+
+input UpdateIdentifier {
+  id: Int!
+  identifier: String!
+  identifierType: Int!
+  selected: Boolean!
+  idSystemObject: Int!
+  idIdentifier: Int!
+}
+
+type DeleteObjectConnectionResult {
+  success: Boolean!
+  details: String!
+}
+
+input DeleteObjectConnectionInput {
+  idSystemObjectMaster: Int!
+  idSystemObjectDerived: Int!
+}
+
+type DeleteIdentifierResult {
+  success: Boolean!
+}
+
+input DeleteIdentifierInput {
+  idIdentifier: Int!
+}
+
+type RollbackSystemObjectVersionResult {
+  success: Boolean!
+  message: String!
+}
+
+input RollbackSystemObjectVersionInput {
+  idSystemObjectVersion: Int!
+}
+
+type CreateSubjectWithIdentifiersResult {
+  success: Boolean!
+  message: String!
+}
+
+input CreateSubjectWithIdentifiersInput {
+  identifiers: [CreateIdentifierInput!]!
+  subject: CreateSubjectInput!
+  systemCreated: Boolean!
+}
+
+input CreateIdentifierInput {
+  identifierValue: String!
+  identifierType: Int!
+  idSystemObject: Int
+  selected: Boolean!
+}
+
+scalar JSON
 
 input GetDetailsTabDataForObjectInput {
   idSystemObject: Int!
@@ -1037,6 +1227,7 @@ type CaptureDataDetailFields {
   clusterType: Int
   clusterGeometryFieldId: Int
   folders: [IngestFolder!]!
+  isValidData: Boolean
 }
 
 type SceneDetailFields {
@@ -1046,6 +1237,16 @@ type SceneDetailFields {
   Annotation: Int
   HasBeenQCd: Boolean
   IsOriented: Boolean
+  CountScene: Int
+  CountNode: Int
+  CountCamera: Int
+  CountLight: Int
+  CountModel: Int
+  CountMeta: Int
+  CountSetup: Int
+  CountTour: Int
+  EdanUUID: String
+  idScene: Int
 }
 
 type IntermediaryFileDetailFields {
@@ -1059,6 +1260,8 @@ type ProjectDocumentationDetailFields {
 type AssetDetailFields {
   FilePath: String
   AssetType: Int
+  Asset: Asset
+  idAsset: Int
 }
 
 type AssetVersionDetailFields {
@@ -1067,6 +1270,9 @@ type AssetVersionDetailFields {
   Ingested: Boolean
   Version: Int
   StorageSize: BigInt
+  AssetVersion: AssetVersion
+  idAsset: Int
+  idAssetVersion: Int
 }
 
 type ActorDetailFields {
@@ -1108,6 +1314,7 @@ type RepositoryPath {
 }
 
 type GetSystemObjectDetailsResult {
+  idSystemObject: Int!
   idObject: Int!
   name: String!
   retired: Boolean!
@@ -1119,10 +1326,13 @@ type GetSystemObjectDetailsResult {
   objectAncestors: [[RepositoryPath!]!]!
   sourceObjects: [RelatedObject!]!
   derivedObjects: [RelatedObject!]!
+  objectVersions: [SystemObjectVersion!]!
   unit: RepositoryPath
   project: RepositoryPath
   subject: RepositoryPath
   item: RepositoryPath
+  license: License
+  licenseInherited: Boolean
 }
 
 input GetSourceObjectIdentiferInput {
@@ -1138,14 +1348,12 @@ type GetSourceObjectIdentiferResult {
   sourceObjectIdentifiers: [SourceObjectIdentifier!]!
 }
 
-type AssetDetail {
-  idSystemObject: Int!
-  name: String!
-  path: String!
-  assetType: Int!
-  version: Int!
-  dateCreated: DateTime!
-  size: BigInt!
+type ColumnDefinition {
+  colName: String!
+  colLabel: String!
+  colDisplay: Boolean!
+  colType: Int!
+  colAlign: String!
 }
 
 input GetAssetDetailsForSystemObjectInput {
@@ -1153,23 +1361,26 @@ input GetAssetDetailsForSystemObjectInput {
 }
 
 type GetAssetDetailsForSystemObjectResult {
-  assetDetails: [AssetDetail!]!
+  columns: [ColumnDefinition!]!
+  assetDetailRows: [JSON!]!
 }
 
 type DetailVersion {
   idSystemObject: Int!
+  idAssetVersion: Int!
   version: Int!
   name: String!
   creator: String!
   dateCreated: DateTime!
   size: BigInt!
+  ingested: Boolean!
 }
 
-input GetVersionsForSystemObjectInput {
+input GetVersionsForAssetInput {
   idSystemObject: Int!
 }
 
-type GetVersionsForSystemObjectResult {
+type GetVersionsForAssetResult {
   versions: [DetailVersion!]!
 }
 
@@ -1179,6 +1390,19 @@ type GetProjectListResult {
 
 input GetProjectListInput {
   search: String!
+}
+
+type GetSubjectListResult {
+  subjects: [SubjectUnitIdentifier!]!
+}
+
+input GetSubjectListInput {
+  search: String!
+  idUnit: Int
+  pageNumber: Int
+  rowCount: Int
+  sortBy: Int
+  sortOrder: Boolean
 }
 
 type SystemObject {
@@ -1229,6 +1453,7 @@ type SystemObjectVersion {
   idSystemObjectVersion: Int!
   idSystemObject: Int!
   PublishedState: Int!
+  DateCreated: DateTime!
   SystemObject: SystemObject
 }
 
@@ -1244,13 +1469,13 @@ type Identifier {
 type Metadata {
   idMetadata: Int!
   Name: String!
-  idAssetValue: Int
   idSystemObject: Int
   idUser: Int
   idVMetadataSource: Int
+  idAssetVersionValue: Int
   ValueExtended: String
   ValueShort: String
-  AssetValue: Asset
+  AssetVersionValue: AssetVersion
   SystemObject: SystemObject
   User: User
   VMetadataSource: Vocabulary
@@ -1298,6 +1523,23 @@ type CreateItemResult {
   Item: Item
 }
 
+input CreateGeoLocationInput {
+  Latitude: Int
+  Longitude: Int
+  Altitude: Int
+  TS0: Int
+  TS1: Int
+  TS2: Int
+  R0: Int
+  R1: Int
+  R2: Int
+  R3: Int
+}
+
+type CreateGeoLocationResult {
+  GeoLocation: GeoLocation
+}
+
 input GetSubjectsForUnitInput {
   idUnit: Int!
   pagination: PaginationInput = {}
@@ -1318,6 +1560,7 @@ type GetItemsForSubjectResult {
 
 type SubjectUnitIdentifier {
   idSubject: Int!
+  idSystemObject: Int!
   SubjectName: String!
   UnitAbbreviation: String!
   IdentifierPublic: String
@@ -1338,6 +1581,7 @@ type GetObjectsForItemResult {
 
 input SearchIngestionSubjectsInput {
   query: String!
+  EdanOnly: Boolean
 }
 
 type SearchIngestionSubjectsResult {
@@ -1406,6 +1650,14 @@ type GetUnitsFromNameSearchResult {
 
 input GetUnitsFromNameSearchInput {
   search: String!
+}
+
+type GetUnitsFromEdanAbbreviationResult {
+  Units: [Unit!]!
+}
+
+input GetUnitsFromEdanAbbreviationInput {
+  abbreviation: String!
 }
 
 type Unit {
@@ -1633,8 +1885,26 @@ input GetWorkflowInput {
   idWorkflow: Int!
 }
 
+input GetWorkflowListInput {
+  idVWorkflowType: [Int!]
+  idVJobType: [Int!]
+  State: [Int!]
+  DateFrom: DateTime
+  DateTo: DateTime
+  idUserInitiator: [Int!]
+  idUserOwner: [Int!]
+  pageNumber: Int
+  rowCount: Int
+  sortBy: Int
+  sortOrder: Boolean
+}
+
 type GetWorkflowResult {
   Workflow: Workflow
+}
+
+type GetWorkflowListResult {
+  WorkflowList: [WorkflowListResult]
 }
 
 type Job {
@@ -1674,6 +1944,19 @@ type Workflow {
   WorkflowStep: [WorkflowStep]
 }
 
+type WorkflowReport {
+  idWorkflowReport: Int!
+  idWorkflow: Int!
+  MimeType: String!
+  Data: String!
+  Workflow: Workflow
+}
+
+type WorkflowSet {
+  idWorkflowSet: Int!
+  Workflow: [Workflow]
+}
+
 type WorkflowStep {
   idWorkflowStep: Int!
   JobRun: JobRun
@@ -1696,4 +1979,27 @@ type WorkflowStepSystemObjectXref {
   Input: Boolean!
   SystemObject: SystemObject
   WorkflowStep: WorkflowStep
+}
+
+type WorkflowListResult {
+  idWorkflow: Int!
+  idWorkflowSet: Int
+  idWorkflowReport: Int
+  idJobRun: Int
+  Type: String
+  State: String
+  idUserInitiator: Int
+  idOwner: Int
+  DateStart: DateTime
+  DateLast: DateTime
+  Error: String
+  UserInitiator: User
+  Owner: User
+  Workflow: Workflow
+  WorkflowReport: WorkflowReport
+  WorkflowSet: WorkflowSet
+  JobRun: JobRun
+  HyperlinkReport: String
+  HyperlinkSet: String
+  HyperlinkJob: String
 }

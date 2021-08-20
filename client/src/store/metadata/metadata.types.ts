@@ -3,7 +3,7 @@
  *
  * Type definitions for the metadata store.
  */
-import { AssetDetail, DetailVersion, ReferenceModel, ReferenceModelAction, RelatedObject } from '../../types/graphql';
+import { DetailVersion, ReferenceModel, ReferenceModelAction, RelatedObject } from '../../types/graphql';
 import { IngestionFile } from '../upload';
 
 export type StateMetadata = {
@@ -33,6 +33,7 @@ export type FieldErrors = {
         datasetType: boolean;
     };
     model: {
+        name: boolean;
         dateCaptured: boolean;
         creationMethod: boolean;
         modality: boolean;
@@ -55,6 +56,7 @@ export type StateIdentifier = {
     identifier: string;
     identifierType: number | null;
     selected: boolean;
+    idIdentifier: number;
 };
 
 export type StateFolder = {
@@ -66,6 +68,8 @@ export type StateFolder = {
 export type PhotogrammetryFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    sourceObjects: StateRelatedObject[];
+    derivedObjects: StateRelatedObject[];
     folders: StateFolder[];
     name: string;
     description: string;
@@ -82,6 +86,7 @@ export type PhotogrammetryFields = {
     clusterGeometryFieldId: number | null;
     cameraSettingUniform: boolean;
     directory: string;
+    idAsset?: number;
 };
 
 export type ModelFields = {
@@ -89,33 +94,40 @@ export type ModelFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     sourceObjects: StateRelatedObject[];
+    derivedObjects: StateRelatedObject[];
     dateCaptured: Date | string | null;
     creationMethod: number | null;
-    master: boolean;
-    authoritative: boolean;
     modality: number | null;
     units: number | null;
     purpose: number | null;
     modelFileType: number | null;
     directory: string;
+    idAsset?: number;
 };
 
 export type SceneFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    sourceObjects: StateRelatedObject[];
+    derivedObjects: StateRelatedObject[];
     referenceModels: StateReferenceModel[];
+    hasBeenQCd: boolean;
+    isOriented: boolean;
+    name: string;
+    directory: string;
+    EdanUUID: string;
+    idAsset?: number;
 };
 
 export type OtherFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    idAsset?: number;
 };
 
 export type StateRelatedObject = RelatedObject;
 
 export type StateReferenceModel = ReferenceModel;
-
-export type StateAssetDetail = AssetDetail;
 
 export type StateDetailVersion = DetailVersion;
 

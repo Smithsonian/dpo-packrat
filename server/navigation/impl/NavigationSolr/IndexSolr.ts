@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import * as NAV from '../../interface';
 import * as LOG from '../../../utils/logger';
+import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import { eSystemObjectType, ObjectGraphDataEntry } from '../../../db';
-import { SolrClient } from './SolrClient';
+import { SolrClient, eSolrCore } from './SolrClient';
 
-export class IndexSolr {
+export class IndexSolr implements NAV.IIndexer {
     private objectGraphDatabase: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
     private hierarchyNameMap: Map<number, string> = new Map<number, string>(); // map of idSystemObject -> object name
     private static fullIndexUnderway: boolean = false;
@@ -24,8 +26,87 @@ export class IndexSolr {
     private countActor:                 number = 0;
     private countStakeholder:           number = 0;
     private countUnknown:               number = 0;
+    private countMetadata:              number = 0;
 
-    async fullIndexProfiled(): Promise<boolean> {
+    async fullIndex(profiled?: boolean | undefined): Promise<boolean> {
+        if (profiled)
+            return this.fullIndexProfiled();
+
+        if (IndexSolr.fullIndexUnderway) {
+            LOG.error('IndexSolr.fullIndex() already underway; exiting this additional request early', LOG.LS.eNAV);
+            return false;
+        }
+
+        let retValue: boolean = false;
+        try {
+            IndexSolr.fullIndexUnderway = true;
+            retValue = await this.fullIndexWorker();
+        } catch (error) {
+            LOG.error('IndexSolr.fullIndex', LOG.LS.eNAV, error);
+        } finally {
+            IndexSolr.fullIndexUnderway = false;
+        }
+        return retValue;
+    }
+
+    async indexObject(idSystemObject: number): Promise<boolean> {
+        // Compute full object graph for object
+        if (!await this.objectGraphDatabase.fetchFromSystemObject(idSystemObject))
+            LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed computing ObjectGraph`, LOG.LS.eNAV);
+
+        const OGDE: ObjectGraphDataEntry | undefined = this.objectGraphDatabase.objectMap.get(idSystemObject);
+        if (!OGDE) {
+            LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed fetching ObjectGraphDataEntry from ObjectGraphDatabase`, LOG.LS.eNAV);
+            return false;
+        }
+
+        const docs: any[] = [];
+        const doc: any = {};
+        if (await this.handleObject(doc, OGDE)) {
+            docs.push(doc);
+
+            if (!await this.handleAncestors(docs, OGDE)) // updates docs, if there are ancestors and if OGDE has children data
+                return false;
+
+            // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(doc, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eNAV);
+            const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackrat);
+            try {
+                let res: H.IOResults = await solrClient.add(docs);
+                if (res.success)
+                    res = await solrClient.commit();
+                if (!res.success)
+                    LOG.error(`IndexSolr.indexObject failed: ${res.error}`, LOG.LS.eNAV);
+            } catch (error) {
+                LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed`, LOG.LS.eNAV, error);
+                return false;
+            }
+
+            LOG.info(`IndexSolr.indexObject(${idSystemObject}) succeeded, updating ${docs.length} documents`, LOG.LS.eNAV);
+        } else
+            LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed in handleObject`, LOG.LS.eNAV);
+
+        return true;
+    }
+
+    /** Returns count of indexed metadata, or -1 if there's an error */
+    async indexMetadata(metadataList: DBAPI.Metadata[]): Promise<boolean> {
+        const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackratMeta);
+        const documentCount: number = await this.indexMetadataWorker(solrClient, metadataList, false);
+        if (documentCount >= -1) {
+            LOG.info(`IndexSolr.indexMetadata succeeded, updating ${documentCount} documents`, LOG.LS.eNAV);
+            return true;
+        } else {
+            LOG.error('IndexSolr.indexMetadata failed', LOG.LS.eNAV);
+            return false;
+        }
+    }
+
+    private async fullIndexProfiled(): Promise<boolean> {
+        if (IndexSolr.fullIndexUnderway) {
+            LOG.error('IndexSolr.fullIndexProfiled() already underway; exiting this additional request early', LOG.LS.eNAV);
+            return false;
+        }
+
         LOG.info('****************************************', LOG.LS.eNAV);
         LOG.info('IndexSolr.fullIndexProfiled() starting', LOG.LS.eNAV);
         return new Promise<boolean>((resolve) => {
@@ -36,8 +117,16 @@ export class IndexSolr {
 
             session.post('Profiler.enable', async () => {
                 session.post('Profiler.start', async () => {
-                    LOG.info('IndexSolr.fullIndexProfiled() fullIndex() starting', LOG.LS.eNAV);
-                    const retValue: boolean = await this.fullIndex();
+                    let retValue: boolean = false;
+                    try {
+                        IndexSolr.fullIndexUnderway = true;
+                        retValue = await this.fullIndexWorker();
+                    } catch (error) {
+                        LOG.error('IndexSolr.fullIndexProfiled', LOG.LS.eNAV, error);
+                    } finally {
+                        IndexSolr.fullIndexUnderway = false;
+                    }
+
                     LOG.info('IndexSolr.fullIndexProfiled() fullIndex() complete', LOG.LS.eNAV);
                     resolve(retValue);
 
@@ -55,56 +144,33 @@ export class IndexSolr {
         });
     }
 
-    async fullIndex(): Promise<boolean> {
-        if (IndexSolr.fullIndexUnderway) {
-            LOG.error('IndexSolr.fullIndex() already underway; exiting this additional request early', LOG.LS.eNAV);
-            return false;
-        }
+    private async handleAncestors(docs: any[], OGDE: ObjectGraphDataEntry): Promise<boolean> {
+        const OGDEHChildrenInfo: DBAPI.ObjectGraphDataEntryHierarchy = OGDE.extractChildrenHierarchy(null);
+        if (OGDEHChildrenInfo.childrenInfoEmpty())
+            return true;
 
-        let retValue: boolean = false;
-        try {
-            IndexSolr.fullIndexUnderway = true;
-            retValue = await this.fullIndexWorker();
-        } finally {
-            IndexSolr.fullIndexUnderway = false;
+        for (const idSystemObject of OGDE.ancestorObjectMap.keys()) {
+            const doc: any = {};
+            doc.id = idSystemObject;
+            await this.extractCommonChildrenFields(doc, OGDEHChildrenInfo, false); // false means we're updating
+            docs.push(doc);
+            // LOG.info(`IndexSolr.handleAncestors prepping to update ${JSON.stringify(doc)}`, LOG.LS.eNAV);
         }
-        return retValue;
-    }
-
-    // TODO: test! Integrate potentially with TBD audit interface, providing a path for system object creation and updates to flow through to Solr
-    async indexObject(idSystemObject: number): Promise<boolean> {
-        // Compute full object graph for object
-        const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAll, 32, this.objectGraphDatabase);
-        if (!await OG.fetch()) {
-            LOG.error(`IndexSolr.indexObject failed fetching ObjectGraph for ${idSystemObject}`, LOG.LS.eNAV);
-            return false;
-        }
-        const OGDE: ObjectGraphDataEntry | undefined = this.objectGraphDatabase.objectMap.get(idSystemObject);
-        if (!OGDE) {
-            LOG.error('IndexSolr.indexObject failed fetching ObjectGraphDataEntry from ObjectGraphDatabase', LOG.LS.eNAV);
-            return false;
-        }
-
-        const doc: any = {};
-        if (await this.handleObject(doc, OGDE)) {
-            const solrClient: SolrClient = new SolrClient(null, null, null);
-            try {
-                solrClient._client.add([doc], undefined, function (err, obj) { if (err) LOG.error('IndexSolr.indexObject adding record', LOG.LS.eNAV, err); else obj; });
-                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.error('IndexSolr.indexObject -> commit()', LOG.LS.eNAV, err); else obj; });
-            } catch (error) {
-                LOG.error(`IndexSolr.indexObject ${idSystemObject} failed`, LOG.LS.eNAV, error);
-                return false;
-            }
-        } else
-            LOG.error('IndexSolr.indexObject failed in handleObject', LOG.LS.eNAV);
-
         return true;
     }
 
     private async fullIndexWorker(): Promise<boolean> {
-        const solrClient: SolrClient = new SolrClient(null, null, null);
+        if (!await this.fullIndexWorkerOG())
+            return false;
+
+        return await this.fullIndexWorkerMeta();
+    }
+
+    private async fullIndexWorkerOG(): Promise<boolean> {
+        const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackrat);
+
         if (!(await this.objectGraphDatabase.fetch())) {
-            LOG.error('IndexSolr.fullIndex failed on ObjectGraphDatabase.fetch()', LOG.LS.eNAV);
+            LOG.error('IndexSolr.fullIndexWorkerOG failed on ObjectGraphDatabase.fetch()', LOG.LS.eNAV);
             return false;
         }
 
@@ -116,30 +182,19 @@ export class IndexSolr {
                 docs.push(doc);
 
                 if (docs.length >= 1000) {
-                    try {
-                        solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex adding cached records', LOG.LS.eNAV, err); else obj; });
-                        solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex -> commit()', LOG.LS.eNAV, err); else obj; });
-                    } catch (error) {
-                        LOG.error('IndexSolr.fullIndexWorker failed', LOG.LS.eNAV, error);
+                    documentCount = await this.addDocumentsToSolr(solrClient, docs, documentCount, 'fullIndexWorkerOG');
+                    if (documentCount === -1)
                         return false;
-                    }
-                    documentCount += docs.length;
-                    LOG.info(`IndexSolr.fullIndex committed ${documentCount} total documents`, LOG.LS.eNAV);
                     docs = [];
                 }
             } else
-                LOG.error('IndexSolr.fullIndex failed in handleObject', LOG.LS.eNAV);
+                LOG.error('IndexSolr.fullIndexWorkerOG failed in handleObject', LOG.LS.eNAV);
         }
 
         if (docs.length > 0) {
-            try {
-                solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex adding cached records', LOG.LS.eNAV, err); else obj; });
-                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex -> commit()', LOG.LS.eNAV, err); else obj; });
-            } catch (error) {
-                LOG.error('IndexSolr.fullIndexWorker failed', LOG.LS.eNAV, error);
+            documentCount = await this.addDocumentsToSolr(solrClient, docs, documentCount, 'fullIndexWorkerOG');
+            if (documentCount === -1)
                 return false;
-            }
-            documentCount += docs.length;
         }
 
         LOG.info(`IndexSolr.fullIndex indexed units: ${this.countUnit}`, LOG.LS.eNAV);
@@ -158,6 +213,108 @@ export class IndexSolr {
         LOG.info(`IndexSolr.fullIndex indexed unknown: ${this.countUnknown}`, LOG.LS.eNAV);
         LOG.info(`IndexSolr.fullIndex committed ${documentCount} total documents`, LOG.LS.eNAV);
         return true;
+    }
+
+    private async fullIndexWorkerMeta(): Promise<boolean> {
+        const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackratMeta);
+
+        let result: boolean = true;
+        let documentCount: number = 0;
+        let idMetadataLast: number = 0;
+
+        while (true) { // eslint-disable-line no-constant-condition
+            const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchAllByPage(idMetadataLast, 1000);
+            if (!metadataList) {
+                LOG.error('IndexSolr.fullIndexWorkerMeta could not fetch metadata', LOG.LS.eNAV);
+                return false;
+            }
+            if (metadataList.length <= 0)
+                break;
+
+            documentCount = await this.indexMetadataWorker(solrClient, metadataList, true, documentCount);
+            if (documentCount === -1) {
+                documentCount = 0;
+                result = false;
+            }
+            idMetadataLast = metadataList[metadataList.length - 1].idMetadata;
+        }
+
+        LOG.info(`IndexSolr.fullIndex indexed metadata: ${this.countMetadata}`, LOG.LS.eNAV);
+        return result;
+    }
+
+    private async indexMetadataWorker(solrClient: SolrClient, metadataList: DBAPI.Metadata[], create: boolean, documentCount?: number | undefined): Promise<number> {
+        documentCount = documentCount ?? 0;
+        if (metadataList.length <= 0)
+            return documentCount;
+
+        const metadataMap: Map<number, DBAPI.Metadata[]> = new Map<number, DBAPI.Metadata[]>(); // map of idSystemObject -> array of Metadata
+        for (const metadata of metadataList) {
+            if (!metadata.idSystemObject)
+                continue;
+            let metadataList: DBAPI.Metadata[] | undefined = metadataMap.get(metadata.idSystemObject);
+            if (!metadataList) {
+                metadataList = [];
+                metadataMap.set(metadata.idSystemObject, metadataList);
+            }
+            metadataList.push(metadata);
+        }
+
+        const docs: any[] = [];
+        for (const [idSystemObject, metadataList] of metadataMap) {
+            const doc: any = {};
+            const textGrabAll: string[] = [];
+            let idSystemObjectParent: number = idSystemObject;
+
+            doc.id = idSystemObject;
+            for (const metadata of metadataList) {
+                if (metadata.idSystemObjectParent)
+                    idSystemObjectParent = metadata.idSystemObjectParent;
+
+                const key: string = `${metadata.Name.toLowerCase()}_v`;
+                if (metadata.ValueShort) {
+                    doc[key] = create ? metadata.ValueShort : { 'set': metadata.ValueShort };
+                    textGrabAll.push(metadata.ValueShort);
+                } else if (metadata.ValueExtended) {
+                    const value: string = metadata.ValueExtended.substring(0, 4096);
+                    doc[key] = create ? value : { 'set': value };
+                    textGrabAll.push(value);
+                }
+
+                if (metadata.idVMetadataSource) {
+                    const metadataSourceV: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(metadata.idVMetadataSource);
+                    if (metadataSourceV)
+                        doc.MetadataSource = create ? metadataSourceV.Term : { 'set': metadataSourceV.Term };
+                    else
+                        LOG.error(`IndexSolr.fullIndexWorkerMeta could not fetch metadata source ${metadata.idVMetadataSource}`, LOG.LS.eNAV);
+                }
+            }
+            doc.idSystemObjectParent = create ? idSystemObjectParent : { 'set': idSystemObjectParent };
+            if (!textGrabAll.length)
+                textGrabAll.push('');
+            doc._text_ = create ? textGrabAll : { 'set': textGrabAll };
+
+            docs.push(doc);
+            this.countMetadata++;
+        }
+
+        return await this.addDocumentsToSolr(solrClient, docs, documentCount, 'indexObjectMetadata');
+    }
+
+    private async addDocumentsToSolr(solrClient: SolrClient, docs: any[], documentCount: number, callerForLog: string): Promise<number> {
+        try {
+            let res: H.IOResults = await solrClient.add(docs);
+            if (res.success)
+                res = await solrClient.commit();
+            if (!res.success)
+                LOG.error(`IndexSolr.${callerForLog} failed: ${res.error}`, LOG.LS.eNAV);
+        } catch (error) {
+            LOG.error(`IndexSolr.${callerForLog} failed`, LOG.LS.eNAV, error);
+            return -1;
+        }
+        documentCount += docs.length;
+        LOG.info(`IndexSolr.${callerForLog} committed ${documentCount} total documents to ${solrClient.core()}`, LOG.LS.eNAV);
+        return documentCount;
     }
 
     private async handleObject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
@@ -288,31 +445,47 @@ export class IndexSolr {
             idArray = [];
         }
 
+        await this.extractCommonChildrenFields(doc, OGDEH, true);
+    }
+
+    private async extractCommonChildrenFields(doc: any, OGDEH: DBAPI.ObjectGraphDataEntryHierarchy, create: boolean): Promise<void> {
         const ChildrenObjectTypes: string[] = [];
         for (const childrenObjectType of OGDEH.childrenObjectTypes)
             ChildrenObjectTypes.push(DBAPI.SystemObjectTypeToName(childrenObjectType));
-        doc.ChildrenObjectTypes = ChildrenObjectTypes;
+        if (ChildrenObjectTypes.length > 0)
+            doc.ChildrenObjectTypes = create ? ChildrenObjectTypes : { 'add': ChildrenObjectTypes };
 
         let VocabList: string[] = [];
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenCaptureMethods);
-        doc.ChildrenCaptureMethods = VocabList;
-        VocabList = [];
+        if (VocabList.length > 0) {
+            doc.ChildrenCaptureMethods = create ?  VocabList : { 'add': VocabList };
+            VocabList = [];
+        }
 
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenVariantTypes);
-        doc.ChildrenVariantTypes = VocabList;
-        VocabList = [];
+        if (VocabList.length > 0) {
+            doc.ChildrenVariantTypes = create ?  VocabList : { 'add': VocabList };
+            VocabList = [];
+        }
 
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenModelPurposes);
-        doc.ChildrenModelPurposes = VocabList;
-        VocabList = [];
+        if (VocabList.length > 0) {
+            doc.ChildrenModelPurposes = create ?  VocabList : { 'add': VocabList };
+            VocabList = [];
+        }
 
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenModelFileTypes);
-        doc.ChildrenModelFileTypes = VocabList;
-        VocabList = [];
+        if (VocabList.length > 0) {
+            doc.ChildrenModelFileTypes = create ?  VocabList : { 'add': VocabList };
+            VocabList = [];
+        }
+
+        if (OGDEH.childrenDateCreated.length > 0)
+            doc.ChildrenDateCreated = create ? OGDEH.childrenDateCreated : { 'add': OGDEH.childrenDateCreated };
     }
 
-    private async computeVocabulary(idVocabulary: number): Promise<string | undefined> {
-        const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabulary);
+    private async computeVocabulary(idVocabulary: number | null): Promise<string | undefined> {
+        const vocab: DBAPI.Vocabulary | undefined = idVocabulary ? await CACHE.VocabularyCache.vocabulary(idVocabulary) : undefined;
         return vocab ? vocab.Term : undefined;
     }
 
@@ -391,6 +564,7 @@ export class IndexSolr {
         doc.CommonName = captureData.Name;
         doc.CommonDescription = captureData.Description;
         doc.CommonDateCreated = captureData.DateCaptured;
+        doc.ChildrenDateCreated = [captureData.DateCaptured];
         doc.CDCaptureMethod = await this.lookupVocabulary(captureData.idVCaptureMethod);
         if (captureDataPhoto) {
             doc.CDCaptureDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
@@ -431,10 +605,9 @@ export class IndexSolr {
 
         doc.CommonName = model.Name;
         doc.CommonDateCreated = model.DateCreated;
+        doc.ChildrenDateCreated = [model.DateCreated];
 
         doc.ModelCreationMethod = await this.computeVocabulary(model.idVCreationMethod);
-        doc.ModelMaster = model.Master;
-        doc.ModelAuthoritative = model.Authoritative;
         doc.ModelModality = await this.computeVocabulary(model.idVModality);
         doc.ModelUnits = await this.computeVocabulary(model.idVUnits);
         doc.ModelPurpose = await this.computeVocabulary(model.idVPurpose);
@@ -450,6 +623,7 @@ export class IndexSolr {
         doc.ModelCountEmbeddedTextures = model.CountEmbeddedTextures;
         doc.ModelCountLinkedTextures = model.CountLinkedTextures;
         doc.ModelFileEncoding = model.FileEncoding;
+        doc.ModelIsDracoCompressed = model.IsDracoCompressed;
 
         const modelMaterialNameMap: Map<string, boolean> = new Map<string, boolean>();
         const modelMaterialChannelTypeMap: Map<string, boolean> = new Map<string, boolean>();
@@ -585,6 +759,14 @@ export class IndexSolr {
         doc.CommonName = scene.Name;
         doc.SceneIsOriented = scene.IsOriented;
         doc.SceneHasBeenQCd = scene.HasBeenQCd;
+        doc.SceneCountScene = scene.CountScene;
+        doc.SceneCountNode = scene.CountNode;
+        doc.SceneCountCamera = scene.CountCamera;
+        doc.SceneCountLight = scene.CountLight;
+        doc.SceneCountModel = scene.CountModel;
+        doc.SceneCountMeta = scene.CountMeta;
+        doc.SceneCountSetup = scene.CountSetup;
+        doc.SceneCountTour = scene.CountTour;
         this.countScene++;
         return true;
     }
@@ -597,6 +779,7 @@ export class IndexSolr {
         }
         doc.CommonName = `Intermediary File created ${intermediaryFile.DateCreated.toISOString()}`;
         doc.CommonDateCreated = intermediaryFile.DateCreated;
+        doc.ChildrenDateCreated = [intermediaryFile.DateCreated];
         this.countIntermediaryFile++;
         return true;
     }

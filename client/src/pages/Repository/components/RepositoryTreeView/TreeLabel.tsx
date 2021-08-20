@@ -2,6 +2,7 @@
  * TreeLabel
  *
  * This component renders a tree label for StyledTreeItem.
+ * The label includes the SO type icon, SO name, and external link icon
  */
 import { Box } from '@material-ui/core';
 import { grey } from '@material-ui/core/colors';
@@ -125,6 +126,16 @@ export function TreeLabelLoading(): React.ReactElement {
     return (
         <div className={classes.container}>
             <Progress className={classes.stickyItem} size={15} />
+        </div>
+    );
+}
+
+
+export function TreeLabelEllipsis(): React.ReactElement {
+    const classes = useLabelStyle();
+    return (
+        <div className={classes.container}>
+            <span title='possibly more results'>...</span>
         </div>
     );
 }
