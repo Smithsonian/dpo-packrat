@@ -15,6 +15,7 @@ input CreateSceneInput {
     CountMeta: Int
     CountSetup: Int
     CountTour: Int
+    EdanUUID: String
 }
 
 type CreateSceneResult {

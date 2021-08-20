@@ -27,8 +27,7 @@ export class EventConsumerDB extends EventConsumer {
             switch (dataItem.key) {
                 case EVENT.eEventKey.eDBCreate:
                 case EVENT.eEventKey.eDBUpdate:
-                case EVENT.eEventKey.eDBDelete:
-                case EVENT.eEventKey.eSceneQCd: {
+                case EVENT.eEventKey.eDBDelete: {
                     const audit: DBAPI.Audit = EventConsumerDB.convertDataToAudit(dataItem.value);
 
                     let idSystemObject: number | null = audit.idSystemObject;

@@ -16,6 +16,7 @@ const getScene = gql`
                 CountMeta
                 CountSetup
                 CountTour
+                EdanUUID
                 ModelSceneXref {
                     idModelSceneXref
                     idModel
