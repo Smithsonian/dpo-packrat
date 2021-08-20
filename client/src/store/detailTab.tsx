@@ -16,7 +16,7 @@ import {
 import lodash from 'lodash';
 
 export interface ModelDetailsType {
-    DateCaptured: string | null;
+    DateCreated: string | null;
     idVCreationMethod: number | null;
     idVModality: number | null;
     idVPurpose: number | null;
@@ -117,7 +117,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         EntireSubject: null
     },
     ModelDetails: {
-        DateCaptured: null,
+        DateCreated: null,
         idVCreationMethod: null,
         idVModality: null,
         idVPurpose: null,
