@@ -537,4 +537,9 @@ export class Helpers {
             return anchor;
         return `<a href='${path}'>${Helpers.escapeHTMLEntity(anchor)}</a>`;
     }
+
+    static validFieldId(value: any): boolean {
+        if (typeof value === 'number' && value > 0 && value < 2147483648) return true;
+        return false;
+    }
 }
