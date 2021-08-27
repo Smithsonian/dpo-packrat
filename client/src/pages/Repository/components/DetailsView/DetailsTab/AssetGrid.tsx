@@ -20,10 +20,11 @@ import { sharedButtonProps, formatDate } from '../../../../../utils/shared';
 import { updateSystemObjectUploadRedirect } from '../../../../../constants';
 import { useHistory } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
-import MUIDataTable, { MUIDataTableOptions } from 'mui-datatables';
+import MUIDataTable from 'mui-datatables';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import clsx from 'clsx';
+import { DataTableOptions } from '../../../../../types/component';
 
 export const useStyles = makeStyles(({ palette }) => ({
     btn: sharedButtonProps,
@@ -71,20 +72,6 @@ export const useStyles = makeStyles(({ palette }) => ({
         textDecoration: 'underline'
     }
 }));
-
-// interface DataTableOptions {
-//     filter: boolean;
-//     filterType: string;
-//     responsive: string;
-//     selectableRows: string;
-//     search: boolean;
-//     download: boolean;
-//     print: boolean;
-//     fixedHeader: boolean;
-//     pagination: boolean;
-//     elevation: number;
-//     onViewColumnsChange: (change: string, action: string) => void;
-// }
 
 interface AssetGridProps {
     idSystemObject: number;
@@ -290,7 +277,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         };
     }
 
-    const options: MUIDataTableOptions = {
+    const options: DataTableOptions = {
         filter: false,
         filterType: 'dropdown',
         responsive: 'standard',
