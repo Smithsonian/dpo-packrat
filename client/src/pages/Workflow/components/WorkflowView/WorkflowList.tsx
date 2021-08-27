@@ -1,5 +1,5 @@
 import React from 'react';
-import MUIDataTable, { MUIDataTableOptions } from 'mui-datatables';
+import MUIDataTable from 'mui-datatables';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, TablePagination, Tooltip } from '@material-ui/core';
@@ -12,7 +12,7 @@ import { workflowListSortEnumToString } from '../../../../types/server';
 import { ePaginationChange } from '../../../../store';
 import { EmptyTable } from '../../../../components';
 import { truncateWithEllipses } from '../../../../constants/helperfunctions';
-// import { DataTableOptions } from '../../../../types/component';
+import { DataTableOptions } from '../../../../types/component';
 import clsx from 'clsx';
 
 interface WorkflowIconProps {
@@ -133,7 +133,7 @@ function WorkflowList(): React.ReactElement {
 
     const count = calculateTotalRowCount();
 
-    const options: MUIDataTableOptions = {
+    const options: DataTableOptions = {
         filter: false,
         filterType: 'dropdown',
         responsive: 'standard',
