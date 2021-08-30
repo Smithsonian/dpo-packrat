@@ -60,7 +60,6 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     updateButton: {
         height: 35,
         width: 100,
-        marginTop: 10,
         color: palette.background.paper,
         [breakpoints.down('lg')]: {
             height: 30
@@ -91,10 +90,19 @@ function DetailsView(): React.ReactElement {
     const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
     const { data, loading } = useObjectDetails(idSystemObject);
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
-
+    const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
     const getEntries = useVocabularyStore(state => state.getEntries);
-    const [stateIdentifiers, addNewIdentifier, initializeIdentifierState, removeTargetIdentifier, updateIdentifier, checkIdentifiersBeforeUpdate] = useIdentifierStore(state => [
+    const [
+        stateIdentifiers,
+        areIdentifiersUpdated,
+        addNewIdentifier,
+        initializeIdentifierState,
+        removeTargetIdentifier,
+        updateIdentifier,
+        checkIdentifiersBeforeUpdate
+    ] = useIdentifierStore(state => [
         state.stateIdentifiers,
+        state.areIdentifiersUpdated,
         state.addNewIdentifier,
         state.initializeIdentifierState,
         state.removeTargetIdentifier,
@@ -129,6 +137,10 @@ function DetailsView(): React.ReactElement {
             fetchDetailTabDataAndInitializeStateStore();
         }
     }, [idSystemObject, data]);
+
+    useEffect(() => {
+        setUpdatedIdentifiers(areIdentifiersUpdated());
+    }, [stateIdentifiers]);
 
     if (!data || !params.idSystemObject) {
         return <ObjectNotFoundView loading={loading} />;
@@ -453,6 +465,13 @@ function DetailsView(): React.ReactElement {
                 </Box>
             </Box>
 
+            <Box display='flex' alignItems='center' mt={'10px'}>
+                <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
+                    Update
+                </LoadingButton>
+                {updatedIdentifiers && <div style={{ fontStyle: 'italic', marginLeft: '5px' }}>Update needed to save your identifier data entry</div>}
+            </Box>
+
             <Box display='flex'>
                 <DetailsTab
                     disabled={disabled}
@@ -470,10 +489,6 @@ function DetailsView(): React.ReactElement {
                     <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />
                 </Box>
             </Box>
-
-            <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
-                Update
-            </LoadingButton>
 
             <ObjectSelectModal
                 open={modalOpen}

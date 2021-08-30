@@ -166,7 +166,8 @@ export async function deleteIdentifier(idIdentifier: number) {
             input: {
                 idIdentifier
             }
-        }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
     });
 }
 
