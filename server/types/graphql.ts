@@ -1410,6 +1410,7 @@ export type SubjectDetailFieldsInput = {
   TS0?: Maybe<Scalars['Float']>;
   TS1?: Maybe<Scalars['Float']>;
   TS2?: Maybe<Scalars['Float']>;
+  idIdentifierPreferred?: Maybe<Scalars['Int']>;
 };
 
 export type ItemDetailFieldsInput = {
@@ -1543,9 +1544,9 @@ export type UpdateIdentifier = {
   id: Scalars['Int'];
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
-  selected: Scalars['Boolean'];
   idSystemObject: Scalars['Int'];
   idIdentifier: Scalars['Int'];
+  preferred?: Maybe<Scalars['Boolean']>;
 };
 
 export type DeleteObjectConnectionResult = {
@@ -1594,7 +1595,7 @@ export type CreateIdentifierInput = {
   identifierValue: Scalars['String'];
   identifierType: Scalars['Int'];
   idSystemObject?: Maybe<Scalars['Int']>;
-  selected: Scalars['Boolean'];
+  preferred?: Maybe<Scalars['Boolean']>;
 };
 
 
@@ -1626,6 +1627,7 @@ export type SubjectDetailFields = {
   TS0?: Maybe<Scalars['Float']>;
   TS1?: Maybe<Scalars['Float']>;
   TS2?: Maybe<Scalars['Float']>;
+  idIdentifierPreferred?: Maybe<Scalars['Int']>;
 };
 
 export type ItemDetailFields = {

@@ -86,7 +86,7 @@ function DetailsView(): React.ReactElement {
     const [detailQuery, setDetailQuery] = useState<any>({});
     const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState('');
-
+    const [loadingIdentifiers, setLoadingIdentifiers] = useState(true);
     const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
     const { data, loading } = useObjectDetails(idSystemObject);
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
@@ -99,7 +99,9 @@ function DetailsView(): React.ReactElement {
         initializeIdentifierState,
         removeTargetIdentifier,
         updateIdentifier,
-        checkIdentifiersBeforeUpdate
+        checkIdentifiersBeforeUpdate,
+        updateIdentifierPreferred,
+        initializePreferredIdentifier
     ] = useIdentifierStore(state => [
         state.stateIdentifiers,
         state.areIdentifiersUpdated,
@@ -107,7 +109,9 @@ function DetailsView(): React.ReactElement {
         state.initializeIdentifierState,
         state.removeTargetIdentifier,
         state.updateIdentifier,
-        state.checkIdentifiersBeforeUpdate
+        state.checkIdentifiersBeforeUpdate,
+        state.updateIdentifierPreferred,
+        state.initializePreferredIdentifier
     ]);
     const [resetRepositoryFilter, resetKeywordSearch, initializeTree] = useRepositoryStore(state => [state.resetRepositoryFilter, state.resetKeywordSearch, state.initializeTree]);
     const [initializeDetailFields, getDetail, getDetailsViewFieldErrors] = useDetailTabStore(state => [
@@ -118,6 +122,22 @@ function DetailsView(): React.ReactElement {
     const objectDetailsData = data;
 
     useEffect(() => {
+        if (data) {
+            const fetchDetailTabDataAndInitializeStateStore = async () => {
+                const detailsTabData = await getDetailsTabDataForObject(idSystemObject, objectType);
+                setDetailQuery(detailsTabData);
+                initializeDetailFields(detailsTabData, objectType);
+                if (objectType === eSystemObjectType.eSubject) {
+                    initializePreferredIdentifier(detailsTabData?.data?.getDetailsTabDataForObject?.Subject?.idIdentifierPreferred);
+                    setLoadingIdentifiers(false);
+                }
+            };
+
+            fetchDetailTabDataAndInitializeStateStore();
+        }
+    }, [idSystemObject, data]);
+
+    useEffect(() => {
         if (data && !loading) {
             const { name, retired, license } = data.getSystemObjectDetails;
             setDetails({ name, retired, idLicense: license?.idLicense || 0 });
@@ -125,19 +145,7 @@ function DetailsView(): React.ReactElement {
         }
     }, [data, loading, initializeIdentifierState]);
 
-    // new function for setting state
-    useEffect(() => {
-        if (data) {
-            const fetchDetailTabDataAndInitializeStateStore = async () => {
-                const detailsTabData = await getDetailsTabDataForObject(idSystemObject, objectType);
-                setDetailQuery(detailsTabData);
-                initializeDetailFields(detailsTabData, objectType);
-            };
-
-            fetchDetailTabDataAndInitializeStateStore();
-        }
-    }, [idSystemObject, data]);
-
+    // checks for updates to identifiers
     useEffect(() => {
         setUpdatedIdentifiers(areIdentifiersUpdated());
     }, [stateIdentifiers]);
@@ -177,6 +185,7 @@ function DetailsView(): React.ReactElement {
             const deleteIdentifierSuccess = await deleteIdentifier(idIdentifier);
             if (deleteIdentifierSuccess) {
                 removeTargetIdentifier(idIdentifier);
+                setUpdatedIdentifiers(false);
                 toast.success('Identifier removed');
             } else {
                 toast.error('Error when removing identifier');
@@ -327,7 +336,7 @@ function DetailsView(): React.ReactElement {
                 const { IsOriented, HasBeenQCd } = updatedData.Scene;
                 updatedData.Scene = { IsOriented, HasBeenQCd };
             }
-            // convert subject and item inputs to numberse to handle scientific notation
+            // convert subject and item inputs to numbers to handle scientific notation
             if (objectType === eSystemObjectType.eSubject && updatedData.Subject) {
                 const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Subject;
                 if (Latitude) updatedData.Subject.Latitude = Number(Latitude);
@@ -397,20 +406,21 @@ function DetailsView(): React.ReactElement {
                 };
             }
 
-            const stateIdentifiersWithIdSystemObject: UpdateIdentifier[] = stateIdentifiers.map(({ id, identifier, identifierType, selected, idIdentifier }) => {
+            const stateIdentifiersWithIdSystemObject: UpdateIdentifier[] = stateIdentifiers.map(({ id, identifier, identifierType, idIdentifier, preferred }) => {
                 return {
                     id,
                     identifier,
                     identifierType,
-                    selected,
                     idSystemObject,
-                    idIdentifier
+                    idIdentifier,
+                    preferred
                 };
             });
 
             updatedData.Retired = updatedData?.Retired || details?.retired;
             updatedData.Name = updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name;
             updatedData.Identifiers = stateIdentifiersWithIdSystemObject || [];
+            // console.log('updatedData', updatedData);
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
@@ -461,6 +471,9 @@ function DetailsView(): React.ReactElement {
                         onAdd={addIdentifer}
                         onRemove={removeIdentifier}
                         onUpdate={updateIdentifierFields}
+                        subjectView={objectType === eSystemObjectType.eSubject}
+                        onUpdateIdIdentifierPreferred={updateIdentifierPreferred}
+                        loading={loadingIdentifiers}
                     />
                 </Box>
             </Box>

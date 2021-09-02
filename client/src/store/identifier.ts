@@ -15,34 +15,30 @@ type StateIdentifier = {
     id: number;
     identifier: string;
     identifierType: number;
-    selected: boolean;
     idIdentifier: number;
+    preferred?: boolean;
 };
 
 type IdentifierStore = {
     stateIdentifiers: StateIdentifier[];
     originalIdentifiers: StateIdentifier[];
-    subjectDetailView: boolean;
-    idIdentifierPreferred: number | null;
     areIdentifiersUpdated: () => boolean;
     getIdentifierState: () => StateIdentifier[];
     addNewIdentifier: () => void;
     initializeIdentifierState: (identifiers: Identifier[]) => void;
+    initializeIdentifierPreferred: () => void;
     removeTargetIdentifier: (id: number, idInd?: boolean | number) => void;
     updateIdentifier: (id: number, name: string, value: string | number | boolean) => void;
     checkIdentifiersBeforeUpdate: () => string[];
-    initializeSubjectDetailView: (isSubject: boolean) => void;
-    updateIdIdentifierPreferred: (id: number) => void;
+    initializePreferredIdentifier: (idIdentifier: number) => void;
+    updateIdentifierPreferred: (id: number) => void;
 };
 
 export const useIdentifierStore = create<IdentifierStore>((set: SetState<IdentifierStore>, get: GetState<IdentifierStore>) => ({
     stateIdentifiers: [],
     originalIdentifiers: [],
-    subjectDetailView: false,
-    idIdentifierPreferred: null,
     areIdentifiersUpdated: () => {
         const { stateIdentifiers, originalIdentifiers } = get();
-        // return areIdentifiersUpdated(stateIdentifiers, originalIdentifiers);
         return !lodash.isEqual(stateIdentifiers, originalIdentifiers);
     },
     getIdentifierState: () => {
@@ -55,8 +51,8 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
             id: stateIdentifiers.length + 1,
             identifier: '',
             identifierType: eIdentifierIdentifierType.eARK,
-            selected: true,
-            idIdentifier: 0
+            idIdentifier: 0,
+            preferred: false
         };
         const updatedIdentifiers = lodash.concat(stateIdentifiers, [newIdentifier]);
         set({ stateIdentifiers: updatedIdentifiers });
@@ -67,12 +63,12 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
                 id: ind,
                 identifier: identifier.identifier,
                 identifierType: identifier.identifierType,
-                selected: true,
                 idIdentifier: identifier.idIdentifier
             };
         });
         set({ stateIdentifiers: initialIdentifiers, originalIdentifiers: initialIdentifiers });
     },
+    initializeIdentifierPreferred: () => {},
     removeTargetIdentifier: (id: number, idInd = false) => {
         const { stateIdentifiers } = get();
         let updatedIdentifiers;
@@ -110,20 +106,35 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
             if (!identifier.identifierType) {
                 errors['Missing identifier type'] = 'Missing identifier type';
             }
-            if (!identifier.selected) {
-                errors['Identifiers should not be unchecked'] = 'Identifiers should not be unchecked';
-            }
         });
         for (const error in errors) {
             result.push(error);
         }
         return result;
     },
-    initializeSubjectDetailView: (isSubject): void => {
-        set({ subjectDetailView: isSubject });
+    // this method will be responsible for setting the preferred identifier
+    initializePreferredIdentifier: (idIdentifier: number): void => {
+        const { stateIdentifiers } = get();
+        const stateIdentifiersCopy = stateIdentifiers.map(identifier => {
+            if (identifier.idIdentifier === idIdentifier) identifier.preferred = true;
+            return identifier;
+        });
+        set({ stateIdentifiers: stateIdentifiersCopy });
     },
-    updateIdIdentifierPreferred: (id: number) => {
-        const { idIdentifierPreferred } = get();
-        set({ idIdentifierPreferred: idIdentifierPreferred === id ? null : idIdentifierPreferred });
+    updateIdentifierPreferred: (id: number): void => {
+        const { stateIdentifiers } = get();
+        const stateIdentifiersCopy = stateIdentifiers.map(identifier => {
+            if (id === identifier.id) {
+                if (identifier.preferred) {
+                    identifier.preferred = undefined;
+                } else {
+                    identifier.preferred = true;
+                }
+                return identifier;
+            }
+            identifier.preferred = undefined;
+            return identifier;
+        });
+        set({ stateIdentifiers: stateIdentifiersCopy });
     }
 }));
