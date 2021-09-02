@@ -5,22 +5,18 @@
  *
  * This component renders identifier list used in photogrammetry metadata component.
  */
-import { Box, Button /*, Checkbox*/, MenuItem, Select, Typography /*, Radio */ } from '@material-ui/core';
+import { Box, Button, MenuItem, Select, Typography, Radio } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { StateIdentifier, VocabularyOption } from '../../store';
 import { ViewableProps } from '../../types/repository';
-import { sharedButtonProps, sharedLabelProps } from '../../utils/shared';
+import { sharedLabelProps } from '../../utils/shared';
 import FieldType from './FieldType';
+import { Progress } from '..';
+import { Colors } from '../../theme';
 
-/*
-    TODO:
-        fix the font of the buttons on New Identifier to be consistent
-        when an identifier is removed in details view, make sure to refetch request so that the warning message disappears
-        keep error message in the same line as the update button and italicize the message
-*/
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     identifierInput: {
         width: '75%',
@@ -65,7 +61,15 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontStyle: 'italic'
     },
     header: sharedLabelProps,
-    addIdentifierButton: sharedButtonProps
+    addIdentifierButton: {
+        height: 35,
+        width: 80,
+        fontSize: typography.caption.fontSize,
+        color: Colors.defaults.white,
+        [breakpoints.down('lg')]: {
+            height: 30
+        }
+    }
 }));
 
 interface IdentifierListProps extends ViewableProps {
@@ -75,14 +79,25 @@ interface IdentifierListProps extends ViewableProps {
     onRemove: (idIdentifier: number, id: number) => void;
     identifierTypes: VocabularyOption[];
     subjectView?: boolean;
-    selectedIdentifier?: StateIdentifier;
+    onUpdateIdIdentifierPreferred?: (id: number) => void;
+    loading?: boolean;
 }
 
 function IdentifierList(props: IdentifierListProps): React.ReactElement {
-    const { identifiers, onAdd, onUpdate, identifierTypes, onRemove, viewMode = false, disabled = false } = props;
+    const { identifiers, onAdd, onUpdate, identifierTypes, onRemove, viewMode = false, disabled = false, subjectView, onUpdateIdIdentifierPreferred, loading } = props;
     const classes = useStyles();
-
     const hasIdentifiers: boolean = !!identifiers.length;
+
+    if (loading && subjectView) {
+        return (
+            <Box overflow='hidden'>
+                <FieldType required={false} renderLabel={false} width='auto'>
+                    <Progress />
+                </FieldType>
+            </Box>
+        );
+    }
+
     return (
         <Box overflow='hidden'>
             <FieldType required={false} renderLabel={false} width='auto'>
@@ -92,15 +107,15 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                         <Typography className={classes.empty}>No Identifiers</Typography>
                     </Box>
                 )}
-                {identifiers.map(({ id /*, selected*/, identifier, identifierType, idIdentifier }, index) => {
+                {identifiers.map(({ id, identifier, identifierType, idIdentifier, preferred }, index) => {
                     const remove = () => onRemove(idIdentifier, id);
-                    // const updateCheckbox = ({ target }) => onUpdate(id, target.name, target.checked);
                     const update = ({ target }) => onUpdate(id, target.name, target.value);
-
+                    const check = () => {
+                        if (onUpdateIdIdentifierPreferred) onUpdateIdIdentifierPreferred(id);
+                    };
                     return (
                         <Box key={index} display='flex' flexDirection='row' alignItems='center' paddingBottom='10px'>
-                            {/* <Checkbox checked={selected} name='selected' color='primary' onChange={updateCheckbox} disabled={disabled} /> */}
-                            {/* <Radio checked={} onChange/> */}
+                            {subjectView && <Radio checked={preferred === true} name='selected' color='primary' disabled={disabled} onClick={check} size='small' />}
                             <DebounceInput
                                 value={identifier}
                                 name='identifier'
@@ -117,7 +132,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                                     </MenuItem>
                                 ))}
                             </Select>
-                            <MdRemoveCircleOutline className={classes.identifierOption} onClick={remove} size={'30px'} />
+                            <MdRemoveCircleOutline className={classes.identifierOption} onClick={remove} size={30} />
                         </Box>
                     );
                 })}

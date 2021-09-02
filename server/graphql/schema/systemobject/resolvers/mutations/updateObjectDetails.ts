@@ -29,35 +29,48 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         }
     }
 
+    let identifierPreferred: null | number = null;
     if (data?.Identifiers && data?.Identifiers.length) {
-
-        data.Identifiers.forEach(async ({ idIdentifier, selected, identifier, identifierType }) => {
-            // update exisiting identifier
-            if (idIdentifier && selected && identifier && identifierType) {
+        for await (const Identifier of data.Identifiers) {
+            const { idIdentifier, identifier, identifierType, preferred } = Identifier;
+            if (idIdentifier && identifier && identifierType) {
                 const existingIdentifier = await DBAPI.Identifier.fetch(idIdentifier);
                 if (existingIdentifier) {
+                    if (preferred) {
+                        console.log('********if preferred + exisiting', idIdentifier);
+                        identifierPreferred = idIdentifier;
+                    }
                     existingIdentifier.IdentifierValue = identifier;
                     existingIdentifier.idVIdentifierType = Number(identifierType);
                     const updateSuccess = await existingIdentifier.update();
                     if (updateSuccess) {
-                        return LOG.info(`updated identifier ${idIdentifier}`, LOG.LS.eDB);
+                        LOG.info(`updated identifier ${idIdentifier}`, LOG.LS.eDB);
                     } else {
-                        return LOG.error(`failed to updated identifier ${idIdentifier}`, LOG.LS.eDB);
+                        LOG.error(`failed to updated identifier ${idIdentifier}`, LOG.LS.eDB);
                     }
                 } else {
-                    return LOG.error(`failed to find identifier ${idIdentifier}`, LOG.LS.eDB);
+                    LOG.error(`failed to find identifier ${idIdentifier}`, LOG.LS.eDB);
                 }
             }
 
             // create new identifier
-            if (idIdentifier === 0 && selected && identifier && identifierType) {
+            if (idIdentifier === 0 && identifier && identifierType) {
                 const newIdentifier = new DBAPI.Identifier({ idIdentifier: 0, IdentifierValue: identifier, idVIdentifierType: identifierType, idSystemObject });
                 const createNewIdentifier = await newIdentifier.create();
+
                 if (!createNewIdentifier) {
-                    return LOG.error(`updateObjectDetails failed to create newIdentifier ${JSON.stringify(newIdentifier)}`, LOG.LS.eDB);
+                    LOG.error(`updateObjectDetails failed to create newIdentifier ${JSON.stringify(newIdentifier)}`, LOG.LS.eDB);
+                }
+                if (preferred === true) {
+                    const newIdentifier = await DBAPI.Identifier.fetchFromIdentifierValue(identifier);
+                    if (newIdentifier && newIdentifier.length) {
+                        identifierPreferred = newIdentifier[0].idIdentifier;
+                    } else {
+                        LOG.error('failed to fetch new preferred identifier', LOG.LS.eDB);
+                    }
                 }
             }
-        });
+        }
     }
 
     if (data.License) {
@@ -147,6 +160,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         await Subject.update();
                         break;
                     }
+
+                    Subject.idIdentifierPreferred = identifierPreferred;
 
                     await Subject.update();
 
