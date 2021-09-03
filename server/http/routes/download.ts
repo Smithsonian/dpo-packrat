@@ -343,7 +343,7 @@ class Downloader {
                 return this.sendError(500);
             }
 
-            const fileNameAndPath: string = path.join(asset.FilePath, assetVersion.FileName);
+            const fileNameAndPath: string = path.posix.join(asset.FilePath, assetVersion.FileName);
             const res: H.IOResults = await zip.add(fileNameAndPath, RSR.readStream);
             if (!res.success) {
                 LOG.error(`${errorMsgBase} failed to add asset version ${assetVersion.idAssetVersion} to zip: ${res.error}`, LOG.LS.eHTTP);
@@ -386,7 +386,7 @@ class Downloader {
     private async emitDownloadJobRun(jobRun: DBAPI.JobRun): Promise<boolean> {
         this.response.setHeader('Content-disposition', `attachment; filename=JobRun.${jobRun.idJobRun}.htm`);
         this.response.setHeader('Content-type', 'application/json');
-        this.response.write(jobRun.Output);
+        this.response.write(jobRun.Output ?? '');
         this.response.end();
         return true;
     }

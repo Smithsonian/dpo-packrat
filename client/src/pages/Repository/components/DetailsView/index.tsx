@@ -286,9 +286,9 @@ function DetailsView(): React.ReactElement {
         }
 
         // Create another validation here to make sure that the appropriate SO types are being checked
-        const errors = getDetailsViewFieldErrors(updatedData, objectType);
+        const errors = await getDetailsViewFieldErrors(updatedData, objectType);
         if (errors.length) {
-            errors.forEach(error => toast.error(`Please input a valid ${error}`, { autoClose: false }));
+            errors.forEach(error => toast.error(`${error}`, { autoClose: false }));
             setIsUpdatingData(false);
             return;
         }
@@ -298,7 +298,7 @@ function DetailsView(): React.ReactElement {
             // requires the fields to be populated.
             if (objectType === eSystemObjectType.eModel) {
                 const ModelDetails = getDetail(objectType) as ModelDetailsType;
-                const { DateCaptured, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
+                const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
 
                 updatedData.Model = {
                     Name: updatedData?.Name,
@@ -307,7 +307,7 @@ function DetailsView(): React.ReactElement {
                     Purpose: idVPurpose,
                     Units: idVUnits,
                     ModelFileType: idVFileType,
-                    DateCaptured
+                    DateCaptured: DateCreated
                 };
             }
 

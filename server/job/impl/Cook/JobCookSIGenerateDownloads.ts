@@ -182,7 +182,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                     LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to fetch system object for ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
             } else {
                 // create Model (for each download generated)
-                model = await this.createModel(downloadFile, downloadType);
+                model = await this.createModel(downloadFile, downloadType, modelSource);
                 if (!await model.create()) {
                     const error: string = `JobCookSIGenerateDownloads.createSystemObjects unable to create model ${JSON.stringify(model, H.Helpers.saferStringify)}`;
                     LOG.error(error, LOG.LS.eJOB);
@@ -256,7 +256,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                     idModel: model.idModel,
                     idScene: sceneSource.idScene,
                     Name: model.Name,
-                    Usage: null,
+                    Usage: `Download ${downloadType}`,
                     Quality: null,
                     FileSize,
                     UVResolution: null,
@@ -303,17 +303,17 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         return `download-${downloadType}`;
     }
 
-    private async createModel(Name: string, downloadType: string): Promise<DBAPI.Model> {
+    private async createModel(Name: string, downloadType: string, modelSource: DBAPI.Model): Promise<DBAPI.Model> {
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
         const vPurpose: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeDownload);
         return new DBAPI.Model({
             idModel: 0,
             Name,
             DateCreated: new Date(),
-            idVCreationMethod: null,
-            idVModality: null,
+            idVCreationMethod: modelSource.idVCreationMethod,
+            idVModality: modelSource.idVModality,
             idVPurpose: vPurpose ? vPurpose.idVocabulary : null,
-            idVUnits: null,
+            idVUnits: modelSource.idVUnits,
             idVFileType: vFileType ? vFileType.idVocabulary : null,
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,

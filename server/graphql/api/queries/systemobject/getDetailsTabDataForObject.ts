@@ -131,6 +131,7 @@ const getDetailsTabDataForObject = gql`
                 Annotation
                 HasBeenQCd
                 IsOriented
+                EdanUUID
                 idScene
             }
             IntermediaryFile {

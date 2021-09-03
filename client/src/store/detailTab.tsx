@@ -16,7 +16,7 @@ import {
 import * as yup from 'yup';
 
 export interface ModelDetailsType {
-    DateCaptured: string | null;
+    DateCreated: string | null;
     idVCreationMethod: number | null;
     idVModality: number | null;
     idVPurpose: number | null;
@@ -53,6 +53,7 @@ interface SceneDetailsType {
     CountMeta: number;
     CountSetup: number;
     CountTour: number;
+    EdanUUID: string | null;
     ModelSceneXref: any[];
 }
 
@@ -123,7 +124,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         EntireSubject: null
     },
     ModelDetails: {
-        DateCaptured: null,
+        DateCreated: null,
         idVCreationMethod: null,
         idVModality: null,
         idVPurpose: null,
@@ -160,6 +161,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         CountMeta: 0,
         CountSetup: 0,
         CountTour: 0,
+        EdanUUID: null,
         ModelSceneXref: [
             {
                 BoundingBoxP1X: 0,
@@ -466,10 +468,11 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
 
         if (objectType === eSystemObjectType.eScene) {
             const {
-                Scene: { HasBeenQCd, IsOriented }
+                Scene: { HasBeenQCd, IsOriented, EdanUUID }
             } = getDetailsTabDataForObject;
             updateDetailField(eSystemObjectType.eScene, 'HasBeenQCd', HasBeenQCd);
             updateDetailField(eSystemObjectType.eScene, 'IsOriented', IsOriented);
+            updateDetailField(eSystemObjectType.eScene, 'EdanUUID', EdanUUID);
         }
 
         if (objectType === eSystemObjectType.eProjectDocumentation) {

@@ -65,19 +65,19 @@ export const photogrammetryFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     folders: yup.array().of(folderSchema),
-    name: yup.string(),
+    name: yup.string().required('Name cannot be empty'),
     description: yup.string().required('Description cannot be empty'),
     dateCaptured: yup.date().required(),
     datasetType: yup.number().typeError('Please select a valid dataset type'),
-    datasetFieldId: yup.number().nullable(true),
+    datasetFieldId: yup.number().nullable(true).positive('Dataset Field ID must be positive').max(2147483647, 'Dataset Field ID is too large'),
     itemPositionType: yup.number().nullable(true),
-    itemPositionFieldId: yup.number().nullable(true),
-    itemArrangementFieldId: yup.number().nullable(true),
+    itemPositionFieldId: yup.number().nullable(true).positive('Item Position Field ID must be positive').max(2147483647, 'Item Position Field ID is too large'),
+    itemArrangementFieldId: yup.number().nullable(true).positive('Item Arrangement Field ID must be positive').max(2147483647, 'Item Arrangement Field ID is too large'),
     focusType: yup.number().nullable(true),
     lightsourceType: yup.number().nullable(true),
     backgroundRemovalMethod: yup.number().nullable(true),
     clusterType: yup.number().nullable(true),
-    clusterGeometryFieldId: yup.number().nullable(true),
+    clusterGeometryFieldId: yup.number().nullable(true).positive('Cluster Geometry Field ID must be positive').max(2147483647, 'Cluster Geometry Field ID is too large'),
     cameraSettingUniform: yup.boolean().required(),
     directory: yup.string()
 });
@@ -153,7 +153,8 @@ export const defaultSceneFields: SceneFields = {
     hasBeenQCd: false,
     isOriented: false,
     name: '',
-    directory: ''
+    directory: '',
+    EdanUUID: '',
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;

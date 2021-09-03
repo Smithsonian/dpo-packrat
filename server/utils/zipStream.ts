@@ -45,6 +45,7 @@ export class ZipStream implements IZip {
         }
     }
 
+    /** fileNameAndPath should use posix-compliant path separators, i.e. forward slashes */
     async add(fileNameAndPath: string, inputStream: NodeJS.ReadableStream): Promise<H.IOResults> {
         if (!this._zip)
             this._zip = new JSZip();
