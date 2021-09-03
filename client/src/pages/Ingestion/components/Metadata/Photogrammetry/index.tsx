@@ -191,19 +191,19 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     />
                 </Box>
                 <Box display='flex' flex={1} flexDirection='column' ml='30px'>
-                    <InputField type='number' label='Dataset Field ID' value={photogrammetry.datasetFieldId} name='datasetFieldId' onChange={setIdField} />
+                    <InputField label='Dataset Field ID' value={photogrammetry.datasetFieldId} name='datasetFieldId' onChange={setIdField} />
                     <SelectField
                         label='Item Position Type'
-                        value={withDefaultValueNumber(photogrammetry.itemPositionType, getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType))}
+                        value={photogrammetry.itemPositionType}
                         name='itemPositionType'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eCaptureDataItemPositionType)}
                     />
-                    <InputField type='number' label='Item Position Field ID' value={photogrammetry.itemPositionFieldId} name='itemPositionFieldId' onChange={setIdField} />
-                    <InputField type='number' label='Item Arrangement Field ID' value={photogrammetry.itemArrangementFieldId} name='itemArrangementFieldId' onChange={setIdField} />
+                    <InputField label='Item Position Field ID' value={photogrammetry.itemPositionFieldId} name='itemPositionFieldId' onChange={setIdField} />
+                    <InputField label='Item Arrangement Field ID' value={photogrammetry.itemArrangementFieldId} name='itemArrangementFieldId' onChange={setIdField} />
                     <SelectField
                         label='Focus Type'
-                        value={withDefaultValueNumber(photogrammetry.focusType, getInitialEntry(eVocabularySetID.eCaptureDataFocusType))}
+                        value={photogrammetry.focusType}
                         name='focusType'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eCaptureDataFocusType)}
@@ -211,7 +211,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
                     <SelectField
                         label='Light Source Type'
-                        value={withDefaultValueNumber(photogrammetry.lightsourceType, getInitialEntry(eVocabularySetID.eCaptureDataLightSourceType))}
+                        value={photogrammetry.lightsourceType}
                         name='lightsourceType'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eCaptureDataLightSourceType)}
@@ -219,7 +219,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
                     <SelectField
                         label='Background Removal Method'
-                        value={withDefaultValueNumber(photogrammetry.backgroundRemovalMethod, getInitialEntry(eVocabularySetID.eCaptureDataBackgroundRemovalMethod))}
+                        value={photogrammetry.backgroundRemovalMethod}
                         name='backgroundRemovalMethod'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod)}
@@ -227,13 +227,13 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
                     <SelectField
                         label='Cluster Type'
-                        value={withDefaultValueNumber(photogrammetry.clusterType, getInitialEntry(eVocabularySetID.eCaptureDataClusterType))}
+                        value={photogrammetry.clusterType}
                         name='clusterType'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eCaptureDataClusterType)}
                     />
 
-                    <InputField type='number' label='Cluster Geometry Field ID' value={photogrammetry.clusterGeometryFieldId} name='clusterGeometryFieldId' onChange={setIdField} />
+                    <InputField label='Cluster Geometry Field ID' value={photogrammetry.clusterGeometryFieldId} name='clusterGeometryFieldId' onChange={setIdField} />
                     <FieldType required={false} label='Camera Settings Uniform?' direction='row' containerProps={rowFieldProps}>
                         <CustomCheckbox disabled name='cameraSettingUniform' checked={photogrammetry.cameraSettingUniform} onChange={setCheckboxField} color='primary' />
                     </FieldType>
