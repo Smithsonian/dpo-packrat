@@ -28,11 +28,7 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
         });
 
         const successfulIdentifierCreation = await Identifier.create();
-        if (successfulIdentifierCreation) {
-            identifiersList.push(Identifier);
-            const newIdentifier = await DBAPI.Identifier.fetchFromIdentifierValue(ARKId);
-            if (newIdentifier && newIdentifier.length) idIdentifierPreferred = newIdentifier[0].idIdentifier;
-        }
+        if (successfulIdentifierCreation) idIdentifierPreferred = Identifier.idIdentifier;
     }
 
     for await (const identifier of identifiers) {
@@ -48,12 +44,9 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
             identifiersList.push(Identifier);
 
             // TODO: Do we want system created to always be preferred?
-            // If so, uncomment L52 and comment L53
+            // If so, uncomment the next line and comment the line after
             // if (identifier.preferred && !idIdentifierPreferred) {
-            if (identifier.preferred) {
-                const newIdentifier = await DBAPI.Identifier.fetchFromIdentifierValue(identifier.identifierValue);
-                if (newIdentifier && newIdentifier.length) idIdentifierPreferred = newIdentifier[0].idIdentifier;
-            }
+            if (identifier.preferred) idIdentifierPreferred = Identifier.idIdentifier;
         }
     }
 

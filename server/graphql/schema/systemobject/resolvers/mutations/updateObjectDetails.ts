@@ -37,7 +37,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 const existingIdentifier = await DBAPI.Identifier.fetch(idIdentifier);
                 if (existingIdentifier) {
                     if (preferred) {
-                        console.log('********if preferred + exisiting', idIdentifier);
                         identifierPreferred = idIdentifier;
                     }
                     existingIdentifier.IdentifierValue = identifier;
