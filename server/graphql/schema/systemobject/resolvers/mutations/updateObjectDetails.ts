@@ -6,6 +6,7 @@ import * as DBAPI from '../../../../../db';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
 import { SystemObjectTypeToName } from '../../../../../db/api/ObjectType';
+import * as H from '../../../../../utils/helpers';
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs): Promise<UpdateObjectDetailsResult> {
     const { input } = args;
@@ -254,6 +255,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         clusterType,
                         clusterGeometryFieldId,
                     } = data.CaptureData;
+
+                    if (!H.Helpers.validFieldId(datasetFieldId)) return { success: false, message: 'Dataset Field ID is invalid; update failed' };
+                    if (!H.Helpers.validFieldId(itemPositionFieldId)) return { success: false, message: 'Item Position Field ID is invalid; update failed' };
+                    if (!H.Helpers.validFieldId(itemArrangementFieldId)) return { success: false, message: 'Item Arrangement Field ID is invalid; update failed' };
+                    if (!H.Helpers.validFieldId(clusterGeometryFieldId)) return { success: false, message: 'Cluster Geometry Field ID is invalid; update failed' };
 
                     CaptureData.DateCaptured = new Date(dateCaptured);
                     if (description) CaptureData.Description = description;

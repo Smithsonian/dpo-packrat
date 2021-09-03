@@ -286,9 +286,9 @@ function DetailsView(): React.ReactElement {
         }
 
         // Create another validation here to make sure that the appropriate SO types are being checked
-        const errors = getDetailsViewFieldErrors(updatedData, objectType);
+        const errors = await getDetailsViewFieldErrors(updatedData, objectType);
         if (errors.length) {
-            errors.forEach(error => toast.error(`Please input a valid ${error}`, { autoClose: false }));
+            errors.forEach(error => toast.error(`${error}`, { autoClose: false }));
             setIsUpdatingData(false);
             return;
         }
