@@ -24,6 +24,7 @@ import MUIDataTable from 'mui-datatables';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import clsx from 'clsx';
+import { DataTableOptions } from '../../../../../types/component';
 
 export const useStyles = makeStyles(({ palette }) => ({
     btn: sharedButtonProps,
@@ -71,20 +72,6 @@ export const useStyles = makeStyles(({ palette }) => ({
         textDecoration: 'underline'
     }
 }));
-
-interface DataTableOptions {
-    filter: boolean;
-    filterType: string;
-    responsive: string;
-    selectableRows: string;
-    search: boolean;
-    download: boolean;
-    print: boolean;
-    fixedHeader: boolean;
-    pagination: boolean;
-    elevation: number;
-    onViewColumnsChange: (change: string, action: string) => void;
-}
 
 interface AssetGridProps {
     idSystemObject: number;
