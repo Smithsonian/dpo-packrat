@@ -28,13 +28,8 @@ function SubjectDetails(props: DetailComponentProps): React.ReactElement {
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
-        let numberValue: number | null = null;
 
-        if (value) {
-            numberValue = Number.parseInt(value, 10);
-        }
-        updateDetailField(eSystemObjectType.eSubject, name, numberValue);
-        // setDetails(details => ({ ...details, [name]: numberValue }));
+        updateDetailField(eSystemObjectType.eSubject, name, value);
     };
 
     const subjectData = data.getDetailsTabDataForObject?.Subject;

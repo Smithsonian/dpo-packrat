@@ -315,6 +315,34 @@ function DetailsView(): React.ReactElement {
                 const { IsOriented, HasBeenQCd } = updatedData.Scene;
                 updatedData.Scene = { IsOriented, HasBeenQCd };
             }
+            // convert subject and item inputs to numberse to handle scientific notation
+            if (objectType === eSystemObjectType.eSubject && updatedData.Subject) {
+                const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Subject;
+                if (Latitude) updatedData.Subject.Latitude = Number(Latitude);
+                if (Longitude) updatedData.Subject.Longitude = Number(Longitude);
+                if (Altitude) updatedData.Subject.Altitude = Number(Altitude);
+                if (TS0) updatedData.Subject.TS0 = Number(TS0);
+                if (TS1) updatedData.Subject.TS1 = Number(TS1);
+                if (TS2) updatedData.Subject.TS2 = Number(TS2);
+                if (R0) updatedData.Subject.R0 = Number(R0);
+                if (R1) updatedData.Subject.R1 = Number(R1);
+                if (R2) updatedData.Subject.R2 = Number(R2);
+                if (R3) updatedData.Subject.R3 = Number(R3);
+            }
+
+            if (objectType === eSystemObjectType.eItem && updatedData.Item) {
+                const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Item;
+                if (Latitude) updatedData.Item.Latitude = Number(Latitude);
+                if (Longitude) updatedData.Item.Longitude = Number(Longitude);
+                if (Altitude) updatedData.Item.Altitude = Number(Altitude);
+                if (TS0) updatedData.Item.TS0 = Number(TS0);
+                if (TS1) updatedData.Item.TS1 = Number(TS1);
+                if (TS2) updatedData.Item.TS2 = Number(TS2);
+                if (R0) updatedData.Item.R0 = Number(R0);
+                if (R1) updatedData.Item.R1 = Number(R1);
+                if (R2) updatedData.Item.R2 = Number(R2);
+                if (R3) updatedData.Item.R3 = Number(R3);
+            }
 
             if (objectType === eSystemObjectType.eCaptureData && !updatedData.CaptureData) {
                 const CaptureDataDetails = getDetail(objectType) as CaptureDataDetailFields;

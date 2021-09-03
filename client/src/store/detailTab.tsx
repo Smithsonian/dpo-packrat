@@ -578,6 +578,32 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             }
         }
 
+        if (objectType === eSystemObjectType.eItem || objectType === eSystemObjectType.eSubject) {
+            const { Item, Subject } = metadata;
+            const itemOrSubject = objectType === eSystemObjectType.eItem ? Item : Subject;
+            try {
+                schemaItemAndSubject.validateSync(
+                    {
+                        Latitude: Number(itemOrSubject?.Latitude),
+                        Longitude: Number(itemOrSubject?.Longitude),
+                        Altitude: Number(itemOrSubject?.Altitude),
+                        TS0: Number(itemOrSubject?.TS0),
+                        TS1: Number(itemOrSubject?.TS1),
+                        TS2: Number(itemOrSubject?.TS2),
+                        R0: Number(itemOrSubject?.R0),
+                        R1: Number(itemOrSubject?.R1),
+                        R2: Number(itemOrSubject?.R2),
+                        R3: Number(itemOrSubject?.R3)
+                    },
+                    option
+                );
+            } catch (error) {
+                for (const message of error.errors) {
+                    errorMessages.push(message);
+                }
+            }
+        }
+
         return errorMessages;
     }
 }));
@@ -591,4 +617,17 @@ const schemaCD = yup.object().shape({
 
 const schemaModel = yup.object().shape({
     dateCaptured: yup.date().max(Date(), 'Date Created cannot be set in the future')
+});
+
+const schemaItemAndSubject = yup.object().shape({
+    Latitude: yup.number().typeError('Number must be in standard or scientific notation'),
+    Longitude: yup.number().typeError('Number must be in standard or scientific notation'),
+    Altitude: yup.number().typeError('Number must be in standard or scientific notation'),
+    TS0: yup.number().typeError('Number must be in standard or scientific notation'),
+    TS1: yup.number().typeError('Number must be in standard or scientific notation'),
+    TS2: yup.number().typeError('Number must be in standard or scientific notation'),
+    R0: yup.number().typeError('Number must be in standard or scientific notation'),
+    R1: yup.number().typeError('Number must be in standard or scientific notation'),
+    R2: yup.number().typeError('Number must be in standard or scientific notation'),
+    R3: yup.number().typeError('Number must be in standard or scientific notation')
 });
