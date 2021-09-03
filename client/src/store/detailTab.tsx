@@ -13,7 +13,7 @@ import {
     ActorDetailFields,
     UpdateObjectDetailsDataInput
 } from '../types/graphql';
-import lodash from 'lodash';
+import * as yup from 'yup';
 
 export interface ModelDetailsType {
     DateCreated: string | null;
@@ -32,6 +32,13 @@ export type DetailsViewFieldErrors = {
     model: {
         name: boolean;
         dateCaptured: boolean;
+    };
+    captureData: {
+        name: boolean;
+        datasetFieldId: boolean;
+        itemPositionFieldId: boolean;
+        itemArrangementFieldId: boolean;
+        clusterGeometryFieldId: boolean;
     };
 };
 
@@ -513,28 +520,75 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
     },
     getDetailsViewFieldErrors: (metadata: UpdateObjectDetailsDataInput, objectType: eSystemObjectType): string[] => {
-        // UPDATE these error fields as we include more validation for ingestion
-        const errors: DetailsViewFieldErrors = {
-            model: {
-                name: false,
-                dateCaptured: false
-            }
+        // UPDATE these error fields as we include more validation for details tab
+        // errors should be responsible for rendering error version of the input
+        // const errors: DetailsViewFieldErrors = {
+        //     model: {
+        //         name: false,
+        //         dateCaptured: false
+        //     },
+        //     captureData: {
+        //         name: false,
+        //         datasetFieldId: false,
+        //         itemPositionFieldId: false,
+        //         itemArrangementFieldId: false,
+        //         clusterGeometryFieldId: false
+        //     }
+        // };
+
+        const option = {
+            abortEarly: false
         };
-
         const errorMessages: string[] = [];
-
+        if (!metadata.Name?.trim().length) errorMessages.push('Please input a valid Name');
         if (objectType === eSystemObjectType.eModel) {
-            if (!lodash.isNil(metadata.Name)) {
-                errors.model.name = !metadata.Name.trim().length;
+            const { Model } = metadata;
+
+            try {
+                schemaModel.validateSync(
+                    {
+                        dateCaptured: Model?.DateCaptured
+                    },
+                    option
+                );
+            } catch (error) {
+                for (const message of error.errors) {
+                    errorMessages.push(message);
+                }
             }
-            if (!lodash.isNil(metadata.Model?.DateCaptured)) {
-                errors.model.dateCaptured = metadata?.Model?.DateCaptured.toString() === 'Invalid Date' || new Date(metadata?.Model?.DateCaptured).getTime() > new Date().getTime();
-            }
-            for (const field in errors.model) {
-                if (errors.model[field]) errorMessages.push(field);
+        }
+
+        if (objectType === eSystemObjectType.eCaptureData) {
+            const { CaptureData } = metadata;
+
+            try {
+                schemaCD.validateSync(
+                    {
+                        datasetFieldId: CaptureData?.datasetFieldId,
+                        itemArrangementFieldId: CaptureData?.itemArrangementFieldId,
+                        itemPositionFieldId: CaptureData?.itemPositionFieldId,
+                        clusterGeometryFieldId: CaptureData?.clusterGeometryFieldId
+                    },
+                    option
+                );
+            } catch (error) {
+                for (const message of error.errors) {
+                    errorMessages.push(message);
+                }
             }
         }
 
         return errorMessages;
     }
 }));
+
+const schemaCD = yup.object().shape({
+    datasetFieldId: yup.number().positive('Dataset Field ID must be positive').max(2147483647, 'Dataset Field ID is too large').nullable(),
+    itemPositionFieldId: yup.number().positive('Item Position Field ID must be positive').max(2147483647, 'Item Position Field ID is too large').nullable(),
+    itemArrangementFieldId: yup.number().positive('Item Arrangement Field ID must be positive').max(2147483647, 'Item Arrangement Field ID is too large').nullable(),
+    clusterGeometryFieldId: yup.number().positive('Cluster Geometry Field ID must be positive').max(2147483647, 'Cluster Geometry Field ID is too large').nullable()
+});
+
+const schemaModel = yup.object().shape({
+    dateCaptured: yup.date().max(Date(), 'Date Created cannot be set in the future')
+});
