@@ -101,7 +101,8 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                     CountMeta: Scene?.CountMeta,
                     CountSetup: Scene?.CountSetup,
                     CountTour: Scene?.CountTour,
-                    idScene: systemObject.idScene
+                    EdanUUID: Scene?.EdanUUID,
+                    idScene: systemObject.idScene,
                 };
                 result.Scene = fields;
             }
