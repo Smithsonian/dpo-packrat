@@ -987,6 +987,7 @@ input SubjectDetailFieldsInput {
   TS0: Float
   TS1: Float
   TS2: Float
+  idIdentifierPreferred: Int
 }
 
 input ItemDetailFieldsInput {
@@ -1117,9 +1118,9 @@ input UpdateIdentifier {
   id: Int!
   identifier: String!
   identifierType: Int!
-  selected: Boolean!
   idSystemObject: Int!
   idIdentifier: Int!
+  preferred: Boolean
 }
 
 type DeleteObjectConnectionResult {
@@ -1164,7 +1165,7 @@ input CreateIdentifierInput {
   identifierValue: String!
   identifierType: Int!
   idSystemObject: Int
-  selected: Boolean!
+  preferred: Boolean
 }
 
 scalar JSON
@@ -1194,6 +1195,7 @@ type SubjectDetailFields {
   TS0: Float
   TS1: Float
   TS2: Float
+  idIdentifierPreferred: Int
 }
 
 type ItemDetailFields {
