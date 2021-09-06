@@ -31,12 +31,6 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     value: {
         color: ({ clickable = true }: DetailProps) => (clickable ? palette.primary.main : palette.primary.dark),
         textDecoration: ({ clickable = true, value }: DetailProps) => (clickable && value ? 'underline' : undefined)
-    },
-    btn: {
-        backgroundColor: '#687DDB',
-        color: 'white',
-        width: '90px',
-        height: '30px'
     }
 }));
 

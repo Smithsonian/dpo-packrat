@@ -3,9 +3,8 @@
  *
  * Default field definitions for the metadata store.
  */
-import lodash from 'lodash';
 import * as yup from 'yup';
-import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields, StateIdentifier } from './metadata.types';
+import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields } from './metadata.types';
 
 const identifierWhenSelectedValidation = {
     is: true,
@@ -16,8 +15,7 @@ const identifierWhenSelectedValidation = {
 const identifierSchema = yup.object().shape({
     id: yup.number().required(),
     identifier: yup.string().trim().when('selected', identifierWhenSelectedValidation),
-    identifierType: yup.number().nullable(true),
-    selected: yup.boolean().required()
+    identifierType: yup.number().nullable(true)
 });
 
 const folderSchema = yup.object().shape({
@@ -27,8 +25,8 @@ const folderSchema = yup.object().shape({
 });
 
 const identifierValidation = {
-    test: array => !!lodash.filter(array as StateIdentifier[], { selected: true }).length,
-    message: 'Should select/provide at least 1 identifier'
+    test: array => array.length && array.every(identifier => identifier.identifier.length),
+    message: 'Should provide at least 1 identifier with valid identifier ID'
 };
 
 const identifiersWhenValidation = {

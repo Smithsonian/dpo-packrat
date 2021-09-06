@@ -59,7 +59,7 @@ type MetadataStore = {
 
 export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
     metadatas: [],
-    getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => lodash.filter(identifiers, { selected: true }),
+    getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => identifiers,
     getFieldErrors: (metadata: StateMetadata): FieldErrors => {
         const { getAssetType } = useVocabularyStore.getState();
         // UPDATE these error fields as we include more validation for ingestion

@@ -5,33 +5,33 @@ import * as COL from '../../../../../collections/interface';
 import { VocabularyCache, eVocabularySetID } from '../../../../../cache';
 
 export default async function createSubjectWithIdentifiers(_: Parent, args: MutationCreateSubjectWithIdentifiersArgs): Promise<CreateSubjectWithIdentifiersResult> {
-    const { input: { systemCreated, identifiers, subject } } = args;
+    const {
+        input: { systemCreated, identifiers, subject }
+    } = args;
     const { idUnit, Name, idGeoLocation } = subject;
     const ICOL: COL.ICollection = COL.CollectionFactory.getInstance();
 
-    // Use identifiersList to keep track of all the created identifiers that need to update idSystemObject once subject is created
     const identifiersList: DBAPI.Identifier[] = [];
 
     const ARKId: string = ICOL.generateArk(null, false);
     const identifierTypeARK = await VocabularyCache.vocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'ARK');
     const idIentifierType = identifierTypeARK?.idVocabulary || 79;
 
+    let idIdentifierPreferred: null | number = null;
+
     if (systemCreated) {
         const Identifier = new DBAPI.Identifier({
             idIdentifier: 0,
             idVIdentifierType: idIentifierType,
             IdentifierValue: ARKId,
-            idSystemObject: null,
+            idSystemObject: null
         });
 
         const successfulIdentifierCreation = await Identifier.create();
-        if (successfulIdentifierCreation) identifiersList.push(Identifier);
+        if (successfulIdentifierCreation) idIdentifierPreferred = Identifier.idIdentifier;
     }
 
-    let selectedIdentifierCount = 0;
     for await (const identifier of identifiers) {
-        if (identifier.selected) selectedIdentifierCount++;
-
         const Identifier = new DBAPI.Identifier({
             idIdentifier: 0,
             idVIdentifierType: identifier.identifierType,
@@ -40,23 +40,18 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
         });
 
         const successfulIdentifierCreation = await Identifier.create();
-        if (successfulIdentifierCreation) identifiersList.push(Identifier);
+        if (successfulIdentifierCreation) {
+            identifiersList.push(Identifier);
+
+            // TODO: Do we want system created to always be preferred?
+            // If so, uncomment the next line and comment the line after
+            // if (identifier.preferred && !idIdentifierPreferred) {
+            if (identifier.preferred) idIdentifierPreferred = Identifier.idIdentifier;
+        }
     }
 
-    let idIdentifierPreferred: number | null = null;
-
-    // idIdentifierPreferred is set by a systemCreated ARKID > a selected identifier > an ARKID
-    if (systemCreated) {
-        const systemCreatedIdentifier = identifiersList.find((identifier) => identifier.IdentifierValue === ARKId);
-        if (systemCreatedIdentifier?.idIdentifier) {
-            idIdentifierPreferred = systemCreatedIdentifier?.idIdentifier;
-        }
-    } else if (selectedIdentifierCount === 1) {
-        const selectedIdentifier = identifiers.find((identifier) => identifier.selected === true);
-        const preferredIdentifier = identifiersList.find((identifier) => identifier.IdentifierValue === selectedIdentifier?.identifierValue);
-        if (preferredIdentifier?.idIdentifier) idIdentifierPreferred = preferredIdentifier.idIdentifier;
-    } else {
-        const preferredIdentifier = identifiersList.find((identifier) => identifier.idVIdentifierType === idIentifierType);
+    if (idIdentifierPreferred === null) {
+        const preferredIdentifier = identifiersList.find(identifier => identifier.idVIdentifierType === idIentifierType);
         if (preferredIdentifier?.idIdentifier) idIdentifierPreferred = preferredIdentifier.idIdentifier;
     }
 
@@ -76,10 +71,10 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
 
     if (successfulSubjectCreation) {
         const SO = await Subject.fetchSystemObject();
-        identifiersList.forEach(async (identifier) => {
+        for await (const identifier of identifiersList) {
             if (SO?.idSystemObject) identifier.idSystemObject = SO.idSystemObject;
             await identifier.update();
-        });
+        }
     } else {
         return { success: false, message: 'Error when creating subject' };
     }
