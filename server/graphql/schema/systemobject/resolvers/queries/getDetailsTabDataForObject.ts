@@ -47,6 +47,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
 
                 const Subject = await DBAPI.Subject.fetch(systemObject.idSubject);
 
+                fields = { ...Subject };
                 if (Subject?.idGeoLocation) {
                     const GeoLocation = await DBAPI.GeoLocation.fetch(Subject.idGeoLocation);
                     fields = { ...fields, ...GeoLocation };

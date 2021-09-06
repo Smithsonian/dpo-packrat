@@ -32,7 +32,8 @@ export function useObjectDetails(idSystemObject: number): GetSystemObjectDetails
             input: {
                 idSystemObject
             }
-        }
+        },
+        fetchPolicy: 'no-cache'
     });
 }
 
@@ -75,7 +76,8 @@ export async function getDetailsTabDataForObject(idSystemObject: number, objectT
                 idSystemObject,
                 objectType
             }
-        }
+        },
+        fetchPolicy: 'no-cache'
     });
 }
 
@@ -166,7 +168,8 @@ export async function deleteIdentifier(idIdentifier: number) {
             input: {
                 idIdentifier
             }
-        }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
     });
 }
 
