@@ -34,10 +34,12 @@ interface AssetIdentifiersProps {
     onAddIdentifer: (identifiers: StateIdentifier[]) => void;
     onUpdateIdentifer: (identifiers: StateIdentifier[]) => void;
     onRemoveIdentifer: (identifiers: StateIdentifier[]) => void;
+    subjectView?: boolean;
+    onUpdateIdIdentifierPreferred?: (id: number) => void;
 }
 
 function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
-    const { systemCreated, identifiers, onSystemCreatedChange, onAddIdentifer, onUpdateIdentifer, onRemoveIdentifer } = props;
+    const { systemCreated, identifiers, onSystemCreatedChange, onAddIdentifer, onUpdateIdentifer, onRemoveIdentifer, subjectView, onUpdateIdIdentifierPreferred } = props;
     const classes = useStyles();
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
 
@@ -46,8 +48,8 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
             id: identifiers.length + 1,
             identifier: '',
             identifierType: getInitialEntry(eVocabularySetID.eIdentifierIdentifierType) || initialEntry,
-            selected: false,
-            idIdentifier: 0
+            idIdentifier: 0,
+            preferred: undefined
         };
 
         const updatedIdentifiers = lodash.concat(identifiers, [newIdentifier]);
@@ -101,6 +103,8 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
                         onAdd={addIdentifer}
                         onRemove={removeIdentifier}
                         onUpdate={updateIdentifierFields}
+                        subjectView={subjectView}
+                        onUpdateIdIdentifierPreferred={onUpdateIdIdentifierPreferred}
                     />
                 )}
             </FieldType>
