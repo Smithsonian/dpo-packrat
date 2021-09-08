@@ -131,6 +131,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const newRoot = tree.get('root')?.concat(entries) as NavigationResultEntry[];
             const entry: [string, NavigationResultEntry[]] = [treeRootKey, newRoot];
             const updatedTree = new Map([entry]);
+            // console.log(`getMoreRoot: added ${entries.length} for ${newRoot.length} total`);
+            // console.log(`getMoreRoot: ${JSON.stringify(data)}`);
+            // console.log(`getMoreRoot: ${updatedTree.size}`);
             set({ tree: updatedTree, loading: false });
         }
     },
@@ -165,6 +168,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
             const previousEntries = updatedTree.get(nodeId) || [];
             updatedTree.set(nodeId, [...previousEntries, ...entries]);
+            console.log(`getMoreChildren: ${updatedTree.size}`);
             set({ tree: updatedTree });
             if (cursorMark) {
                 const newCursors = cursors;
