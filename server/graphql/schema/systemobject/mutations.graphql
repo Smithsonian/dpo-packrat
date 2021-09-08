@@ -71,6 +71,7 @@ input CaptureDataDetailFieldsInput {
     clusterType: Int
     clusterGeometryFieldId: Int
     folders: [IngestFolderInput!]!
+    isValidData: Boolean
 }
 
 input ModelDetailFieldsInput {
