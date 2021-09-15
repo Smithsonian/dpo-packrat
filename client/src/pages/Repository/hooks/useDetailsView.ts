@@ -22,7 +22,8 @@ import {
     ClearLicenseAssignmentDocument,
     AssignLicenseDocument,
     ClearLicenseAssignmentMutation,
-    AssignLicenseMutation
+    AssignLicenseMutation,
+    ExistingRelationship
 } from '../../../types/graphql';
 import { eSystemObjectType } from '../../../types/server';
 
@@ -99,12 +100,13 @@ export function updateDetailsTabData(
     });
 }
 
-export function updateSourceObjects(idSystemObject: number, sources: number[], PreviouslySelected: number[]) {
+export function updateSourceObjects(idSystemObject: number, objectType: number, sources: ExistingRelationship[], PreviouslySelected: ExistingRelationship[]) {
     return apolloClient.mutate({
         mutation: UpdateSourceObjectsDocument,
         variables: {
             input: {
                 idSystemObject,
+                ChildObjectType: objectType,
                 Sources: sources,
                 PreviouslySelected
             }
@@ -113,12 +115,13 @@ export function updateSourceObjects(idSystemObject: number, sources: number[], P
     });
 }
 
-export function updateDerivedObjects(idSystemObject: number, derivatives: number[], PreviouslySelected: number[]) {
+export function updateDerivedObjects(idSystemObject: number, objectType: number, derivatives: ExistingRelationship[], PreviouslySelected: ExistingRelationship[]) {
     return apolloClient.mutate({
         mutation: UpdateDerivedObjectsDocument,
         variables: {
             input: {
                 idSystemObject,
+                ParentObjectType: objectType,
                 Derivatives: derivatives,
                 PreviouslySelected
             }

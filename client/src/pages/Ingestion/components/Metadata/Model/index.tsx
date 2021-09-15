@@ -379,6 +379,7 @@ function Model(props: ModelProps): React.ReactElement {
                 onModalClose={onModalClose}
                 selectedObjects={objectRelationship === 'Source' ? model.sourceObjects : model.derivedObjects}
                 relationship={objectRelationship}
+                objectType={eSystemObjectType.eModel}
             />
         </React.Fragment>
     );

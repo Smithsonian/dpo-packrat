@@ -204,6 +204,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 onModalClose={onModalClose}
                 selectedObjects={objectRelationship === 'Source' ? scene.sourceObjects : scene.derivedObjects}
                 relationship={objectRelationship}
+                objectType={eSystemObjectType.eScene}
             />
         </Box>
     );

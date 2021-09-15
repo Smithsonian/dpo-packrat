@@ -1,7 +1,7 @@
 import {
     IngestDataInput, IngestDataResult, MutationIngestDataArgs,
     IngestSubjectInput, IngestItemInput, IngestIdentifierInput, User,
-    IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput
+    IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput, ExistingRelationship, RelatedObjectType
 } from '../../../../../types/graphql';
 import { ResolverBase, IWorkflowHelper } from '../../../ResolverBase';
 import { Parent, Context } from '../../../../../types/resolvers';
@@ -18,6 +18,8 @@ import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
+import { eSystemObjectType } from '../../../../../db/api/ObjectType';
+import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
 
 type AssetPair = {
     asset: DBAPI.Asset;
@@ -470,6 +472,11 @@ class IngestDataWorker extends ResolverBase {
         // wire photogrammetry to sourceObjects
         if (photogrammetry.sourceObjects && photogrammetry.sourceObjects.length > 0) {
             for (const sourceObject of photogrammetry.sourceObjects) {
+                console.log('photo adding source');
+                if (!isValidParentChildRelationship(sourceObject.objectType, eSystemObjectType.eCaptureData, photogrammetry.sourceObjects, [], true)) {
+                    LOG.error(`ingestData failed to connect photogrammetry with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
+                    continue;
+                }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, captureDataDB)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -480,6 +487,12 @@ class IngestDataWorker extends ResolverBase {
         // wire photogrammetry to derivedObjects
         if (photogrammetry.derivedObjects && photogrammetry.derivedObjects.length > 0) {
             for (const derivedObject of photogrammetry.derivedObjects) {
+                // make a query for each derivedObject's sourceObjects
+                const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
+                if (!isValidParentChildRelationship(eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                    LOG.error(`ingestData failed to connect photogrammetry with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
+                    continue;
+                }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(captureDataDB, derivedObject.idSystemObject)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -650,6 +663,10 @@ class IngestDataWorker extends ResolverBase {
         // wire model to sourceObjects
         if (model.sourceObjects && model.sourceObjects.length > 0) {
             for (const sourceObject of model.sourceObjects) {
+                if (!isValidParentChildRelationship(sourceObject.objectType, eSystemObjectType.eModel, model.sourceObjects, [], true)) {
+                    LOG.error(`ingestData failed to connect model with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
+                    continue;
+                }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, modelDB)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -660,6 +677,12 @@ class IngestDataWorker extends ResolverBase {
         // wire model to derivedObjects
         if (model.derivedObjects && model.derivedObjects.length > 0) {
             for (const derivedObject of model.derivedObjects) {
+                // make a query for each derivedObject's sourceObjects
+                const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
+                if (!isValidParentChildRelationship(eSystemObjectType.eModel, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                    LOG.error(`ingestData failed to connect model with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
+                    continue;
+                }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelDB, derivedObject.idSystemObject)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -761,6 +784,10 @@ class IngestDataWorker extends ResolverBase {
         // wire scene to sourceObjects
         if (scene.sourceObjects && scene.sourceObjects.length > 0) {
             for (const sourceObject of scene.sourceObjects) {
+                if (!isValidParentChildRelationship(sourceObject.objectType, eSystemObjectType.eScene, scene.sourceObjects, [], true)) {
+                    LOG.error(`ingestData failed to connect scene with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
+                    continue;
+                }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, sceneDB)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -771,6 +798,11 @@ class IngestDataWorker extends ResolverBase {
         // wire scene to derivedObjects
         if (scene.derivedObjects && scene.derivedObjects.length > 0) {
             for (const derivedObject of scene.derivedObjects) {
+                const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
+                if (!isValidParentChildRelationship(eSystemObjectType.eScene, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                    LOG.error(`ingestData failed to connect model with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
+                    continue;
+                }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneDB, derivedObject.idSystemObject)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -1306,3 +1338,86 @@ class IngestDataWorker extends ResolverBase {
         return { success: true, error: '', workflowEngine, workflow, workflowReport };
     }
 }
+
+export function isValidParentChildRelationship(parent: number, child: number, selected: ExistingRelationship[], existingParentRelationships: ExistingRelationship[], isAddingSource: boolean): boolean {
+    let result = false;
+    /*
+        NOTE: when updating this relationship function, make sure to also fix it in client/src/util/repository.tsx
+        xproject child to 1 - many unit parent
+        -skip on stakeholders for now
+        -skip on stakeholders for now
+        xitem child to only 1 parent project parent
+        xitem child to multiple subject parent
+        xCD child to only 1 item parent
+        xmodel child only 1 parent Item
+        xscene child to 1 or more item parent
+        xmodel child to 0 - many CD parent
+        xCD child to 0 - many CD parent
+        -skip on actor for now
+        xmodel child to 0 to many model parent
+        xscene child to 1 to many model parent
+        -skip on actor for now
+        xmodel child to only 1 scene parent
+        -skip on IF for now
+        -skip on PD for now
+    */
+
+    const existingAndNewRelationships = [...existingParentRelationships, ...selected];
+    switch (child) {
+        case eSystemObjectType.eProject:
+            result = parent === eSystemObjectType.eUnit;
+            break;
+        case eSystemObjectType.eItem: {
+            if (parent === eSystemObjectType.eSubject) result = true;
+
+            if (parent === eSystemObjectType.eProject) {
+                if (isAddingSource) {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 2);
+                } else {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 1);
+                }
+            }
+            break;
+        }
+        case eSystemObjectType.eCaptureData: {
+            if (parent === eSystemObjectType.eItem) {
+                if (isAddingSource) {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 2);
+                } else {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
+                }
+            }
+
+            if (parent === eSystemObjectType.eCaptureData) result = true;
+            break;
+        }
+        case eSystemObjectType.eModel: {
+            if (parent === eSystemObjectType.eItem) {
+                if (isAddingSource) {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 2);
+                } else {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
+                }
+            }
+
+            if (parent === eSystemObjectType.eScene) {
+                if (isAddingSource) {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 2);
+                } else {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 1);
+                }
+            }
+
+            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eModel) result = true;
+            break;
+        }
+        case eSystemObjectType.eScene: {
+            if (parent === eSystemObjectType.eItem || parent === eSystemObjectType.eModel) result = true;
+            break;
+        }
+    }
+
+    return result;
+}
+
+const maximumConnections = (relationships: ExistingRelationship[], objectType: number, limit: number) => relationships.filter(relationship => relationship.objectType === objectType).length < limit;

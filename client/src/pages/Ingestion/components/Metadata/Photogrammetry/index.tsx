@@ -245,6 +245,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                 onModalClose={onModalClose}
                 selectedObjects={objectRelationship === 'Source' ? photogrammetry.sourceObjects : photogrammetry.derivedObjects}
                 relationship={objectRelationship}
+                objectType={eSystemObjectType.eCaptureData}
             />
         </Box>
     );
