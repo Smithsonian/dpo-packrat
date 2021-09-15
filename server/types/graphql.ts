@@ -1517,26 +1517,37 @@ export type UpdateObjectDetailsResult = {
   message: Scalars['String'];
 };
 
+export type ExistingRelationship = {
+  idSystemObject: Scalars['Int'];
+  objectType: Scalars['Int'];
+};
+
 export type UpdateDerivedObjectsInput = {
   idSystemObject: Scalars['Int'];
-  Derivatives: Array<Scalars['Int']>;
-  PreviouslySelected: Array<Scalars['Int']>;
+  ParentObjectType: Scalars['Int'];
+  Derivatives: Array<ExistingRelationship>;
+  PreviouslySelected: Array<ExistingRelationship>;
 };
 
 export type UpdateDerivedObjectsResult = {
   __typename?: 'UpdateDerivedObjectsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
+  status: Scalars['String'];
 };
 
 export type UpdateSourceObjectsInput = {
   idSystemObject: Scalars['Int'];
-  Sources: Array<Scalars['Int']>;
-  PreviouslySelected: Array<Scalars['Int']>;
+  ChildObjectType: Scalars['Int'];
+  Sources: Array<ExistingRelationship>;
+  PreviouslySelected: Array<ExistingRelationship>;
 };
 
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
+  status: Scalars['String'];
 };
 
 export type UpdateIdentifier = {

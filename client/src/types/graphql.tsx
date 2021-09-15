@@ -1520,26 +1520,37 @@ export type UpdateObjectDetailsResult = {
   message: Scalars['String'];
 };
 
+export type ExistingRelationship = {
+  idSystemObject: Scalars['Int'];
+  objectType: Scalars['Int'];
+};
+
 export type UpdateDerivedObjectsInput = {
   idSystemObject: Scalars['Int'];
-  Derivatives: Array<Scalars['Int']>;
-  PreviouslySelected: Array<Scalars['Int']>;
+  ParentObjectType: Scalars['Int'];
+  Derivatives: Array<ExistingRelationship>;
+  PreviouslySelected: Array<ExistingRelationship>;
 };
 
 export type UpdateDerivedObjectsResult = {
   __typename?: 'UpdateDerivedObjectsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
+  status: Scalars['String'];
 };
 
 export type UpdateSourceObjectsInput = {
   idSystemObject: Scalars['Int'];
-  Sources: Array<Scalars['Int']>;
-  PreviouslySelected: Array<Scalars['Int']>;
+  ChildObjectType: Scalars['Int'];
+  Sources: Array<ExistingRelationship>;
+  PreviouslySelected: Array<ExistingRelationship>;
 };
 
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
+  status: Scalars['String'];
 };
 
 export type UpdateIdentifier = {
@@ -2720,7 +2731,7 @@ export type UpdateDerivedObjectsMutation = (
   { __typename?: 'Mutation' }
   & { updateDerivedObjects: (
     { __typename?: 'UpdateDerivedObjectsResult' }
-    & Pick<UpdateDerivedObjectsResult, 'success'>
+    & Pick<UpdateDerivedObjectsResult, 'success' | 'message' | 'status'>
   ) }
 );
 
@@ -2746,7 +2757,7 @@ export type UpdateSourceObjectsMutation = (
   { __typename?: 'Mutation' }
   & { updateSourceObjects: (
     { __typename?: 'UpdateSourceObjectsResult' }
-    & Pick<UpdateSourceObjectsResult, 'success'>
+    & Pick<UpdateSourceObjectsResult, 'success' | 'status' | 'message'>
   ) }
 );
 
@@ -4371,6 +4382,8 @@ export const UpdateDerivedObjectsDocument = gql`
     mutation updateDerivedObjects($input: UpdateDerivedObjectsInput!) {
   updateDerivedObjects(input: $input) {
     success
+    message
+    status
   }
 }
     `;
@@ -4438,6 +4451,8 @@ export const UpdateSourceObjectsDocument = gql`
     mutation updateSourceObjects($input: UpdateSourceObjectsInput!) {
   updateSourceObjects(input: $input) {
     success
+    status
+    message
   }
 }
     `;

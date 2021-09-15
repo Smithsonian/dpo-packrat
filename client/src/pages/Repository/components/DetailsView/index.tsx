@@ -453,6 +453,7 @@ function DetailsView(): React.ReactElement {
                 selectedObjects={objectRelationship === 'Source' ? sourceObjects : derivedObjects}
                 idSystemObject={idSystemObject}
                 relationship={objectRelationship}
+                objectType={objectType}
             />
         </Box>
     );
