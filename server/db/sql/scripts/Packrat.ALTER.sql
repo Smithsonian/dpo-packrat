@@ -148,3 +148,5 @@ ADD CONSTRAINT `fk_metadata_systemobject2`
 
 -- 2021-08-12 Jon
 ALTER TABLE Scene ADD COLUMN EdanUUID varchar(64) NULL;
+
+-- 2021-08-20 Deployed to Staging
