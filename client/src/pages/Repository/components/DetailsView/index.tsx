@@ -24,6 +24,7 @@ import {
     ModelDetailFieldsInput,
     ProjectDetailFieldsInput,
     ProjectDocumentationDetailFieldsInput,
+    RelatedObjectType,
     SceneDetailFieldsInput,
     StakeholderDetailFieldsInput,
     SubjectDetailFieldsInput,
@@ -85,7 +86,7 @@ function DetailsView(): React.ReactElement {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [detailQuery, setDetailQuery] = useState<any>({});
     const [isUpdatingData, setIsUpdatingData] = useState(false);
-    const [objectRelationship, setObjectRelationship] = useState('');
+    const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const [loadingIdentifiers, setLoadingIdentifiers] = useState(true);
     const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
     const { data, loading } = useObjectDetails(idSystemObject);
@@ -201,12 +202,12 @@ function DetailsView(): React.ReactElement {
 
     const onModalClose = () => {
         setModalOpen(false);
-        setObjectRelationship('');
+        setObjectRelationship(RelatedObjectType.Source);
         resetRepositoryFilter();
     };
 
     const onAddSourceObject = () => {
-        setObjectRelationship('Source');
+        setObjectRelationship(RelatedObjectType.Source);
         resetKeywordSearch();
         resetRepositoryFilter();
         initializeTree();
@@ -214,7 +215,7 @@ function DetailsView(): React.ReactElement {
     };
 
     const onAddDerivedObject = () => {
-        setObjectRelationship('Derived');
+        setObjectRelationship(RelatedObjectType.Derived);
         resetKeywordSearch();
         resetRepositoryFilter();
         initializeTree();
@@ -506,9 +507,10 @@ function DetailsView(): React.ReactElement {
             <ObjectSelectModal
                 open={modalOpen}
                 onModalClose={onModalClose}
-                selectedObjects={objectRelationship === 'Source' ? sourceObjects : derivedObjects}
+                selectedObjects={objectRelationship === RelatedObjectType.Source ? sourceObjects : derivedObjects}
                 idSystemObject={idSystemObject}
                 relationship={objectRelationship}
+                objectType={objectType}
             />
         </Box>
     );

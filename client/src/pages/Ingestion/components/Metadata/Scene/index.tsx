@@ -75,7 +75,7 @@ function Scene(props: SceneProps): React.ReactElement {
         EdanUUID: ''
     });
     const [modalOpen, setModalOpen] = useState(false);
-    const [objectRelationship, setObjectRelationship] = useState('');
+    const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
@@ -126,13 +126,13 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const openSourceObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
-        await setObjectRelationship('Source');
+        await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
-        await setObjectRelationship('Derived');
+        await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };
 
@@ -150,12 +150,12 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const onModalClose = () => {
         setModalOpen(false);
-        setObjectRelationship('');
+        setObjectRelationship(RelatedObjectType.Source);
         closeRepositoryBrowser();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
-        updateMetadataField(metadataIndex, objectRelationship === 'Source' ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.scene);
+        updateMetadataField(metadataIndex, objectRelationship === RelatedObjectType.Source ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.scene);
         onModalClose();
     };
 
@@ -201,8 +201,9 @@ function Scene(props: SceneProps): React.ReactElement {
                 open={modalOpen}
                 onSelectedObjects={onSelectedObjects}
                 onModalClose={onModalClose}
-                selectedObjects={objectRelationship === 'Source' ? scene.sourceObjects : scene.derivedObjects}
+                selectedObjects={objectRelationship === RelatedObjectType.Source ? scene.sourceObjects : scene.derivedObjects}
                 relationship={objectRelationship}
+                objectType={eSystemObjectType.eScene}
             />
         </Box>
     );

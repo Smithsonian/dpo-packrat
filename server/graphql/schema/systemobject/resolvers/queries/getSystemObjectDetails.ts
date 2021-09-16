@@ -77,7 +77,7 @@ async function getPublishedState(idSystemObject: number): Promise<string> {
     return DBAPI.PublishedStateEnumToString(systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished);
 }
 
-async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {
+export async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {
     let relatedSystemObjects: SystemObject[] | null = [];
 
     if (type === RelatedObjectType.Source) {
