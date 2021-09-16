@@ -571,6 +571,7 @@ model Scene {
   CountMeta        Int?
   CountSetup       Int?
   CountTour        Int?
+  EdanUUID         String?          @mariasql.VarChar(64)
   Asset            Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
   ModelSceneXref   ModelSceneXref[]
   SystemObject     SystemObject?

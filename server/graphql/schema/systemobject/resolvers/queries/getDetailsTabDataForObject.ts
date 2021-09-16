@@ -47,6 +47,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
 
                 const Subject = await DBAPI.Subject.fetch(systemObject.idSubject);
 
+                fields = { ...Subject };
                 if (Subject?.idGeoLocation) {
                     const GeoLocation = await DBAPI.GeoLocation.fetch(Subject.idGeoLocation);
                     fields = { ...fields, ...GeoLocation };
@@ -101,7 +102,8 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                     CountMeta: Scene?.CountMeta,
                     CountSetup: Scene?.CountSetup,
                     CountTour: Scene?.CountTour,
-                    idScene: systemObject.idScene
+                    EdanUUID: Scene?.EdanUUID,
+                    idScene: systemObject.idScene,
                 };
                 result.Scene = fields;
             }

@@ -4,8 +4,9 @@ import * as CACHE from '../cache';
 import { IExtractor, IExtractorResults } from './IExtractor';
 
 import { pathExists } from 'fs-extra';
-// import { ExtractorImageExiftool } from './ExtractorImageExiftool'; Loaded dynamically due to install issues with exiftool-vendored when performed in a linux container from a non-linux system (windows or macos)
 import { ExtractorImageExifr } from './ExtractorImageExifr';
+// import { ExtractorImageExiftool } from './ExtractorImageExiftool'; Loaded dynamically due to install issues with exiftool-vendored when performed in a linux container from a non-linux system (windows or macos)
+type ExifModule = typeof import('./ExtractorImageExiftool');
 
 export class MetadataExtractor {
     metadata: Map<string, string> = new Map<string, string>();  // Map of metadata name -> value
@@ -67,18 +68,22 @@ export class MetadataExtractor {
             return results;
 
         try {
-            const exiftool = await this.importModule('./ExtractorImageExiftool.ts');
-            const extractor: IExtractor = new exiftool.ExtractorImageExiftool();
-            results = await extractor.initialize();
-            if (results.success) {
-                LOG.info('MetadataExtractor.initializeExtractorImage using exiftool', LOG.LS.eMETA);
-                MetadataExtractor.extractorImage = extractor;
-                return results;
+            const exifModule: ExifModule | null = await this.importModule('./ExtractorImageExiftool.ts');
+            if (exifModule) {
+                const extractor: IExtractor = new exifModule.ExtractorImageExiftool();
+                results = await extractor.initialize();
+                if (results.success) {
+                    LOG.info('MetadataExtractor.initializeExtractorImage using exiftool', LOG.LS.eMETA);
+                    MetadataExtractor.extractorImage = extractor;
+                    return results;
+                }
             }
+            LOG.info(`MetadataExtractor.initializeExtractorImage failed to initialize exiftool: ${results.error}`, LOG.LS.eMETA);
         } catch (err) {
             LOG.error('MetadataExtractor.initializeExtractorImage failed to initialize exiftool', LOG.LS.eMETA, err);
         }
 
+        results.error = '';
         try {
             const extractor: IExtractor = new ExtractorImageExifr();
             results = await extractor.initialize();
@@ -87,15 +92,16 @@ export class MetadataExtractor {
                 MetadataExtractor.extractorImage = extractor;
                 return results;
             }
+            LOG.info(`MetadataExtractor.initializeExtractorImage failed to initialize exifr: ${results.error}`, LOG.LS.eMETA);
         } catch (err) {
             LOG.error('MetadataExtractor.initializeExtractorImage failed to initialize exifr', LOG.LS.eMETA, err);
         }
 
-        LOG.error(`MetadataExtractor.initializeExtractorImage unable to load exiftool and exifr: ${results.error}`, LOG.LS.eMETA);
+        LOG.error('MetadataExtractor.initializeExtractorImage unable to load exiftool and exifr', LOG.LS.eMETA);
         return results;
     }
 
-    private async importModule(moduleName: string): Promise<any> { // eslint-disable-line @typescript-eslint/no-explicit-any
+    private async importModule(moduleName: string): Promise<ExifModule | null> { // eslint-disable-line @typescript-eslint/no-explicit-any
         try {
             LOG.info(`MetadataExtractor.importModule ${moduleName}`, LOG.LS.eMETA);
             return await import(moduleName);

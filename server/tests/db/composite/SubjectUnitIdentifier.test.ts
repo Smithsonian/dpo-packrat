@@ -4,7 +4,7 @@ import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';
 
 afterAll(async done => {
-    // H.Helpers.sleep(4000);
+    // awaitH.Helpers.sleep(4000);
     done();
 });
 

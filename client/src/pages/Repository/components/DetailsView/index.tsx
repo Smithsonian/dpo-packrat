@@ -61,7 +61,6 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     updateButton: {
         height: 35,
         width: 100,
-        marginTop: 10,
         color: palette.background.paper,
         [breakpoints.down('lg')]: {
             height: 30
@@ -88,19 +87,32 @@ function DetailsView(): React.ReactElement {
     const [detailQuery, setDetailQuery] = useState<any>({});
     const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
-
+    const [loadingIdentifiers, setLoadingIdentifiers] = useState(true);
     const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
     const { data, loading } = useObjectDetails(idSystemObject);
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
-
+    const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
     const getEntries = useVocabularyStore(state => state.getEntries);
-    const [stateIdentifiers, addNewIdentifier, initializeIdentifierState, removeTargetIdentifier, updateIdentifier, checkIdentifiersBeforeUpdate] = useIdentifierStore(state => [
+    const [
+        stateIdentifiers,
+        areIdentifiersUpdated,
+        addNewIdentifier,
+        initializeIdentifierState,
+        removeTargetIdentifier,
+        updateIdentifier,
+        checkIdentifiersBeforeUpdate,
+        updateIdentifierPreferred,
+        initializePreferredIdentifier
+    ] = useIdentifierStore(state => [
         state.stateIdentifiers,
+        state.areIdentifiersUpdated,
         state.addNewIdentifier,
         state.initializeIdentifierState,
         state.removeTargetIdentifier,
         state.updateIdentifier,
-        state.checkIdentifiersBeforeUpdate
+        state.checkIdentifiersBeforeUpdate,
+        state.updateIdentifierPreferred,
+        state.initializePreferredIdentifier
     ]);
     const [resetRepositoryFilter, resetKeywordSearch, initializeTree] = useRepositoryStore(state => [state.resetRepositoryFilter, state.resetKeywordSearch, state.initializeTree]);
     const [initializeDetailFields, getDetail, getDetailsViewFieldErrors] = useDetailTabStore(state => [
@@ -111,6 +123,22 @@ function DetailsView(): React.ReactElement {
     const objectDetailsData = data;
 
     useEffect(() => {
+        if (data) {
+            const fetchDetailTabDataAndInitializeStateStore = async () => {
+                const detailsTabData = await getDetailsTabDataForObject(idSystemObject, objectType);
+                setDetailQuery(detailsTabData);
+                initializeDetailFields(detailsTabData, objectType);
+                if (objectType === eSystemObjectType.eSubject) {
+                    initializePreferredIdentifier(detailsTabData?.data?.getDetailsTabDataForObject?.Subject?.idIdentifierPreferred);
+                    setLoadingIdentifiers(false);
+                }
+            };
+
+            fetchDetailTabDataAndInitializeStateStore();
+        }
+    }, [idSystemObject, data]);
+
+    useEffect(() => {
         if (data && !loading) {
             const { name, retired, license } = data.getSystemObjectDetails;
             setDetails({ name, retired, idLicense: license?.idLicense || 0 });
@@ -118,18 +146,10 @@ function DetailsView(): React.ReactElement {
         }
     }, [data, loading, initializeIdentifierState]);
 
-    // new function for setting state
+    // checks for updates to identifiers
     useEffect(() => {
-        if (data) {
-            const fetchDetailTabDataAndInitializeStateStore = async () => {
-                const detailsTabData = await getDetailsTabDataForObject(idSystemObject, objectType);
-                setDetailQuery(detailsTabData);
-                initializeDetailFields(detailsTabData, objectType);
-            };
-
-            fetchDetailTabDataAndInitializeStateStore();
-        }
-    }, [idSystemObject, data]);
+        setUpdatedIdentifiers(areIdentifiersUpdated());
+    }, [stateIdentifiers]);
 
     if (!data || !params.idSystemObject) {
         return <ObjectNotFoundView loading={loading} />;
@@ -166,6 +186,7 @@ function DetailsView(): React.ReactElement {
             const deleteIdentifierSuccess = await deleteIdentifier(idIdentifier);
             if (deleteIdentifierSuccess) {
                 removeTargetIdentifier(idIdentifier);
+                setUpdatedIdentifiers(false);
                 toast.success('Identifier removed');
             } else {
                 toast.error('Error when removing identifier');
@@ -287,9 +308,9 @@ function DetailsView(): React.ReactElement {
         }
 
         // Create another validation here to make sure that the appropriate SO types are being checked
-        const errors = getDetailsViewFieldErrors(updatedData, objectType);
+        const errors = await getDetailsViewFieldErrors(updatedData, objectType);
         if (errors.length) {
-            errors.forEach(error => toast.error(`Please input a valid ${error}`, { autoClose: false }));
+            errors.forEach(error => toast.error(`${error}`, { autoClose: false }));
             setIsUpdatingData(false);
             return;
         }
@@ -299,7 +320,7 @@ function DetailsView(): React.ReactElement {
             // requires the fields to be populated.
             if (objectType === eSystemObjectType.eModel) {
                 const ModelDetails = getDetail(objectType) as ModelDetailsType;
-                const { DateCaptured, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
+                const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
 
                 updatedData.Model = {
                     Name: updatedData?.Name,
@@ -308,13 +329,41 @@ function DetailsView(): React.ReactElement {
                     Purpose: idVPurpose,
                     Units: idVUnits,
                     ModelFileType: idVFileType,
-                    DateCaptured
+                    DateCaptured: DateCreated
                 };
             }
 
             if (objectType === eSystemObjectType.eScene && updatedData.Scene) {
                 const { IsOriented, HasBeenQCd } = updatedData.Scene;
                 updatedData.Scene = { IsOriented, HasBeenQCd };
+            }
+            // convert subject and item inputs to numbers to handle scientific notation
+            if (objectType === eSystemObjectType.eSubject && updatedData.Subject) {
+                const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Subject;
+                if (Latitude) updatedData.Subject.Latitude = Number(Latitude);
+                if (Longitude) updatedData.Subject.Longitude = Number(Longitude);
+                if (Altitude) updatedData.Subject.Altitude = Number(Altitude);
+                if (TS0) updatedData.Subject.TS0 = Number(TS0);
+                if (TS1) updatedData.Subject.TS1 = Number(TS1);
+                if (TS2) updatedData.Subject.TS2 = Number(TS2);
+                if (R0) updatedData.Subject.R0 = Number(R0);
+                if (R1) updatedData.Subject.R1 = Number(R1);
+                if (R2) updatedData.Subject.R2 = Number(R2);
+                if (R3) updatedData.Subject.R3 = Number(R3);
+            }
+
+            if (objectType === eSystemObjectType.eItem && updatedData.Item) {
+                const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Item;
+                if (Latitude) updatedData.Item.Latitude = Number(Latitude);
+                if (Longitude) updatedData.Item.Longitude = Number(Longitude);
+                if (Altitude) updatedData.Item.Altitude = Number(Altitude);
+                if (TS0) updatedData.Item.TS0 = Number(TS0);
+                if (TS1) updatedData.Item.TS1 = Number(TS1);
+                if (TS2) updatedData.Item.TS2 = Number(TS2);
+                if (R0) updatedData.Item.R0 = Number(R0);
+                if (R1) updatedData.Item.R1 = Number(R1);
+                if (R2) updatedData.Item.R2 = Number(R2);
+                if (R3) updatedData.Item.R3 = Number(R3);
             }
 
             if (objectType === eSystemObjectType.eCaptureData && !updatedData.CaptureData) {
@@ -358,20 +407,21 @@ function DetailsView(): React.ReactElement {
                 };
             }
 
-            const stateIdentifiersWithIdSystemObject: UpdateIdentifier[] = stateIdentifiers.map(({ id, identifier, identifierType, selected, idIdentifier }) => {
+            const stateIdentifiersWithIdSystemObject: UpdateIdentifier[] = stateIdentifiers.map(({ id, identifier, identifierType, idIdentifier, preferred }) => {
                 return {
                     id,
                     identifier,
                     identifierType,
-                    selected,
                     idSystemObject,
-                    idIdentifier
+                    idIdentifier,
+                    preferred
                 };
             });
 
             updatedData.Retired = updatedData?.Retired || details?.retired;
             updatedData.Name = updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name;
             updatedData.Identifiers = stateIdentifiersWithIdSystemObject || [];
+            // console.log('updatedData', updatedData);
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
@@ -422,8 +472,18 @@ function DetailsView(): React.ReactElement {
                         onAdd={addIdentifer}
                         onRemove={removeIdentifier}
                         onUpdate={updateIdentifierFields}
+                        subjectView={objectType === eSystemObjectType.eSubject}
+                        onUpdateIdIdentifierPreferred={updateIdentifierPreferred}
+                        loading={loadingIdentifiers}
                     />
                 </Box>
+            </Box>
+
+            <Box display='flex' alignItems='center' mt={'10px'}>
+                <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
+                    Update
+                </LoadingButton>
+                {updatedIdentifiers && <div style={{ fontStyle: 'italic', marginLeft: '5px' }}>Update needed to save your identifier data entry</div>}
             </Box>
 
             <Box display='flex'>
@@ -443,10 +503,6 @@ function DetailsView(): React.ReactElement {
                     <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />
                 </Box>
             </Box>
-
-            <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
-                Update
-            </LoadingButton>
 
             <ObjectSelectModal
                 open={modalOpen}

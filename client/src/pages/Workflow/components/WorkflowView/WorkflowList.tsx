@@ -289,7 +289,7 @@ function WorkflowList(): React.ReactElement {
                     if (!value) return '';
                     return (
                         <Tooltip placement='left' title={value} arrow>
-                            <p>{truncateWithEllipses(value, 40)}</p>
+                            <div>{truncateWithEllipses(value, 40)}</div>
                         </Tooltip>
                     );
                 },
