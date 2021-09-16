@@ -470,10 +470,6 @@ class IngestDataWorker extends ResolverBase {
         // wire photogrammetry to sourceObjects
         if (photogrammetry.sourceObjects && photogrammetry.sourceObjects.length > 0) {
             for (const sourceObject of photogrammetry.sourceObjects) {
-                // if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, photogrammetry.sourceObjects, [], true)) {
-                //     LOG.error(`ingestData failed to connect photogrammetry with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
-                //     continue;
-                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, captureDataDB)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -484,12 +480,6 @@ class IngestDataWorker extends ResolverBase {
         // wire photogrammetry to derivedObjects
         if (photogrammetry.derivedObjects && photogrammetry.derivedObjects.length > 0) {
             for (const derivedObject of photogrammetry.derivedObjects) {
-                // make a query for each derivedObject's sourceObjects
-                // const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                // if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                //     LOG.error(`ingestData failed to connect photogrammetry with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
-                //     continue;
-                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(captureDataDB, derivedObject.idSystemObject)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -660,10 +650,6 @@ class IngestDataWorker extends ResolverBase {
         // wire model to sourceObjects
         if (model.sourceObjects && model.sourceObjects.length > 0) {
             for (const sourceObject of model.sourceObjects) {
-                // if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eModel, model.sourceObjects, [], true)) {
-                //     LOG.error(`ingestData failed to connect model with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
-                //     continue;
-                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, modelDB)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -674,12 +660,6 @@ class IngestDataWorker extends ResolverBase {
         // wire model to derivedObjects
         if (model.derivedObjects && model.derivedObjects.length > 0) {
             for (const derivedObject of model.derivedObjects) {
-                // make a query for each derivedObject's sourceObjects
-                // const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                // if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eModel, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                //     LOG.error(`ingestData failed to connect model with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
-                //     continue;
-                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelDB, derivedObject.idSystemObject)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -781,10 +761,6 @@ class IngestDataWorker extends ResolverBase {
         // wire scene to sourceObjects
         if (scene.sourceObjects && scene.sourceObjects.length > 0) {
             for (const sourceObject of scene.sourceObjects) {
-                // if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eScene, scene.sourceObjects, [], true)) {
-                //     LOG.error(`ingestData failed to connect scene with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
-                //     continue;
-                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, sceneDB)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -795,11 +771,6 @@ class IngestDataWorker extends ResolverBase {
         // wire scene to derivedObjects
         if (scene.derivedObjects && scene.derivedObjects.length > 0) {
             for (const derivedObject of scene.derivedObjects) {
-                // const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                // if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eScene, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                //     LOG.error(`ingestData failed to connect model with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
-                //     continue;
-                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneDB, derivedObject.idSystemObject)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -1038,9 +1009,12 @@ class IngestDataWorker extends ResolverBase {
                     }
                 }
 
-                if (photogrammetry.idAssetVersion) this.assetVersionSet.add(photogrammetry.idAssetVersion);
-                if (photogrammetry.idAsset) this.ingestUpdate = true;
-                else this.ingestNew = true;
+                if (photogrammetry.idAssetVersion)
+                    this.assetVersionSet.add(photogrammetry.idAssetVersion);
+                if (photogrammetry.idAsset)
+                    this.ingestUpdate = true;
+                else
+                    this.ingestNew = true;
             }
         }
 
@@ -1066,9 +1040,12 @@ class IngestDataWorker extends ResolverBase {
                     }
                 }
 
-                if (model.idAssetVersion) this.assetVersionSet.add(model.idAssetVersion);
-                if (model.idAsset) this.ingestUpdate = true;
-                else this.ingestNew = true;
+                if (model.idAssetVersion)
+                    this.assetVersionSet.add(model.idAssetVersion);
+                if (model.idAsset)
+                    this.ingestUpdate = true;
+                else
+                    this.ingestNew = true;
             }
         }
 
@@ -1094,9 +1071,12 @@ class IngestDataWorker extends ResolverBase {
                     }
                 }
 
-                if (scene.idAssetVersion) this.assetVersionSet.add(scene.idAssetVersion);
-                if (scene.idAsset) this.ingestUpdate = true;
-                else this.ingestNew = true;
+                if (scene.idAssetVersion)
+                    this.assetVersionSet.add(scene.idAssetVersion);
+                if (scene.idAsset)
+                    this.ingestUpdate = true;
+                else
+                    this.ingestNew = true;
             }
         }
 

@@ -91,7 +91,7 @@ function Model(props: ModelProps): React.ReactElement {
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
-    const [objectRelationship, setObjectRelationship] = useState('');
+    const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const [modalOpen, setModalOpen] = useState(false);
     const [ingestionModel, setIngestionModel] = useState<any>({
         CountVertices: null,
@@ -212,13 +212,13 @@ function Model(props: ModelProps): React.ReactElement {
 
     const openSourceObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
-        await setObjectRelationship('Source');
+        await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
-        await setObjectRelationship('Derived');
+        await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };
 
@@ -236,12 +236,12 @@ function Model(props: ModelProps): React.ReactElement {
 
     const onModalClose = () => {
         setModalOpen(false);
-        setObjectRelationship('');
+        setObjectRelationship(RelatedObjectType.Source);
         closeRepositoryBrowser();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
-        updateMetadataField(metadataIndex, objectRelationship === 'Source' ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.model);
+        updateMetadataField(metadataIndex, objectRelationship === RelatedObjectType.Source ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.model);
         onModalClose();
     };
 
@@ -377,7 +377,7 @@ function Model(props: ModelProps): React.ReactElement {
                 open={modalOpen}
                 onSelectedObjects={onSelectedObjects}
                 onModalClose={onModalClose}
-                selectedObjects={objectRelationship === 'Source' ? model.sourceObjects : model.derivedObjects}
+                selectedObjects={objectRelationship === RelatedObjectType.Source ? model.sourceObjects : model.derivedObjects}
                 relationship={objectRelationship}
                 objectType={eSystemObjectType.eModel}
             />
