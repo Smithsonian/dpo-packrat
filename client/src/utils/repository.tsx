@@ -321,7 +321,12 @@ export function isValidParentChildRelationship(
 ): boolean {
     let result = false;
     /*
-        NOTE: when updating this relationship function, make sure to also fix it in ingestData.ts
+        *NOTE: when updating this relationship validation function,
+        make sure to also apply changes to the server-side version located at
+        ingestData.ts to maintain consistency
+        **NOTE: this client-side validation function will be validating a selected item BEFORE adding it,
+        which means the maximum connection count will be different from those seen in ingestData.ts
+
         xproject child to 1 - many unit parent
         -skip on stakeholders for now
         -skip on stakeholders for now

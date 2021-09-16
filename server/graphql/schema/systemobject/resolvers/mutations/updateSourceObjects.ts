@@ -30,13 +30,9 @@ export default async function updateSourceObjects(_: Parent, args: MutationUpdat
                     continue;
                 }
 
-                const xref: DBAPI.SystemObjectXref = new DBAPI.SystemObjectXref({
-                    idSystemObjectMaster: newlySelected.idSystemObject,
-                    idSystemObjectDerived: SO.idSystemObject,
-                    idSystemObjectXref: 0
-                });
-                if (!(await xref.create())) {
-                    LOG.error(`updateSourceObjects failed to create SystemObjectXref ${JSON.stringify(xref)}`, LOG.LS.eGQL);
+                const wireSourceToDerived = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(newlySelected.idSystemObject, SO.idSystemObject);
+                if (!wireSourceToDerived) {
+                    LOG.error(`updateSourceObjects failed to wire SystemObjectXref ${JSON.stringify(wireSourceToDerived)}`, LOG.LS.eGQL);
                     continue;
                 }
             }
