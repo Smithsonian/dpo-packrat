@@ -83,9 +83,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                 return { idSystemObject, objectType };
             });
             if (props.relationship === 'Source' && idSystemObject) {
-                console.log('derived case', idSystemObject, objectType, 'selectedRelationships', selectedRelationships, 'previouslySelected', previouslySelectedObjects);
                 const { data } = await updateSourceObjects(idSystemObject, objectType, selectedRelationships, previouslySelectedObjects);
-                console.log('data', data);
                 if (data.updateSourceObjects.success) {
                     if (data.updateSourceObjects.status === 'success') toast.success('Parent(s) successfully added');
                     if (data.updateSourceObjects.status === 'warn') toast.warn(`The following parent(s) had mismatched relationship:${data.updateSourceObjects.message}`);
@@ -93,9 +91,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                     toast.error('Parent(s) could not be added. Please try again later');
                 }
             } else if (props.relationship === 'Derived' && idSystemObject) {
-                console.log('derived case', idSystemObject, objectType, 'selectedRelationships', selectedRelationships, 'previouslySelected', previouslySelectedObjects);
                 const { data } = await updateDerivedObjects(idSystemObject, objectType, selectedRelationships, []);
-                console.log('data', data);
                 if (data.updateDerivedObjects.success) {
                     if (data.updateDerivedObjects.status === 'success') toast.success('Child(ren) successfully added');
                     if (data.updateDerivedObjects.status === 'warn') toast.warn(`The following child(ren) had mismatched relationship:${data.updateDerivedObjects.message}`);
@@ -125,7 +121,6 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
             //     onSelectedObjects(selectedSourceObjects);
             // }
         } catch (error) {
-            console.log('error', error);
             toast.error(`Error: ${error}`, { autoClose: false });
         }
         onModalClose();
@@ -140,9 +135,6 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                 1) sourceObject is the parent - we want to simply pass the previouslySelectedObjects/existingParentRelationships
                 2) sourceObject is the child - need to query for the child's sourceObjects to make sure it's following the relationship rules
         */
-        console.log('sourceObject', sourceObject);
-        console.log('selected', selected);
-        console.log('objectType', objectType);
         try {
             if (relationship === 'Source') {
                 if (!isValidParentChildRelationship(sourceObject.objectType, objectType, selected, previouslySelectedObjects, true)) {

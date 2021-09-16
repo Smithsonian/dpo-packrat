@@ -18,7 +18,6 @@ import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
-import { eSystemObjectType } from '../../../../../db/api/ObjectType';
 import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
 
 type AssetPair = {
@@ -71,10 +70,9 @@ class IngestDataWorker extends ResolverBase {
     private async ingestWorker(): Promise<IngestDataResult> {
         LOG.info(`ingestData: input=${JSON.stringify(this.input, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
 
-        const results: H.IOResults = this.validateInput();
+        const results: H.IOResults = await this.validateInput();
         this.workflowHelper = await this.createWorkflow(); // do this *after* this.validateInput, and *before* returning from validation failure
-        if (!results.success)
-            return results;
+        if (!results.success) return { success: results.success, message: results.error };
 
         let itemDB: DBAPI.Item | null = null;
         if (this.ingestNew) {
@@ -472,11 +470,10 @@ class IngestDataWorker extends ResolverBase {
         // wire photogrammetry to sourceObjects
         if (photogrammetry.sourceObjects && photogrammetry.sourceObjects.length > 0) {
             for (const sourceObject of photogrammetry.sourceObjects) {
-                console.log('photo adding source');
-                if (!isValidParentChildRelationship(sourceObject.objectType, eSystemObjectType.eCaptureData, photogrammetry.sourceObjects, [], true)) {
-                    LOG.error(`ingestData failed to connect photogrammetry with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
-                    continue;
-                }
+                // if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, photogrammetry.sourceObjects, [], true)) {
+                //     LOG.error(`ingestData failed to connect photogrammetry with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
+                //     continue;
+                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, captureDataDB)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -488,11 +485,11 @@ class IngestDataWorker extends ResolverBase {
         if (photogrammetry.derivedObjects && photogrammetry.derivedObjects.length > 0) {
             for (const derivedObject of photogrammetry.derivedObjects) {
                 // make a query for each derivedObject's sourceObjects
-                const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                if (!isValidParentChildRelationship(eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                    LOG.error(`ingestData failed to connect photogrammetry with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
-                    continue;
-                }
+                // const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
+                // if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                //     LOG.error(`ingestData failed to connect photogrammetry with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
+                //     continue;
+                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(captureDataDB, derivedObject.idSystemObject)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -663,10 +660,10 @@ class IngestDataWorker extends ResolverBase {
         // wire model to sourceObjects
         if (model.sourceObjects && model.sourceObjects.length > 0) {
             for (const sourceObject of model.sourceObjects) {
-                if (!isValidParentChildRelationship(sourceObject.objectType, eSystemObjectType.eModel, model.sourceObjects, [], true)) {
-                    LOG.error(`ingestData failed to connect model with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
-                    continue;
-                }
+                // if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eModel, model.sourceObjects, [], true)) {
+                //     LOG.error(`ingestData failed to connect model with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
+                //     continue;
+                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, modelDB)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -678,11 +675,11 @@ class IngestDataWorker extends ResolverBase {
         if (model.derivedObjects && model.derivedObjects.length > 0) {
             for (const derivedObject of model.derivedObjects) {
                 // make a query for each derivedObject's sourceObjects
-                const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                if (!isValidParentChildRelationship(eSystemObjectType.eModel, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                    LOG.error(`ingestData failed to connect model with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
-                    continue;
-                }
+                // const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
+                // if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eModel, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                //     LOG.error(`ingestData failed to connect model with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
+                //     continue;
+                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelDB, derivedObject.idSystemObject)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -784,10 +781,10 @@ class IngestDataWorker extends ResolverBase {
         // wire scene to sourceObjects
         if (scene.sourceObjects && scene.sourceObjects.length > 0) {
             for (const sourceObject of scene.sourceObjects) {
-                if (!isValidParentChildRelationship(sourceObject.objectType, eSystemObjectType.eScene, scene.sourceObjects, [], true)) {
-                    LOG.error(`ingestData failed to connect scene with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
-                    continue;
-                }
+                // if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eScene, scene.sourceObjects, [], true)) {
+                //     LOG.error(`ingestData failed to connect scene with source object ${sourceObject.idSystemObject}`, LOG.LS.eGQL);
+                //     continue;
+                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, sceneDB)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -798,11 +795,11 @@ class IngestDataWorker extends ResolverBase {
         // wire scene to derivedObjects
         if (scene.derivedObjects && scene.derivedObjects.length > 0) {
             for (const derivedObject of scene.derivedObjects) {
-                const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                if (!isValidParentChildRelationship(eSystemObjectType.eScene, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                    LOG.error(`ingestData failed to connect model with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
-                    continue;
-                }
+                // const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
+                // if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eScene, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                //     LOG.error(`ingestData failed to connect model with derived object ${derivedObject.idSystemObject}`, LOG.LS.eGQL);
+                //     continue;
+                // }
                 if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneDB, derivedObject.idSystemObject)) {
                     LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
                     continue;
@@ -1011,7 +1008,7 @@ class IngestDataWorker extends ResolverBase {
         return ret;
     }
 
-    validateInput(): H.IOResults {
+    async validateInput(): Promise<H.IOResults> {
         this.ingestPhotogrammetry = this.input.photogrammetry && this.input.photogrammetry.length > 0;
         this.ingestModel = this.input.model && this.input.model.length > 0;
         this.ingestScene = this.input.scene && this.input.scene.length > 0;
@@ -1021,34 +1018,85 @@ class IngestDataWorker extends ResolverBase {
 
         if (this.ingestPhotogrammetry) {
             for (const photogrammetry of this.input.photogrammetry) {
-                if (photogrammetry.idAssetVersion)
-                    this.assetVersionSet.add(photogrammetry.idAssetVersion);
-                if (photogrammetry.idAsset)
-                    this.ingestUpdate = true;
-                else
-                    this.ingestNew = true;
+                // add validation in this area while we iterate through the objects
+                if (photogrammetry.sourceObjects && photogrammetry.sourceObjects.length) {
+                    for (const sourceObject of photogrammetry.sourceObjects) {
+                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, photogrammetry.sourceObjects, [], true)) {
+                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and photogrammetry`, LOG.LS.eGQL);
+                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and photogrammetry` };
+                        }
+                    }
+                }
+
+                if (photogrammetry.derivedObjects && photogrammetry.derivedObjects.length) {
+                    for (const derivedObject of photogrammetry.derivedObjects) {
+                        const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
+                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between photogrammetry and ${derivedObject.objectType}`, LOG.LS.eGQL);
+                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between photogrammetry and ${derivedObject.objectType}` };
+                        }
+                    }
+                }
+
+                if (photogrammetry.idAssetVersion) this.assetVersionSet.add(photogrammetry.idAssetVersion);
+                if (photogrammetry.idAsset) this.ingestUpdate = true;
+                else this.ingestNew = true;
             }
         }
 
         if (this.ingestModel) {
             for (const model of this.input.model) {
-                if (model.idAssetVersion)
-                    this.assetVersionSet.add(model.idAssetVersion);
-                if (model.idAsset)
-                    this.ingestUpdate = true;
-                else
-                    this.ingestNew = true;
+                // add validation in this area while we iterate through the objects
+                if (model.sourceObjects && model.sourceObjects.length) {
+                    for (const sourceObject of model.sourceObjects) {
+                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, model.sourceObjects, [], true)) {
+                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and model`, LOG.LS.eGQL);
+                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and model` };
+                        }
+                    }
+                }
+
+                if (model.derivedObjects && model.derivedObjects.length) {
+                    for (const derivedObject of model.derivedObjects) {
+                        const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
+                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between model and ${derivedObject.objectType}`, LOG.LS.eGQL);
+                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between model and ${derivedObject.objectType}` };
+                        }
+                    }
+                }
+
+                if (model.idAssetVersion) this.assetVersionSet.add(model.idAssetVersion);
+                if (model.idAsset) this.ingestUpdate = true;
+                else this.ingestNew = true;
             }
         }
 
         if (this.ingestScene) {
             for (const scene of this.input.scene) {
-                if (scene.idAssetVersion)
-                    this.assetVersionSet.add(scene.idAssetVersion);
-                if (scene.idAsset)
-                    this.ingestUpdate = true;
-                else
-                    this.ingestNew = true;
+                // add validation in this area while we iterate through the objects
+                if (scene.sourceObjects && scene.sourceObjects.length) {
+                    for (const sourceObject of scene.sourceObjects) {
+                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, scene.sourceObjects, [], true)) {
+                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and scene`, LOG.LS.eGQL);
+                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and scene` };
+                        }
+                    }
+                }
+
+                if (scene.derivedObjects && scene.derivedObjects.length) {
+                    for (const derivedObject of scene.derivedObjects) {
+                        const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
+                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between scene and ${derivedObject.objectType}`, LOG.LS.eGQL);
+                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between scene and ${derivedObject.objectType}` };
+                        }
+                    }
+                }
+
+                if (scene.idAssetVersion) this.assetVersionSet.add(scene.idAssetVersion);
+                if (scene.idAsset) this.ingestUpdate = true;
+                else this.ingestNew = true;
             }
         }
 
@@ -1339,10 +1387,15 @@ class IngestDataWorker extends ResolverBase {
     }
 }
 
-export function isValidParentChildRelationship(parent: number, child: number, selected: ExistingRelationship[], existingParentRelationships: ExistingRelationship[], isAddingSource: boolean): boolean {
+export function isValidParentChildRelationship(parent: DBAPI.eSystemObjectType, child: DBAPI.eSystemObjectType, selected: ExistingRelationship[], existingParentRelationships: ExistingRelationship[], isAddingSource: boolean): boolean {
     let result = false;
     /*
-        NOTE: when updating this relationship function, make sure to also fix it in client/src/util/repository.tsx
+        *NOTE: when updating this relationship validation function,
+        make sure to also apply changes to the client-side version located at
+        client/src/util/repository.tsx to maintain consistency
+        **NOTE: this server-side validation function will be validating a selected item AFTER adding it,
+        which means the maximum connection count will be different from those seen in repository.tsx
+
         xproject child to 1 - many unit parent
         -skip on stakeholders for now
         -skip on stakeholders for now
@@ -1364,55 +1417,55 @@ export function isValidParentChildRelationship(parent: number, child: number, se
 
     const existingAndNewRelationships = [...existingParentRelationships, ...selected];
     switch (child) {
-        case eSystemObjectType.eProject:
-            result = parent === eSystemObjectType.eUnit;
+        case DBAPI.eSystemObjectType.eProject:
+            result = parent === DBAPI.eSystemObjectType.eUnit;
             break;
-        case eSystemObjectType.eItem: {
-            if (parent === eSystemObjectType.eSubject) result = true;
+        case DBAPI.eSystemObjectType.eItem: {
+            if (parent === DBAPI.eSystemObjectType.eSubject) result = true;
 
-            if (parent === eSystemObjectType.eProject) {
+            if (parent === DBAPI.eSystemObjectType.eProject) {
                 if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 2);
+                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eProject, 2);
                 } else {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 1);
+                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eProject, 1);
                 }
             }
             break;
         }
-        case eSystemObjectType.eCaptureData: {
-            if (parent === eSystemObjectType.eItem) {
+        case DBAPI.eSystemObjectType.eCaptureData: {
+            if (parent === DBAPI.eSystemObjectType.eItem) {
                 if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 2);
+                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eItem, 2);
                 } else {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
+                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eItem, 1);
                 }
             }
 
-            if (parent === eSystemObjectType.eCaptureData) result = true;
+            if (parent === DBAPI.eSystemObjectType.eCaptureData) result = true;
             break;
         }
-        case eSystemObjectType.eModel: {
-            if (parent === eSystemObjectType.eItem) {
+        case DBAPI.eSystemObjectType.eModel: {
+            if (parent === DBAPI.eSystemObjectType.eItem) {
                 if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 2);
+                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eItem, 2);
                 } else {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
+                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eItem, 1);
                 }
             }
 
-            if (parent === eSystemObjectType.eScene) {
+            if (parent === DBAPI.eSystemObjectType.eScene) {
                 if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 2);
+                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eScene, 2);
                 } else {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 1);
+                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eScene, 1);
                 }
             }
 
-            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eModel) result = true;
+            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eModel) result = true;
             break;
         }
-        case eSystemObjectType.eScene: {
-            if (parent === eSystemObjectType.eItem || parent === eSystemObjectType.eModel) result = true;
+        case DBAPI.eSystemObjectType.eScene: {
+            if (parent === DBAPI.eSystemObjectType.eItem || parent === DBAPI.eSystemObjectType.eModel) result = true;
             break;
         }
     }
@@ -1420,4 +1473,4 @@ export function isValidParentChildRelationship(parent: number, child: number, se
     return result;
 }
 
-const maximumConnections = (relationships: ExistingRelationship[], objectType: number, limit: number) => relationships.filter(relationship => relationship.objectType === objectType).length < limit;
+const maximumConnections = (relationships: ExistingRelationship[], objectType: DBAPI.eSystemObjectType, limit: number) => relationships.filter(relationship => relationship.objectType === objectType).length < limit;
