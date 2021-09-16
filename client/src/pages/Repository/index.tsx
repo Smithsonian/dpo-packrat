@@ -154,7 +154,7 @@ function TreeViewPage(): React.ReactElement {
     };
     const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
     if (route !== location.search) {
-        console.log(`*** src/pages/Repository/index.tsx TreeViewPage window.history.pushState(path: ${route}, '', ${route})`);
+        // console.log(`*** src/pages/Repository/index.tsx TreeViewPage window.history.pushState(path: ${route}, '', ${route})`);
         window.history.pushState({ path: route }, '', route);
     }
 

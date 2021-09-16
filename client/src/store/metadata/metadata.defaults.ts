@@ -71,20 +71,20 @@ export const photogrammetryFieldsSchema = yup.object().shape({
         .number()
         .nullable(true)
         .typeError('Dataset Field ID must be a positive integer')
-        .positive('Dataset Field ID must be positive')
+        .positive('Dataset Field ID must be a positive integer')
         .max(2147483647, 'Dataset Field ID is too large'),
     itemPositionType: yup.number().nullable(true),
     itemPositionFieldId: yup
         .number()
         .nullable(true)
         .typeError('Item Position Field ID must be a positive integer')
-        .positive('Item Position Field ID must be positive')
+        .positive('Item Position Field ID must be a positive integer')
         .max(2147483647, 'Item Position Field ID is too large'),
     itemArrangementFieldId: yup
         .number()
         .nullable(true)
         .typeError('Item Arrangement Field ID must be a positive integer')
-        .positive('Item Arrangement Field ID must be positive')
+        .positive('Item Arrangement Field ID must be a positive integer')
         .max(2147483647, 'Item Arrangement Field ID is too large'),
     focusType: yup.number().nullable(true),
     lightsourceType: yup.number().nullable(true),
@@ -94,7 +94,7 @@ export const photogrammetryFieldsSchema = yup.object().shape({
         .number()
         .nullable(true)
         .typeError('Cluster Geometry Field ID must be a positive integer')
-        .positive('Cluster Geometry Field ID must be positive')
+        .positive('Cluster Geometry Field ID must be a positive integer')
         .max(2147483647, 'Cluster Geometry Field ID is too large'),
     cameraSettingUniform: yup.boolean().required(),
     directory: yup.string()
