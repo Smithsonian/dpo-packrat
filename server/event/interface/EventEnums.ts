@@ -1,6 +1,7 @@
 export enum eEventTopic {
     eAuth = 1,
     eDB = 2,
+    ePublish = 3,
 }
 
 export enum eEventKey {

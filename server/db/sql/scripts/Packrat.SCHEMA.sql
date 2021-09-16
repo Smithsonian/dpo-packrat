@@ -439,6 +439,7 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `CountMeta` int(11) DEFAULT NULL,
   `CountSetup` int(11) DEFAULT NULL,
   `CountTour` int(11) DEFAULT NULL,
+  `EdanUUID` varchar(64) NULL,
   PRIMARY KEY (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

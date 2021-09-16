@@ -36,6 +36,7 @@ type SubjectDetailFields {
     TS0: Float
     TS1: Float
     TS2: Float
+    idIdentifierPreferred: Int
 }
 
 type ItemDetailFields {
@@ -87,6 +88,7 @@ type SceneDetailFields {
     CountMeta: Int
     CountSetup: Int
     CountTour: Int
+    EdanUUID: String
     idScene: Int
 }
 
