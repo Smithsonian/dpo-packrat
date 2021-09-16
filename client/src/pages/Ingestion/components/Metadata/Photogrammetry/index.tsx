@@ -38,7 +38,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
     const [modalOpen, setModalOpen] = useState(false);
-    const [objectRelationship, setObjectRelationship] = useState('');
+    const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const { photogrammetry } = metadata;
     const errors = getFieldErrors(metadata);
 
@@ -104,13 +104,13 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const openSourceObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
-        await setObjectRelationship('Source');
+        await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
-        await setObjectRelationship('Derived');
+        await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };
 
@@ -128,12 +128,12 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const onModalClose = () => {
         setModalOpen(false);
-        setObjectRelationship('');
+        setObjectRelationship(RelatedObjectType.Source);
         closeRepositoryBrowser();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
-        updateMetadataField(metadataIndex, objectRelationship === 'Source' ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.photogrammetry);
+        updateMetadataField(metadataIndex, objectRelationship === RelatedObjectType.Source ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.photogrammetry);
         onModalClose();
     };
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
@@ -243,7 +243,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                 open={modalOpen}
                 onSelectedObjects={onSelectedObjects}
                 onModalClose={onModalClose}
-                selectedObjects={objectRelationship === 'Source' ? photogrammetry.sourceObjects : photogrammetry.derivedObjects}
+                selectedObjects={objectRelationship === RelatedObjectType.Source ? photogrammetry.sourceObjects : photogrammetry.derivedObjects}
                 relationship={objectRelationship}
                 objectType={eSystemObjectType.eCaptureData}
             />

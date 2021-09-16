@@ -12,7 +12,7 @@
 //     UpdateDerivedObjectsDocument,
 //     UpdateSourceObjectsDocument
 // } from '../../../../../types/graphql';
-import { GetSystemObjectDetailsDocument, ExistingRelationship } from '../../../../../types/graphql';
+import { GetSystemObjectDetailsDocument, ExistingRelationship, RelatedObjectType } from '../../../../../types/graphql';
 import { apolloClient } from '../../../../../graphql';
 import { AppBar, Box, Button, Dialog, Toolbar, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -53,7 +53,7 @@ interface ObjectSelectModalProps {
     selectedObjects: StateRelatedObject[];
     onSelectedObjects?: (newSourceObjects: StateRelatedObject[]) => void;
     onModalClose: () => void;
-    relationship?: string;
+    relationship?: RelatedObjectType;
     idSystemObject?: number;
     objectType: number;
 }
@@ -136,14 +136,14 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                 2) sourceObject is the child - need to query for the child's sourceObjects to make sure it's following the relationship rules
         */
         try {
-            if (relationship === 'Source') {
+            if (relationship === RelatedObjectType.Source) {
                 if (!isValidParentChildRelationship(sourceObject.objectType, objectType, selected, previouslySelectedObjects, true)) {
                     toast.error('Invalid parent selected');
                     return;
                 }
             }
 
-            if (relationship === 'Derived') {
+            if (relationship === RelatedObjectType.Derived) {
                 const { data } = await apolloClient.query({
                     query: GetSystemObjectDetailsDocument,
                     variables: {
