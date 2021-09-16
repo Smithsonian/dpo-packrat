@@ -27,7 +27,7 @@ export class LicenseResolver {
             return null;
         }
 
-        return await LicenseResolver.fetchParentsLicense(OGD, idSystemObject, 32);
+        return await LicenseResolver.fetchParentsLicense(OGD, idSystemObject, 32, new Map<number, LicenseResolver | null>());
     }
 
     private static async pickMostRestrictiveLicense(assignments: LicenseAssignment[], inherited: boolean): Promise<LicenseResolver | null> {
@@ -59,13 +59,13 @@ export class LicenseResolver {
         let LR: LicenseResolver | null = null;
         if (assignments && assignments.length > 0)
             LR = await LicenseResolver.pickMostRestrictiveLicense(assignments, inherited);
-        // LOG.info(`LR.fetchSpecificLicense found ${JSON.stringify(LR)}`, LOG.LS.eDB);
+        // LOG.info(`LR.fetchSpecificLicense(${idSystemObject}) found ${JSON.stringify(LR)}`, LOG.LS.eDB);
         return LR;
     }
 
-    private static async fetchParentsLicense(OGD: ObjectGraphDatabase, idSystemObject: number, depth: number): Promise<LicenseResolver | null> {
+    private static async fetchParentsLicense(OGD: ObjectGraphDatabase, idSystemObject: number, depth: number,
+        LRMap: Map<number, LicenseResolver | null>): Promise<LicenseResolver | null> {
         let LR: LicenseResolver | null = null;
-        const LRMap: Map<number, LicenseResolver | null> = new Map<number, LicenseResolver | null>();
 
         const OGDE: ObjectGraphDataEntry | undefined = OGD.objectMap.get(idSystemObject);
         if (!OGDE) {
@@ -76,14 +76,14 @@ export class LicenseResolver {
         for (const idSystemObjectParent of OGDE.parentMap.keys()) {
             // for each parent, get its specific LicenseResolver
             let LRP: LicenseResolver | null | undefined = LRMap.get(idSystemObjectParent);
-            if (LRP !== undefined) {
+            if (LRP === undefined) {
                 LRP = await LicenseResolver.fetchSpecificLicense(idSystemObjectParent, true);
                 if (!LRP || !LRP.License) {  /* istanbul ignore if */
                     // if none, step "up" to the parent, and fetch it's aggregate parents' notion of license, via recursion
                     if (depth <= 0)
                         continue;
 
-                    LRP = await LicenseResolver.fetchParentsLicense(OGD, idSystemObjectParent, depth - 1);
+                    LRP = await LicenseResolver.fetchParentsLicense(OGD, idSystemObjectParent, depth - 1, LRMap);
                 } /* istanbul ignore else */
                 LRMap.set(idSystemObjectParent, LRP);
             }
@@ -96,7 +96,7 @@ export class LicenseResolver {
                 continue;
             }
         }
-        // LOG.info(`LR.fetchParentsLicense found ${JSON.stringify(LR)}`, LOG.LS.eDB);
+        // LOG.info(`LR.fetchParentsLicense(${idSystemObject}) found ${JSON.stringify(LR)}, LRMap size = ${LRMap.size}`, LOG.LS.eDB);
         return LR;
     }
 }
