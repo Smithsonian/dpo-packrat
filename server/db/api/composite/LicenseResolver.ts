@@ -65,6 +65,7 @@ export class LicenseResolver {
 
     private static async fetchParentsLicense(OGD: ObjectGraphDatabase, idSystemObject: number, depth: number): Promise<LicenseResolver | null> {
         let LR: LicenseResolver | null = null;
+        const LRMap: Map<number, LicenseResolver | null> = new Map<number, LicenseResolver | null>();
 
         const OGDE: ObjectGraphDataEntry | undefined = OGD.objectMap.get(idSystemObject);
         if (!OGDE) {
@@ -74,14 +75,18 @@ export class LicenseResolver {
 
         for (const idSystemObjectParent of OGDE.parentMap.keys()) {
             // for each parent, get its specific LicenseResolver
-            let LRP: LicenseResolver | null = await LicenseResolver.fetchSpecificLicense(idSystemObjectParent, true);
-            if (!LRP || !LRP.License) {  /* istanbul ignore if */
-                // if none, step "up" to the parent, and fetch it's aggregate parents' notion of license, via recursion
-                if (depth <= 0)
-                    continue;
+            let LRP: LicenseResolver | null | undefined = LRMap.get(idSystemObjectParent);
+            if (LRP !== undefined) {
+                LRP = await LicenseResolver.fetchSpecificLicense(idSystemObjectParent, true);
+                if (!LRP || !LRP.License) {  /* istanbul ignore if */
+                    // if none, step "up" to the parent, and fetch it's aggregate parents' notion of license, via recursion
+                    if (depth <= 0)
+                        continue;
 
-                LRP = await LicenseResolver.fetchParentsLicense(OGD, idSystemObjectParent, depth - 1);
-            } /* istanbul ignore else */
+                    LRP = await LicenseResolver.fetchParentsLicense(OGD, idSystemObjectParent, depth - 1);
+                } /* istanbul ignore else */
+                LRMap.set(idSystemObjectParent, LRP);
+            }
 
             if (LRP && LRP.License) {
                 if (!LR || !LR.License)                                         // if we don't yet have a license, use this one
