@@ -1094,24 +1094,35 @@ type UpdateObjectDetailsResult {
   message: String!
 }
 
+input ExistingRelationship {
+  idSystemObject: Int!
+  objectType: Int!
+}
+
 input UpdateDerivedObjectsInput {
   idSystemObject: Int!
-  Derivatives: [Int!]!
-  PreviouslySelected: [Int!]!
+  ParentObjectType: Int!
+  Derivatives: [ExistingRelationship!]!
+  PreviouslySelected: [ExistingRelationship!]!
 }
 
 type UpdateDerivedObjectsResult {
   success: Boolean!
+  message: String!
+  status: String!
 }
 
 input UpdateSourceObjectsInput {
   idSystemObject: Int!
-  Sources: [Int!]!
-  PreviouslySelected: [Int!]!
+  ChildObjectType: Int!
+  Sources: [ExistingRelationship!]!
+  PreviouslySelected: [ExistingRelationship!]!
 }
 
 type UpdateSourceObjectsResult {
   success: Boolean!
+  message: String!
+  status: String!
 }
 
 input UpdateIdentifier {

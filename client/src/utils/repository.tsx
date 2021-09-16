@@ -22,6 +22,7 @@ import Colors, { RepositoryColorVariant } from '../theme/colors';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
 import { safeDate, convertLocalDateToUTC } from './shared';
+import { ExistingRelationship } from '../types/graphql';
 
 export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystemObjectType[] {
     const objectTypes: eSystemObjectType[] = [];
@@ -310,3 +311,98 @@ export function getUpdatedCheckboxProps(updated: boolean): CheckboxProps {
         color: updated ? 'secondary' : 'primary'
     };
 }
+
+export function isValidParentChildRelationship(
+    parent: number,
+    child: number,
+    selected: ExistingRelationship[],
+    existingParentRelationships: ExistingRelationship[],
+    isAddingSource: boolean
+): boolean {
+    let result = false;
+    /*
+        *NOTE: when updating this relationship validation function,
+        make sure to also apply changes to the server-side version located at
+        ingestData.ts to maintain consistency
+        **NOTE: this client-side validation function will be validating a selected item BEFORE adding it,
+        which means the maximum connection count will be different from those seen in ingestData.ts
+
+        xproject child to 1 - many unit parent
+        -skip on stakeholders for now
+        -skip on stakeholders for now
+        xitem child to only 1 parent project parent
+        xitem child to multiple subject parent
+        xCD child to only 1 item parent
+        xmodel child only 1 parent Item
+        xscene child to 1 or more item parent
+        xmodel child to 0 - many CD parent
+        xCD child to 0 - many CD parent
+        -skip on actor for now
+        xmodel child to 0 to many model parent
+        xscene child to 1 to many model parent
+        -skip on actor for now
+        xmodel child to only 1 scene parent
+        -skip on IF for now
+        -skip on PD for now
+    */
+
+    const existingAndNewRelationships = [...existingParentRelationships, ...selected];
+    switch (child) {
+        case eSystemObjectType.eProject:
+            result = parent === eSystemObjectType.eUnit;
+            break;
+        case eSystemObjectType.eItem: {
+            if (parent === eSystemObjectType.eSubject) result = true;
+
+            if (parent === eSystemObjectType.eProject) {
+                if (isAddingSource) {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 1);
+                } else {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 1);
+                }
+            }
+            break;
+        }
+        case eSystemObjectType.eCaptureData: {
+            if (parent === eSystemObjectType.eItem) {
+                if (isAddingSource) {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
+                } else {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
+                }
+            }
+
+            if (parent === eSystemObjectType.eCaptureData) result = true;
+            break;
+        }
+        case eSystemObjectType.eModel: {
+            if (parent === eSystemObjectType.eItem) {
+                if (isAddingSource) {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
+                } else {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
+                }
+            }
+
+            if (parent === eSystemObjectType.eScene) {
+                if (isAddingSource) {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 1);
+                } else {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 1);
+                }
+            }
+
+            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eModel) result = true;
+            break;
+        }
+        case eSystemObjectType.eScene: {
+            if (parent === eSystemObjectType.eItem || parent === eSystemObjectType.eModel) result = true;
+            break;
+        }
+    }
+
+    return result;
+}
+
+const maximumConnections = (relationships: ExistingRelationship[], objectType: number, limit: number) =>
+    relationships.filter(relationship => relationship.objectType === objectType).length < limit;
