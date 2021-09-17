@@ -191,7 +191,9 @@ type DeleteObjectConnectionResult {
 
 input DeleteObjectConnectionInput {
     idSystemObjectMaster: Int!
+    objectTypeMaster: Int!
     idSystemObjectDerived: Int!
+    objectTypeDerived: Int!
 }
 
 type DeleteIdentifierResult {

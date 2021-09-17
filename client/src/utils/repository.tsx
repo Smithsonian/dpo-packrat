@@ -332,8 +332,8 @@ export function isValidParentChildRelationship(
         -skip on stakeholders for now
         xitem child to only 1 parent project parent
         xitem child to multiple subject parent
-        xCD child to only 1 item parent
-        xmodel child only 1 parent Item
+        xCD child to 1 - many item parent
+        xmodel child to 1 - many parent Item
         xscene child to 1 or more item parent
         xmodel child to 0 - many CD parent
         xCD child to 0 - many CD parent
@@ -364,25 +364,11 @@ export function isValidParentChildRelationship(
             break;
         }
         case eSystemObjectType.eCaptureData: {
-            if (parent === eSystemObjectType.eItem) {
-                if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
-                } else {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
-                }
-            }
 
-            if (parent === eSystemObjectType.eCaptureData) result = true;
+            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eItem) result = true;
             break;
         }
         case eSystemObjectType.eModel: {
-            if (parent === eSystemObjectType.eItem) {
-                if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
-                } else {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eItem, 1);
-                }
-            }
 
             if (parent === eSystemObjectType.eScene) {
                 if (isAddingSource) {
@@ -392,7 +378,7 @@ export function isValidParentChildRelationship(
                 }
             }
 
-            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eModel) result = true;
+            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eModel || parent === eSystemObjectType.eItem) result = true;
             break;
         }
         case eSystemObjectType.eScene: {
