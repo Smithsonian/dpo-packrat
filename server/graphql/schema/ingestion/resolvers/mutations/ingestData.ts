@@ -1381,8 +1381,8 @@ export function isValidParentChildRelationship(parent: DBAPI.eSystemObjectType, 
         -skip on stakeholders for now
         xitem child to only 1 parent project parent
         xitem child to multiple subject parent
-        xCD child to only 1 item parent
-        xmodel child only 1 parent Item
+        xCD child to 1 - many item parent
+        xmodel child to 1 - many parent Item
         xscene child to 1 or more item parent
         xmodel child to 0 - many CD parent
         xCD child to 0 - many CD parent
@@ -1413,26 +1413,10 @@ export function isValidParentChildRelationship(parent: DBAPI.eSystemObjectType, 
             break;
         }
         case DBAPI.eSystemObjectType.eCaptureData: {
-            if (parent === DBAPI.eSystemObjectType.eItem) {
-                if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eItem, 2);
-                } else {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eItem, 1);
-                }
-            }
-
-            if (parent === DBAPI.eSystemObjectType.eCaptureData) result = true;
+            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eItem) result = true;
             break;
         }
         case DBAPI.eSystemObjectType.eModel: {
-            if (parent === DBAPI.eSystemObjectType.eItem) {
-                if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eItem, 2);
-                } else {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eItem, 1);
-                }
-            }
-
             if (parent === DBAPI.eSystemObjectType.eScene) {
                 if (isAddingSource) {
                     result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eScene, 2);
@@ -1441,7 +1425,7 @@ export function isValidParentChildRelationship(parent: DBAPI.eSystemObjectType, 
                 }
             }
 
-            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eModel) result = true;
+            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eModel || parent === DBAPI.eSystemObjectType.eItem) result = true;
             break;
         }
         case DBAPI.eSystemObjectType.eScene: {

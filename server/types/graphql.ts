@@ -1571,7 +1571,9 @@ export type DeleteObjectConnectionResult = {
 
 export type DeleteObjectConnectionInput = {
   idSystemObjectMaster: Scalars['Int'];
+  objectTypeMaster: Scalars['Int'];
   idSystemObjectDerived: Scalars['Int'];
+  objectTypeDerived: Scalars['Int'];
 };
 
 export type DeleteIdentifierResult = {

@@ -113,7 +113,8 @@ export function updateSourceObjects(idSystemObject: number, objectType: number, 
                 PreviouslySelected
             }
         },
-        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject'],
+        awaitRefetchQueries: true
     });
 }
 
@@ -128,38 +129,23 @@ export function updateDerivedObjects(idSystemObject: number, objectType: number,
                 PreviouslySelected
             }
         },
-        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject'],
+        awaitRefetchQueries: true
     });
 }
 
-export async function deleteObjectConnection(idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) {
+export async function deleteObjectConnection(idSystemObjectMaster: number, objectTypeMaster: eSystemObjectType, idSystemObjectDerived: number, objectTypeDerived: eSystemObjectType) {
     return await apolloClient.mutate({
         mutation: DeleteObjectConnectionDocument,
         variables: {
             input: {
                 idSystemObjectMaster,
-                idSystemObjectDerived
+                objectTypeMaster,
+                idSystemObjectDerived,
+                objectTypeDerived
             }
         },
-        refetchQueries: [
-            {
-                query: GetSystemObjectDetailsDocument,
-                variables: {
-                    input: {
-                        idSystemObject: type === 'Source' ? idSystemObjectDerived : idSystemObjectMaster
-                    }
-                }
-            },
-            {
-                query: GetDetailsTabDataForObjectDocument,
-                variables: {
-                    input: {
-                        idSystemObject: type === 'Source' ? idSystemObjectDerived : idSystemObjectMaster,
-                        objectType: systemObjectType
-                    }
-                }
-            }
-        ],
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject'],
         awaitRefetchQueries: true
     });
 }
