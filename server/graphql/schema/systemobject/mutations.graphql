@@ -8,6 +8,7 @@ type Mutation {
     deleteIdentifier(input: DeleteIdentifierInput!): DeleteIdentifierResult!
     rollbackSystemObjectVersion(input: RollbackSystemObjectVersionInput!): RollbackSystemObjectVersionResult!
     createSubjectWithIdentifiers(input: CreateSubjectWithIdentifiersInput!): CreateSubjectWithIdentifiersResult!
+    publish(input: PublishInput!): PublishResult!
 }
 
 input UpdateObjectDetailsInput {
@@ -229,4 +230,14 @@ input CreateIdentifierInput {
     identifierType: Int!
     idSystemObject: Int
     preferred: Boolean
+}
+
+input PublishInput {
+    idSystemObject: Int!
+    eState: Int!
+}
+
+type PublishResult {
+    success: Boolean!
+    message: String!
 }

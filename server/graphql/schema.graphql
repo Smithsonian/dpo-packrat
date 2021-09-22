@@ -121,6 +121,7 @@ type Mutation {
   deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
+  publish(input: PublishInput!): PublishResult!
   rollbackSystemObjectVersion(input: RollbackSystemObjectVersionInput!): RollbackSystemObjectVersionResult!
   updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
   updateLicense(input: UpdateLicenseInput!): CreateLicenseResult!
@@ -1182,6 +1183,16 @@ input CreateIdentifierInput {
   preferred: Boolean
 }
 
+input PublishInput {
+  idSystemObject: Int!
+  eState: Int!
+}
+
+type PublishResult {
+  success: Boolean!
+  message: String!
+}
+
 scalar JSON
 
 input GetDetailsTabDataForObjectInput {
@@ -1337,6 +1348,7 @@ type GetSystemObjectDetailsResult {
   objectType: Int!
   allowed: Boolean!
   publishedState: String!
+  publishedEnum: Int!
   thumbnail: String
   identifiers: [IngestIdentifier!]!
   objectAncestors: [[RepositoryPath!]!]!

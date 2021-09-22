@@ -23,7 +23,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
     const derivedObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Derived);
     const objectVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
-    const publishedState: string = await getPublishedState(idSystemObject);
+    const { publishedState, publishedEnum } = await getPublishedState(idSystemObject);
     const identifiers = await getIngestIdentifiers(idSystemObject);
 
     if (!oID) {
@@ -57,6 +57,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         objectType: oID.eObjectType,
         allowed: true, // TODO: True until Access control is implemented (Post MVP)
         publishedState,
+        publishedEnum,
         thumbnail: null,
         unit,
         project,
@@ -72,9 +73,11 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     };
 }
 
-async function getPublishedState(idSystemObject: number): Promise<string> {
+async function getPublishedState(idSystemObject: number): Promise<{ publishedState: string, publishedEnum: DBAPI.ePublishedState }> {
     const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
-    return DBAPI.PublishedStateEnumToString(systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished);
+    const publishedEnum: DBAPI.ePublishedState = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished;
+    const publishedState: string = DBAPI.PublishedStateEnumToString(publishedEnum);
+    return { publishedState, publishedEnum };
 }
 
 export async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {
