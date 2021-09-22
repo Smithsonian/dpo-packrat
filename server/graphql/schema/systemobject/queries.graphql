@@ -163,6 +163,7 @@ type GetSystemObjectDetailsResult {
     objectType: Int!
     allowed: Boolean!
     publishedState: String!
+    publishedEnum: Int!
     thumbnail: String
     identifiers: [IngestIdentifier!]!
     objectAncestors: [[RepositoryPath!]!]!

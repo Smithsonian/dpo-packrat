@@ -3,7 +3,9 @@
 import fetch, { RequestInit } from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
 import * as COL from '../interface';
+import { PublishScene } from './PublishScene';
 import { Config } from '../../config';
+import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
@@ -109,6 +111,20 @@ export class EdanCollection implements COL.ICollection {
         return result;
     }
 
+    async publish(idSystemObject: number, ePublishState: number): Promise<boolean> {
+        switch (ePublishState) {
+            case DBAPI.ePublishedState.eNotPublished:
+            case DBAPI.ePublishedState.eAPIOnly:
+            case DBAPI.ePublishedState.ePublished:
+                break;
+            default:
+                LOG.error(`EdanCollection.publish called with invalid ePublishState ${ePublishState} for idSystemObject ${idSystemObject}`, LOG.LS.eCOLL);
+                return false;
+        }
+        const PS: PublishScene = new PublishScene(this, idSystemObject, ePublishState);
+        return PS.publish();
+    }
+
     async createEdanMDM(edanmdm: COL.EdanMDMContent, status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {
         const body: any = {
             url: `edanmdm:${edanmdm.descriptiveNonRepeating.record_ID}`,
@@ -139,7 +155,8 @@ export class EdanCollection implements COL.ICollection {
 
     /** c.f. http://dev.3d.api.si.edu/apidocs/#api-admin-upsertContent */
     private async upsertContent(body: any, caller: string): Promise<COL.EdanRecord | null> {
-        LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
+        // LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
+        LOG.info('EdanCollection.upsertContent', LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertContent', '', JSON.stringify(body), 'application/json');
         // LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}: ${reqResult.output}`, LOG.LS.eCOLL);
         if (!reqResult.success) {

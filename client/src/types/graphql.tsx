@@ -357,6 +357,7 @@ export type Mutation = {
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  publish: PublishResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateLicense: CreateLicenseResult;
@@ -459,6 +460,11 @@ export type MutationDiscardUploadedAssetVersionsArgs = {
 
 export type MutationIngestDataArgs = {
   input: IngestDataInput;
+};
+
+
+export type MutationPublishArgs = {
+  input: PublishInput;
 };
 
 
@@ -1617,6 +1623,17 @@ export type CreateIdentifierInput = {
   preferred?: Maybe<Scalars['Boolean']>;
 };
 
+export type PublishInput = {
+  idSystemObject: Scalars['Int'];
+  eState: Scalars['Int'];
+};
+
+export type PublishResult = {
+  __typename?: 'PublishResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
 
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
@@ -1786,6 +1803,7 @@ export type GetSystemObjectDetailsResult = {
   objectType: Scalars['Int'];
   allowed: Scalars['Boolean'];
   publishedState: Scalars['String'];
+  publishedEnum: Scalars['Int'];
   thumbnail?: Maybe<Scalars['String']>;
   identifiers: Array<IngestIdentifier>;
   objectAncestors: Array<Array<RepositoryPath>>;
@@ -2717,6 +2735,19 @@ export type DeleteObjectConnectionMutation = (
   ) }
 );
 
+export type PublishMutationVariables = Exact<{
+  input: PublishInput;
+}>;
+
+
+export type PublishMutation = (
+  { __typename?: 'Mutation' }
+  & { publish: (
+    { __typename?: 'PublishResult' }
+    & Pick<PublishResult, 'success' | 'message'>
+  ) }
+);
+
 export type RollbackSystemObjectVersionMutationVariables = Exact<{
   input: RollbackSystemObjectVersionInput;
 }>;
@@ -3496,7 +3527,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail' | 'licenseInherited'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'thumbnail' | 'licenseInherited'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -4352,6 +4383,40 @@ export function useDeleteObjectConnectionMutation(baseOptions?: Apollo.MutationH
 export type DeleteObjectConnectionMutationHookResult = ReturnType<typeof useDeleteObjectConnectionMutation>;
 export type DeleteObjectConnectionMutationResult = Apollo.MutationResult<DeleteObjectConnectionMutation>;
 export type DeleteObjectConnectionMutationOptions = Apollo.BaseMutationOptions<DeleteObjectConnectionMutation, DeleteObjectConnectionMutationVariables>;
+export const PublishDocument = gql`
+    mutation publish($input: PublishInput!) {
+  publish(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type PublishMutationFn = Apollo.MutationFunction<PublishMutation, PublishMutationVariables>;
+
+/**
+ * __usePublishMutation__
+ *
+ * To run a mutation, you first call `usePublishMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `usePublishMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [publishMutation, { data, loading, error }] = usePublishMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function usePublishMutation(baseOptions?: Apollo.MutationHookOptions<PublishMutation, PublishMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<PublishMutation, PublishMutationVariables>(PublishDocument, options);
+      }
+export type PublishMutationHookResult = ReturnType<typeof usePublishMutation>;
+export type PublishMutationResult = Apollo.MutationResult<PublishMutation>;
+export type PublishMutationOptions = Apollo.BaseMutationOptions<PublishMutation, PublishMutationVariables>;
 export const RollbackSystemObjectVersionDocument = gql`
     mutation rollbackSystemObjectVersion($input: RollbackSystemObjectVersionInput!) {
   rollbackSystemObjectVersion(input: $input) {
@@ -6196,6 +6261,7 @@ export const GetSystemObjectDetailsDocument = gql`
     objectType
     allowed
     publishedState
+    publishedEnum
     thumbnail
     identifiers {
       identifier

@@ -354,6 +354,7 @@ export type Mutation = {
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  publish: PublishResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateLicense: CreateLicenseResult;
@@ -456,6 +457,11 @@ export type MutationDiscardUploadedAssetVersionsArgs = {
 
 export type MutationIngestDataArgs = {
   input: IngestDataInput;
+};
+
+
+export type MutationPublishArgs = {
+  input: PublishInput;
 };
 
 
@@ -1614,6 +1620,17 @@ export type CreateIdentifierInput = {
   preferred?: Maybe<Scalars['Boolean']>;
 };
 
+export type PublishInput = {
+  idSystemObject: Scalars['Int'];
+  eState: Scalars['Int'];
+};
+
+export type PublishResult = {
+  __typename?: 'PublishResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
 
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
@@ -1783,6 +1800,7 @@ export type GetSystemObjectDetailsResult = {
   objectType: Scalars['Int'];
   allowed: Scalars['Boolean'];
   publishedState: Scalars['String'];
+  publishedEnum: Scalars['Int'];
   thumbnail?: Maybe<Scalars['String']>;
   identifiers: Array<IngestIdentifier>;
   objectAncestors: Array<Array<RepositoryPath>>;

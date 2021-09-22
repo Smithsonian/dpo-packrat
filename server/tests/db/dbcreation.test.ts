@@ -4103,10 +4103,8 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     test('DB Fetch SystemObject: PublishedStateEnumToString', async () => {
         expect(DBAPI.PublishedStateEnumToString(-1)).toEqual('Not Published');
         expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eNotPublished)).toEqual('Not Published');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eRestricted)).toEqual('Restricted');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eViewOnly)).toEqual('View Only');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eViewDownloadRestriction)).toEqual('View and Download with usage restrictions');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eViewDownloadCC0)).toEqual('View and Download CC0');
+        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eAPIOnly)).toEqual('API Only');
+        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.ePublished)).toEqual('Published');
     });
 
     test('DB Fetch SystemObject: SystemObjectTypeToName', async () => {
@@ -6771,20 +6769,16 @@ describe('DB Update Test Suite', () => {
         if (systemObjectVersion) {
             systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eNotPublished);
             expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eNotPublished);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eRestricted);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eRestricted);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eViewOnly);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewOnly);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eViewDownloadRestriction);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewDownloadRestriction);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eViewDownloadCC0);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewDownloadCC0);
+            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eAPIOnly);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eAPIOnly);
+            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.ePublished);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.ePublished);
             bUpdated = await systemObjectVersion.update();
 
             const systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(systemObjectVersion.idSystemObjectVersion);
             expect(systemObjectVersionFetch).toBeTruthy();
             if (systemObjectVersionFetch)
-                expect(systemObjectVersionFetch.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewDownloadCC0);
+                expect(systemObjectVersionFetch.publishedStateEnum()).toEqual(DBAPI.ePublishedState.ePublished);
         }
         expect(bUpdated).toBeTruthy();
     });
