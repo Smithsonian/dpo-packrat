@@ -160,6 +160,7 @@ function DetailsView(): React.ReactElement {
         objectType,
         allowed,
         publishedState,
+        publishedEnum,
         thumbnail,
         unit,
         project,
@@ -452,13 +453,15 @@ function DetailsView(): React.ReactElement {
                     project={project}
                     subject={subject}
                     item={item}
+                    disabled={disabled}
+                    publishedState={publishedState}
+                    publishedEnum={publishedEnum}
+                    retired={withDefaultValueBoolean(details.retired, false)}
+                    hidePublishState={objectType !== eSystemObjectType.eScene}
                     onRetiredUpdate={onRetiredUpdate}
                     onLicenseUpdate={onLicenseUpdate}
-                    publishedState={publishedState}
                     originalFields={data.getSystemObjectDetails}
-                    retired={withDefaultValueBoolean(details.retired, false)}
                     license={withDefaultValueNumber(details.idLicense, 0)}
-                    disabled={disabled}
                     idSystemObject={idSystemObject}
                     licenseInherited={licenseInherited}
                     path={objectAncestors}

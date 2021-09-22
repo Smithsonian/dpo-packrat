@@ -251,10 +251,10 @@ export class ObjectGraphTestSetup {
     }
 
     async assignLicenses(): Promise<boolean> {
-        this.licenseCC0        = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadCC0) ?? null;
-        this.licenseDownload   = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadRestriction) ?? null;
-        this.licenseView       = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewOnly) ?? null;
-        this.licenseRestricted = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eRestricted) ?? null;
+        this.licenseCC0        = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadCC0) ?? null;
+        this.licenseDownload   = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadRestriction) ?? null;
+        this.licenseView       = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewOnly) ?? null;
+        this.licenseRestricted = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eRestricted) ?? null;
 
         if (!this.licenseCC0 || !this.licenseDownload || !this.licenseView || !this.licenseRestricted) {
             LOG.error('ObjectGraphTestSetup.assignLicenses unable to fetch cached licenses', LOG.LS.eTEST);

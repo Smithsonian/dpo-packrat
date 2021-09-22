@@ -21,11 +21,13 @@ import {
     GetLicenseListDocument,
     ClearLicenseAssignmentDocument,
     AssignLicenseDocument,
+    PublishDocument,
     ClearLicenseAssignmentMutation,
     AssignLicenseMutation,
+    PublishMutation,
     ExistingRelationship
 } from '../../../types/graphql';
-import { eSystemObjectType } from '../../../types/server';
+import { eSystemObjectType, ePublishedState } from '../../../types/server';
 
 export function useObjectDetails(idSystemObject: number): GetSystemObjectDetailsQueryResult {
     return useQuery(GetSystemObjectDetailsDocument, {
@@ -211,3 +213,17 @@ export async function assignLicense(idSystemObject: number, idLicense: number): 
         refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
     });
 }
+
+export async function publish(idSystemObject: number, eState: ePublishedState): Promise<FetchResult<PublishMutation>> {
+    return await apolloClient.mutate({
+        mutation: PublishDocument,
+        variables: {
+            input: {
+                idSystemObject,
+                eState
+            }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+    });
+}
+
