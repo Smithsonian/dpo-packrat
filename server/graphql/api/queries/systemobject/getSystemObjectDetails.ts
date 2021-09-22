@@ -10,6 +10,7 @@ const getSystemObjectDetails = gql`
             objectType
             allowed
             publishedState
+            publishedEnum
             thumbnail
             identifiers {
                 identifier
