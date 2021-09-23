@@ -86,6 +86,7 @@ interface ObjectDetailsProps {
     disabled: boolean;
     publishedState: string;
     publishedEnum: number;
+    publishable: boolean;
     retired: boolean;
     hideRetired?: boolean;
     hidePublishState?: boolean;
@@ -106,6 +107,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         item,
         publishedState,
         publishedEnum,
+        publishable,
         retired,
         hideRetired,
         hidePublishState,
@@ -195,9 +197,9 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     valueComponent={
                         <Box className={classes.inheritedLicense}>
                             <Typography>{publishedState}</Typography>
-                            &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading}>Publish</LoadingButton>
-                            &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading}>API Only</LoadingButton>
-                            &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
+                            &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Publish</LoadingButton>
+                            &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>API Only</LoadingButton>
+                            &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Unpublish</LoadingButton>)}
                         </Box>
                     }
                 />

@@ -131,6 +131,11 @@ export class PublishScene {
             return false;
         }
 
+        if (!this.scene.HasBeenQCd) {
+            LOG.error(`PublishScene.fetchScene attempting to publish non-QC'd scene ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+            return false;
+        }
+
         // create UUID if not done already
         if (!this.scene.EdanUUID) {
             this.scene.EdanUUID = uuidv4();
@@ -432,14 +437,10 @@ export class PublishScene {
 
         // Determine if licensing prevents publishing
         const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(this.idSystemObject);
-        if (!LR || !LR.License) {
-            LOG.error('PublishScene.updatePublishedState unable to compute license', LOG.LS.eCOLL);
-            return false;
-        }
-
-        if (DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) === DBAPI.ePublishedState.eNotPublished)
+        if (LR && LR.License &&
+            DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) === DBAPI.ePublishedState.eNotPublished)
             this.eState = DBAPI.ePublishedState.eNotPublished;
-        LOG.info(`PublishScene.updatePublishedState computed license ${JSON.stringify(LR.License, H.Helpers.saferStringify)}, resulting in published state of ${this.eState}`, LOG.LS.eCOLL);
+        LOG.info(`PublishScene.updatePublishedState computed license ${LR ? JSON.stringify(LR.License, H.Helpers.saferStringify) : 'none'}, resulting in published state of ${this.eState}`, LOG.LS.eCOLL);
 
         if (this.systemObjectVersion.publishedStateEnum() !== this.eState) {
             this.systemObjectVersion.setPublishedState(this.eState);
