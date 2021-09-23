@@ -78,7 +78,7 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
     const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
     const publishedEnum: DBAPI.ePublishedState = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished;
     const publishedState: string = DBAPI.PublishedStateEnumToString(publishedEnum);
-    let publishable: boolean = false; 
+    let publishable: boolean = false;
     if (oID && oID.eObjectType == DBAPI.eSystemObjectType.eScene) {
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
         if (scene)
