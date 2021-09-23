@@ -1801,6 +1801,7 @@ export type GetSystemObjectDetailsResult = {
   allowed: Scalars['Boolean'];
   publishedState: Scalars['String'];
   publishedEnum: Scalars['Int'];
+  publishable: Scalars['Boolean'];
   thumbnail?: Maybe<Scalars['String']>;
   identifiers: Array<IngestIdentifier>;
   objectAncestors: Array<Array<RepositoryPath>>;

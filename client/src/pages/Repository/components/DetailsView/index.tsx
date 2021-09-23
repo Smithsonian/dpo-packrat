@@ -161,6 +161,7 @@ function DetailsView(): React.ReactElement {
         allowed,
         publishedState,
         publishedEnum,
+        publishable,
         thumbnail,
         unit,
         project,
@@ -456,6 +457,7 @@ function DetailsView(): React.ReactElement {
                     disabled={disabled}
                     publishedState={publishedState}
                     publishedEnum={publishedEnum}
+                    publishable={publishable}
                     retired={withDefaultValueBoolean(details.retired, false)}
                     hidePublishState={objectType !== eSystemObjectType.eScene}
                     onRetiredUpdate={onRetiredUpdate}
