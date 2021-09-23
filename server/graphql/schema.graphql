@@ -1349,6 +1349,7 @@ type GetSystemObjectDetailsResult {
   allowed: Boolean!
   publishedState: String!
   publishedEnum: Int!
+  publishable: Boolean!
   thumbnail: String
   identifiers: [IngestIdentifier!]!
   objectAncestors: [[RepositoryPath!]!]!

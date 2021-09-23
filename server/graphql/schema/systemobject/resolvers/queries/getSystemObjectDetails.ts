@@ -23,7 +23,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
     const derivedObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Derived);
     const objectVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
-    const { publishedState, publishedEnum } = await getPublishedState(idSystemObject);
+    const { publishedState, publishedEnum, publishable } = await getPublishedState(idSystemObject, oID);
     const identifiers = await getIngestIdentifiers(idSystemObject);
 
     if (!oID) {
@@ -58,6 +58,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         allowed: true, // TODO: True until Access control is implemented (Post MVP)
         publishedState,
         publishedEnum,
+        publishable,
         thumbnail: null,
         unit,
         project,
@@ -73,11 +74,19 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     };
 }
 
-async function getPublishedState(idSystemObject: number): Promise<{ publishedState: string, publishedEnum: DBAPI.ePublishedState }> {
+async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndType | undefined): Promise<{ publishedState: string, publishedEnum: DBAPI.ePublishedState, publishable: boolean }> {
     const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
     const publishedEnum: DBAPI.ePublishedState = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished;
     const publishedState: string = DBAPI.PublishedStateEnumToString(publishedEnum);
-    return { publishedState, publishedEnum };
+    let publishable: boolean = false;
+    if (oID && oID.eObjectType == DBAPI.eSystemObjectType.eScene) {
+        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
+        if (scene)
+            publishable = scene.HasBeenQCd;
+        else
+            LOG.error(`Unable to compute scene for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+    }
+    return { publishedState, publishedEnum, publishable };
 }
 
 export async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {
