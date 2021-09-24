@@ -201,7 +201,7 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
             datasetType: CD.idVCaptureDatasetType,
             datasetFieldId: CD.CaptureDatasetFieldID,
             itemPositionType: CD.idVItemPositionType,
-            itemPositionFieldId: CD.idVItemPositionType,
+            itemPositionFieldId: CD.ItemPositionFieldID,
             itemArrangementFieldId: CD.ItemArrangementFieldID,
             focusType: CD.idVFocusType,
             lightsourceType: CD.idVLightSourceType,

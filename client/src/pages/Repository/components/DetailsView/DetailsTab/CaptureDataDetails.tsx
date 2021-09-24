@@ -59,12 +59,8 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     const setIdField = ({ target }): void => {
         const { name, value } = target;
-        let idFieldValue: number | null = null;
 
-        if (value) {
-            idFieldValue = Number.parseInt(value, 10);
-        }
-        updateDetailField(eSystemObjectType.eCaptureData, name, idFieldValue);
+        updateDetailField(eSystemObjectType.eCaptureData, name, value);
     };
 
     const setCheckboxField = ({ target }): void => {
