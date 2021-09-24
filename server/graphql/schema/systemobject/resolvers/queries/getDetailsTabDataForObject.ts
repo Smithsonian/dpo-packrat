@@ -163,7 +163,25 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
         folders: []
     };
 
-    // TODO: KARAN resolve folders, systemCreated from where?
+    // creates a unique map of asset.filePath and file.idVVariantType
+    const foldersMap = new Map<string, number>();
+
+    const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(idCaptureData);
+    if (CDFiles) {
+        for await (const file of CDFiles) {
+            const asset = await DBAPI.Asset.fetch(file.idAsset);
+            if (asset) {
+                if (!foldersMap.has(asset.FilePath) && file.idVVariantType) {
+                    foldersMap.set(asset.FilePath, file.idVVariantType);
+                }
+            }
+        }
+    }
+
+    foldersMap.forEach((value, key) => {
+        fields.folders.push({ name: key, variantType: value });
+    });
+
     const CaptureData = await DBAPI.CaptureData.fetch(idCaptureData);
     fields = {
         ...fields,
