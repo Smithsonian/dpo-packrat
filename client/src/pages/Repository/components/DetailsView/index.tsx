@@ -409,15 +409,15 @@ function DetailsView(): React.ReactElement {
                     systemCreated,
                     description,
                     cameraSettingUniform,
-                    datasetFieldId,
+                    datasetFieldId: Number(datasetFieldId),
                     itemPositionType,
-                    itemPositionFieldId,
-                    itemArrangementFieldId,
+                    itemPositionFieldId: Number(itemPositionFieldId),
+                    itemArrangementFieldId: Number(itemArrangementFieldId),
                     focusType,
                     lightsourceType,
                     backgroundRemovalMethod,
                     clusterType,
-                    clusterGeometryFieldId,
+                    clusterGeometryFieldId: Number(clusterGeometryFieldId),
                     folders
                 };
             }
