@@ -11,7 +11,8 @@ import {
     AssetDetailFields,
     AssetVersionDetailFields,
     ActorDetailFields,
-    UpdateObjectDetailsDataInput
+    UpdateObjectDetailsDataInput,
+    IngestFolder
 } from '../types/graphql';
 import * as yup from 'yup';
 
@@ -42,7 +43,7 @@ export type DetailsViewFieldErrors = {
     };
 };
 
-interface SceneDetailsType {
+export interface SceneDetailsType {
     HasBeenQCd: boolean;
     IsOriented: boolean;
     CountScene: number;
@@ -84,7 +85,7 @@ type DetailTabStore = {
     AssetDetails: AssetDetailFields;
     ActorDetails: ActorDetailFields;
     StakeholderDetails: StakeholderDetailFields;
-    updateDetailField: (metadataType: eSystemObjectType, fieldName: string, value: number | string | boolean | Date | null) => void;
+    updateDetailField: (metadataType: eSystemObjectType, fieldName: string, value: number | string | boolean | Date | null | IngestFolder[]) => void;
     getDetail: (type: eSystemObjectType) => DetailsTabType | void;
     initializeDetailFields: (data: any, type: eSystemObjectType) => void;
     getDetailsViewFieldErrors: (metadata: UpdateObjectDetailsDataInput, objectType: eSystemObjectType) => string[];
@@ -458,7 +459,13 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             updateDetailField(eSystemObjectType.eCaptureData, 'dateCaptured', dateCaptured);
             updateDetailField(eSystemObjectType.eCaptureData, 'description', description);
             updateDetailField(eSystemObjectType.eCaptureData, 'focusType', focusType);
-            updateDetailField(eSystemObjectType.eCaptureData, 'folders', folders);
+            const sanitizedFolders = folders.map((folder) => {
+                return {
+                    name: folder.name,
+                    variantType: folder.variantType
+                };
+            });
+            updateDetailField(eSystemObjectType.eCaptureData, 'folders', sanitizedFolders);
             updateDetailField(eSystemObjectType.eCaptureData, 'isValidData', isValidData);
             updateDetailField(eSystemObjectType.eCaptureData, 'itemArrangementFieldId', itemArrangementFieldId);
             updateDetailField(eSystemObjectType.eCaptureData, 'itemPositionFieldId', itemPositionFieldId);

@@ -13,7 +13,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType } from '../../../../store';
+import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -309,6 +309,21 @@ function DetailsView(): React.ReactElement {
             return;
         }
 
+        const stateIdentifiersWithIdSystemObject: UpdateIdentifier[] = stateIdentifiers.map(({ id, identifier, identifierType, idIdentifier, preferred }) => {
+            return {
+                id,
+                identifier,
+                identifierType,
+                idSystemObject,
+                idIdentifier,
+                preferred
+            };
+        });
+
+        updatedData.Retired = updatedData?.Retired || details?.retired;
+        updatedData.Name = updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name;
+        updatedData.Identifiers = stateIdentifiersWithIdSystemObject || [];
+
         // Create another validation here to make sure that the appropriate SO types are being checked
         const errors = await getDetailsViewFieldErrors(updatedData, objectType);
         if (errors.length) {
@@ -336,7 +351,8 @@ function DetailsView(): React.ReactElement {
             }
 
             if (objectType === eSystemObjectType.eScene && updatedData.Scene) {
-                const { IsOriented, HasBeenQCd } = updatedData.Scene;
+                const SceneDetails = getDetail(objectType) as SceneDetailsType;
+                const { HasBeenQCd, IsOriented } = SceneDetails;
                 updatedData.Scene = { IsOriented, HasBeenQCd };
             }
             // convert subject and item inputs to numbers to handle scientific notation
@@ -368,7 +384,7 @@ function DetailsView(): React.ReactElement {
                 if (R3) updatedData.Item.R3 = Number(R3);
             }
 
-            if (objectType === eSystemObjectType.eCaptureData && !updatedData.CaptureData) {
+            if (objectType === eSystemObjectType.eCaptureData) {
                 const CaptureDataDetails = getDetail(objectType) as CaptureDataDetailFields;
                 const {
                     captureMethod,
@@ -409,21 +425,6 @@ function DetailsView(): React.ReactElement {
                 };
             }
 
-            const stateIdentifiersWithIdSystemObject: UpdateIdentifier[] = stateIdentifiers.map(({ id, identifier, identifierType, idIdentifier, preferred }) => {
-                return {
-                    id,
-                    identifier,
-                    identifierType,
-                    idSystemObject,
-                    idIdentifier,
-                    preferred
-                };
-            });
-
-            updatedData.Retired = updatedData?.Retired || details?.retired;
-            updatedData.Name = updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name;
-            updatedData.Identifiers = stateIdentifiersWithIdSystemObject || [];
-            // console.log('updatedData', updatedData);
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
@@ -431,7 +432,7 @@ function DetailsView(): React.ReactElement {
                 throw new Error(data?.updateObjectDetails?.message);
             }
         } catch (error) {
-            toast.error(error || 'Failed to save updated data');
+            toast.error(error.toString() || 'Failed to save updated data');
         } finally {
             setIsUpdatingData(false);
         }
