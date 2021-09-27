@@ -8,6 +8,7 @@ export class SystemObjectCache {
 
     private objectIDToSystemMap: Map<DBAPI.ObjectIDAndType, DBAPI.SystemObjectInfo> = new Map<DBAPI.ObjectIDAndType, DBAPI.SystemObjectInfo>(); // map of { idObject, eDBObjectType } -> { idSystemObject, Retired }
     private systemIDToObjectMap: Map<number, DBAPI.ObjectIDAndType> = new Map<number, DBAPI.ObjectIDAndType>(); // map of idSystemObject -> { idObject, eDBObjectType }
+    private systemIDToNameMap: Map<number, string> = new Map<number, string>(); // map of idSystemObject -> name
 
     // **************************
     // Boilerplate Implementation
@@ -110,6 +111,16 @@ export class SystemObjectCache {
     }
 
     private async getObjectNameInternal(SO: DBAPI.SystemObject): Promise<string | undefined> {
+        let name: string | undefined = this.systemIDToNameMap.get(SO.idSystemObject);
+        if (name)
+            return name;
+        name = await this.getObjectNameInternalWorker(SO);
+        if (name)
+            this.systemIDToNameMap.set(SO.idSystemObject, name);
+        return name;
+    }
+
+    private async getObjectNameInternalWorker(SO: DBAPI.SystemObject): Promise<string | undefined> {
         const oID: DBAPI.ObjectIDAndType | undefined = await this.getObjectFromSystemInternal(SO.idSystemObject);
         if (!oID) /* istanbul ignore next */
             return undefined;
@@ -175,6 +186,19 @@ export class SystemObjectCache {
         }
     }
 
+    private async getObjectNameByIDInternal(idSystemObject: number): Promise<string | undefined> {
+        const name: string | undefined = this.systemIDToNameMap.get(idSystemObject);
+        if (name)
+            return name;
+
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+        if (!SO) {
+            LOG.error(`SystemObjectCache.getObjectNameByIDInternal unable to lookup SystemObject for id ${idSystemObject}`, LOG.LS.eCACHE);
+            return undefined;
+        }
+        return this.getObjectNameInternal(SO);
+    }
+
     private async flushObjectWorker(idSystemObject: number): Promise<DBAPI.ObjectIDAndType | undefined> {
         const SO: SystemObject | null = await SystemObject.fetch(idSystemObject);
         if (!SO) {
@@ -187,6 +211,8 @@ export class SystemObjectCache {
             this.objectIDToSystemMap.set(oID, { idSystemObject, Retired: SO.Retired });
             this.systemIDToObjectMap.set(idSystemObject, oID);
         }
+
+        this.systemIDToNameMap.delete(idSystemObject);
         return oID;
     }
     // #endregion
@@ -211,12 +237,7 @@ export class SystemObjectCache {
     }
 
     static async getObjectNameByID(idSystemObject: number): Promise<string | undefined> {
-        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
-        if (!SO) {
-            LOG.error(`SystemObjectCache.getObjectNameByID unable to lookup SystemObject for id ${idSystemObject}`, LOG.LS.eCACHE);
-            return undefined;
-        }
-        return SystemObjectCache.getObjectName(SO);
+        return await (await this.getInstance()).getObjectNameByIDInternal(idSystemObject);
     }
 
     /**
