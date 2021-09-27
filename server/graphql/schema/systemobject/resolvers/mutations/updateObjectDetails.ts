@@ -285,33 +285,29 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         const foldersMap = new Map<string, number>();
                         folders.forEach((folder) => foldersMap.set(folder.name, folder.variantType));
                         const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(CaptureData.idCaptureData);
-                        if (CDFiles) {
-                            for await (const file of CDFiles) {
-                                const asset = await DBAPI.Asset.fetch(file.idAsset);
-                                if (asset) {
-                                    const newVariantType = foldersMap.get(asset.FilePath);
-                                    file.idVVariantType = newVariantType || file.idVVariantType;
-                                    const update = await file.update();
-                                    if (update) {
-                                        continue;
-                                    } else {
-                                        return {
-                                            success: false,
-                                            message: `Unable to update Capture Data File with id ${file.idCaptureDataFile}; update failed`
-                                        };
-                                    }
-                                } else {
-                                    return {
-                                        success: false,
-                                        message: `Unable to fetch Asset with id ${file.idAsset}; update failed`
-                                    };
-                                }
-                            }
-                        } else {
+                        if (!CDFiles) {
                             return {
                                 success: false,
                                 message: `Unable to fetch Capture Data Files with id ${CaptureData.idCaptureData}; update failed`
                             };
+                        }
+                        for (const file of CDFiles) {
+                            const asset = await DBAPI.Asset.fetch(file.idAsset);
+                            if (!asset) {
+                                return {
+                                    success: false,
+                                    message: `Unable to fetch Asset with id ${file.idAsset}; update failed`
+                                };
+                            }
+                            const newVariantType = foldersMap.get(asset.FilePath);
+                            file.idVVariantType = newVariantType || file.idVVariantType;
+                            const update = await file.update();
+                            if (!update) {
+                                return {
+                                    success: false,
+                                    message: `Unable to update Capture Data File with id ${file.idCaptureDataFile}; update failed`
+                                };
+                            }
                         }
                     }
 

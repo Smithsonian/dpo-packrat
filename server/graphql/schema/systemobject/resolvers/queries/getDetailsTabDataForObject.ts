@@ -168,7 +168,7 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
 
     const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(idCaptureData);
     if (CDFiles) {
-        for await (const file of CDFiles) {
+        for (const file of CDFiles) {
             const asset = await DBAPI.Asset.fetch(file.idAsset);
             if (asset) {
                 if (!foldersMap.has(asset.FilePath) && file.idVVariantType) {
