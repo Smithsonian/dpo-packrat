@@ -130,8 +130,8 @@ function Header(): React.ReactElement {
         resetRepositoryFilter();
         updateRepositoryFilter(filterState);
         const repositoryURL = generateRepositoryUrl(filterState);
-        console.log(`*** src/components/shared/Header.tsx Header updateRepositorySearch history.push(${route + repositoryURL}`);
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
+        console.log(`*** src/components/shared/Header.tsx Header updateRepositorySearch history.push(${route + repositoryURL}`);
         history.push(route + repositoryURL);
     };
 
