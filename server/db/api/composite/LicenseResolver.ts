@@ -15,16 +15,18 @@ export class LicenseResolver {
         this.inherited = inherited;
     }
 
-    public static async fetch(idSystemObject: number): Promise<LicenseResolver | null> {
+    public static async fetch(idSystemObject: number, OGD?: ObjectGraphDatabase | undefined): Promise<LicenseResolver | null> {
         const LR: LicenseResolver | null = await LicenseResolver.fetchSpecificLicense(idSystemObject, false);
         if (LR)
             return LR;
 
-        const OGD: ObjectGraphDatabase = new ObjectGraphDatabase();
-        const OG: ObjectGraph = new ObjectGraph(idSystemObject, eObjectGraphMode.eAncestors, 32, OGD); /* istanbul ignore if */
-        if (!await OG.fetch()) {
-            LOG.error(`LicenseResolver unable to fetch object graph for ${idSystemObject}`, LOG.LS.eDB);
-            return null;
+        if (!OGD) {
+            OGD = new ObjectGraphDatabase();
+            const OG: ObjectGraph = new ObjectGraph(idSystemObject, eObjectGraphMode.eAncestors, 32, OGD); /* istanbul ignore if */
+            if (!await OG.fetch()) {
+                LOG.error(`LicenseResolver unable to fetch object graph for ${idSystemObject}`, LOG.LS.eDB);
+                return null;
+            }
         }
 
         return await LicenseResolver.fetchParentsLicense(OGD, idSystemObject, 32, new Map<number, LicenseResolver | null>());
