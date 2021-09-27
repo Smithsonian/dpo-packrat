@@ -268,16 +268,48 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         backgroundRemovalMethod,
                         clusterType,
                         clusterGeometryFieldId,
+                        folders
                     } = data.CaptureData;
 
-                    if (!H.Helpers.validFieldId(datasetFieldId)) return { success: false, message: 'Dataset Field ID is invalid; update failed' };
-                    if (!H.Helpers.validFieldId(itemPositionFieldId)) return { success: false, message: 'Item Position Field ID is invalid; update failed' };
-                    if (!H.Helpers.validFieldId(itemArrangementFieldId)) return { success: false, message: 'Item Arrangement Field ID is invalid; update failed' };
-                    if (!H.Helpers.validFieldId(clusterGeometryFieldId)) return { success: false, message: 'Cluster Geometry Field ID is invalid; update failed' };
+
+                    if (datasetFieldId && !H.Helpers.validFieldId(datasetFieldId)) return { success: false, message: 'Dataset Field ID is invalid; update failed' };
+                    if (itemPositionFieldId && !H.Helpers.validFieldId(itemPositionFieldId)) return { success: false, message: 'Item Position Field ID is invalid; update failed' };
+                    if (itemArrangementFieldId && !H.Helpers.validFieldId(itemArrangementFieldId)) return { success: false, message: 'Item Arrangement Field ID is invalid; update failed' };
+                    if (clusterGeometryFieldId && !H.Helpers.validFieldId(clusterGeometryFieldId)) return { success: false, message: 'Cluster Geometry Field ID is invalid; update failed' };
 
                     CaptureData.DateCaptured = new Date(dateCaptured);
                     if (description) CaptureData.Description = description;
                     if (captureMethod) CaptureData.idVCaptureMethod = captureMethod;
+
+                    if (folders && folders.length) {
+                        const foldersMap = new Map<string, number>();
+                        folders.forEach((folder) => foldersMap.set(folder.name, folder.variantType));
+                        const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(CaptureData.idCaptureData);
+                        if (!CDFiles) {
+                            return {
+                                success: false,
+                                message: `Unable to fetch Capture Data Files with id ${CaptureData.idCaptureData}; update failed`
+                            };
+                        }
+                        for (const file of CDFiles) {
+                            const asset = await DBAPI.Asset.fetch(file.idAsset);
+                            if (!asset) {
+                                return {
+                                    success: false,
+                                    message: `Unable to fetch Asset with id ${file.idAsset}; update failed`
+                                };
+                            }
+                            const newVariantType = foldersMap.get(asset.FilePath);
+                            file.idVVariantType = newVariantType || file.idVVariantType;
+                            const update = await file.update();
+                            if (!update) {
+                                return {
+                                    success: false,
+                                    message: `Unable to update Capture Data File with id ${file.idCaptureDataFile}; update failed`
+                                };
+                            }
+                        }
+                    }
 
                     const CaptureDataPhoto = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(CaptureData.idCaptureData);
                     if (CaptureDataPhoto && CaptureDataPhoto[0]) {
@@ -287,7 +319,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         if (datasetType) CD.idVCaptureDatasetType = datasetType;
                         CD.CaptureDatasetFieldID = maybe<number>(datasetFieldId);
                         CD.idVItemPositionType = maybe<number>(itemPositionType);
-                        CD.idVItemPositionType = maybe<number>(itemPositionFieldId);
+                        CD.ItemPositionFieldID = maybe<number>(itemPositionFieldId);
                         CD.ItemArrangementFieldID = maybe<number>(itemArrangementFieldId);
                         CD.idVFocusType = maybe<number>(focusType);
                         CD.idVLightSourceType = maybe<number>(lightsourceType);
