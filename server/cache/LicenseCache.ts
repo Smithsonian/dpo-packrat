@@ -73,10 +73,10 @@ export class LicenseCache {
         return this.licenseEnumMap.get(eState);
     }
 
-    private async getLicenseResolverInternal(idSystemObject: number): Promise<DBAPI.LicenseResolver | undefined> {
+    private async getLicenseResolverInternal(idSystemObject: number, OGD?: DBAPI.ObjectGraphDatabase | undefined): Promise<DBAPI.LicenseResolver | undefined> {
         let licenseResolver: DBAPI.LicenseResolver | undefined | null = this.licenseResolverMap.get(idSystemObject);
         if (!licenseResolver) { // cache miss, look it up
-            licenseResolver = await DBAPI.LicenseResolver.fetch(idSystemObject);
+            licenseResolver = await DBAPI.LicenseResolver.fetch(idSystemObject, OGD);
             if (licenseResolver)
                 this.licenseResolverMap.set(idSystemObject, licenseResolver);
             // LOG.info(`LicenseCache.getLicenseResolverInternal(${idSystemObject}) computed ${JSON.stringify(licenseResolver)}`, LOG.LS.eCACHE);
@@ -131,8 +131,9 @@ export class LicenseCache {
         return await (await this.getInstance()).getLicenseByEnumInternal(eState);
     }
 
-    static async getLicenseResolver(idSystemObject: number): Promise<DBAPI.LicenseResolver | undefined> {
-        return await (await this.getInstance()).getLicenseResolverInternal(idSystemObject);
+    /** If passing in OGD, make sure to compute this navigating through the ancestors of idSystemObject */
+    static async getLicenseResolver(idSystemObject: number, OGD?: DBAPI.ObjectGraphDatabase | undefined): Promise<DBAPI.LicenseResolver | undefined> {
+        return await (await this.getInstance()).getLicenseResolverInternal(idSystemObject, OGD);
     }
 
     static async clearAssignment(idSystemObject: number): Promise<boolean> {
