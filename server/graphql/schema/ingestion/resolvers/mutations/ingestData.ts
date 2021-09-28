@@ -25,6 +25,12 @@ type AssetPair = {
     assetVersion: DBAPI.AssetVersion | undefined;
 };
 
+type ModelInfo = {
+    model: IngestModelInput;
+    idModel: number;
+    JCOutput: JobCookSIPackratInspectOutput;
+};
+
 export default async function ingestData(_: Parent, args: MutationIngestDataArgs, context: Context): Promise<IngestDataResult> {
     const { input } = args;
     const { user } = context;
@@ -45,8 +51,9 @@ class IngestDataWorker extends ResolverBase {
     private ingestUpdate: boolean = false;
     private assetVersionSet: Set<number> = new Set<number>(); // set of idAssetVersions
 
-    private assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>();       // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
-    private ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>();    // map from idAssetVersion -> photogrammetry input
+    private assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>();     // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
+    private ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>();  // map from idAssetVersion -> photogrammetry input
+    private ingestModelMap: Map<number, ModelInfo> = new Map<number, ModelInfo>();      // map from idAssetVersion -> model input, JCOutput, idModel
 
     constructor(input: IngestDataInput, user: User | undefined) {
         super();
@@ -78,6 +85,10 @@ class IngestDataWorker extends ResolverBase {
         if (this.ingestNew) {
             await this.appendToWFReport('Ingesting content for new object');
 
+            let SOI: DBAPI.SystemObjectInfo | undefined = undefined;
+            let path: string = '';
+            let href: string = '';
+
             // retrieve/create subjects; if creating subjects, create related objects (Identifiers, possibly UnitEdan records, though unlikely)
             const subjectsDB: DBAPI.Subject[] = [];
             for (const subject of this.input.subjects) {
@@ -93,18 +104,34 @@ class IngestDataWorker extends ResolverBase {
                 if (!subjectDB)
                     return { success: false, message: 'failure to retrieve or create subject' };
 
+                SOI = await CACHE.SystemObjectCache.getSystemFromSubject(subjectDB);
+                path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+                href = H.Helpers.computeHref(path, subject.name);
+                await this.appendToWFReport(`Subject ${href} (ARK ID ${subject.arkId}) ${subject.id ? 'validated' : 'created'}`);
+
                 subjectsDB.push(subjectDB);
             }
 
             // wire projects to subjects
-            if (this.input.project.id && !(await this.wireProjectToSubjects(this.input.project.id, subjectsDB)))
-                return { success: false, message: 'failure to wire project to subjects' };
-            await this.appendToWFReport(`Packrat Project: ${this.input.project.name}`);
+            if (this.input.project.id) {
+                const projectDB: DBAPI.Project | null = await this.wireProjectToSubjects(this.input.project.id, subjectsDB);
+                if (!projectDB)
+                    return { success: false, message: 'failure to wire project to subjects' };
+
+                SOI = await CACHE.SystemObjectCache.getSystemFromProject(projectDB);
+                path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+                href = H.Helpers.computeHref(path, this.input.project.name);
+                await this.appendToWFReport(`Packrat Project: ${href}`);
+            }
 
             itemDB = await this.fetchOrCreateItem(this.input.item);
             if (!itemDB)
                 return { success: false, message: 'failure to retrieve or create item' };
-            await this.appendToWFReport(`Packrat Item: ${itemDB.Name}`);
+
+            SOI = await CACHE.SystemObjectCache.getSystemFromItem(itemDB);
+            path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+            href = H.Helpers.computeHref(path, itemDB.Name);
+            await this.appendToWFReport(`Packrat Item${!this.input.item.id ? ' (created)' : ''}: ${href}`);
 
             // wire subjects to item
             if (!await this.wireSubjectsToItem(subjectsDB, itemDB))
@@ -144,12 +171,6 @@ class IngestDataWorker extends ResolverBase {
             }
         }
 
-        // wire item to asset-owning objects
-        if (itemDB) {
-            if (!await this.wireItemToAssetOwners(itemDB))
-                return { success: false, message: 'failure to wire item to asset owner' };
-        }
-
         // next, promote asset into repository storage
         const { ingestResMap, transformUpdated } = await this.promoteAssetsIntoRepository();
         if (transformUpdated)
@@ -158,6 +179,15 @@ class IngestDataWorker extends ResolverBase {
         // use results to create/update derived objects
         if (this.ingestPhotogrammetry)
             await this.createPhotogrammetryDerivedObjects(ingestResMap);
+
+        if (this.ingestModel)
+            await this.createModelDerivedObjects(ingestResMap);
+
+        // wire item to asset-owning objects; do this *after* createModelDerivedObjects
+        if (itemDB) {
+            if (!await this.wireItemToAssetOwners(itemDB))
+                return { success: false, message: 'failure to wire item to asset owner' };
+        }
 
         // notify workflow engine about this ingestion:
         if (!await this.sendWorkflowIngestionEvent(ingestResMap, modelTransformUpdated))
@@ -335,7 +365,6 @@ class IngestDataWorker extends ResolverBase {
             return null;
         }
 
-        await this.appendToWFReport(`Subject ${subject.name} (ARK ID ${subject.arkId}) validated`);
         return subjectDB;
     }
 
@@ -357,7 +386,6 @@ class IngestDataWorker extends ResolverBase {
         const subjectDB: DBAPI.Subject | null = await this.createSubject(unit.idUnit, subject.name, identifier);
         if (!subjectDB)
             return null;
-        await this.appendToWFReport(`Subject ${subject.name} (ARK ID ${subject.arkId}) created`);
 
         // update identifier, if it exists with systemobject ID of our subject
         if (!await this.updateSubjectIdentifier(identifier, subjectDB))
@@ -366,21 +394,21 @@ class IngestDataWorker extends ResolverBase {
         return subjectDB;
     }
 
-    private async wireProjectToSubjects(idProject: number, subjectsDB: DBAPI.Subject[]): Promise<boolean> {
+    private async wireProjectToSubjects(idProject: number, subjectsDB: DBAPI.Subject[]): Promise<DBAPI.Project | null> {
         const projectDB: DBAPI.Project | null = await DBAPI.Project.fetch(idProject);
         if (!projectDB) {
             LOG.error(`ingestData unable to fetch project ${idProject}`, LOG.LS.eGQL);
-            return false;
+            return null;
         }
 
         for (const subjectDB of subjectsDB) {
             const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(projectDB, subjectDB);
             if (!xref) {
                 LOG.error(`ingestData unable to wire project ${JSON.stringify(projectDB)} to subject ${JSON.stringify(subjectDB)}`, LOG.LS.eGQL);
-                return false;
+                return null;
             }
         }
-        return true;
+        return projectDB;
     }
 
     private async fetchOrCreateItem(item: IngestItemInput): Promise<DBAPI.Item | null> {
@@ -590,40 +618,27 @@ class IngestDataWorker extends ResolverBase {
             return false;
         }
 
-        let modelDB: DBAPI.Model = JCOutput.modelConstellation.Model;
-        modelDB.Name = model.name;
-        modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCaptured) || new Date();
-        modelDB.idVCreationMethod = model.creationMethod;
-        modelDB.idVModality = model.modality;
-        modelDB.idVPurpose = model.purpose;
-        modelDB.idVUnits = model.units;
-        modelDB.idVFileType = model.modelFileType;
-
-        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(model.idAssetVersion);
-        if (!assetVersion) {
-            LOG.error(`ingestData unable to fetch asset version from ${JSON.stringify(model)}`, LOG.LS.eGQL);
-            return false;
-        }
-        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
-        if (!asset) {
-            LOG.error(`ingestData unable to fetch asset from ${JSON.stringify(model)}, idAsset ${assetVersion.idAsset}`, LOG.LS.eGQL);
-            return false;
-        }
-        const assetMap: Map<string, number> = new Map<string, number>();
-        assetMap.set(asset.FileName, asset.idAsset);
-
-        // write entries to database
-        // LOG.info(`ingestData createModelObjects model=${JSON.stringify(model, H.Helpers.saferStringify)} vs asset=${JSON.stringify(asset, H.Helpers.saferStringify)}vs assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         // Examine model.idAsset; if Asset.idVAssetType -> model or model geometry file, then
         // Lookup SystemObject from Asset.idSystemObject; if idModel is not null, then use that idModel
         let idModel: number = 0;
         if (model.idAsset) {
+            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(model.idAssetVersion);
+            if (!assetVersion) {
+                LOG.error(`ingestData createModelObjects unable to fetch asset version from ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                return false;
+            }
+            const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
+            if (!asset) {
+                LOG.error(`ingestData createModelObjects unable to fetch asset from ${JSON.stringify(model, H.Helpers.saferStringify)}, idAsset ${assetVersion.idAsset}`, LOG.LS.eGQL);
+                return false;
+            }
+
             const assetType: CACHE.eVocabularyID | undefined = await asset.assetType();
             if (assetType === CACHE.eVocabularyID.eAssetAssetTypeModel ||
                 assetType === CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile) {
                 const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
                 if (!SO) {
-                    LOG.error(`ingestData unable to fetch model's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData createModelObjects unable to fetch model's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     return false;
                 }
 
@@ -632,44 +647,117 @@ class IngestDataWorker extends ResolverBase {
             }
         }
 
-        const res: H.IOResults = await JCOutput.persist(idModel, assetMap);
-        if (!res.success) {
-            LOG.error(`ingestData unable to create model constellation ${JSON.stringify(model)}: ${res.success}`, LOG.LS.eGQL);
+        let modelDB: DBAPI.Model | null = idModel ? await DBAPI.Model.fetch(idModel) : null;
+        if (!modelDB)
+            modelDB = JCOutput.modelConstellation.Model;
+        else
+            modelDB.cloneData(JCOutput.modelConstellation.Model);
+
+        modelDB.Name = model.name;
+        modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCaptured) || new Date();
+        modelDB.idVCreationMethod = model.creationMethod;
+        modelDB.idVModality = model.modality;
+        modelDB.idVPurpose = model.purpose;
+        modelDB.idVUnits = model.units;
+        modelDB.idVFileType = model.modelFileType;
+
+        const updateRes: boolean = idModel ? await modelDB.update() : await modelDB.create();
+        if (!updateRes) {
+            LOG.error(`ingestData createModelObjects unable to ${idModel ? 'update' : 'create'} model ${JSON.stringify(modelDB, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
             return false;
         }
-        modelDB = JCOutput.modelConstellation.Model; // retrieve again, as we may have swapped the object above, in JCOutput.persist
 
-        const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(modelDB);
-        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-        const href: string = H.Helpers.computeHref(path, modelDB.Name);
-        await this.appendToWFReport(`Model: ${href}`);
-
-        if (!await this.handleIdentifiers(modelDB, model.systemCreated, model.identifiers))
-            return false;
-
-        // wire model to sourceObjects
-        if (model.sourceObjects && model.sourceObjects.length > 0) {
-            for (const sourceObject of model.sourceObjects) {
-                if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, modelDB)) {
-                    LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
-                    continue;
-                }
-            }
-        }
-
-        // wire model to derivedObjects
-        if (model.derivedObjects && model.derivedObjects.length > 0) {
-            for (const derivedObject of model.derivedObjects) {
-                if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelDB, derivedObject.idSystemObject)) {
-                    LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
-                    continue;
-                }
-            }
-        }
-
-        if (model.idAssetVersion)
+        // LOG.info(`ingestData createModelObjects model=${JSON.stringify(model, H.Helpers.saferStringify)} vs asset=${JSON.stringify(asset, H.Helpers.saferStringify)}vs assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+        if (model.idAssetVersion) {
             this.assetVersionMap.set(model.idAssetVersion, modelDB);
+            const MI: ModelInfo = { model, idModel: modelDB.idModel, JCOutput };
+            this.ingestModelMap.set(model.idAssetVersion, MI);
+            LOG.info(`ingestData createModelObjects computed ${JSON.stringify(MI, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+        }
+
         return true;
+    }
+
+    // ingestResMap: map from idAssetVersion -> object that "owns" the asset
+    private async createModelDerivedObjects(ingestResMap: Map<number, IngestAssetResult | null>): Promise<boolean> {
+        // populate assetMap
+        const assetMap: Map<string, number> = new Map<string, number>(); // Map of asset filename -> idAsset
+        let ret: boolean = true;
+
+        for (const [idAssetVersion, SOBased] of this.assetVersionMap) {
+            LOG.info(`ingestData createModelDerivedObjects considering idAssetVersion ${idAssetVersion}: ${JSON.stringify(SOBased, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            if (!(SOBased instanceof DBAPI.Model))
+                continue;
+            const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
+            if (!ingestAssetRes) {
+                LOG.error(`ingestData createModelDerivedObjects unable to locate ingest results for idAssetVersion ${idAssetVersion}`, LOG.LS.eGQL);
+                ret = false;
+                continue;
+            }
+            if (!ingestAssetRes.success) {
+                LOG.error(`ingestData createModelDerivedObjects failed for idAssetVersion ${idAssetVersion}: ${ingestAssetRes.error}`, LOG.LS.eGQL);
+                ret = false;
+                continue;
+            }
+
+            for (const asset of ingestAssetRes.assets || [])
+                assetMap.set(asset.FileName, asset.idAsset);
+
+            const modelInfo: ModelInfo | undefined = this.ingestModelMap.get(idAssetVersion);
+            if (!modelInfo) {
+                LOG.error(`ingestData createModelDerivedObjects unable to find model info for idAssetVersion ${idAssetVersion}`, LOG.LS.eGQL);
+                ret = false;
+                continue;
+            }
+
+            const model: IngestModelInput = modelInfo.model;
+            const JCOutput: JobCookSIPackratInspectOutput = modelInfo.JCOutput;
+            const idModel: number = modelInfo.idModel;
+
+            if (!JCOutput.success || !JCOutput.modelConstellation || !JCOutput.modelConstellation.Model) {
+                LOG.error(`ingestData createModelDerivedObjects unable to find valid model object results for idAssetVersion ${idAssetVersion}: ${JSON.stringify(JCOutput, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                ret = false;
+                continue;
+            }
+
+            const res: H.IOResults = await JCOutput.persist(idModel, assetMap);
+            if (!res.success) {
+                LOG.error(`ingestData unable to create model constellation ${JSON.stringify(model)}: ${res.success}`, LOG.LS.eGQL);
+                ret = false;
+                continue;
+            }
+            const modelDB: DBAPI.Model = JCOutput.modelConstellation.Model; // retrieve again, as we may have swapped the object above, in JCOutput.persist
+            this.assetVersionMap.set(idAssetVersion, modelDB);
+
+            const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(modelDB);
+            const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+            const href: string = H.Helpers.computeHref(path, modelDB.Name);
+            await this.appendToWFReport(`Model: ${href}`);
+
+            if (!await this.handleIdentifiers(modelDB, model.systemCreated, model.identifiers))
+                return false;
+
+            // wire model to sourceObjects
+            if (model.sourceObjects && model.sourceObjects.length > 0) {
+                for (const sourceObject of model.sourceObjects) {
+                    if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, modelDB)) {
+                        LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
+                        continue;
+                    }
+                }
+            }
+
+            // wire model to derivedObjects
+            if (model.derivedObjects && model.derivedObjects.length > 0) {
+                for (const derivedObject of model.derivedObjects) {
+                    if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelDB, derivedObject.idSystemObject)) {
+                        LOG.error('ingestData failed to create SystemObjectXref', LOG.LS.eGQL);
+                        continue;
+                    }
+                }
+            }
+        }
+        return ret;
     }
 
     private async createSceneObjects(scene: IngestSceneInput): Promise<{ success: boolean, transformUpdated?: boolean | undefined }> {
