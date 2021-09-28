@@ -725,7 +725,10 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 success: true,
                 error: ''
             });
-            this.parameters.sourceMeshFile = path.basename(file);
+
+            // If we haven't yet defined the source mesh and we are processing a geometry file (eVocabID is defined), use this file as our source mesh:
+            if (eVocabID !== undefined && !this.parameters.sourceMeshFile)
+                this.parameters.sourceMeshFile = path.basename(file);
             this._dbJobRun.Parameters = JSON.stringify(this.parameters, H.Helpers.saferStringify);
             if (!await this._dbJobRun.update())
                 LOG.error(`JobCookSIPackratInspect.testForZip failed to update JobRun.parameters for ${JSON.stringify(this._dbJobRun, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
