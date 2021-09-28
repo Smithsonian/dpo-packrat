@@ -1079,20 +1079,19 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Model With Nulls', async () => {
-        if (vocabulary)
-            modelNulls = await UTIL.createModelTest({
-                Name: 'Test Model with Nulls',
-                DateCreated: UTIL.nowCleansed(),
-                idVCreationMethod: null,
-                idVModality: null,
-                idVUnits: null,
-                idVPurpose: null,
-                idVFileType: null,
-                idAssetThumbnail: null,
-                CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
-                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
-                idModel: 0
-            });
+        modelNulls = await UTIL.createModelTest({
+            Name: 'Test Model with Nulls',
+            DateCreated: UTIL.nowCleansed(),
+            idVCreationMethod: null,
+            idVModality: null,
+            idVUnits: null,
+            idVPurpose: null,
+            idVFileType: null,
+            idAssetThumbnail: null,
+            CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+            CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
+            idModel: 0
+        });
         expect(modelNulls).toBeTruthy();
     });
 
@@ -4881,6 +4880,48 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(modelFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Model.cloneData', async () => {
+        const modelClone: DBAPI.Model = await UTIL.createModelTest({
+            Name: 'Test Model with Nulls',
+            DateCreated: UTIL.nowCleansed(),
+            idVCreationMethod: null,
+            idVModality: null,
+            idVUnits: null,
+            idVPurpose: null,
+            idVFileType: null,
+            idAssetThumbnail: null,
+            CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+            CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
+            idModel: 0
+        });
+        expect(modelClone).toBeTruthy();
+        expect(model).toBeTruthy();
+        if (model) {
+            modelClone.cloneData(model);
+            expect(modelClone.idModel).not.toEqual(model.idModel);
+            expect(modelClone.Name).toEqual(model.Name);
+            expect(modelClone.DateCreated).toEqual(model.DateCreated);
+            expect(modelClone.idVCreationMethod).toEqual(model.idVCreationMethod);
+            expect(modelClone.idVModality).toEqual(model.idVModality);
+            expect(modelClone.idVPurpose).toEqual(model.idVPurpose);
+            expect(modelClone.idVUnits).toEqual(model.idVUnits);
+            expect(modelClone.idVFileType).toEqual(model.idVFileType);
+            expect(modelClone.idAssetThumbnail).toEqual(model.idAssetThumbnail);
+            expect(modelClone.CountAnimations).toEqual(model.CountAnimations);
+            expect(modelClone.CountCameras).toEqual(model.CountCameras);
+            expect(modelClone.CountFaces).toEqual(model.CountFaces);
+            expect(modelClone.CountLights).toEqual(model.CountLights);
+            expect(modelClone.CountMaterials).toEqual(model.CountMaterials);
+            expect(modelClone.CountMeshes).toEqual(model.CountMeshes);
+            expect(modelClone.CountVertices).toEqual(model.CountVertices);
+            expect(modelClone.CountEmbeddedTextures).toEqual(model.CountEmbeddedTextures);
+            expect(modelClone.CountLinkedTextures).toEqual(model.CountLinkedTextures);
+            expect(modelClone.FileEncoding).toEqual(model.FileEncoding);
+            expect(modelClone.IsDracoCompressed).toEqual(model.IsDracoCompressed);
+            expect(modelClone.AutomationTag).toEqual(model.AutomationTag);
+        }
     });
 
     test('DB Fetch Special: Model.fetchByFileNameAndAssetType', async () => {
