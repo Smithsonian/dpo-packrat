@@ -28,15 +28,10 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 
     const systemObject: SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
-    LOG.info('getSystemObjectDetails 3', LOG.LS.eGQL);
     const derivedObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Derived);
-    LOG.info('getSystemObjectDetails 4', LOG.LS.eGQL);
     const objectVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
-    LOG.info('getSystemObjectDetails 5', LOG.LS.eGQL);
     const { publishedState, publishedEnum, publishable } = await getPublishedState(idSystemObject, oID);
-    LOG.info('getSystemObjectDetails 6', LOG.LS.eGQL);
     const identifiers = await getIngestIdentifiers(idSystemObject);
-    LOG.info('getSystemObjectDetails 7', LOG.LS.eGQL);
 
     if (!oID) {
         const message: string = `No object ID found for ID: ${idSystemObject}`;
@@ -57,10 +52,8 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     }
 
     const name: string = await resolveNameForObject(idSystemObject);
-    LOG.info('getSystemObjectDetails 8', LOG.LS.eGQL);
-
     const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject, OGD);
-    LOG.info('getSystemObjectDetails 9', LOG.LS.eGQL);
+    LOG.info('getSystemObjectDetails 3', LOG.LS.eGQL);
 
     return {
         idSystemObject,
@@ -173,7 +166,7 @@ async function getObjectAncestors(OG: DBAPI.ObjectGraph): Promise<GetObjectAnces
             objectAncestors: []
         };
     }
-    LOG.info('getSystemObjectDetails 1a', LOG.LS.eGQL);
+    LOG.info('getSystemObjectDetails 1a-OG Fetch', LOG.LS.eGQL);
 
     const objectAncestors: RepositoryPath[][] = [];
 
