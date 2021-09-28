@@ -702,6 +702,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             return false;
         }
 
+        let sourceMeshFile: string | undefined = undefined;
         const files: string[] = await ZS.getJustFiles(null);
         const RSRs: STORE.ReadStreamResult[] = [];
         for (const file of files) {
@@ -725,7 +726,14 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 success: true,
                 error: ''
             });
-            this.parameters.sourceMeshFile = path.basename(file);
+
+            // If we haven't yet defined the source mesh and we are processing a geometry file (eVocabID is defined), use this file as our source mesh:
+            if (!sourceMeshFile && eVocabID !== undefined)
+                sourceMeshFile = path.basename(file);
+        }
+
+        if (sourceMeshFile) {
+            this.parameters.sourceMeshFile = sourceMeshFile;
             this._dbJobRun.Parameters = JSON.stringify(this.parameters, H.Helpers.saferStringify);
             if (!await this._dbJobRun.update())
                 LOG.error(`JobCookSIPackratInspect.testForZip failed to update JobRun.parameters for ${JSON.stringify(this._dbJobRun, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
