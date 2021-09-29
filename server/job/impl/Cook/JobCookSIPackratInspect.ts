@@ -113,11 +113,12 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         // map and validate assets:
         if (this.modelConstellation.ModelAssets) {
             for (const modelAsset of this.modelConstellation.ModelAssets) {
-                let mappedId: number | undefined = assetMap.get(modelAsset.Asset.FileName);
+                const fileName: string = modelAsset.Asset.FileName.trim();
+                let mappedId: number | undefined = assetMap.get(fileName);
                 if (!mappedId) // try again, with just filename
-                    mappedId = assetMap.get(path.basename(modelAsset.Asset.FileName));
+                    mappedId = assetMap.get(path.basename(fileName));
                 if (!mappedId) {
-                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.saferStringify)}`;
+                    const error: string = `Missing ${fileName} and ${path.basename(fileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.saferStringify)}`;
                     LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
@@ -416,6 +417,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                                 case 'uri':
                                     materialUri = maybeString(value);
                                     if (materialUri) {
+                                        materialUri = materialUri.trim();
                                         // detect and handle UV Maps embedded in the geometry file:
                                         if (materialUri.toLowerCase().startsWith('embedded*')) {
                                             materialUri = null;
