@@ -2,6 +2,7 @@
 import { Audit as AuditBase, User as UserBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 import { eDBObjectType, eAuditType /*, eSystemObjectType */ } from './ObjectType'; // importing eSystemObjectType causes as circular dependency
 import { User } from './User';
 
@@ -96,7 +97,6 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
     }
 
     static async fetchLastUser(idSystemObject: number, eAudit: eAuditType): Promise<User | null> {
-        // LOG.info(`DBAPI.Audit.fetchLastUser(${idSystemObject}, ${eAudit})`, LOG.LS.eDB);
         if (!idSystemObject || !eAudit)
             return null;
         try {
@@ -109,6 +109,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
                   AND AU.idSystemObject = ${idSystemObject}
                 ORDER BY AU.AuditDate DESC
                 LIMIT 1`;
+            LOG.info(`DBAPI.Audit.fetchLastUser(${idSystemObject}, ${eAudit}) raw ${JSON.stringify(userBaseList, H.Helpers.saferStringify)}`, LOG.LS.eDB);
             return (userBaseList && userBaseList.length > 0) ? User.constructFromPrisma(userBaseList[0]) : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Audit.fetchLastUser', LOG.LS.eDB, error);
