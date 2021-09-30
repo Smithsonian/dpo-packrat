@@ -2225,14 +2225,13 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch By ID: Audit', async () => {
         let auditFetch: DBAPI.Audit | null = null;
         if (audit) {
-            const eAuditTypeOrig: DBAPI.eAuditType = audit.getAuditType();
-            const eDBObjectTypeOrig: DBAPI.eDBObjectType = audit.getDBObjectType();
             auditFetch = await DBAPI.Audit.fetch(audit.idAudit);
             if (auditFetch) {
                 expect(auditFetch).toMatchObject(audit);
                 expect(audit).toMatchObject(auditFetch);
             }
 
+            const eAuditTypeOrig: DBAPI.eAuditType = audit.getAuditType();
             audit.setAuditType(DBAPI.eAuditType.eUnknown);
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eUnknown);
             audit.setAuditType(DBAPI.eAuditType.eAuthLogin);
@@ -2248,6 +2247,7 @@ describe('DB Fetch By ID Test Suite', () => {
             audit.setAuditType(eAuditTypeOrig);
             expect(audit.getAuditType()).toEqual(eAuditTypeOrig);
 
+            const eDBObjectTypeOrig: DBAPI.eDBObjectType = audit.getDBObjectType();
             audit.setDBObjectType(null);
             expect(audit.getDBObjectType()).toEqual(DBAPI.eSystemObjectType.eUnknown);
             audit.setDBObjectType(DBAPI.eSystemObjectType.eUnit);
@@ -2262,8 +2262,10 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch Audit: Audit.fetchLastUser', async () => {
         let userFetch: DBAPI.User | null = null;
-        if (audit)
+        if (audit) {
+            LOG.info(`Audit: ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
             userFetch = await DBAPI.Audit.fetchLastUser(audit.idSystemObject ?? 0, audit.getAuditType());
+        }
         expect(userFetch).toBeTruthy();
         expect(userFetch?.idUser).toEqual(userActive?.idUser);
     });
