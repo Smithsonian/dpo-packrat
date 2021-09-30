@@ -88,7 +88,7 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
     if (oID && oID.eObjectType == DBAPI.eSystemObjectType.eScene) {
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
         if (scene)
-            publishable = scene.HasBeenQCd;
+            publishable = scene.ApprovedForPublication && scene.PosedAndQCd;
         else
             LOG.error(`Unable to compute scene for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
     }

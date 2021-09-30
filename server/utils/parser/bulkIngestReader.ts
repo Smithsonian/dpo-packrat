@@ -120,7 +120,7 @@ export class BulkIngestReader {
         return (obj as IngestModel).modality !== undefined;
     }
     static ingestedObjectIsScene(obj: (IngestPhotogrammetry | IngestModel | IngestScene)): obj is IngestScene {
-        return (obj as IngestScene).hasBeenQCd !== undefined;
+        return (obj as IngestScene).approvedForPublication !== undefined;
     }
 
     static async computeProjects(ingestMetadata: IngestMetadata): Promise<DBAPI.Project[] | null> {
@@ -436,8 +436,8 @@ export class BulkIngestReader {
             idAssetVersion: 0,
             systemCreated: true,
             name: bagitScene.name,
-            hasBeenQCd: bagitScene.has_been_qcd !== 'false' && bagitScene.has_been_qcd !== '0',
-            isOriented: bagitScene.is_oriented !== 'false' && bagitScene.is_oriented !== '0',
+            approvedForPublication: bagitScene.approved_for_publication !== 'false' && bagitScene.approved_for_publication !== '0',
+            posedAndQCd: bagitScene.posed_and_qcd !== 'false' && bagitScene.posed_and_qcd !== '0',
             directory: bagitScene.directory_path,
             identifiers: [],
             referenceModels: [],

@@ -130,9 +130,10 @@ const getDetailsTabDataForObject = gql`
                 AssetType
                 Tours
                 Annotation
-                HasBeenQCd
-                IsOriented
                 EdanUUID
+                ApprovedForPublication
+                PublicationApprover
+                PosedAndQCd
                 idScene
             }
             IntermediaryFile {

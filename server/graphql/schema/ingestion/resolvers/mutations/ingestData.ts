@@ -794,8 +794,8 @@ class IngestDataWorker extends ResolverBase {
         }
 
         sceneDB.Name = scene.name;
-        sceneDB.HasBeenQCd = scene.hasBeenQCd;
-        sceneDB.IsOriented = scene.isOriented;
+        sceneDB.ApprovedForPublication = scene.approvedForPublication;
+        sceneDB.PosedAndQCd = scene.posedAndQCd;
         LOG.info(`ingestData createSceneObjects, updateMode=${updateMode}, sceneDB=${JSON.stringify(sceneDB, H.Helpers.saferStringify)}, sceneConstellation=${JSON.stringify(sceneConstellation, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         let success: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
 
