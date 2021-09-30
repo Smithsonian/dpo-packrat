@@ -2261,11 +2261,10 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch Audit: Audit.fetchLastUser', async () => {
+        // LOG.info(`Audit: ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
         let userFetch: DBAPI.User | null = null;
-        if (audit) {
-            LOG.info(`Audit: ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+        if (audit)
             userFetch = await DBAPI.Audit.fetchLastUser(audit.idSystemObject ?? 0, audit.getAuditType());
-        }
         expect(userFetch).toBeTruthy();
         expect(userFetch?.idUser).toEqual(userActive?.idUser);
     });
