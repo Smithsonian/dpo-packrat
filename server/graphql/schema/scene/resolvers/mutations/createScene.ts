@@ -4,15 +4,14 @@ import * as DBAPI from '../../../../../db';
 
 export default async function createScene(_: Parent, args: MutationCreateSceneArgs): Promise<CreateSceneResult> {
     const { input } = args;
-    const { Name, HasBeenQCd, IsOriented, idAssetThumbnail, CountScene, CountNode, CountCamera,
-        CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID } = input;
+    const { Name, idAssetThumbnail, CountScene, CountNode, CountCamera,
+        CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID,
+        ApprovedForPublication, PosedAndQCd } = input;
 
     const sceneArgs = {
         idScene: 0,
         Name,
         idAssetThumbnail: idAssetThumbnail || null,
-        HasBeenQCd,
-        IsOriented,
         CountScene: CountScene || null,
         CountNode: CountNode || null,
         CountCamera: CountCamera || null,
@@ -21,7 +20,9 @@ export default async function createScene(_: Parent, args: MutationCreateSceneAr
         CountMeta: CountMeta || null,
         CountSetup: CountSetup || null,
         CountTour: CountTour || null,
-        EdanUUID: EdanUUID || null
+        EdanUUID: EdanUUID || null,
+        ApprovedForPublication,
+        PosedAndQCd,
     };
 
     const Scene = new DBAPI.Scene(sceneArgs);

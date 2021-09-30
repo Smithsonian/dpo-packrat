@@ -248,8 +248,8 @@ type IngestScene {
   idAssetVersion: Int!
   systemCreated: Boolean!
   name: String!
-  hasBeenQCd: Boolean!
-  isOriented: Boolean!
+  approvedForPublication: Boolean!
+  posedAndQCd: Boolean!
   directory: String!
   identifiers: [IngestIdentifier!]!
   referenceModels: [ReferenceModel!]!
@@ -539,8 +539,8 @@ input IngestSceneInput {
   idAsset: Int
   systemCreated: Boolean!
   name: String!
-  hasBeenQCd: Boolean!
-  isOriented: Boolean!
+  approvedForPublication: Boolean!
+  posedAndQCd: Boolean!
   directory: String!
   identifiers: [IngestIdentifierInput!]!
   sourceObjects: [RelatedObjectInput!]!
@@ -885,8 +885,6 @@ type GetFilterViewDataResult {
 
 input CreateSceneInput {
   Name: String!
-  HasBeenQCd: Boolean!
-  IsOriented: Boolean!
   idAssetThumbnail: Int
   CountScene: Int
   CountNode: Int
@@ -897,6 +895,8 @@ input CreateSceneInput {
   CountSetup: Int
   CountTour: Int
   EdanUUID: String
+  ApprovedForPublication: Boolean!
+  PosedAndQCd: Boolean!
 }
 
 type CreateSceneResult {
@@ -921,9 +921,7 @@ type GetIntermediaryFileResult {
 
 type Scene {
   idScene: Int!
-  HasBeenQCd: Boolean!
   idAssetThumbnail: Int
-  IsOriented: Boolean!
   Name: String!
   CountScene: Int
   CountNode: Int
@@ -934,6 +932,8 @@ type Scene {
   CountSetup: Int
   CountTour: Int
   EdanUUID: String
+  ApprovedForPublication: Boolean!
+  PosedAndQCd: Boolean!
   AssetThumbnail: Asset
   ModelSceneXref: [ModelSceneXref]
   SystemObject: SystemObject
@@ -1039,8 +1039,8 @@ input SceneDetailFieldsInput {
   AssetType: Int
   Tours: Int
   Annotation: Int
-  HasBeenQCd: Boolean
-  IsOriented: Boolean
+  ApprovedForPublication: Boolean
+  PosedAndQCd: Boolean
 }
 
 input ProjectDocumentationDetailFieldsInput {
@@ -1262,8 +1262,6 @@ type SceneDetailFields {
   AssetType: Int
   Tours: Int
   Annotation: Int
-  HasBeenQCd: Boolean
-  IsOriented: Boolean
   CountScene: Int
   CountNode: Int
   CountCamera: Int
@@ -1273,6 +1271,9 @@ type SceneDetailFields {
   CountSetup: Int
   CountTour: Int
   EdanUUID: String
+  ApprovedForPublication: Boolean
+  PublicationApprover: String
+  PosedAndQCd: Boolean
   idScene: Int
 }
 
