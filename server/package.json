@@ -42,6 +42,7 @@
     "reset": "yarn dropdb && yarn initdb && rm -rf var/Storage && rm -rf config/solr/data/packrat/data/index && rm -rf config/solr/data/packrat/data/snapshot_metadata && rm -rf config/solr/data/packrat/data/tlog && rm -rf config/solr/data/packratMeta/data/index && rm -rf config/solr/data/packratMeta/data/snapshot_metadata && rm -rf config/solr/data/packratMeta/data/tlog"
   },
   "dependencies": {
+    "ajv": "6.10.2",
     "apollo-server-express": "2.21.1",
     "async-mutex": "0.3.1",
     "axios": "0.21.1",
