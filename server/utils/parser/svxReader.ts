@@ -152,6 +152,7 @@ export class SvxExtraction {
 export class SvxReader {
     SvxDocument: SVX.IDocument | null = null;
     SvxExtraction: SvxExtraction | null = null;
+    static DV: SVX.DocumentValidator = new SVX.DocumentValidator();
 
     async loadFromStream(readStream: NodeJS.ReadableStream): Promise<H.IOResults> {
         try {
@@ -169,6 +170,10 @@ export class SvxReader {
     async loadFromJSON(json: string): Promise<H.IOResults> {
         try {
             const obj: any = JSON.parse(json);  // may throw an exception, if json is not valid JSON
+            if (!SvxReader.DV.validate(obj))
+                LOG.error('SvxReder.loadFromJSON failed SVX validation; ignoring and continuing', LOG.LS.eSYS);
+                // return { success: false, error: 'SVX JSON Validation Failed' };
+
             const { svx, results } = SvxExtraction.extract(obj);
             if (!results.success)
                 return results;

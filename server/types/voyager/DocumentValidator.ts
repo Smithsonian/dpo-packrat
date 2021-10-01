@@ -30,7 +30,7 @@ import * as LOG from '../../utils/logger';
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class DocumentValidator
+export class DocumentValidator
 {
     private _schemaValidator: ajv.Ajv;
     private _validateDocument: ajv.ValidateFunction;
