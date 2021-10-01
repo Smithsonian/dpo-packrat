@@ -17,8 +17,16 @@
                 "title": {
                     "type": "string"
                 },
+                "titles": {
+                    "description": "Short title with language key.",
+                    "type": "object"
+                },
                 "lead": {
                     "type": "string"
+                },
+                "leads": {
+                    "description": "Short lead text with language key.",
+                    "type": "object"
                 },
                 "marker": {
                     "type": "string"
@@ -29,6 +37,10 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "taglist": {
+                    "description": "Array of tags, categorizing the annotation with language key.",
+                    "type": "object"
                 },
                 "articleId": {
                     "description": "Id of an article related to this annotation.",
@@ -76,8 +88,8 @@
                 "color": {
                     "description": "Color of the annotation",
                     "type": "array",
-                    "minLength": 3,
-                    "maxLength": 3,
+                    "minItems": 3,
+                    "maxItems": 3,
                     "items": {
                         "type": "number"
                     }
@@ -111,6 +123,8 @@
                     "enum": [
                         "Image2D",
                         "Web3D",
+                        "App3D",
+                        "iOSApp3D",
                         "Print3D",
                         "Editorial3D"
                     ]
@@ -124,7 +138,8 @@
                         "High",
                         "Highest",
                         "LOD",
-                        "Stream"
+                        "Stream",
+                        "AR"
                     ]
                 },
                 "assets": {
@@ -213,6 +228,14 @@
         },
         "renderOrder": {
             "type": "number"
+        },
+        "shadowSide": {
+            "type": "string",
+            "enum": [
+                "Front",
+                "Back",
+                "Double"
+            ]
         },
         "derivatives": {
             "type": "array",

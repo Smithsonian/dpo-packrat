@@ -23,8 +23,9 @@
  * limitations under the License.
  */
 
-// import { Index } from "@ff/core/types";
+// import { Dictionary } from "@ff/core/types";
 // import { ColorRGB, ColorRGBA, EUnitType, TUnitType, Vector3, Vector4 } from "./common";
+type Dictionary<T> = Record<string, T>;
 import { ColorRGBA, TUnitType, Vector3, Vector4 } from "./common";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,17 +34,20 @@ import { ColorRGBA, TUnitType, Vector3, Vector4 } from "./common";
 
 export type TNormalSpaceType = "Tangent" | "Object";
 
-export enum EDerivativeUsage { Image2D, Web3D, Print3D, Editorial3D }
-export type TDerivativeUsage = "Image2D" | "Web3D" | "Print3D" | "Editorial3D";
+export enum EDerivativeUsage { Image2D, Web3D, App3D, iOSApp3D, Print3D, Editorial3D }
+export type TDerivativeUsage = "Image2D" | "Web3D" | "App3D" | "iOSApp3D" | "Print3D" | "Editorial3D";
 
-export enum EDerivativeQuality { Thumb, Low, Medium, High, Highest, LOD, Stream }
-export type TDerivativeQuality = "Thumb" | "Low" | "Medium" | "High" | "Highest" | "LOD" | "Stream";
+export enum EDerivativeQuality { Thumb, Low, Medium, High, Highest, LOD, Stream, AR }
+export type TDerivativeQuality = "Thumb" | "Low" | "Medium" | "High" | "Highest" | "LOD" | "Stream" |"AR";
 
 export enum EAssetType { Model, Geometry, Image, Texture, Points, Volume }
 export type TAssetType = "Model" | "Geometry" | "Image" | "Texture" | "Points" | "Volume";
 
 export enum EMapType { Color, Emissive, Occlusion, Normal, MetallicRoughness, Zone }
 export type TMapType = "Color" | "Emissive" | "Occlusion" | "Normal" | "MetallicRoughness" | "Zone";
+
+export enum ESideType { Front, Back, Double }
+export type TSideType = "Front" | "Back" | "Double";
 
 
 export interface IModel
@@ -54,6 +58,7 @@ export interface IModel
 
     visible?: boolean;
     renderOrder?: number;
+    shadowSide?: TSideType;
     translation?: Vector3;
     rotation?: Vector4;
     boundingBox?: IBoundingBox;
@@ -70,9 +75,12 @@ export interface IAnnotation
     id: string;
 
     title?: string;
+    titles?: Dictionary<string>;
     lead?: string;
+    leads?: Dictionary<string>;
     marker?: string;
     tags?: string[];
+    taglist?: Dictionary<string[]>;
     articleId?: string;
     imageUri?: string;
 
@@ -138,6 +146,6 @@ export interface IPBRMaterialSettings
     //emissiveFactor?: ColorRGB;
     //alphaMode?: any; // TODO
     //alphaCutoff?: number;
-    //doubleSided?: boolean;
+    doubleSided?: boolean;
     normalSpace?: TNormalSpaceType;
 }
