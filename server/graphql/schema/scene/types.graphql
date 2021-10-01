@@ -2,9 +2,7 @@ scalar DateTime
 
 type Scene {
     idScene: Int!
-    HasBeenQCd: Boolean!
     idAssetThumbnail: Int
-    IsOriented: Boolean!
     Name: String!
     CountScene: Int
     CountNode: Int
@@ -15,6 +13,8 @@ type Scene {
     CountSetup: Int
     CountTour: Int
     EdanUUID: String
+    ApprovedForPublication: Boolean!
+    PosedAndQCd: Boolean!
     AssetThumbnail: Asset
     ModelSceneXref: [ModelSceneXref]
     SystemObject: SystemObject

@@ -313,8 +313,9 @@ export class NavigationSolr implements NAV.INavigation {
                 case NAV.eMetadata.eModelChannelPosition:               metadata.push(this.computeMetadataFromNumberArray(doc.ModelChannelPosition)); break;
                 case NAV.eMetadata.eModelChannelWidth:                  metadata.push(this.computeMetadataFromNumberArray(doc.ModelChannelWidth)); break;
                 case NAV.eMetadata.eModelUVMapType:                     metadata.push(this.computeMetadataFromStringArray(doc.ModelUVMapType)); break;
-                case NAV.eMetadata.eSceneIsOriented:                    metadata.push(this.computeMetadataFromBoolean(doc.SceneIsOriented)); break;
-                case NAV.eMetadata.eSceneHasBeenQCd:                    metadata.push(this.computeMetadataFromBoolean(doc.SceneHasBeenQCd)); break;
+                case NAV.eMetadata.eSceneEdanUUID:                      metadata.push(this.computeMetadataFromBoolean(doc.SceneEdanUUID)); break;
+                case NAV.eMetadata.eScenePosedAndQCd:                   metadata.push(this.computeMetadataFromBoolean(doc.ScenePosedAndQCd)); break;
+                case NAV.eMetadata.eSceneApprovedForPublication:        metadata.push(this.computeMetadataFromBoolean(doc.SceneApprovedForPublication)); break;
                 case NAV.eMetadata.eSceneCountScene:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountScene)); break;
                 case NAV.eMetadata.eSceneCountNode:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountNode)); break;
                 case NAV.eMetadata.eSceneCountCamera:                   metadata.push(this.computeMetadataFromNumber(doc.SceneCountCamera)); break;

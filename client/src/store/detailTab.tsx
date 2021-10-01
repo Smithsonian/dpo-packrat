@@ -44,8 +44,6 @@ export type DetailsViewFieldErrors = {
 };
 
 export interface SceneDetailsType {
-    HasBeenQCd: boolean;
-    IsOriented: boolean;
     CountScene: number;
     CountNode: number;
     CountCamera: number;
@@ -55,6 +53,9 @@ export interface SceneDetailsType {
     CountSetup: number;
     CountTour: number;
     EdanUUID: string | null;
+    ApprovedForPublication: boolean;
+    PublicationApprover: string | null;
+    PosedAndQCd: boolean;
     ModelSceneXref: any[];
 }
 
@@ -152,8 +153,6 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         isValidData: null
     },
     SceneDetails: {
-        HasBeenQCd: false,
-        IsOriented: false,
         CountScene: 0,
         CountNode: 0,
         CountCamera: 0,
@@ -163,6 +162,9 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         CountSetup: 0,
         CountTour: 0,
         EdanUUID: null,
+        ApprovedForPublication: false,
+        PublicationApprover: null,
+        PosedAndQCd: false,
         ModelSceneXref: [
             {
                 BoundingBoxP1X: 0,
@@ -475,10 +477,11 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
 
         if (objectType === eSystemObjectType.eScene) {
             const {
-                Scene: { HasBeenQCd, IsOriented, EdanUUID }
+                Scene: { ApprovedForPublication, PublicationApprover, PosedAndQCd, EdanUUID }
             } = getDetailsTabDataForObject;
-            updateDetailField(eSystemObjectType.eScene, 'HasBeenQCd', HasBeenQCd);
-            updateDetailField(eSystemObjectType.eScene, 'IsOriented', IsOriented);
+            updateDetailField(eSystemObjectType.eScene, 'ApprovedForPublication', ApprovedForPublication);
+            updateDetailField(eSystemObjectType.eScene, 'PublicationApprover', PublicationApprover);
+            updateDetailField(eSystemObjectType.eScene, 'PosedAndQCd', PosedAndQCd);
             updateDetailField(eSystemObjectType.eScene, 'EdanUUID', EdanUUID);
         }
 
@@ -559,9 +562,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
                     option
                 );
             } catch (error) {
-                for (const message of error.errors) {
-                    errorMessages.push(message);
-                }
+                if (error instanceof Error)
+                    errorMessages.push(error.message);
             }
         }
 
@@ -579,9 +581,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
                     option
                 );
             } catch (error) {
-                for (const message of error.errors) {
-                    errorMessages.push(message);
-                }
+                if (error instanceof Error)
+                    errorMessages.push(error.message);
             }
         }
 
@@ -605,9 +606,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
                     option
                 );
             } catch (error) {
-                for (const message of error.errors) {
-                    errorMessages.push(message);
-                }
+                if (error instanceof Error)
+                    errorMessages.push(error.message);
             }
         }
 

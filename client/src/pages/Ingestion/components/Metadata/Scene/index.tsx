@@ -60,9 +60,7 @@ function Scene(props: SceneProps): React.ReactElement {
     // state responsible for SceneDataGrid
     const [sceneData, setSceneData] = useState({
         idScene: 0,
-        HasBeenQCd: false,
         idAssetThumbnail: 0,
-        IsOriented: false,
         Name: '',
         CountScene: 0,
         CountNode: 0,
@@ -72,7 +70,9 @@ function Scene(props: SceneProps): React.ReactElement {
         CountMeta: 0,
         CountSetup: 0,
         CountTour: 0,
-        EdanUUID: ''
+        EdanUUID: '',
+        ApprovedForPublication: false,
+        PosedAndQCd: false
     });
     const [modalOpen, setModalOpen] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
@@ -193,8 +193,8 @@ function Scene(props: SceneProps): React.ReactElement {
                 setCheckboxField={setCheckboxField}
                 setNameField={setNameField}
                 name={scene.name}
-                hasBeenQCd={scene.hasBeenQCd}
-                isOriented={scene.isOriented}
+                approvedForPublication={scene.approvedForPublication}
+                posedAndQCd={scene.posedAndQCd}
                 EdanUUID={scene.EdanUUID}
             />
             <ObjectSelectModal
