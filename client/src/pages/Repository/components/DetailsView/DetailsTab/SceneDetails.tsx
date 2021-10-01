@@ -88,7 +88,6 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
 
     const gridTemplateColumns = '200px 1fr';
     const rowFieldProps = { alignItems: 'center', alignContent: 'center', style: { borderRadius: 0, display: 'grid', gridTemplateColumns } };
-    console.log(`PublicationApprover2 = ${SceneDetails.PublicationApprover}`);
 
     return (
         <Box>
