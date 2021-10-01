@@ -558,23 +558,23 @@ model ProjectDocumentation {
 }
 
 model Scene {
-  idScene          Int              @id @default(autoincrement())
-  Name             String           @mariasql.VarChar(255)
-  idAssetThumbnail Int?
-  IsOriented       Boolean
-  HasBeenQCd       Boolean
-  CountScene       Int?
-  CountNode        Int?
-  CountCamera      Int?
-  CountLight       Int?
-  CountModel       Int?
-  CountMeta        Int?
-  CountSetup       Int?
-  CountTour        Int?
-  EdanUUID         String?          @mariasql.VarChar(64)
-  Asset            Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
-  ModelSceneXref   ModelSceneXref[]
-  SystemObject     SystemObject?
+  idScene                Int              @id @default(autoincrement())
+  Name                   String           @mariasql.VarChar(255)
+  idAssetThumbnail       Int?
+  CountScene             Int?
+  CountNode              Int?
+  CountCamera            Int?
+  CountLight             Int?
+  CountModel             Int?
+  CountMeta              Int?
+  CountSetup             Int?
+  CountTour              Int?
+  EdanUUID               String?          @mariasql.VarChar(64)
+  PosedAndQCd            Boolean
+  ApprovedForPublication Boolean
+  Asset                  Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
+  ModelSceneXref         ModelSceneXref[]
+  SystemObject           SystemObject?
 
   @@index([idAssetThumbnail], name: "fk_scene_asset1")
 }

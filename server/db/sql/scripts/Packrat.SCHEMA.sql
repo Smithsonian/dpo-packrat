@@ -429,8 +429,6 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `idScene` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
-  `IsOriented` boolean NOT NULL,
-  `HasBeenQCd` boolean NOT NULL,
   `CountScene` int(11) DEFAULT NULL,
   `CountNode` int(11) DEFAULT NULL,
   `CountCamera` int(11) DEFAULT NULL,
@@ -440,6 +438,8 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `CountSetup` int(11) DEFAULT NULL,
   `CountTour` int(11) DEFAULT NULL,
   `EdanUUID` varchar(64) NULL,
+  `PosedAndQCd` boolean NOT NULL,
+  `ApprovedForPublication` boolean NOT NULL,
   PRIMARY KEY (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

@@ -27,8 +27,6 @@ export class SvxExtraction {
         return new DBAPI.Scene({
             Name,
             idAssetThumbnail: null,
-            IsOriented: false,
-            HasBeenQCd: false,
             CountScene: this.sceneCount,
             CountNode: this.nodeCount,
             CountCamera: this.cameraCount,
@@ -38,6 +36,8 @@ export class SvxExtraction {
             CountSetup: this.setupCount,
             CountTour: this.tourCount,
             EdanUUID: null,
+            PosedAndQCd: false,
+            ApprovedForPublication: false,
             idScene: 0
         });
     }

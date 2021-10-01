@@ -381,15 +381,10 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         await Asset.update();
                     }
                     */
-                    try {
-                        if (await Model.update()) {
-                            break;
-                        } else {
-                            throw new Error('error in updating');
-                        }
-                    } catch (error) {
-                        throw new Error(error);
-                    }
+                    if (await Model.update())
+                        break;
+                    else
+                        throw new Error('error in updating');
                 } else {
                     return {
                         success: false,
@@ -403,8 +398,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (Scene) {
                 Scene.Name = data.Name;
                 if (data.Scene) {
-                    if (typeof data.Scene.IsOriented === 'boolean') Scene.IsOriented = data.Scene.IsOriented;
-                    if (typeof data.Scene.HasBeenQCd === 'boolean') Scene.HasBeenQCd = data.Scene.HasBeenQCd;
+                    if (typeof data.Scene.PosedAndQCd === 'boolean') Scene.PosedAndQCd = data.Scene.PosedAndQCd;
+                    if (typeof data.Scene.ApprovedForPublication === 'boolean') Scene.ApprovedForPublication = data.Scene.ApprovedForPublication;
                 }
                 await Scene.update();
             } else {

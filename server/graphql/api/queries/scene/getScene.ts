@@ -5,8 +5,6 @@ const getScene = gql`
         getScene(input: $input) {
             Scene {
                 idScene
-                HasBeenQCd
-                IsOriented
                 Name
                 CountCamera
                 CountScene
@@ -17,6 +15,8 @@ const getScene = gql`
                 CountSetup
                 CountTour
                 EdanUUID
+                ApprovedForPublication
+                PosedAndQCd
                 ModelSceneXref {
                     idModelSceneXref
                     idModel
