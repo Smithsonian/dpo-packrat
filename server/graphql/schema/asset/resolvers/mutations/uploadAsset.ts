@@ -11,7 +11,6 @@ import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { ASL, LocalStore } from '../../../../../utils/localStore';
-import DocumentValidator from '../../../../../types/voyager/DocumentValidator';
 
 interface ApolloFile {
     filename: string;
@@ -32,8 +31,6 @@ class UploadAssetWorker extends ResolverBase {
     private idAsset: number | undefined | null;
     private type: number;
     private LS: LocalStore | null = null;
-
-    static DV: DocumentValidator = new DocumentValidator();
 
     constructor(user: User | undefined, apolloFile: ApolloFile, idAsset: number | undefined | null, type: number) {
         super();
@@ -132,10 +129,6 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     private async uploadWorkerOnFinishWorker(storageKey: string, filename: string, idVocabulary: number): Promise<UploadAssetResult> {
-        const commitRes: H.IOResults = await this.preCommitValidations(storageKey, filename, idVocabulary);
-        if (!commitRes.success)
-            return { status: UploadStatus.Failed, error: commitRes.error };
-
         let commitResult: STORE.AssetStorageResultCommit;
         if (!this.idAsset) { // create new asset and asset version
             const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
@@ -276,50 +269,5 @@ class UploadAssetWorker extends ResolverBase {
 
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
         return { success: true, error: '', workflowEngine, workflow, workflowReport };
-    }
-
-    private async preCommitValidations(storageKey: string, fileName: string, idVocabulary: number): Promise<H.IOResults> {
-        const eVocab: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVocabulary);
-        LOG.info(`uploadAsset preCommitValidations storageKey ${storageKey}, fileName ${fileName}, asset type ${eVocab ? CACHE.eVocabularyID[eVocab] : 'undefined'}`, LOG.LS.eGQL);
-
-        switch (eVocab) {
-            case CACHE.eVocabularyID.eAssetAssetTypeScene: {
-                const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance();
-                if (!storage)
-                    return this.handleError('Unable to fetch Storage Instance');
-
-                const RSR: STORE.ReadStreamResult = await storage.readStream({ storageKey, fileName, version: 1, staging: true });
-                if (!RSR.success)
-                    return this.handleError(RSR.error);
-                if (!RSR.readStream)
-                    return this.handleError('Unable to read file');
-                try {
-                    const fileBuffer: Buffer | null = await H.Helpers.readFileFromStream(RSR.readStream);
-                    if (!fileBuffer)
-                        return this.handleError('Unable to read file');
-                    const fileData: string = fileBuffer.toString('utf8');
-
-                    LOG.info(`uploadAsset preCommitValidations validating scene ${fileData.substring(0, 1024)}`, LOG.LS.eGQL);
-                    if (!UploadAssetWorker.DV.validate(JSON.parse(fileData)))
-                        return this.handleError('Invalid Scene');
-                } catch (error) {
-                    return this.handleError('Unable to read file', error);
-                }
-                return { success: true, error: '' };
-
-            } break;
-
-            default:
-                return { success: true, error: '' };
-        }
-    }
-
-    private handleError(error: string, errorObj?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
-        if (!errorObj)
-            LOG.error(error, LOG.LS.eGQL);
-        else
-            LOG.error(error, LOG.LS.eGQL, errorObj);
-
-        return { success: false, error };
     }
 }
