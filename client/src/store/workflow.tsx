@@ -44,8 +44,8 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
     dateTo: null,
     pageNumber: 0,
     rowCount: 10,
-    sortBy: eWorkflowListSortColumns.eDefault,
-    sortOrder: true,
+    sortBy: eWorkflowListSortColumns.eStart,
+    sortOrder: false,
     loading: false,
     workflowRowData: [],
     updateFilterValue: (name: string, value: number | number[] | Date | null): void => {
@@ -89,11 +89,9 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
             set({ workflowRowData: rows });
         }
         set({ loading: false });
-        // console.log('list', data.getWorkflowList.WorkflowList);
     },
     paginationUpdateAndRefetchList: async (changeType: ePaginationChange, value?: number | null, column?: string | null, direction?: string | null): Promise<void> => {
         const { fetchWorkflowList } = get();
-        console.log('changeType', changeType, 'value', value, column, direction);
         if (changeType === ePaginationChange.ePage && value !== null) set({ pageNumber: value });
 
         if (changeType === ePaginationChange.eRowCount && value !== null) set({ rowCount: value });
