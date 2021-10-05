@@ -27,6 +27,7 @@ import * as setupSchema from './json/setup.schema.json';
 import { IDocument } from './document';
 
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -53,14 +54,14 @@ export class DocumentValidator
         );
     }
 
-    validate(document: IDocument): boolean
+    validate(document: IDocument): H.IOResults
     {
         if (!this._validateDocument(document)) {
-            LOG.error(this._schemaValidator.errorsText(
-                this._validateDocument.errors, { separator: ', ', dataVar: 'document' }), LOG.LS.eSYS);
-            return false;
+            const error: string = this._schemaValidator.errorsText(this._validateDocument.errors, { separator: ', ', dataVar: 'document' });
+            LOG.error(error, LOG.LS.eSYS);
+            return { success: false, error };
         }
 
-        return true;
+        return { success: true, error: '' };
     }
 }

@@ -170,8 +170,9 @@ export class SvxReader {
     async loadFromJSON(json: string): Promise<H.IOResults> {
         try {
             const obj: any = JSON.parse(json);  // may throw an exception, if json is not valid JSON
-            if (!SvxReader.DV.validate(obj)) {
-                const error: string = 'SVX JSON Validation Failed';
+            const validRes: H.IOResults = SvxReader.DV.validate(obj);
+            if (!validRes.success) {
+                const error: string = `SVX JSON Validation Failed: ${validRes.error}`;
                 LOG.error(`SvxReader.loadFromJSON ${error}`, LOG.LS.eSYS);
                 return { success: false, error };
             }
