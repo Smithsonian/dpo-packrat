@@ -42,6 +42,7 @@
     "reset": "yarn dropdb && yarn initdb && rm -rf var/Storage && rm -rf config/solr/data/packrat/data/index && rm -rf config/solr/data/packrat/data/snapshot_metadata && rm -rf config/solr/data/packrat/data/tlog && rm -rf config/solr/data/packratMeta/data/index && rm -rf config/solr/data/packratMeta/data/snapshot_metadata && rm -rf config/solr/data/packratMeta/data/tlog"
   },
   "dependencies": {
+    "ajv": "6.10.2",
     "apollo-server-express": "2.21.1",
     "async-mutex": "0.3.1",
     "axios": "0.21.1",
@@ -69,6 +70,7 @@
     "node-stream-zip": "1.13.2",
     "passport": "0.4.1",
     "passport-local": "1.0.0",
+    "sharp": "0.29.1",
     "solr-client": "0.8.0",
     "supertest": "4.0.2",
     "tmp-promise": "3.0.2",
@@ -93,6 +95,7 @@
     "@types/node-schedule": "1.3.1",
     "@types/passport": "1.0.4",
     "@types/passport-local": "1.0.33",
+    "@types/sharp": "0.29.2",
     "@types/solr-client": "0.7.4",
     "@types/supertest": "2.0.10",
     "jest": "26.6.3",
