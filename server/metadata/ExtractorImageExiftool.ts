@@ -86,7 +86,7 @@ export class ExtractorImageExiftool implements IExtractor  {
 
                 return { success: true, error: '', metadata };
             } catch (err) /* istanbul ignore next */ {
-                const res: H.IOResults = await this.handleExiftoolException(err);
+                const res: H.IOResults = (err instanceof Error) ? await this.handleExiftoolException(err) : { success: false, error: 'Unknown error' };
                 if (!res.success)
                     return res;
             } finally {
@@ -112,7 +112,7 @@ export class ExtractorImageExiftool implements IExtractor  {
                 }
                 break;
             } catch (err) {
-                const res: IExtractorResults = await this.handleExiftoolException(err);
+                const res: IExtractorResults = (err instanceof Error) ? await this.handleExiftoolException(err) : { success: false, error: 'Unknown error' };
                 if (!res.success)
                     return res;
             }
@@ -125,7 +125,7 @@ export class ExtractorImageExiftool implements IExtractor  {
         LOG.error(error, LOG.LS.eMETA, err);
 
         const errMessage: string = H.Helpers.safeString(err.message) ?? '';
-        if (errMessage.indexOf('BatchCluster has ended, cannot enqueue') >= -1) {
+        if (errMessage.indexOf('BatchCluster has ended, cannot enqueue') > -1) {
             LOG.info('ExtractorImageExiftool.handleExiftoolException restarting exiftool', LOG.LS.eMETA);
             await ExtractorImageExiftool.exiftool.end();
             ExtractorImageExiftool.exiftool = new ExifTool();
