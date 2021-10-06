@@ -384,9 +384,8 @@ class Downloader {
     }
 
     private async emitDownloadJobRun(jobRun: DBAPI.JobRun): Promise<boolean> {
-        this.response.setHeader('Content-disposition', `attachment; filename=JobRun.${jobRun.idJobRun}.htm`);
+        this.response.setHeader('Content-disposition', `inline; filename=JobRun.${jobRun.idJobRun}.htm`);
         this.response.setHeader('Content-type', 'application/json');
-        this.response.setHeader('Content-disposition', `inline; filename=JobRun.${this.idJobRun}.htm`);
         this.response.write(jobRun.Output ?? '');
         this.response.end();
         return true;
