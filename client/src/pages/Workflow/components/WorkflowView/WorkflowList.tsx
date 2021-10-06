@@ -319,7 +319,12 @@ function WorkflowIcon(props: WorkflowIconProps): React.ReactElement {
     if (reportType === eWorkflowLinkType.eSet) source = SetIcon;
 
     return (
-        <a href={path} style={{ display: 'flex', justifyContent: 'center' }}>
+        <a
+            href={path}
+            style={{ display: 'flex', justifyContent: 'center' }}
+            target='_blank'
+            rel='noreferrer noopener'
+        >
             <img src={source} style={{ height: '20px', width: '20px' }} alt='This icon indicates a clickable hyperlink.' />
         </a>
     );
