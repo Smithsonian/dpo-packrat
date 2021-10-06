@@ -368,7 +368,7 @@ class Downloader {
         const mimeType: string = WFReports[0].MimeType;
         const idWorkflowReport: number = WFReports[0].idWorkflowReport;
 
-        this.response.setHeader('Content-disposition', `attachment; filename=WorkflowReport.${idWorkflowReport}.htm`);
+        this.response.setHeader('Content-disposition', `inline; filename=WorkflowReport.${idWorkflowReport}.htm`);
         if (mimeType)
             this.response.setHeader('Content-type', mimeType);
         let first: boolean = true;
@@ -384,7 +384,7 @@ class Downloader {
     }
 
     private async emitDownloadJobRun(jobRun: DBAPI.JobRun): Promise<boolean> {
-        this.response.setHeader('Content-disposition', `attachment; filename=JobRun.${jobRun.idJobRun}.htm`);
+        this.response.setHeader('Content-disposition', `inline; filename=JobRun.${jobRun.idJobRun}.htm`);
         this.response.setHeader('Content-type', 'application/json');
         this.response.write(jobRun.Output ?? '');
         this.response.end();
