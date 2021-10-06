@@ -263,8 +263,34 @@ export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | un
     return `${serverEndPoint}/download?idSystemObjectVersion=${idSystemObjectVersion}`;
 }
 
-export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number, path: string): string {
-    return `${serverEndPoint}/download/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
+export enum eVoyagerStoryMode {
+    eViewer,
+    eQC,
+    eAuthor,
+    eExpert,
+}
+
+export function getModeForVoyager(eMode: eVoyagerStoryMode): string {
+    switch (eMode) {
+        default:
+        case eVoyagerStoryMode.eViewer: return '';
+        case eVoyagerStoryMode.eQC:     return 'qc';
+        case eVoyagerStoryMode.eAuthor: return 'author';
+        case eVoyagerStoryMode.eExpert: return 'expert';
+    }
+}
+
+export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number,
+    path: string, eMode?: eVoyagerStoryMode | undefined): string {
+    let dlPath: string = 'download';
+    switch (eMode) {
+        default:
+        case eVoyagerStoryMode.eViewer: dlPath='download'; break;
+        case eVoyagerStoryMode.eQC:     dlPath='download'; break;
+        case eVoyagerStoryMode.eAuthor: dlPath='download'; break;
+        case eVoyagerStoryMode.eExpert: dlPath='download'; break;
+    }
+    return `${serverEndPoint}/${dlPath}/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
 }
 
 // prettier-ignore

@@ -9,9 +9,10 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import DefaultThumbnail from '../../../../assets/images/default-thumbnail.png';
 import VoyagerExplorer from './DetailsTab/VoyagerExplorer';
+import VoyagerStory from './DetailsTab/VoyagerStory';
 import { eSystemObjectType } from '../../../../types/server';
 import { getObjectAssets } from '../../hooks/useDetailsView';
-import { getRootSceneDownloadUrlForVoyager } from '../../../../utils/repository';
+import { eVoyagerStoryMode, getRootSceneDownloadUrlForVoyager, getModeForVoyager } from '../../../../utils/repository';
 
 const useStyles = makeStyles(() => ({
     thumbnail: {
@@ -34,19 +35,29 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     const classes = useStyles();
     const [rootLink, setRootLink] = useState('');
     const [documentLink, setDocumentLink] = useState('');
+    const [eMode, setMode] = useState(eVoyagerStoryMode.eExpert);
 
     useEffect(() => {
         const fetchObjectAssets = async () => {
-            if (idSystemObject) {
-                const {
-                    data: {
-                        getAssetDetailsForSystemObject: { assetDetailRows }
-                    }
-                } = await getObjectAssets(idSystemObject);
-                if (assetDetailRows && assetDetailRows.length > 0) {
-                    setRootLink(getRootSceneDownloadUrlForVoyager(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject, assetDetailRows[0].filePath));
-                    setDocumentLink(assetDetailRows[0].name.label);
+            if (!idSystemObject)
+                return;
+            if (objectType !== eSystemObjectType.eScene)
+                return;
+
+            const {
+                data: {
+                    getAssetDetailsForSystemObject: { assetDetailRows }
                 }
+            } = await getObjectAssets(idSystemObject);
+
+            if (assetDetailRows && assetDetailRows.length > 0) {
+                const root: string = getRootSceneDownloadUrlForVoyager(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject, assetDetailRows[0].filePath, eMode);
+                const document: string = assetDetailRows[0].name.label;
+                console.log(`Voyager root: ${root}, document: ${document}, mode: ${eVoyagerStoryMode[eMode]}`);
+
+                setRootLink(root);
+                setDocumentLink(document);
+                setMode(eMode);
             }
         };
 
@@ -56,8 +67,13 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     return (
         <Box display='flex' flex={1} flexDirection='column' alignItems='center'>
             {objectType !== eSystemObjectType.eScene && <img className={classes.thumbnail} src={thumbnail || DefaultThumbnail} loading='lazy' alt='asset thumbnail' />}
-            {objectType === eSystemObjectType.eScene && rootLink.length > 0 && documentLink.length > 0 && (
+            {objectType === eSystemObjectType.eScene && rootLink.length > 0 && documentLink.length > 0 && eMode === eVoyagerStoryMode.eViewer && (
                 <VoyagerExplorer root={rootLink} document={documentLink} height='500px' width='100%' />
+            )}
+            {objectType === eSystemObjectType.eScene && rootLink.length > 0 && documentLink.length > 0 && eMode !== eVoyagerStoryMode.eViewer && (
+                <VoyagerStory root={rootLink} document={documentLink} mode={getModeForVoyager(eMode)}
+                    height='500px' width='100%'
+                />
             )}
         </Box>
     );
