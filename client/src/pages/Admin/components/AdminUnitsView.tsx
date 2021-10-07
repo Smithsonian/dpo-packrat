@@ -13,6 +13,8 @@ import { useLocation } from 'react-router';
 import { GetUnitsFromNameSearchDocument, GetUnitsFromNameSearchResult } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
+import { Helmet } from 'react-helmet';
+import { getHeaderTitle } from '../../../utils/shared';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -220,8 +222,13 @@ function AdminUnitsView(): React.ReactElement {
         setUnitList(Units);
     };
 
+    const title = getHeaderTitle('Units | Admin');
+
     return (
         <React.Fragment>
+            <Helmet>
+                <title>{title}</title>
+            </Helmet>
             <Box className={classes.AdminPageViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />

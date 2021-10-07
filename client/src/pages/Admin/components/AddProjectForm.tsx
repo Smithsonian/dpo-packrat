@@ -12,6 +12,8 @@ import { CreateProjectDocument } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
 import { toTitleCase } from '../../../constants/helperfunctions';
 import * as yup from 'yup';
+import { Helmet } from 'react-helmet';
+import { getHeaderTitle } from '../../../utils/shared';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -154,8 +156,13 @@ function AddProjectForm(): React.ReactElement {
         }
     };
 
+    const title = getHeaderTitle('Create Project');
+
     return (
         <Box className={classes.container}>
+            <Helmet>
+                <title>{title}</title>
+            </Helmet>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
                     <Typography className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</Typography>

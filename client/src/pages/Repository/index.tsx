@@ -19,6 +19,8 @@ import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repositor
 import DetailsView from './components/DetailsView';
 import RepositoryFilterView from './components/RepositoryFilterView';
 import RepositoryTreeView from './components/RepositoryTreeView';
+import { Helmet } from 'react-helmet';
+import { getHeaderTitle } from '../../utils/shared';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
@@ -157,9 +159,12 @@ function TreeViewPage(): React.ReactElement {
         // console.log(`*** src/pages/Repository/index.tsx TreeViewPage window.history.pushState(path: ${route}, '', ${route})`);
         window.history.pushState({ path: route }, '', route);
     }
-
+    const title = getHeaderTitle('Repository');
     return (
         <React.Fragment>
+            <Helmet>
+                <title>{title}</title>
+            </Helmet>
             <RepositoryFilterView />
             <RepositoryTreeView />
         </React.Fragment>
