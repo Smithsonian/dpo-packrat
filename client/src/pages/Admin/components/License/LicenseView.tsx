@@ -15,7 +15,7 @@ import { apolloClient } from '../../../../graphql/index';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { useLicenseStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
-import {getHeaderTitle} from '../../../../utils/shared';
+import { getHeaderTitle } from '../../../../utils/shared';
 
 const useStyles = makeStyles({
     AdminListContainer: {
