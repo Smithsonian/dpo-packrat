@@ -10,6 +10,8 @@ import { GetAllUsersDocument, User_Status } from '../../../types/graphql';
 import { GetAllUsersResult } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
+import { Helmet } from 'react-helmet';
+import { getHeaderTitle } from '../../../utils/shared';
 
 const useStyles = makeStyles({
     AdminUsersViewContainer: {
@@ -80,8 +82,13 @@ function AdminUsersView(): React.ReactElement {
         setUsersList(queriedUsers);
     };
 
+    const title = getHeaderTitle('Users | Admin');
+
     return (
         <React.Fragment>
+            <Helmet>
+                <title>{title}</title>
+            </Helmet>
             <Box className={classes.AdminUsersViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />
