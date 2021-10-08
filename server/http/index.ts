@@ -9,6 +9,7 @@ import { logtest } from './routes/logtest';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
 import { download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
+import { WebDAVServer } from './routes/WebDAVServer';
 
 import express, { Request } from 'express';
 import cors from 'cors';
@@ -16,6 +17,7 @@ import { ApolloServer } from 'apollo-server-express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { graphqlUploadExpress } from 'graphql-upload';
+import { v2 as webdav } from 'webdav-server';
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
@@ -67,6 +69,7 @@ export class HttpServer {
         this.app.get('/solrindexprofiled', solrindexprofiled);
         this.app.get('/download', download);
         this.app.get('/download/*', download);
+        this.app.use(webdav.extensions.express('/download-wd', WebDAVServer.server().webdav()));
         this.app.use(errorhandler); // keep last
 
         if (process.env.NODE_ENV !== 'test') {
