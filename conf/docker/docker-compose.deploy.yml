@@ -67,6 +67,7 @@ services:
         volumes:
             - $PACKRAT_OCFL_STORAGE_ROOT:$PACKRAT_OCFL_STORAGE_ROOT
             - $PACKRAT_EDAN_STAGING_ROOT:$PACKRAT_EDAN_STAGING_ROOT
+            - $PACKRAT_EDAN_RESOURCES_HOTFOLDER:$PACKRAT_EDAN_RESOURCES_HOTFOLDER
 
     packrat-server-prod:
         container_name: packrat-server-prod
@@ -106,6 +107,7 @@ services:
         volumes:
             - $PACKRAT_OCFL_STORAGE_ROOT:$PACKRAT_OCFL_STORAGE_ROOT
             - $PACKRAT_EDAN_STAGING_ROOT:$PACKRAT_EDAN_STAGING_ROOT
+            - $PACKRAT_EDAN_RESOURCES_HOTFOLDER:$PACKRAT_EDAN_RESOURCES_HOTFOLDER
 
     packrat-db-dev:
         container_name: packrat-db-dev
