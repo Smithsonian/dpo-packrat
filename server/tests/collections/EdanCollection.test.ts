@@ -192,9 +192,9 @@ function nextID(): string {
 // #region Create EDAN 3D Package
 function executeTestCreateEdan3DPackage(ICol: COL.ICollection): void {
     // executeTestCreateEdan3DPackageWorker(ICol, 'file:///' + mockScenePath.replace(/\\/g, '/'), 'scene.svx.json');
-    // executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///ifs/smb/ocio/ocio-3ddigip01/upload/ff607e3c-3d88-4422-a246-3976aa4839dc.zip', 'scene.svx.json');
-    // executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///ifs/smb/ocio/ocio-3ddigip01/upload/fbcc6998-41a8-41cf-af57-81a82098f3ca.zip', 'scene.svx.json');
-    executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///ifs/smb/ocio/ocio-3ddigip01/upload/f550015a-7e43-435b-90dc-e7c1367bc5fb.zip', 'scene.svx.json');
+    // executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///si-3ddigi-staging/upload/ff607e3c-3d88-4422-a246-3976aa4839dc.zip', 'scene.svx.json');
+    // executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///si-3ddigi-staging/upload/fbcc6998-41a8-41cf-af57-81a82098f3ca.zip', 'scene.svx.json');
+    executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///si-3ddigi-staging/upload/f550015a-7e43-435b-90dc-e7c1367bc5fb.zip', 'scene.svx.json');
 }
 
 function executeTestCreateEdan3DPackageWorker(ICol: COL.ICollection, path: string, scene: string): void {
