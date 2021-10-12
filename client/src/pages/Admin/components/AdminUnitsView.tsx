@@ -14,7 +14,6 @@ import { GetUnitsFromNameSearchDocument, GetUnitsFromNameSearchResult } from '..
 import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
-import { getHeaderTitle } from '../../../utils/shared';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -222,12 +221,10 @@ function AdminUnitsView(): React.ReactElement {
         setUnitList(Units);
     };
 
-    const title = getHeaderTitle('Units | Admin');
-
     return (
         <React.Fragment>
             <Helmet>
-                <title>{title}</title>
+                <title>Units | Admin</title>
             </Helmet>
             <Box className={classes.AdminPageViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>

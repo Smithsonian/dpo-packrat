@@ -20,7 +20,6 @@ import UploadFilesPicker from './UploadList';
 import useIngest from '../../hooks/useIngest';
 import { eVocabularySetID } from '../../../../types/server';
 import { Helmet } from 'react-helmet';
-import { getHeaderTitle } from '../../../../utils/shared';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -196,12 +195,10 @@ function Uploads(): React.ReactElement {
         }
     };
 
-    const title = getHeaderTitle('Uploads | Ingestion');
-
     return (
         <Box className={classes.container}>
             <Helmet>
-                <title>{title}</title>
+                <title>Uploads | Ingestion</title>
             </Helmet>
             <Box className={classes.content}>
                 <KeepAlive>

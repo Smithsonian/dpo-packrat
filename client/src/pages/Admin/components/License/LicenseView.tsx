@@ -15,7 +15,6 @@ import { apolloClient } from '../../../../graphql/index';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { useLicenseStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
-import { getHeaderTitle } from '../../../../utils/shared';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -200,12 +199,10 @@ function LicenseView(): React.ReactElement {
         setLicenseList(newFilterQuery?.data?.getLicenseList?.Licenses);
     };
 
-    const title = getHeaderTitle('Licenses | Admin');
-
     return (
         <React.Fragment>
             <Helmet>
-                <title>{title}</title>
+                <title>Licenses | Admin</title>
             </Helmet>
             <Box className={classes.AdminPageViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>
