@@ -16,7 +16,6 @@ import ProjectList from './ProjectList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
 import { Helmet } from 'react-helmet';
-import { getHeaderTitle } from '../../../../utils/shared';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -136,12 +135,10 @@ function SubjectItem(): React.ReactElement {
         return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
     }
 
-    const title = getHeaderTitle('Subject/Item | Ingestion');
-
     return (
         <Box className={classes.container}>
             <Helmet>
-                <title>{title}</title>
+                <title>Subect/Item | Ingestion</title>
             </Helmet>
             <Box className={classes.content}>
                 <Box display='flex' flexDirection='row' alignItems='center' flexWrap='wrap'>

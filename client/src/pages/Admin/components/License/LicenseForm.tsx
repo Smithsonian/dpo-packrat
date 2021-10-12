@@ -15,7 +15,6 @@ import { toTitleCase } from '../../../../constants/helperfunctions';
 import * as yup from 'yup';
 import { useLicenseStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
-import { getHeaderTitle } from '../../../../utils/shared';
 
 const useStyles = makeStyles(({ breakpoints, typography }) => ({
     container: {
@@ -207,12 +206,10 @@ function LicenseForm(): React.ReactElement {
         }
     };
 
-    const title = getHeaderTitle('Create License');
-
     return (
         <Box className={classes.container}>
             <Helmet>
-                <title>{title}</title>
+                <title>Create License</title>
             </Helmet>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>

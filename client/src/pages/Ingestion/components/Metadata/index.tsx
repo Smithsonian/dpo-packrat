@@ -35,7 +35,6 @@ import Other from './Other';
 import Photogrammetry from './Photogrammetry';
 import Scene from './Scene';
 import { Helmet } from 'react-helmet';
-import { getHeaderTitle } from '../../../../utils/shared';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -154,12 +153,10 @@ function Metadata(): React.ReactElement {
         return <Other metadataIndex={metadataIndex} />;
     };
 
-    const title = getHeaderTitle('Metadata | Ingestion');
-
     return (
         <Box className={classes.container}>
             <Helmet>
-                <title>{title}</title>
+                <title>Metadata | Ingestion</title>
             </Helmet>
             <Box className={classes.content}>
                 <BreadcrumbsHeader project={project} item={item} metadata={metadata} updateMode={updateMode} />

@@ -14,7 +14,6 @@ import { GetProjectListDocument, GetProjectListResult } from '../../../types/gra
 import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
-import { getHeaderTitle } from '../../../utils/shared';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -216,12 +215,10 @@ function AdminProjectsView(): React.ReactElement {
         setProjectList(projects);
     };
 
-    const title = getHeaderTitle('Projects | Admin');
-
     return (
         <React.Fragment>
             <Helmet>
-                <title>{title}</title>
+                <title>Projects | Admin</title>
             </Helmet>
             <Box className={classes.AdminPageViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>

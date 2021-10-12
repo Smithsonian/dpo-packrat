@@ -14,7 +14,6 @@ import { BreadcrumbsView } from '../../../../components';
 import { GetSystemObjectDetailsResult, RepositoryPath } from '../../../../types/graphql';
 import { eSystemObjectType } from '../../../../types/server';
 import { getTermForSystemObjectType, isFieldUpdated } from '../../../../utils/repository';
-import { getHeaderTitle } from '../../../../utils/shared';
 
 const useStyles = makeStyles(({ palette }) => ({
     header: {
@@ -47,8 +46,7 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
     const updated: boolean = isFieldUpdated({ name }, originalFields, 'name');
 
     const classes = useStyles(updated);
-
-    const title = getHeaderTitle(`${name} ${getTermForSystemObjectType(objectType)}`);
+    const title = `${getTermForSystemObjectType(objectType)} ${name}`;
 
     return (
         <Box display='flex' flexDirection='row' justifyContent='center' mb={1}>
