@@ -156,7 +156,7 @@ function Metadata(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Helmet>
-                <title>Metadata | Ingestion</title>
+                <title>Metadata Ingestion</title>
             </Helmet>
             <Box className={classes.content}>
                 <BreadcrumbsHeader project={project} item={item} metadata={metadata} updateMode={updateMode} />

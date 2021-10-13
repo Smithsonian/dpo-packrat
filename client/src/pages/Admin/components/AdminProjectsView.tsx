@@ -218,7 +218,7 @@ function AdminProjectsView(): React.ReactElement {
     return (
         <React.Fragment>
             <Helmet>
-                <title>Projects | Admin</title>
+                <title>Projects Admin</title>
             </Helmet>
             <Box className={classes.AdminPageViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>

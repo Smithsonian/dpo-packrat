@@ -198,7 +198,7 @@ function Uploads(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Helmet>
-                <title>Uploads | Ingestion</title>
+                <title>Uploads Ingestion</title>
             </Helmet>
             <Box className={classes.content}>
                 <KeepAlive>
