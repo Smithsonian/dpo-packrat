@@ -84,7 +84,7 @@ function AdminUsersView(): React.ReactElement {
     return (
         <React.Fragment>
             <Helmet>
-                <title>Users | Admin</title>
+                <title>Users Admin</title>
             </Helmet>
             <Box className={classes.AdminUsersViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>

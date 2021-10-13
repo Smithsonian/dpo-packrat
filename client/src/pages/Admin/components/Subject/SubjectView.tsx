@@ -167,7 +167,7 @@ function SubjectView(): React.ReactElement {
     return (
         <Box className={classes.AdminViewContainer}>
             <Helmet>
-                <title>Subjects | Admin</title>
+                <title>Subjects Admin</title>
             </Helmet>
             <Box className={classes.AdminBreadCrumbsContainer}>
                 <GenericBreadcrumbsView items={location.pathname.slice(1)} />

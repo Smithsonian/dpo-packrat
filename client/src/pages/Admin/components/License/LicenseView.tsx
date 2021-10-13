@@ -202,7 +202,7 @@ function LicenseView(): React.ReactElement {
     return (
         <React.Fragment>
             <Helmet>
-                <title>Licenses | Admin</title>
+                <title>Licenses Admin</title>
             </Helmet>
             <Box className={classes.AdminPageViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>

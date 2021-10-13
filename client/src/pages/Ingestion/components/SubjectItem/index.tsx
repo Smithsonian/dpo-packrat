@@ -138,7 +138,7 @@ function SubjectItem(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Helmet>
-                <title>Subect/Item | Ingestion</title>
+                <title>Subect Ingestion</title>
             </Helmet>
             <Box className={classes.content}>
                 <Box display='flex' flexDirection='row' alignItems='center' flexWrap='wrap'>

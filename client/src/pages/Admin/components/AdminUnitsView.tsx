@@ -224,7 +224,7 @@ function AdminUnitsView(): React.ReactElement {
     return (
         <React.Fragment>
             <Helmet>
-                <title>Units | Admin</title>
+                <title>Units Admin</title>
             </Helmet>
             <Box className={classes.AdminPageViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>
