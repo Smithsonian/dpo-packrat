@@ -19,6 +19,7 @@ import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repositor
 import DetailsView from './components/DetailsView';
 import RepositoryFilterView from './components/RepositoryFilterView';
 import RepositoryTreeView from './components/RepositoryTreeView';
+import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
@@ -160,6 +161,9 @@ function TreeViewPage(): React.ReactElement {
 
     return (
         <React.Fragment>
+            <Helmet>
+                <title>Repository</title>
+            </Helmet>
             <RepositoryFilterView />
             <RepositoryTreeView />
         </React.Fragment>

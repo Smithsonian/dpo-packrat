@@ -22,6 +22,7 @@ import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumb
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
 import { useUsersStore } from '../../../store';
+import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles({
     AdminUsersViewContainer: {
@@ -216,6 +217,9 @@ function AdminUserForm(): React.ReactElement {
 
     return (
         <Box className={classes.AdminUsersViewContainer}>
+            <Helmet>
+                <title>Create User</title>
+            </Helmet>
             <Box className={classes.AdminBreadCrumbsContainer}>
                 <GenericBreadcrumbsView items={location.pathname.slice(1)} end={create ? null : `${fetchedUser?.Name} <${fetchedUser?.EmailAddress}>`} />
             </Box>
