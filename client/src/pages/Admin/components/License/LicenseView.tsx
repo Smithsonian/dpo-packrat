@@ -14,6 +14,7 @@ import { GetLicenseListDocument, License } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { useLicenseStore } from '../../../../store';
+import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -200,6 +201,9 @@ function LicenseView(): React.ReactElement {
 
     return (
         <React.Fragment>
+            <Helmet>
+                <title>Licenses Admin</title>
+            </Helmet>
             <Box className={classes.AdminPageViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />
