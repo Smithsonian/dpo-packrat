@@ -1079,20 +1079,19 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Model With Nulls', async () => {
-        if (vocabulary)
-            modelNulls = await UTIL.createModelTest({
-                Name: 'Test Model with Nulls',
-                DateCreated: UTIL.nowCleansed(),
-                idVCreationMethod: null,
-                idVModality: null,
-                idVUnits: null,
-                idVPurpose: null,
-                idVFileType: null,
-                idAssetThumbnail: null,
-                CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
-                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
-                idModel: 0
-            });
+        modelNulls = await UTIL.createModelTest({
+            Name: 'Test Model with Nulls',
+            DateCreated: UTIL.nowCleansed(),
+            idVCreationMethod: null,
+            idVModality: null,
+            idVUnits: null,
+            idVPurpose: null,
+            idVFileType: null,
+            idAssetThumbnail: null,
+            CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+            CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
+            idModel: 0
+        });
         expect(modelNulls).toBeTruthy();
     });
 
@@ -4103,10 +4102,8 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     test('DB Fetch SystemObject: PublishedStateEnumToString', async () => {
         expect(DBAPI.PublishedStateEnumToString(-1)).toEqual('Not Published');
         expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eNotPublished)).toEqual('Not Published');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eRestricted)).toEqual('Restricted');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eViewOnly)).toEqual('View Only');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eViewDownloadRestriction)).toEqual('View and Download with usage restrictions');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eViewDownloadCC0)).toEqual('View and Download CC0');
+        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eAPIOnly)).toEqual('API Only');
+        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.ePublished)).toEqual('Published');
     });
 
     test('DB Fetch SystemObject: SystemObjectTypeToName', async () => {
@@ -4883,6 +4880,48 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(modelFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Model.cloneData', async () => {
+        const modelClone: DBAPI.Model = await UTIL.createModelTest({
+            Name: 'Test Model with Nulls',
+            DateCreated: UTIL.nowCleansed(),
+            idVCreationMethod: null,
+            idVModality: null,
+            idVUnits: null,
+            idVPurpose: null,
+            idVFileType: null,
+            idAssetThumbnail: null,
+            CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+            CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
+            idModel: 0
+        });
+        expect(modelClone).toBeTruthy();
+        expect(model).toBeTruthy();
+        if (model) {
+            modelClone.cloneData(model);
+            expect(modelClone.idModel).not.toEqual(model.idModel);
+            expect(modelClone.Name).toEqual(model.Name);
+            expect(modelClone.DateCreated).toEqual(model.DateCreated);
+            expect(modelClone.idVCreationMethod).toEqual(model.idVCreationMethod);
+            expect(modelClone.idVModality).toEqual(model.idVModality);
+            expect(modelClone.idVPurpose).toEqual(model.idVPurpose);
+            expect(modelClone.idVUnits).toEqual(model.idVUnits);
+            expect(modelClone.idVFileType).toEqual(model.idVFileType);
+            expect(modelClone.idAssetThumbnail).toEqual(model.idAssetThumbnail);
+            expect(modelClone.CountAnimations).toEqual(model.CountAnimations);
+            expect(modelClone.CountCameras).toEqual(model.CountCameras);
+            expect(modelClone.CountFaces).toEqual(model.CountFaces);
+            expect(modelClone.CountLights).toEqual(model.CountLights);
+            expect(modelClone.CountMaterials).toEqual(model.CountMaterials);
+            expect(modelClone.CountMeshes).toEqual(model.CountMeshes);
+            expect(modelClone.CountVertices).toEqual(model.CountVertices);
+            expect(modelClone.CountEmbeddedTextures).toEqual(model.CountEmbeddedTextures);
+            expect(modelClone.CountLinkedTextures).toEqual(model.CountLinkedTextures);
+            expect(modelClone.FileEncoding).toEqual(model.FileEncoding);
+            expect(modelClone.IsDracoCompressed).toEqual(model.IsDracoCompressed);
+            expect(modelClone.AutomationTag).toEqual(model.AutomationTag);
+        }
     });
 
     test('DB Fetch Special: Model.fetchByFileNameAndAssetType', async () => {
@@ -6771,20 +6810,16 @@ describe('DB Update Test Suite', () => {
         if (systemObjectVersion) {
             systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eNotPublished);
             expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eNotPublished);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eRestricted);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eRestricted);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eViewOnly);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewOnly);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eViewDownloadRestriction);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewDownloadRestriction);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eViewDownloadCC0);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewDownloadCC0);
+            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eAPIOnly);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eAPIOnly);
+            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.ePublished);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.ePublished);
             bUpdated = await systemObjectVersion.update();
 
             const systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(systemObjectVersion.idSystemObjectVersion);
             expect(systemObjectVersionFetch).toBeTruthy();
             if (systemObjectVersionFetch)
-                expect(systemObjectVersionFetch.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewDownloadCC0);
+                expect(systemObjectVersionFetch.publishedStateEnum()).toEqual(DBAPI.ePublishedState.ePublished);
         }
         expect(bUpdated).toBeTruthy();
     });

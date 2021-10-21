@@ -47,6 +47,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
 
                 const Subject = await DBAPI.Subject.fetch(systemObject.idSubject);
 
+                fields = { ...Subject };
                 if (Subject?.idGeoLocation) {
                     const GeoLocation = await DBAPI.GeoLocation.fetch(Subject.idGeoLocation);
                     fields = { ...fields, ...GeoLocation };
@@ -162,7 +163,25 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
         folders: []
     };
 
-    // TODO: KARAN resolve folders, systemCreated from where?
+    // creates a unique map of asset.filePath and file.idVVariantType
+    const foldersMap = new Map<string, number>();
+
+    const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(idCaptureData);
+    if (CDFiles) {
+        for (const file of CDFiles) {
+            const asset = await DBAPI.Asset.fetch(file.idAsset);
+            if (asset) {
+                if (!foldersMap.has(asset.FilePath) && file.idVVariantType) {
+                    foldersMap.set(asset.FilePath, file.idVVariantType);
+                }
+            }
+        }
+    }
+
+    foldersMap.forEach((value, key) => {
+        fields.folders.push({ name: key, variantType: value });
+    });
+
     const CaptureData = await DBAPI.CaptureData.fetch(idCaptureData);
     fields = {
         ...fields,
@@ -182,7 +201,7 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
             datasetType: CD.idVCaptureDatasetType,
             datasetFieldId: CD.CaptureDatasetFieldID,
             itemPositionType: CD.idVItemPositionType,
-            itemPositionFieldId: CD.idVItemPositionType,
+            itemPositionFieldId: CD.ItemPositionFieldID,
             itemArrangementFieldId: CD.ItemArrangementFieldID,
             focusType: CD.idVFocusType,
             lightsourceType: CD.idVLightSourceType,

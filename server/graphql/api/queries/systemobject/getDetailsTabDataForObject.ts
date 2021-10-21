@@ -21,6 +21,7 @@ const getDetailsTabDataForObject = gql`
                 TS0
                 TS1
                 TS2
+                idIdentifierPreferred
             }
             Item {
                 EntireSubject

@@ -32,13 +32,8 @@ function ItemDetails(props: DetailComponentProps): React.ReactElement {
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
-        let numberValue: number | null = null;
 
-        if (value) {
-            numberValue = Number.parseInt(value, 10);
-        }
-
-        updateDetailField(eSystemObjectType.eItem, name, numberValue);
+        updateDetailField(eSystemObjectType.eItem, name, value);
     };
 
     const setCheckboxField = ({ target }): void => {

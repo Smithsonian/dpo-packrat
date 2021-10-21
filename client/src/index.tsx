@@ -21,7 +21,6 @@ import { Home, Login } from './pages';
 import * as serviceWorker from './serviceWorker';
 import { useUserStore, useVocabularyStore, useLicenseStore, useUsersStore } from './store';
 import theme from './theme';
-import { getHeaderTitle } from './utils/shared';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
@@ -71,7 +70,7 @@ function App(): React.ReactElement {
         <ApolloProvider client={apolloClient}>
             <ThemeProvider theme={theme}>
                 <Helmet>
-                    <title>{getHeaderTitle()}</title>
+                    <title>Packrat</title>
                 </Helmet>
                 <AppRouter />
                 <ToastContainer

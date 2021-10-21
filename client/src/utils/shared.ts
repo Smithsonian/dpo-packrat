@@ -63,11 +63,6 @@ export const sharedLabelProps: CSSProperties = {
     color: palette.primary.dark
 };
 
-export function getHeaderTitle(title?: string): string {
-    if (title) return `${title} - Packrat`;
-    return 'Packrat';
-}
-
 export function safeDate(value: any): Date | null {
     if (value == null)
         return null;
