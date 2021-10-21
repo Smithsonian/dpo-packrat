@@ -27,8 +27,6 @@ export class SvxExtraction {
         return new DBAPI.Scene({
             Name,
             idAssetThumbnail: null,
-            IsOriented: false,
-            HasBeenQCd: false,
             CountScene: this.sceneCount,
             CountNode: this.nodeCount,
             CountCamera: this.cameraCount,
@@ -38,6 +36,8 @@ export class SvxExtraction {
             CountSetup: this.setupCount,
             CountTour: this.tourCount,
             EdanUUID: null,
+            PosedAndQCd: false,
+            ApprovedForPublication: false,
             idScene: 0
         });
     }
@@ -152,6 +152,7 @@ export class SvxExtraction {
 export class SvxReader {
     SvxDocument: SVX.IDocument | null = null;
     SvxExtraction: SvxExtraction | null = null;
+    static DV: SVX.DocumentValidator = new SVX.DocumentValidator();
 
     async loadFromStream(readStream: NodeJS.ReadableStream): Promise<H.IOResults> {
         try {
@@ -169,6 +170,13 @@ export class SvxReader {
     async loadFromJSON(json: string): Promise<H.IOResults> {
         try {
             const obj: any = JSON.parse(json);  // may throw an exception, if json is not valid JSON
+            const validRes: H.IOResults = SvxReader.DV.validate(obj);
+            if (!validRes.success) {
+                const error: string = `SVX JSON Validation Failed: ${validRes.error}`;
+                LOG.error(`SvxReader.loadFromJSON ${error}`, LOG.LS.eSYS);
+                return { success: false, error };
+            }
+
             const { svx, results } = SvxExtraction.extract(obj);
             if (!results.success)
                 return results;

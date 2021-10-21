@@ -1284,7 +1284,7 @@ INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term,
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: unwrap';
 
 INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View And Download CC0', 'View And Download CC0', 10);
-INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View with Download Restrictions', 'View with Download Restrictions', 20);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View With Download Restrictions', 'View With Download Restrictions', 20);
 INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View Only', 'View Only', 30);
 INSERT INTO License (Name, Description, RestrictLevel) VALUES ('Restricted', 'Restricted', 1000);
 

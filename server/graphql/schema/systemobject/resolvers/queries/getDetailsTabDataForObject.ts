@@ -11,6 +11,7 @@ import {
     SceneDetailFields
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
+import * as LOG from '../../../../../utils/logger';
 
 export default async function getDetailsTabDataForObject(_: Parent, args: QueryGetDetailsTabDataForObjectArgs): Promise<GetDetailsTabDataForObjectResult> {
     const { input } = args;
@@ -47,6 +48,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
 
                 const Subject = await DBAPI.Subject.fetch(systemObject.idSubject);
 
+                fields = { ...Subject };
                 if (Subject?.idGeoLocation) {
                     const GeoLocation = await DBAPI.GeoLocation.fetch(Subject.idGeoLocation);
                     fields = { ...fields, ...GeoLocation };
@@ -88,11 +90,13 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 let fields: SceneDetailFields = {
                     Links: []
                 };
-                const Scene = await DBAPI.Scene.fetch(systemObject.idScene);
+                const Scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(systemObject.idScene);
+                if (!Scene)
+                    LOG.error(`getDetailsTabForObject(${systemObject.idSystemObject}) unable to compute Scene details`, LOG.LS.eGQL);
+                const User: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eSceneQCd);
+
                 fields = {
                     ...fields,
-                    HasBeenQCd: Scene?.HasBeenQCd,
-                    IsOriented: Scene?.IsOriented,
                     CountScene: Scene?.CountScene,
                     CountNode: Scene?.CountNode,
                     CountCamera: Scene?.CountCamera,
@@ -102,6 +106,9 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                     CountSetup: Scene?.CountSetup,
                     CountTour: Scene?.CountTour,
                     EdanUUID: Scene?.EdanUUID,
+                    ApprovedForPublication: Scene?.ApprovedForPublication,
+                    PublicationApprover: User?.Name ?? null,
+                    PosedAndQCd: Scene?.PosedAndQCd,
                     idScene: systemObject.idScene,
                 };
                 result.Scene = fields;
@@ -162,7 +169,25 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
         folders: []
     };
 
-    // TODO: KARAN resolve folders, systemCreated from where?
+    // creates a unique map of asset.filePath and file.idVVariantType
+    const foldersMap = new Map<string, number>();
+
+    const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(idCaptureData);
+    if (CDFiles) {
+        for (const file of CDFiles) {
+            const asset = await DBAPI.Asset.fetch(file.idAsset);
+            if (asset) {
+                if (!foldersMap.has(asset.FilePath) && file.idVVariantType) {
+                    foldersMap.set(asset.FilePath, file.idVVariantType);
+                }
+            }
+        }
+    }
+
+    foldersMap.forEach((value, key) => {
+        fields.folders.push({ name: key, variantType: value });
+    });
+
     const CaptureData = await DBAPI.CaptureData.fetch(idCaptureData);
     fields = {
         ...fields,
@@ -182,7 +207,7 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
             datasetType: CD.idVCaptureDatasetType,
             datasetFieldId: CD.CaptureDatasetFieldID,
             itemPositionType: CD.idVItemPositionType,
-            itemPositionFieldId: CD.idVItemPositionType,
+            itemPositionFieldId: CD.ItemPositionFieldID,
             itemArrangementFieldId: CD.ItemArrangementFieldID,
             focusType: CD.idVFocusType,
             lightsourceType: CD.idVLightSourceType,

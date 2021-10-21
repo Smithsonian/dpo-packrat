@@ -5,15 +5,17 @@
  *
  * This component renders identifier list used in photogrammetry metadata component.
  */
-import { Box, Button, Checkbox, MenuItem, Select, Typography } from '@material-ui/core';
+import { Box, Button, MenuItem, Select, Typography, Radio } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { StateIdentifier, VocabularyOption } from '../../store';
 import { ViewableProps } from '../../types/repository';
-import { sharedButtonProps, sharedLabelProps } from '../../utils/shared';
+import { sharedLabelProps } from '../../utils/shared';
 import FieldType from './FieldType';
+import { Progress } from '..';
+import { Colors } from '../../theme';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     identifierInput: {
@@ -59,7 +61,15 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontStyle: 'italic'
     },
     header: sharedLabelProps,
-    addIdentifierButton: sharedButtonProps
+    addIdentifierButton: {
+        height: 35,
+        width: 80,
+        fontSize: typography.caption.fontSize,
+        color: Colors.defaults.white,
+        [breakpoints.down('lg')]: {
+            height: 30
+        }
+    }
 }));
 
 interface IdentifierListProps extends ViewableProps {
@@ -68,13 +78,26 @@ interface IdentifierListProps extends ViewableProps {
     onUpdate: (id: number, fieldName: string, fieldValue: number | string | boolean) => void;
     onRemove: (idIdentifier: number, id: number) => void;
     identifierTypes: VocabularyOption[];
+    subjectView?: boolean;
+    onUpdateIdIdentifierPreferred?: (id: number) => void;
+    loading?: boolean;
 }
 
 function IdentifierList(props: IdentifierListProps): React.ReactElement {
-    const { identifiers, onAdd, onUpdate, identifierTypes, onRemove, viewMode = false, disabled = false } = props;
+    const { identifiers, onAdd, onUpdate, identifierTypes, onRemove, viewMode = false, disabled = false, subjectView, onUpdateIdIdentifierPreferred, loading } = props;
     const classes = useStyles();
-
     const hasIdentifiers: boolean = !!identifiers.length;
+
+    if (loading && subjectView) {
+        return (
+            <Box overflow='hidden'>
+                <FieldType required={false} renderLabel={false} width='auto'>
+                    <Progress />
+                </FieldType>
+            </Box>
+        );
+    }
+
     return (
         <Box overflow='hidden'>
             <FieldType required={false} renderLabel={false} width='auto'>
@@ -84,14 +107,15 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                         <Typography className={classes.empty}>No Identifiers</Typography>
                     </Box>
                 )}
-                {identifiers.map(({ id, selected, identifier, identifierType, idIdentifier }, index) => {
+                {identifiers.map(({ id, identifier, identifierType, idIdentifier, preferred }, index) => {
                     const remove = () => onRemove(idIdentifier, id);
-                    const updateCheckbox = ({ target }) => onUpdate(id, target.name, target.checked);
                     const update = ({ target }) => onUpdate(id, target.name, target.value);
-
+                    const check = () => {
+                        if (onUpdateIdIdentifierPreferred) onUpdateIdIdentifierPreferred(id);
+                    };
                     return (
                         <Box key={index} display='flex' flexDirection='row' alignItems='center' paddingBottom='10px'>
-                            <Checkbox checked={selected} name='selected' color='primary' onChange={updateCheckbox} disabled={disabled} />
+                            {subjectView && <Radio checked={preferred === true} name='selected' color='primary' disabled={disabled} onClick={check} size='small' />}
                             <DebounceInput
                                 value={identifier}
                                 name='identifier'
@@ -118,9 +142,10 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                     color='primary'
                     variant='contained'
                     onClick={() => onAdd(identifierTypes[0].idVocabulary)}
+                    style={{ width: 'fit-content' }}
                     disabled={disabled}
                 >
-                    Add
+                    New Identifier
                 </Button>
             </FieldType>
         </Box>

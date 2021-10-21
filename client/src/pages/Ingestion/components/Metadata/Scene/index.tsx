@@ -60,9 +60,7 @@ function Scene(props: SceneProps): React.ReactElement {
     // state responsible for SceneDataGrid
     const [sceneData, setSceneData] = useState({
         idScene: 0,
-        HasBeenQCd: false,
         idAssetThumbnail: 0,
-        IsOriented: false,
         Name: '',
         CountScene: 0,
         CountNode: 0,
@@ -72,10 +70,12 @@ function Scene(props: SceneProps): React.ReactElement {
         CountMeta: 0,
         CountSetup: 0,
         CountTour: 0,
-        EdanUUID: ''
+        EdanUUID: '',
+        ApprovedForPublication: false,
+        PosedAndQCd: false
     });
     const [modalOpen, setModalOpen] = useState(false);
-    const [objectRelationship, setObjectRelationship] = useState('');
+    const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
@@ -126,13 +126,13 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const openSourceObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
-        await setObjectRelationship('Source');
+        await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
-        await setObjectRelationship('Derived');
+        await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };
 
@@ -150,12 +150,12 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const onModalClose = () => {
         setModalOpen(false);
-        setObjectRelationship('');
+        setObjectRelationship(RelatedObjectType.Source);
         closeRepositoryBrowser();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
-        updateMetadataField(metadataIndex, objectRelationship === 'Source' ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.scene);
+        updateMetadataField(metadataIndex, objectRelationship === RelatedObjectType.Source ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.scene);
         onModalClose();
     };
 
@@ -193,16 +193,17 @@ function Scene(props: SceneProps): React.ReactElement {
                 setCheckboxField={setCheckboxField}
                 setNameField={setNameField}
                 name={scene.name}
-                hasBeenQCd={scene.hasBeenQCd}
-                isOriented={scene.isOriented}
+                approvedForPublication={scene.approvedForPublication}
+                posedAndQCd={scene.posedAndQCd}
                 EdanUUID={scene.EdanUUID}
             />
             <ObjectSelectModal
                 open={modalOpen}
                 onSelectedObjects={onSelectedObjects}
                 onModalClose={onModalClose}
-                selectedObjects={objectRelationship === 'Source' ? scene.sourceObjects : scene.derivedObjects}
+                selectedObjects={objectRelationship === RelatedObjectType.Source ? scene.sourceObjects : scene.derivedObjects}
                 relationship={objectRelationship}
+                objectType={eSystemObjectType.eScene}
             />
         </Box>
     );

@@ -18,6 +18,7 @@ import { ViewableProps } from '../../../../../types/repository';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
 import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared';
 import { toast } from 'react-toastify';
+import { eSystemObjectType } from '../../../../../types/server';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -59,7 +60,7 @@ interface RelatedObjectsListProps extends ViewableProps {
     onAdd: () => void;
     onRemove?: (id: number) => void;
     currentObject?: number;
-    onRemoveConnection?: (idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) => any;
+    onRemoveConnection?: (idSystemObjectMaster: number, objectTypeMaster: eSystemObjectType, idSystemObjectDerived: number, objectTypeDerived: eSystemObjectType) => any;
     objectType?: number;
     relationshipLanguage?: string;
 }
@@ -128,7 +129,7 @@ interface ItemProps {
     onRemove?: (id: number) => void;
     viewMode?: boolean;
     currentObject?: number;
-    onRemoveConnection?: (idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) => any;
+    onRemoveConnection?: (idSystemObjectMaster: number, objectTypeMaster: eSystemObjectType, idSystemObjectDerived: number, objectTypeDerived: eSystemObjectType) => any;
     type?: RelatedObjectType;
     systemObjectType?: number;
 }
@@ -148,8 +149,8 @@ function Item(props: ItemProps): React.ReactElement {
                 }
             } =
                 type.toString() === 'Source'
-                    ? await onRemoveConnection(idSystemObject, currentObject, type.toString(), systemObjectType)
-                    : await onRemoveConnection(currentObject, idSystemObject, type.toString(), systemObjectType);
+                    ? await onRemoveConnection(idSystemObject, objectType, currentObject, systemObjectType)
+                    : await onRemoveConnection(currentObject, systemObjectType, idSystemObject, objectType);
             if (success) {
                 toast.success(details);
             } else {

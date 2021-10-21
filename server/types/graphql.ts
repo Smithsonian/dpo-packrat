@@ -354,6 +354,7 @@ export type Mutation = {
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  publish: PublishResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateLicense: CreateLicenseResult;
@@ -456,6 +457,11 @@ export type MutationDiscardUploadedAssetVersionsArgs = {
 
 export type MutationIngestDataArgs = {
   input: IngestDataInput;
+};
+
+
+export type MutationPublishArgs = {
+  input: PublishInput;
 };
 
 
@@ -622,8 +628,8 @@ export type IngestScene = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  hasBeenQCd: Scalars['Boolean'];
-  isOriented: Scalars['Boolean'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   referenceModels: Array<ReferenceModel>;
@@ -931,8 +937,8 @@ export type IngestSceneInput = {
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  hasBeenQCd: Scalars['Boolean'];
-  isOriented: Scalars['Boolean'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
@@ -1302,8 +1308,6 @@ export type GetFilterViewDataResult = {
 
 export type CreateSceneInput = {
   Name: Scalars['String'];
-  HasBeenQCd: Scalars['Boolean'];
-  IsOriented: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -1314,6 +1318,8 @@ export type CreateSceneInput = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication: Scalars['Boolean'];
+  PosedAndQCd: Scalars['Boolean'];
 };
 
 export type CreateSceneResult = {
@@ -1342,9 +1348,7 @@ export type GetIntermediaryFileResult = {
 export type Scene = {
   __typename?: 'Scene';
   idScene: Scalars['Int'];
-  HasBeenQCd: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
-  IsOriented: Scalars['Boolean'];
   Name: Scalars['String'];
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -1355,6 +1359,8 @@ export type Scene = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication: Scalars['Boolean'];
+  PosedAndQCd: Scalars['Boolean'];
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1412,6 +1418,7 @@ export type SubjectDetailFieldsInput = {
   TS0?: Maybe<Scalars['Float']>;
   TS1?: Maybe<Scalars['Float']>;
   TS2?: Maybe<Scalars['Float']>;
+  idIdentifierPreferred?: Maybe<Scalars['Int']>;
 };
 
 export type ItemDetailFieldsInput = {
@@ -1445,6 +1452,7 @@ export type CaptureDataDetailFieldsInput = {
   clusterType?: Maybe<Scalars['Int']>;
   clusterGeometryFieldId?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolderInput>;
+  isValidData?: Maybe<Scalars['Boolean']>;
 };
 
 export type ModelDetailFieldsInput = {
@@ -1461,8 +1469,8 @@ export type SceneDetailFieldsInput = {
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
-  HasBeenQCd?: Maybe<Scalars['Boolean']>;
-  IsOriented?: Maybe<Scalars['Boolean']>;
+  ApprovedForPublication?: Maybe<Scalars['Boolean']>;
+  PosedAndQCd?: Maybe<Scalars['Boolean']>;
 };
 
 export type ProjectDocumentationDetailFieldsInput = {
@@ -1519,35 +1527,46 @@ export type UpdateObjectDetailsResult = {
   message: Scalars['String'];
 };
 
+export type ExistingRelationship = {
+  idSystemObject: Scalars['Int'];
+  objectType: Scalars['Int'];
+};
+
 export type UpdateDerivedObjectsInput = {
   idSystemObject: Scalars['Int'];
-  Derivatives: Array<Scalars['Int']>;
-  PreviouslySelected: Array<Scalars['Int']>;
+  ParentObjectType: Scalars['Int'];
+  Derivatives: Array<ExistingRelationship>;
+  PreviouslySelected: Array<ExistingRelationship>;
 };
 
 export type UpdateDerivedObjectsResult = {
   __typename?: 'UpdateDerivedObjectsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
+  status: Scalars['String'];
 };
 
 export type UpdateSourceObjectsInput = {
   idSystemObject: Scalars['Int'];
-  Sources: Array<Scalars['Int']>;
-  PreviouslySelected: Array<Scalars['Int']>;
+  ChildObjectType: Scalars['Int'];
+  Sources: Array<ExistingRelationship>;
+  PreviouslySelected: Array<ExistingRelationship>;
 };
 
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
+  status: Scalars['String'];
 };
 
 export type UpdateIdentifier = {
   id: Scalars['Int'];
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
-  selected: Scalars['Boolean'];
   idSystemObject: Scalars['Int'];
   idIdentifier: Scalars['Int'];
+  preferred?: Maybe<Scalars['Boolean']>;
 };
 
 export type DeleteObjectConnectionResult = {
@@ -1558,7 +1577,9 @@ export type DeleteObjectConnectionResult = {
 
 export type DeleteObjectConnectionInput = {
   idSystemObjectMaster: Scalars['Int'];
+  objectTypeMaster: Scalars['Int'];
   idSystemObjectDerived: Scalars['Int'];
+  objectTypeDerived: Scalars['Int'];
 };
 
 export type DeleteIdentifierResult = {
@@ -1596,7 +1617,18 @@ export type CreateIdentifierInput = {
   identifierValue: Scalars['String'];
   identifierType: Scalars['Int'];
   idSystemObject?: Maybe<Scalars['Int']>;
-  selected: Scalars['Boolean'];
+  preferred?: Maybe<Scalars['Boolean']>;
+};
+
+export type PublishInput = {
+  idSystemObject: Scalars['Int'];
+  eState: Scalars['Int'];
+};
+
+export type PublishResult = {
+  __typename?: 'PublishResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
 };
 
 
@@ -1628,6 +1660,7 @@ export type SubjectDetailFields = {
   TS0?: Maybe<Scalars['Float']>;
   TS1?: Maybe<Scalars['Float']>;
   TS2?: Maybe<Scalars['Float']>;
+  idIdentifierPreferred?: Maybe<Scalars['Int']>;
 };
 
 export type ItemDetailFields = {
@@ -1672,8 +1705,6 @@ export type SceneDetailFields = {
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
-  HasBeenQCd?: Maybe<Scalars['Boolean']>;
-  IsOriented?: Maybe<Scalars['Boolean']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
   CountCamera?: Maybe<Scalars['Int']>;
@@ -1683,6 +1714,9 @@ export type SceneDetailFields = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication?: Maybe<Scalars['Boolean']>;
+  PublicationApprover?: Maybe<Scalars['String']>;
+  PosedAndQCd?: Maybe<Scalars['Boolean']>;
   idScene?: Maybe<Scalars['Int']>;
 };
 
@@ -1767,6 +1801,8 @@ export type GetSystemObjectDetailsResult = {
   objectType: Scalars['Int'];
   allowed: Scalars['Boolean'];
   publishedState: Scalars['String'];
+  publishedEnum: Scalars['Int'];
+  publishable: Scalars['Boolean'];
   thumbnail?: Maybe<Scalars['String']>;
   identifiers: Array<IngestIdentifier>;
   objectAncestors: Array<Array<RepositoryPath>>;

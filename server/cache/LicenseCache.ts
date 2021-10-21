@@ -6,7 +6,7 @@ import { CacheControl } from './CacheControl';
 export class LicenseCache {
     private static singleton: LicenseCache | null = null;
     private licenseMap: Map<number, DBAPI.License> = new Map<number, DBAPI.License>(); // map of idLicense -> License
-    private publishedStateMap: Map<DBAPI.ePublishedState, DBAPI.License> = new Map<DBAPI.ePublishedState, DBAPI.License>(); // map of ePublishedState -> License
+    private licenseEnumMap: Map<DBAPI.eLicense, DBAPI.License> = new Map<DBAPI.eLicense, DBAPI.License>(); // map of eLicense -> License
     private licenseResolverMap: Map<number, DBAPI.LicenseResolver> = new Map<number, DBAPI.LicenseResolver>(); // map of idSystemObject -> LicenseResolver, representing cache of resolved license information
 
     // **************************
@@ -45,10 +45,10 @@ export class LicenseCache {
         for (const license of LicenseFetch) {
             this.licenseMap.set(license.idLicense, license);
             switch (license.Name.toLowerCase()) {
-                case 'view and download cc0':           this.publishedStateMap.set(DBAPI.ePublishedState.eViewDownloadCC0, license); break;
-                case 'view with download restrictions': this.publishedStateMap.set(DBAPI.ePublishedState.eViewDownloadRestriction, license); break;
-                case 'view only':                       this.publishedStateMap.set(DBAPI.ePublishedState.eViewOnly, license); break;
-                case 'restricted':                      this.publishedStateMap.set(DBAPI.ePublishedState.eRestricted, license); break;
+                case 'view and download cc0':           this.licenseEnumMap.set(DBAPI.eLicense.eViewDownloadCC0, license); break;
+                case 'view with download restrictions': this.licenseEnumMap.set(DBAPI.eLicense.eViewDownloadRestriction, license); break;
+                case 'view only':                       this.licenseEnumMap.set(DBAPI.eLicense.eViewOnly, license); break;
+                case 'restricted':                      this.licenseEnumMap.set(DBAPI.eLicense.eRestricted, license); break;
             }
         }
         // LOG.info(`LicenseCache publishedStateMap=\n${JSON.stringify(this.publishedStateMap, H.Helpers.saferStringify)}`, LOG.LS.eCACHE);
@@ -69,14 +69,14 @@ export class LicenseCache {
         return license ?? undefined;
     }
 
-    private async getLicenseByPublishedStateInternal(eState: DBAPI.ePublishedState): Promise<DBAPI.License | undefined> {
-        return this.publishedStateMap.get(eState);
+    private async getLicenseByEnumInternal(eState: DBAPI.eLicense): Promise<DBAPI.License | undefined> {
+        return this.licenseEnumMap.get(eState);
     }
 
-    private async getLicenseResolverInternal(idSystemObject: number): Promise<DBAPI.LicenseResolver | undefined> {
+    private async getLicenseResolverInternal(idSystemObject: number, OGD?: DBAPI.ObjectGraphDatabase | undefined): Promise<DBAPI.LicenseResolver | undefined> {
         let licenseResolver: DBAPI.LicenseResolver | undefined | null = this.licenseResolverMap.get(idSystemObject);
         if (!licenseResolver) { // cache miss, look it up
-            licenseResolver = await DBAPI.LicenseResolver.fetch(idSystemObject);
+            licenseResolver = await DBAPI.LicenseResolver.fetch(idSystemObject, OGD);
             if (licenseResolver)
                 this.licenseResolverMap.set(idSystemObject, licenseResolver);
             // LOG.info(`LicenseCache.getLicenseResolverInternal(${idSystemObject}) computed ${JSON.stringify(licenseResolver)}`, LOG.LS.eCACHE);
@@ -127,12 +127,13 @@ export class LicenseCache {
         return await (await this.getInstance()).getLicenseInternal(idLicense);
     }
 
-    static async getLicenseByPublishedState(eState: DBAPI.ePublishedState): Promise<DBAPI.License | undefined> {
-        return await (await this.getInstance()).getLicenseByPublishedStateInternal(eState);
+    static async getLicenseByEnum(eState: DBAPI.eLicense): Promise<DBAPI.License | undefined> {
+        return await (await this.getInstance()).getLicenseByEnumInternal(eState);
     }
 
-    static async getLicenseResolver(idSystemObject: number): Promise<DBAPI.LicenseResolver | undefined> {
-        return await (await this.getInstance()).getLicenseResolverInternal(idSystemObject);
+    /** If passing in OGD, make sure to compute this navigating through the ancestors of idSystemObject */
+    static async getLicenseResolver(idSystemObject: number, OGD?: DBAPI.ObjectGraphDatabase | undefined): Promise<DBAPI.LicenseResolver | undefined> {
+        return await (await this.getInstance()).getLicenseResolverInternal(idSystemObject, OGD);
     }
 
     static async clearAssignment(idSystemObject: number): Promise<boolean> {

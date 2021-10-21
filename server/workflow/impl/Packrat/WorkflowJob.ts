@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types, no-constant-condition */
 import * as WF from '../../interface';
+import { WorkflowUtil, WorkflowUtilExtractAssetVersions } from './WorkflowUtil';
 import * as JOB from '../../../job/interface';
 import * as REP from '../../../report/interface';
 import * as DBAPI from '../../../db';
@@ -240,20 +241,11 @@ export class WorkflowJob implements WF.IWorkflow {
         if (!this.workflowParams.idSystemObject)
             return { success: true, error: '' }; // OK to call without objects to act on, at least at this point -- the job itself may complain once started
 
-        this.idAssetVersions = [];
-        for (const idSystemObject of this.workflowParams.idSystemObject) {
-            const OID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
-            if (!OID) {
-                const error: string = `WorkflowJob.start unable to compute system object type for ${idSystemObject}`;
-                LOG.error(error, LOG.LS.eWF);
-                return { success: false, error };
-            } else if (OID.eObjectType != DBAPI.eSystemObjectType.eAssetVersion) {
-                const error: string = `WorkflowJob.start called with invalid system object type ${JSON.stringify(OID)} for ${idSystemObject}; expected eAssetVersion`;
-                LOG.error(error, LOG.LS.eWF);
-                return { success: false, error };
-            }
-            this.idAssetVersions.push(OID.idObject);
-        }
+        const WFUVersion: WorkflowUtilExtractAssetVersions = await WorkflowUtil.extractAssetVersions(this.workflowParams.idSystemObject);
+        if (!WFUVersion.success)
+            return { success: false, error: WFUVersion.error };
+
+        this.idAssetVersions = WFUVersion.idAssetVersions;
         return { success: true, error: '' };
     }
 }

@@ -11,9 +11,10 @@ import {
     AssetDetailFields,
     AssetVersionDetailFields,
     ActorDetailFields,
-    UpdateObjectDetailsDataInput
+    UpdateObjectDetailsDataInput,
+    IngestFolder
 } from '../types/graphql';
-import lodash from 'lodash';
+import * as yup from 'yup';
 
 export interface ModelDetailsType {
     DateCreated: string | null;
@@ -33,11 +34,16 @@ export type DetailsViewFieldErrors = {
         name: boolean;
         dateCaptured: boolean;
     };
+    captureData: {
+        name: boolean;
+        datasetFieldId: boolean;
+        itemPositionFieldId: boolean;
+        itemArrangementFieldId: boolean;
+        clusterGeometryFieldId: boolean;
+    };
 };
 
-interface SceneDetailsType {
-    HasBeenQCd: boolean;
-    IsOriented: boolean;
+export interface SceneDetailsType {
     CountScene: number;
     CountNode: number;
     CountCamera: number;
@@ -47,6 +53,9 @@ interface SceneDetailsType {
     CountSetup: number;
     CountTour: number;
     EdanUUID: string | null;
+    ApprovedForPublication: boolean;
+    PublicationApprover: string | null;
+    PosedAndQCd: boolean;
     ModelSceneXref: any[];
 }
 
@@ -77,7 +86,7 @@ type DetailTabStore = {
     AssetDetails: AssetDetailFields;
     ActorDetails: ActorDetailFields;
     StakeholderDetails: StakeholderDetailFields;
-    updateDetailField: (metadataType: eSystemObjectType, fieldName: string, value: number | string | boolean | Date | null) => void;
+    updateDetailField: (metadataType: eSystemObjectType, fieldName: string, value: number | string | boolean | Date | null | IngestFolder[]) => void;
     getDetail: (type: eSystemObjectType) => DetailsTabType | void;
     initializeDetailFields: (data: any, type: eSystemObjectType) => void;
     getDetailsViewFieldErrors: (metadata: UpdateObjectDetailsDataInput, objectType: eSystemObjectType) => string[];
@@ -144,8 +153,6 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         isValidData: null
     },
     SceneDetails: {
-        HasBeenQCd: false,
-        IsOriented: false,
         CountScene: 0,
         CountNode: 0,
         CountCamera: 0,
@@ -155,6 +162,9 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         CountSetup: 0,
         CountTour: 0,
         EdanUUID: null,
+        ApprovedForPublication: false,
+        PublicationApprover: null,
+        PosedAndQCd: false,
         ModelSceneXref: [
             {
                 BoundingBoxP1X: 0,
@@ -451,7 +461,13 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             updateDetailField(eSystemObjectType.eCaptureData, 'dateCaptured', dateCaptured);
             updateDetailField(eSystemObjectType.eCaptureData, 'description', description);
             updateDetailField(eSystemObjectType.eCaptureData, 'focusType', focusType);
-            updateDetailField(eSystemObjectType.eCaptureData, 'folders', folders);
+            const sanitizedFolders = folders.map((folder) => {
+                return {
+                    name: folder.name,
+                    variantType: folder.variantType
+                };
+            });
+            updateDetailField(eSystemObjectType.eCaptureData, 'folders', sanitizedFolders);
             updateDetailField(eSystemObjectType.eCaptureData, 'isValidData', isValidData);
             updateDetailField(eSystemObjectType.eCaptureData, 'itemArrangementFieldId', itemArrangementFieldId);
             updateDetailField(eSystemObjectType.eCaptureData, 'itemPositionFieldId', itemPositionFieldId);
@@ -461,10 +477,11 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
 
         if (objectType === eSystemObjectType.eScene) {
             const {
-                Scene: { HasBeenQCd, IsOriented, EdanUUID }
+                Scene: { ApprovedForPublication, PublicationApprover, PosedAndQCd, EdanUUID }
             } = getDetailsTabDataForObject;
-            updateDetailField(eSystemObjectType.eScene, 'HasBeenQCd', HasBeenQCd);
-            updateDetailField(eSystemObjectType.eScene, 'IsOriented', IsOriented);
+            updateDetailField(eSystemObjectType.eScene, 'ApprovedForPublication', ApprovedForPublication);
+            updateDetailField(eSystemObjectType.eScene, 'PublicationApprover', PublicationApprover);
+            updateDetailField(eSystemObjectType.eScene, 'PosedAndQCd', PosedAndQCd);
             updateDetailField(eSystemObjectType.eScene, 'EdanUUID', EdanUUID);
         }
 
@@ -513,28 +530,111 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
     },
     getDetailsViewFieldErrors: (metadata: UpdateObjectDetailsDataInput, objectType: eSystemObjectType): string[] => {
-        // UPDATE these error fields as we include more validation for ingestion
-        const errors: DetailsViewFieldErrors = {
-            model: {
-                name: false,
-                dateCaptured: false
-            }
+        // UPDATE these error fields as we include more validation for details tab
+        // errors should be responsible for rendering error version of the input
+        // const errors: DetailsViewFieldErrors = {
+        //     model: {
+        //         name: false,
+        //         dateCaptured: false
+        //     },
+        //     captureData: {
+        //         name: false,
+        //         datasetFieldId: false,
+        //         itemPositionFieldId: false,
+        //         itemArrangementFieldId: false,
+        //         clusterGeometryFieldId: false
+        //     }
+        // };
+
+        const option = {
+            abortEarly: false
         };
-
         const errorMessages: string[] = [];
-
+        if (!metadata.Name?.trim().length) errorMessages.push('Please input a valid Name');
         if (objectType === eSystemObjectType.eModel) {
-            if (!lodash.isNil(metadata.Name)) {
-                errors.model.name = !metadata.Name.trim().length;
+            const { Model } = metadata;
+
+            try {
+                schemaModel.validateSync(
+                    {
+                        dateCaptured: Model?.DateCaptured
+                    },
+                    option
+                );
+            } catch (error) {
+                if (error instanceof Error)
+                    errorMessages.push(error.message);
             }
-            if (!lodash.isNil(metadata.Model?.DateCaptured)) {
-                errors.model.dateCaptured = metadata?.Model?.DateCaptured.toString() === 'Invalid Date' || new Date(metadata?.Model?.DateCaptured).getTime() > new Date().getTime();
+        }
+
+        if (objectType === eSystemObjectType.eCaptureData) {
+            const { CaptureData } = metadata;
+
+            try {
+                schemaCD.validateSync(
+                    {
+                        datasetFieldId: CaptureData?.datasetFieldId,
+                        itemArrangementFieldId: CaptureData?.itemArrangementFieldId,
+                        itemPositionFieldId: CaptureData?.itemPositionFieldId,
+                        clusterGeometryFieldId: CaptureData?.clusterGeometryFieldId
+                    },
+                    option
+                );
+            } catch (error) {
+                if (error instanceof Error)
+                    errorMessages.push(error.message);
             }
-            for (const field in errors.model) {
-                if (errors.model[field]) errorMessages.push(field);
+        }
+
+        if (objectType === eSystemObjectType.eItem || objectType === eSystemObjectType.eSubject) {
+            const { Item, Subject } = metadata;
+            const itemOrSubject = objectType === eSystemObjectType.eItem ? Item : Subject;
+            try {
+                schemaItemAndSubject.validateSync(
+                    {
+                        Latitude: Number(itemOrSubject?.Latitude),
+                        Longitude: Number(itemOrSubject?.Longitude),
+                        Altitude: Number(itemOrSubject?.Altitude),
+                        TS0: Number(itemOrSubject?.TS0),
+                        TS1: Number(itemOrSubject?.TS1),
+                        TS2: Number(itemOrSubject?.TS2),
+                        R0: Number(itemOrSubject?.R0),
+                        R1: Number(itemOrSubject?.R1),
+                        R2: Number(itemOrSubject?.R2),
+                        R3: Number(itemOrSubject?.R3)
+                    },
+                    option
+                );
+            } catch (error) {
+                if (error instanceof Error)
+                    errorMessages.push(error.message);
             }
         }
 
         return errorMessages;
     }
 }));
+
+const schemaCD = yup.object().shape({
+    datasetFieldId: yup.number().positive('Dataset Field ID must be positive').max(2147483647, 'Dataset Field ID is too large').nullable(),
+    itemPositionFieldId: yup.number().positive('Item Position Field ID must be positive').max(2147483647, 'Item Position Field ID is too large').nullable(),
+    itemArrangementFieldId: yup.number().positive('Item Arrangement Field ID must be positive').max(2147483647, 'Item Arrangement Field ID is too large').nullable(),
+    clusterGeometryFieldId: yup.number().positive('Cluster Geometry Field ID must be positive').max(2147483647, 'Cluster Geometry Field ID is too large').nullable()
+});
+
+const schemaModel = yup.object().shape({
+    dateCaptured: yup.date().max(Date(), 'Date Created cannot be set in the future')
+});
+
+const schemaItemAndSubject = yup.object().shape({
+    Latitude: yup.number().typeError('Number must be in standard or scientific notation'),
+    Longitude: yup.number().typeError('Number must be in standard or scientific notation'),
+    Altitude: yup.number().typeError('Number must be in standard or scientific notation'),
+    TS0: yup.number().typeError('Number must be in standard or scientific notation'),
+    TS1: yup.number().typeError('Number must be in standard or scientific notation'),
+    TS2: yup.number().typeError('Number must be in standard or scientific notation'),
+    R0: yup.number().typeError('Number must be in standard or scientific notation'),
+    R1: yup.number().typeError('Number must be in standard or scientific notation'),
+    R2: yup.number().typeError('Number must be in standard or scientific notation'),
+    R3: yup.number().typeError('Number must be in standard or scientific notation')
+});

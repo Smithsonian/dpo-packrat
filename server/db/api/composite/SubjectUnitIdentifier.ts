@@ -54,10 +54,11 @@ export class SubjectUnitIdentifier {
                 
                 SELECT SO.idSystemObject
                 FROM Subject AS S
-                JOIN Unit AS U ON (S.idUnit = U.idUnit)
                 JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
-                WHERE (S.Name LIKE ${query}
-                    OR U.Abbreviation LIKE ${query})	
+                LEFT JOIN SystemObjectXref AS SOX ON (SO.idSystemObject = SOX.idSystemObjectMaster)
+                LEFT JOIN SystemObject AS SOD ON (SOX.idSystemObjectDerived = SOD.idSystemObject)
+                LEFT JOIN Item AS I ON (SOD.idItem = I.idItem)
+                WHERE (S.Name LIKE ${query} OR I.Name LIKE ${query})
             ),
             _ARKIDs (idSystemObject, IdentifierValue) AS (
                 SELECT ID.idSystemObject, ID.IdentifierValue

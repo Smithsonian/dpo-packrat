@@ -24,7 +24,7 @@ export class CSVParser {
                 stream.on('error', () => reject());
                 stream.on('end', () => resolve(rows));
             } catch (error) /* istanbul ignore next */ {
-                LOG.error(error, LOG.LS.eSYS);
+                LOG.error('CSVParser.parse', LOG.LS.eSYS, error);
                 reject();
             }
         });

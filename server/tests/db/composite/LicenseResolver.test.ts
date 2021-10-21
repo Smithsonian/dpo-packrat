@@ -35,10 +35,10 @@ describe('DB Composite LicenseResolver', () => {
     });
 
     test('LicenseCache', async () => {
-        expect(await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadCC0)).toEqual(OGTS.licenseCC0);
-        expect(await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadRestriction)).toEqual(OGTS.licenseDownload);
-        expect(await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewOnly)).toEqual(OGTS.licenseView);
-        expect(await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eRestricted)).toEqual(OGTS.licenseRestricted);
+        expect(await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadCC0)).toEqual(OGTS.licenseCC0);
+        expect(await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadRestriction)).toEqual(OGTS.licenseDownload);
+        expect(await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewOnly)).toEqual(OGTS.licenseView);
+        expect(await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eRestricted)).toEqual(OGTS.licenseRestricted);
     });
 });
 
