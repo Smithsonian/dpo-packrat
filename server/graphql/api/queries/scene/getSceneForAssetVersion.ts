@@ -7,9 +7,7 @@ const getSceneForAssetVersion = gql`
             SceneConstellation {
                 Scene {
                     idScene
-                    HasBeenQCd
                     idAssetThumbnail
-                    IsOriented
                     Name
                     CountScene
                     CountNode
@@ -19,6 +17,8 @@ const getSceneForAssetVersion = gql`
                     CountMeta
                     CountSetup
                     CountTour
+                    ApprovedForPublication
+                    PosedAndQCd
                 }
                 ModelSceneXref {
                     idModelSceneXref

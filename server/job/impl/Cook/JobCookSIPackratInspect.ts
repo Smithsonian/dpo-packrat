@@ -113,11 +113,12 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         // map and validate assets:
         if (this.modelConstellation.ModelAssets) {
             for (const modelAsset of this.modelConstellation.ModelAssets) {
-                let mappedId: number | undefined = assetMap.get(modelAsset.Asset.FileName);
+                const fileName: string = modelAsset.Asset.FileName.trim();
+                let mappedId: number | undefined = assetMap.get(fileName);
                 if (!mappedId) // try again, with just filename
-                    mappedId = assetMap.get(path.basename(modelAsset.Asset.FileName));
+                    mappedId = assetMap.get(path.basename(fileName));
                 if (!mappedId) {
-                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.saferStringify)}`;
+                    const error: string = `Missing ${fileName} and ${path.basename(fileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.saferStringify)}`;
                     LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
@@ -416,6 +417,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                                 case 'uri':
                                     materialUri = maybeString(value);
                                     if (materialUri) {
+                                        materialUri = materialUri.trim();
                                         // detect and handle UV Maps embedded in the geometry file:
                                         if (materialUri.toLowerCase().startsWith('embedded*')) {
                                             materialUri = null;
@@ -702,6 +704,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             return false;
         }
 
+        let sourceMeshFile: string | undefined = undefined;
         const files: string[] = await ZS.getJustFiles(null);
         const RSRs: STORE.ReadStreamResult[] = [];
         for (const file of files) {
@@ -725,7 +728,14 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 success: true,
                 error: ''
             });
-            this.parameters.sourceMeshFile = path.basename(file);
+
+            // If we haven't yet defined the source mesh and we are processing a geometry file (eVocabID is defined), use this file as our source mesh:
+            if (!sourceMeshFile && eVocabID !== undefined)
+                sourceMeshFile = path.basename(file);
+        }
+
+        if (sourceMeshFile) {
+            this.parameters.sourceMeshFile = sourceMeshFile;
             this._dbJobRun.Parameters = JSON.stringify(this.parameters, H.Helpers.saferStringify);
             if (!await this._dbJobRun.update())
                 LOG.error(`JobCookSIPackratInspect.testForZip failed to update JobRun.parameters for ${JSON.stringify(this._dbJobRun, H.Helpers.saferStringify)}`, LOG.LS.eJOB);

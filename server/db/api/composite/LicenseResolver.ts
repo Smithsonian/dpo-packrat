@@ -15,19 +15,21 @@ export class LicenseResolver {
         this.inherited = inherited;
     }
 
-    public static async fetch(idSystemObject: number): Promise<LicenseResolver | null> {
+    public static async fetch(idSystemObject: number, OGD?: ObjectGraphDatabase | undefined): Promise<LicenseResolver | null> {
         const LR: LicenseResolver | null = await LicenseResolver.fetchSpecificLicense(idSystemObject, false);
         if (LR)
             return LR;
 
-        const OGD: ObjectGraphDatabase = new ObjectGraphDatabase();
-        const OG: ObjectGraph = new ObjectGraph(idSystemObject, eObjectGraphMode.eAncestors, 32, OGD); /* istanbul ignore if */
-        if (!await OG.fetch()) {
-            LOG.error(`LicenseResolver unable to fetch object graph for ${idSystemObject}`, LOG.LS.eDB);
-            return null;
+        if (!OGD) {
+            OGD = new ObjectGraphDatabase();
+            const OG: ObjectGraph = new ObjectGraph(idSystemObject, eObjectGraphMode.eAncestors, 32, OGD); /* istanbul ignore if */
+            if (!await OG.fetch()) {
+                LOG.error(`LicenseResolver unable to fetch object graph for ${idSystemObject}`, LOG.LS.eDB);
+                return null;
+            }
         }
 
-        return await LicenseResolver.fetchParentsLicense(OGD, idSystemObject, 32);
+        return await LicenseResolver.fetchParentsLicense(OGD, idSystemObject, 32, new Map<number, LicenseResolver | null>());
     }
 
     private static async pickMostRestrictiveLicense(assignments: LicenseAssignment[], inherited: boolean): Promise<LicenseResolver | null> {
@@ -59,11 +61,12 @@ export class LicenseResolver {
         let LR: LicenseResolver | null = null;
         if (assignments && assignments.length > 0)
             LR = await LicenseResolver.pickMostRestrictiveLicense(assignments, inherited);
-        // LOG.info(`LR.fetchSpecificLicense found ${JSON.stringify(LR)}`, LOG.LS.eDB);
+        // LOG.info(`LR.fetchSpecificLicense(${idSystemObject}) found ${JSON.stringify(LR)}`, LOG.LS.eDB);
         return LR;
     }
 
-    private static async fetchParentsLicense(OGD: ObjectGraphDatabase, idSystemObject: number, depth: number): Promise<LicenseResolver | null> {
+    private static async fetchParentsLicense(OGD: ObjectGraphDatabase, idSystemObject: number, depth: number,
+        LRMap: Map<number, LicenseResolver | null>): Promise<LicenseResolver | null> {
         let LR: LicenseResolver | null = null;
 
         const OGDE: ObjectGraphDataEntry | undefined = OGD.objectMap.get(idSystemObject);
@@ -74,14 +77,18 @@ export class LicenseResolver {
 
         for (const idSystemObjectParent of OGDE.parentMap.keys()) {
             // for each parent, get its specific LicenseResolver
-            let LRP: LicenseResolver | null = await LicenseResolver.fetchSpecificLicense(idSystemObjectParent, true);
-            if (!LRP || !LRP.License) {  /* istanbul ignore if */
-                // if none, step "up" to the parent, and fetch it's aggregate parents' notion of license, via recursion
-                if (depth <= 0)
-                    continue;
+            let LRP: LicenseResolver | null | undefined = LRMap.get(idSystemObjectParent);
+            if (LRP === undefined) {
+                LRP = await LicenseResolver.fetchSpecificLicense(idSystemObjectParent, true);
+                if (!LRP || !LRP.License) {  /* istanbul ignore if */
+                    // if none, step "up" to the parent, and fetch it's aggregate parents' notion of license, via recursion
+                    if (depth <= 0)
+                        continue;
 
-                LRP = await LicenseResolver.fetchParentsLicense(OGD, idSystemObjectParent, depth - 1);
-            } /* istanbul ignore else */
+                    LRP = await LicenseResolver.fetchParentsLicense(OGD, idSystemObjectParent, depth - 1, LRMap);
+                } /* istanbul ignore else */
+                LRMap.set(idSystemObjectParent, LRP);
+            }
 
             if (LRP && LRP.License) {
                 if (!LR || !LR.License)                                         // if we don't yet have a license, use this one
@@ -91,7 +98,7 @@ export class LicenseResolver {
                 continue;
             }
         }
-        // LOG.info(`LR.fetchParentsLicense found ${JSON.stringify(LR)}`, LOG.LS.eDB);
+        // LOG.info(`LR.fetchParentsLicense(${idSystemObject}) found ${JSON.stringify(LR)}, LRMap size = ${LRMap.size}`, LOG.LS.eDB);
         return LR;
     }
 }

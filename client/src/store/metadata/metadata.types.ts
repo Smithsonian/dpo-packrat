@@ -55,8 +55,8 @@ export type StateIdentifier = {
     id: number;
     identifier: string;
     identifierType: number | null;
-    selected: boolean;
     idIdentifier: number;
+    preferred?: boolean;
 };
 
 export type StateFolder = {
@@ -111,11 +111,11 @@ export type SceneFields = {
     sourceObjects: StateRelatedObject[];
     derivedObjects: StateRelatedObject[];
     referenceModels: StateReferenceModel[];
-    hasBeenQCd: boolean;
-    isOriented: boolean;
     name: string;
     directory: string;
     EdanUUID: string;
+    approvedForPublication: boolean;
+    posedAndQCd: boolean;
     idAsset?: number;
 };
 

@@ -11,19 +11,26 @@ import {
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as LOG from '../../../../../utils/logger';
+import * as H from '../../../../../utils/helpers';
 
 export default async function getSystemObjectDetails(_: Parent, args: QueryGetSystemObjectDetailsArgs): Promise<GetSystemObjectDetailsResult> {
     const { input } = args;
     const { idSystemObject } = input;
+    LOG.info('getSystemObjectDetails 0', LOG.LS.eGQL);
 
     const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
-    const { unit, project, subject, item, objectAncestors } = await getObjectAncestors(idSystemObject);
+    LOG.info('getSystemObjectDetails 1', LOG.LS.eGQL);
+
+    const OGD: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
+    const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors, 32, OGD);
+    const { unit, project, subject, item, objectAncestors } = await getObjectAncestors(OG);
+    LOG.info('getSystemObjectDetails 2', LOG.LS.eGQL);
 
     const systemObject: SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
     const derivedObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Derived);
     const objectVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
-    const publishedState: string = await getPublishedState(idSystemObject);
+    const { publishedState, publishedEnum, publishable } = await getPublishedState(idSystemObject, oID);
     const identifiers = await getIngestIdentifiers(idSystemObject);
 
     if (!oID) {
@@ -34,29 +41,30 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 
     if (!systemObject) {
         const message: string = `No system object found for ID: ${idSystemObject}`;
-        LOG.error(message, LOG.LS.eGQL);
+        LOG.error(`getSystemObjectDetails: ${message}`, LOG.LS.eGQL);
         throw new Error(message);
     }
 
     if (!objectVersions) {
         const message: string = `No SystemObjectVersions found for ID: ${idSystemObject}`;
-        LOG.error(message, LOG.LS.eGQL);
+        LOG.error(`getSystemObjectDetails: ${message}`, LOG.LS.eGQL);
         throw new Error(message);
     }
 
-    const idObject: number = oID.idObject;
-    const name: string = await resolveNameForObjectType(systemObject, oID.eObjectType);
-
-    const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
+    const name: string = await resolveNameForObject(idSystemObject);
+    const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject, OGD);
+    LOG.info('getSystemObjectDetails 3', LOG.LS.eGQL);
 
     return {
         idSystemObject,
-        idObject,
+        idObject: oID.idObject,
         name,
         retired: systemObject.Retired,
         objectType: oID.eObjectType,
         allowed: true, // TODO: True until Access control is implemented (Post MVP)
         publishedState,
+        publishedEnum,
+        publishable,
         thumbnail: null,
         unit,
         project,
@@ -72,12 +80,22 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     };
 }
 
-async function getPublishedState(idSystemObject: number): Promise<string> {
+async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndType | undefined): Promise<{ publishedState: string, publishedEnum: DBAPI.ePublishedState, publishable: boolean }> {
     const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
-    return DBAPI.PublishedStateEnumToString(systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished);
+    const publishedEnum: DBAPI.ePublishedState = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished;
+    const publishedState: string = DBAPI.PublishedStateEnumToString(publishedEnum);
+    let publishable: boolean = false;
+    if (oID && oID.eObjectType == DBAPI.eSystemObjectType.eScene) {
+        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
+        if (scene)
+            publishable = scene.ApprovedForPublication && scene.PosedAndQCd;
+        else
+            LOG.error(`Unable to compute scene for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+    }
+    return { publishedState, publishedEnum, publishable };
 }
 
-async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {
+export async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {
     let relatedSystemObjects: SystemObject[] | null = [];
 
     if (type === RelatedObjectType.Source) {
@@ -102,7 +120,7 @@ async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType
 
         const sourceObject: RelatedObject = {
             idSystemObject: relatedSystemObject.idSystemObject,
-            name: await resolveNameForObjectType(relatedSystemObject, oID.eObjectType),
+            name: await resolveNameForObject(relatedSystemObject.idSystemObject),
             identifier: identifier?.[0]?.IdentifierValue ?? null,
             objectType: oID.eObjectType
         };
@@ -133,14 +151,13 @@ type GetObjectAncestorsResult = {
     objectAncestors: RepositoryPath[][];
 };
 
-async function getObjectAncestors(idSystemObject: number): Promise<GetObjectAncestorsResult> {
-    const objectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors);
+async function getObjectAncestors(OG: DBAPI.ObjectGraph): Promise<GetObjectAncestorsResult> {
     let unit: RepositoryPath | null = null;
     let project: RepositoryPath | null = null;
     let subject: RepositoryPath | null = null;
     let item: RepositoryPath | null = null;
 
-    if (!(await objectGraph.fetch())) {
+    if (!(await OG.fetch())) {
         return {
             unit,
             project,
@@ -149,43 +166,45 @@ async function getObjectAncestors(idSystemObject: number): Promise<GetObjectAnce
             objectAncestors: []
         };
     }
+    LOG.info('getSystemObjectDetails 1a-OG Fetch', LOG.LS.eGQL);
 
     const objectAncestors: RepositoryPath[][] = [];
 
-    if (objectGraph.unit) {
-        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.unit, DBAPI.eSystemObjectType.eUnit);
+    if (OG.unit) {
+        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(OG.unit, DBAPI.eSystemObjectType.eUnit);
         unit = objectAncestor[0];
         objectAncestors.push(objectAncestor);
     }
 
-    if (objectGraph.project) {
-        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.project, DBAPI.eSystemObjectType.eProject);
+    if (OG.project) {
+        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(OG.project, DBAPI.eSystemObjectType.eProject);
         project = objectAncestor[0];
         objectAncestors.push(objectAncestor);
     }
 
-    if (objectGraph.subject) {
-        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.subject, DBAPI.eSystemObjectType.eSubject);
+    if (OG.subject) {
+        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(OG.subject, DBAPI.eSystemObjectType.eSubject);
         subject = objectAncestor[0];
         objectAncestors.push(objectAncestor);
     }
 
-    if (objectGraph.item) {
-        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(objectGraph.item, DBAPI.eSystemObjectType.eItem);
+    if (OG.item) {
+        const objectAncestor: RepositoryPath[] = await objectToRepositoryPath(OG.item, DBAPI.eSystemObjectType.eItem);
         item = objectAncestor[0];
         objectAncestors.push(objectAncestor);
     }
 
-    if (objectGraph.captureData) objectAncestors.push(await objectToRepositoryPath(objectGraph.captureData, DBAPI.eSystemObjectType.eCaptureData));
-    if (objectGraph.model) objectAncestors.push(await objectToRepositoryPath(objectGraph.model, DBAPI.eSystemObjectType.eModel));
-    if (objectGraph.scene) objectAncestors.push(await objectToRepositoryPath(objectGraph.scene, DBAPI.eSystemObjectType.eScene));
-    if (objectGraph.intermediaryFile) objectAncestors.push(await objectToRepositoryPath(objectGraph.intermediaryFile, DBAPI.eSystemObjectType.eIntermediaryFile));
-    if (objectGraph.projectDocumentation) objectAncestors.push(await objectToRepositoryPath(objectGraph.projectDocumentation, DBAPI.eSystemObjectType.eProjectDocumentation));
-    if (objectGraph.asset) objectAncestors.push(await objectToRepositoryPath(objectGraph.asset, DBAPI.eSystemObjectType.eAsset));
-    if (objectGraph.assetVersion) objectAncestors.push(await objectToRepositoryPath(objectGraph.assetVersion, DBAPI.eSystemObjectType.eAssetVersion));
-    if (objectGraph.actor) objectAncestors.push(await objectToRepositoryPath(objectGraph.actor, DBAPI.eSystemObjectType.eActor));
-    if (objectGraph.stakeholder) objectAncestors.push(await objectToRepositoryPath(objectGraph.stakeholder, DBAPI.eSystemObjectType.eStakeholder));
+    if (OG.captureData) objectAncestors.push(await objectToRepositoryPath(OG.captureData, DBAPI.eSystemObjectType.eCaptureData));
+    if (OG.model) objectAncestors.push(await objectToRepositoryPath(OG.model, DBAPI.eSystemObjectType.eModel));
+    if (OG.scene) objectAncestors.push(await objectToRepositoryPath(OG.scene, DBAPI.eSystemObjectType.eScene));
+    if (OG.intermediaryFile) objectAncestors.push(await objectToRepositoryPath(OG.intermediaryFile, DBAPI.eSystemObjectType.eIntermediaryFile));
+    if (OG.projectDocumentation) objectAncestors.push(await objectToRepositoryPath(OG.projectDocumentation, DBAPI.eSystemObjectType.eProjectDocumentation));
+    if (OG.asset) objectAncestors.push(await objectToRepositoryPath(OG.asset, DBAPI.eSystemObjectType.eAsset));
+    if (OG.assetVersion) objectAncestors.push(await objectToRepositoryPath(OG.assetVersion, DBAPI.eSystemObjectType.eAssetVersion));
+    if (OG.actor) objectAncestors.push(await objectToRepositoryPath(OG.actor, DBAPI.eSystemObjectType.eActor));
+    if (OG.stakeholder) objectAncestors.push(await objectToRepositoryPath(OG.stakeholder, DBAPI.eSystemObjectType.eStakeholder));
 
+    LOG.info('getSystemObjectDetails 1b', LOG.LS.eGQL);
     return {
         unit,
         project,
@@ -215,49 +234,57 @@ type Objects =
 async function objectToRepositoryPath(objects: Objects, objectType: DBAPI.eSystemObjectType): Promise<RepositoryPath[]> {
     const paths: RepositoryPath[] = [];
     for (const object of objects) {
-        let SystemObject: SystemObject | null = null;
+        let idObject: number | null = null;
 
-        if (object instanceof DBAPI.Unit && objectType === DBAPI.eSystemObjectType.eUnit)
-            SystemObject = await DBAPI.SystemObject.fetchFromUnitID(object.idUnit);
-        if (object instanceof DBAPI.Project && objectType === DBAPI.eSystemObjectType.eProject)
-            SystemObject = await DBAPI.SystemObject.fetchFromProjectID(object.idProject);
-        if (object instanceof DBAPI.Subject && objectType === DBAPI.eSystemObjectType.eSubject)
-            SystemObject = await DBAPI.SystemObject.fetchFromSubjectID(object.idSubject);
-        if (object instanceof DBAPI.Item && objectType === DBAPI.eSystemObjectType.eItem)
-            SystemObject = await DBAPI.SystemObject.fetchFromItemID(object.idItem);
-        if (object instanceof DBAPI.CaptureData && objectType === DBAPI.eSystemObjectType.eCaptureData)
-            SystemObject = await DBAPI.SystemObject.fetchFromCaptureDataID(object.idCaptureData);
-        if (object instanceof DBAPI.Model && objectType === DBAPI.eSystemObjectType.eModel)
-            SystemObject = await DBAPI.SystemObject.fetchFromModelID(object.idModel);
-        if (object instanceof DBAPI.Scene && objectType === DBAPI.eSystemObjectType.eScene)
-            SystemObject = await DBAPI.SystemObject.fetchFromSceneID(object.idScene);
-        if (object instanceof DBAPI.IntermediaryFile && objectType === DBAPI.eSystemObjectType.eIntermediaryFile)
-            SystemObject = await DBAPI.SystemObject.fetchFromIntermediaryFileID(object.idIntermediaryFile);
-        if (object instanceof DBAPI.ProjectDocumentation && objectType === DBAPI.eSystemObjectType.eProjectDocumentation)
-            SystemObject = await DBAPI.SystemObject.fetchFromProjectDocumentationID(object.idProjectDocumentation);
-        if (object instanceof DBAPI.Asset && objectType === DBAPI.eSystemObjectType.eAsset)
-            SystemObject = await DBAPI.SystemObject.fetchFromAssetID(object.idAsset);
-        if (object instanceof DBAPI.AssetVersion && objectType === DBAPI.eSystemObjectType.eAssetVersion)
-            SystemObject = await DBAPI.SystemObject.fetchFromAssetVersionID(object.idAssetVersion);
-        if (object instanceof DBAPI.Actor && objectType === DBAPI.eSystemObjectType.eActor)
-            SystemObject = await DBAPI.SystemObject.fetchFromActorID(object.idActor);
-        if (object instanceof DBAPI.Stakeholder && objectType === DBAPI.eSystemObjectType.eStakeholder)
-            SystemObject = await DBAPI.SystemObject.fetchFromStakeholderID(object.idStakeholder);
+        if (object instanceof DBAPI.Unit)
+            idObject = object.idUnit;
+        else if (object instanceof DBAPI.Project)
+            idObject = object.idProject;
+        else if (object instanceof DBAPI.Subject)
+            idObject = object.idSubject;
+        else if (object instanceof DBAPI.Item)
+            idObject = object.idItem;
+        else if (object instanceof DBAPI.CaptureData)
+            idObject = object.idCaptureData;
+        else if (object instanceof DBAPI.Model)
+            idObject = object.idModel;
+        else if (object instanceof DBAPI.Scene)
+            idObject = object.idScene;
+        else if (object instanceof DBAPI.IntermediaryFile)
+            idObject = object.idIntermediaryFile;
+        else if (object instanceof DBAPI.ProjectDocumentation)
+            idObject = object.idProjectDocumentation;
+        else if (object instanceof DBAPI.Asset)
+            idObject = object.idAsset;
+        else if (object instanceof DBAPI.AssetVersion)
+            idObject = object.idAssetVersion;
+        else if (object instanceof DBAPI.Actor)
+            idObject = object.idActor;
+        else if (object instanceof DBAPI.Stakeholder)
+            idObject = object.idStakeholder;
+        else {
+            LOG.error(`getSystemObjectDetails unable to determine type and id from ${JSON.stringify(object, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            continue;
+        }
 
-        const path: RepositoryPath = {
-            idSystemObject: SystemObject?.idSystemObject ?? 0,
-            name: await resolveNameForObjectType(SystemObject, objectType),
-            objectType
-        };
-        paths.push(path);
+        const oID: DBAPI.ObjectIDAndType | undefined = { idObject, eObjectType: objectType };
+        const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
+        if (SOI) {
+            const path: RepositoryPath = {
+                idSystemObject: SOI.idSystemObject,
+                name: await resolveNameForObject(SOI.idSystemObject),
+                objectType
+            };
+            paths.push(path);
+        } else
+            LOG.error(`getSystemObjectDetails could not compute system object info from ${JSON.stringify(oID)}`, LOG.LS.eGQL);
     }
 
+    LOG.info(`getSystemObjectDetails 1b-${DBAPI.eSystemObjectType[objectType]} ${objects.length}`, LOG.LS.eGQL);
     return paths;
 }
 
-async function resolveNameForObjectType(systemObject: SystemObject | null, _objectType: DBAPI.eDBObjectType): Promise<string> {
-    if (!systemObject)
-        return unknownName;
-    const name: string | undefined = await CACHE.SystemObjectCache.getObjectNameByID(systemObject.idSystemObject);
+async function resolveNameForObject(idSystemObject: number): Promise<string> {
+    const name: string | undefined = await CACHE.SystemObjectCache.getObjectNameByID(idSystemObject);
     return name || unknownName;
 }

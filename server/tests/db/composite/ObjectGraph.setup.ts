@@ -165,7 +165,7 @@ export class ObjectGraphTestSetup {
         this.assetVersion8a = await UTIL.createAssetVersionTest({ idAsset: this.asset8.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test', StorageKeyStaging: '', Version: 0 });
         this.assetVersion8b = await UTIL.createAssetVersionTest({ idAsset: this.asset8.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test', StorageKeyStaging: '', Version: 0 });
         this.assetVersion8c = await UTIL.createAssetVersionTest({ idAsset: this.asset8.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test', StorageKeyStaging: '', Version: 0 });
-        this.scene1 = await UTIL.createSceneTest({ Name: 'OA Test', idAssetThumbnail: this.assetT5.idAsset, IsOriented: true, HasBeenQCd: true, CountScene: 0, CountNode: 0, CountCamera: 0, CountLight: 0, CountModel: 0, CountMeta: 0, CountSetup: 0, CountTour: 0, EdanUUID: null, idScene: 0 });
+        this.scene1 = await UTIL.createSceneTest({ Name: 'OA Test', idAssetThumbnail: this.assetT5.idAsset, CountScene: 0, CountNode: 0, CountCamera: 0, CountLight: 0, CountModel: 0, CountMeta: 0, CountSetup: 0, CountTour: 0, EdanUUID: null, PosedAndQCd: true, ApprovedForPublication: true, idScene: 0 });
         assigned = await this.asset8.assignOwner(this.scene1); expect(assigned).toBeTruthy();
         assigned = await this.assetT5.assignOwner(this.scene1); expect(assigned).toBeTruthy();
 
@@ -251,10 +251,10 @@ export class ObjectGraphTestSetup {
     }
 
     async assignLicenses(): Promise<boolean> {
-        this.licenseCC0        = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadCC0) ?? null;
-        this.licenseDownload   = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadRestriction) ?? null;
-        this.licenseView       = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewOnly) ?? null;
-        this.licenseRestricted = await CACHE.LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eRestricted) ?? null;
+        this.licenseCC0        = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadCC0) ?? null;
+        this.licenseDownload   = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadRestriction) ?? null;
+        this.licenseView       = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewOnly) ?? null;
+        this.licenseRestricted = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eRestricted) ?? null;
 
         if (!this.licenseCC0 || !this.licenseDownload || !this.licenseView || !this.licenseRestricted) {
             LOG.error('ObjectGraphTestSetup.assignLicenses unable to fetch cached licenses', LOG.LS.eTEST);

@@ -2,11 +2,24 @@ import { DeleteObjectConnectionResult, MutationDeleteObjectConnectionArgs } from
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as LOG from '../../../../../utils/logger';
+import { getRelatedObjects } from '../queries/getSystemObjectDetails';
+import { RelatedObjectType } from '../../../../../types/graphql';
+import { eSystemObjectType } from '../../../../../db';
+
 
 export default async function deleteObjectConnection(_: Parent, args: MutationDeleteObjectConnectionArgs): Promise<DeleteObjectConnectionResult> {
-    const { input: { idSystemObjectMaster, idSystemObjectDerived } } = args;
+    const { input: { idSystemObjectMaster, objectTypeMaster, idSystemObjectDerived, objectTypeDerived } } = args;
     let result = { success: true, details: 'Relationship Removed!' };
+
     const idSystemObjectXrefs = await DBAPI.SystemObjectXref.fetchXref(idSystemObjectMaster, idSystemObjectDerived);
+
+    if ((objectTypeDerived === eSystemObjectType.eModel && objectTypeMaster === eSystemObjectType.eItem) || (objectTypeDerived === eSystemObjectType.eCaptureData && objectTypeMaster === eSystemObjectType.eItem)) {
+        const sourceObjectsOfChild = await getRelatedObjects(idSystemObjectDerived, RelatedObjectType.Source);
+        const sourceItemCount = sourceObjectsOfChild.filter(source => source.objectType === eSystemObjectType.eItem).length;
+        if (sourceItemCount <= 1) {
+            return { success: false, details: 'Cannot delete last item parent' };
+        }
+    }
 
     if (idSystemObjectXrefs) {
         for (let i = 0; i < idSystemObjectXrefs.length; i++) {

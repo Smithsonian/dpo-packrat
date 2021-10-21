@@ -72,6 +72,7 @@ export interface IViewer
 {
     shader: TShaderMode;
     exposure: number;
+    toneMapping: boolean;
     gamma: number;
     annotationsVisible?: boolean;
     activeTags?: string;

@@ -3,8 +3,9 @@ import { EventConsumer } from './EventConsumer';
 import { EventConsumerDB } from './EventConsumerDB';
 import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
+import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
-import { PublishScene } from './PublishScene';
+import * as H from '../../../utils/helpers';
 
 export class EventConsumerPublish extends EventConsumer {
     constructor(engine: EventEngine) {
@@ -34,7 +35,31 @@ export class EventConsumerPublish extends EventConsumer {
 
     protected async publishScene<Value>(dataItemValue: Value): Promise<boolean> {
         const audit: DBAPI.Audit = EventConsumerDB.convertDataToAudit(dataItemValue);
-        const PS: PublishScene = new PublishScene(audit);
-        return await PS.publish();
+
+        let idSystemObject: number | null = audit.idSystemObject;
+        if (idSystemObject === null && audit.idDBObject && audit.DBObjectType) {
+            const oID: DBAPI.ObjectIDAndType = { idObject: audit.idDBObject, eObjectType: audit.DBObjectType };
+            const SOInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
+            if (SOInfo) {
+                idSystemObject = SOInfo.idSystemObject;
+                audit.idSystemObject = idSystemObject;
+            }
+        }
+
+        LOG.info(`EventConsumerPublish.publishScene Scene QCd ${audit.idDBObject}`, LOG.LS.eEVENT);
+        if (audit.idAudit === 0)
+            audit.create(); // don't use await so this happens asynchronously
+
+        if (!idSystemObject) {
+            LOG.error(`EventConsumerPublish.publishScene received eSceneQCd event for scene without idSystemObject ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eEVENT);
+            return false;
+        }
+
+        if (audit.getDBObjectType() !== DBAPI.eSystemObjectType.eScene) {
+            LOG.error(`EventConsumerPublish.publishScene received eSceneQCd event for non scene object ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eEVENT);
+            return false;
+        }
+
+        return true;
     }
 }

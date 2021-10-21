@@ -36,6 +36,7 @@ type SubjectDetailFields {
     TS0: Float
     TS1: Float
     TS2: Float
+    idIdentifierPreferred: Int
 }
 
 type ItemDetailFields {
@@ -77,8 +78,6 @@ type SceneDetailFields {
     AssetType: Int
     Tours: Int
     Annotation: Int
-    HasBeenQCd: Boolean
-    IsOriented: Boolean
     CountScene: Int
     CountNode: Int
     CountCamera: Int
@@ -88,6 +87,9 @@ type SceneDetailFields {
     CountSetup: Int
     CountTour: Int
     EdanUUID: String
+    ApprovedForPublication: Boolean
+    PublicationApprover: String
+    PosedAndQCd: Boolean
     idScene: Int
 }
 
@@ -162,6 +164,8 @@ type GetSystemObjectDetailsResult {
     objectType: Int!
     allowed: Boolean!
     publishedState: String!
+    publishedEnum: Int!
+    publishable: Boolean!
     thumbnail: String
     identifiers: [IngestIdentifier!]!
     objectAncestors: [[RepositoryPath!]!]!

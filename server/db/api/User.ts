@@ -2,6 +2,7 @@
 import { User as UserBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 
 export enum eUserStatus {
     eAll,
@@ -28,6 +29,20 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
 
     public fetchTableName(): string { return 'User'; }
     public fetchID(): number { return this.idUser; }
+
+    static constructFromPrisma(userBase: UserBase): User {
+        return new User({
+            idUser: userBase.idUser,
+            Name: userBase.Name,
+            EmailAddress: userBase.EmailAddress,
+            SecurityID: userBase.SecurityID,
+            Active: H.Helpers.safeBoolean(userBase.Active) ?? false,
+            DateActivated: userBase.DateActivated,
+            DateDisabled: userBase.DateDisabled,
+            WorkflowNotificationTime: userBase.WorkflowNotificationTime,
+            EmailSettings: userBase.EmailSettings
+        });
+    }
 
     protected updateCachedValues(): void {
         this.ActiveOrig = this.Active;
