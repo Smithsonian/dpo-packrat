@@ -38,13 +38,15 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         return <Loader minHeight='15vh' />;
     }
 
-    const updateFolderVariant = () => {
-        alert('TODO: KARAN: Update Folder Variant');
+    const updateFolderVariant = (id, variantType) => {
+        const folders = [...CaptureDataDetails.folders];
+        const folder = folders[id];
+        folder.variantType = variantType;
+        updateDetailField(eSystemObjectType.eCaptureData, 'folders', folders);
     };
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
-        // setDetails(details => ({ ...details, [name]: value }));
         updateDetailField(eSystemObjectType.eCaptureData, name, value);
     };
 
@@ -78,7 +80,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     return (
         <Box>
-            <ReadOnlyRow label='Capture Method' value={captureMethod?.Term || 'Unknown'} />
+            <ReadOnlyRow label='Capture Method' value={captureMethod?.Term || 'Unknown'} width='calc(100% - 20px)' />
             <Description
                 viewMode
                 value={CaptureDataDetails.description ?? ''}

@@ -36,6 +36,7 @@ type SubjectDetailFields {
     TS0: Float
     TS1: Float
     TS2: Float
+    idIdentifierPreferred: Int
 }
 
 type ItemDetailFields {
@@ -162,6 +163,8 @@ type GetSystemObjectDetailsResult {
     objectType: Int!
     allowed: Boolean!
     publishedState: String!
+    publishedEnum: Int!
+    publishable: Boolean!
     thumbnail: String
     identifiers: [IngestIdentifier!]!
     objectAncestors: [[RepositoryPath!]!]!

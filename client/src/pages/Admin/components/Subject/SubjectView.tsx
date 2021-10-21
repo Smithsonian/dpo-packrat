@@ -13,6 +13,7 @@ import { resolveSubRoute, ADMIN_ROUTE, ADMIN_ROUTES_TYPE } from '../../../../con
 import { Subject } from '../../../../types/graphql';
 import { toast } from 'react-toastify';
 import { subjectUnitIdentifierStringToEnum } from '../../../../types/server';
+import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles({
     AdminViewContainer: {
@@ -165,6 +166,9 @@ function SubjectView(): React.ReactElement {
 
     return (
         <Box className={classes.AdminViewContainer}>
+            <Helmet>
+                <title>Subjects Admin</title>
+            </Helmet>
             <Box className={classes.AdminBreadCrumbsContainer}>
                 <GenericBreadcrumbsView items={location.pathname.slice(1)} />
             </Box>

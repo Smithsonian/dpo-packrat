@@ -13,6 +13,7 @@ import { useLocation } from 'react-router';
 import { GetProjectListDocument, GetProjectListResult } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
+import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -216,6 +217,9 @@ function AdminProjectsView(): React.ReactElement {
 
     return (
         <React.Fragment>
+            <Helmet>
+                <title>Projects Admin</title>
+            </Helmet>
             <Box className={classes.AdminPageViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />

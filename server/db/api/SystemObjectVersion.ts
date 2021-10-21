@@ -19,10 +19,8 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
 
     public publishedStateEnum(): ePublishedState {
         switch (this.PublishedState) {
-            case 1: return ePublishedState.eRestricted;
-            case 2: return ePublishedState.eViewOnly;
-            case 3: return ePublishedState.eViewDownloadRestriction;
-            case 4: return ePublishedState.eViewDownloadCC0;
+            case 1: return ePublishedState.eAPIOnly;
+            case 2: return ePublishedState.ePublished;
             default: return ePublishedState.eNotPublished;
         }
     }
