@@ -89,7 +89,7 @@ function Model(props: ModelProps): React.ReactElement {
     const { model } = metadata;
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
-    const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
+    const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const [modalOpen, setModalOpen] = useState(false);
@@ -211,13 +211,13 @@ function Model(props: ModelProps): React.ReactElement {
     };
 
     const openSourceObjectModal = async () => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };
@@ -238,6 +238,7 @@ function Model(props: ModelProps): React.ReactElement {
         setModalOpen(false);
         setObjectRelationship(RelatedObjectType.Source);
         closeRepositoryBrowser();
+        resetRepositoryBrowserRoot();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
@@ -386,18 +387,3 @@ function Model(props: ModelProps): React.ReactElement {
 }
 
 export default Model;
-
-// import UVContents from './UVContents';
-// const updateUVMapsVariant = (uvMapId: number, mapType: number) => {
-//     const { uvMaps } = model;
-//     const updatedUVMaps = uvMaps.map(uvMap => {
-//         if (uvMapId === uvMap.id) {
-//             return {
-//                 ...uvMap,
-//                 mapType
-//             };
-//         }
-//         return uvMap;
-//     });
-//     updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
-// };
