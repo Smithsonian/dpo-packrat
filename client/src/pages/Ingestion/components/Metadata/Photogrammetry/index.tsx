@@ -36,7 +36,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const metadata: StateMetadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
-    const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
+    const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [modalOpen, setModalOpen] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const { photogrammetry } = metadata;
@@ -103,13 +103,13 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     };
 
     const openSourceObjectModal = async () => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };
@@ -130,6 +130,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         setModalOpen(false);
         setObjectRelationship(RelatedObjectType.Source);
         closeRepositoryBrowser();
+        resetRepositoryBrowserRoot();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {

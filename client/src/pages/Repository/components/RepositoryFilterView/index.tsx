@@ -105,7 +105,7 @@ const StyledChip = withStyles(({ palette }) => ({
 
 function RepositoryFilterView(): React.ReactElement {
     const { data, loading } = useGetFilterViewDataQuery();
-    const [units, projects, isExpanded] = useRepositoryStore(state => [state.units, state.projects, state.isExpanded]);
+    const [units, projects, isExpanded, repositoryBrowserRootObjectType, repositoryBrowserRootName, repositoryRootType] = useRepositoryStore(state => [state.units, state.projects, state.isExpanded, state.repositoryBrowserRootObjectType, state.repositoryBrowserRootName, state.repositoryRootType]);
     const [toggleFilter, removeUnitsOrProjects] = useRepositoryStore(state => [state.toggleFilter, state.removeUnitsOrProjects]);
     const getEntries = useVocabularyStore(state => state.getEntries);
     const classes = useStyles(isExpanded);
@@ -132,10 +132,20 @@ function RepositoryFilterView(): React.ReactElement {
         }
     };
 
+    let unrootedRepositoryType: string;
+    if (!repositoryRootType.length) {
+        unrootedRepositoryType = 'Unit';
+    } else if (repositoryRootType.length === 1) {
+        unrootedRepositoryType = getTermForSystemObjectType(repositoryRootType[0]);
+    } else {
+        unrootedRepositoryType = 'Multiple';
+    }
+    const typeName = repositoryBrowserRootObjectType ? `${repositoryBrowserRootObjectType}: ${repositoryBrowserRootName}` : `${unrootedRepositoryType}: All`;
+
     let content: React.ReactNode = (
         <Box display='flex' alignItems='center'>
             <Box className={classes.textArea}>
-                <Typography variant='body1'>Unit: All</Typography>
+                <Typography variant='body1'>{typeName}</Typography>
             </Box>
 
             <Box display='flex' alignItems='center' height='40px' width='64vw' overflow='hidden'>

@@ -14,6 +14,7 @@ import { eVocabularySetID } from '../../../../types/server';
 import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
 import { useHistory } from 'react-router-dom';
 import { CreateSubjectWithIdentifiersInput } from '../../../../types/graphql';
+import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -267,6 +268,9 @@ function SubjectForm(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
+            <Helmet>
+                <title>Create Subject</title>
+            </Helmet>
             <Box className={classes.content}>
                 <SearchList EdanOnly />
                 <Box style={{ marginTop: '10px', marginBottom: '10px', width: '600px' }}>
