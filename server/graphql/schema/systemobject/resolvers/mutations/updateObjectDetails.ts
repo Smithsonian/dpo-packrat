@@ -12,22 +12,22 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { input } = args;
     const { idSystemObject, idObject, objectType, data } = input;
 
-    // LOG.info(JSON.stringify(data, null, 2), LOG.LS.eGQL);
-
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired)) {
         return { success: false, message: 'Error with Name and/or Retired field(s)' };
     }
 
     const SO = await DBAPI.SystemObject.fetch(idSystemObject);
-    /**
-     * TODO: KARAN: add an error property and handle errors
-     */
-    if (SO) {
-        if (data.Retired) {
-            await SO.retireObject();
-        } else {
-            await SO.reinstateObject();
-        }
+
+    if (!SO)
+        return { success: false, message: 'Error with fetching the object' };
+    if (data.Retired) {
+        const retireSuccess = await SO.retireObject();
+        if (!retireSuccess) 
+            return { success: false, message: 'Error with retiring object' };
+    } else {
+        const reinstateScuccess = await SO.reinstateObject();
+        if (!reinstateScuccess)
+            return { success: false, message: 'Error with reinstating object' };
     }
 
     let identifierPreferred: null | number = null;
@@ -47,9 +47,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         LOG.info(`updated identifier ${idIdentifier}`, LOG.LS.eDB);
                     } else {
                         LOG.error(`failed to updated identifier ${idIdentifier}`, LOG.LS.eDB);
+                        return { success: false, message: `failed to update identifier with id ${idIdentifier}` };
                     }
                 } else {
                     LOG.error(`failed to find identifier ${idIdentifier}`, LOG.LS.eDB);
+                    return { success: false, message: `failed to find identifier with id ${idIdentifier}` };
                 }
             }
 
@@ -60,6 +62,10 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 if (!createNewIdentifier) {
                     LOG.error(`updateObjectDetails failed to create newIdentifier ${JSON.stringify(newIdentifier)}`, LOG.LS.eDB);
+                    return {
+                        success: false,
+                        message: `There was an error when creating identifier ${identifier}`
+                    }
                 }
                 if (preferred === true) {
                     const newIdentifier = await DBAPI.Identifier.fetchFromIdentifierValue(identifier);
@@ -67,6 +73,10 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         identifierPreferred = newIdentifier[0].idIdentifier;
                     } else {
                         LOG.error('failed to fetch new preferred identifier', LOG.LS.eDB);
+                        return {
+                            success: false,
+                            message: `Failed to find identifier with value ${identifier}`
+                        }
                     }
                 }
             }
@@ -75,20 +85,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
     if (data.License) {
         const reassignedLicense = await DBAPI.License.fetch(data.License);
-        if (reassignedLicense) {
-            const reassignmentSuccess = await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense);
-            if (!reassignmentSuccess) {
-                return {
-                    success: false,
-                    message: 'There was an error assigning the license. Please try again.'
-                };
-            }
-        } else {
-            return {
-                success: false,
-                message: 'There was an error fetching the license for assignment. Please try again.'
-            };
-        }
+        if (!reassignedLicense) 
+            return { success: false, message: 'There was an error fetching the license for assignment. Please try again.' };
+        
+        const reassignmentSuccess = await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense);
+        if (!reassignmentSuccess) 
+            return { success: false, message: 'There was an error assigning the license. Please try again.' };
     }
 
     switch (objectType) {
@@ -103,7 +105,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Unit.ARKPrefix = maybe<string>(ARKPrefix);
                 }
 
-                await Unit.update();
+                const updateSuccess = await Unit.update();
+                if (!updateSuccess)
+                    return {
+                        success: false,
+                        message: 'There was an error updating unit'
+                    }
             } else {
                 return {
                     success: false,
@@ -122,7 +129,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Project.Description = maybe<string>(Description);
                 }
 
-                await Project.update();
+                const updateSuccess = await Project.update();
+                if (!updateSuccess)
+                    return {
+                        success: false,
+                        message: 'There was an error updating project'
+                    }
             } else {
                 return {
                     success: false,
@@ -138,8 +150,34 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 if (Subject) {
                     Subject.Name = data.Name;
+                    Subject.idIdentifierPreferred = identifierPreferred;
 
-                    if (!Subject.idGeoLocation) {
+                    // update exisiting geolocation OR create a new one and then connect with subject
+                    if (Subject.idGeoLocation) {
+                        const GeoLocation = await DBAPI.GeoLocation.fetch(Subject.idGeoLocation);
+                        if (!GeoLocation)
+                            return {
+                                success: false,
+                                message: 'There was an error fetching GeoLocation'
+                            }
+                            
+                            GeoLocation.Altitude = maybe<number>(Altitude);
+                            GeoLocation.Latitude = maybe<number>(Latitude);
+                            GeoLocation.Longitude = maybe<number>(Longitude);
+                            GeoLocation.R0 = maybe<number>(R0);
+                            GeoLocation.R1 = maybe<number>(R1);
+                            GeoLocation.R2 = maybe<number>(R2);
+                            GeoLocation.R3 = maybe<number>(R3);
+                            GeoLocation.TS0 = maybe<number>(TS0);
+                            GeoLocation.TS1 = maybe<number>(TS1);
+                            GeoLocation.TS2 = maybe<number>(TS2);
+                            const updateSuccess = await GeoLocation.update();
+                            if (!updateSuccess)
+                                return {
+                                    success: false,
+                                    message: 'There was an error updating Geolocation'
+                                }
+                    } else {
                         const GeoLocationInput = {
                             idGeoLocation: 0,
                             Altitude: maybe<number>(Altitude),
@@ -154,32 +192,22 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             TS2: maybe<number>(TS2)
                         };
                         const GeoLocation = new DBAPI.GeoLocation(GeoLocationInput);
-                        await GeoLocation.create();
+                        const creationSuccess = await GeoLocation.create();
+                        if (!creationSuccess)
+                            return {
+                                success: false,
+                                message: 'There was an error with creating geolocation'
+                            }
+
                         Subject.idGeoLocation = GeoLocation.idGeoLocation;
-
-                        await Subject.update();
-                        break;
                     }
 
-                    Subject.idIdentifierPreferred = identifierPreferred;
-
-                    await Subject.update();
-
-                    const GeoLocation = await DBAPI.GeoLocation.fetch(Subject.idGeoLocation);
-
-                    if (GeoLocation) {
-                        GeoLocation.Altitude = maybe<number>(Altitude);
-                        GeoLocation.Latitude = maybe<number>(Latitude);
-                        GeoLocation.Longitude = maybe<number>(Longitude);
-                        GeoLocation.R0 = maybe<number>(R0);
-                        GeoLocation.R1 = maybe<number>(R1);
-                        GeoLocation.R2 = maybe<number>(R2);
-                        GeoLocation.R3 = maybe<number>(R3);
-                        GeoLocation.TS0 = maybe<number>(TS0);
-                        GeoLocation.TS1 = maybe<number>(TS1);
-                        GeoLocation.TS2 = maybe<number>(TS2);
-                        await GeoLocation.update();
-                    }
+                    const subjectUpdateSuccess = await Subject.update();
+                    if (!subjectUpdateSuccess)
+                        return {
+                            success: false,
+                            message: 'There was an error updating subject'
+                        }
                 } else {
                     return {
                         success: false,
@@ -196,9 +224,34 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 if (Item) {
                     Item.Name = data.Name;
-                    if (!isNull(EntireSubject) && !isUndefined(EntireSubject)) Item.EntireSubject = EntireSubject;
+                    if (!isNull(EntireSubject) && !isUndefined(EntireSubject))
+                        Item.EntireSubject = EntireSubject;
 
-                    if (!Item.idGeoLocation) {
+                    // update existing geolocation OR create a new one and then connect with item
+                    if (Item.idGeoLocation) {
+                        const GeoLocation = await DBAPI.GeoLocation.fetch(Item.idGeoLocation);
+                        if (!GeoLocation)
+                            return {
+                                success: false,
+                                message: 'There was an error fetching the geolocation'
+                            }
+                        GeoLocation.Altitude = maybe<number>(Altitude);
+                        GeoLocation.Latitude = maybe<number>(Latitude);
+                        GeoLocation.Longitude = maybe<number>(Longitude);
+                        GeoLocation.R0 = maybe<number>(R0);
+                        GeoLocation.R1 = maybe<number>(R1);
+                        GeoLocation.R2 = maybe<number>(R2);
+                        GeoLocation.R3 = maybe<number>(R3);
+                        GeoLocation.TS0 = maybe<number>(TS0);
+                        GeoLocation.TS1 = maybe<number>(TS1);
+                        GeoLocation.TS2 = maybe<number>(TS2);
+                        const updateSuccess = await GeoLocation.update();
+                        if (!updateSuccess)
+                            return {
+                                success: false,
+                                message: 'There was an error updating geolocation'
+                            }
+                    } else {
                         const GeoLocationInput = {
                             idGeoLocation: 0,
                             Altitude: maybe<number>(Altitude),
@@ -213,30 +266,21 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             TS2: maybe<number>(TS2)
                         };
                         const GeoLocation = new DBAPI.GeoLocation(GeoLocationInput);
-                        await GeoLocation.create();
+                        const creationSuccess = await GeoLocation.create();
+                        if (!creationSuccess)
+                            return { 
+                                success: false,
+                                message: 'There was an error creating geolocation'
+                            };
                         Item.idGeoLocation = GeoLocation.idGeoLocation;
-                        await Item.update();
-                        break;
                     }
 
-                    await Item.update();
-
-                    if (Item.idGeoLocation) {
-                        const GeoLocation = await DBAPI.GeoLocation.fetch(Item.idGeoLocation);
-                        if (GeoLocation) {
-                            GeoLocation.Altitude = maybe<number>(Altitude);
-                            GeoLocation.Latitude = maybe<number>(Latitude);
-                            GeoLocation.Longitude = maybe<number>(Longitude);
-                            GeoLocation.R0 = maybe<number>(R0);
-                            GeoLocation.R1 = maybe<number>(R1);
-                            GeoLocation.R2 = maybe<number>(R2);
-                            GeoLocation.R3 = maybe<number>(R3);
-                            GeoLocation.TS0 = maybe<number>(TS0);
-                            GeoLocation.TS1 = maybe<number>(TS1);
-                            GeoLocation.TS2 = maybe<number>(TS2);
-                            await GeoLocation.update();
-                        }
-                    }
+                    const updateSuccess = await Item.update();
+                    if (!updateSuccess)
+                        return {
+                            success: false,
+                            message: 'There was an error updating item'
+                        };
                 } else {
                     return {
                         success: false,
@@ -247,7 +291,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             break;
         }
         case eSystemObjectType.eCaptureData: {
-            // TODO: KARAN update/create folders, systemCreated
             if (data.CaptureData) {
                 const CaptureData = await DBAPI.CaptureData.fetch(idObject);
 
@@ -301,8 +344,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             }
                             const newVariantType = foldersMap.get(asset.FilePath);
                             file.idVVariantType = newVariantType || file.idVVariantType;
-                            const update = await file.update();
-                            if (!update) {
+                            const updateSuccess = await file.update();
+                            if (!updateSuccess) {
                                 return {
                                     success: false,
                                     message: `Unable to update Capture Data File with id ${file.idCaptureDataFile}; update failed`
@@ -326,14 +369,24 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         CD.idVBackgroundRemovalMethod = maybe<number>(backgroundRemovalMethod);
                         CD.idVClusterType = maybe<number>(clusterType);
                         CD.ClusterGeometryFieldID = maybe<number>(clusterGeometryFieldId);
-                        await CD.update();
+                        const updateSuccess = await CD.update();
+                        if (!updateSuccess)
+                            return {
+                                success: false,
+                                message: `Unable to update CaptureDataPhoto with id ${CD.idCaptureData}; update failed`
+                            }
                     } else {
                         return {
                             success: false,
                             message: `Unable to fetch CaptureDataPhoto with id ${idObject}; update failed`
                         };
                     }
-                    await CaptureData.update();
+                    const updateSuccess = await CaptureData.update();
+                    if (!updateSuccess)
+                        return {
+                            success: false,
+                            message: `Unable to update Capture Data with id ${CaptureData.idCaptureData}; update failed`
+                        }
                 } else {
                     return {
                         success: false,
@@ -342,7 +395,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 }
             }
             break;
-        } case eSystemObjectType.eModel: {
+        } 
+        case eSystemObjectType.eModel: {
             if (data.Model) {
                 const Model = await DBAPI.Model.fetch(idObject);
                 if (Model) {
@@ -364,32 +418,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (ModelFileType) Model.idVFileType = ModelFileType;
                     Model.DateCreated = new Date(DateCaptured);
 
-                    // if (Model.idAssetThumbnail) {
-                    //     const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(Model.idAssetThumbnail);
-                    //     if (AssetVersion && AssetVersion[0]) {
-                    //         const [AV] = AssetVersion;
-                    //         if (size) AV.StorageSize = size;
-                    //     }
-                    // }
-
-                    /*
-                    // TODO: do we want to update the asset name?  I don't think so...
-                    // Look up asset using SystemObjectXref, with idSystemObjectMaster = Model's system object ID
-                    const Asset = await DBAPI.Asset.fetch(MGF.idAsset);
-                    if (Asset) {
-                        Asset.FileName = data.Name;
-                        await Asset.update();
-                    }
-                    */
-                    try {
-                        if (await Model.update()) {
-                            break;
-                        } else {
-                            throw new Error('error in updating');
+                    const updateSuccess = await Model.update();
+                    if (!updateSuccess)
+                        return {
+                            success: false,
+                            message: `Unable to update Model with id ${Model.idModel}; update failed`
                         }
-                    } catch (error) {
-                        throw new Error(error);
-                    }
                 } else {
                     return {
                         success: false,
@@ -398,7 +432,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 }
             }
             break;
-        } case eSystemObjectType.eScene: {
+        } 
+        case eSystemObjectType.eScene: {
             const Scene = await DBAPI.Scene.fetch(idObject);
             if (Scene) {
                 Scene.Name = data.Name;
@@ -406,7 +441,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (typeof data.Scene.IsOriented === 'boolean') Scene.IsOriented = data.Scene.IsOriented;
                     if (typeof data.Scene.HasBeenQCd === 'boolean') Scene.HasBeenQCd = data.Scene.HasBeenQCd;
                 }
-                await Scene.update();
+                const updateSuccess = await Scene.update();
+                if (!updateSuccess)
+                    return {
+                        success: false,
+                        message: 'There was an error updating scene'
+                    }
             } else {
                 return {
                     success: false,
@@ -414,14 +454,23 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 };
             }
             break;
-        } case eSystemObjectType.eIntermediaryFile: {
+        }
+        case eSystemObjectType.eIntermediaryFile: {
             const IntermediaryFile = await DBAPI.IntermediaryFile.fetch(idObject);
             if (IntermediaryFile) {
                 const Asset = await DBAPI.Asset.fetch(IntermediaryFile.idAsset);
-                if (Asset) {
-                    Asset.FileName = data.Name;
-                    await Asset.update();
-                }
+                if (!Asset)
+                    return { 
+                        success: false,
+                        message: `Unable to fetch Asset with id ${idObject}; update failed`
+                    };
+                Asset.FileName = data.Name;
+                const updateSuccess = await Asset.update();
+                if (!updateSuccess)
+                    return { 
+                        success: false,
+                        message: 'There was an error updating intermediary file'
+                    };
             } else {
                 return {
                     success: false,
@@ -429,7 +478,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 };
             }
             break;
-        } case eSystemObjectType.eProjectDocumentation: {
+        }
+        case eSystemObjectType.eProjectDocumentation: {
             const ProjectDocumentation = await DBAPI.ProjectDocumentation.fetch(idObject);
 
             if (ProjectDocumentation) {
@@ -440,7 +490,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (Description) ProjectDocumentation.Description = Description;
                 }
 
-                await ProjectDocumentation.update();
+                const updateSuccess = await ProjectDocumentation.update();
+                if (!updateSuccess)
+                    return { 
+                        success: false,
+                        message: 'There was an error updating project documentation'
+                    };
             } else {
                 return {
                     success: false,
@@ -461,7 +516,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (AssetType) Asset.idVAssetType = AssetType;
                 }
 
-                await Asset.update();
+                const updateSuccess = await Asset.update();
+                if (!updateSuccess)
+                    return { 
+                        success: false,
+                        message: 'There was an error updating asseet'
+                    };
             } else {
                 return {
                     success: false,
@@ -482,7 +542,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         AssetVersion.Ingested = Ingested;
                 }
 
-                await AssetVersion.update();
+                const updateSuccess = await AssetVersion.update();
+                if (!updateSuccess)
+                    return { 
+                        success: false,
+                        message: 'There was an error updating asset version'
+                    };
             } else {
                 return {
                     success: false,
@@ -500,7 +565,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Actor.OrganizationName = maybe<string>(OrganizationName);
 
                 }
-                await Actor.update();
+                const updateSuccess = await Actor.update();
+                if (!updateSuccess)
+                    return {
+                        success: false,
+                        message: 'There was an error updating actor'
+                    };
             } else {
                 return {
                     success: false,
@@ -522,7 +592,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Stakeholder.PhoneNumberMobile = maybe<string>(PhoneNumberMobile);
                     Stakeholder.PhoneNumberOffice = maybe<string>(PhoneNumberOffice);
                 }
-                await Stakeholder.update();
+                const updateSuccess = await Stakeholder.update();
+                if (!updateSuccess)
+                    return {
+                        success: false,
+                        message: 'There was an error updating stakeholder' };
             } else {
                 return {
                     success: false,
