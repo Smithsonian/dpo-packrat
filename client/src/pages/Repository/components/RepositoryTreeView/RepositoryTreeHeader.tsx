@@ -48,6 +48,28 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
             paddingLeft: 10,
             left: 10,
         }
+    },
+    metadata: {
+        display: 'flex'
+    },
+    column: {
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0px 10px',
+        fontSize: typography.pxToRem(18),
+        color: palette.primary.dark,
+        fontWeight: typography.fontWeightRegular,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        [breakpoints.down('lg')]: {
+            fontSize: typography.pxToRem(14),
+        }
+    },
+    text: {
+        fontSize: '0.8em',
+        [breakpoints.down('lg')]: {
+            fontSize: '0.9em',
+        }
     }
 }));
 
@@ -69,7 +91,7 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
             <Box className={classes.treeView}>
                 <Box className={classes.treeViewText} />
             </Box>
-            <MetadataView header treeColumns={treeColumns} />
+            <MetadataView header treeColumns={treeColumns} makeStyles={{ text: classes.text, column: classes.column }} />
         </Box>
     );
 }
