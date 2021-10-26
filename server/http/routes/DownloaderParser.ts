@@ -2,7 +2,7 @@ import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
-import { ParsedQs } from 'qs';
+import { ParsedQs, parse } from 'qs';
 
 export enum eDownloadMode {
     eAssetVersion,
@@ -27,29 +27,44 @@ export interface DownloaderParserResults {
 }
 
 export class DownloaderParser {
-    eMode: eDownloadMode = eDownloadMode.eUnknown;
-    idAssetVersion: number | null = null;
-    idAsset: number | null = null;
-    idSystemObject: number | null = null;
-    idSystemObjectVersion: number | null = null;
+    private eMode: eDownloadMode = eDownloadMode.eUnknown;
+    private idAssetVersion: number | null = null;
+    private idAsset: number | null = null;
+    private idSystemObject: number | null = null;
+    private idSystemObjectVersion: number | null = null;
 
-    idWorkflow: number | null = null;
-    idWorkflowReport: number | null = null;
-    idWorkflowSet: number | null = null;
-    idJobRun: number | null = null;
+    private idWorkflow: number | null = null;
+    private idWorkflowReport: number | null = null;
+    private idWorkflowSet: number | null = null;
+    private idJobRun: number | null = null;
 
-    systemObjectPath: string | null = null;         // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
+    private systemObjectPath: string | null = null;         // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
 
     private rootURL: string;
     private requestPath: string;
-    private requestQuery: ParsedQs;
-    private static regexDownload: RegExp = new RegExp('/download/idSystemObject-(\\d*)(/.*)?', 'i');
+    private requestQuery?: ParsedQs;
+    private regexDownload: RegExp;
 
-    constructor(rootURL: string, requestPath: string, requestQuery: ParsedQs) {
+    constructor(rootURL: string, requestPath: string, requestQuery?: ParsedQs) {
         this.rootURL = rootURL;
         this.requestPath = requestPath;
         this.requestQuery = requestQuery;
+        this.regexDownload = new RegExp(`${rootURL}/idSystemObject-(\\d*)(/.*)?`, 'i');
     }
+
+    get eModeV(): eDownloadMode { return this.eMode; }
+    get idAssetVersionV(): number | null { return this.idAssetVersion; }
+    get idAssetV(): number | null { return this.idAsset; }
+    get idSystemObjectV(): number | null { return this.idSystemObject; }
+    get idSystemObjectVersionV(): number | null { return this.idSystemObjectVersion; }
+
+    get idWorkflowV(): number | null { return this.idWorkflow; }
+    get idWorkflowReportV(): number | null { return this.idWorkflowReport; }
+    get idWorkflowSetV(): number | null { return this.idWorkflowSet; }
+    get idJobRunV(): number | null { return this.idJobRun; }
+
+    get systemObjectPathV(): string | null { return this.systemObjectPath; }
+
 
     /** Returns success: false if arguments are invalid */
     async parseArguments(): Promise<DownloaderParserResults> {
@@ -57,12 +72,15 @@ export class DownloaderParser {
         // /download/idSystemObject-ID/FOO/BAR: Computes the asset attached to this system object, found at the path /FOO/BAR.
         let idSystemObjectU: string | string[] | ParsedQs | ParsedQs[] | undefined = undefined;
 
-        const downloadMatch: RegExpMatchArray | null = this.requestPath.match(DownloaderParser.regexDownload);
+        const downloadMatch: RegExpMatchArray | null = this.requestPath.match(this.regexDownload);
         if (downloadMatch && downloadMatch.length >= 2) {
             idSystemObjectU = downloadMatch[1];
             if (downloadMatch.length >= 3)
                 this.systemObjectPath = downloadMatch[2];
         }
+
+        if (!this.requestQuery)
+            this.requestQuery = parse(this.requestPath);
 
         if (!idSystemObjectU)
             idSystemObjectU = this.requestQuery.idSystemObject;
@@ -78,7 +96,7 @@ export class DownloaderParser {
             + (idAssetVersionU ? 1 : 0) + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0)
             + (idJobRunU ? 1 : 0);
         if (urlParamCount != 1) {
-            LOG.error(`${this.rootURL} called with ${urlParamCount} parameters, expected 1`, LOG.LS.eHTTP);
+            LOG.error(`DownloadParser called with ${urlParamCount} parameters, expected 1`, LOG.LS.eHTTP);
             return this.recordStatus(404);
         }
 
@@ -244,6 +262,6 @@ export class DownloaderParser {
     }
 
     reconstructSystemObjectLink(): string {
-        return (this.systemObjectPath) ? `/${this.rootURL}/idSystemObject-${this.idSystemObject}${this.systemObjectPath}` :`/download?idSystemObject=${this.idSystemObject}`;
+        return (this.systemObjectPath) ? `${this.rootURL}/idSystemObject-${this.idSystemObject}${this.systemObjectPath}` :`/download?idSystemObject=${this.idSystemObject}`;
     }
 }

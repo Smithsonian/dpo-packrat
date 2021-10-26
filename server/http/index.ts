@@ -69,7 +69,13 @@ export class HttpServer {
         this.app.get('/solrindexprofiled', solrindexprofiled);
         this.app.get('/download', download);
         this.app.get('/download/*', download);
-        this.app.use(webdav.extensions.express('/download-wd', WebDAVServer.server().webdav()));
+
+        const WDSV: WebDAVServer | null = await WebDAVServer.server();
+        if (WDSV)
+            this.app.use(webdav.extensions.express('/download-wd', WDSV.webdav()));
+        else
+            LOG.error('HttpServer.configureMiddlewareAndRoutes failed to initialize WebDAV server', LOG.LS.eHTTP);
+
         this.app.use(errorhandler); // keep last
 
         if (process.env.NODE_ENV !== 'test') {
