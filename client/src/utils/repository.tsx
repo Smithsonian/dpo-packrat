@@ -211,7 +211,7 @@ type ObjectInterfaceDetails = {
 };
 
 // prettier-ignore
-export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant: RepositoryColorVariant): ObjectInterfaceDetails {
+export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant: RepositoryColorVariant, makeStyles: any): ObjectInterfaceDetails {
     const color: string = Colors.repository[objectType][variant];
     const textColor: string = Colors.defaults.white;
     const backgroundColor: string = Colors.repository[objectType][RepositoryColorVariant.dark] || Colors.repository.default[RepositoryColorVariant.dark];
@@ -229,7 +229,8 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
         case eSystemObjectType.eAssetVersion:
             return { icon: <AiOutlineFileText />, color };
     }
-    return { icon: <RepositoryIcon {...iconProps} />, color };
+
+    return { icon: <RepositoryIcon {...iconProps} makeStyles={{ ...makeStyles, color, backgroundColor }} />, color };
 }
 
 export function sortEntriesAlphabetically(entries: NavigationResultEntry[]): NavigationResultEntry[] {
