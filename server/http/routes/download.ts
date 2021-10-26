@@ -11,6 +11,8 @@ import { Request, Response } from 'express';
 import mime from 'mime'; // const mime = require('mime-types'); // can't seem to make this work using "import * as mime from 'mime'"; subsequent calls to mime.lookup freeze!
 import path from 'path';
 
+const rootURL: string = '/download';
+
 /** Used to provide download access to assets and reports. Access with one of the following URL patterns:
  * ASSETS:
  * /download?idAssetVersion=ID:         Downloads the specified version of the specified asset
@@ -31,7 +33,7 @@ export async function download(request: Request, response: Response): Promise<bo
     try {
         return await DL.execute();
     } catch (error) {
-        LOG.error('/download', LOG.LS.eHTTP, error);
+        LOG.error(rootURL, LOG.LS.eHTTP, error);
         return false;
     }
 }
@@ -49,7 +51,7 @@ class Downloader {
 
     async execute(): Promise<boolean> {
         if (!isAuthenticated(this.request)) {
-            LOG.error('/download not authenticated', LOG.LS.eHTTP);
+            LOG.error(`${rootURL} not authenticated`, LOG.LS.eHTTP);
             return this.sendError(403);
         }
 
@@ -62,14 +64,14 @@ class Downloader {
             return true;
         }
 
-        switch (this.downloaderParser.eMode) {
+        switch (this.downloaderParser.eModeV) {
             case eDownloadMode.eAssetVersion:
                 return (DPResults.assetVersion) ? await this.emitDownload(DPResults.assetVersion) : this.sendError(404);
 
             case eDownloadMode.eAsset:
                 return (DPResults.assetVersion)
                     ? await this.emitDownload(DPResults.assetVersion)
-                    : this.sendError(404, `/download?idAsset=${this.downloaderParser.idAsset} unable to fetch asset version`);
+                    : this.sendError(404, `${rootURL}?idAsset=${this.downloaderParser.idAssetV} unable to fetch asset version`);
 
             case eDownloadMode.eSystemObject:
                 if (DPResults.assetVersions)
@@ -109,21 +111,21 @@ class Downloader {
 
     private async emitDownloadZip(assetVersions: DBAPI.AssetVersion[]): Promise<boolean> {
         let errorMsgBase: string = '';
-        let idSystemObject: number = this.downloaderParser.idSystemObject ?? 0;
+        let idSystemObject: number = this.downloaderParser.idSystemObjectV ?? 0;
 
         if (idSystemObject)
             errorMsgBase = this.downloaderParser.reconstructSystemObjectLink();
-        else if (this.downloaderParser.idSystemObjectVersion) {
-            errorMsgBase = `/download?idSystemObjectVersion=${this.downloaderParser.idSystemObjectVersion}`;
-            const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(this.downloaderParser.idSystemObjectVersion);
+        else if (this.downloaderParser.idSystemObjectVersionV) {
+            errorMsgBase = `${rootURL}?idSystemObjectVersion=${this.downloaderParser.idSystemObjectVersionV}`;
+            const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(this.downloaderParser.idSystemObjectVersionV);
             if (SOV)
                 idSystemObject = SOV.idSystemObject;
             else {
-                LOG.error(`${errorMsgBase} failed to laod SystemObjectVersion by id ${this.downloaderParser.idSystemObjectVersion}`, LOG.LS.eHTTP);
+                LOG.error(`${errorMsgBase} failed to laod SystemObjectVersion by id ${this.downloaderParser.idSystemObjectVersionV}`, LOG.LS.eHTTP);
                 return false;
             }
         } else {
-            LOG.error('/download emitDownloadZip called with unexpected parameters', LOG.LS.eHTTP);
+            LOG.error(`${rootURL} emitDownloadZip called with unexpected parameters`, LOG.LS.eHTTP);
             return false;
         }
 
@@ -193,7 +195,7 @@ class Downloader {
         const fileName: string = fileNameIn.replace(/,/g, '_'); // replace commas with underscores to avoid ERR_RESPONSE_HEADERS_MULTIPLE_CONTENT_DISPOSITION browser error
         if (!mimeType)
             mimeType = mime.lookup(fileName) || 'application/octet-stream';
-        LOG.info(`/download emitDownloadFromStream filename=${fileName}, mimetype=${mimeType}`, LOG.LS.eHTTP);
+        LOG.info(`${rootURL} emitDownloadFromStream filename=${fileName}, mimetype=${mimeType}`, LOG.LS.eHTTP);
 
         this.response.setHeader('Content-disposition', 'attachment; filename=' + fileName);
         if (mimeType)
