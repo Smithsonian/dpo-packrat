@@ -140,7 +140,7 @@ function RepositoryFilterView(): React.ReactElement {
     } else {
         unrootedRepositoryType = 'Multiple';
     }
-    const typeName = repositoryBrowserRootObjectType ? `${repositoryBrowserRootObjectType}: ${repositoryBrowserRootName}` : `${unrootedRepositoryType} : All`;
+    const typeName = repositoryBrowserRootObjectType ? `${repositoryBrowserRootObjectType}: ${repositoryBrowserRootName}` : `${unrootedRepositoryType}: All`;
 
     let content: React.ReactNode = (
         <Box display='flex' alignItems='center'>
