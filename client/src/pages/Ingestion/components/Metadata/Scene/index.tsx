@@ -35,7 +35,7 @@ function Scene(props: SceneProps): React.ReactElement {
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { scene } = metadata;
     const updateMetadataField = useMetadataStore(state => state.updateMetadataField);
-    const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
+    const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     // state responsible for ReferenceModels
     const [referenceModels, setReferenceModels] = useState([
@@ -125,13 +125,13 @@ function Scene(props: SceneProps): React.ReactElement {
     };
 
     const openSourceObjectModal = async () => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };
@@ -152,6 +152,7 @@ function Scene(props: SceneProps): React.ReactElement {
         setModalOpen(false);
         setObjectRelationship(RelatedObjectType.Source);
         closeRepositoryBrowser();
+        resetRepositoryBrowserRoot();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
