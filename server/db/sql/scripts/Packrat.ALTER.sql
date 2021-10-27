@@ -160,3 +160,5 @@ ALTER TABLE Scene MODIFY COLUMN `ApprovedForPublication` boolean NOT NULL;
 ALTER TABLE Scene DROP COLUMN `isOriented`;
 ALTER TABLE Scene DROP COLUMN `hasBeenQCd`;
 
+-- 2021-10-26 Deployed to Staging
+
