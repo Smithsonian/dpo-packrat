@@ -11,6 +11,7 @@ import {
     SceneDetailFields
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
+import * as LOG from '../../../../../utils/logger';
 
 export default async function getDetailsTabDataForObject(_: Parent, args: QueryGetDetailsTabDataForObjectArgs): Promise<GetDetailsTabDataForObjectResult> {
     const { input } = args;
@@ -88,11 +89,13 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 let fields: SceneDetailFields = {
                     Links: []
                 };
-                const Scene = await DBAPI.Scene.fetch(systemObject.idScene);
+                const Scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(systemObject.idScene);
+                if (!Scene)
+                    LOG.error(`getDetailsTabForObject(${systemObject.idSystemObject}) unable to compute Scene details`, LOG.LS.eGQL);
+                const User: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eSceneQCd);
+
                 fields = {
                     ...fields,
-                    HasBeenQCd: Scene?.HasBeenQCd,
-                    IsOriented: Scene?.IsOriented,
                     CountScene: Scene?.CountScene,
                     CountNode: Scene?.CountNode,
                     CountCamera: Scene?.CountCamera,
@@ -102,6 +105,9 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                     CountSetup: Scene?.CountSetup,
                     CountTour: Scene?.CountTour,
                     EdanUUID: Scene?.EdanUUID,
+                    ApprovedForPublication: Scene?.ApprovedForPublication,
+                    PublicationApprover: User?.Name ?? null,
+                    PosedAndQCd: Scene?.PosedAndQCd,
                     idScene: systemObject.idScene,
                 };
                 result.Scene = fields;

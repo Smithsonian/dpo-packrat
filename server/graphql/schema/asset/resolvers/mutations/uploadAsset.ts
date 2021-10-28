@@ -170,7 +170,9 @@ class UploadAssetWorker extends ResolverBase {
         if (!assetVersions)
             return { status: UploadStatus.Failed, error: 'No Asset Versions created' };
 
-        this.workflowHelper = await this.createWorkflow(assetVersions);
+        this.workflowHelper = await this.createUploadWorkflow(assetVersions);
+        if (!this.workflowHelper.success)
+            return { status: UploadStatus.Failed, error: this.workflowHelper.error };
 
         let success: boolean = true;
         let error: string = '';
@@ -208,12 +210,7 @@ class UploadAssetWorker extends ResolverBase {
                     }
                 } else {
                     await this.appendToWFReport(`uploadAsset post-upload workflow error: ${results.error}`, true, true);
-                    const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
-                    if (SO) {
-                        if (!await SO.retireObject())
-                            LOG.error('uploadAsset post-upload workflow error handler failed to retire uploaded asset', LOG.LS.eGQL);
-                    } else
-                        LOG.error('uploadAsset post-upload workflow error handler failed to fetch system object for uploaded asset', LOG.LS.eGQL);
+                    await this.retireFailedUpload(assetVersion);
                     success = false;
                     error = 'Post-upload Workflow Failed';
                 }
@@ -226,7 +223,7 @@ class UploadAssetWorker extends ResolverBase {
             return { status: UploadStatus.Failed, error, idAssetVersions };
     }
 
-    async createWorkflow(assetVersions: DBAPI.AssetVersion[]): Promise<IWorkflowHelper> {
+    async createUploadWorkflow(assetVersions: DBAPI.AssetVersion[]): Promise<IWorkflowHelper> {
         const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
         if (!workflowEngine) {
             const error: string = 'uploadAsset createWorkflow could not load WorkflowEngine';
@@ -268,6 +265,29 @@ class UploadAssetWorker extends ResolverBase {
         }
 
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
+        const results: H.IOResults = workflow ? await workflow.waitForCompletion(3600000) : { success: true, error: '' };
+        if (!results.success) {
+            for (const assetVersion of assetVersions)
+                await this.retireFailedUpload(assetVersion);
+            LOG.error(`uploadAsset createWorkflow Upload workflow failed: ${results.error}`, LOG.LS.eGQL);
+            return results;
+        }
+
         return { success: true, error: '', workflowEngine, workflow, workflowReport };
+    }
+
+    private async retireFailedUpload(assetVersion: DBAPI.AssetVersion): Promise<H.IOResults> {
+        const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+        if (SO) {
+            if (await SO.retireObject())
+                return { success: true, error: '' };
+            const error: string = 'uploadAsset post-upload workflow error handler failed to retire uploaded asset';
+            LOG.error(error, LOG.LS.eGQL);
+            return { success: false, error };
+        } else {
+            const error: string = 'uploadAsset post-upload workflow error handler failed to fetch system object for uploaded asset';
+            LOG.error(error, LOG.LS.eGQL);
+            return { success: false, error };
+        }
     }
 }

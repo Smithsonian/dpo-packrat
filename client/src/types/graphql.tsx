@@ -631,8 +631,8 @@ export type IngestScene = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  hasBeenQCd: Scalars['Boolean'];
-  isOriented: Scalars['Boolean'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   referenceModels: Array<ReferenceModel>;
@@ -940,8 +940,8 @@ export type IngestSceneInput = {
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  hasBeenQCd: Scalars['Boolean'];
-  isOriented: Scalars['Boolean'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
@@ -1311,8 +1311,6 @@ export type GetFilterViewDataResult = {
 
 export type CreateSceneInput = {
   Name: Scalars['String'];
-  HasBeenQCd: Scalars['Boolean'];
-  IsOriented: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -1323,6 +1321,8 @@ export type CreateSceneInput = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication: Scalars['Boolean'];
+  PosedAndQCd: Scalars['Boolean'];
 };
 
 export type CreateSceneResult = {
@@ -1351,9 +1351,7 @@ export type GetIntermediaryFileResult = {
 export type Scene = {
   __typename?: 'Scene';
   idScene: Scalars['Int'];
-  HasBeenQCd: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
-  IsOriented: Scalars['Boolean'];
   Name: Scalars['String'];
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -1364,6 +1362,8 @@ export type Scene = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication: Scalars['Boolean'];
+  PosedAndQCd: Scalars['Boolean'];
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1472,8 +1472,8 @@ export type SceneDetailFieldsInput = {
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
-  HasBeenQCd?: Maybe<Scalars['Boolean']>;
-  IsOriented?: Maybe<Scalars['Boolean']>;
+  ApprovedForPublication?: Maybe<Scalars['Boolean']>;
+  PosedAndQCd?: Maybe<Scalars['Boolean']>;
 };
 
 export type ProjectDocumentationDetailFieldsInput = {
@@ -1708,8 +1708,6 @@ export type SceneDetailFields = {
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
-  HasBeenQCd?: Maybe<Scalars['Boolean']>;
-  IsOriented?: Maybe<Scalars['Boolean']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
   CountCamera?: Maybe<Scalars['Int']>;
@@ -1719,6 +1717,9 @@ export type SceneDetailFields = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication?: Maybe<Scalars['Boolean']>;
+  PublicationApprover?: Maybe<Scalars['String']>;
+  PosedAndQCd?: Maybe<Scalars['Boolean']>;
   idScene?: Maybe<Scalars['Int']>;
 };
 
@@ -3026,7 +3027,7 @@ export type GetAssetVersionsDetailsQuery = (
         )> }
       )>, Scene?: Maybe<(
         { __typename?: 'IngestScene' }
-        & Pick<IngestScene, 'idAssetVersion' | 'systemCreated' | 'name' | 'hasBeenQCd' | 'isOriented' | 'directory'>
+        & Pick<IngestScene, 'idAssetVersion' | 'systemCreated' | 'name' | 'directory' | 'approvedForPublication' | 'posedAndQCd'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
           & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3337,7 +3338,7 @@ export type GetSceneQuery = (
     { __typename?: 'GetSceneResult' }
     & { Scene?: Maybe<(
       { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'EdanUUID'>
+      & Pick<Scene, 'idScene' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'EdanUUID' | 'ApprovedForPublication' | 'PosedAndQCd'>
       & { ModelSceneXref?: Maybe<Array<Maybe<(
         { __typename?: 'ModelSceneXref' }
         & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
@@ -3360,7 +3361,7 @@ export type GetSceneForAssetVersionQuery = (
       { __typename?: 'SceneConstellation' }
       & { Scene?: Maybe<(
         { __typename?: 'Scene' }
-        & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'idAssetThumbnail' | 'IsOriented' | 'Name' | 'CountScene' | 'CountNode' | 'CountCamera' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour'>
+        & Pick<Scene, 'idScene' | 'idAssetThumbnail' | 'Name' | 'CountScene' | 'CountNode' | 'CountCamera' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'ApprovedForPublication' | 'PosedAndQCd'>
       )>, ModelSceneXref?: Maybe<Array<Maybe<(
         { __typename?: 'ModelSceneXref' }
         & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
@@ -3444,7 +3445,7 @@ export type GetDetailsTabDataForObjectQuery = (
       )>> }
     )>, Scene?: Maybe<(
       { __typename?: 'SceneDetailFields' }
-      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented' | 'EdanUUID' | 'idScene'>
+      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'EdanUUID' | 'ApprovedForPublication' | 'PublicationApprover' | 'PosedAndQCd' | 'idScene'>
     )>, IntermediaryFile?: Maybe<(
       { __typename?: 'IntermediaryFileDetailFields' }
       & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>
@@ -3660,7 +3661,7 @@ export type GetObjectsForItemQuery = (
       & Pick<Model, 'idModel' | 'DateCreated'>
     )>, Scene: Array<(
       { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name'>
+      & Pick<Scene, 'idScene' | 'Name' | 'ApprovedForPublication' | 'PosedAndQCd'>
     )>, IntermediaryFile: Array<(
       { __typename?: 'IntermediaryFile' }
       & Pick<IntermediaryFile, 'idIntermediaryFile' | 'DateCreated'>
@@ -5035,9 +5036,9 @@ export const GetAssetVersionsDetailsDocument = gql`
         idAssetVersion
         systemCreated
         name
-        hasBeenQCd
-        isOriented
         directory
+        approvedForPublication
+        posedAndQCd
         identifiers {
           identifier
           identifierType
@@ -5760,8 +5761,6 @@ export const GetSceneDocument = gql`
   getScene(input: $input) {
     Scene {
       idScene
-      HasBeenQCd
-      IsOriented
       Name
       CountCamera
       CountScene
@@ -5772,6 +5771,8 @@ export const GetSceneDocument = gql`
       CountSetup
       CountTour
       EdanUUID
+      ApprovedForPublication
+      PosedAndQCd
       ModelSceneXref {
         idModelSceneXref
         idModel
@@ -5827,9 +5828,7 @@ export const GetSceneForAssetVersionDocument = gql`
     SceneConstellation {
       Scene {
         idScene
-        HasBeenQCd
         idAssetThumbnail
-        IsOriented
         Name
         CountScene
         CountNode
@@ -5839,6 +5838,8 @@ export const GetSceneForAssetVersionDocument = gql`
         CountMeta
         CountSetup
         CountTour
+        ApprovedForPublication
+        PosedAndQCd
       }
       ModelSceneXref {
         idModelSceneXref
@@ -6066,9 +6067,10 @@ export const GetDetailsTabDataForObjectDocument = gql`
       AssetType
       Tours
       Annotation
-      HasBeenQCd
-      IsOriented
       EdanUUID
+      ApprovedForPublication
+      PublicationApprover
+      PosedAndQCd
       idScene
     }
     IntermediaryFile {
@@ -6561,9 +6563,9 @@ export const GetObjectsForItemDocument = gql`
     }
     Scene {
       idScene
-      HasBeenQCd
-      IsOriented
       Name
+      ApprovedForPublication
+      PosedAndQCd
     }
     IntermediaryFile {
       idIntermediaryFile

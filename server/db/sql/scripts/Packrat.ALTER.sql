@@ -150,3 +150,13 @@ ADD CONSTRAINT `fk_metadata_systemobject2`
 ALTER TABLE Scene ADD COLUMN EdanUUID varchar(64) NULL;
 
 -- 2021-08-20 Deployed to Staging
+
+-- 2021-09-30 Jon
+ALTER TABLE Scene ADD COLUMN `PosedAndQCd` boolean NULL;
+ALTER TABLE Scene ADD COLUMN `ApprovedForPublication` boolean NULL;
+UPDATE Scene SET PosedAndQCd = isOriented, ApprovedForPublication = hasBeenQCd;
+ALTER TABLE Scene MODIFY COLUMN `PosedAndQCd` boolean NOT NULL;
+ALTER TABLE Scene MODIFY COLUMN `ApprovedForPublication` boolean NOT NULL;
+ALTER TABLE Scene DROP COLUMN `isOriented`;
+ALTER TABLE Scene DROP COLUMN `hasBeenQCd`;
+

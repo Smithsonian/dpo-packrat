@@ -89,8 +89,8 @@ input SceneDetailFieldsInput {
     AssetType: Int
     Tours: Int
     Annotation: Int
-    HasBeenQCd: Boolean
-    IsOriented: Boolean
+    ApprovedForPublication: Boolean
+    PosedAndQCd: Boolean
 }
 
 input ProjectDocumentationDetailFieldsInput {

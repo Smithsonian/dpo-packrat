@@ -168,11 +168,11 @@ export const defaultSceneFields: SceneFields = {
     sourceObjects: [],
     derivedObjects: [],
     referenceModels: [],
-    hasBeenQCd: false,
-    isOriented: false,
     name: '',
     directory: '',
     EdanUUID: '',
+    approvedForPublication: false,
+    posedAndQCd: false,
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;
