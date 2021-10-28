@@ -358,30 +358,31 @@ function DetailsView(): React.ReactElement {
             // convert subject and item inputs to numbers to handle scientific notation
             if (objectType === eSystemObjectType.eSubject && updatedData.Subject) {
                 const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Subject;
-                Latitude ? updatedData.Subject.Latitude = Number(Latitude) : updatedData.Subject.Latitude = null;
-                Longitude ? updatedData.Subject.Longitude = Number(Longitude) : updatedData.Subject.Longitude = null;
-                Altitude ? updatedData.Subject.Altitude = Number(Altitude) : updatedData.Subject.Altitude = null;
-                TS0 ? updatedData.Subject.TS0 = Number(TS0) : updatedData.Subject.TS0 = null;
-                TS1 ? updatedData.Subject.TS1 = Number(TS1) : updatedData.Subject.TS1 = null;
-                TS2 ? updatedData.Subject.TS2 = Number(TS2) : updatedData.Subject.TS2 = null;
-                R0 ? updatedData.Subject.R0 = Number(R0) : updatedData.Subject.R0 = null;
-                R1 ? updatedData.Subject.R1 = Number(R1) : updatedData.Subject.R1 = null;
-                R2 ? updatedData.Subject.R2 = Number(R2) : updatedData.Subject.R2 = null;
-                R3 ? updatedData.Subject.R3 = Number(R3) : updatedData.Subject.R3 = null;
+                updatedData.Subject.Latitude = Latitude ? Number(Latitude) : null;
+                updatedData.Subject.Longitude = Longitude ? Number(Longitude) : null;
+                updatedData.Subject.Altitude = Altitude ? Number(Altitude) : null;
+                updatedData.Subject.TS0 = TS0 ? Number(TS0) : null;
+                updatedData.Subject.TS1 = TS1 ? Number(TS1) : null;
+                updatedData.Subject.TS2 = TS2 ? Number(TS2) : null;
+                updatedData.Subject.R0 = R0 ? Number(R0) : null;
+                updatedData.Subject.R1 = R1 ? Number(R1) : null;
+                updatedData.Subject.R2 = R2 ? Number(R2) : null;
+                updatedData.Subject.R3 = R3 ? Number(R3) : null;
+
             }
 
             if (objectType === eSystemObjectType.eItem && updatedData.Item) {
                 const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Item;
-                Latitude ? updatedData.Item.Latitude = Number(Latitude) : updatedData.Item.Latitude = null;
-                Longitude ? updatedData.Item.Longitude = Number(Longitude) : updatedData.Item.Longitude = null;
-                Altitude ? updatedData.Item.Altitude = Number(Altitude) : updatedData.Item.Altitude = null;
-                TS0 ? updatedData.Item.TS0 = Number(TS0) : updatedData.Item.TS0 = null;
-                TS1 ? updatedData.Item.TS1 = Number(TS1) : updatedData.Item.TS1 = null;
-                TS2 ? updatedData.Item.TS2 = Number(TS2) : updatedData.Item.TS2 = null;
-                R0 ? updatedData.Item.R0 = Number(R0) : updatedData.Item.R0 = null;
-                R1 ? updatedData.Item.R1 = Number(R1) : updatedData.Item.R1 = null;
-                R2 ? updatedData.Item.R2 = Number(R2) : updatedData.Item.R2 = null;
-                R3 ? updatedData.Item.R3 = Number(R3) : updatedData.Item.R3 = null;
+                updatedData.Item.Latitude = Latitude ? Number(Latitude) : null;
+                updatedData.Item.Longitude = Longitude ? Number(Longitude) : null;
+                updatedData.Item.Altitude = Altitude ? Number(Altitude) : null;
+                updatedData.Item.TS0 = TS0 ? Number(TS0) : null;
+                updatedData.Item.TS1 = TS1 ? Number(TS1) : null;
+                updatedData.Item.TS2 = TS2 ? Number(TS2) : null;
+                updatedData.Item.R0 = R0 ? Number(R0) : null;
+                updatedData.Item.R1 = R1 ? Number(R1) : null;
+                updatedData.Item.R2 = R2 ? Number(R2) : null;
+                updatedData.Item.R3 = R3 ? Number(R3) : null;
             }
 
             if (objectType === eSystemObjectType.eCaptureData) {
