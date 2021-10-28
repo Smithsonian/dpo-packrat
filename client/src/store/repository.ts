@@ -381,7 +381,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         } else {
             toast.warn('Subject was not found in database.');
         }
-        
+
         resetKeywordSearch();
 
         if (systemObjectType === eSystemObjectType.eModel) {
