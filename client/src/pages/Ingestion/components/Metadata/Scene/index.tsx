@@ -35,7 +35,7 @@ function Scene(props: SceneProps): React.ReactElement {
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { scene } = metadata;
     const updateMetadataField = useMetadataStore(state => state.updateMetadataField);
-    const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
+    const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     // state responsible for ReferenceModels
     const [referenceModels, setReferenceModels] = useState([
@@ -60,9 +60,7 @@ function Scene(props: SceneProps): React.ReactElement {
     // state responsible for SceneDataGrid
     const [sceneData, setSceneData] = useState({
         idScene: 0,
-        HasBeenQCd: false,
         idAssetThumbnail: 0,
-        IsOriented: false,
         Name: '',
         CountScene: 0,
         CountNode: 0,
@@ -72,7 +70,9 @@ function Scene(props: SceneProps): React.ReactElement {
         CountMeta: 0,
         CountSetup: 0,
         CountTour: 0,
-        EdanUUID: ''
+        EdanUUID: '',
+        ApprovedForPublication: false,
+        PosedAndQCd: false
     });
     const [modalOpen, setModalOpen] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
@@ -125,13 +125,13 @@ function Scene(props: SceneProps): React.ReactElement {
     };
 
     const openSourceObjectModal = async () => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };
@@ -152,6 +152,7 @@ function Scene(props: SceneProps): React.ReactElement {
         setModalOpen(false);
         setObjectRelationship(RelatedObjectType.Source);
         closeRepositoryBrowser();
+        resetRepositoryBrowserRoot();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
@@ -193,8 +194,8 @@ function Scene(props: SceneProps): React.ReactElement {
                 setCheckboxField={setCheckboxField}
                 setNameField={setNameField}
                 name={scene.name}
-                hasBeenQCd={scene.hasBeenQCd}
-                isOriented={scene.isOriented}
+                approvedForPublication={scene.approvedForPublication}
+                posedAndQCd={scene.posedAndQCd}
                 EdanUUID={scene.EdanUUID}
             />
             <ObjectSelectModal

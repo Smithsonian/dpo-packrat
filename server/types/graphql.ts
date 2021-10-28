@@ -628,8 +628,8 @@ export type IngestScene = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  hasBeenQCd: Scalars['Boolean'];
-  isOriented: Scalars['Boolean'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   referenceModels: Array<ReferenceModel>;
@@ -937,8 +937,8 @@ export type IngestSceneInput = {
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  hasBeenQCd: Scalars['Boolean'];
-  isOriented: Scalars['Boolean'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
@@ -1308,8 +1308,6 @@ export type GetFilterViewDataResult = {
 
 export type CreateSceneInput = {
   Name: Scalars['String'];
-  HasBeenQCd: Scalars['Boolean'];
-  IsOriented: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -1320,6 +1318,8 @@ export type CreateSceneInput = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication: Scalars['Boolean'];
+  PosedAndQCd: Scalars['Boolean'];
 };
 
 export type CreateSceneResult = {
@@ -1348,9 +1348,7 @@ export type GetIntermediaryFileResult = {
 export type Scene = {
   __typename?: 'Scene';
   idScene: Scalars['Int'];
-  HasBeenQCd: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
-  IsOriented: Scalars['Boolean'];
   Name: Scalars['String'];
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -1361,6 +1359,8 @@ export type Scene = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication: Scalars['Boolean'];
+  PosedAndQCd: Scalars['Boolean'];
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1469,8 +1469,8 @@ export type SceneDetailFieldsInput = {
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
-  HasBeenQCd?: Maybe<Scalars['Boolean']>;
-  IsOriented?: Maybe<Scalars['Boolean']>;
+  ApprovedForPublication?: Maybe<Scalars['Boolean']>;
+  PosedAndQCd?: Maybe<Scalars['Boolean']>;
 };
 
 export type ProjectDocumentationDetailFieldsInput = {
@@ -1705,8 +1705,6 @@ export type SceneDetailFields = {
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
-  HasBeenQCd?: Maybe<Scalars['Boolean']>;
-  IsOriented?: Maybe<Scalars['Boolean']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
   CountCamera?: Maybe<Scalars['Int']>;
@@ -1716,6 +1714,9 @@ export type SceneDetailFields = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication?: Maybe<Scalars['Boolean']>;
+  PublicationApprover?: Maybe<Scalars['String']>;
+  PosedAndQCd?: Maybe<Scalars['Boolean']>;
   idScene?: Maybe<Scalars['Int']>;
 };
 

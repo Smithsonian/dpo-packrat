@@ -1,8 +1,10 @@
 /* eslint-disable camelcase */
-import { Audit as AuditBase } from '@prisma/client';
+import { Audit as AuditBase, User as UserBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+// import * as H from '../../utils/helpers';
 import { eDBObjectType, eAuditType /*, eSystemObjectType */ } from './ObjectType'; // importing eSystemObjectType causes as circular dependency
+import { User } from './User';
 
 export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
     idAudit!: number;
@@ -90,6 +92,27 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
                 await DBC.DBConnection.prisma.audit.findUnique({ where: { idAudit, }, }), Audit);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Audit.fetch', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchLastUser(idSystemObject: number, eAudit: eAuditType): Promise<User | null> {
+        if (!idSystemObject || !eAudit)
+            return null;
+        try {
+            const userBaseList: UserBase[] | null =
+                await DBC.DBConnection.prisma.$queryRaw<User[]>`
+                SELECT U.*
+                FROM Audit AS AU
+                JOIN User AS U ON (AU.idUser = U.idUser)
+                WHERE AU.AuditType = ${eAudit}
+                  AND AU.idSystemObject = ${idSystemObject}
+                ORDER BY AU.AuditDate DESC
+                LIMIT 1`;
+            // LOG.info(`DBAPI.Audit.fetchLastUser(${idSystemObject}, ${eAudit}) raw ${JSON.stringify(userBaseList, H.Helpers.saferStringify)}`, LOG.LS.eDB);
+            return (userBaseList && userBaseList.length > 0) ? User.constructFromPrisma(userBaseList[0]) : /* istanbul ignore next */ null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Audit.fetchLastUser', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { join } from 'path';
+import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import { CSVParser, CSVTypes, CaptureDataPhotoCSVFields, ModelsCSVFields, ScenesCSVFields } from '../../../utils/parser';
 
@@ -19,7 +20,8 @@ describe('CSVParser', () => {
         try {
             const result = await CSVParser.parse<CaptureDataPhotoCSVFields>(fileStream, CSVTypes.captureDataPhoto);
             expect(result).toBeTruthy();
-        } catch {
+        } catch (error) {
+            LOG.error('CSVParser.parse failed', LOG.LS.eTEST, error);
             expect('Exception not expected!').toBeFalsy();
         }
     });
@@ -31,7 +33,8 @@ describe('CSVParser', () => {
         try {
             const result = await CSVParser.parse<ModelsCSVFields>(fileStream, CSVTypes.models);
             expect(result).toBeTruthy();
-        } catch {
+        } catch (error) {
+            LOG.error('CSVParser.parse failed', LOG.LS.eTEST, error);
             expect('Exception not expected!').toBeFalsy();
         }
     });
@@ -43,7 +46,8 @@ describe('CSVParser', () => {
         try {
             const result = await CSVParser.parse<ScenesCSVFields>(fileStream, CSVTypes.scenes);
             expect(result).toBeTruthy();
-        } catch {
+        } catch (error) {
+            LOG.error('CSVParser.parse failed', LOG.LS.eTEST, error);
             expect('Exception not expected!').toBeFalsy();
         }
     });
@@ -53,7 +57,7 @@ describe('CSVParser', () => {
         try {
             const fileStream = fs.createReadStream(mockPathJunk);
             await CSVParser.parse<ModelsCSVFields>(fileStream, CSVTypes.models);
-        } catch {
+        } catch (error) {
             expect('Exception expected').toBeTruthy();
         }
     });
