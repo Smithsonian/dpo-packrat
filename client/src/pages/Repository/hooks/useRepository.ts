@@ -15,7 +15,7 @@ function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0):
         fetchPolicy: 'network-only',
         variables: {
             input: {
-                idRoot: idSystemObject,
+                idRoot: filter?.idRoot ?? idSystemObject,
                 objectTypes: filter.repositoryRootType,
                 metadataColumns: filter.metadataToDisplay,
                 objectsToDisplay: filter.objectsToDisplay,

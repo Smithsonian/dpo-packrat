@@ -3,9 +3,9 @@
  *
  * This component renders metadata view used in RepositoryTreeView and RepositoryTreeHeader.
  */
-import { makeStyles } from '@material-ui/core/styles';
 import lodash from 'lodash';
 import React from 'react';
+import { palette } from '../../../../theme';
 import { eMetadata } from '../../../../types/server';
 import { computeMetadataViewWidth, trimmedMetadataField } from '../../../../utils/repository';
 
@@ -15,40 +15,15 @@ export type TreeViewColumn = {
     size: number;
 };
 
-const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
-    metadata: {
-        display: 'flex'
-    },
-    column: {
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0px 10px',
-        fontSize: ({ header }: MetadataViewProps) => header ? typography.pxToRem(18) : undefined,
-        color: ({ header }: MetadataViewProps) => header ? palette.primary.dark : palette.grey[900],
-        fontWeight: ({ header }: MetadataViewProps) => header ? typography.fontWeightRegular : typography.fontWeightLight,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        [breakpoints.down('lg')]: {
-            fontSize: ({ header }: MetadataViewProps) => header ? typography.pxToRem(14) : undefined,
-        }
-    },
-    text: {
-        fontSize: '0.8em',
-        [breakpoints.down('lg')]: {
-            fontSize: '0.9em',
-        }
-    }
-}));
-
 interface MetadataViewProps {
     header: boolean;
     treeColumns: TreeViewColumn[];
     options?: React.ReactNode;
+    makeStyles?: { [key: string]: string };
 }
 
 function MetadataView(props: MetadataViewProps): React.ReactElement {
-    const { header, treeColumns, options = null } = props;
-    const classes = useStyles(props);
+    const { header, treeColumns, options = null, makeStyles } = props;
 
     const width = computeMetadataViewWidth(treeColumns);
 
@@ -58,8 +33,8 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
             const width = `${size}vw`;
 
             return (
-                <div key={index} className={classes.column} style={{ width }}>
-                    <span className={classes.text} title={header ? undefined : label} data-tooltip-position='bottom'>
+                <div key={index} className={makeStyles?.column} style={{ width, color: palette.primary.dark, fontSize: undefined }}>
+                    <span className={makeStyles?.text} title={header ? undefined : label} data-tooltip-position='bottom'>
                         {trimmedMetadataField(label, 20, 10)}
                     </span>
                 </div>
@@ -67,7 +42,7 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
         });
 
     return (
-        <div className={classes.metadata} style={{ width }}>
+        <div style={{ width, display: 'flex' }}>
             {options}
             {renderTreeColumns(treeColumns)}
         </div>

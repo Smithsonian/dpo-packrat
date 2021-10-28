@@ -30,7 +30,7 @@ import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
 import InViewTreeItem from './InViewTreeItem';
 import { repositoryRowCount } from '../../../../types/server';
 
-const useStyles = makeStyles(({ breakpoints }) => ({
+const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     container: {
         display: 'flex',
         flex: 5,
@@ -51,6 +51,78 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     },
     fullWidth: {
         maxWidth: '95.5vw'
+    },
+    iconContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 18,
+        width: 18,
+        borderRadius: 2.5,
+        [breakpoints.down('lg')]: {
+            height: 15,
+            width: 15,
+        },
+    },
+    initial: {
+        fontSize: 10,
+        fontWeight: typography.fontWeightMedium,
+    },
+    // TreeLabel
+    treeLabelContainer: {
+        display: 'flex',
+    },
+    label: {
+        display: 'flex',
+        flex: 0.9,
+        alignItems: 'center',
+        position: 'sticky',
+        left: 45,
+        [breakpoints.down('lg')]: {
+            left: 30
+        }
+    },
+    labelText: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '60%',
+        fontSize: '0.8em',
+        zIndex: 10,
+        [breakpoints.down('lg')]: {
+            fontSize: '0.9em',
+        }
+    },
+    column: {
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0px 10px',
+        fontSize: undefined,
+        color: palette.grey[900],
+        fontWeight: typography.fontWeightLight,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+    },
+    text: {
+        fontSize: '0.8em',
+        [breakpoints.down('lg')]: {
+            fontSize: '0.9em',
+        }
+    },
+    options: {
+        display: 'flex',
+        alignItems: 'center',
+        position: 'sticky',
+        left: 0,
+        width: 120
+    },
+    option: {
+        display: 'flex',
+        alignItems: 'center'
+    },
+    link: {
+        color: palette.primary.dark,
+        textDecoration: 'none'
     }
 }));
 
@@ -98,12 +170,11 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
     // recursive
     const renderTree = (children: NavigationResultEntry[] | undefined, isChild?: boolean, parentNodeId?: string) => {
-        // console.log(`renderTree: ${children?.length} total`);
+        // console.log(`renderTree: ${children?.length} total`, children);
 
         if (!children) return null;
         return children.map((child: NavigationResultEntry, index: number) => {
             const { idSystemObject, objectType, idObject, name, metadata } = child;
-            // console.log(`renderTree children.map: ${JSON.stringify(child)}`);
 
             const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject);
             const childNodes = tree.get(nodeId);
@@ -119,10 +190,11 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             }
 
             const variant = getTreeColorVariant(index);
-            const { icon, color } = getObjectInterfaceDetails(objectType, variant);
-            const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
-            const isSelected = isRepositoryItemSelected(nodeId, selectedItems);
+            const { icon, color } = getObjectInterfaceDetails(objectType, variant, { container: classes.iconContainer, initial: classes.initial });
 
+            const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
+
+            const isSelected = isRepositoryItemSelected(nodeId, selectedItems);
             const select = (event: React.MouseEvent<SVGElement, MouseEvent>) => {
                 if (onSelect) {
                     event.stopPropagation();
@@ -154,6 +226,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                     objectType={objectType}
                     color={color}
                     treeColumns={treeColumns}
+                    makeStyles={{ container: classes.treeLabelContainer, label: classes.label, labelText: classes.labelText, column: classes.column, text: classes.text, options: classes.options, option: classes.option, link: classes.link }}
                 />
             );
 
@@ -211,7 +284,6 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         const treeColumns = getTreeViewColumns(metadataColumns, false);
         const width = getTreeWidth(treeColumns.length, sideBarExpanded, isModal);
         const children = tree.get(treeRootKey);
-
         content = (
             <TreeView className={classes.tree} defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />} onNodeToggle={onNodeToggle} style={{ width }}>
                 <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />

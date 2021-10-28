@@ -54,6 +54,7 @@ export type RepositoryFilter = {
     dateCreatedFrom?: Date | string | null;
     dateCreatedTo?: Date | string | null;
     cursorMark?: string | null;
+    idRoot?: number | null;
 };
 
 function Repository(): React.ReactElement {
@@ -90,6 +91,7 @@ function TreeViewPage(): React.ReactElement {
         modelFileType,
         dateCreatedFrom,
         dateCreatedTo,
+        idRoot,
         updateRepositoryFilter
     } = useRepositoryStore();
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
@@ -109,7 +111,8 @@ function TreeViewPage(): React.ReactElement {
             modelPurpose: [],
             modelFileType: [],
             dateCreatedFrom: null,
-            dateCreatedTo: null
+            dateCreatedTo: null,
+            idRoot: null
         })};path=/`;
     };
 
@@ -151,11 +154,11 @@ function TreeViewPage(): React.ReactElement {
         modelPurpose,
         modelFileType,
         dateCreatedFrom,
-        dateCreatedTo
+        dateCreatedTo,
+        idRoot
     };
     const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
     if (route !== location.search) {
-        // console.log(`*** src/pages/Repository/index.tsx TreeViewPage window.history.pushState(path: ${route}, '', ${route})`);
         window.history.pushState({ path: route }, '', route);
     }
 
