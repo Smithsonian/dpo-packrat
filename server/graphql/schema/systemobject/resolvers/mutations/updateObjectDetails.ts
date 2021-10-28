@@ -77,14 +77,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     return { success: false, message };
                 }
                 if (preferred === true) {
-                    const newIdentifier = await DBAPI.Identifier.fetchFromIdentifierValue(identifier);
-                    if (newIdentifier && newIdentifier.length) {
-                        identifierPreferred = newIdentifier[0].idIdentifier;
-                    } else {
-                        const message = `Unable to fetch identifier with value ${identifier}; update failed`;
-                        LOG.error(message, LOG.LS.eDB);
-                        return { success: false, message };
-                    }
+                    identifierPreferred = newIdentifier.idIdentifier;
                 }
             }
         }
