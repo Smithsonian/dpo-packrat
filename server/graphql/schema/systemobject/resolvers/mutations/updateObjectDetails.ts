@@ -48,9 +48,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (idIdentifier && identifier && identifierType) {
                 const existingIdentifier = await DBAPI.Identifier.fetch(idIdentifier);
                 if (existingIdentifier) {
-                    if (preferred) {
+                    if (preferred)
                         identifierPreferred = idIdentifier;
-                    }
                     existingIdentifier.IdentifierValue = identifier;
                     existingIdentifier.idVIdentifierType = Number(identifierType);
                     const updateSuccess = await existingIdentifier.update();
