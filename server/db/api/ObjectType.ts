@@ -44,6 +44,7 @@ export enum eNonSystemObjectType {
     eModelProcessingAction = 45,
     eModelProcessingActionStep = 46,
     eModelSceneXref = 47,
+    eSentinel = 63,
     eSystemObject = 48,
     eSystemObjectVersion = 49,
     eSystemObjectVersionAssetVersionXref = 60,
@@ -168,6 +169,7 @@ export function DBObjectTypeToName(dbType: eDBObjectType | null): string {
         case eNonSystemObjectType.eModelProcessingAction:               return 'ModelProcessingAction';
         case eNonSystemObjectType.eModelProcessingActionStep:           return 'ModelProessingActionStep';
         case eNonSystemObjectType.eModelSceneXref:                      return 'ModelSceneXref';
+        case eNonSystemObjectType.eSentinel:                            return 'Sentinel';
         case eNonSystemObjectType.eSystemObject:                        return 'SystemObject';
         case eNonSystemObjectType.eSystemObjectVersion:                 return 'SystemObjectVersion';
         case eNonSystemObjectType.eSystemObjectVersionAssetVersionXref: return 'SystemObjectVersionAssetVersionXref';
@@ -242,6 +244,7 @@ export function DBObjectNameToType(objectTypeName: string | null): eDBObjectType
         case 'Model Proessing Action Step': return eNonSystemObjectType.eModelProcessingActionStep;
         case 'ModelSceneXref': return eNonSystemObjectType.eModelSceneXref;
         case 'Model Scene Xref': return eNonSystemObjectType.eModelSceneXref;
+        case 'Sentinel': return eNonSystemObjectType.eSentinel;
         case 'SystemObject': return eNonSystemObjectType.eSystemObject;
         case 'System Object': return eNonSystemObjectType.eSystemObject;
         case 'SystemObjectVersion': return eNonSystemObjectType.eSystemObjectVersion;

@@ -724,6 +724,7 @@ model User {
   Audit                           Audit[]
   LicenseAssignment               LicenseAssignment[]
   Metadata                        Metadata[]
+  Sentinel                        Sentinel[]
   UserPersonalizationSystemObject UserPersonalizationSystemObject[]
   UserPersonalizationUrl          UserPersonalizationUrl[]
   Workflow                        Workflow[]
@@ -891,4 +892,15 @@ model WorkflowReport {
 model WorkflowSet {
   idWorkflowSet Int        @id @default(autoincrement())
   Workflow      Workflow[]
+}
+
+model Sentinel {
+  idSentinel     Int      @id @default(autoincrement())
+  URLBase        String   @mariasql.VarChar(512)
+  ExpirationDate DateTime @mariasql.DateTime(0)
+  idUser         Int
+  User           User     @relation(fields: [idUser], references: [idUser])
+
+  @@index([URLBase], name: "Sentinel_URLBase")
+  @@index([idUser], name: "fk_sentinel_user1")
 }

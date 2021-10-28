@@ -443,6 +443,15 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   PRIMARY KEY (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
+CREATE TABLE IF NOT EXISTS `Sentinel` (
+  `idSentinel` int(11) NOT NULL AUTO_INCREMENT,
+  `URLBase` varchar(512) NOT NULL,
+  `ExpirationDate` datetime NOT NULL,
+  `idUser` int(11) NOT NULL,
+  PRIMARY KEY (`idSentinel`),
+  KEY `Sentinel_URLBase` (`URLBase`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
 CREATE TABLE IF NOT EXISTS `Stakeholder` (
   `idStakeholder` int(11) NOT NULL AUTO_INCREMENT,
   `IndividualName` varchar(255) NOT NULL,
@@ -1024,6 +1033,13 @@ ALTER TABLE `Scene`
 ADD CONSTRAINT `fk_scene_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
   REFERENCES `Asset` (`idAsset`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `Sentinel` 
+ADD CONSTRAINT `fk_sentinel_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

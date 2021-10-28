@@ -85,6 +85,7 @@ let project2: DBAPI.Project | null;
 let projectDocumentation: DBAPI.ProjectDocumentation | null;
 let scene: DBAPI.Scene | null;
 let sceneNulls: DBAPI.Scene | null;
+let sentinel: DBAPI.Sentinel | null;
 let stakeholder: DBAPI.Stakeholder | null;
 let subject: DBAPI.Subject | null;
 let subjectWithPreferredID: DBAPI.Subject | null;
@@ -1542,6 +1543,17 @@ describe('DB Creation Test Suite', () => {
         expect(projectDocumentation).toBeTruthy();
     });
 
+    test('DB Creation: Sentinel', async () => {
+        if (userActive)
+            sentinel = await UTIL.createSentinelTest({
+                URLBase: 'Test Sentinel URLBase ' + H.Helpers.randomSlug(),
+                ExpirationDate: UTIL.nowCleansed(),
+                idUser: userActive.idUser,
+                idSentinel: 0
+            });
+        expect(sentinel).toBeTruthy();
+    });
+
     test('DB Creation: Stakeholder', async () => {
         stakeholder = await UTIL.createStakeholderTest({
             IndividualName: 'Test Stakeholder Name',
@@ -2793,6 +2805,18 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(sceneFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: Sentinel', async () => {
+        let sentinelFetch: DBAPI.Sentinel | null = null;
+        if (sentinel) {
+            sentinelFetch = await DBAPI.Sentinel.fetch(sentinel.idSentinel);
+            if (sentinelFetch) {
+                expect(sentinelFetch).toMatchObject(sentinel);
+                expect(sentinel).toMatchObject(sentinelFetch);
+            }
+        }
+        expect(sentinelFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: Stakeholder', async () => {
@@ -4220,6 +4244,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelProcessingAction)).toEqual('ModelProcessingAction');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelProcessingActionStep)).toEqual('ModelProessingActionStep');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelSceneXref)).toEqual('ModelSceneXref');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSentinel)).toEqual('Sentinel');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObject)).toEqual('SystemObject');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectVersion)).toEqual('SystemObjectVersion');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectXref)).toEqual('SystemObjectXref');
@@ -4303,6 +4328,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectNameToType('Model Proessing Action Step')).toEqual(DBAPI.eNonSystemObjectType.eModelProcessingActionStep);
         expect(DBAPI.DBObjectNameToType('ModelSceneXref')).toEqual(DBAPI.eNonSystemObjectType.eModelSceneXref);
         expect(DBAPI.DBObjectNameToType('Model Scene Xref')).toEqual(DBAPI.eNonSystemObjectType.eModelSceneXref);
+        expect(DBAPI.DBObjectNameToType('Sentinel')).toEqual(DBAPI.eNonSystemObjectType.eSentinel);
         expect(DBAPI.DBObjectNameToType('SystemObject')).toEqual(DBAPI.eNonSystemObjectType.eSystemObject);
         expect(DBAPI.DBObjectNameToType('System Object')).toEqual(DBAPI.eNonSystemObjectType.eSystemObject);
         expect(DBAPI.DBObjectNameToType('SystemObjectVersion')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersion);
@@ -5350,6 +5376,16 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(sceneFetch.length).toEqual(0);
         }
         expect(sceneFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Sentinel.fetchByURLBase', async () => {
+        let sentinelFetch: DBAPI.Sentinel[] | null = null;
+        if (sentinel) {
+            sentinelFetch = await DBAPI.Sentinel.fetchByURLBase(sentinel.URLBase);
+            if (sentinelFetch)
+                expect(sentinelFetch).toEqual(expect.arrayContaining([sentinel]));
+        }
+        expect(sentinelFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: Stakeholder.fetchAll', async () => {
@@ -6704,6 +6740,21 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: Sentinel.update', async () => {
+        let bUpdated: boolean = false;
+        if (sentinel) {
+            const updatedURLBase: string = 'Updated Sentinel URLBase ' + H.Helpers.randomSlug();
+            sentinel.URLBase = updatedURLBase;
+            bUpdated = await sentinel.update();
+
+            const sentinelFetch: DBAPI.Sentinel | null = await DBAPI.Sentinel.fetch(sentinel.idSentinel);
+            expect(sentinelFetch).toBeTruthy();
+            if (sentinelFetch)
+                expect(sentinelFetch.URLBase).toBe(updatedURLBase);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: Stakeholder.update', async () => {
         let bUpdated: boolean = false;
         if (stakeholder) {
@@ -7580,6 +7631,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Scene.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.Scene.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.Scene.fetchChildrenScenes(0)).toBeNull();
+        expect(await DBAPI.Sentinel.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();
         expect(await DBAPI.Subject.clearPreferredIdentifier(0)).toBeFalsy();

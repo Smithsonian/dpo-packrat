@@ -36,7 +36,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
             Name: userBase.Name,
             EmailAddress: userBase.EmailAddress,
             SecurityID: userBase.SecurityID,
-            Active: H.Helpers.safeBoolean(userBase.Active) ?? false,
+            Active: /* istanbul ignore next */ H.Helpers.safeBoolean(userBase.Active) ?? false,
             DateActivated: userBase.DateActivated,
             DateDisabled: userBase.DateDisabled,
             WorkflowNotificationTime: userBase.WorkflowNotificationTime,
