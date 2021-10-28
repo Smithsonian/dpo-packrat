@@ -368,7 +368,6 @@ function DetailsView(): React.ReactElement {
                 updatedData.Subject.R1 = R1 ? Number(R1) : null;
                 updatedData.Subject.R2 = R2 ? Number(R2) : null;
                 updatedData.Subject.R3 = R3 ? Number(R3) : null;
-
             }
 
             if (objectType === eSystemObjectType.eItem && updatedData.Item) {
