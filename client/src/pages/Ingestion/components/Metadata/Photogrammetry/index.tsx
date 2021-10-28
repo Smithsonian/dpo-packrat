@@ -41,7 +41,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const { photogrammetry } = metadata;
     const errors = getFieldErrors(metadata);
-    
+
     const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
     const subjectIdSystemObject = useGetSubjectQuery({
         variables: {
