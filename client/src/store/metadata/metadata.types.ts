@@ -111,11 +111,11 @@ export type SceneFields = {
     sourceObjects: StateRelatedObject[];
     derivedObjects: StateRelatedObject[];
     referenceModels: StateReferenceModel[];
-    hasBeenQCd: boolean;
-    isOriented: boolean;
     name: string;
     directory: string;
     EdanUUID: string;
+    approvedForPublication: boolean;
+    posedAndQCd: boolean;
     idAsset?: number;
 };
 

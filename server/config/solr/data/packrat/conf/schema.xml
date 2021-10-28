@@ -100,8 +100,6 @@
     <field name="ModelObjectSelfIntersecting" type="booleans" indexed="true" stored="true"/>
     
     <!-- Scene fields -->
-    <field name="SceneIsOriented" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="SceneHasBeenQCd" type="boolean" indexed="true" stored="true" multiValued="false" />
     <field name="SceneCountScene" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="SceneCountNode" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="SceneCountCamera" type="pint" indexed="true" stored="true" multiValued="false" />
@@ -110,6 +108,9 @@
     <field name="SceneCountMeta" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="SceneCountSetup" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="SceneCountTour" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneEdanUUID" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="ScenePosedAndQCd" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneApprovedForPublication" type="boolean" indexed="true" stored="true" multiValued="false" />
 
     <!-- Asset fields -->
     <field name="AssetFileName" type="strings" indexed="true" stored="true" />

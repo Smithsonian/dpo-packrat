@@ -352,8 +352,8 @@ function DetailsView(): React.ReactElement {
 
             if (objectType === eSystemObjectType.eScene && updatedData.Scene) {
                 const SceneDetails = getDetail(objectType) as SceneDetailsType;
-                const { HasBeenQCd, IsOriented } = SceneDetails;
-                updatedData.Scene = { IsOriented, HasBeenQCd };
+                const { ApprovedForPublication, PosedAndQCd } = SceneDetails;
+                updatedData.Scene = { PosedAndQCd, ApprovedForPublication };
             }
             // convert subject and item inputs to numbers to handle scientific notation
             if (objectType === eSystemObjectType.eSubject && updatedData.Subject) {
@@ -432,7 +432,8 @@ function DetailsView(): React.ReactElement {
                 throw new Error(data?.updateObjectDetails?.message);
             }
         } catch (error) {
-            toast.error(error.toString() || 'Failed to save updated data');
+            if (error instanceof Error)
+                toast.error(error.toString() || 'Failed to save updated data');
         } finally {
             setIsUpdatingData(false);
         }

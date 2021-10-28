@@ -78,8 +78,6 @@ type SceneDetailFields {
     AssetType: Int
     Tours: Int
     Annotation: Int
-    HasBeenQCd: Boolean
-    IsOriented: Boolean
     CountScene: Int
     CountNode: Int
     CountCamera: Int
@@ -89,6 +87,9 @@ type SceneDetailFields {
     CountSetup: Int
     CountTour: Int
     EdanUUID: String
+    ApprovedForPublication: Boolean
+    PublicationApprover: String
+    PosedAndQCd: Boolean
     idScene: Int
 }
 
