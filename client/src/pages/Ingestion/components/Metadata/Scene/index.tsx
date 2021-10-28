@@ -101,10 +101,11 @@ function Scene(props: SceneProps): React.ReactElement {
         fetchSceneConstellation();
     }, [idAssetVersion, metadataIndex, setInvalidMetadataStep, scene.directory]);
 
+    const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
     const subjectIdSystemObject = useGetSubjectQuery({
         variables: {
             input: {
-                idSubject: subjects[0]?.id
+                idSubject: validSubjectId
             }
         }
     });
@@ -125,13 +126,13 @@ function Scene(props: SceneProps): React.ReactElement {
     };
 
     const openSourceObjectModal = async () => {
-        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eScene, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
-        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eScene, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };

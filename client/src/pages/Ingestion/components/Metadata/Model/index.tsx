@@ -165,12 +165,13 @@ function Model(props: ModelProps): React.ReactElement {
 
         fetchModelConstellation();
     }, [idAssetVersion, metadataIndex, updateMetadataField]);
-
+    
     // use subject's idSystemObject as the root to initialize the repository browser
+    const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
     const subjectIdSystemObject = useGetSubjectQuery({
         variables: {
             input: {
-                idSubject: subjects[0]?.id
+                idSubject: validSubjectId
             }
         }
     });
