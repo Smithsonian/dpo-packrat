@@ -85,8 +85,8 @@ input IngestSceneInput {
     idAsset: Int
     systemCreated: Boolean!
     name: String!
-    hasBeenQCd: Boolean!
-    isOriented: Boolean!
+    approvedForPublication: Boolean!
+    posedAndQCd: Boolean!
     directory: String!
     identifiers: [IngestIdentifierInput!]!
     sourceObjects: [RelatedObjectInput!]!

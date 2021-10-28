@@ -131,8 +131,9 @@ export class PublishScene {
             return false;
         }
 
-        if (!this.scene.HasBeenQCd) {
-            LOG.error(`PublishScene.fetchScene attempting to publish non-QC'd scene ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+        if (this.eState !== DBAPI.ePublishedState.eNotPublished &&
+            (!this.scene.ApprovedForPublication || !this.scene.PosedAndQCd)) {
+            LOG.error(`PublishScene.fetchScene attempting to publish non-Approved and/or non-QC'd scene ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
             return false;
         }
 

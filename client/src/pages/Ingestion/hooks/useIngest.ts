@@ -221,7 +221,7 @@ function useIngest(): UseIngest {
                 }
 
                 if (isScene) {
-                    const { identifiers, systemCreated, hasBeenQCd, isOriented, name, directory, sourceObjects,
+                    const { identifiers, systemCreated, approvedForPublication, posedAndQCd, name, directory, sourceObjects,
                         derivedObjects } = scene;
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
@@ -230,8 +230,8 @@ function useIngest(): UseIngest {
                         identifiers: ingestIdentifiers,
                         systemCreated,
                         name,
-                        hasBeenQCd,
-                        isOriented,
+                        approvedForPublication,
+                        posedAndQCd,
                         directory,
                         sourceObjects,
                         derivedObjects
@@ -289,7 +289,8 @@ function useIngest(): UseIngest {
             }
 
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error.toString());
         }
 
         return { success: false, message: 'unable to start ingestion process' };

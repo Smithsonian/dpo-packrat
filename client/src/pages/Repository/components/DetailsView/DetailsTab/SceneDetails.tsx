@@ -4,7 +4,7 @@
  *
  * This component renders details tab for Scene specific details used in DetailsTab component.
  */
-import { Box, makeStyles, Checkbox /*, Typography */ } from '@material-ui/core';
+import { Box, makeStyles, Checkbox } from '@material-ui/core';
 import React, { useEffect, useRef } from 'react';
 import { Loader } from '../../../../../components';
 import { GetSceneDocument } from '../../../../../types/graphql';
@@ -86,7 +86,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eScene, name, checked);
     };
 
-    const gridTemplateColumns = '100px 1fr';
+    const gridTemplateColumns = '200px 1fr';
     const rowFieldProps = { alignItems: 'center', alignContent: 'center', style: { borderRadius: 0, display: 'grid', gridTemplateColumns } };
 
     return (
@@ -96,27 +96,28 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
             <Box className={classes.container}>
                 <FieldType
                     required
-                    label="Has been QC'd"
+                    label='Approved for Publication'
                     direction='row'
                     width='100%'
                     containerProps={rowFieldProps}
                 >
                     <Box width='fit-content' textAlign='right'>
-                        <Checkbox name='HasBeenQCd' checked={SceneDetails.HasBeenQCd} color='primary' onChange={setCheckboxField} />
+                        <Checkbox name='ApprovedForPublication' checked={SceneDetails.ApprovedForPublication} color='primary' onChange={setCheckboxField} />
                     </Box>
                 </FieldType>
 
                 <FieldType
                     required
-                    label='Is Oriented'
+                    label="Posed and QC'd"
                     direction='row'
                     width='100%'
                     containerProps={rowFieldProps}
                 >
                     <Box width='fit-content' textAlign='right'>
-                        <Checkbox name='IsOriented' checked={SceneDetails.IsOriented} color='primary' onChange={setCheckboxField} />
+                        <Checkbox name='PosedAndQCd' checked={SceneDetails.PosedAndQCd} color='primary' onChange={setCheckboxField} />
                     </Box>
                 </FieldType>
+                <ReadOnlyRow label='Publication Approver' value={SceneDetails.PublicationApprover} padding={15} gridTemplate={gridTemplateColumns} />
                 <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} padding={15} gridTemplate={gridTemplateColumns} />
                 <ReadOnlyRow label='Scene Count' value={SceneDetails.CountScene} padding={15} gridTemplate={gridTemplateColumns} />
                 <ReadOnlyRow label='Node Count' value={SceneDetails.CountNode} padding={15} gridTemplate={gridTemplateColumns} />

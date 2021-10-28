@@ -487,6 +487,7 @@ export class AssetStorageAdapter {
         const assets: DBAPI.Asset[] = [];
         const assetVersions: DBAPI.AssetVersion[] = [];
         const eAssetTypeMaster: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType);
+        let IAR: IngestAssetResult = { success: true, error: '' };
 
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${asset.FilePath}/` : '';
@@ -500,12 +501,16 @@ export class AssetStorageAdapter {
             if (!inputStream) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to stream entry ${entry} of AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
                 LOG.error(error, LOG.LS.eSTR);
-                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                if (IAR.success)
+                    IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                continue;
             }
             const hashResults: H.HashResults = await H.Helpers.computeHashFromStream(inputStream, ST.OCFLDigestAlgorithm); /* istanbul ignore next */
             if (!hashResults.success) {
                 LOG.error(hashResults.error, LOG.LS.eSTR);
-                return { success: false, error: hashResults.error, assets, assetVersions, systemObjectVersion: null };
+                if (IAR.success)
+                    IAR = { success: false, error: hashResults.error, assets, assetVersions, systemObjectVersion: null };
+                continue;
             }
 
             // Get a second readstream to that part of the zip, to reset stream position after computing the hash
@@ -513,7 +518,9 @@ export class AssetStorageAdapter {
             if (!inputStream) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to stream entry ${entry} of AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
                 LOG.error(error, LOG.LS.eSTR);
-                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                if (IAR.success)
+                    IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                continue;
             }
 
             // Determine asset type
@@ -557,7 +564,9 @@ export class AssetStorageAdapter {
             if (!idVAssetType) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to compute asset type of Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
                 LOG.error(error, LOG.LS.eSTR);
-                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                if (IAR.success)
+                    IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                continue;
             }
 
             // find/create asset and asset version
@@ -601,7 +610,9 @@ export class AssetStorageAdapter {
             if (!assetVersionComponent) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to create AssetVersion from Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
                 LOG.error(error, LOG.LS.eSTR);
-                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                if (IAR.success)
+                    IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                continue;
             }
 
             // Create a storage key, Promote the asset, Update the asset
@@ -610,13 +621,18 @@ export class AssetStorageAdapter {
                 if (!ASR.success) {
                     const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to promote Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${ASR.error}`;
                     LOG.error(error, LOG.LS.eSTR);
-                    return { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                    if (IAR.success)
+                        IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
+                    continue;
                 }
             }
 
             assets.push(assetComponent);
             assetVersions.push(assetVersionComponent);
         }
+
+        if (!IAR.success)
+            return IAR;
 
         // If no other assets exist for this bulk ingest, retire the asset version and remove the staged file
         const relatedAV: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchByStorageKeyStaging(assetVersion.StorageKeyStaging);
@@ -742,7 +758,7 @@ export class AssetStorageAdapter {
         } else
             LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to extract metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
 
-        return { asset, assetVersion, success: true, error: '' };
+        return { asset, assetVersion, success: res.success, error: '' };
     }
 
     static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestStreamOrFileResult> {

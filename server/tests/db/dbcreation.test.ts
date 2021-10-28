@@ -421,8 +421,6 @@ describe('DB Creation Test Suite', () => {
             scene = await UTIL.createSceneTest({
                 Name: 'Test Scene',
                 idAssetThumbnail: assetThumbnail.idAsset,
-                IsOriented: true,
-                HasBeenQCd: true,
                 CountScene: 0,
                 CountNode: 0,
                 CountCamera: 0,
@@ -432,6 +430,8 @@ describe('DB Creation Test Suite', () => {
                 CountSetup: 0,
                 CountTour: 0,
                 EdanUUID: null,
+                PosedAndQCd: true,
+                ApprovedForPublication: true,
                 idScene: 0
             });
         expect(scene).toBeTruthy();
@@ -441,8 +441,6 @@ describe('DB Creation Test Suite', () => {
         sceneNulls = await UTIL.createSceneTest({
             Name: 'Test Scene',
             idAssetThumbnail: null,
-            IsOriented: true,
-            HasBeenQCd: false,
             CountScene: 0,
             CountNode: 0,
             CountCamera: 0,
@@ -452,6 +450,8 @@ describe('DB Creation Test Suite', () => {
             CountSetup: 0,
             CountTour: 0,
             EdanUUID: null,
+            PosedAndQCd: true,
+            ApprovedForPublication: false,
             idScene: 0
         });
         expect(sceneNulls).toBeTruthy();
@@ -2231,6 +2231,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 expect(audit).toMatchObject(auditFetch);
             }
 
+            const eAuditTypeOrig: DBAPI.eAuditType = audit.getAuditType();
             audit.setAuditType(DBAPI.eAuditType.eUnknown);
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eUnknown);
             audit.setAuditType(DBAPI.eAuditType.eAuthLogin);
@@ -2243,15 +2244,29 @@ describe('DB Fetch By ID Test Suite', () => {
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eDBUpdate);
             audit.setAuditType(DBAPI.eAuditType.eDBDelete);
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eDBDelete);
+            audit.setAuditType(eAuditTypeOrig);
+            expect(audit.getAuditType()).toEqual(eAuditTypeOrig);
 
+            const eDBObjectTypeOrig: DBAPI.eDBObjectType = audit.getDBObjectType();
             audit.setDBObjectType(null);
             expect(audit.getDBObjectType()).toEqual(DBAPI.eSystemObjectType.eUnknown);
             audit.setDBObjectType(DBAPI.eSystemObjectType.eUnit);
             expect(audit.getDBObjectType()).toEqual(DBAPI.eSystemObjectType.eUnit);
             audit.setDBObjectType(DBAPI.eNonSystemObjectType.eUnitEdan);
             expect(audit.getDBObjectType()).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
+            audit.setDBObjectType(eDBObjectTypeOrig);
+            expect(audit.getDBObjectType()).toEqual(eDBObjectTypeOrig);
         }
         expect(auditFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Audit: Audit.fetchLastUser', async () => {
+        // LOG.info(`Audit: ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+        let userFetch: DBAPI.User | null = null;
+        if (audit)
+            userFetch = await DBAPI.Audit.fetchLastUser(audit.idSystemObject ?? 0, audit.getAuditType());
+        expect(userFetch).toBeTruthy();
+        expect(userFetch?.idUser).toEqual(userActive?.idUser);
     });
 
     test('DB Fetch By ID: CaptureData', async () => {
@@ -4099,11 +4114,30 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
+    test('DB Fetch SystemObject: LicenseEnumToString', async () => {
+        expect(DBAPI.LicenseEnumToString(-1)).toEqual('Restricted');
+        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eViewDownloadCC0)).toEqual('View and Download CC0');
+        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eViewDownloadRestriction)).toEqual('View and Download with usage restrictions');
+        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eViewOnly)).toEqual('View Only');
+        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eRestricted)).toEqual('Restricted');
+    });
+
     test('DB Fetch SystemObject: PublishedStateEnumToString', async () => {
         expect(DBAPI.PublishedStateEnumToString(-1)).toEqual('Not Published');
         expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eNotPublished)).toEqual('Not Published');
         expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eAPIOnly)).toEqual('API Only');
         expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.ePublished)).toEqual('Published');
+    });
+
+    test('DB Fetch SystemObject: LicenseRestrictLevelToPublishedStateEnum', async () => {
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(-1)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(10)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(15)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(20)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(25)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(30)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(35)).toEqual(DBAPI.ePublishedState.eNotPublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(1000)).toEqual(DBAPI.ePublishedState.eNotPublished);
     });
 
     test('DB Fetch SystemObject: SystemObjectTypeToName', async () => {
@@ -6623,7 +6657,7 @@ describe('DB Update Test Suite', () => {
             const SOOld: DBAPI.SystemObject | null = await sceneNulls.fetchSystemObject();
             expect(SOOld).toBeTruthy();
 
-            sceneNulls.HasBeenQCd = true;
+            sceneNulls.ApprovedForPublication = true;
             sceneNulls.idAssetThumbnail = assetThumbnail.idAsset;
             bUpdated = await sceneNulls.update();
 
@@ -7451,6 +7485,8 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true, true)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchByAssetAndVersion(0, 1)).toBeNull();
         expect(await DBAPI.Audit.fetch(0)).toBeNull();
+        expect(await DBAPI.Audit.fetchLastUser(0, DBAPI.eAuditType.eAuthLogin)).toBeNull();
+        expect(await DBAPI.Audit.fetchLastUser(-1, DBAPI.eAuditType.eUnknown)).toBeNull();
         expect(await DBAPI.CaptureData.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromCaptureDataPhoto(0)).toBeNull();

@@ -757,8 +757,6 @@ export class IndexSolr implements NAV.IIndexer {
             return false;
         }
         doc.CommonName = scene.Name;
-        doc.SceneIsOriented = scene.IsOriented;
-        doc.SceneHasBeenQCd = scene.HasBeenQCd;
         doc.SceneCountScene = scene.CountScene;
         doc.SceneCountNode = scene.CountNode;
         doc.SceneCountCamera = scene.CountCamera;
@@ -767,6 +765,9 @@ export class IndexSolr implements NAV.IIndexer {
         doc.SceneCountMeta = scene.CountMeta;
         doc.SceneCountSetup = scene.CountSetup;
         doc.SceneCountTour = scene.CountTour;
+        doc.SceneEdanUUID = scene.EdanUUID;
+        doc.ScenePosedAndQCd = scene.PosedAndQCd;
+        doc.SceneApprovedForPublication = scene.ApprovedForPublication;
         this.countScene++;
         return true;
     }

@@ -483,8 +483,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (Scene) {
                 Scene.Name = data.Name;
                 if (data.Scene) {
-                    if (typeof data.Scene.IsOriented === 'boolean') Scene.IsOriented = data.Scene.IsOriented;
-                    if (typeof data.Scene.HasBeenQCd === 'boolean') Scene.HasBeenQCd = data.Scene.HasBeenQCd;
+                    if (typeof data.Scene.PosedAndQCd === 'boolean') Scene.PosedAndQCd = data.Scene.PosedAndQCd;
+                    if (typeof data.Scene.ApprovedForPublication === 'boolean') Scene.ApprovedForPublication = data.Scene.ApprovedForPublication;
                 }
                 const updateSuccess = await Scene.update();
                 if (!updateSuccess) {
