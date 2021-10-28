@@ -367,7 +367,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     setDefaultIngestionFilters: async (systemObjectType: eSystemObjectType, idRoot: number | undefined): Promise<void> => {
         const { resetKeywordSearch, resetRepositoryFilter, getChildrenForIngestion } = get();
-        try {
+        if (idRoot !== undefined) {
             const { data: { getSystemObjectDetails: { name, objectType } } } = await apolloClient.query({
                 query: GetSystemObjectDetailsDocument,
                 variables: {
@@ -378,9 +378,10 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             });
             resetRepositoryFilter(false);
             set({ isExpanded: false, idRoot, repositoryBrowserRootName: name, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
-        } catch {
+        } else {
             toast.warn('Subject was not found in database.');
         }
+        
         resetKeywordSearch();
 
         if (systemObjectType === eSystemObjectType.eModel) {
