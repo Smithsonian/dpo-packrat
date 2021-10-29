@@ -42,7 +42,8 @@ export const INGESTION_ROUTE = {
 
 export enum REPOSITORY_ROUTES_TYPE {
     VIEW = '',
-    DETAILS = 'details/:idSystemObject'
+    DETAILS = 'details/:idSystemObject',
+    VOYAGER = 'voyager-story/:idSystemObject'
 }
 
 export const REPOSITORY_ROUTE = {

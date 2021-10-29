@@ -11,6 +11,7 @@ import { eMetadata, eSystemObjectType } from '../types/server';
 import { parseRepositoryTreeNodeId, validateArray, getTermForSystemObjectType } from '../utils/repository';
 import { apolloClient } from '../graphql';
 import { GetSystemObjectDetailsDocument } from '../types/graphql';
+import { toast } from 'react-toastify';
 
 type RepositoryStore = {
     isExpanded: boolean;
@@ -366,17 +367,20 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     setDefaultIngestionFilters: async (systemObjectType: eSystemObjectType, idRoot: number | undefined): Promise<void> => {
         const { resetKeywordSearch, resetRepositoryFilter, getChildrenForIngestion } = get();
-        const { data: { getSystemObjectDetails: { name, objectType } } } = await apolloClient.query({
-            query: GetSystemObjectDetailsDocument,
-            variables: {
-                input: {
-                    idSystemObject: idRoot
+        if (idRoot !== undefined) {
+            const { data: { getSystemObjectDetails: { name, objectType } } } = await apolloClient.query({
+                query: GetSystemObjectDetailsDocument,
+                variables: {
+                    input: {
+                        idSystemObject: idRoot
+                    }
                 }
-            }
-        });
-        resetRepositoryFilter(false);
-        set({ isExpanded: false, idRoot, repositoryBrowserRootName: name, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
-
+            });
+            resetRepositoryFilter(false);
+            set({ isExpanded: false, idRoot, repositoryBrowserRootName: name, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
+        } else {
+            toast.warn('Subject was not found in database.');
+        }
         resetKeywordSearch();
 
         if (systemObjectType === eSystemObjectType.eModel) {
