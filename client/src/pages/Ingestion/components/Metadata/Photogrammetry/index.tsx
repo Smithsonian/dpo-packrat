@@ -42,10 +42,11 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { photogrammetry } = metadata;
     const errors = getFieldErrors(metadata);
 
+    const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
     const subjectIdSystemObject = useGetSubjectQuery({
         variables: {
             input: {
-                idSubject: subjects[0]?.id
+                idSubject: validSubjectId
             }
         }
     });
@@ -103,13 +104,13 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     };
 
     const openSourceObjectModal = async () => {
-        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eCaptureData, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
-        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eCaptureData, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };

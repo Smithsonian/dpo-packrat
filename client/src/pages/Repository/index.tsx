@@ -19,6 +19,7 @@ import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repositor
 import DetailsView from './components/DetailsView';
 import RepositoryFilterView from './components/RepositoryFilterView';
 import RepositoryTreeView from './components/RepositoryTreeView';
+import VoyagerStoryView from './components/DetailsView/VoyagerStoryView';
 import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
@@ -66,6 +67,7 @@ function Repository(): React.ReactElement {
             <PrivateRoute path={resolveRoute(HOME_ROUTES.REPOSITORY)}>
                 <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} component={TreeViewPage} />
                 <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.DETAILS)} component={DetailsView} />
+                <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VOYAGER)} component={VoyagerStoryView} />
                 <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, 'details')}>
                     <Redirect to={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} />
                 </PrivateRoute>
