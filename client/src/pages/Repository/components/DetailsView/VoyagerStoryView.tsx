@@ -14,6 +14,8 @@ import { useObjectDetails  } from '../../hooks/useDetailsView';
 import DetailsHeader from './DetailsHeader';
 import ObjectNotFoundView from './ObjectNotFoundView';
 import VoyagerExplorer from './DetailsTab/VoyagerExplorer';
+import VoyagerStory from './DetailsTab/VoyagerStory';
+import { eVoyagerStoryMode, getModeForVoyager, getVoyagerModeFromParam } from '../../../../utils/repository';
 import * as qs from 'query-string';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
@@ -49,19 +51,19 @@ type DetailsParams = {
 type QueryParams = {
     document: string;
     root: string;
+    mode: string;
 };
 
 
 function VoyagerStoryView(): React.ReactElement {
     const classes = useStyles();
-    // NOTE: params gives you access to the idSystemObject as defined in the route
-    const params = useParams<DetailsParams>();
+    const params = useParams<DetailsParams>(); // NOTE: params gives you access to the idSystemObject as defined in the route
     const location = useLocation();
-    // NOTE: qs.parse gives you the object of query strings you use, such as document and root
-    const { document, root } = qs.parse(location.search) as QueryParams;
+    const { document, root, mode } = qs.parse(location.search) as QueryParams; // NOTE: qs.parse gives you the object of query strings you use, such as document and root
     const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
     const { data, loading } = useObjectDetails(idSystemObject);
     const [objectName, setObjectName] = useState('');
+    const eMode = getVoyagerModeFromParam(mode);
 
     useEffect(() => {
         if (data && !loading) {
@@ -92,7 +94,14 @@ function VoyagerStoryView(): React.ReactElement {
 
             <Box display='flex'>
                 <Box display='flex' flex={1} padding={2}>
-                    <VoyagerExplorer root={root} document={document} width={'80vw'} height={'80vh'} />
+                    {eMode === eVoyagerStoryMode.eViewer && (
+                        <VoyagerExplorer root={root} document={document} width={'80vw'} height={'80vh'} />
+                    )}
+                    {eMode !== eVoyagerStoryMode.eViewer && (
+                        <VoyagerStory root={root} document={document} mode={getModeForVoyager(eMode)}
+                            width={'80vw'} height={'80vh'}
+                        />
+                    )}
                 </Box>
             </Box>
 

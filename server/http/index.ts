@@ -68,6 +68,7 @@ export class HttpServer {
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
         this.app.get('/download', download);
+        this.app.get('/download/*', HttpServer.idRequestMiddleware2);
         this.app.get('/download/*', download);
 
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
@@ -91,6 +92,7 @@ export class HttpServer {
     private static idRequestMiddleware(req: Request, _res, next): void {
         if (!req.originalUrl.startsWith('/auth/') &&
             !req.originalUrl.startsWith('/graphql') &&
+            !req.originalUrl.startsWith('/download/') &&
             !req.originalUrl.startsWith('/download-wd/')) {
             const user = req['user'];
             const idUser = user ? user['idUser'] : undefined;
