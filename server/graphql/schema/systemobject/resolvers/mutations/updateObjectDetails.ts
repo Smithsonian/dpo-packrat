@@ -12,21 +12,32 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { input } = args;
     const { idSystemObject, idObject, objectType, data } = input;
 
-    // LOG.info(JSON.stringify(data, null, 2), LOG.LS.eGQL);
-
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired)) {
-        return { success: false, message: 'Error with Name and/or Retired field(s)' };
+        const message = 'Error with Name and/or Retired field(s); update failed';
+        LOG.error(message, LOG.LS.eDB);
+        return { success: false, message };
     }
 
     const SO = await DBAPI.SystemObject.fetch(idSystemObject);
-    /**
-     * TODO: KARAN: add an error property and handle errors
-     */
-    if (SO) {
-        if (data.Retired) {
-            await SO.retireObject();
-        } else {
-            await SO.reinstateObject();
+
+    if (!SO) {
+        const message = 'Error with fetching the object; update failed';
+        LOG.error(message, LOG.LS.eDB);
+        return { success: false, message };
+    }
+    if (data.Retired) {
+        const retireSuccess = await SO.retireObject();
+        if (!retireSuccess) {
+            const message = 'Error with retiring object; update failed';
+            LOG.error(message, LOG.LS.eDB);
+            return { success: false, message };
+        }
+    } else {
+        const reinstateScuccess = await SO.reinstateObject();
+        if (!reinstateScuccess) {
+            const message = 'Error with reinstating object; update failed';
+            LOG.error(message, LOG.LS.eDB);
+            return { success: false, message };
         }
     }
 
@@ -37,19 +48,20 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (idIdentifier && identifier && identifierType) {
                 const existingIdentifier = await DBAPI.Identifier.fetch(idIdentifier);
                 if (existingIdentifier) {
-                    if (preferred) {
+                    if (preferred)
                         identifierPreferred = idIdentifier;
-                    }
                     existingIdentifier.IdentifierValue = identifier;
                     existingIdentifier.idVIdentifierType = Number(identifierType);
                     const updateSuccess = await existingIdentifier.update();
-                    if (updateSuccess) {
-                        LOG.info(`updated identifier ${idIdentifier}`, LOG.LS.eDB);
+                    if (!updateSuccess) {
+                        const message = `Unable to update identifier with id ${idIdentifier}; update failed`;
+                        LOG.error(message, LOG.LS.eDB);
+                        return { success: false, message };
                     } else {
-                        LOG.error(`failed to updated identifier ${idIdentifier}`, LOG.LS.eDB);
+                        const message = `Unable to fetch identifier with id ${idIdentifier}; update failed`;
+                        LOG.error(message, LOG.LS.eDB);
+                        return { success: false, message };
                     }
-                } else {
-                    LOG.error(`failed to find identifier ${idIdentifier}`, LOG.LS.eDB);
                 }
             }
 
@@ -59,15 +71,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 const createNewIdentifier = await newIdentifier.create();
 
                 if (!createNewIdentifier) {
-                    LOG.error(`updateObjectDetails failed to create newIdentifier ${JSON.stringify(newIdentifier)}`, LOG.LS.eDB);
+                    const message = `Unable to create identifier when updating ${SystemObjectTypeToName(objectType)}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
                 }
                 if (preferred === true) {
-                    const newIdentifier = await DBAPI.Identifier.fetchFromIdentifierValue(identifier);
-                    if (newIdentifier && newIdentifier.length) {
-                        identifierPreferred = newIdentifier[0].idIdentifier;
-                    } else {
-                        LOG.error('failed to fetch new preferred identifier', LOG.LS.eDB);
-                    }
+                    identifierPreferred = newIdentifier.idIdentifier;
                 }
             }
         }
@@ -75,19 +84,17 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
     if (data.License) {
         const reassignedLicense = await DBAPI.License.fetch(data.License);
-        if (reassignedLicense) {
-            const reassignmentSuccess = await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense);
-            if (!reassignmentSuccess) {
-                return {
-                    success: false,
-                    message: 'There was an error assigning the license. Please try again.'
-                };
-            }
-        } else {
-            return {
-                success: false,
-                message: 'There was an error fetching the license for assignment. Please try again.'
-            };
+        if (!reassignedLicense) {
+            const message = `Unable to fetch license with id ${data.License}; update failed`;
+            LOG.error(message, LOG.LS.eDB);
+            return { success: false, message };
+        }
+
+        const reassignmentSuccess = await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense);
+        if (!reassignmentSuccess) {
+            const message = `Unable to reassign license with id ${reassignedLicense.idLicense}; update failed`;
+            LOG.error(message, LOG.LS.eDB);
+            return { success: false, message };
         }
     }
 
@@ -103,12 +110,16 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Unit.ARKPrefix = maybe<string>(ARKPrefix);
                 }
 
-                await Unit.update();
+                const updateSuccess = await Unit.update();
+                if (!updateSuccess) {
+                    const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
+                }
             } else {
-                return {
-                    success: false,
-                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                };
+                const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                LOG.error(message, LOG.LS.eDB);
+                return { success: false, message };
             }
             break;
         }
@@ -122,12 +133,16 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Project.Description = maybe<string>(Description);
                 }
 
-                await Project.update();
+                const updateSuccess = await Project.update();
+                if (!updateSuccess) {
+                    const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
+                }
             } else {
-                return {
-                    success: false,
-                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                };
+                const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                LOG.error(message, LOG.LS.eDB);
+                return { success: false, message };
             }
             break;
         }
@@ -138,36 +153,16 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 if (Subject) {
                     Subject.Name = data.Name;
-
-                    if (!Subject.idGeoLocation) {
-                        const GeoLocationInput = {
-                            idGeoLocation: 0,
-                            Altitude: maybe<number>(Altitude),
-                            Latitude: maybe<number>(Latitude),
-                            Longitude: maybe<number>(Longitude),
-                            R0: maybe<number>(R0),
-                            R1: maybe<number>(R1),
-                            R2: maybe<number>(R2),
-                            R3: maybe<number>(R3),
-                            TS0: maybe<number>(TS0),
-                            TS1: maybe<number>(TS1),
-                            TS2: maybe<number>(TS2)
-                        };
-                        const GeoLocation = new DBAPI.GeoLocation(GeoLocationInput);
-                        await GeoLocation.create();
-                        Subject.idGeoLocation = GeoLocation.idGeoLocation;
-
-                        await Subject.update();
-                        break;
-                    }
-
                     Subject.idIdentifierPreferred = identifierPreferred;
 
-                    await Subject.update();
-
-                    const GeoLocation = await DBAPI.GeoLocation.fetch(Subject.idGeoLocation);
-
-                    if (GeoLocation) {
+                    // update exisiting geolocation OR create a new one and then connect with subject
+                    if (Subject.idGeoLocation) {
+                        const GeoLocation = await DBAPI.GeoLocation.fetch(Subject.idGeoLocation);
+                        if (!GeoLocation) {
+                            const message = `Unable to fetch GeoLocation with id ${Subject.idGeoLocation}; update failed`;
+                            LOG.error(message, LOG.LS.eDB);
+                            return { success: false, message };
+                        }
                         GeoLocation.Altitude = maybe<number>(Altitude);
                         GeoLocation.Latitude = maybe<number>(Latitude);
                         GeoLocation.Longitude = maybe<number>(Longitude);
@@ -178,27 +173,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         GeoLocation.TS0 = maybe<number>(TS0);
                         GeoLocation.TS1 = maybe<number>(TS1);
                         GeoLocation.TS2 = maybe<number>(TS2);
-                        await GeoLocation.update();
-                    }
-                } else {
-                    return {
-                        success: false,
-                        message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                    };
-                }
-            }
-            break;
-        }
-        case eSystemObjectType.eItem: {
-            if (data.Item) {
-                const { EntireSubject, Altitude, Latitude, Longitude, R0, R1, R2, R3, TS0, TS1, TS2 } = data.Item;
-                const Item = await DBAPI.Item.fetch(idObject);
-
-                if (Item) {
-                    Item.Name = data.Name;
-                    if (!isNull(EntireSubject) && !isUndefined(EntireSubject)) Item.EntireSubject = EntireSubject;
-
-                    if (!Item.idGeoLocation) {
+                        const updateSuccess = await GeoLocation.update();
+                        if (!updateSuccess) {
+                            const message = `Unable to update GeoLocation with id ${Subject.idGeoLocation}; update failed`;
+                            LOG.error(message, LOG.LS.eDB);
+                            return { success: false, message };
+                        }
+                    } else {
                         const GeoLocationInput = {
                             idGeoLocation: 0,
                             Altitude: maybe<number>(Altitude),
@@ -213,41 +194,102 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             TS2: maybe<number>(TS2)
                         };
                         const GeoLocation = new DBAPI.GeoLocation(GeoLocationInput);
-                        await GeoLocation.create();
-                        Item.idGeoLocation = GeoLocation.idGeoLocation;
-                        await Item.update();
-                        break;
+                        const creationSuccess = await GeoLocation.create();
+                        if (!creationSuccess) {
+                            const message = `Unable to create GeoLocation when updating ${SystemObjectTypeToName(objectType)}; update failed`;
+                            LOG.error(message, LOG.LS.eDB);
+                            return { success: false, message };
+                        }
+                        Subject.idGeoLocation = GeoLocation.idGeoLocation;
                     }
 
-                    await Item.update();
-
-                    if (Item.idGeoLocation) {
-                        const GeoLocation = await DBAPI.GeoLocation.fetch(Item.idGeoLocation);
-                        if (GeoLocation) {
-                            GeoLocation.Altitude = maybe<number>(Altitude);
-                            GeoLocation.Latitude = maybe<number>(Latitude);
-                            GeoLocation.Longitude = maybe<number>(Longitude);
-                            GeoLocation.R0 = maybe<number>(R0);
-                            GeoLocation.R1 = maybe<number>(R1);
-                            GeoLocation.R2 = maybe<number>(R2);
-                            GeoLocation.R3 = maybe<number>(R3);
-                            GeoLocation.TS0 = maybe<number>(TS0);
-                            GeoLocation.TS1 = maybe<number>(TS1);
-                            GeoLocation.TS2 = maybe<number>(TS2);
-                            await GeoLocation.update();
-                        }
+                    const subjectUpdateSuccess = await Subject.update();
+                    if (!subjectUpdateSuccess) {
+                        const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                        LOG.error(message, LOG.LS.eDB);
+                        return { success: false, message };
                     }
                 } else {
-                    return {
-                        success: false,
-                        message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                    };
+                    const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
+                }
+            }
+            break;
+        }
+        case eSystemObjectType.eItem: {
+            if (data.Item) {
+                const { EntireSubject, Altitude, Latitude, Longitude, R0, R1, R2, R3, TS0, TS1, TS2 } = data.Item;
+                const Item = await DBAPI.Item.fetch(idObject);
+                if (Item) {
+                    Item.Name = data.Name;
+                    if (!isNull(EntireSubject) && !isUndefined(EntireSubject))
+                        Item.EntireSubject = EntireSubject;
+
+                    // update existing geolocation OR create a new one and then connect with item
+                    if (Item.idGeoLocation) {
+                        const GeoLocation = await DBAPI.GeoLocation.fetch(Item.idGeoLocation);
+                        if (!GeoLocation) {
+                            const message = `Unable to fetch GeoLocation with id ${Item.idGeoLocation}; update failed`;
+                            LOG.error(message, LOG.LS.eDB);
+                            return { success: false, message };
+                        }
+                        GeoLocation.Altitude = maybe<number>(Altitude);
+                        GeoLocation.Latitude = maybe<number>(Latitude);
+                        GeoLocation.Longitude = maybe<number>(Longitude);
+                        GeoLocation.R0 = maybe<number>(R0);
+                        GeoLocation.R1 = maybe<number>(R1);
+                        GeoLocation.R2 = maybe<number>(R2);
+                        GeoLocation.R3 = maybe<number>(R3);
+                        GeoLocation.TS0 = maybe<number>(TS0);
+                        GeoLocation.TS1 = maybe<number>(TS1);
+                        GeoLocation.TS2 = maybe<number>(TS2);
+                        const updateSuccess = await GeoLocation.update();
+                        if (!updateSuccess) {
+                            const message = `Unable to update GeoLocation with id ${Item.idGeoLocation}; update failed`;
+                            LOG.error(message, LOG.LS.eDB);
+                            return { success: false, message };
+                        }
+                    } else {
+                        const GeoLocationInput = {
+                            idGeoLocation: 0,
+                            Altitude: maybe<number>(Altitude),
+                            Latitude: maybe<number>(Latitude),
+                            Longitude: maybe<number>(Longitude),
+                            R0: maybe<number>(R0),
+                            R1: maybe<number>(R1),
+                            R2: maybe<number>(R2),
+                            R3: maybe<number>(R3),
+                            TS0: maybe<number>(TS0),
+                            TS1: maybe<number>(TS1),
+                            TS2: maybe<number>(TS2)
+                        };
+                        const GeoLocation = new DBAPI.GeoLocation(GeoLocationInput);
+                        const creationSuccess = await GeoLocation.create();
+                        if (!creationSuccess) {
+                            const message = `Unable to create GeoLocation when updating ${SystemObjectTypeToName(objectType)}; update failed`;
+                            LOG.error(message, LOG.LS.eDB);
+                            return { success: false, message };
+                        }
+
+                        Item.idGeoLocation = GeoLocation.idGeoLocation;
+                    }
+
+                    const updateSuccess = await Item.update();
+                    if (!updateSuccess) {
+                        const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                        LOG.error(message, LOG.LS.eDB);
+                        return { success: false, message };
+                    }
+                } else {
+                    const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
                 }
             }
             break;
         }
         case eSystemObjectType.eCaptureData: {
-            // TODO: KARAN update/create folders, systemCreated
             if (data.CaptureData) {
                 const CaptureData = await DBAPI.CaptureData.fetch(idObject);
 
@@ -286,27 +328,24 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         folders.forEach((folder) => foldersMap.set(folder.name, folder.variantType));
                         const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(CaptureData.idCaptureData);
                         if (!CDFiles) {
-                            return {
-                                success: false,
-                                message: `Unable to fetch Capture Data Files with id ${CaptureData.idCaptureData}; update failed`
-                            };
+                            const message = `Unable to fetch Capture Data Files with id ${CaptureData.idCaptureData}; update failed`;
+                            LOG.error(message, LOG.LS.eDB);
+                            return { success: false, message };
                         }
                         for (const file of CDFiles) {
                             const asset = await DBAPI.Asset.fetch(file.idAsset);
                             if (!asset) {
-                                return {
-                                    success: false,
-                                    message: `Unable to fetch Asset with id ${file.idAsset}; update failed`
-                                };
+                                const message = `Unable to fetch asset with id ${file.idAsset}; update failed`;
+                                LOG.error(message, LOG.LS.eDB);
+                                return { success: false, message };
                             }
                             const newVariantType = foldersMap.get(asset.FilePath);
                             file.idVVariantType = newVariantType || file.idVVariantType;
-                            const update = await file.update();
-                            if (!update) {
-                                return {
-                                    success: false,
-                                    message: `Unable to update Capture Data File with id ${file.idCaptureDataFile}; update failed`
-                                };
+                            const updateSuccess = await file.update();
+                            if (!updateSuccess) {
+                                const message = `Unable to update Capture Data File with id ${file.idCaptureDataFile}; update failed`;
+                                LOG.error(message, LOG.LS.eDB);
+                                return { success: false, message };
                             }
                         }
                     }
@@ -326,23 +365,32 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         CD.idVBackgroundRemovalMethod = maybe<number>(backgroundRemovalMethod);
                         CD.idVClusterType = maybe<number>(clusterType);
                         CD.ClusterGeometryFieldID = maybe<number>(clusterGeometryFieldId);
-                        await CD.update();
+                        const updateSuccess = await CD.update();
+                        if (!updateSuccess) {
+                            const message = `Unable to update CaptureDataPhoto with id ${CD.idCaptureData}; update failed`;
+                            LOG.error(message, LOG.LS.eDB);
+                            return { success: false, message };
+                        }
                     } else {
-                        return {
-                            success: false,
-                            message: `Unable to fetch CaptureDataPhoto with id ${idObject}; update failed`
-                        };
+                        const message = `Unable to fetch CaptureDataPhoto with id ${idObject}; update failed`;
+                        LOG.error(message, LOG.LS.eDB);
+                        return { success: false, message };
                     }
-                    await CaptureData.update();
+                    const updateSuccess = await CaptureData.update();
+                    if (!updateSuccess) {
+                        const message = `Unable to update Capture Data with id ${CaptureData.idCaptureData}; update failed`;
+                        LOG.error(message, LOG.LS.eDB);
+                        return { success: false, message };
+                    }
                 } else {
-                    return {
-                        success: false,
-                        message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                    };
+                    const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
                 }
             }
             break;
-        } case eSystemObjectType.eModel: {
+        }
+        case eSystemObjectType.eModel: {
             if (data.Model) {
                 const Model = await DBAPI.Model.fetch(idObject);
                 if (Model) {
@@ -364,36 +412,21 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (ModelFileType) Model.idVFileType = ModelFileType;
                     Model.DateCreated = new Date(DateCaptured);
 
-                    // if (Model.idAssetThumbnail) {
-                    //     const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(Model.idAssetThumbnail);
-                    //     if (AssetVersion && AssetVersion[0]) {
-                    //         const [AV] = AssetVersion;
-                    //         if (size) AV.StorageSize = size;
-                    //     }
-                    // }
-
-                    /*
-                    // TODO: do we want to update the asset name?  I don't think so...
-                    // Look up asset using SystemObjectXref, with idSystemObjectMaster = Model's system object ID
-                    const Asset = await DBAPI.Asset.fetch(MGF.idAsset);
-                    if (Asset) {
-                        Asset.FileName = data.Name;
-                        await Asset.update();
+                    const updateSuccess = await Model.update();
+                    if (!updateSuccess) {
+                        const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                        LOG.error(message, LOG.LS.eDB);
+                        return { success: false, message };
                     }
-                    */
-                    if (await Model.update())
-                        break;
-                    else
-                        throw new Error('error in updating');
                 } else {
-                    return {
-                        success: false,
-                        message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                    };
+                    const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
                 }
             }
             break;
-        } case eSystemObjectType.eScene: {
+        }
+        case eSystemObjectType.eScene: {
             const Scene = await DBAPI.Scene.fetch(idObject);
             if (Scene) {
                 Scene.Name = data.Name;
@@ -401,30 +434,43 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (typeof data.Scene.PosedAndQCd === 'boolean') Scene.PosedAndQCd = data.Scene.PosedAndQCd;
                     if (typeof data.Scene.ApprovedForPublication === 'boolean') Scene.ApprovedForPublication = data.Scene.ApprovedForPublication;
                 }
-                await Scene.update();
+                const updateSuccess = await Scene.update();
+                if (!updateSuccess) {
+                    const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
+                }
             } else {
-                return {
-                    success: false,
-                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                };
+                const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                LOG.error(message, LOG.LS.eDB);
+                return { success: false, message };
             }
             break;
-        } case eSystemObjectType.eIntermediaryFile: {
+        }
+        case eSystemObjectType.eIntermediaryFile: {
             const IntermediaryFile = await DBAPI.IntermediaryFile.fetch(idObject);
             if (IntermediaryFile) {
                 const Asset = await DBAPI.Asset.fetch(IntermediaryFile.idAsset);
-                if (Asset) {
-                    Asset.FileName = data.Name;
-                    await Asset.update();
+                if (!Asset) {
+                    const message = `Unable to fetch Asset using IntermediaryFile.idAsset ${IntermediaryFile.idAsset}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
+                }
+                Asset.FileName = data.Name;
+                const updateSuccess = await Asset.update();
+                if (!updateSuccess) {
+                    const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
                 }
             } else {
-                return {
-                    success: false,
-                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                };
+                const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                LOG.error(message, LOG.LS.eDB);
+                return { success: false, message };
             }
             break;
-        } case eSystemObjectType.eProjectDocumentation: {
+        }
+        case eSystemObjectType.eProjectDocumentation: {
             const ProjectDocumentation = await DBAPI.ProjectDocumentation.fetch(idObject);
 
             if (ProjectDocumentation) {
@@ -435,12 +481,16 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (Description) ProjectDocumentation.Description = Description;
                 }
 
-                await ProjectDocumentation.update();
+                const updateSuccess = await ProjectDocumentation.update();
+                if (!updateSuccess) {
+                    const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
+                }
             } else {
-                return {
-                    success: false,
-                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                };
+                const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                LOG.error(message, LOG.LS.eDB);
+                return { success: false, message };
             }
             break;
         }
@@ -456,12 +506,16 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (AssetType) Asset.idVAssetType = AssetType;
                 }
 
-                await Asset.update();
+                const updateSuccess = await Asset.update();
+                if (!updateSuccess) {
+                    const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
+                }
             } else {
-                return {
-                    success: false,
-                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                };
+                const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                LOG.error(message, LOG.LS.eDB);
+                return { success: false, message };
             }
             break;
         }
@@ -477,12 +531,16 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         AssetVersion.Ingested = Ingested;
                 }
 
-                await AssetVersion.update();
+                const updateSuccess = await AssetVersion.update();
+                if (!updateSuccess) {
+                    const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
+                }
             } else {
-                return {
-                    success: false,
-                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                };
+                const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                LOG.error(message, LOG.LS.eDB);
+                return { success: false, message };
             }
             break;
         }
@@ -493,14 +551,17 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (data.Actor) {
                     const { OrganizationName } = data.Actor;
                     Actor.OrganizationName = maybe<string>(OrganizationName);
-
                 }
-                await Actor.update();
+                const updateSuccess = await Actor.update();
+                if (!updateSuccess) {
+                    const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
+                }
             } else {
-                return {
-                    success: false,
-                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                };
+                const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                LOG.error(message, LOG.LS.eDB);
+                return { success: false, message };
             }
             break;
         }
@@ -517,12 +578,16 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Stakeholder.PhoneNumberMobile = maybe<string>(PhoneNumberMobile);
                     Stakeholder.PhoneNumberOffice = maybe<string>(PhoneNumberOffice);
                 }
-                await Stakeholder.update();
+                const updateSuccess = await Stakeholder.update();
+                if (!updateSuccess) {
+                    const message = `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                    LOG.error(message, LOG.LS.eDB);
+                    return { success: false, message };
+                }
             } else {
-                return {
-                    success: false,
-                    message: `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`
-                };
+                const message = `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`;
+                LOG.error(message, LOG.LS.eDB);
+                return { success: false, message };
             }
             break;
         }
