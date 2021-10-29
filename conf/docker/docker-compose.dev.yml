@@ -9,9 +9,6 @@ services:
             context: ../..
             dockerfile: ./conf/docker/proxy-dev.Dockerfile
             target: proxy
-        depends_on:
-            - packrat-client
-            - packrat-server
         volumes:
             - ../../conf/nginx/nginx-dev.conf:/etc/nginx/nginx.conf
         ports:

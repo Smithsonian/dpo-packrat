@@ -1,8 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 import * as LOG from '../../utils/logger';
 import * as STORE from '../../storage/interface';
-// import { ASL, LocalStore } from '../../utils/localStore';
-// import { isAuthenticated } from '../auth';
+import * as DBAPI from '../../db';
+import * as CACHE from '../../cache';
+import { ASL, LocalStore } from '../../utils/localStore';
+import { isAuthenticated } from '../auth';
 import { DownloaderParser, DownloaderParserResults } from './DownloaderParser';
 
 import { Readable, Writable /*, Transform */ } from 'stream';
@@ -15,6 +17,7 @@ import path from 'path';
 
 export class WebDAVServer {
     protected server: webdav.WebDAVServer;
+    protected auth: webdav.HTTPAuthentication;
     protected WDFS: WebDAVFileSystem | null = null;
 
     private static _webDavServer: WebDAVServer | null = null;
@@ -54,25 +57,46 @@ export class WebDAVServer {
     }
 
     private constructor()     {
-        this.server = new webdav.WebDAVServer(/* { port: webDAVPort } */);
+        this.auth = new WebDAVAuthentication();
+        this.server = new webdav.WebDAVServer({
+            httpAuthentication: this.auth,
+            // port: webDAVPort
+        });
         this.server.beforeRequest((ctx, next) => {
-            const user = ctx.request['user'];
-            const idUser = user ? user['idUser'] : undefined;
-            /*
-            ASL.run(new LocalStore(true, idUser), () => {
-                LOG.info(`WEBDAV ${req.request.method} ${req.request.url}`, LOG.LS.eHTTP);
-                next();
-            });
-            */
-            LOG.info(`*** WEBDAV ${ctx.request.method} ${ctx.request.url} User: ${idUser} ${JSON.stringify(ctx.request.headers)}`, LOG.LS.eHTTP);
+            LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} START`, LOG.LS.eHTTP);
             next();
         });
         this.server.afterRequest((ctx, next) => {
             // Display the method, the URI, the returned status code and the returned message
-            LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} ${ctx.response.statusCode} ${ctx.response.statusMessage}`, LOG.LS.eHTTP);
+            LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} END ${ctx.response.statusCode} ${ctx.response.statusMessage}`, LOG.LS.eHTTP);
             next();
         });
     }
+}
+
+class WebDAVAuthentication implements webdav.HTTPAuthentication {
+    askForAuthentication(_ctx: webdav.HTTPRequestContext): { [headeName: string]: string; } {
+        return { };
+    }
+
+    async getUser(ctx: webdav.HTTPRequestContext, callback: (error: Error, user?: webdav.IUser) => void): Promise<void> {
+        if (isAuthenticated(ctx.request)) {
+            const LS: LocalStore | undefined = ASL.getStore();
+            const idUser: number | undefined | null = LS?.idUser;
+            const user: DBAPI.User | undefined = idUser ? await CACHE.UserCache.getUser(idUser) : undefined;
+            if (user) {
+                // LOG.info(`WEBDAV ${ctx.request.url} authenticated for UserID ${user.idUser}`, LOG.LS.eHTTP);
+                // @ts-ignore: ts(2345)
+                callback(null, { uid: user.idUser.toString(), username: user.Name });
+                return;
+            }
+        }
+
+        LOG.error(`WEBDAV ${ctx.request.url} not authenticated`, LOG.LS.eHTTP);
+        callback(new Error('Not Authenticated'), { uid: '', username: 'Default', isDefaultUser: true });
+        return;
+    }
+
 }
 
 // Adapted from https://github.com/OpenMarshal/npm-WebDAV-Server-Types/blob/master/repositories/http/HTTPFileSystem.ts
@@ -131,7 +155,27 @@ class WebDAVFileSystem extends webdav.FileSystem {
         callback(undefined, this.findResource(pathWD).locks);
     }
 
-    // HERE
+    /*
+    async fetchAssetVersion(pathWD: webdav.Path, callerName: string): Promise<{ assetVersion: DBAPI.AssetVersion | null, error?: Error }> {
+        LOG.info(`WebDAVFileSystem${callerName}(${pathWD})`, LOG.LS.eHTTP);
+
+        const DP: DownloaderParser = new DownloaderParser('', pathWD.toString());
+        const DPResults: DownloaderParserResults = await DP.parseArguments();
+        if (!DPResults.success) {
+            const error: string = `WebDAVFileSystem._openReadStream failed: ${DPResults.statusCode}${DPResults.message ? ' (' + DPResults.message + ')' : ''}`;
+            LOG.error(error, LOG.LS.eHTTP);
+            return { assetVersion: null, error: new Error(error) };
+        }
+
+        if (!DPResults.assetVersion) {
+            const error: string = 'WebDAVServer._openReadStream called without an assetVersion';
+            LOG.error(error, LOG.LS.eHTTP);
+            return { assetVersion: null, error: new Error(error) };
+        }
+        return { assetVersion: DPResults.assetVersion };
+    }
+    */
+
     async _openReadStream(pathWD: webdav.Path, _info: webdav.OpenReadStreamInfo, callback: webdav.ReturnCallback<Readable>): Promise<void> {
         LOG.info(`WebDAVFileSystem._openReadStream(${pathWD})`, LOG.LS.eHTTP);
 
@@ -169,28 +213,6 @@ class WebDAVFileSystem extends webdav.FileSystem {
         // const stream = request.put(this.url + path.toString());
         // callback(undefined, (stream as any) as Writable);
     }
-
-    // HERE
-    /*
-    _size(_path: webdav.Path, _info: webdav.SizeInfo, _callback: webdav.ReturnCallback<number>): void {
-        LOG.info(`WebDAVFileSystem._size(${_path})`, LOG.LS.eHTTP);
-        request({
-            url: this.url + path.toString(),
-            method: 'HEAD'
-        }, (e, res) => {
-            if (e)
-                return callback(e);
-
-            const contentLength = res.headers['content-length'];
-            console.log(res.headers);
-            console.log(contentLength);
-            if (contentLength)
-                callback(undefined, parseInt(contentLength.constructor === String ? contentLength as string: contentLength[0]));
-            else
-                callback(undefined, undefined);
-        });
-    }
-    */
 
     _mimeType(pathWD: webdav.Path, _info: webdav.MimeTypeInfo, callback: webdav.ReturnCallback<string>): void {
         const filePath: string = pathWD.toString();
