@@ -64,7 +64,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                 const path: string = assetDetailRows[0].filePath;
                 const root: string = getRootSceneDownloadUrlForVoyager(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject, path, eMode);
                 const document: string = assetDetailRows[0].name.label;
-                console.log(`Voyager root: ${root}, document: ${document}, mode: ${eVoyagerStoryMode[eMode]}`);
+                // console.log(`Voyager root: ${root}, document: ${document}, mode: ${eVoyagerStoryMode[eMode]}`);
 
                 setPathLink(path);
                 setRootLink(root);
