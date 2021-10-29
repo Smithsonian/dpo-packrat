@@ -71,9 +71,10 @@ export class HttpServer {
         this.app.get('/download/*', download);
 
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
-        if (WDSV)
+        if (WDSV) {
+            this.app.use('/download-wd', HttpServer.idRequestMiddleware2);
             this.app.use(webdav.extensions.express('/download-wd', WDSV.webdav()));
-        else
+        } else
             LOG.error('HttpServer.configureMiddlewareAndRoutes failed to initialize WebDAV server', LOG.LS.eHTTP);
 
         this.app.use(errorhandler); // keep last
@@ -88,7 +89,9 @@ export class HttpServer {
 
     // creates a LocalStore populated with the next requestID
     private static idRequestMiddleware(req: Request, _res, next): void {
-        if (!req.originalUrl.startsWith('/auth/') && !req.originalUrl.startsWith('/graphql')) {
+        if (!req.originalUrl.startsWith('/auth/') &&
+            !req.originalUrl.startsWith('/graphql') &&
+            !req.originalUrl.startsWith('/download-wd/')) {
             const user = req['user'];
             const idUser = user ? user['idUser'] : undefined;
             ASL.run(new LocalStore(true, idUser), () => {
