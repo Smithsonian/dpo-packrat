@@ -271,7 +271,7 @@ export enum eVoyagerStoryMode {
     eExpert,
 }
 
-export function getModeForVoyager(eMode: eVoyagerStoryMode): string {
+export function getModeForVoyager(eMode?: eVoyagerStoryMode): string {
     switch (eMode) {
         default:
         case eVoyagerStoryMode.eViewer: return '';
@@ -281,18 +281,37 @@ export function getModeForVoyager(eMode: eVoyagerStoryMode): string {
     }
 }
 
+export function getVoyagerModeFromParam(sMode: string): eVoyagerStoryMode {
+    switch (sMode) {
+        default:
+        case '':        return eVoyagerStoryMode.eViewer;
+        case 'qc':      return eVoyagerStoryMode.eQC;
+        case 'author':  return eVoyagerStoryMode.eAuthor;
+        case 'expert':  return eVoyagerStoryMode.eExpert;
+    }
+}
+
 export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number,
     path: string, eMode?: eVoyagerStoryMode | undefined): string {
     let dlPath: string = 'download';
     switch (eMode) {
         default:
         case eVoyagerStoryMode.eViewer: dlPath='download'; break;
-        case eVoyagerStoryMode.eQC:     dlPath='download'; break;
-        case eVoyagerStoryMode.eAuthor: dlPath='download'; break;
-        case eVoyagerStoryMode.eExpert: dlPath='download'; break;
+        case eVoyagerStoryMode.eQC:     dlPath='download-wd'; break;
+        case eVoyagerStoryMode.eAuthor: dlPath='download-wd'; break;
+        case eVoyagerStoryMode.eExpert: dlPath='download-wd'; break;
     }
     return `${serverEndPoint}/${dlPath}/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
 }
+
+export function getVoyagerStoryUrl(serverEndPoint: string | undefined, idSystemObject: number,
+    document: string, path: string, eMode?: eVoyagerStoryMode | undefined): string {
+
+    const mode: string = getModeForVoyager(eMode);
+    const root: string = getRootSceneDownloadUrlForVoyager(serverEndPoint, idSystemObject, path, eMode);
+    return `/repository/voyager/${idSystemObject}?mode=${mode}&root=${root}&document=${document}`;
+}
+
 
 // prettier-ignore
 export function getTreeViewStyleHeight(isExpanded: boolean, isModal: boolean, breakpoint: Breakpoint): string {
