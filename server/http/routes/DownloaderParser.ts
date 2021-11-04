@@ -19,6 +19,7 @@ export enum eDownloadMode {
 export interface DownloaderParserResults {
     success: boolean;
     statusCode?: number; // undefined means 200
+    matchedPartialPath?: string; // when set, indicates the parser matched the specified partial path, typically for a system object that has subelements (such as a scene and its articles)
     message?: string; // when set, we ignore processing of items below
     assetVersion?: DBAPI.AssetVersion;
     assetVersions?: DBAPI.AssetVersion[];
@@ -67,10 +68,11 @@ export class DownloaderParser {
 
 
     /** Returns success: false if arguments are invalid */
-    async parseArguments(): Promise<DownloaderParserResults> {
+    async parseArguments(allowUnmatchedPaths?: boolean): Promise<DownloaderParserResults> {
         // /download/idSystemObject-ID:         Computes the assets attached to this system object.  If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
         // /download/idSystemObject-ID/FOO/BAR: Computes the asset attached to this system object, found at the path /FOO/BAR.
         let idSystemObjectU: string | string[] | ParsedQs | ParsedQs[] | undefined = undefined;
+        let matchedPartialPath: string | undefined = undefined;
 
         const downloadMatch: RegExpMatchArray | null = this.requestPath.match(this.regexDownload);
         if (downloadMatch && downloadMatch.length >= 2) {
@@ -84,6 +86,8 @@ export class DownloaderParser {
 
         if (!idSystemObjectU)
             idSystemObjectU = this.requestQuery.idSystemObject;
+        // LOG.info(`DownloadParser.parseArguments(${this.requestPath}), idSystemObjectU = ${idSystemObjectU}`, LOG.LS.eHTTP);
+
         const idSystemObjectVersionU = this.requestQuery.idSystemObjectVersion;
         const idAssetU = this.requestQuery.idAsset;
         const idAssetVersionU = this.requestQuery.idAssetVersion;
@@ -154,7 +158,7 @@ export class DownloaderParser {
 
             // otherwise, find the specified asset by path
             const pathToMatch: string = this.systemObjectPath.toLowerCase();
-            let pathsConsidered: string = '\n';
+            // let pathsConsidered: string = '\n';
             for (const assetVersion of assetVersions) {
                 const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
                 if (!asset) {
@@ -165,12 +169,20 @@ export class DownloaderParser {
                     + `/${assetVersion.FileName}`).toLowerCase();
                 if (pathToMatch === pathAssetVersion)
                     return { success: true, assetVersion }; // this.emitDownload(assetVersion);
-                else
-                    pathsConsidered += `${pathAssetVersion}\n`;
+                else {
+                    // pathsConsidered += `${pathAssetVersion}\n`;
+                    if (pathAssetVersion.startsWith(pathToMatch))
+                        matchedPartialPath = pathToMatch;
+                }
             }
 
-            LOG.error(`${this.reconstructSystemObjectLink()} unable to find assetVersion with path ${pathToMatch} from ${pathsConsidered}`, LOG.LS.eHTTP);
-            return this.recordStatus(404);
+            if (!allowUnmatchedPaths) {
+                LOG.error(`${this.reconstructSystemObjectLink()} unable to find assetVersion with path ${pathToMatch}`, LOG.LS.eHTTP);
+                return this.recordStatus(404);
+            } else {
+                LOG.info(`${this.reconstructSystemObjectLink()} unable to find assetVersion with path ${pathToMatch}`, LOG.LS.eHTTP);
+                return { success: true, matchedPartialPath }; // this.emitDownload(assetVersion);
+            }
         }
 
         if (idSystemObjectVersionU) {
