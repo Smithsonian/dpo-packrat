@@ -1,5 +1,4 @@
 {
-    "iptables": false,
     "default-address-pools": [
         {
             "base": "172.19.19.0/24",
