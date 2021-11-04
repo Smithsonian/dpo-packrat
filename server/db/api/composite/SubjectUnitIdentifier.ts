@@ -144,7 +144,7 @@ export class SubjectUnitIdentifier {
                 ${orderBy}
                 LIMIT ?, ?`;
             // LOG.info(`DBAPI.SubjectUnitIdentifier.search, sql=${sql}; params=${JSON.stringify(queryRawParams)}`, LOG.LS.eDB);
-            return await DBC.DBConnection.prisma.$queryRaw<SubjectUnitIdentifier[] | null>(sql, ...queryRawParams);
+            return await DBC.DBConnection.prisma.$queryRawUnsafe<SubjectUnitIdentifier[] | null>(sql, ...queryRawParams);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SubjectUnitIdentifier.search', LOG.LS.eDB, error);
             return null;

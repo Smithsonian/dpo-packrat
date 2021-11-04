@@ -14,7 +14,6 @@ import { WebDAVServer } from './routes/WebDAVServer';
 import express, { Request } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
-import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { graphqlUploadExpress } from 'graphql-upload';
 import { v2 as webdav } from 'webdav-server';
@@ -45,11 +44,12 @@ export class HttpServer {
         return res;
     }
 
+    static bodyProcessorExclusions: RegExp = /^\/(?!download-wd).*$/;
     private async configureMiddlewareAndRoutes(): Promise<boolean> {
         this.app.use(HttpServer.idRequestMiddleware);
         this.app.use(cors(authCorsConfig));
-        this.app.use(bodyParser.json());
-        this.app.use(bodyParser.urlencoded({ extended: true }));
+        this.app.use(HttpServer.bodyProcessorExclusions, express.json()); // do not extract webdav PUT bodies into request.body element
+        this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true }));
         this.app.use(cookieParser());
         this.app.use(authSession);
         this.app.use(passport.initialize());

@@ -2,6 +2,7 @@ generator client {
   provider      = "prisma-client-js"
   output        = "../../../node_modules/@prisma/client"
   binaryTargets = ["native", "linux-musl"]
+  previewFeatures = ["interactiveTransactions"]
 }
 
 datasource mariasql {
