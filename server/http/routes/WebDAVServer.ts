@@ -14,9 +14,6 @@ import { v2 as webdav } from 'webdav-server';
 import mime from 'mime'; // const mime = require('mime-types'); // can't seem to make this work using "import * as mime from 'mime'"; subsequent calls to mime.lookup freeze!
 import path from 'path';
 
-// import tmp from 'tmp-promise';
-// import fs from 'fs';
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class WebDAVServer {
@@ -75,32 +72,6 @@ export class WebDAVServer {
             LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} END ${ctx.response.statusCode} ${ctx.response.statusMessage}`, LOG.LS.eHTTP);
             next();
         });
-        /*
-        this.server.on('create', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event create ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-create', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-create ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('delete', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event delete ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-delete', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-delete ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('copy', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event copy ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-copy', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-copy ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('move', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event move ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-move', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-move ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('openWriteStream', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event openWriteStream ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-openWriteStream', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-openWriteStream ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('openReadStream', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event openReadStream ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-openReadStream', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-openReadStream ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('rename', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event rename ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-rename', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-rename ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('lock-set', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event lock-set ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-lock-set', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-lock-set ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('lock-remove', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event lock-remove ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-lock-remove', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-lock-remove ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('lock-refresh', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event lock-refresh ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-lock-refresh', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-lock-refresh ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('property-set', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event property-set ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-property-set', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-property-set ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('property-remove', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event property-remove ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        this.server.on('before-property-remove', (ctx, _fs, _path, _data) => { LOG.info(`WEBDAV event before-property-remove ${ctx.fullUri()}`, LOG.LS.eHTTP); });
-        */
     }
 }
 
@@ -128,19 +99,6 @@ class WebDAVAuthentication implements webdav.HTTPAuthentication {
     }
 
 }
-
-// Adapted from https://github.com/OpenMarshal/npm-WebDAV-Server-Types/blob/master/repositories/http/HTTPFileSystem.ts
-/*
-class WebDAVResource {
-    props: webdav.IPropertyManager;
-    locks: webdav.ILockManager;
-
-    constructor(data?: WebDAVResource) {
-        this.props = new webdav.LocalPropertyManager(data ? data.props: undefined);
-        this.locks = new webdav.LocalLockManager();
-    }
-}
-*/
 
 // Adapted from https://github.com/OpenMarshal/npm-WebDAV-Server-Types/blob/master/repositories/http/HTTPFileSystem.ts
 class WebDAVSerializer implements webdav.FileSystemSerializer {
@@ -184,8 +142,6 @@ class WebDAVFileSystem extends webdav.FileSystem {
 
     constructor(WDFS?: WebDAVFileSystem) {
         super(new WebDAVSerializer());
-        // this.props = WDFS ? WDFS.props : new webdav.LocalPropertyManager();
-        // this.locks = WDFS ? WDFS.locks : new webdav.LocalLockManager();
 
         this.resources = WDFS ? WDFS.resources : new Map<string, FileSystemResource>();
         this.exists = WDFS ? WDFS.exists : new Map<string, boolean>();
@@ -326,96 +282,4 @@ class WebDAVFileSystem extends webdav.FileSystem {
         LOG.info(`WebDAVFileSystem._type(${pathWD}): ${isDirectory ? 'Directory' : 'File'}`, LOG.LS.eHTTP);
         callback(undefined, isDirectory ? webdav.ResourceType.Directory : webdav.ResourceType.File);
     }
-
-    /*
-    async _fastExistCheck?(_ctx: webdav.RequestContext, pathWD: webdav.Path, callback: (exists: boolean) => void): Promise<void> {
-        const path: string = pathWD.toString();
-        if (path === '/')
-            return callback(true);
-
-        let exists: boolean | undefined = this.exists.get(path);
-        if (exists !== undefined) {   // cached, use it
-            LOG.info(`WebDAVFileSystem._fastExistCheck(${path}): ${exists ? 'Exists' : 'Does not exist'}`, LOG.LS.eHTTP);
-            return callback(exists);
-        }
-
-        const DP: DownloaderParser = new DownloaderParser('', path);
-        const DPResults: DownloaderParserResults = await DP.parseArguments(true);
-        if (!DPResults.success) {
-            const error: string = `WebDAVFileSystem._fastExistCheck(${path}) failed: ${DPResults.statusCode}${DPResults.message ? ' (' + DPResults.message + ')' : ''}`;
-            LOG.error(error, LOG.LS.eHTTP);
-            callback(false);
-            return;
-        }
-
-        const assetVersionExists: boolean = DPResults.assetVersion !== undefined || DPResults.assetVersions !== undefined;
-        const matchedPartialPath: boolean = DPResults.matchedPartialPath !== undefined;
-        let existenceMessage: string = '';
-        if (assetVersionExists)
-            existenceMessage = 'Exists';
-        else if (matchedPartialPath)
-            existenceMessage = 'Matched Partial Path';
-        else
-            existenceMessage = 'Does not exist';
-
-        exists = assetVersionExists || matchedPartialPath;
-        this.exists.set(path, exists);
-        LOG.info(`WebDAVFileSystem._fastExistCheck(${path}): ${existenceMessage}`, LOG.LS.eHTTP);
-        callback(exists);
-    }
-    */
-
-    /*
-    protected _privilegeManager?(path: webdav.Path, info: webdav. PrivilegeManagerInfo, callback: webdav.ReturnCallback<webdav.PrivilegeManager>): any  { LOG.info('WebDAVFileSystem._privilegeManager', LOG.LS.eHTTP); if (super._privilegeManager) super._privilegeManager(path, info, callback); }
-    protected _fastExistCheck?(ctx: webdav.RequestContext, path: webdav.Path, callback: (exists: boolean) => void): void                                { LOG.info('WebDAVFileSystem._fastExistCheck', LOG.LS.eHTTP); if (super._fastExistCheck) super._fastExistCheck(ctx, path, callback); }
-    protected _size?(path: webdav.Path, ctx: webdav.SizeInfo, callback: webdav.ReturnCallback<number>): void                                            { LOG.info('WebDAVFileSystem._size', LOG.LS.eHTTP); if (super._size) super._size(path, ctx, callback); }
-    protected _displayName?(pathWD: webdav.Path, ctx: webdav.DisplayNameInfo, callback: webdav.ReturnCallback<string>): void                            { LOG.info(`WebDAVFileSystem._displayName(${pathWD})`, LOG.LS.eHTTP); if (super._displayName) super._displayName(pathWD, ctx, callback); }
-    protected _availableLocks?(pathWD: webdav.Path, ctx: webdav.AvailableLocksInfo, callback: webdav.ReturnCallback<webdav.LockKind[]>): void           { LOG.info(`WebDAVFileSystem._availableLocks(${pathWD})`, LOG.LS.eHTTP); if (super._availableLocks) super._availableLocks(pathWD, ctx, callback); }
-    protected _lastModifiedDate?(pathWD: webdav.Path, ctx: webdav.LastModifiedDateInfo, callback: webdav.ReturnCallback<number>): void                  { LOG.info(`WebDAVFileSystem._lastModifiedDate(${pathWD})`, LOG.LS.eHTTP); if (super._lastModifiedDate) super._lastModifiedDate(pathWD, ctx, callback); }
-    protected _etag?(pathWD: webdav.Path, ctx: webdav.ETagInfo, callback: webdav.ReturnCallback<string>): void                                          { LOG.info(`WebDAVFileSystem._etag(${pathWD})`, LOG.LS.eHTTP); if (super._etag) super._etag(pathWD, ctx, callback); }
-    protected _create?(pathWD: webdav.Path, ctx: webdav.CreateInfo, callback: webdav.SimpleCallback): void                                              { LOG.info(`WebDAVFileSystem._create(${pathWD})`, LOG.LS.eHTTP); if (super._create) super._create(pathWD, ctx, callback); }
-    protected _delete?(pathWD: webdav.Path, ctx: webdav.DeleteInfo, callback: webdav.SimpleCallback): void                                              { LOG.info(`WebDAVFileSystem._delete(${pathWD})`, LOG.LS.eHTTP); if (super._delete) super._delete(pathWD, ctx, callback); }
-    protected _move?(pathFrom: webdav.Path, pathTo: webdav.Path, ctx: webdav.MoveInfo, callback: webdav.ReturnCallback<boolean>): void                  { LOG.info(`WebDAVFileSystem._move(${pathFrom})`, LOG.LS.eHTTP); if (super._move) super._move(pathFrom, pathTo, ctx, callback); }
-    protected _copy?(pathFrom: webdav.Path, pathTo: webdav.Path, ctx: webdav.CopyInfo, callback: webdav.ReturnCallback<boolean>): void                  { LOG.info(`WebDAVFileSystem._copy(${pathFrom})`, LOG.LS.eHTTP); if (super._copy) super._copy(pathFrom, pathTo, ctx, callback); }
-    protected _rename?(pathFrom: webdav.Path, newName: string, ctx: webdav.RenameInfo, callback: webdav.ReturnCallback<boolean>): void                  { LOG.info(`WebDAVFileSystem._rename(${pathFrom})`, LOG.LS.eHTTP); if (super._rename) super._rename(pathFrom, newName, ctx, callback); }
-    protected _readDir?(pathWD: webdav.Path, ctx: webdav.ReadDirInfo, callback: webdav.ReturnCallback<string[] | webdav.Path[]>): void                  { LOG.info(`WebDAVFileSystem._readDir(${pathWD})`, LOG.LS.eHTTP); if (super._readDir) super._readDir(pathWD, ctx, callback); }
-    protected _creationDate?(pathWD: webdav.Path, ctx: webdav.CreationDateInfo, callback: webdav.ReturnCallback<number>): void                          { LOG.info(`WebDAVFileSystem._creationDate(${pathWD})`, LOG.LS.eHTTP); if (super._creationDate) super._creationDate(pathWD, ctx, callback); }
-    */
 }
-
-/*
-class BufferingTransformItem {
-    chunk: any;
-    encoding: BufferEncoding;
-
-    constructor(chunk: any, encoding: BufferEncoding) {
-        this.chunk = chunk;
-        this.encoding = encoding;
-    }
-}
-
-class BufferingTransform extends Transform {
-    buffers: BufferingTransformItem[] = [];
-
-    constructor(options?: TransformOptions) {
-        super(options);
-    }
-
-    _transform(chunk: any, encoding: BufferEncoding, cb: TransformCallback): void {
-        LOG.info(`WebDAVFileSystem._transform ${this.buffers.length + 1}`, LOG.LS.eHTTP);
-        this.buffers.push(new BufferingTransformItem(chunk, encoding));
-        cb();
-    }
-
-    _flush(cb: TransformCallback): void {
-        LOG.info(`WebDAVFileSystem._flush ${this.buffers.length}`, LOG.LS.eHTTP);
-        while (this.buffers.length > 0) {
-            const BTI: BufferingTransformItem | undefined = this.buffers.shift();
-            if (BTI)
-                this.push(BTI.chunk, BTI.encoding);
-        }
-
-        cb();
-    }
-}
-*/
