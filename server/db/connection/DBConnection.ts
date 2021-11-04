@@ -47,6 +47,7 @@ export class DBConnection {
             if (!LS || !LS.transactionNumber)
                 return;
             transactionNumber = LS.transactionNumber;
+            LS.transactionNumber = undefined;
         }
         this._prismaTransMap.delete(transactionNumber);
     }

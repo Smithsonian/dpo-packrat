@@ -178,3 +178,5 @@ ADD CONSTRAINT `fk_sentinel_user1`
   REFERENCES `User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
+
+-- 2021-11-04 Deployed to Staging
