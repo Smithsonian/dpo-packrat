@@ -9,6 +9,7 @@ export class LocalStore {
     private idWorkflowStep?: number | undefined;
     private idWorkflowReport?: number | undefined;
     idWorkflowSet?: number | undefined;
+    transactionNumber?: number | undefined;
 
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {

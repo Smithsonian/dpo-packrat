@@ -160,3 +160,21 @@ ALTER TABLE Scene MODIFY COLUMN `ApprovedForPublication` boolean NOT NULL;
 ALTER TABLE Scene DROP COLUMN `isOriented`;
 ALTER TABLE Scene DROP COLUMN `hasBeenQCd`;
 
+-- 2021-10-26 Deployed to Staging
+
+-- 2021-10-27 Jon
+CREATE TABLE IF NOT EXISTS `Sentinel` (
+  `idSentinel` int(11) NOT NULL AUTO_INCREMENT,
+  `URLBase` varchar(512) NOT NULL,
+  `ExpirationDate` datetime NOT NULL,
+  `idUser` int(11) NOT NULL,
+  PRIMARY KEY (`idSentinel`),
+  KEY `Sentinel_URLBase` (`URLBase`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+ALTER TABLE `Sentinel` 
+ADD CONSTRAINT `fk_sentinel_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
