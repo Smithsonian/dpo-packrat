@@ -1,8 +1,9 @@
 /* eslint-disable camelcase */
-import { SystemObjectVersion as SystemObjectVersionBase } from '@prisma/client';
+import { PrismaClient, SystemObjectVersion as SystemObjectVersionBase } from '@prisma/client';
 import { ePublishedState, SystemObjectVersionAssetVersionXref } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+// import * as H from '../../utils/helpers';
 
 export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> implements SystemObjectVersionBase {
     idSystemObjectVersion!: number;
@@ -132,12 +133,29 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
         if (!idSystemObject)
             return null;
         try {
+            const prisma: PrismaClient = new PrismaClient();
+            return await prisma.$transaction(async (prisma) => {
+                const transactionNumber: number = await DBC.DBConnection.setPrismaTransaction(prisma);
+                const retValue: SystemObjectVersion | null = await SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, assetVersionOverrideMap);
+                DBC.DBConnection.clearPrismaTransaction(transactionNumber);
+                return retValue;
+            });
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.SystemObjectVersion.cloneObjectAndXrefs', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    private static async cloneObjectAndXrefsTrans(idSystemObject: number, idSystemObjectVersion: number | null,
+        assetVersionOverrideMap?: Map<number, number> | undefined): Promise<SystemObjectVersion | null> {
+        try {
+            // LOG.info(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans(${idSystemObject}, ${idSystemObjectVersion}, ${JSON.stringify(assetVersionOverrideMap, H.Helpers.saferStringify)})`, LOG.LS.eDB);
             // fetch latest SystemObjectVerion's mapping of idAsset -> idAssetVersion
             const assetVersionMap: Map<number, number> | null = idSystemObjectVersion
                 ? await SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(idSystemObjectVersion)
                 : await SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(idSystemObject); /* istanbul ignore next */
             if (!assetVersionMap) {
-                LOG.error(`DBAPI.SystemObjectVersion.cloneObjectAndXrefs unable to fetch assetVersionMap from idSystemObject ${idSystemObject}, idSystemObjectVersion ${idSystemObjectVersion}`, LOG.LS.eDB);
+                LOG.error(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans unable to fetch assetVersionMap from idSystemObject ${idSystemObject}, idSystemObjectVersion ${idSystemObjectVersion}`, LOG.LS.eDB);
                 return null;
             }
 
@@ -150,7 +168,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             }); /* istanbul ignore next */
 
             if (!await SOV.create()) {
-                LOG.error(`DBAPI.SystemObjectVersion.cloneObjectAndXrefs failed to create new SystemObjectVersion for ${idSystemObject}`, LOG.LS.eDB);
+                LOG.error(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans failed to create new SystemObjectVersion for ${idSystemObject}`, LOG.LS.eDB);
                 return null;
             }
 
@@ -169,15 +187,16 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                     idAssetVersion
                 });
                 success = await SOVAVX.create() && success;
+                // LOG.info(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans(${idSystemObject}, ${idSystemObjectVersion}) created ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)})`, LOG.LS.eDB);
             } /* istanbul ignore next */
 
             if (!success) {
-                LOG.error(`DBAPI.SystemObjectVersion.cloneObjectAndXrefs failed to create all SystemObjectVersionAssetVersionXref's for ${JSON.stringify(SOV)}`, LOG.LS.eDB);
+                LOG.error(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans failed to create all SystemObjectVersionAssetVersionXref's for ${JSON.stringify(SOV)}`, LOG.LS.eDB);
                 return null;
             }
             return SOV;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObjectVersion.cloneObjectAndXrefs', LOG.LS.eDB, error);
+            LOG.error('DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans', LOG.LS.eDB, error);
             return null;
         }
     }

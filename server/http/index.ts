@@ -9,13 +9,14 @@ import { logtest } from './routes/logtest';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
 import { download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
+import { WebDAVServer } from './routes/WebDAVServer';
 
 import express, { Request } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
-import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { graphqlUploadExpress } from 'graphql-upload';
+import { v2 as webdav } from 'webdav-server';
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
@@ -43,11 +44,12 @@ export class HttpServer {
         return res;
     }
 
+    static bodyProcessorExclusions: RegExp = /^\/(?!download-wd).*$/;
     private async configureMiddlewareAndRoutes(): Promise<boolean> {
         this.app.use(HttpServer.idRequestMiddleware);
         this.app.use(cors(authCorsConfig));
-        this.app.use(bodyParser.json());
-        this.app.use(bodyParser.urlencoded({ extended: true }));
+        this.app.use(HttpServer.bodyProcessorExclusions, express.json()); // do not extract webdav PUT bodies into request.body element
+        this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true }));
         this.app.use(cookieParser());
         this.app.use(authSession);
         this.app.use(passport.initialize());
@@ -66,7 +68,16 @@ export class HttpServer {
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
         this.app.get('/download', download);
+        this.app.get('/download/*', HttpServer.idRequestMiddleware2);
         this.app.get('/download/*', download);
+
+        const WDSV: WebDAVServer | null = await WebDAVServer.server();
+        if (WDSV) {
+            this.app.use('/download-wd', HttpServer.idRequestMiddleware2);
+            this.app.use(webdav.extensions.express('/download-wd', WDSV.webdav()));
+        } else
+            LOG.error('HttpServer.configureMiddlewareAndRoutes failed to initialize WebDAV server', LOG.LS.eHTTP);
+
         this.app.use(errorhandler); // keep last
 
         if (process.env.NODE_ENV !== 'test') {
@@ -79,7 +90,10 @@ export class HttpServer {
 
     // creates a LocalStore populated with the next requestID
     private static idRequestMiddleware(req: Request, _res, next): void {
-        if (!req.originalUrl.startsWith('/auth/') && !req.originalUrl.startsWith('/graphql')) {
+        if (!req.originalUrl.startsWith('/auth/') &&
+            !req.originalUrl.startsWith('/graphql') &&
+            !req.originalUrl.startsWith('/download/') &&
+            !req.originalUrl.startsWith('/download-wd/')) {
             const user = req['user'];
             const idUser = user ? user['idUser'] : undefined;
             ASL.run(new LocalStore(true, idUser), () => {
