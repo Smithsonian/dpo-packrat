@@ -117,56 +117,135 @@ class WebDAVSerializer implements webdav.FileSystemSerializer {
 }
 
 class FileSystemResource {
-    props: webdav.LocalPropertyManager;
-    locks: webdav.LocalLockManager;
+    propertyManager: webdav.LocalPropertyManager;   // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
+    lockManager: webdav.LocalLockManager;           // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
+    type: webdav.ResourceType;                      // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
+    size: number | undefined;                       // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
+    readDir: string[] | undefined;                  // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
 
-    constructor(data?: FileSystemResource) {
-        if (!data) {
-            this.props = new webdav.LocalPropertyManager();
-            this.locks = new webdav.LocalLockManager();
-        } else {
-            const rs = data as FileSystemResource;
-            this.props = new webdav.LocalPropertyManager(rs.props);
-            this.locks = new webdav.LocalLockManager();
+    private resourceSet: Set<string> = new Set<string>();
+
+    constructor(resourceType: webdav.ResourceType, fileSize: number | bigint | undefined) {
+        this.propertyManager = new webdav.LocalPropertyManager();
+        this.lockManager = new webdav.LocalLockManager();
+        this.type = resourceType;
+        try {
+            this.size = fileSize ? Number(fileSize) : undefined;
+        } catch {
+            this.size = undefined;
         }
+        this.readDir = undefined;
+    }
+
+    /** Returns true if new item is added, and false if item has already been added */
+    addChild(childPath: string): boolean {
+        if (this.resourceSet.has(childPath))
+            return false;
+        this.resourceSet.add(childPath);
+        if (!this.readDir)
+            this.readDir = [];
+        this.readDir.push(childPath);
+        return true;
     }
 }
 
 // Adapted from https://github.com/OpenMarshal/npm-WebDAV-Server-Types/blob/master/repositories/http/HTTPFileSystem.ts
 class WebDAVFileSystem extends webdav.FileSystem {
-    // props: webdav.IPropertyManager;
-    // locks: webdav.ILockManager;
-
     resources: Map<string, FileSystemResource>;
-    exists: Map<string, boolean>;
 
     constructor(WDFS?: WebDAVFileSystem) {
         super(new WebDAVSerializer());
 
         this.resources = WDFS ? WDFS.resources : new Map<string, FileSystemResource>();
-        this.exists = WDFS ? WDFS.exists : new Map<string, boolean>();
-
-        this.resources.set('/', new FileSystemResource());
+        this.resources.set('/', new FileSystemResource(webdav.ResourceType.Directory, undefined));
     }
 
-    _propertyManager(pathWD: webdav.Path, _info: webdav.PropertyManagerInfo, callback: webdav.ReturnCallback<webdav.IPropertyManager>): void {
-        LOG.info(`WebDAVFileSystem._propertyManager(${pathWD})`, LOG.LS.eHTTP);
-        this.getPropertyFromResource(pathWD, 'props', callback);
+    async _propertyManager(pathWD: webdav.Path, _info: webdav.PropertyManagerInfo, callback: webdav.ReturnCallback<webdav.IPropertyManager>): Promise<void> {
+        await this.getPropertyFromResource(pathWD, 'propertyManager', callback);
     }
 
-    _lockManager(pathWD: webdav.Path, _info: webdav.LockManagerInfo, callback: webdav.ReturnCallback<webdav.ILockManager>): void {
-        LOG.info(`WebDAVFileSystem._lockManager(${pathWD})`, LOG.LS.eHTTP);
-        this.getPropertyFromResource(pathWD, 'locks', callback);
+    async _lockManager(pathWD: webdav.Path, _info: webdav.LockManagerInfo, callback: webdav.ReturnCallback<webdav.ILockManager>): Promise<void> {
+        await this.getPropertyFromResource(pathWD, 'lockManager', callback);
     }
 
-    protected getPropertyFromResource(pathWD: webdav.Path, propertyName: string, callback: webdav.ReturnCallback<any>): void {
-        const path: string = pathWD.toString();
-        let resource: FileSystemResource | undefined = this.resources.get(path);
+    protected async getPropertyFromResource(pathWD: webdav.Path, propertyName: string, callback: webdav.ReturnCallback<any>): Promise<void> {
+        const pathS: string = pathWD.toString();
+        const logPrefix: string = `WebDAVFileSystem._${propertyName}(${pathS})`;
+        let resource: FileSystemResource | undefined = this.resources.get(pathS);
         if (!resource) {
-            resource = new FileSystemResource();
-            this.resources.set(path, resource);
+            const DP: DownloaderParser = new DownloaderParser('', pathS);
+            const DPResults: DownloaderParserResults = await DP.parseArguments(true, true); // true, true -> collect all paths
+            if (!DPResults.success || !DP.idSystemObjectV) {
+                const error: string = `${logPrefix} failed: ${DPResults.statusCode}${DPResults.message ? ' (' + DPResults.message + ')' : ''}`;
+                LOG.error(error, LOG.LS.eHTTP);
+                callback(new Error(error));
+                return;
+            }
+
+            for (const [ fileName, fileSize ] of DP.fileMapV) {
+                const fileNamePrefixed: string = `/idSystemObject-${DP.idSystemObjectV}${fileName}`;
+                // LOG.info(`${logPrefix} considering ${fileNamePrefixed}`, LOG.LS.eHTTP);
+
+                let resLookup: FileSystemResource | undefined = this.resources.get(fileNamePrefixed);
+                if (!resLookup) {
+                    resLookup = new FileSystemResource(webdav.ResourceType.File, fileSize);
+                    this.resources.set(fileNamePrefixed, resLookup);
+                }
+
+                if (fileNamePrefixed === pathS) {
+                    // LOG.info(`${logPrefix} FOUND ${fileNamePrefixed}`, LOG.LS.eHTTP);
+                    resource = resLookup;
+                }
+
+                let count: number = 0;
+                let dirWalker: string = fileNamePrefixed;
+                while (count++ <= 100) {
+                    const dir = path.posix.dirname(dirWalker);
+                    if (!dir|| dir === '/')
+                        break;
+                    let resDirectory: FileSystemResource | undefined = this.resources.get(dir);
+                    if (!resDirectory) {
+                        // LOG.info(`${logPrefix} recording DIR ${dir}`, LOG.LS.eHTTP);
+                        resDirectory = new FileSystemResource(webdav.ResourceType.Directory, undefined);
+                        this.resources.set(dir, resDirectory);
+                        /*
+                        if (dir.endsWith('/')) {
+                            LOG.info(`${logPrefix} recording DIR ending with slash ${dir}`, LOG.LS.eHTTP);
+                            this.resources.set(dir.substring(0, dir.length - 1), resDirectory);
+                        } else { // <--- only this code path
+                            LOG.info(`${logPrefix} recording DIR not ending with slash ${dir}`, LOG.LS.eHTTP);
+                            this.resources.set(dir + '/', resDirectory);
+                        }
+                        */
+                    }
+
+                    if (count === 1) { // record file with parent directory
+                        resDirectory.addChild(fileNamePrefixed);
+                        // LOG.info(`${logPrefix} adding to DIR ${dir} FILE ${fileNamePrefixed}`, LOG.LS.eHTTP);
+                    } else { // record directory with parent directory
+                        resDirectory.addChild(dirWalker);
+                        // LOG.info(`${logPrefix} adding to DIR ${dir} DIR ${dirWalker}`, LOG.LS.eHTTP);
+                    }
+                    dirWalker = dir;
+                }
+            }
+
+            if (!resource) {
+                const error: string = `${logPrefix} failed to compute resource`;
+                LOG.error(error, LOG.LS.eHTTP);
+                callback(new Error(error));
+                return;
+            }
         }
 
+        if (propertyName === 'type')
+            LOG.info(`${logPrefix}: ${resource.type === webdav.ResourceType.Directory ? 'Directory' : 'File'}`, LOG.LS.eHTTP);
+        else if (propertyName === 'size')
+            LOG.info(`${logPrefix}: ${resource.size}`, LOG.LS.eHTTP);
+        else if (propertyName === 'readDir')
+            LOG.info(`${logPrefix}: DIR Contents ${JSON.stringify(resource.readDir)}`, LOG.LS.eHTTP);
+        else if (propertyName !== 'propertyManager' && propertyName !== 'lockManager')
+            LOG.info(logPrefix, LOG.LS.eHTTP);
         callback(undefined, resource[propertyName]);
     }
 
@@ -277,9 +356,15 @@ class WebDAVFileSystem extends webdav.FileSystem {
         callback(undefined, mimeType);
     }
 
-    _type(pathWD: webdav.Path, _info: webdav.TypeInfo, callback: webdav.ReturnCallback<webdav.ResourceType>): void {
-        const isDirectory: boolean = pathWD.toString().endsWith('/');
-        LOG.info(`WebDAVFileSystem._type(${pathWD}): ${isDirectory ? 'Directory' : 'File'}`, LOG.LS.eHTTP);
-        callback(undefined, isDirectory ? webdav.ResourceType.Directory : webdav.ResourceType.File);
+    async _type(pathWD: webdav.Path, _info: webdav.TypeInfo, callback: webdav.ReturnCallback<webdav.ResourceType>): Promise<void> {
+        await this.getPropertyFromResource(pathWD, 'type', callback);
+    }
+
+    async _readDir(pathWD: webdav.Path, _info: webdav.ReadDirInfo, callback: webdav.ReturnCallback<string[] | webdav.Path[]>): Promise<void> {
+        await this.getPropertyFromResource(pathWD, 'readDir', callback);
+    }
+
+    async _size(pathWD: webdav.Path, _info: webdav.SizeInfo, callback: webdav.ReturnCallback<number>): Promise<void> {
+        await this.getPropertyFromResource(pathWD, 'size', callback);
     }
 }
