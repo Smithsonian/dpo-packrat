@@ -61,6 +61,7 @@ export class WebDAVServer {
         this.auth = new WebDAVAuthentication();
         this.server = new webdav.WebDAVServer({
             httpAuthentication: this.auth,
+            // respondWithPaths: true,
             // port: webDAVPort
         });
         this.server.beforeRequest((ctx, next) => {
@@ -122,10 +123,13 @@ class FileSystemResource {
     type: webdav.ResourceType;                      // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
     size: number | undefined;                       // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
     readDir: string[] | undefined;                  // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
+    etag: string;                                   // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
+    lastModifiedDate: number;                       // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
+    creationDate: number;                           // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
 
     private resourceSet: Set<string> = new Set<string>();
 
-    constructor(resourceType: webdav.ResourceType, fileSize: number | bigint | undefined) {
+    constructor(resourceType: webdav.ResourceType, fileSize: number | bigint | undefined, hash: string, lastModifiedDate, creationDate) {
         this.propertyManager = new webdav.LocalPropertyManager();
         this.lockManager = new webdav.LocalLockManager();
         this.type = resourceType;
@@ -135,6 +139,9 @@ class FileSystemResource {
             this.size = undefined;
         }
         this.readDir = undefined;
+        this.etag = hash;
+        this.lastModifiedDate = lastModifiedDate;
+        this.creationDate = creationDate;
     }
 
     /** Returns true if new item is added, and false if item has already been added */
@@ -157,7 +164,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
         super(new WebDAVSerializer());
 
         this.resources = WDFS ? WDFS.resources : new Map<string, FileSystemResource>();
-        this.resources.set('/', new FileSystemResource(webdav.ResourceType.Directory, undefined));
+        this.resources.set('/', new FileSystemResource(webdav.ResourceType.Directory, undefined, '/', 0, 0));
     }
 
     async _propertyManager(pathWD: webdav.Path, _info: webdav.PropertyManagerInfo, callback: webdav.ReturnCallback<webdav.IPropertyManager>): Promise<void> {
@@ -182,13 +189,15 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 return;
             }
 
-            for (const [ fileName, fileSize ] of DP.fileMapV) {
-                const fileNamePrefixed: string = `/idSystemObject-${DP.idSystemObjectV}${fileName}`;
+            const prefix: string = `/idSystemObject-${DP.idSystemObjectV}`;
+            for (const [ fileName, assetVersion ] of DP.fileMapV) {
+                const fileNamePrefixed: string = `${prefix}${fileName}`;
                 // LOG.info(`${logPrefix} considering ${fileNamePrefixed}`, LOG.LS.eHTTP);
 
+                const utcMS: number = assetVersion.DateCreated.getTime();
                 let resLookup: FileSystemResource | undefined = this.resources.get(fileNamePrefixed);
                 if (!resLookup) {
-                    resLookup = new FileSystemResource(webdav.ResourceType.File, fileSize);
+                    resLookup = new FileSystemResource(webdav.ResourceType.File, assetVersion.StorageSize, assetVersion.StorageHash, utcMS, utcMS);
                     this.resources.set(fileNamePrefixed, resLookup);
                 }
 
@@ -206,7 +215,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                     let resDirectory: FileSystemResource | undefined = this.resources.get(dir);
                     if (!resDirectory) {
                         // LOG.info(`${logPrefix} recording DIR ${dir}`, LOG.LS.eHTTP);
-                        resDirectory = new FileSystemResource(webdav.ResourceType.Directory, undefined);
+                        resDirectory = new FileSystemResource(webdav.ResourceType.Directory, undefined, dir, utcMS, utcMS); // HERE: need a better hash than dir here
                         this.resources.set(dir, resDirectory);
                         /*
                         if (dir.endsWith('/')) {
@@ -220,11 +229,23 @@ class WebDAVFileSystem extends webdav.FileSystem {
                     }
 
                     if (count === 1) { // record file with parent directory
-                        resDirectory.addChild(fileNamePrefixed);
-                        // LOG.info(`${logPrefix} adding to DIR ${dir} FILE ${fileNamePrefixed}`, LOG.LS.eHTTP);
+                        const childPath: string = path.basename(fileName);
+                        if (resDirectory.addChild(childPath))
+                            LOG.info(`${logPrefix} adding to DIR ${dir} FILE ${childPath}`, LOG.LS.eHTTP);
+                        // resDirectory.addChild(fileNamePrefixed);
+                        // const childPath: string = fileNamePrefixed.replace(prefix, '');
+                        // const childPath: string = `http://server/download-wd${fileNamePrefixed}`;
+                        // if (resDirectory.addChild(childPath))
+                        //     LOG.info(`${logPrefix} adding to DIR ${dir} FILE ${childPath}`, LOG.LS.eHTTP);
                     } else { // record directory with parent directory
-                        resDirectory.addChild(dirWalker);
-                        // LOG.info(`${logPrefix} adding to DIR ${dir} DIR ${dirWalker}`, LOG.LS.eHTTP);
+                        const childPath: string = path.basename(dirWalker);
+                        if (resDirectory.addChild(childPath))
+                            LOG.info(`${logPrefix} adding to DIR ${dir} DIR ${childPath}`, LOG.LS.eHTTP);
+                        // resDirectory.addChild(dirWalker);
+                        // const childPath: string = dirWalker.replace(prefix, '');
+                        // const childPath: string = `http://server/download-wd${dirWalker}`;
+                        // if (resDirectory.addChild(childPath))
+                        //     LOG.info(`${logPrefix} adding to DIR ${dir} DIR ${childPath}`, LOG.LS.eHTTP);
                     }
                     dirWalker = dir;
                 }
@@ -238,14 +259,16 @@ class WebDAVFileSystem extends webdav.FileSystem {
             }
         }
 
+        /*
         if (propertyName === 'type')
             LOG.info(`${logPrefix}: ${resource.type === webdav.ResourceType.Directory ? 'Directory' : 'File'}`, LOG.LS.eHTTP);
-        else if (propertyName === 'size')
-            LOG.info(`${logPrefix}: ${resource.size}`, LOG.LS.eHTTP);
         else if (propertyName === 'readDir')
             LOG.info(`${logPrefix}: DIR Contents ${JSON.stringify(resource.readDir)}`, LOG.LS.eHTTP);
+        else if (propertyName === 'etag' || propertyName === 'creationDate' || propertyName === 'lastModifiedDate' || propertyName === 'size')
+            LOG.info(`${logPrefix}: ${resource[propertyName]}`, LOG.LS.eHTTP);
         else if (propertyName !== 'propertyManager' && propertyName !== 'lockManager')
             LOG.info(logPrefix, LOG.LS.eHTTP);
+        */
         callback(undefined, resource[propertyName]);
     }
 
@@ -352,7 +375,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
         const fileName: string = path.basename(filePath);
         const mimeType: string = mime.lookup(fileName) || 'application/octet-stream';
 
-        LOG.info(`WebDAVFileSystem._mimeType(${pathWD}): ${mimeType}`, LOG.LS.eHTTP);
+        // LOG.info(`WebDAVFileSystem._mimeType(${pathWD}): ${mimeType}`, LOG.LS.eHTTP);
         callback(undefined, mimeType);
     }
 
@@ -366,5 +389,17 @@ class WebDAVFileSystem extends webdav.FileSystem {
 
     async _size(pathWD: webdav.Path, _info: webdav.SizeInfo, callback: webdav.ReturnCallback<number>): Promise<void> {
         await this.getPropertyFromResource(pathWD, 'size', callback);
+    }
+
+    async _etag(pathWD: webdav.Path, _info: webdav.SizeInfo, callback: webdav.ReturnCallback<string>): Promise<void> {
+        await this.getPropertyFromResource(pathWD, 'etag', callback);
+    }
+
+    async _creationDate(pathWD: webdav.Path, _info: webdav.SizeInfo, callback: webdav.ReturnCallback<number>): Promise<void> {
+        await this.getPropertyFromResource(pathWD, 'creationDate', callback);
+    }
+
+    async _lastModifiedDate(pathWD: webdav.Path, _info: webdav.SizeInfo, callback: webdav.ReturnCallback<number>): Promise<void> {
+        await this.getPropertyFromResource(pathWD, 'lastModifiedDate', callback);
     }
 }

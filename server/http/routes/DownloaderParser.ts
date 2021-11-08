@@ -39,8 +39,8 @@ export class DownloaderParser {
     private idWorkflowSet: number | null = null;
     private idJobRun: number | null = null;
 
-    private systemObjectPath: string | null = null;                     // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
-    private fileMap: Map<string, bigint> = new Map<string, bigint>();   // Map of asset files path -> size of asset version
+    private systemObjectPath: string | null = null;                                             // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
+    private fileMap: Map<string, DBAPI.AssetVersion> = new Map<string, DBAPI.AssetVersion>();   // Map of asset files path -> asset version
 
     private rootURL: string;
     private requestPath: string;
@@ -66,7 +66,7 @@ export class DownloaderParser {
     get idJobRunV(): number | null { return this.idJobRun; }
 
     get systemObjectPathV(): string | null { return this.systemObjectPath; }
-    get fileMapV(): Map<string, bigint> { return this.fileMap; }
+    get fileMapV(): Map<string, DBAPI.AssetVersion> { return this.fileMap; }
 
     /** Returns success: false if arguments are invalid */
     async parseArguments(allowUnmatchedPaths?: boolean, collectPaths?: boolean): Promise<DownloaderParserResults> {
@@ -177,7 +177,7 @@ export class DownloaderParser {
                     if (pathAssetVersionNorm.startsWith(pathToMatch))
                         matchedPartialPath = pathToMatch;
                 }
-                this.fileMap.set(pathAssetVersion, assetVersion.StorageSize);
+                this.fileMap.set(pathAssetVersion, assetVersion);
             }
 
             if (assetVersionMatch)
