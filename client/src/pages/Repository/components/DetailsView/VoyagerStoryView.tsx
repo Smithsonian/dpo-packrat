@@ -33,14 +33,6 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
             // maxHeight: 'calc(100vh - 120px)',
             padding: 10
         }
-    },
-    updateButton: {
-        height: 35,
-        width: 100,
-        color: palette.background.paper,
-        [breakpoints.down('lg')]: {
-            height: 30
-        }
     }
 }));
 

@@ -39,7 +39,8 @@ export class DownloaderParser {
     private idWorkflowSet: number | null = null;
     private idJobRun: number | null = null;
 
-    private systemObjectPath: string | null = null;         // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
+    private systemObjectPath: string | null = null;                                             // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
+    private fileMap: Map<string, DBAPI.AssetVersion> = new Map<string, DBAPI.AssetVersion>();   // Map of asset files path -> asset version
 
     private rootURL: string;
     private requestPath: string;
@@ -65,10 +66,10 @@ export class DownloaderParser {
     get idJobRunV(): number | null { return this.idJobRun; }
 
     get systemObjectPathV(): string | null { return this.systemObjectPath; }
-
+    get fileMapV(): Map<string, DBAPI.AssetVersion> { return this.fileMap; }
 
     /** Returns success: false if arguments are invalid */
-    async parseArguments(allowUnmatchedPaths?: boolean): Promise<DownloaderParserResults> {
+    async parseArguments(allowUnmatchedPaths?: boolean, collectPaths?: boolean): Promise<DownloaderParserResults> {
         // /download/idSystemObject-ID:         Computes the assets attached to this system object.  If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
         // /download/idSystemObject-ID/FOO/BAR: Computes the asset attached to this system object, found at the path /FOO/BAR.
         let idSystemObjectU: string | string[] | ParsedQs | ParsedQs[] | undefined = undefined;
@@ -158,23 +159,29 @@ export class DownloaderParser {
 
             // otherwise, find the specified asset by path
             const pathToMatch: string = this.systemObjectPath.toLowerCase();
-            // let pathsConsidered: string = '\n';
+            let assetVersionMatch: DBAPI.AssetVersion | null = null;
             for (const assetVersion of assetVersions) {
                 const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
                 if (!asset) {
                     LOG.error(`${this.reconstructSystemObjectLink()} unable to fetch asset from assetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eHTTP);
                     return this.recordStatus(404);
                 }
-                const pathAssetVersion: string = (((asset.FilePath !== '' && asset.FilePath !== '.') ? `/${asset.FilePath}` : '')
-                    + `/${assetVersion.FileName}`).toLowerCase();
-                if (pathToMatch === pathAssetVersion)
-                    return { success: true, assetVersion }; // this.emitDownload(assetVersion);
-                else {
-                    // pathsConsidered += `${pathAssetVersion}\n`;
-                    if (pathAssetVersion.startsWith(pathToMatch))
+
+                const pathAssetVersion: string = ((asset.FilePath !== '' && asset.FilePath !== '.') ? `/${asset.FilePath}` : '') + `/${assetVersion.FileName}`;
+                const pathAssetVersionNorm: string = pathAssetVersion.toLowerCase();
+                if (pathToMatch === pathAssetVersionNorm) {
+                    assetVersionMatch = assetVersion;
+                    if (!collectPaths)
+                        break;
+                } else {
+                    if (pathAssetVersionNorm.startsWith(pathToMatch))
                         matchedPartialPath = pathToMatch;
                 }
+                this.fileMap.set(pathAssetVersion, assetVersion);
             }
+
+            if (assetVersionMatch)
+                return { success: true, assetVersion: assetVersionMatch };
 
             if (!allowUnmatchedPaths) {
                 LOG.error(`${this.reconstructSystemObjectLink()} unable to find assetVersion with path ${pathToMatch}`, LOG.LS.eHTTP);
