@@ -217,36 +217,20 @@ class WebDAVFileSystem extends webdav.FileSystem {
                         // LOG.info(`${logPrefix} recording DIR ${dir}`, LOG.LS.eHTTP);
                         resDirectory = new FileSystemResource(webdav.ResourceType.Directory, undefined, dir, utcMS, utcMS); // HERE: need a better hash than dir here
                         this.resources.set(dir, resDirectory);
-                        /*
-                        if (dir.endsWith('/')) {
-                            LOG.info(`${logPrefix} recording DIR ending with slash ${dir}`, LOG.LS.eHTTP);
-                            this.resources.set(dir.substring(0, dir.length - 1), resDirectory);
-                        } else { // <--- only this code path
-                            LOG.info(`${logPrefix} recording DIR not ending with slash ${dir}`, LOG.LS.eHTTP);
-                            this.resources.set(dir + '/', resDirectory);
-                        }
-                        */
                     }
 
+                    let childPath: string;
+                    // let entryType: string;
                     if (count === 1) { // record file with parent directory
-                        const childPath: string = path.basename(fileName);
-                        if (resDirectory.addChild(childPath))
-                            LOG.info(`${logPrefix} adding to DIR ${dir} FILE ${childPath}`, LOG.LS.eHTTP);
-                        // resDirectory.addChild(fileNamePrefixed);
-                        // const childPath: string = fileNamePrefixed.replace(prefix, '');
-                        // const childPath: string = `http://server/download-wd${fileNamePrefixed}`;
-                        // if (resDirectory.addChild(childPath))
-                        //     LOG.info(`${logPrefix} adding to DIR ${dir} FILE ${childPath}`, LOG.LS.eHTTP);
+                        childPath = path.basename(fileName);
+                        // entryType = 'FILE';
                     } else { // record directory with parent directory
-                        const childPath: string = path.basename(dirWalker);
-                        if (resDirectory.addChild(childPath))
-                            LOG.info(`${logPrefix} adding to DIR ${dir} DIR ${childPath}`, LOG.LS.eHTTP);
-                        // resDirectory.addChild(dirWalker);
-                        // const childPath: string = dirWalker.replace(prefix, '');
-                        // const childPath: string = `http://server/download-wd${dirWalker}`;
-                        // if (resDirectory.addChild(childPath))
-                        //     LOG.info(`${logPrefix} adding to DIR ${dir} DIR ${childPath}`, LOG.LS.eHTTP);
+                        childPath = path.basename(dirWalker);
+                        // entryType = 'DIR';
                     }
+                    resDirectory.addChild(childPath);
+                    // if (resDirectory.addChild(childPath))
+                    //     LOG.info(`${logPrefix} adding to DIR ${dir} ${entryType} ${childPath}`, LOG.LS.eHTTP);
                     dirWalker = dir;
                 }
             }

@@ -16,15 +16,15 @@ import * as H from '../../../../../utils/helpers';
 export default async function getSystemObjectDetails(_: Parent, args: QueryGetSystemObjectDetailsArgs): Promise<GetSystemObjectDetailsResult> {
     const { input } = args;
     const { idSystemObject } = input;
-    LOG.info('getSystemObjectDetails 0', LOG.LS.eGQL);
+    // LOG.info('getSystemObjectDetails 0', LOG.LS.eGQL);
 
     const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
-    LOG.info('getSystemObjectDetails 1', LOG.LS.eGQL);
+    // LOG.info('getSystemObjectDetails 1', LOG.LS.eGQL);
 
     const OGD: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
     const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors, 32, OGD);
     const { unit, project, subject, item, objectAncestors } = await getObjectAncestors(OG);
-    LOG.info('getSystemObjectDetails 2', LOG.LS.eGQL);
+    // LOG.info('getSystemObjectDetails 2', LOG.LS.eGQL);
 
     const systemObject: SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
@@ -53,7 +53,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 
     const name: string = await resolveNameForObject(idSystemObject);
     const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject, OGD);
-    LOG.info('getSystemObjectDetails 3', LOG.LS.eGQL);
+    // LOG.info('getSystemObjectDetails 3', LOG.LS.eGQL);
 
     return {
         idSystemObject,
@@ -166,7 +166,7 @@ async function getObjectAncestors(OG: DBAPI.ObjectGraph): Promise<GetObjectAnces
             objectAncestors: []
         };
     }
-    LOG.info('getSystemObjectDetails 1a-OG Fetch', LOG.LS.eGQL);
+    // LOG.info('getSystemObjectDetails 1a-OG Fetch', LOG.LS.eGQL);
 
     const objectAncestors: RepositoryPath[][] = [];
 
@@ -204,7 +204,7 @@ async function getObjectAncestors(OG: DBAPI.ObjectGraph): Promise<GetObjectAnces
     if (OG.actor) objectAncestors.push(await objectToRepositoryPath(OG.actor, DBAPI.eSystemObjectType.eActor));
     if (OG.stakeholder) objectAncestors.push(await objectToRepositoryPath(OG.stakeholder, DBAPI.eSystemObjectType.eStakeholder));
 
-    LOG.info('getSystemObjectDetails 1b', LOG.LS.eGQL);
+    // LOG.info('getSystemObjectDetails 1b', LOG.LS.eGQL);
     return {
         unit,
         project,
@@ -280,7 +280,7 @@ async function objectToRepositoryPath(objects: Objects, objectType: DBAPI.eSyste
             LOG.error(`getSystemObjectDetails could not compute system object info from ${JSON.stringify(oID)}`, LOG.LS.eGQL);
     }
 
-    LOG.info(`getSystemObjectDetails 1b-${DBAPI.eSystemObjectType[objectType]} ${objects.length}`, LOG.LS.eGQL);
+    // LOG.info(`getSystemObjectDetails 1b-${DBAPI.eSystemObjectType[objectType]} ${objects.length}`, LOG.LS.eGQL);
     return paths;
 }
 
