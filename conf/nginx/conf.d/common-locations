@@ -1,6 +1,7 @@
 location /server {
     rewrite /server/(.*) /$1 break;
     proxy_pass http://server-dev;
+    proxy_set_header Host $host//server;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
 }
