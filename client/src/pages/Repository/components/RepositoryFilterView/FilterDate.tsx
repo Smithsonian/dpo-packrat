@@ -72,12 +72,14 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
                     selected={dateCreatedFrom}
                     onChange={date => onDate('dateCreatedFrom', date)}
                     isClearable
+                    title='Date Created From'
                 />
                 <Typography className={classes.toText}>to</Typography>
                 <DatePicker
                     selected={dateCreatedTo}
                     onChange={date => onDate('dateCreatedTo', date)}
                     isClearable
+                    title='Date Created To'
                 />
             </div>
         </Box>

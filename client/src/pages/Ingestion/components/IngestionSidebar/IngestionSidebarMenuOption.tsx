@@ -7,8 +7,8 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { memo } from 'react';
 import { INGESTION_ROUTES_TYPE } from '../../../../constants';
-import { Colors } from '../../../../theme';
 import { Link } from 'react-router-dom';
+// import { Colors } from '../../../../theme';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -23,8 +23,10 @@ const useStyles = makeStyles(({ palette }) => ({
         overflow: 'hidden',
         borderRadius: 5,
         marginTop: 2,
-        color: ({ isSelected }: IngestionSidebarMenuOptionProps) => (isSelected ? palette.primary.main : palette.primary.dark),
-        backgroundColor: ({ isSelected }: IngestionSidebarMenuOptionProps) => (isSelected ? palette.primary.light : Colors.defaults.white),
+        // TODO: line 26 works but 27 doesn't. Why?
+        color: 'black',
+        // color: ({ isSelected }: IngestionSidebarMenuOptionProps) => (isSelected ? 'black' : 'black'),
+        backgroundColor: ({ isSelected }: IngestionSidebarMenuOptionProps) => (isSelected ? palette.primary.light : palette.background.default),
         '&:hover': {
             cursor: ({ enabled }: IngestionSidebarMenuOptionProps) => (enabled ? 'pointer' : undefined),
             color: ({ enabled }: IngestionSidebarMenuOptionProps) => (enabled ? palette.primary.main : undefined),

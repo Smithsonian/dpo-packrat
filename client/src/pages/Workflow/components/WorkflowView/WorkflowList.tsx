@@ -35,7 +35,16 @@ export const useStyles = makeStyles(({ palette }) => ({
         // need to specify top radius in table container AND MuiToolbar override
         borderTopRightRadius: '5px',
         borderTopLeftRadius: '5px',
-        width: '80%'
+        width: '80%',
+        // TODO: Need to figure out why table won't come into focus
+        '&:focus': {
+            border: '20px solid black',
+            outline: '20px solid black'
+        },
+        '&:not(:focus)': {
+            border: '20px solid pink',
+            outline: '20px solid pink'
+        }
     },
     centeredTableHead: {
         '& > span': {
@@ -46,13 +55,7 @@ export const useStyles = makeStyles(({ palette }) => ({
             justifyContent: 'center'
         }
     },
-    container: {
-        width: 'calc(100% + 10px)',
-        background: palette.secondary.light,
-        padding: 5,
-        borderRadius: 5,
-        marginBottom: 7
-    },
+    
     header: {
         fontSize: '0.9em',
         color: palette.primary.dark,
@@ -99,7 +102,7 @@ const getMuiTheme = () =>
             MuiIconButton: {
                 root: {
                     border: '0px',
-                    padding: '0px'
+                    padding: '0px'                
                 }
             },
             MuiTableHead: {
@@ -149,7 +152,7 @@ function WorkflowList(): React.ReactElement {
         rowsPerPageOptions: [10, 25, 100],
         sortOrder: { name: workflowListSortEnumToString(sortBy), direction: sortOrder ? 'asc' : 'desc' },
         onColumnSortChange: (changedColumn: string, direction: string) => paginationUpdateAndRefetchList(ePaginationChange.eSort, null, changedColumn, direction),
-        customFooter: function Pagination() {
+        customTableBodyFooterRender: function Pagination() {
             return (
                 <tfoot>
                     <tr>
@@ -163,6 +166,24 @@ function WorkflowList(): React.ReactElement {
                     </tr>
                 </tfoot>
             );
+        },
+        setRowProps: () => {
+            return { role: 'row' }
+        },
+        // TODO: This may not be working as intended because we can't focus in on the table
+        setTableProps: () => {
+            return {
+                style: {
+                    '& :focus': {
+                        border: '20px solid black',
+                        outline: '20px solid black'
+                    },
+                    '&:not(:focus)': {
+                        border: '20px solid pink',
+                        outline: '20px solid pink'
+                    },
+                }
+            }
         }
     };
 
@@ -178,7 +199,7 @@ function WorkflowList(): React.ReactElement {
         return {
             className: clsx({
                 [classes.centeredTableHead]: true
-            })
+            })        
         };
     };
 

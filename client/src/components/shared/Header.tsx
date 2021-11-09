@@ -49,7 +49,6 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         fontSize: 18,
         marginLeft: 5,
         outline: 'none',
-        border: 'none',
         color: fade(Colors.defaults.white, 0.65),
         background: 'transparent',
         fontWeight: typography.fontWeightRegular,
@@ -64,6 +63,13 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         },
         '&::-moz-placeholder': {
             fontStyle: 'italic'
+        },
+        '&:focus': {
+            // TODO: discuss with Jon
+            border: '1.5px solid silver',
+        },
+        '&:not(:focus)': {
+            borderStyle: 'none'
         }
     },
     navOptionsContainer: {
@@ -83,7 +89,11 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         color: 'white',
         width: '90px',
         height: '30px',
-        border: 'solid 1px white'
+        border: '1px solid white',
+        '&:focus': {
+            // TODO: discuss with Jon
+            border: '4px solid silver',
+        }
     }
 }));
 
@@ -206,12 +216,12 @@ function Header(): React.ReactElement {
             {isRepository ? (
                 <React.Fragment>
                     <NavOption onClick={updateRepositorySearch}>
-                        <Button variant='outlined' className={classes.headerButton}>
+                    <Button variant='outlined' className={classes.headerButton}>
                             Search
                         </Button>
                     </NavOption>
                     <NavOption onClick={clearSearchAndUpdateRepositorySearch}>
-                        <Button variant='outlined' className={classes.headerButton}>
+                    <Button variant='outlined' className={classes.headerButton}>
                             Clear
                         </Button>
                     </NavOption>
@@ -219,12 +229,12 @@ function Header(): React.ReactElement {
             ) : (
                 <React.Fragment>
                     <NavOption onClick={onSearch}>
-                        <Button variant='outlined' className={classes.headerButton}>
+                    <Button variant='outlined' className={classes.headerButton}>
                             Search
                         </Button>
                     </NavOption>
                     <NavOption onClick={resetKeywordSearch}>
-                        <Button variant='outlined' className={classes.headerButton}>
+                    <Button variant='outlined' className={classes.headerButton}>
                             Clear
                         </Button>
                     </NavOption>
