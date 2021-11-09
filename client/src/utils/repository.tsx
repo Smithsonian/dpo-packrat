@@ -266,6 +266,7 @@ export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | un
 
 export enum eVoyagerStoryMode {
     eViewer,
+    eEdit,
     eQC,
     eAuthor,
     eExpert,
@@ -275,6 +276,7 @@ export function getModeForVoyager(eMode?: eVoyagerStoryMode): string {
     switch (eMode) {
         default:
         case eVoyagerStoryMode.eViewer: return '';
+        case eVoyagerStoryMode.eEdit:   return 'edit';
         case eVoyagerStoryMode.eQC:     return 'qc';
         case eVoyagerStoryMode.eAuthor: return 'author';
         case eVoyagerStoryMode.eExpert: return 'expert';
@@ -285,6 +287,7 @@ export function getVoyagerModeFromParam(sMode: string): eVoyagerStoryMode {
     switch (sMode) {
         default:
         case '':        return eVoyagerStoryMode.eViewer;
+        case 'edit':    return eVoyagerStoryMode.eEdit;
         case 'qc':      return eVoyagerStoryMode.eQC;
         case 'author':  return eVoyagerStoryMode.eAuthor;
         case 'expert':  return eVoyagerStoryMode.eExpert;
@@ -297,6 +300,7 @@ export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undef
     switch (eMode) {
         default:
         case eVoyagerStoryMode.eViewer: dlPath='download'; break;
+        case eVoyagerStoryMode.eEdit:   dlPath='download-wd'; break;
         case eVoyagerStoryMode.eQC:     dlPath='download-wd'; break;
         case eVoyagerStoryMode.eAuthor: dlPath='download-wd'; break;
         case eVoyagerStoryMode.eExpert: dlPath='download-wd'; break;
