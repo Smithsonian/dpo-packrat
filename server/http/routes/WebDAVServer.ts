@@ -117,9 +117,17 @@ class WebDAVSerializer implements webdav.FileSystemSerializer {
     }
 }
 
-class FileSystemResource {
+class WebDAVManagers {
     propertyManager: webdav.LocalPropertyManager;   // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
     lockManager: webdav.LocalLockManager;           // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
+
+    constructor() {
+        this.propertyManager = new webdav.LocalPropertyManager();
+        this.lockManager = new webdav.LocalLockManager();
+    }
+}
+
+class FileSystemResource {
     type: webdav.ResourceType;                      // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
     size: number | undefined;                       // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
     readDir: string[] | undefined;                  // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
@@ -128,10 +136,9 @@ class FileSystemResource {
     creationDate: number;                           // The name of this member is important as it matches method names in webdav.FileSystem; don't change it!
 
     private resourceSet: Set<string> = new Set<string>();
+    cacheDate: Date = new Date();
 
     constructor(resourceType: webdav.ResourceType, fileSize: number | bigint | undefined, hash: string, lastModifiedDate, creationDate) {
-        this.propertyManager = new webdav.LocalPropertyManager();
-        this.lockManager = new webdav.LocalLockManager();
         this.type = resourceType;
         this.setSize(fileSize);
         this.readDir = undefined;
@@ -163,13 +170,37 @@ class FileSystemResource {
 // Adapted from https://github.com/OpenMarshal/npm-WebDAV-Server-Types/blob/master/repositories/http/HTTPFileSystem.ts
 class WebDAVFileSystem extends webdav.FileSystem {
     resources: Map<string, FileSystemResource>;
+    managers: Map<string, WebDAVManagers>;
     // private static lockExclusiveWrite: webdav.LockKind = new webdav.LockKind(webdav.LockScope.Exclusive, webdav.LockType.Write, 300);
 
     constructor(WDFS?: WebDAVFileSystem) {
         super(new WebDAVSerializer());
 
         this.resources = WDFS ? WDFS.resources : new Map<string, FileSystemResource>();
+        this.managers =  WDFS ? WDFS.managers : new Map<string, WebDAVManagers>();
         this.resources.set('/', new FileSystemResource(webdav.ResourceType.Directory, undefined, '/', 0, 0));
+        this.managers.set('/', new WebDAVManagers());
+    }
+
+    private getManagers(pathS: string): WebDAVManagers {
+        let managers: WebDAVManagers | undefined = this.managers.get(pathS);
+        if (!managers) {
+            managers = new WebDAVManagers();
+            this.managers.set(pathS, managers);
+        }
+        return managers;
+    }
+
+    private getResource(pathS: string): FileSystemResource | undefined {
+        let resource: FileSystemResource | undefined = this.resources.get(pathS);
+        if (resource && resource.type === webdav.ResourceType.File) {
+            const age: number = new Date().getTime() - resource.cacheDate.getTime();
+            if (age >= 10000) {
+                resource = undefined;
+                this.resources.delete(pathS);
+            }
+        }
+        return resource;
     }
 
     /** Returns true if caller should try again, calling callback when done */
@@ -177,7 +208,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
         try {
             const pathS: string = pathWD.toString();
             const logPrefix: string = `WebDAVFileSystem._${propertyName}(${pathS})`;
-            let resource: FileSystemResource | undefined = this.resources.get(pathS);
+            let resource: FileSystemResource | undefined = this.getResource(pathS);
             if (!resource) {
                 const DP: DownloaderParser = new DownloaderParser('', pathS);
                 const DPResults: DownloaderParserResults = await DP.parseArguments(true, true); // true, true -> collect all paths
@@ -194,7 +225,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                     // LOG.info(`${logPrefix} considering ${fileNamePrefixed}`, LOG.LS.eHTTP);
 
                     const utcMS: number = assetVersion.DateCreated.getTime();
-                    let resLookup: FileSystemResource | undefined = this.resources.get(fileNamePrefixed);
+                    let resLookup: FileSystemResource | undefined = this.getResource(fileNamePrefixed);
                     if (!resLookup) {
                         resLookup = new FileSystemResource(webdav.ResourceType.File, assetVersion.StorageSize, assetVersion.StorageHash, utcMS, utcMS);
                         this.resources.set(fileNamePrefixed, resLookup);
@@ -229,7 +260,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 LOG.info(`${logPrefix}: DIR Contents ${JSON.stringify(resource.readDir)}`, LOG.LS.eHTTP);
             else if (propertyName === 'etag' || propertyName === 'creationDate' || propertyName === 'lastModifiedDate' || propertyName === 'size')
                 LOG.info(`${logPrefix}: ${resource[propertyName]}`, LOG.LS.eHTTP);
-            else if (propertyName !== 'propertyManager' && propertyName !== 'lockManager')
+            else
                 LOG.info(logPrefix, LOG.LS.eHTTP);
             */
             callback(undefined, resource[propertyName]);
@@ -245,7 +276,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
             const dir = path.posix.dirname(dirWalker);
             if (!dir|| dir === '/')
                 break;
-            let resDirectory: FileSystemResource | undefined = this.resources.get(dir);
+            let resDirectory: FileSystemResource | undefined = this.getResource(dir);
             if (!resDirectory) {
                 // LOG.info(`${logPrefix} recording DIR ${dir}`, LOG.LS.eHTTP);
                 resDirectory = new FileSystemResource(webdav.ResourceType.Directory, undefined, dir, utcMS, utcMS); // HERE: need a better hash than dir here
@@ -411,7 +442,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
 
                     // Update WebDAV resource
                     const utcMS: number = assetVersion.DateCreated.getTime();
-                    let resource: FileSystemResource | undefined = this.resources.get(pathS);
+                    let resource: FileSystemResource | undefined = this.getResource(pathS);
                     if (!resource) {
                         resource = new FileSystemResource(webdav.ResourceType.File, assetVersion.StorageSize, assetVersion.StorageHash, utcMS, utcMS);
                         this.resources.set(pathS, resource);
@@ -445,12 +476,14 @@ class WebDAVFileSystem extends webdav.FileSystem {
         callback(undefined, mimeType);
     }
 
-    async _propertyManager(pathWD: webdav.Path, _info: webdav.PropertyManagerInfo, callback: webdav.ReturnCallback<webdav.IPropertyManager>): Promise<void> {
-        await this.getPropertyFromResource(pathWD, 'propertyManager', true, callback);
+    _propertyManager(pathWD: webdav.Path, _info: webdav.PropertyManagerInfo, callback: webdav.ReturnCallback<webdav.IPropertyManager>): void {
+        const WDM: WebDAVManagers = this.getManagers(pathWD.toString());
+        callback(undefined, WDM.propertyManager);
     }
 
-    async _lockManager(pathWD: webdav.Path, _info: webdav.LockManagerInfo, callback: webdav.ReturnCallback<webdav.ILockManager>): Promise<void> {
-        await this.getPropertyFromResource(pathWD, 'lockManager', true, callback);
+    _lockManager(pathWD: webdav.Path, _info: webdav.LockManagerInfo, callback: webdav.ReturnCallback<webdav.ILockManager>): void {
+        const WDM: WebDAVManagers = this.getManagers(pathWD.toString());
+        callback(undefined, WDM.lockManager);
     }
 
     async _type(pathWD: webdav.Path, _info: webdav.TypeInfo, callback: webdav.ReturnCallback<webdav.ResourceType>): Promise<void> {
