@@ -55,9 +55,11 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
                         onClick={event => event.stopPropagation()}
                         target='_blank'
                         rel='noopener noreferrer'
+                        aria-label={objectTitle}
                         className={makeStyles?.link}
                     >
-                        <RiExternalLinkFill size={18} color={palette.primary.main} />
+
+                        <RiExternalLinkFill size={18} color={palette.primary.main} title={objectTitle} />
                     </Link>
                 </div>
             }

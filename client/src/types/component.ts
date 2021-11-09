@@ -28,6 +28,10 @@ export interface DataTableOptions {
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     customFooter?: () => any;
+    customTableBodyFooterRender?: () => any;
+    setRowProps?: (any) => any;
+    setCellHeaderProps?: (any) => any;
+    setTableProps?: (any) => any;
 }
 
 export interface SortOrderOptions {

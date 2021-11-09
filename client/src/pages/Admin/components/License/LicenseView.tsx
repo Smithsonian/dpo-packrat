@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Tooltip, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { DataGrid, GridColumns } from '@material-ui/data-grid';
+import { DataGrid, GridColumns, /*GridArrowDownwardIcon,*/ GridTripleDotsVerticalIcon } from '@material-ui/data-grid';
 import { useLocation } from 'react-router';
 import { GetLicenseListDocument, License } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
@@ -130,6 +130,11 @@ function LicenseList({ licenses }): React.ReactElement {
         }
     ];
 
+    // TODO: can't seem to inject aria-controls or retrieve the id properly
+    function accessibleColumnMenuIcon() {
+        return <GridTripleDotsVerticalIcon aria-controls='poo'/>
+    }
+
     return (
         <Box className={classes.AdminListContainer}>
             <DataGrid
@@ -141,6 +146,9 @@ function LicenseList({ licenses }): React.ReactElement {
                 density='compact'
                 disableSelectionOnClick
                 hideFooter
+                components={{
+                    ColumnMenuIcon: accessibleColumnMenuIcon
+                }}
             />
         </Box>
     );
@@ -154,23 +162,18 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
         setSearchFilter(e.target.value);
     };
 
-    const search = () => {
-        console.log('searchFiler', searchFilter);
-        queryByFilter(searchFilter);
-    };
+    const search = () => queryByFilter(searchFilter);
+
+    const createLicense = () => window.open('/admin/licenses/create', '_blank');
 
     return (
         <Box className={classes.AdminSearchFilterContainer}>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
                 <TextField className={classes.searchFilter} placeholder='Search License' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
-                <Button className={classes.styledButton} style={{ right: '25px' }} onClick={search}>
-                    Search
-                </Button>
+                <Button className={classes.styledButton} style={{ right: '25px' }} onClick={search}>Search</Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/licenses/create' target='_blank'>
-                    <Button className={classes.styledButton}>Create</Button>
-                </Link>
+                <Button className={classes.styledButton} onClick={createLicense}>Create</Button>
             </Box>
         </Box>
     );

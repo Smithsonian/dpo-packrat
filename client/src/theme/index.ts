@@ -18,7 +18,10 @@ export const palette = {
     },
     secondary: {
         light: '#FFFCD1',
-        main: '#F8D00D'
+        main: '#F8D00D',
+    },
+    background: {
+        default: '#FFFFFF'
     }
 };
 

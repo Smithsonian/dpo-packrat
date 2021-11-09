@@ -55,7 +55,11 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing /*
         width: 120,
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
-        color: Colors.defaults.white
+        color: Colors.defaults.white,
+        '&:focus': {
+            // TODO: discuss with Jon
+            border: '1px solid silver',
+        }
     },
     title: {
         margin: '1% 0px',
@@ -85,7 +89,8 @@ function UploadList(props: UploadListProps): React.ReactElement {
                 required
                 align='center'
                 label='Upload Files'
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'black' } }}
+                // TODO: this label props will help with testing
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'maroon' } }}
                 width={'calc(100% - 20px)'}
             >
                 <UploadListHeader />

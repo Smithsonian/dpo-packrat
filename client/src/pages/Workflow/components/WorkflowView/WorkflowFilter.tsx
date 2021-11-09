@@ -1,6 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Typography, Select, MenuItem } from '@material-ui/core';
+import { Box, Typography, Select, MenuItem, InputLabel } from '@material-ui/core';
 import { useWorkflowStore, useVocabularyStore, useUsersStore } from '../../../../store';
 import { getWorkflowFilterOptions } from '../WorkflowFilterOptions';
 import { LoadingButton } from '../../../../components';
@@ -163,50 +163,25 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
 
     return (
         <Box display='flex' alignItems='center' justifyContent='space-between' mb={1}>
-            <Typography className={classes.label}>{label}</Typography>
-            {(name === 'has' || name === 'missing') && value.length < 1 ? (
-                <Select
-                    value={value || []}
-                    multiple={multiple || false}
-                    className={long ? classes.selectLong : classes.select}
-                    name={name}
-                    onChange={onChange}
-                    disableUnderline
-                    inputProps={inputProps}
-                    renderValue={selected => {
-                        if ((selected as string[]).length === 0) {
-                            return <span>(Ignore)</span>;
-                        }
-
-                        return (selected as string[]).join(', ');
-                    }}
-                    displayEmpty
-                >
-                    {options.map(({ label, value }: FilterOption, index) => {
-                        return (
-                            <MenuItem key={index} value={value}>
-                                {label}
-                            </MenuItem>
-                        );
-                    })}
-                </Select>
-            ) : (
-                <Select
-                    value={value || []}
-                    multiple={multiple || false}
-                    className={long ? classes.selectLong : classes.select}
-                    name={name}
-                    onChange={onChange}
-                    disableUnderline
-                    inputProps={inputProps}
-                >
-                    {options.map(({ label, value }: FilterOption, index) => (
-                        <MenuItem key={index} value={value}>
-                            {label}
-                        </MenuItem>
-                    ))}
-                </Select>
-            )}
+            <InputLabel id={name}>
+                <Typography className={classes.label}>{label}</Typography>
+            </InputLabel>
+            <Select
+                value={value || []}
+                multiple={multiple || false}
+                className={long ? classes.selectLong : classes.select}
+                name={name}
+                onChange={onChange}
+                disableUnderline
+                inputProps={inputProps}
+                id={name}
+            >
+                {options.map(({ label, value }: FilterOption, index) => (
+                    <MenuItem key={index} value={value}>
+                        {label}
+                    </MenuItem>
+                ))}
+            </Select>
         </Box>
     );
 }
@@ -236,9 +211,15 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
                     selected={dateFrom}
                     onChange={date => onDate('dateFrom', date)}
                     isClearable
+                    title='Date From'
                 />
                 <Typography className={classes.toText}>to</Typography>
-                <DatePicker selected={dateTo} onChange={date => onDate('dateTo', date)} isClearable />
+                <DatePicker 
+                    selected={dateTo} 
+                    onChange={date => onDate('dateTo', date)} 
+                    isClearable 
+                    title='Date To' 
+                />
             </div>
         </Box>
     );
