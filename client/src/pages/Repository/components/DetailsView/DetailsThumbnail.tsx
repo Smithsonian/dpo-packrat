@@ -83,7 +83,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                 <React.Fragment>
                     <VoyagerExplorer root={rootLink} document={documentLink} height='500px' width='100%' />
                     <br />
-                    <a href={getVoyagerStoryUrl(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eExpert)} rel='noopener noreferrer' target='_blank' style={{ textDecoration: 'none' }}>
+                    <a href={getVoyagerStoryUrl(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eEdit)} rel='noopener noreferrer' target='_blank' style={{ textDecoration: 'none' }}>
                         <Button className={classes.editButton} variant='contained' color='primary'>Edit</Button>
                     </a>
                 </React.Fragment>
