@@ -16,9 +16,9 @@ const getObjectsForItem = gql`
 
             Scene {
                 idScene
-                HasBeenQCd
-                IsOriented
                 Name
+                ApprovedForPublication
+                PosedAndQCd
             }
 
             IntermediaryFile {

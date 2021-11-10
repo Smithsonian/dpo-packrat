@@ -429,8 +429,6 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `idScene` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
-  `IsOriented` boolean NOT NULL,
-  `HasBeenQCd` boolean NOT NULL,
   `CountScene` int(11) DEFAULT NULL,
   `CountNode` int(11) DEFAULT NULL,
   `CountCamera` int(11) DEFAULT NULL,
@@ -440,7 +438,18 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `CountSetup` int(11) DEFAULT NULL,
   `CountTour` int(11) DEFAULT NULL,
   `EdanUUID` varchar(64) NULL,
+  `PosedAndQCd` boolean NOT NULL,
+  `ApprovedForPublication` boolean NOT NULL,
   PRIMARY KEY (`idScene`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `Sentinel` (
+  `idSentinel` int(11) NOT NULL AUTO_INCREMENT,
+  `URLBase` varchar(512) NOT NULL,
+  `ExpirationDate` datetime NOT NULL,
+  `idUser` int(11) NOT NULL,
+  PRIMARY KEY (`idSentinel`),
+  KEY `Sentinel_URLBase` (`URLBase`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `Stakeholder` (
@@ -1024,6 +1033,13 @@ ALTER TABLE `Scene`
 ADD CONSTRAINT `fk_scene_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
   REFERENCES `Asset` (`idAsset`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `Sentinel` 
+ADD CONSTRAINT `fk_sentinel_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

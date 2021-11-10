@@ -10,8 +10,11 @@ COPY . .
 FROM base AS server
 # Remove client to prevent duplication
 RUN rm -rf client
+RUN apk update
 # Install perl, needed by exiftool
 RUN apk add perl
+# Install git, needed to fetch npm-server-webdav
+RUN apk add git
 # Expose port(s)
 EXPOSE 4000
 # Install dependencies

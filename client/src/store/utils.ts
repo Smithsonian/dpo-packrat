@@ -78,8 +78,8 @@ export function parseIdentifiersToState(identifiers: IngestIdentifier[], default
             id: index,
             identifier,
             identifierType,
-            selected: true,
-            idIdentifier
+            idIdentifier,
+            preferred: false
         })
     );
 

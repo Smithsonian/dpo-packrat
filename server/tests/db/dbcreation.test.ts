@@ -85,6 +85,7 @@ let project2: DBAPI.Project | null;
 let projectDocumentation: DBAPI.ProjectDocumentation | null;
 let scene: DBAPI.Scene | null;
 let sceneNulls: DBAPI.Scene | null;
+let sentinel: DBAPI.Sentinel | null;
 let stakeholder: DBAPI.Stakeholder | null;
 let subject: DBAPI.Subject | null;
 let subjectWithPreferredID: DBAPI.Subject | null;
@@ -421,8 +422,6 @@ describe('DB Creation Test Suite', () => {
             scene = await UTIL.createSceneTest({
                 Name: 'Test Scene',
                 idAssetThumbnail: assetThumbnail.idAsset,
-                IsOriented: true,
-                HasBeenQCd: true,
                 CountScene: 0,
                 CountNode: 0,
                 CountCamera: 0,
@@ -432,6 +431,8 @@ describe('DB Creation Test Suite', () => {
                 CountSetup: 0,
                 CountTour: 0,
                 EdanUUID: null,
+                PosedAndQCd: true,
+                ApprovedForPublication: true,
                 idScene: 0
             });
         expect(scene).toBeTruthy();
@@ -441,8 +442,6 @@ describe('DB Creation Test Suite', () => {
         sceneNulls = await UTIL.createSceneTest({
             Name: 'Test Scene',
             idAssetThumbnail: null,
-            IsOriented: true,
-            HasBeenQCd: false,
             CountScene: 0,
             CountNode: 0,
             CountCamera: 0,
@@ -452,6 +451,8 @@ describe('DB Creation Test Suite', () => {
             CountSetup: 0,
             CountTour: 0,
             EdanUUID: null,
+            PosedAndQCd: true,
+            ApprovedForPublication: false,
             idScene: 0
         });
         expect(sceneNulls).toBeTruthy();
@@ -1079,20 +1080,19 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Model With Nulls', async () => {
-        if (vocabulary)
-            modelNulls = await UTIL.createModelTest({
-                Name: 'Test Model with Nulls',
-                DateCreated: UTIL.nowCleansed(),
-                idVCreationMethod: null,
-                idVModality: null,
-                idVUnits: null,
-                idVPurpose: null,
-                idVFileType: null,
-                idAssetThumbnail: null,
-                CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
-                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
-                idModel: 0
-            });
+        modelNulls = await UTIL.createModelTest({
+            Name: 'Test Model with Nulls',
+            DateCreated: UTIL.nowCleansed(),
+            idVCreationMethod: null,
+            idVModality: null,
+            idVUnits: null,
+            idVPurpose: null,
+            idVFileType: null,
+            idAssetThumbnail: null,
+            CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+            CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
+            idModel: 0
+        });
         expect(modelNulls).toBeTruthy();
     });
 
@@ -1541,6 +1541,17 @@ describe('DB Creation Test Suite', () => {
                 idProjectDocumentation: 0
             });
         expect(projectDocumentation).toBeTruthy();
+    });
+
+    test('DB Creation: Sentinel', async () => {
+        if (userActive)
+            sentinel = await UTIL.createSentinelTest({
+                URLBase: 'Test Sentinel URLBase ' + H.Helpers.randomSlug(),
+                ExpirationDate: UTIL.nowCleansed(),
+                idUser: userActive.idUser,
+                idSentinel: 0
+            });
+        expect(sentinel).toBeTruthy();
     });
 
     test('DB Creation: Stakeholder', async () => {
@@ -2232,6 +2243,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 expect(audit).toMatchObject(auditFetch);
             }
 
+            const eAuditTypeOrig: DBAPI.eAuditType = audit.getAuditType();
             audit.setAuditType(DBAPI.eAuditType.eUnknown);
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eUnknown);
             audit.setAuditType(DBAPI.eAuditType.eAuthLogin);
@@ -2244,15 +2256,29 @@ describe('DB Fetch By ID Test Suite', () => {
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eDBUpdate);
             audit.setAuditType(DBAPI.eAuditType.eDBDelete);
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eDBDelete);
+            audit.setAuditType(eAuditTypeOrig);
+            expect(audit.getAuditType()).toEqual(eAuditTypeOrig);
 
+            const eDBObjectTypeOrig: DBAPI.eDBObjectType = audit.getDBObjectType();
             audit.setDBObjectType(null);
             expect(audit.getDBObjectType()).toEqual(DBAPI.eSystemObjectType.eUnknown);
             audit.setDBObjectType(DBAPI.eSystemObjectType.eUnit);
             expect(audit.getDBObjectType()).toEqual(DBAPI.eSystemObjectType.eUnit);
             audit.setDBObjectType(DBAPI.eNonSystemObjectType.eUnitEdan);
             expect(audit.getDBObjectType()).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
+            audit.setDBObjectType(eDBObjectTypeOrig);
+            expect(audit.getDBObjectType()).toEqual(eDBObjectTypeOrig);
         }
         expect(auditFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Audit: Audit.fetchLastUser', async () => {
+        // LOG.info(`Audit: ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+        let userFetch: DBAPI.User | null = null;
+        if (audit)
+            userFetch = await DBAPI.Audit.fetchLastUser(audit.idSystemObject ?? 0, audit.getAuditType());
+        expect(userFetch).toBeTruthy();
+        expect(userFetch?.idUser).toEqual(userActive?.idUser);
     });
 
     test('DB Fetch By ID: CaptureData', async () => {
@@ -2779,6 +2805,18 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(sceneFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: Sentinel', async () => {
+        let sentinelFetch: DBAPI.Sentinel | null = null;
+        if (sentinel) {
+            sentinelFetch = await DBAPI.Sentinel.fetch(sentinel.idSentinel);
+            if (sentinelFetch) {
+                expect(sentinelFetch).toMatchObject(sentinel);
+                expect(sentinel).toMatchObject(sentinelFetch);
+            }
+        }
+        expect(sentinelFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: Stakeholder', async () => {
@@ -4100,13 +4138,30 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
+    test('DB Fetch SystemObject: LicenseEnumToString', async () => {
+        expect(DBAPI.LicenseEnumToString(-1)).toEqual('Restricted');
+        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eViewDownloadCC0)).toEqual('View and Download CC0');
+        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eViewDownloadRestriction)).toEqual('View and Download with usage restrictions');
+        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eViewOnly)).toEqual('View Only');
+        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eRestricted)).toEqual('Restricted');
+    });
+
     test('DB Fetch SystemObject: PublishedStateEnumToString', async () => {
         expect(DBAPI.PublishedStateEnumToString(-1)).toEqual('Not Published');
         expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eNotPublished)).toEqual('Not Published');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eRestricted)).toEqual('Restricted');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eViewOnly)).toEqual('View Only');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eViewDownloadRestriction)).toEqual('View and Download with usage restrictions');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eViewDownloadCC0)).toEqual('View and Download CC0');
+        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eAPIOnly)).toEqual('API Only');
+        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.ePublished)).toEqual('Published');
+    });
+
+    test('DB Fetch SystemObject: LicenseRestrictLevelToPublishedStateEnum', async () => {
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(-1)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(10)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(15)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(20)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(25)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(30)).toEqual(DBAPI.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(35)).toEqual(DBAPI.ePublishedState.eNotPublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(1000)).toEqual(DBAPI.ePublishedState.eNotPublished);
     });
 
     test('DB Fetch SystemObject: SystemObjectTypeToName', async () => {
@@ -4189,6 +4244,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelProcessingAction)).toEqual('ModelProcessingAction');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelProcessingActionStep)).toEqual('ModelProessingActionStep');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelSceneXref)).toEqual('ModelSceneXref');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSentinel)).toEqual('Sentinel');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObject)).toEqual('SystemObject');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectVersion)).toEqual('SystemObjectVersion');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectXref)).toEqual('SystemObjectXref');
@@ -4272,6 +4328,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectNameToType('Model Proessing Action Step')).toEqual(DBAPI.eNonSystemObjectType.eModelProcessingActionStep);
         expect(DBAPI.DBObjectNameToType('ModelSceneXref')).toEqual(DBAPI.eNonSystemObjectType.eModelSceneXref);
         expect(DBAPI.DBObjectNameToType('Model Scene Xref')).toEqual(DBAPI.eNonSystemObjectType.eModelSceneXref);
+        expect(DBAPI.DBObjectNameToType('Sentinel')).toEqual(DBAPI.eNonSystemObjectType.eSentinel);
         expect(DBAPI.DBObjectNameToType('SystemObject')).toEqual(DBAPI.eNonSystemObjectType.eSystemObject);
         expect(DBAPI.DBObjectNameToType('System Object')).toEqual(DBAPI.eNonSystemObjectType.eSystemObject);
         expect(DBAPI.DBObjectNameToType('SystemObjectVersion')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersion);
@@ -4885,6 +4942,48 @@ describe('DB Fetch Special Test Suite', () => {
         expect(modelFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Model.cloneData', async () => {
+        const modelClone: DBAPI.Model = await UTIL.createModelTest({
+            Name: 'Test Model with Nulls',
+            DateCreated: UTIL.nowCleansed(),
+            idVCreationMethod: null,
+            idVModality: null,
+            idVUnits: null,
+            idVPurpose: null,
+            idVFileType: null,
+            idAssetThumbnail: null,
+            CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+            CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
+            idModel: 0
+        });
+        expect(modelClone).toBeTruthy();
+        expect(model).toBeTruthy();
+        if (model) {
+            modelClone.cloneData(model);
+            expect(modelClone.idModel).not.toEqual(model.idModel);
+            expect(modelClone.Name).toEqual(model.Name);
+            expect(modelClone.DateCreated).toEqual(model.DateCreated);
+            expect(modelClone.idVCreationMethod).toEqual(model.idVCreationMethod);
+            expect(modelClone.idVModality).toEqual(model.idVModality);
+            expect(modelClone.idVPurpose).toEqual(model.idVPurpose);
+            expect(modelClone.idVUnits).toEqual(model.idVUnits);
+            expect(modelClone.idVFileType).toEqual(model.idVFileType);
+            expect(modelClone.idAssetThumbnail).toEqual(model.idAssetThumbnail);
+            expect(modelClone.CountAnimations).toEqual(model.CountAnimations);
+            expect(modelClone.CountCameras).toEqual(model.CountCameras);
+            expect(modelClone.CountFaces).toEqual(model.CountFaces);
+            expect(modelClone.CountLights).toEqual(model.CountLights);
+            expect(modelClone.CountMaterials).toEqual(model.CountMaterials);
+            expect(modelClone.CountMeshes).toEqual(model.CountMeshes);
+            expect(modelClone.CountVertices).toEqual(model.CountVertices);
+            expect(modelClone.CountEmbeddedTextures).toEqual(model.CountEmbeddedTextures);
+            expect(modelClone.CountLinkedTextures).toEqual(model.CountLinkedTextures);
+            expect(modelClone.FileEncoding).toEqual(model.FileEncoding);
+            expect(modelClone.IsDracoCompressed).toEqual(model.IsDracoCompressed);
+            expect(modelClone.AutomationTag).toEqual(model.AutomationTag);
+        }
+    });
+
     test('DB Fetch Special: Model.fetchByFileNameAndAssetType', async () => {
         const modelFetch: DBAPI.Model[] | null = await DBAPI.Model.fetchByFileNameAndAssetType('zzzOBVIOUSLY_INVALID_NAMEzzz', [0]);
         expect(modelFetch).toBeTruthy();
@@ -5277,6 +5376,16 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(sceneFetch.length).toEqual(0);
         }
         expect(sceneFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Sentinel.fetchByURLBase', async () => {
+        let sentinelFetch: DBAPI.Sentinel[] | null = null;
+        if (sentinel) {
+            sentinelFetch = await DBAPI.Sentinel.fetchByURLBase(sentinel.URLBase);
+            if (sentinelFetch)
+                expect(sentinelFetch).toEqual(expect.arrayContaining([sentinel]));
+        }
+        expect(sentinelFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: Stakeholder.fetchAll', async () => {
@@ -6584,7 +6693,7 @@ describe('DB Update Test Suite', () => {
             const SOOld: DBAPI.SystemObject | null = await sceneNulls.fetchSystemObject();
             expect(SOOld).toBeTruthy();
 
-            sceneNulls.HasBeenQCd = true;
+            sceneNulls.ApprovedForPublication = true;
             sceneNulls.idAssetThumbnail = assetThumbnail.idAsset;
             bUpdated = await sceneNulls.update();
 
@@ -6627,6 +6736,21 @@ describe('DB Update Test Suite', () => {
             expect(sceneFetch).toBeTruthy();
             if (sceneFetch)
                 expect(sceneFetch.idAssetThumbnail).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Sentinel.update', async () => {
+        let bUpdated: boolean = false;
+        if (sentinel) {
+            const updatedURLBase: string = 'Updated Sentinel URLBase ' + H.Helpers.randomSlug();
+            sentinel.URLBase = updatedURLBase;
+            bUpdated = await sentinel.update();
+
+            const sentinelFetch: DBAPI.Sentinel | null = await DBAPI.Sentinel.fetch(sentinel.idSentinel);
+            expect(sentinelFetch).toBeTruthy();
+            if (sentinelFetch)
+                expect(sentinelFetch.URLBase).toBe(updatedURLBase);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -6771,20 +6895,16 @@ describe('DB Update Test Suite', () => {
         if (systemObjectVersion) {
             systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eNotPublished);
             expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eNotPublished);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eRestricted);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eRestricted);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eViewOnly);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewOnly);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eViewDownloadRestriction);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewDownloadRestriction);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eViewDownloadCC0);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewDownloadCC0);
+            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eAPIOnly);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eAPIOnly);
+            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.ePublished);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.ePublished);
             bUpdated = await systemObjectVersion.update();
 
             const systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(systemObjectVersion.idSystemObjectVersion);
             expect(systemObjectVersionFetch).toBeTruthy();
             if (systemObjectVersionFetch)
-                expect(systemObjectVersionFetch.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eViewDownloadCC0);
+                expect(systemObjectVersionFetch.publishedStateEnum()).toEqual(DBAPI.ePublishedState.ePublished);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -7416,6 +7536,8 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true, true)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchByAssetAndVersion(0, 1)).toBeNull();
         expect(await DBAPI.Audit.fetch(0)).toBeNull();
+        expect(await DBAPI.Audit.fetchLastUser(0, DBAPI.eAuditType.eAuthLogin)).toBeNull();
+        expect(await DBAPI.Audit.fetchLastUser(-1, DBAPI.eAuditType.eUnknown)).toBeNull();
         expect(await DBAPI.CaptureData.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromCaptureDataPhoto(0)).toBeNull();
@@ -7509,6 +7631,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Scene.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.Scene.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.Scene.fetchChildrenScenes(0)).toBeNull();
+        expect(await DBAPI.Sentinel.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();
         expect(await DBAPI.Subject.clearPreferredIdentifier(0)).toBeFalsy();

@@ -4,6 +4,8 @@ const updateDerivedObjects = gql`
     mutation updateDerivedObjects($input: UpdateDerivedObjectsInput!) {
         updateDerivedObjects(input: $input) {
             success
+            message
+            status
         }
     }
 `;

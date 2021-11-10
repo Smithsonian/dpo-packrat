@@ -14,6 +14,7 @@ import { eVocabularySetID } from '../../../../types/server';
 import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
 import { useHistory } from 'react-router-dom';
 import { CreateSubjectWithIdentifiersInput } from '../../../../types/graphql';
+import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -48,35 +49,6 @@ const useStyles = makeStyles(({ palette }) => ({
 }));
 
 /*
-    Create state for:
-        xName
-        xUnit
-        xIdentifiers (gotta fetch the correct ones)
-        xLatitude
-        xLongitude
-        xAltitude
-        xRotation Origin
-        xRotation Quaternion
-
-    Component workflow
-        xWhen component is mounted, fetch unit list for the drop down
-        xWhen fields are filled out, update the UI to indicate change
-        xIf a subject is searched,
-            xHold on to the results
-            xIf the subject we want to use is in there, add it
-                xAdding will fill out the state for Name, Unit, and Identifiers
-
-    Methods/Functions
-        xUpdating state
-        xSelecting the correct unit
-        xCreating the geolocation, identifiers, and the subject
-        xRevising the searchIngestionSubject
-
-    Validation:
-        xName
-        xUnit
-        xIdentifier
-
     Creating Identifiers:
         Pop the identifiers into the createIdentifiers mutation and get them back
         Find the one that's preferred and that'll be the idIdentifierPreferred for subject
@@ -119,7 +91,7 @@ function SubjectForm(): React.ReactElement {
     const [validName, setValidName] = useState(true);
     const [validUnit, setValidUnit] = useState(true);
 
-    const subjects = useSubjectStore(state => state.subjects);
+    const [subjects, reset] = useSubjectStore(state => [state.subjects, state.reset]);
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
 
     const schema = yup.object().shape({
@@ -167,7 +139,6 @@ function SubjectForm(): React.ReactElement {
                         id: newIdentifiers.length,
                         identifier: arkId || '',
                         identifierType: getEntries(eVocabularySetID.eIdentifierIdentifierType)[0].idVocabulary,
-                        selected: true,
                         idIdentifier: 0
                     });
                 }
@@ -177,7 +148,6 @@ function SubjectForm(): React.ReactElement {
                         id: newIdentifiers.length,
                         identifier: collectionId || '',
                         identifierType: getEntries(eVocabularySetID.eIdentifierIdentifierType)[2].idVocabulary,
-                        selected: true,
                         idIdentifier: 0
                     });
                 }
@@ -191,6 +161,22 @@ function SubjectForm(): React.ReactElement {
 
     const onIdentifierChange = (identifiers: StateIdentifier[]) => {
         setSubjectIdentifiers(identifiers);
+    };
+
+    const onIdentifierPreferredChange = (id: number) => {
+        const subjectIdentifiersCopy = subjectIdentifiers.map(identifier => {
+            if (id === identifier.id) {
+                if (identifier.preferred) {
+                    identifier.preferred = undefined;
+                } else {
+                    identifier.preferred = true;
+                }
+                return identifier;
+            }
+            identifier.preferred = undefined;
+            return identifier;
+        });
+        setSubjectIdentifiers(subjectIdentifiersCopy);
     };
 
     const validateFields = async (): Promise<boolean | void> => {
@@ -252,8 +238,8 @@ function SubjectForm(): React.ReactElement {
                 }
             }
 
-            const identifierList = subjectIdentifiers.map(({ identifier, identifierType, selected }) => {
-                return { identifierValue: identifier, identifierType: identifierType || getEntries(eVocabularySetID.eIdentifierIdentifierType)[0].idVocabulary, selected };
+            const identifierList = subjectIdentifiers.map(({ identifier, identifierType, preferred }) => {
+                return { identifierValue: identifier, identifierType: identifierType || getEntries(eVocabularySetID.eIdentifierIdentifierType)[0].idVocabulary, preferred };
             });
 
             const createSubjectWithIdentifiersInput: CreateSubjectWithIdentifiersInput = {
@@ -261,6 +247,7 @@ function SubjectForm(): React.ReactElement {
                 subject: { idUnit: subjectUnit, Name: subjectName, idGeoLocation },
                 systemCreated
             };
+            console.log('createSubjectsWithIdentifiersInput', createSubjectWithIdentifiersInput);
 
             const {
                 data: {
@@ -269,6 +256,7 @@ function SubjectForm(): React.ReactElement {
             } = await createSubjectWithIdentifiers(createSubjectWithIdentifiersInput);
             if (success) {
                 toast.success('Subject Successfully Created!');
+                reset();
                 history.push('/admin/subjects');
             } else {
                 toast.error(`Error: Failure To Create Subject - ${message}`);
@@ -280,6 +268,9 @@ function SubjectForm(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
+            <Helmet>
+                <title>Create Subject</title>
+            </Helmet>
             <Box className={classes.content}>
                 <SearchList EdanOnly />
                 <Box style={{ marginTop: '10px', marginBottom: '10px', width: '600px' }}>
@@ -316,6 +307,8 @@ function SubjectForm(): React.ReactElement {
                     onAddIdentifer={onIdentifierChange}
                     onUpdateIdentifer={onIdentifierChange}
                     onRemoveIdentifer={onIdentifierChange}
+                    onUpdateIdIdentifierPreferred={onIdentifierPreferredChange}
+                    subjectView
                 />
                 <Button className={classes.btn} onClick={onCreateSubject}>
                     Create

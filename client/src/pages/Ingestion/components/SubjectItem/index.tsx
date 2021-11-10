@@ -15,6 +15,7 @@ import ItemList from './ItemList';
 import ProjectList from './ProjectList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
+import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -136,6 +137,9 @@ function SubjectItem(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
+            <Helmet>
+                <title>Subject Ingestion</title>
+            </Helmet>
             <Box className={classes.content}>
                 <Box display='flex' flexDirection='row' alignItems='center' flexWrap='wrap'>
                     <Typography className={classes.filesLabel}>Select Subject and Item for:</Typography>

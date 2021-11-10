@@ -99,8 +99,8 @@ class TestSuiteUtils {
     createSceneInput = (): CreateSceneInput => {
         return {
             Name: 'Test Scene',
-            HasBeenQCd: true,
-            IsOriented: true
+            ApprovedForPublication: true,
+            PosedAndQCd: true
         };
     };
 

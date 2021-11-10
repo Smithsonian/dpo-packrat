@@ -11,6 +11,7 @@ export * from './Model.util';
 export * from './Project.util';
 export * from './ProjectDocumentation.util';
 export * from './Scene.util';
+export * from './Sentinel.util';
 export * from './Stakeholder.util';
 export * from './Subject.util';
 export * from './SystemObjectXref.util';

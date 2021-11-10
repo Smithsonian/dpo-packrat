@@ -148,3 +148,35 @@ ADD CONSTRAINT `fk_metadata_systemobject2`
 
 -- 2021-08-12 Jon
 ALTER TABLE Scene ADD COLUMN EdanUUID varchar(64) NULL;
+
+-- 2021-08-20 Deployed to Staging
+
+-- 2021-09-30 Jon
+ALTER TABLE Scene ADD COLUMN `PosedAndQCd` boolean NULL;
+ALTER TABLE Scene ADD COLUMN `ApprovedForPublication` boolean NULL;
+UPDATE Scene SET PosedAndQCd = isOriented, ApprovedForPublication = hasBeenQCd;
+ALTER TABLE Scene MODIFY COLUMN `PosedAndQCd` boolean NOT NULL;
+ALTER TABLE Scene MODIFY COLUMN `ApprovedForPublication` boolean NOT NULL;
+ALTER TABLE Scene DROP COLUMN `isOriented`;
+ALTER TABLE Scene DROP COLUMN `hasBeenQCd`;
+
+-- 2021-10-26 Deployed to Staging
+
+-- 2021-10-27 Jon
+CREATE TABLE IF NOT EXISTS `Sentinel` (
+  `idSentinel` int(11) NOT NULL AUTO_INCREMENT,
+  `URLBase` varchar(512) NOT NULL,
+  `ExpirationDate` datetime NOT NULL,
+  `idUser` int(11) NOT NULL,
+  PRIMARY KEY (`idSentinel`),
+  KEY `Sentinel_URLBase` (`URLBase`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+ALTER TABLE `Sentinel` 
+ADD CONSTRAINT `fk_sentinel_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+-- 2021-11-04 Deployed to Staging

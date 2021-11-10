@@ -41,6 +41,7 @@ export * from './api/ObjectType';
 export * from './api/Project';
 export * from './api/ProjectDocumentation';
 export * from './api/Scene';
+export * from './api/Sentinel';
 export * from './api/Stakeholder';
 export * from './api/Subject';
 export * from './api/SystemObject';

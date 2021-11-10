@@ -22,6 +22,7 @@ import Colors, { RepositoryColorVariant } from '../theme/colors';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
 import { safeDate, convertLocalDateToUTC } from './shared';
+import { ExistingRelationship } from '../types/graphql';
 
 export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystemObjectType[] {
     const objectTypes: eSystemObjectType[] = [];
@@ -210,7 +211,7 @@ type ObjectInterfaceDetails = {
 };
 
 // prettier-ignore
-export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant: RepositoryColorVariant): ObjectInterfaceDetails {
+export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant: RepositoryColorVariant, makeStyles: any): ObjectInterfaceDetails {
     const color: string = Colors.repository[objectType][variant];
     const textColor: string = Colors.defaults.white;
     const backgroundColor: string = Colors.repository[objectType][RepositoryColorVariant.dark] || Colors.repository.default[RepositoryColorVariant.dark];
@@ -228,7 +229,8 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
         case eSystemObjectType.eAssetVersion:
             return { icon: <AiOutlineFileText />, color };
     }
-    return { icon: <RepositoryIcon {...iconProps} />, color };
+
+    return { icon: <RepositoryIcon {...iconProps} makeStyles={{ ...makeStyles, color, backgroundColor }} />, color };
 }
 
 export function sortEntriesAlphabetically(entries: NavigationResultEntry[]): NavigationResultEntry[] {
@@ -262,9 +264,58 @@ export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | un
     return `${serverEndPoint}/download?idSystemObjectVersion=${idSystemObjectVersion}`;
 }
 
-export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number, path: string): string {
-    return `${serverEndPoint}/download/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
+export enum eVoyagerStoryMode {
+    eViewer,
+    eEdit,
+    eQC,
+    eAuthor,
+    eExpert,
 }
+
+export function getModeForVoyager(eMode?: eVoyagerStoryMode): string {
+    switch (eMode) {
+        default:
+        case eVoyagerStoryMode.eViewer: return '';
+        case eVoyagerStoryMode.eEdit:   return 'edit';
+        case eVoyagerStoryMode.eQC:     return 'qc';
+        case eVoyagerStoryMode.eAuthor: return 'author';
+        case eVoyagerStoryMode.eExpert: return 'expert';
+    }
+}
+
+export function getVoyagerModeFromParam(sMode: string): eVoyagerStoryMode {
+    switch (sMode) {
+        default:
+        case '':        return eVoyagerStoryMode.eViewer;
+        case 'edit':    return eVoyagerStoryMode.eEdit;
+        case 'qc':      return eVoyagerStoryMode.eQC;
+        case 'author':  return eVoyagerStoryMode.eAuthor;
+        case 'expert':  return eVoyagerStoryMode.eExpert;
+    }
+}
+
+export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number,
+    path: string, eMode?: eVoyagerStoryMode | undefined): string {
+    let dlPath: string = 'download';
+    switch (eMode) {
+        default:
+        case eVoyagerStoryMode.eViewer: dlPath='download'; break;
+        case eVoyagerStoryMode.eEdit:   dlPath='download-wd'; break;
+        case eVoyagerStoryMode.eQC:     dlPath='download-wd'; break;
+        case eVoyagerStoryMode.eAuthor: dlPath='download-wd'; break;
+        case eVoyagerStoryMode.eExpert: dlPath='download-wd'; break;
+    }
+    return `${serverEndPoint}/${dlPath}/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
+}
+
+export function getVoyagerStoryUrl(serverEndPoint: string | undefined, idSystemObject: number,
+    document: string, path: string, eMode?: eVoyagerStoryMode | undefined): string {
+
+    const mode: string = getModeForVoyager(eMode);
+    const root: string = getRootSceneDownloadUrlForVoyager(serverEndPoint, idSystemObject, path, eMode);
+    return `/repository/voyager/${idSystemObject}?mode=${mode}&root=${root}&document=${document}`;
+}
+
 
 // prettier-ignore
 export function getTreeViewStyleHeight(isExpanded: boolean, isModal: boolean, breakpoint: Breakpoint): string {
@@ -310,3 +361,84 @@ export function getUpdatedCheckboxProps(updated: boolean): CheckboxProps {
         color: updated ? 'secondary' : 'primary'
     };
 }
+
+export function isValidParentChildRelationship(
+    parent: number,
+    child: number,
+    selected: ExistingRelationship[],
+    existingParentRelationships: ExistingRelationship[],
+    isAddingSource: boolean
+): boolean {
+    let result = false;
+    /*
+        *NOTE: when updating this relationship validation function,
+        make sure to also apply changes to the server-side version located at
+        ingestData.ts to maintain consistency
+        **NOTE: this client-side validation function will be validating a selected item BEFORE adding it,
+        which means the maximum connection count will be different from those seen in ingestData.ts
+
+        xproject child to 1 - many unit parent
+        -skip on stakeholders for now
+        -skip on stakeholders for now
+        xitem child to only 1 parent project parent
+        xitem child to multiple subject parent
+        xCD child to 1 - many item parent
+        xmodel child to 1 - many parent Item
+        xscene child to 1 or more item parent
+        xmodel child to 0 - many CD parent
+        xCD child to 0 - many CD parent
+        -skip on actor for now
+        xmodel child to 0 to many model parent
+        xscene child to 1 to many model parent
+        -skip on actor for now
+        xmodel child to only 1 scene parent
+        -skip on IF for now
+        -skip on PD for now
+    */
+
+    const existingAndNewRelationships = [...existingParentRelationships, ...selected];
+    switch (child) {
+        case eSystemObjectType.eProject:
+            result = parent === eSystemObjectType.eUnit;
+            break;
+        case eSystemObjectType.eItem: {
+            if (parent === eSystemObjectType.eSubject) result = true;
+
+            if (parent === eSystemObjectType.eProject) {
+                if (isAddingSource) {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 1);
+                } else {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 1);
+                }
+            }
+            break;
+        }
+        case eSystemObjectType.eCaptureData: {
+
+            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eItem) result = true;
+            break;
+        }
+        case eSystemObjectType.eModel: {
+
+            if (parent === eSystemObjectType.eScene) {
+                if (isAddingSource) {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 1);
+                } else {
+                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 1);
+                }
+            }
+
+            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eModel || parent === eSystemObjectType.eItem) result = true;
+            break;
+        }
+        case eSystemObjectType.eScene: {
+            if (parent === eSystemObjectType.eItem || parent === eSystemObjectType.eModel) result = true;
+            break;
+        }
+    }
+
+    return result;
+}
+
+const maximumConnections = (relationships: ExistingRelationship[], objectType: number, limit: number) =>
+    relationships.filter(relationship => relationship.objectType === objectType).length < limit;

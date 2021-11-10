@@ -357,6 +357,7 @@ export type Mutation = {
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  publish: PublishResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateLicense: CreateLicenseResult;
@@ -459,6 +460,11 @@ export type MutationDiscardUploadedAssetVersionsArgs = {
 
 export type MutationIngestDataArgs = {
   input: IngestDataInput;
+};
+
+
+export type MutationPublishArgs = {
+  input: PublishInput;
 };
 
 
@@ -625,8 +631,8 @@ export type IngestScene = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  hasBeenQCd: Scalars['Boolean'];
-  isOriented: Scalars['Boolean'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   referenceModels: Array<ReferenceModel>;
@@ -934,8 +940,8 @@ export type IngestSceneInput = {
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  hasBeenQCd: Scalars['Boolean'];
-  isOriented: Scalars['Boolean'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
@@ -1305,8 +1311,6 @@ export type GetFilterViewDataResult = {
 
 export type CreateSceneInput = {
   Name: Scalars['String'];
-  HasBeenQCd: Scalars['Boolean'];
-  IsOriented: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -1317,6 +1321,8 @@ export type CreateSceneInput = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication: Scalars['Boolean'];
+  PosedAndQCd: Scalars['Boolean'];
 };
 
 export type CreateSceneResult = {
@@ -1345,9 +1351,7 @@ export type GetIntermediaryFileResult = {
 export type Scene = {
   __typename?: 'Scene';
   idScene: Scalars['Int'];
-  HasBeenQCd: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
-  IsOriented: Scalars['Boolean'];
   Name: Scalars['String'];
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -1358,6 +1362,8 @@ export type Scene = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication: Scalars['Boolean'];
+  PosedAndQCd: Scalars['Boolean'];
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1415,6 +1421,7 @@ export type SubjectDetailFieldsInput = {
   TS0?: Maybe<Scalars['Float']>;
   TS1?: Maybe<Scalars['Float']>;
   TS2?: Maybe<Scalars['Float']>;
+  idIdentifierPreferred?: Maybe<Scalars['Int']>;
 };
 
 export type ItemDetailFieldsInput = {
@@ -1448,6 +1455,7 @@ export type CaptureDataDetailFieldsInput = {
   clusterType?: Maybe<Scalars['Int']>;
   clusterGeometryFieldId?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolderInput>;
+  isValidData?: Maybe<Scalars['Boolean']>;
 };
 
 export type ModelDetailFieldsInput = {
@@ -1464,8 +1472,8 @@ export type SceneDetailFieldsInput = {
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
-  HasBeenQCd?: Maybe<Scalars['Boolean']>;
-  IsOriented?: Maybe<Scalars['Boolean']>;
+  ApprovedForPublication?: Maybe<Scalars['Boolean']>;
+  PosedAndQCd?: Maybe<Scalars['Boolean']>;
 };
 
 export type ProjectDocumentationDetailFieldsInput = {
@@ -1522,35 +1530,46 @@ export type UpdateObjectDetailsResult = {
   message: Scalars['String'];
 };
 
+export type ExistingRelationship = {
+  idSystemObject: Scalars['Int'];
+  objectType: Scalars['Int'];
+};
+
 export type UpdateDerivedObjectsInput = {
   idSystemObject: Scalars['Int'];
-  Derivatives: Array<Scalars['Int']>;
-  PreviouslySelected: Array<Scalars['Int']>;
+  ParentObjectType: Scalars['Int'];
+  Derivatives: Array<ExistingRelationship>;
+  PreviouslySelected: Array<ExistingRelationship>;
 };
 
 export type UpdateDerivedObjectsResult = {
   __typename?: 'UpdateDerivedObjectsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
+  status: Scalars['String'];
 };
 
 export type UpdateSourceObjectsInput = {
   idSystemObject: Scalars['Int'];
-  Sources: Array<Scalars['Int']>;
-  PreviouslySelected: Array<Scalars['Int']>;
+  ChildObjectType: Scalars['Int'];
+  Sources: Array<ExistingRelationship>;
+  PreviouslySelected: Array<ExistingRelationship>;
 };
 
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
+  status: Scalars['String'];
 };
 
 export type UpdateIdentifier = {
   id: Scalars['Int'];
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
-  selected: Scalars['Boolean'];
   idSystemObject: Scalars['Int'];
   idIdentifier: Scalars['Int'];
+  preferred?: Maybe<Scalars['Boolean']>;
 };
 
 export type DeleteObjectConnectionResult = {
@@ -1561,7 +1580,9 @@ export type DeleteObjectConnectionResult = {
 
 export type DeleteObjectConnectionInput = {
   idSystemObjectMaster: Scalars['Int'];
+  objectTypeMaster: Scalars['Int'];
   idSystemObjectDerived: Scalars['Int'];
+  objectTypeDerived: Scalars['Int'];
 };
 
 export type DeleteIdentifierResult = {
@@ -1599,7 +1620,18 @@ export type CreateIdentifierInput = {
   identifierValue: Scalars['String'];
   identifierType: Scalars['Int'];
   idSystemObject?: Maybe<Scalars['Int']>;
-  selected: Scalars['Boolean'];
+  preferred?: Maybe<Scalars['Boolean']>;
+};
+
+export type PublishInput = {
+  idSystemObject: Scalars['Int'];
+  eState: Scalars['Int'];
+};
+
+export type PublishResult = {
+  __typename?: 'PublishResult';
+  success: Scalars['Boolean'];
+  message: Scalars['String'];
 };
 
 
@@ -1631,6 +1663,7 @@ export type SubjectDetailFields = {
   TS0?: Maybe<Scalars['Float']>;
   TS1?: Maybe<Scalars['Float']>;
   TS2?: Maybe<Scalars['Float']>;
+  idIdentifierPreferred?: Maybe<Scalars['Int']>;
 };
 
 export type ItemDetailFields = {
@@ -1675,8 +1708,6 @@ export type SceneDetailFields = {
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
-  HasBeenQCd?: Maybe<Scalars['Boolean']>;
-  IsOriented?: Maybe<Scalars['Boolean']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
   CountCamera?: Maybe<Scalars['Int']>;
@@ -1686,6 +1717,9 @@ export type SceneDetailFields = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication?: Maybe<Scalars['Boolean']>;
+  PublicationApprover?: Maybe<Scalars['String']>;
+  PosedAndQCd?: Maybe<Scalars['Boolean']>;
   idScene?: Maybe<Scalars['Int']>;
 };
 
@@ -1770,6 +1804,8 @@ export type GetSystemObjectDetailsResult = {
   objectType: Scalars['Int'];
   allowed: Scalars['Boolean'];
   publishedState: Scalars['String'];
+  publishedEnum: Scalars['Int'];
+  publishable: Scalars['Boolean'];
   thumbnail?: Maybe<Scalars['String']>;
   identifiers: Array<IngestIdentifier>;
   objectAncestors: Array<Array<RepositoryPath>>;
@@ -2701,6 +2737,19 @@ export type DeleteObjectConnectionMutation = (
   ) }
 );
 
+export type PublishMutationVariables = Exact<{
+  input: PublishInput;
+}>;
+
+
+export type PublishMutation = (
+  { __typename?: 'Mutation' }
+  & { publish: (
+    { __typename?: 'PublishResult' }
+    & Pick<PublishResult, 'success' | 'message'>
+  ) }
+);
+
 export type RollbackSystemObjectVersionMutationVariables = Exact<{
   input: RollbackSystemObjectVersionInput;
 }>;
@@ -2723,7 +2772,7 @@ export type UpdateDerivedObjectsMutation = (
   { __typename?: 'Mutation' }
   & { updateDerivedObjects: (
     { __typename?: 'UpdateDerivedObjectsResult' }
-    & Pick<UpdateDerivedObjectsResult, 'success'>
+    & Pick<UpdateDerivedObjectsResult, 'success' | 'message' | 'status'>
   ) }
 );
 
@@ -2749,7 +2798,7 @@ export type UpdateSourceObjectsMutation = (
   { __typename?: 'Mutation' }
   & { updateSourceObjects: (
     { __typename?: 'UpdateSourceObjectsResult' }
-    & Pick<UpdateSourceObjectsResult, 'success'>
+    & Pick<UpdateSourceObjectsResult, 'success' | 'status' | 'message'>
   ) }
 );
 
@@ -2978,7 +3027,7 @@ export type GetAssetVersionsDetailsQuery = (
         )> }
       )>, Scene?: Maybe<(
         { __typename?: 'IngestScene' }
-        & Pick<IngestScene, 'idAssetVersion' | 'systemCreated' | 'name' | 'hasBeenQCd' | 'isOriented' | 'directory'>
+        & Pick<IngestScene, 'idAssetVersion' | 'systemCreated' | 'name' | 'directory' | 'approvedForPublication' | 'posedAndQCd'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
           & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3289,7 +3338,7 @@ export type GetSceneQuery = (
     { __typename?: 'GetSceneResult' }
     & { Scene?: Maybe<(
       { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'EdanUUID'>
+      & Pick<Scene, 'idScene' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'EdanUUID' | 'ApprovedForPublication' | 'PosedAndQCd'>
       & { ModelSceneXref?: Maybe<Array<Maybe<(
         { __typename?: 'ModelSceneXref' }
         & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
@@ -3312,7 +3361,7 @@ export type GetSceneForAssetVersionQuery = (
       { __typename?: 'SceneConstellation' }
       & { Scene?: Maybe<(
         { __typename?: 'Scene' }
-        & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'idAssetThumbnail' | 'IsOriented' | 'Name' | 'CountScene' | 'CountNode' | 'CountCamera' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour'>
+        & Pick<Scene, 'idScene' | 'idAssetThumbnail' | 'Name' | 'CountScene' | 'CountNode' | 'CountCamera' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'ApprovedForPublication' | 'PosedAndQCd'>
       )>, ModelSceneXref?: Maybe<Array<Maybe<(
         { __typename?: 'ModelSceneXref' }
         & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
@@ -3362,7 +3411,7 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<ProjectDetailFields, 'Description'>
     )>, Subject?: Maybe<(
       { __typename?: 'SubjectDetailFields' }
-      & Pick<SubjectDetailFields, 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
+      & Pick<SubjectDetailFields, 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2' | 'idIdentifierPreferred'>
     )>, Item?: Maybe<(
       { __typename?: 'ItemDetailFields' }
       & Pick<ItemDetailFields, 'EntireSubject' | 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
@@ -3396,7 +3445,7 @@ export type GetDetailsTabDataForObjectQuery = (
       )>> }
     )>, Scene?: Maybe<(
       { __typename?: 'SceneDetailFields' }
-      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented' | 'EdanUUID' | 'idScene'>
+      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'EdanUUID' | 'ApprovedForPublication' | 'PublicationApprover' | 'PosedAndQCd' | 'idScene'>
     )>, IntermediaryFile?: Maybe<(
       { __typename?: 'IntermediaryFileDetailFields' }
       & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>
@@ -3480,7 +3529,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail' | 'licenseInherited'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInherited'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3612,7 +3661,7 @@ export type GetObjectsForItemQuery = (
       & Pick<Model, 'idModel' | 'DateCreated'>
     )>, Scene: Array<(
       { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name'>
+      & Pick<Scene, 'idScene' | 'Name' | 'ApprovedForPublication' | 'PosedAndQCd'>
     )>, IntermediaryFile: Array<(
       { __typename?: 'IntermediaryFile' }
       & Pick<IntermediaryFile, 'idIntermediaryFile' | 'DateCreated'>
@@ -4336,6 +4385,40 @@ export function useDeleteObjectConnectionMutation(baseOptions?: Apollo.MutationH
 export type DeleteObjectConnectionMutationHookResult = ReturnType<typeof useDeleteObjectConnectionMutation>;
 export type DeleteObjectConnectionMutationResult = Apollo.MutationResult<DeleteObjectConnectionMutation>;
 export type DeleteObjectConnectionMutationOptions = Apollo.BaseMutationOptions<DeleteObjectConnectionMutation, DeleteObjectConnectionMutationVariables>;
+export const PublishDocument = gql`
+    mutation publish($input: PublishInput!) {
+  publish(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type PublishMutationFn = Apollo.MutationFunction<PublishMutation, PublishMutationVariables>;
+
+/**
+ * __usePublishMutation__
+ *
+ * To run a mutation, you first call `usePublishMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `usePublishMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [publishMutation, { data, loading, error }] = usePublishMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function usePublishMutation(baseOptions?: Apollo.MutationHookOptions<PublishMutation, PublishMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<PublishMutation, PublishMutationVariables>(PublishDocument, options);
+      }
+export type PublishMutationHookResult = ReturnType<typeof usePublishMutation>;
+export type PublishMutationResult = Apollo.MutationResult<PublishMutation>;
+export type PublishMutationOptions = Apollo.BaseMutationOptions<PublishMutation, PublishMutationVariables>;
 export const RollbackSystemObjectVersionDocument = gql`
     mutation rollbackSystemObjectVersion($input: RollbackSystemObjectVersionInput!) {
   rollbackSystemObjectVersion(input: $input) {
@@ -4374,6 +4457,8 @@ export const UpdateDerivedObjectsDocument = gql`
     mutation updateDerivedObjects($input: UpdateDerivedObjectsInput!) {
   updateDerivedObjects(input: $input) {
     success
+    message
+    status
   }
 }
     `;
@@ -4441,6 +4526,8 @@ export const UpdateSourceObjectsDocument = gql`
     mutation updateSourceObjects($input: UpdateSourceObjectsInput!) {
   updateSourceObjects(input: $input) {
     success
+    status
+    message
   }
 }
     `;
@@ -4949,9 +5036,9 @@ export const GetAssetVersionsDetailsDocument = gql`
         idAssetVersion
         systemCreated
         name
-        hasBeenQCd
-        isOriented
         directory
+        approvedForPublication
+        posedAndQCd
         identifiers {
           identifier
           identifierType
@@ -5674,8 +5761,6 @@ export const GetSceneDocument = gql`
   getScene(input: $input) {
     Scene {
       idScene
-      HasBeenQCd
-      IsOriented
       Name
       CountCamera
       CountScene
@@ -5686,6 +5771,8 @@ export const GetSceneDocument = gql`
       CountSetup
       CountTour
       EdanUUID
+      ApprovedForPublication
+      PosedAndQCd
       ModelSceneXref {
         idModelSceneXref
         idModel
@@ -5741,9 +5828,7 @@ export const GetSceneForAssetVersionDocument = gql`
     SceneConstellation {
       Scene {
         idScene
-        HasBeenQCd
         idAssetThumbnail
-        IsOriented
         Name
         CountScene
         CountNode
@@ -5753,6 +5838,8 @@ export const GetSceneForAssetVersionDocument = gql`
         CountMeta
         CountSetup
         CountTour
+        ApprovedForPublication
+        PosedAndQCd
       }
       ModelSceneXref {
         idModelSceneXref
@@ -5871,6 +5958,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       TS0
       TS1
       TS2
+      idIdentifierPreferred
     }
     Item {
       EntireSubject
@@ -5979,9 +6067,10 @@ export const GetDetailsTabDataForObjectDocument = gql`
       AssetType
       Tours
       Annotation
-      HasBeenQCd
-      IsOriented
       EdanUUID
+      ApprovedForPublication
+      PublicationApprover
+      PosedAndQCd
       idScene
     }
     IntermediaryFile {
@@ -6175,6 +6264,8 @@ export const GetSystemObjectDetailsDocument = gql`
     objectType
     allowed
     publishedState
+    publishedEnum
+    publishable
     thumbnail
     identifiers {
       identifier
@@ -6472,9 +6563,9 @@ export const GetObjectsForItemDocument = gql`
     }
     Scene {
       idScene
-      HasBeenQCd
-      IsOriented
       Name
+      ApprovedForPublication
+      PosedAndQCd
     }
     IntermediaryFile {
       idIntermediaryFile

@@ -33,6 +33,28 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     public fetchTableName(): string { return 'Model'; }
     public fetchID(): number { return this.idModel; }
+    public cloneData(model: Model): void {
+        this.Name = model.Name;
+        this.DateCreated = model.DateCreated;
+        this.idVCreationMethod = model.idVCreationMethod;
+        this.idVModality = model.idVModality;
+        this.idVPurpose = model.idVPurpose;
+        this.idVUnits = model.idVUnits;
+        this.idVFileType = model.idVFileType;
+        this.idAssetThumbnail = model.idAssetThumbnail;
+        this.CountAnimations = model.CountAnimations;
+        this.CountCameras = model.CountCameras;
+        this.CountFaces = model.CountFaces;
+        this.CountLights = model.CountLights;
+        this.CountMaterials = model.CountMaterials;
+        this.CountMeshes = model.CountMeshes;
+        this.CountVertices = model.CountVertices;
+        this.CountEmbeddedTextures = model.CountEmbeddedTextures;
+        this.CountLinkedTextures = model.CountLinkedTextures;
+        this.FileEncoding = model.FileEncoding;
+        this.IsDracoCompressed = model.IsDracoCompressed;
+        this.AutomationTag = model.AutomationTag;
+    }
 
     protected async createWorker(): Promise<boolean> {
         try {

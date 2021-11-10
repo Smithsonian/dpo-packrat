@@ -15,11 +15,11 @@ function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0):
         fetchPolicy: 'network-only',
         variables: {
             input: {
-                idRoot: idSystemObject,
+                idRoot: filter?.idRoot ?? idSystemObject,
                 objectTypes: filter.repositoryRootType,
                 metadataColumns: filter.metadataToDisplay,
                 objectsToDisplay: filter.objectsToDisplay,
-                search: filter.search,
+                search: String(filter.search),
                 units: filter.units,
                 projects: filter.projects,
                 has: filter.has,
@@ -47,7 +47,7 @@ function getObjectChildren(idRoot: number, filter: RepositoryFilter): Promise<Ap
                 objectTypes: [],
                 metadataColumns: filter.metadataToDisplay,
                 objectsToDisplay: filter.objectsToDisplay,
-                search: filter.search,
+                search: String(filter.search),
                 units: filter.units,
                 projects: filter.projects,
                 has: filter.has,
