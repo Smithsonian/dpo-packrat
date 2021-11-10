@@ -77,7 +77,7 @@
     "ts-node": "9.1.1",
     "uuid": "8.3.2",
     "webdav": "4.2.1",
-    "webdav-server": "2.6.2",
+    "webdav-server": "https://github.com/Smithsonian/npm-WebDAV-Server.git",
     "winston": "3.3.3"
   },
   "devDependencies": {
