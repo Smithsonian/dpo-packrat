@@ -86,9 +86,12 @@ export function getSortedTreeEntries(entries: NavigationResultEntry[]): Navigati
 }
 
 export function trimmedMetadataField(value: string, start: number, end: number): string {
-    const { length } = value;
-    if (length < 30) return value;
-    return `${value.substring(0, start)}...${value.substring(length - end, length)}`;
+    if (!value)
+        return '';
+    const length = value.length;
+    if (length < (start + end))
+        return value;
+    return `${value.substring(0, start)} ... ${value.substring(length - end, length)}`;
 }
 
 export function parseRepositoryUrl(search: string): any {
