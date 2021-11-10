@@ -182,10 +182,11 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
             metadataTitleMap.set(filterOption.value, filterOption.label);
     }
 
+    const valuesCount: number = values ? values.length : 0;
     metadataColumns.forEach((metadataColumn, index: number) => {
         const treeColumn: TreeViewColumn = {
             metadataColumn,
-            label: values ? values[index] : 'Unknown',
+            label: (values && valuesCount > index) ? values[index] : 'Unknown',
             size: MIN_SIZE
         };
 
