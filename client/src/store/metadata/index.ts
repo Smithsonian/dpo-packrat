@@ -12,7 +12,6 @@ import { apolloClient } from '../../graphql';
 import {
     AreCameraSettingsUniformDocument,
     AssetVersionContent,
-
     GetAssetVersionsDetailsDocument,
     GetAssetVersionsDetailsQuery,
     GetContentsForAssetVersionsDocument,
@@ -60,7 +59,7 @@ type MetadataStore = {
 
 export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
     metadatas: [],
-    getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => lodash.filter(identifiers, { selected: true }),
+    getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => identifiers,
     getFieldErrors: (metadata: StateMetadata): FieldErrors => {
         const { getAssetType } = useVocabularyStore.getState();
         // UPDATE these error fields as we include more validation for ingestion
@@ -352,12 +351,21 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         set({ metadatas: updatedMetadatas });
     },
     getInitialStateFolders: (folders: string[]): StateFolder[] => {
-        const { getInitialEntry } = useVocabularyStore.getState();
-        const stateFolders: StateFolder[] = folders.map((folder, index: number) => ({
-            id: index,
-            name: folder,
-            variantType: getInitialEntry(eVocabularySetID.eCaptureDataFileVariantType)
-        }));
+        const { getInitialEntry, getEntries } = useVocabularyStore.getState();
+        const stateFolders: StateFolder[] = folders.map((folder, index: number) => {
+            let variantType = getInitialEntry(eVocabularySetID.eCaptureDataFileVariantType);
+            const variantTypes = getEntries(eVocabularySetID.eCaptureDataFileVariantType);
+
+            if (folder.search('raw') !== -1) variantType = variantTypes[0].idVocabulary;
+            if (folder.search('processed') !== -1) variantType = variantTypes[1].idVocabulary;
+            if (folder.search('camera') !== -1) variantType = variantTypes[2].idVocabulary;
+
+            return  {
+                id: index,
+                name: folder,
+                variantType
+            };
+        });
 
         return stateFolders;
     },

@@ -2,6 +2,7 @@ generator client {
   provider      = "prisma-client-js"
   output        = "../../../node_modules/@prisma/client"
   binaryTargets = ["native", "linux-musl"]
+  previewFeatures = ["interactiveTransactions"]
 }
 
 datasource mariasql {
@@ -558,23 +559,23 @@ model ProjectDocumentation {
 }
 
 model Scene {
-  idScene          Int              @id @default(autoincrement())
-  Name             String           @mariasql.VarChar(255)
-  idAssetThumbnail Int?
-  IsOriented       Boolean
-  HasBeenQCd       Boolean
-  CountScene       Int?
-  CountNode        Int?
-  CountCamera      Int?
-  CountLight       Int?
-  CountModel       Int?
-  CountMeta        Int?
-  CountSetup       Int?
-  CountTour        Int?
-  EdanUUID         String?          @mariasql.VarChar(64)
-  Asset            Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
-  ModelSceneXref   ModelSceneXref[]
-  SystemObject     SystemObject?
+  idScene                Int              @id @default(autoincrement())
+  Name                   String           @mariasql.VarChar(255)
+  idAssetThumbnail       Int?
+  CountScene             Int?
+  CountNode              Int?
+  CountCamera            Int?
+  CountLight             Int?
+  CountModel             Int?
+  CountMeta              Int?
+  CountSetup             Int?
+  CountTour              Int?
+  EdanUUID               String?          @mariasql.VarChar(64)
+  PosedAndQCd            Boolean
+  ApprovedForPublication Boolean
+  Asset                  Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
+  ModelSceneXref         ModelSceneXref[]
+  SystemObject           SystemObject?
 
   @@index([idAssetThumbnail], name: "fk_scene_asset1")
 }
@@ -724,6 +725,7 @@ model User {
   Audit                           Audit[]
   LicenseAssignment               LicenseAssignment[]
   Metadata                        Metadata[]
+  Sentinel                        Sentinel[]
   UserPersonalizationSystemObject UserPersonalizationSystemObject[]
   UserPersonalizationUrl          UserPersonalizationUrl[]
   Workflow                        Workflow[]
@@ -891,4 +893,15 @@ model WorkflowReport {
 model WorkflowSet {
   idWorkflowSet Int        @id @default(autoincrement())
   Workflow      Workflow[]
+}
+
+model Sentinel {
+  idSentinel     Int      @id @default(autoincrement())
+  URLBase        String   @mariasql.VarChar(512)
+  ExpirationDate DateTime @mariasql.DateTime(0)
+  idUser         Int
+  User           User     @relation(fields: [idUser], references: [idUser])
+
+  @@index([URLBase], name: "Sentinel_URLBase")
+  @@index([idUser], name: "fk_sentinel_user1")
 }

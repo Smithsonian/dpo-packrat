@@ -45,6 +45,7 @@ export type CollectionQueryOptions = {
  */
 export interface ICollection {
     queryCollection(query: string, rows: number, start: number, options: CollectionQueryOptions | null): Promise<CollectionQueryResults | null>;
+    publish(idSystemObject: number, ePublishState: number): Promise<boolean>;
     createEdanMDM(edanmdm: EdanMDMContent, status: number, publicSearch: boolean): Promise<EdanRecord | null>;
     createEdan3DPackage(path: string, sceneFile?: string | undefined): Promise<EdanRecord | null>;
     updateEdan3DPackage(url: string, sceneContent: Edan3DPackageContent, status: number, publicSearch: boolean): Promise<EdanRecord | null>;

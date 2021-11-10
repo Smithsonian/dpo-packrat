@@ -92,12 +92,11 @@ function Header(): React.ReactElement {
     const history = useHistory();
     const { pathname } = useLocation();
     const { user, logout } = useUserStore();
-    const [search, keyword, updateSearch, getFilterState, initializeTree, resetRepositoryFilter, updateRepositoryFilter, resetKeywordSearch] = useRepositoryStore(state => [
+    const [search, keyword, updateSearch, getFilterState, resetRepositoryFilter, updateRepositoryFilter, resetKeywordSearch] = useRepositoryStore(state => [
         state.search,
         state.keyword,
         state.updateSearch,
         state.getFilterState,
-        state.initializeTree,
         state.resetRepositoryFilter,
         state.updateRepositoryFilter,
         state.resetKeywordSearch
@@ -128,13 +127,12 @@ function Header(): React.ReactElement {
     const updateRepositorySearch = (): void => {
         const filterState = getFilterState();
         filterState.search = filterState.keyword;
+        resetRepositoryFilter();
         updateRepositoryFilter(filterState);
-        const updatedFilterState = getFilterState();
-        const repositoryURL = generateRepositoryUrl(updatedFilterState);
+        const repositoryURL = generateRepositoryUrl(filterState);
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
-        console.log(`*** src/components/shared/Header.tsx Header updateRepositorySearch history.push(${route + repositoryURL}`);
+        // console.log(`*** src/components/shared/Header.tsx Header updateRepositorySearch history.push(${route + repositoryURL}`);
         history.push(route + repositoryURL);
-        initializeTree();
     };
 
     // General search function when in different views
@@ -144,7 +142,7 @@ function Header(): React.ReactElement {
         const filterState = getFilterState();
         filterState.search = filterState.keyword;
         updateRepositoryFilter(filterState);
-        console.log(`*** src/components/shared/Header.tsx Header onSearch history.push(${route}`);
+        // console.log(`*** src/components/shared/Header.tsx Header onSearch history.push(${route}`);
         history.push(route);
     };
 

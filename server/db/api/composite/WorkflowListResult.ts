@@ -147,7 +147,7 @@ export class WorkflowListResult {
             ${orderBy}
             LIMIT ?, ?`;
             // LOG.info(`DBAPI.WorkflowListResult.search, sql=${sql}; params=${JSON.stringify(queryRawParams)}`, LOG.LS.eDB);
-            return await DBC.DBConnection.prisma.$queryRaw<WorkflowListResult[] | null>(sql, ...queryRawParams);
+            return await DBC.DBConnection.prisma.$queryRawUnsafe<WorkflowListResult[] | null>(sql, ...queryRawParams);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.WorkflowListResult.search', LOG.LS.eDB, error);
             return null;

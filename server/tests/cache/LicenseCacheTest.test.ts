@@ -69,7 +69,7 @@ function licenseCacheTestWorker(eMode: eCacheTestMode): void {
             }
 
             expect(await LicenseCache.getLicense(-1)).toBeUndefined();
-            expect(await LicenseCache.getLicenseByPublishedState(-1)).toBeUndefined();
+            expect(await LicenseCache.getLicenseByEnum(-1)).toBeUndefined();
             expect(await LicenseCache.getLicenseResolver(-1)).toBeUndefined();
             expect(await LicenseCache.clearAssignment(-1)).toBeTruthy();
             if (licenseCC0)
@@ -77,10 +77,10 @@ function licenseCacheTestWorker(eMode: eCacheTestMode): void {
         });
 
         test('Cache: LicenseCache.getLicenseByPublishedState ' + description, async () => {
-            expect(await LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadCC0)).toEqual(licenseCC0);
-            expect(await LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewDownloadRestriction)).toEqual(licenseDownload);
-            expect(await LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eViewOnly)).toEqual(licenseView);
-            expect(await LicenseCache.getLicenseByPublishedState(DBAPI.ePublishedState.eRestricted)).toEqual(licenseRestricted);
+            expect(await LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadCC0)).toEqual(licenseCC0);
+            expect(await LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadRestriction)).toEqual(licenseDownload);
+            expect(await LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewOnly)).toEqual(licenseView);
+            expect(await LicenseCache.getLicenseByEnum(DBAPI.eLicense.eRestricted)).toEqual(licenseRestricted);
         });
     });
 }

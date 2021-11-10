@@ -3,9 +3,8 @@
  *
  * Default field definitions for the metadata store.
  */
-import lodash from 'lodash';
 import * as yup from 'yup';
-import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields, StateIdentifier } from './metadata.types';
+import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields } from './metadata.types';
 
 const identifierWhenSelectedValidation = {
     is: true,
@@ -16,8 +15,7 @@ const identifierWhenSelectedValidation = {
 const identifierSchema = yup.object().shape({
     id: yup.number().required(),
     identifier: yup.string().trim().when('selected', identifierWhenSelectedValidation),
-    identifierType: yup.number().nullable(true),
-    selected: yup.boolean().required()
+    identifierType: yup.number().nullable(true)
 });
 
 const folderSchema = yup.object().shape({
@@ -27,8 +25,8 @@ const folderSchema = yup.object().shape({
 });
 
 const identifierValidation = {
-    test: array => !!lodash.filter(array as StateIdentifier[], { selected: true }).length,
-    message: 'Should select/provide at least 1 identifier'
+    test: array => array.length && array.every(identifier => identifier.identifier.length),
+    message: 'Should provide at least 1 identifier with valid identifier ID'
 };
 
 const identifiersWhenValidation = {
@@ -65,19 +63,39 @@ export const photogrammetryFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     folders: yup.array().of(folderSchema),
-    name: yup.string(),
-    description: yup.string().required('Description cannot be empty'),
+    name: yup.string().required('Name cannot be empty'),
+    // description: yup.string().required('Description cannot be empty'),
     dateCaptured: yup.date().required(),
     datasetType: yup.number().typeError('Please select a valid dataset type'),
-    datasetFieldId: yup.number().nullable(true),
+    datasetFieldId: yup
+        .number()
+        .nullable(true)
+        .typeError('Dataset Field ID must be a positive integer')
+        .positive('Dataset Field ID must be a positive integer')
+        .max(2147483647, 'Dataset Field ID is too large'),
     itemPositionType: yup.number().nullable(true),
-    itemPositionFieldId: yup.number().nullable(true),
-    itemArrangementFieldId: yup.number().nullable(true),
+    itemPositionFieldId: yup
+        .number()
+        .nullable(true)
+        .typeError('Item Position Field ID must be a positive integer')
+        .positive('Item Position Field ID must be a positive integer')
+        .max(2147483647, 'Item Position Field ID is too large'),
+    itemArrangementFieldId: yup
+        .number()
+        .nullable(true)
+        .typeError('Item Arrangement Field ID must be a positive integer')
+        .positive('Item Arrangement Field ID must be a positive integer')
+        .max(2147483647, 'Item Arrangement Field ID is too large'),
     focusType: yup.number().nullable(true),
     lightsourceType: yup.number().nullable(true),
     backgroundRemovalMethod: yup.number().nullable(true),
     clusterType: yup.number().nullable(true),
-    clusterGeometryFieldId: yup.number().nullable(true),
+    clusterGeometryFieldId: yup
+        .number()
+        .nullable(true)
+        .typeError('Cluster Geometry Field ID must be a positive integer')
+        .positive('Cluster Geometry Field ID must be a positive integer')
+        .max(2147483647, 'Cluster Geometry Field ID is too large'),
     cameraSettingUniform: yup.boolean().required(),
     directory: yup.string()
 });
@@ -150,11 +168,11 @@ export const defaultSceneFields: SceneFields = {
     sourceObjects: [],
     derivedObjects: [],
     referenceModels: [],
-    hasBeenQCd: false,
-    isOriented: false,
     name: '',
     directory: '',
     EdanUUID: '',
+    approvedForPublication: false,
+    posedAndQCd: false,
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;

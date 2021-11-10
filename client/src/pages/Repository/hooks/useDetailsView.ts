@@ -21,10 +21,13 @@ import {
     GetLicenseListDocument,
     ClearLicenseAssignmentDocument,
     AssignLicenseDocument,
+    PublishDocument,
     ClearLicenseAssignmentMutation,
-    AssignLicenseMutation
+    AssignLicenseMutation,
+    PublishMutation,
+    ExistingRelationship
 } from '../../../types/graphql';
-import { eSystemObjectType } from '../../../types/server';
+import { eSystemObjectType, ePublishedState } from '../../../types/server';
 
 export function useObjectDetails(idSystemObject: number): GetSystemObjectDetailsQueryResult {
     return useQuery(GetSystemObjectDetailsDocument, {
@@ -32,7 +35,8 @@ export function useObjectDetails(idSystemObject: number): GetSystemObjectDetails
             input: {
                 idSystemObject
             }
-        }
+        },
+        fetchPolicy: 'no-cache'
     });
 }
 
@@ -75,7 +79,8 @@ export async function getDetailsTabDataForObject(idSystemObject: number, objectT
                 idSystemObject,
                 objectType
             }
-        }
+        },
+        fetchPolicy: 'no-cache'
     });
 }
 
@@ -99,62 +104,50 @@ export function updateDetailsTabData(
     });
 }
 
-export function updateSourceObjects(idSystemObject: number, sources: number[], PreviouslySelected: number[]) {
+export function updateSourceObjects(idSystemObject: number, objectType: number, sources: ExistingRelationship[], PreviouslySelected: ExistingRelationship[]) {
     return apolloClient.mutate({
         mutation: UpdateSourceObjectsDocument,
         variables: {
             input: {
                 idSystemObject,
+                ChildObjectType: objectType,
                 Sources: sources,
                 PreviouslySelected
             }
         },
-        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject'],
+        awaitRefetchQueries: true
     });
 }
 
-export function updateDerivedObjects(idSystemObject: number, derivatives: number[], PreviouslySelected: number[]) {
+export function updateDerivedObjects(idSystemObject: number, objectType: number, derivatives: ExistingRelationship[], PreviouslySelected: ExistingRelationship[]) {
     return apolloClient.mutate({
         mutation: UpdateDerivedObjectsDocument,
         variables: {
             input: {
                 idSystemObject,
+                ParentObjectType: objectType,
                 Derivatives: derivatives,
                 PreviouslySelected
             }
         },
-        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject'],
+        awaitRefetchQueries: true
     });
 }
 
-export async function deleteObjectConnection(idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) {
+export async function deleteObjectConnection(idSystemObjectMaster: number, objectTypeMaster: eSystemObjectType, idSystemObjectDerived: number, objectTypeDerived: eSystemObjectType) {
     return await apolloClient.mutate({
         mutation: DeleteObjectConnectionDocument,
         variables: {
             input: {
                 idSystemObjectMaster,
-                idSystemObjectDerived
+                objectTypeMaster,
+                idSystemObjectDerived,
+                objectTypeDerived
             }
         },
-        refetchQueries: [
-            {
-                query: GetSystemObjectDetailsDocument,
-                variables: {
-                    input: {
-                        idSystemObject: type === 'Source' ? idSystemObjectDerived : idSystemObjectMaster
-                    }
-                }
-            },
-            {
-                query: GetDetailsTabDataForObjectDocument,
-                variables: {
-                    input: {
-                        idSystemObject: type === 'Source' ? idSystemObjectDerived : idSystemObjectMaster,
-                        objectType: systemObjectType
-                    }
-                }
-            }
-        ],
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject'],
         awaitRefetchQueries: true
     });
 }
@@ -166,7 +159,8 @@ export async function deleteIdentifier(idIdentifier: number) {
             input: {
                 idIdentifier
             }
-        }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
     });
 }
 
@@ -219,3 +213,17 @@ export async function assignLicense(idSystemObject: number, idLicense: number): 
         refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
     });
 }
+
+export async function publish(idSystemObject: number, eState: ePublishedState): Promise<FetchResult<PublishMutation>> {
+    return await apolloClient.mutate({
+        mutation: PublishDocument,
+        variables: {
+            input: {
+                idSystemObject,
+                eState
+            }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+    });
+}
+

@@ -153,8 +153,6 @@ export enum eMetadata {
     eModelChannelPosition,
     eModelChannelWidth,
     eModelUVMapType,
-    eSceneIsOriented,
-    eSceneHasBeenQCd,
     eSceneCountScene,
     eSceneCountNode,
     eSceneCountCamera,
@@ -163,6 +161,9 @@ export enum eMetadata {
     eSceneCountMeta,
     eSceneCountSetup,
     eSceneCountTour,
+    eSceneEdanUUID,
+    eScenePosedAndQCd,
+    eSceneApprovedForPublication,
     eAssetFileName,
     eAssetFilePath,
     eAssetType,
@@ -194,12 +195,17 @@ export enum eSystemObjectType {
     eStakeholder = 13,
 }
 
+export enum eLicense {
+    eViewDownloadCC0 = 1,           // 'View and Download CC0'
+    eViewDownloadRestriction = 2,   // 'View and Download with usage restrictions',
+    eViewOnly = 3,                  // 'View Only',
+    eRestricted = 4,                // 'Restricted', default
+}
+
 export enum ePublishedState {
     eNotPublished = 0,              // 'Not Published', default
-    eRestricted = 1,                // 'Restricted',
-    eViewOnly = 2,                  // 'View Only',
-    eViewDownloadRestriction = 3,   // 'View and Download with usage restrictions',
-    eViewDownloadCC0 = 4,           // 'View and Download CC0'
+    eAPIOnly = 1,                   // 'API Only',
+    ePublished = 2,                 // 'Published'
 }
 
 export enum eIdentifierIdentifierType {
@@ -208,16 +214,24 @@ export enum eIdentifierIdentifierType {
     eUnitCMSID = 81
 }
 
-export const PublishedStateEnumToString = (eState: ePublishedState): string => {
+export function LicenseEnumToString(eState: eLicense): string {
     switch (eState) {
-        case ePublishedState.eRestricted: return 'Restricted';
-        case ePublishedState.eViewOnly: return 'View Only';
-        case ePublishedState.eViewDownloadRestriction: return 'View and Download with usage restrictions';
-        case ePublishedState.eViewDownloadCC0: return 'View and Download CC0';
+        case eLicense.eViewDownloadCC0:         return 'View and Download CC0';
+        case eLicense.eViewDownloadRestriction: return 'View and Download with usage restrictions';
+        case eLicense.eViewOnly:                return 'View Only';
         default:
-        case ePublishedState.eNotPublished: return 'Not Published';
+        case eLicense.eRestricted:              return 'Restricted';
     }
-};
+}
+
+export function PublishedStateEnumToString(eState: ePublishedState): string {
+    switch (eState) {
+        case ePublishedState.eAPIOnly:                  return 'API Only';
+        case ePublishedState.ePublished:                return 'Published';
+        default:
+        case ePublishedState.eNotPublished:             return 'Not Published';
+    }
+}
 
 export enum eSubjectUnitIdentifierSortColumns {
     eUnitAbbreviation = 1,

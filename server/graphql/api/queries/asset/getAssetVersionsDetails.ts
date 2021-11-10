@@ -71,9 +71,9 @@ const getAssetVersionsDetails = gql`
                     idAssetVersion
                     systemCreated
                     name
-                    hasBeenQCd
-                    isOriented
                     directory
+                    approvedForPublication
+                    posedAndQCd
                     identifiers {
                         identifier
                         identifierType

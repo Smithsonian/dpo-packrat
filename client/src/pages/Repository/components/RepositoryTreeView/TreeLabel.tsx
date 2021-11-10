@@ -11,50 +11,12 @@ import clsx from 'clsx';
 import lodash from 'lodash';
 import React, { useMemo } from 'react';
 import { FaCheckCircle, FaRegCircle } from 'react-icons/fa';
-import { NewTabLink, Progress } from '../../../../components';
+import { Progress } from '../../../../components';
 import { palette } from '../../../../theme';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
 import MetadataView, { TreeViewColumn } from './MetadataView';
 import { RiExternalLinkFill } from 'react-icons/ri';
-
-const useStyles = makeStyles(({ breakpoints }) => ({
-    container: {
-        display: 'flex',
-    },
-    label: {
-        display: 'flex',
-        flex: 0.9,
-        alignItems: 'center',
-        position: 'sticky',
-        left: 45,
-        [breakpoints.down('lg')]: {
-            left: 30
-        }
-    },
-    labelText: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '60%',
-        fontSize: '0.8em',
-        backgroundColor: ({ color }: TreeLabelProps) => color,
-        zIndex: 10,
-        [breakpoints.down('lg')]: {
-            fontSize: '0.9em',
-        }
-    },
-    options: {
-        display: 'flex',
-        alignItems: 'center',
-        position: 'sticky',
-        left: 0,
-        width: 120
-    },
-    option: {
-        display: 'flex',
-        alignItems: 'center'
-    }
-}));
+import { Link } from 'react-router-dom';
 
 interface TreeLabelProps {
     idSystemObject: number;
@@ -64,33 +26,39 @@ interface TreeLabelProps {
     treeColumns: TreeViewColumn[];
     renderSelected?: boolean;
     selected?: boolean;
+    makeStyles?: { [key: string]: string };
     onSelect?: (event: React.MouseEvent<SVGElement, MouseEvent>) => void;
     onUnSelect?: (event: React.MouseEvent<SVGElement, MouseEvent>) => void;
 }
 
 function TreeLabel(props: TreeLabelProps): React.ReactElement {
-    const { idSystemObject, label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType } = props;
-    const classes = useStyles(props);
+    const { idSystemObject, label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType, makeStyles, color } = props;
     const objectTitle = useMemo(() => `${getTermForSystemObjectType(objectType)} ${label}`, [objectType, label]);
 
     return (
-        <div className={classes.container}>
-            <div className={classes.label}>
+        <div className={makeStyles?.container}>
+            <div className={makeStyles?.label}>
                 {renderSelected && (
                     <Box display='flex' alignItems='center' mr='10px'>
                         {!selected && <FaRegCircle size={16} color={grey[400]} onClick={onSelect} />}
                         {selected && <FaCheckCircle size={16} color={palette.primary.main} onClick={onUnSelect} />}
                     </Box>
                 )}
-                <div className={classes.labelText}>
+                <div className={makeStyles?.labelText} style={{ backgroundColor: color }}>
                     <span title={objectTitle}>{label}</span>
                 </div>
             </div>
-            <MetadataView header={false} treeColumns={treeColumns} options={
-                <div className={classes.options}>
-                    <NewTabLink className={classes.option} to={getDetailsUrlForObject(idSystemObject)}>
+            <MetadataView header={false} treeColumns={treeColumns} makeStyles={{ text: makeStyles?.text || '', column: makeStyles?.column || '' }} options={
+                <div className={makeStyles?.options}>
+                    <Link
+                        to={getDetailsUrlForObject(idSystemObject)}
+                        onClick={event => event.stopPropagation()}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className={makeStyles?.link}
+                    >
                         <RiExternalLinkFill size={18} color={palette.primary.main} />
-                    </NewTabLink>
+                    </Link>
                 </div>
             }
             />

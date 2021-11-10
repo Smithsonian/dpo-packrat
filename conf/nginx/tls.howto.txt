@@ -1,0 +1,42 @@
+****************
+Initial Requests
+****************
+Generated CSRs following the instructions here:  https://www.thesslstore.com/knowledgebase/ssl-generate/csr-generation-guide-for-nginx-openssl/
+* openssl req -new -newkey rsa:2048 -nodes -keyout packrat.si.edu.key -out packrat.si.edu.csr
+* openssl req -new -newkey rsa:2048 -nodes -keyout packrat-test.si.edu.key -out packrat-test.si.edu.csr
+
+Provide these CSR to OCIO staff (Mandy Hargis-Martin), by way of a ServiceNow ticket.
+
+Specified the following information:
+Country Name (2 letter code) [AU]:US
+State or Province Name (full name) [Some-State]:DC
+Locality Name (eg, city) []:Washington
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Smithsonian Institution
+Organizational Unit Name (eg, section) []:DPO 3D
+Common Name (e.g. server FQDN or YOUR name) []:packrat.si.edu
+Email Address []:
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+
+********
+Renewals
+********
+Generate CSRs:
+* openssl req -new -nodes -key packrat.si.edu.key -out packrat.si.edu.csr
+* openssl req -new -nodes -key packrat-test.si.edu.key -out packrat-test.si.edu.csr
+
+Specified the same info as the initial request.  Note that this generated the same actual CSR file ... so it seems like we can simply reuse the original CSR if we're not changing any of the details.
+
+Note that OCIO staff requested these CSRs without our prompting -- they appear to have their own reminders about upcoming TLS cert expirations.
+
+************
+Installation
+************
+1. Download the Full Chain PEM bundle from the certificate authority
+2. Edit this bundle in a text editor, reversing the order of the certificates
+3. Install the cert (as root) in /etc/pki/tls/certs, using the filename specified in nginx.conf (packrat.si.edu.cert and packrat-test.si.edu.cert)
+4. Restart nginx: sudo systemctl restart nginx
+5. Verify that the new cert is active (visit https://packrat-test.si.edu:8443/ and inspect the certificate)

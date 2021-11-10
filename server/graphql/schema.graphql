@@ -121,6 +121,7 @@ type Mutation {
   deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
+  publish(input: PublishInput!): PublishResult!
   rollbackSystemObjectVersion(input: RollbackSystemObjectVersionInput!): RollbackSystemObjectVersionResult!
   updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
   updateLicense(input: UpdateLicenseInput!): CreateLicenseResult!
@@ -247,8 +248,8 @@ type IngestScene {
   idAssetVersion: Int!
   systemCreated: Boolean!
   name: String!
-  hasBeenQCd: Boolean!
-  isOriented: Boolean!
+  approvedForPublication: Boolean!
+  posedAndQCd: Boolean!
   directory: String!
   identifiers: [IngestIdentifier!]!
   referenceModels: [ReferenceModel!]!
@@ -538,8 +539,8 @@ input IngestSceneInput {
   idAsset: Int
   systemCreated: Boolean!
   name: String!
-  hasBeenQCd: Boolean!
-  isOriented: Boolean!
+  approvedForPublication: Boolean!
+  posedAndQCd: Boolean!
   directory: String!
   identifiers: [IngestIdentifierInput!]!
   sourceObjects: [RelatedObjectInput!]!
@@ -884,8 +885,6 @@ type GetFilterViewDataResult {
 
 input CreateSceneInput {
   Name: String!
-  HasBeenQCd: Boolean!
-  IsOriented: Boolean!
   idAssetThumbnail: Int
   CountScene: Int
   CountNode: Int
@@ -896,6 +895,8 @@ input CreateSceneInput {
   CountSetup: Int
   CountTour: Int
   EdanUUID: String
+  ApprovedForPublication: Boolean!
+  PosedAndQCd: Boolean!
 }
 
 type CreateSceneResult {
@@ -920,9 +921,7 @@ type GetIntermediaryFileResult {
 
 type Scene {
   idScene: Int!
-  HasBeenQCd: Boolean!
   idAssetThumbnail: Int
-  IsOriented: Boolean!
   Name: String!
   CountScene: Int
   CountNode: Int
@@ -933,6 +932,8 @@ type Scene {
   CountSetup: Int
   CountTour: Int
   EdanUUID: String
+  ApprovedForPublication: Boolean!
+  PosedAndQCd: Boolean!
   AssetThumbnail: Asset
   ModelSceneXref: [ModelSceneXref]
   SystemObject: SystemObject
@@ -987,6 +988,7 @@ input SubjectDetailFieldsInput {
   TS0: Float
   TS1: Float
   TS2: Float
+  idIdentifierPreferred: Int
 }
 
 input ItemDetailFieldsInput {
@@ -1020,6 +1022,7 @@ input CaptureDataDetailFieldsInput {
   clusterType: Int
   clusterGeometryFieldId: Int
   folders: [IngestFolderInput!]!
+  isValidData: Boolean
 }
 
 input ModelDetailFieldsInput {
@@ -1036,8 +1039,8 @@ input SceneDetailFieldsInput {
   AssetType: Int
   Tours: Int
   Annotation: Int
-  HasBeenQCd: Boolean
-  IsOriented: Boolean
+  ApprovedForPublication: Boolean
+  PosedAndQCd: Boolean
 }
 
 input ProjectDocumentationDetailFieldsInput {
@@ -1093,33 +1096,44 @@ type UpdateObjectDetailsResult {
   message: String!
 }
 
+input ExistingRelationship {
+  idSystemObject: Int!
+  objectType: Int!
+}
+
 input UpdateDerivedObjectsInput {
   idSystemObject: Int!
-  Derivatives: [Int!]!
-  PreviouslySelected: [Int!]!
+  ParentObjectType: Int!
+  Derivatives: [ExistingRelationship!]!
+  PreviouslySelected: [ExistingRelationship!]!
 }
 
 type UpdateDerivedObjectsResult {
   success: Boolean!
+  message: String!
+  status: String!
 }
 
 input UpdateSourceObjectsInput {
   idSystemObject: Int!
-  Sources: [Int!]!
-  PreviouslySelected: [Int!]!
+  ChildObjectType: Int!
+  Sources: [ExistingRelationship!]!
+  PreviouslySelected: [ExistingRelationship!]!
 }
 
 type UpdateSourceObjectsResult {
   success: Boolean!
+  message: String!
+  status: String!
 }
 
 input UpdateIdentifier {
   id: Int!
   identifier: String!
   identifierType: Int!
-  selected: Boolean!
   idSystemObject: Int!
   idIdentifier: Int!
+  preferred: Boolean
 }
 
 type DeleteObjectConnectionResult {
@@ -1129,7 +1143,9 @@ type DeleteObjectConnectionResult {
 
 input DeleteObjectConnectionInput {
   idSystemObjectMaster: Int!
+  objectTypeMaster: Int!
   idSystemObjectDerived: Int!
+  objectTypeDerived: Int!
 }
 
 type DeleteIdentifierResult {
@@ -1164,7 +1180,17 @@ input CreateIdentifierInput {
   identifierValue: String!
   identifierType: Int!
   idSystemObject: Int
-  selected: Boolean!
+  preferred: Boolean
+}
+
+input PublishInput {
+  idSystemObject: Int!
+  eState: Int!
+}
+
+type PublishResult {
+  success: Boolean!
+  message: String!
 }
 
 scalar JSON
@@ -1194,6 +1220,7 @@ type SubjectDetailFields {
   TS0: Float
   TS1: Float
   TS2: Float
+  idIdentifierPreferred: Int
 }
 
 type ItemDetailFields {
@@ -1235,8 +1262,6 @@ type SceneDetailFields {
   AssetType: Int
   Tours: Int
   Annotation: Int
-  HasBeenQCd: Boolean
-  IsOriented: Boolean
   CountScene: Int
   CountNode: Int
   CountCamera: Int
@@ -1246,6 +1271,9 @@ type SceneDetailFields {
   CountSetup: Int
   CountTour: Int
   EdanUUID: String
+  ApprovedForPublication: Boolean
+  PublicationApprover: String
+  PosedAndQCd: Boolean
   idScene: Int
 }
 
@@ -1321,6 +1349,8 @@ type GetSystemObjectDetailsResult {
   objectType: Int!
   allowed: Boolean!
   publishedState: String!
+  publishedEnum: Int!
+  publishable: Boolean!
   thumbnail: String
   identifiers: [IngestIdentifier!]!
   objectAncestors: [[RepositoryPath!]!]!

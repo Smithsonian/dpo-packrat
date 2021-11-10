@@ -10,7 +10,7 @@ type CSVHeadersType = Record<string, string[]>;
 export const CSVHeaders: CSVHeadersType = {
     capture_data_photo: ['subject_guid', 'subject_name', 'unit_guid', 'unit_name', 'item_guid', 'item_name', 'entire_subject', 'name', 'date_captured', 'description', 'capture_dataset_type', 'capture_dataset_field_id', 'item_position_type', 'item_position_field_id', 'item_arrangement_field_id', 'focus_type', 'light_source_type', 'background_removal_method', 'cluster_type', 'cluster_geometry_field_id', 'directory_path'],
     models: ['subject_guid', 'subject_name', 'unit_guid', 'unit_name', 'item_guid', 'item_name', 'entire_subject', 'name', 'date_created', 'creation_method', 'modality', 'units', 'purpose', 'directory_path'],
-    scenes: ['subject_guid', 'subject_name', 'unit_guid', 'unit_name', 'item_guid', 'item_name', 'entire_subject', 'name', 'is_oriented', 'has_been_qcd', 'directory_path'],
+    scenes: ['subject_guid', 'subject_name', 'unit_guid', 'unit_name', 'item_guid', 'item_name', 'entire_subject', 'name', 'posed_and_qcd', 'approved_for_publication', 'directory_path'],
 };
 
 export type SubjectsCSVFields = {
@@ -55,8 +55,8 @@ export type ModelsCSVFields = {
 
 export type ScenesCSVFields = {
     name: string;
-    is_oriented: string;
-    has_been_qcd: string;
+    posed_and_qcd: string;
+    approved_for_publication: string;
     directory_path: string;
 };
 

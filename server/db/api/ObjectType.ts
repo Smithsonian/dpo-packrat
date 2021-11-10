@@ -44,6 +44,7 @@ export enum eNonSystemObjectType {
     eModelProcessingAction = 45,
     eModelProcessingActionStep = 46,
     eModelSceneXref = 47,
+    eSentinel = 63,
     eSystemObject = 48,
     eSystemObjectVersion = 49,
     eSystemObjectVersionAssetVersionXref = 60,
@@ -168,6 +169,7 @@ export function DBObjectTypeToName(dbType: eDBObjectType | null): string {
         case eNonSystemObjectType.eModelProcessingAction:               return 'ModelProcessingAction';
         case eNonSystemObjectType.eModelProcessingActionStep:           return 'ModelProessingActionStep';
         case eNonSystemObjectType.eModelSceneXref:                      return 'ModelSceneXref';
+        case eNonSystemObjectType.eSentinel:                            return 'Sentinel';
         case eNonSystemObjectType.eSystemObject:                        return 'SystemObject';
         case eNonSystemObjectType.eSystemObjectVersion:                 return 'SystemObjectVersion';
         case eNonSystemObjectType.eSystemObjectVersionAssetVersionXref: return 'SystemObjectVersionAssetVersionXref';
@@ -242,6 +244,7 @@ export function DBObjectNameToType(objectTypeName: string | null): eDBObjectType
         case 'Model Proessing Action Step': return eNonSystemObjectType.eModelProcessingActionStep;
         case 'ModelSceneXref': return eNonSystemObjectType.eModelSceneXref;
         case 'Model Scene Xref': return eNonSystemObjectType.eModelSceneXref;
+        case 'Sentinel': return eNonSystemObjectType.eSentinel;
         case 'SystemObject': return eNonSystemObjectType.eSystemObject;
         case 'System Object': return eNonSystemObjectType.eSystemObject;
         case 'SystemObjectVersion': return eNonSystemObjectType.eSystemObjectVersion;
@@ -284,23 +287,46 @@ export enum eAuditType {
     eSceneQCd = 5
 }
 
+export enum eLicense {
+    eViewDownloadCC0 = 1,           // 'View and Download CC0'
+    eViewDownloadRestriction = 2,   // 'View and Download with usage restrictions',
+    eViewOnly = 3,                  // 'View Only',
+    eRestricted = 4,                // 'Restricted', default
+}
+
 export enum ePublishedState {
     eNotPublished = 0,              // 'Not Published', default
-    eRestricted = 1,                // 'Restricted',
-    eViewOnly = 2,                  // 'View Only',
-    eViewDownloadRestriction = 3,   // 'View and Download with usage restrictions',
-    eViewDownloadCC0 = 4,           // 'View and Download CC0'
+    eAPIOnly = 1,                   // 'API Only',
+    ePublished = 2,                 // 'Published'
+}
+
+export function LicenseEnumToString(eState: eLicense): string {
+    switch (eState) {
+        case eLicense.eViewDownloadCC0:         return 'View and Download CC0';
+        case eLicense.eViewDownloadRestriction: return 'View and Download with usage restrictions';
+        case eLicense.eViewOnly:                return 'View Only';
+        default:
+        case eLicense.eRestricted:              return 'Restricted';
+    }
 }
 
 export function PublishedStateEnumToString(eState: ePublishedState): string {
     switch (eState) {
-        case ePublishedState.eRestricted:               return 'Restricted';
-        case ePublishedState.eViewOnly:                 return 'View Only';
-        case ePublishedState.eViewDownloadRestriction:  return 'View and Download with usage restrictions';
-        case ePublishedState.eViewDownloadCC0:          return 'View and Download CC0';
+        case ePublishedState.eAPIOnly:                  return 'API Only';
+        case ePublishedState.ePublished:                return 'Published';
         default:
         case ePublishedState.eNotPublished:             return 'Not Published';
     }
+}
+
+export function LicenseRestrictLevelToPublishedStateEnum(restrictLevel: number): ePublishedState {
+    if (restrictLevel <= 10)
+        return ePublishedState.ePublished;
+    if (restrictLevel <= 20)
+        return ePublishedState.ePublished;
+    if (restrictLevel <= 30)
+        return ePublishedState.ePublished;
+    return ePublishedState.eNotPublished;
 }
 
 // Keep this in sync with SQL in WorkflowListResult.search()

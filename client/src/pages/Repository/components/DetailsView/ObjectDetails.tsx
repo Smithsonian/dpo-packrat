@@ -12,10 +12,11 @@ import { GetSystemObjectDetailsResult, RepositoryPath, License } from '../../../
 import { getDetailsUrlForObject, getUpdatedCheckboxProps, isFieldUpdated } from '../../../../utils/repository';
 import { withDefaultValueBoolean } from '../../../../utils/shared';
 import { useLicenseStore } from '../../../../store';
-import { clearLicenseAssignment, assignLicense } from '../../hooks/useDetailsView';
+import { clearLicenseAssignment, assignLicense, publish } from '../../hooks/useDetailsView';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import { LoadingButton } from '../../../../components';
 import { toast } from 'react-toastify';
+import { ePublishedState } from '../../../../types/server';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     detail: {
@@ -31,12 +32,6 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     value: {
         color: ({ clickable = true }: DetailProps) => (clickable ? palette.primary.main : palette.primary.dark),
         textDecoration: ({ clickable = true, value }: DetailProps) => (clickable && value ? 'underline' : undefined)
-    },
-    btn: {
-        backgroundColor: '#687DDB',
-        color: 'white',
-        width: '90px',
-        height: '30px'
     }
 }));
 
@@ -90,8 +85,11 @@ interface ObjectDetailsProps {
     item?: RepositoryPath | null;
     disabled: boolean;
     publishedState: string;
+    publishedEnum: number;
+    publishable: boolean;
     retired: boolean;
     hideRetired?: boolean;
+    hidePublishState?: boolean;
     originalFields?: GetSystemObjectDetailsResult;
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
     onLicenseUpdate?: (event) => void;
@@ -108,8 +106,11 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         subject,
         item,
         publishedState,
+        publishedEnum,
+        publishable,
         retired,
         hideRetired,
+        hidePublishState,
         disabled,
         originalFields,
         onRetiredUpdate,
@@ -168,13 +169,41 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         setLoading(false);
     };
 
+    const onPublish = async () => { onPublishWorker(ePublishedState.ePublished, 'Publish'); };
+    const onAPIOnly = async () => { onPublishWorker(ePublishedState.eAPIOnly, 'Publish for API Only'); };
+    const onUnpublish = async () => { onPublishWorker(ePublishedState.eNotPublished, 'Unpublish'); };
+
+    const onPublishWorker = async (eState: number, action: string) => {
+        setLoading(true);
+
+        const { data } = await publish(idSystemObject, eState);
+        if (data?.publish?.success)
+            toast.success(`${action} succeeded`);
+        else
+            toast.error(`${action} failed: ${data?.publish?.message}`);
+
+        setLoading(false);
+    };
+
     return (
         <Box display='flex' flex={2} flexDirection='column'>
             <Detail idSystemObject={unit?.idSystemObject} label='Unit' value={unit?.name} />
             <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />
             <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />
             <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />
-            <Detail label='Publication Status' value={publishedState} clickable={false} />
+            {!hidePublishState && (
+                <Detail
+                    label='Publish State'
+                    valueComponent={
+                        <Box className={classes.inheritedLicense}>
+                            <Typography>{publishedState}</Typography>
+                            &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Publish</LoadingButton>
+                            &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>API Only</LoadingButton>
+                            &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
+                        </Box>
+                    }
+                />
+            )}
             {!hideRetired && (
                 <Detail
                     label='Retired'

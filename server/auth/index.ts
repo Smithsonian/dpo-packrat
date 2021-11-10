@@ -27,12 +27,9 @@ if (!PACKRAT_SESSION_SECRET) {
 const Store = MemoryStore(session);
 
 const { maxAge, checkPeriod } = Config.auth.session;
-// const maxAge: number = Date.now() + age;
 
 const sessionConfig = {
-    cookie: {
-        maxAge
-    },
+    cookie: { maxAge },
     secret: PACKRAT_SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
