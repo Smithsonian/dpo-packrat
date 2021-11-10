@@ -69,6 +69,9 @@ jobs:
         with:
           node-version: 14.17.1
 
+      - name: Install git
+        run: apk update && apk add git
+
       # Install dependencies in CI mode
       - name: Install dependencies
         run: yarn install --frozen-lockfile
