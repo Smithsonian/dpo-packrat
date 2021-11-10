@@ -9,10 +9,12 @@ import { VocabularyCache } from '../../../../../cache';
 import { AssetGridDetailBase } from './AssetGridCommon';
 import { AssetGridDetail } from './AssetGridDetail';
 import { AssetGridDetailCaptureData } from './AssetGridDetailCaptureData';
+// import { AssetGridDetailScene } from './AssetGridDetailScene';
 
 enum eAssetGridType {
     eStandard,
     eCaptureData,
+    eScene
 }
 
 export default async function getAssetDetailsForSystemObject(_: Parent, args: QueryGetAssetDetailsForSystemObjectArgs): Promise<GetAssetDetailsForSystemObjectResult> {
@@ -38,7 +40,13 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
     if (!SO.idCaptureData) {
         eGridType = eAssetGridType.eStandard;
         columns = AssetGridDetail.getColumns();
-    } else {
+    } 
+    // else if (/* TODO: Add condition */) {
+    //     eGridType = eAssetGridType.eScene;
+    //     columns = AssetGridDetailScene.getColumns();
+    //     // TODO: Add any additional processing
+    // }
+    else {
         eGridType = eAssetGridType.eCaptureData;
         columns = AssetGridDetailCaptureData.getColumns();
 
@@ -115,6 +123,11 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
 
                 assetDetail = new AssetGridDetailCaptureData(asset, assetVersion, sID.idSystemObject, metadataMap);
             }   break;
+
+            // case eAssetGridType.eScene: {
+            //     // TODO: Add any additional processing here
+            //     // assetDetail = newAssetGridDetailScene(asset, assetVersion, sID.idSystemObject, ?) 
+            // }   break;
         }
 
         // If we haven't yet identified a preferred assetDetail record, examine this asset's asset type,
