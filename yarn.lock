@@ -19110,12 +19110,12 @@ wcwidth@^1.0.0:
   dependencies:
     defaults "^1.0.3"
 
-webdav-server@2.6.2:
+"webdav-server@https://github.com/Smithsonian/npm-WebDAV-Server.git":
   version "2.6.2"
-  resolved "https://registry.yarnpkg.com/webdav-server/-/webdav-server-2.6.2.tgz#5ea39b269aa34a1512c150e29c1b7e27d3a68908"
-  integrity sha512-0iHdrOzlKGFD96bTvPF8IIEfxw9Q7jB5LqWqhjyBYsofD6T6mOYqWtAvR88VY9Mq0xeg8bCRHC2Vifc9iuTYuw==
+  resolved "https://github.com/Smithsonian/npm-WebDAV-Server.git#35c998f79cc40b005381f165c4b2fa74b948ca09"
   dependencies:
     mime-types "^2.1.18"
+    winston "^3.3.3"
     xml-js-builder "^1.0.3"
 
 webdav@4.2.1:
@@ -19378,7 +19378,7 @@ winston-transport@^4.4.0:
     readable-stream "^2.3.7"
     triple-beam "^1.2.0"
 
-winston@3.3.3:
+winston@3.3.3, winston@^3.3.3:
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/winston/-/winston-3.3.3.tgz#ae6172042cafb29786afa3d09c8ff833ab7c9170"
   integrity sha512-oEXTISQnC8VlSAKf1KYSSd7J6IWuRPQqDdo8eoRNaYKLvwSb5+79Z3Yi1lrl6KDpU6/VWaxpakDAtb1oQ4n9aw==
