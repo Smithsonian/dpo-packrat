@@ -70,7 +70,7 @@ jobs:
           node-version: 14.17.1
 
       - name: Install git
-        run: apk update && apk add git
+        run: apt-add-repository ppa:git-core/ppa && apt-get update && apt-get install git
 
       # Install dependencies in CI mode
       - name: Install dependencies
