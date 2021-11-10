@@ -263,7 +263,10 @@ class WebDAVFileSystem extends webdav.FileSystem {
             else
                 LOG.info(logPrefix, LOG.LS.eHTTP);
             */
-            callback(undefined, resource[propertyName]);
+            if (propertyName !== 'create')
+                callback(undefined, resource[propertyName]);
+            else
+                callback(undefined);
         } catch (error) {
             LOG.error(`WebDAVFileSystem.getPropertyFromResource(${pathWD})`, LOG.LS.eHTTP, error);
         }
@@ -357,13 +360,14 @@ class WebDAVFileSystem extends webdav.FileSystem {
         }
     }
 
-    async _openWriteStream(pathWD: webdav.Path, _info: webdav.OpenWriteStreamInfo, callback: webdav.ReturnCallback<Writable>): Promise<void> {
+    async _openWriteStream(pathWD: webdav.Path, _info: webdav.OpenWriteStreamInfo, callback: webdav.ReturnCallback<Writable>, callbackComplete: webdav.SimpleCallback): Promise<void> {
         try {
             /*
             const lockUUID: string | undefined = await this.setLock<Writable>(pathWD, _info.context, callback);
             if (lockUUID === undefined)
                 return;
             */
+
             const pathS: string = pathWD.toString();
             const DP: DownloaderParser = new DownloaderParser('', pathS);
             const DPResults: DownloaderParserResults = await DP.parseArguments();
@@ -389,7 +393,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
             const asset: DBAPI.Asset | null = assetVersion ? await DBAPI.Asset.fetch(assetVersion.idAsset) : null;
 
             const secondSlashIndex: number = pathS.indexOf('/', 1); // skip first slash with 1
-            const FilePath: string = (secondSlashIndex >= 0) ? pathS.substring(secondSlashIndex + 1) : '';
+            const FilePath: string = (secondSlashIndex >= 0) ? path.dirname(pathS.substring(secondSlashIndex + 1)) : '';
             const FileName: string = path.basename(pathS);
 
             let eVocab: CACHE.eVocabularyID = CACHE.eVocabularyID.eAssetAssetTypeOther;
@@ -457,6 +461,8 @@ class WebDAVFileSystem extends webdav.FileSystem {
                     // await this.removeLock(pathWD, info.context, lockUUID);
                 } catch (error) {
                     LOG.error(`WebDAVFileSystem._openWriteStream(${pathWD}) (W) onFinish`, LOG.LS.eHTTP, error);
+                } finally {
+                    callbackComplete(undefined);
                 }
             });
 
@@ -508,5 +514,9 @@ class WebDAVFileSystem extends webdav.FileSystem {
 
     async _lastModifiedDate(pathWD: webdav.Path, _info: webdav.SizeInfo, callback: webdav.ReturnCallback<number>): Promise<void> {
         await this.getPropertyFromResource(pathWD, 'lastModifiedDate', false, callback);
+    }
+
+    async _create(pathWD: webdav.Path, _info: webdav.CreateInfo, callback: webdav.SimpleCallback): Promise<void> {
+        await this.getPropertyFromResource(pathWD, 'create', true, callback);
     }
 }
