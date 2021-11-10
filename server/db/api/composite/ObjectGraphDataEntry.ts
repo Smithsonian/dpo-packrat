@@ -105,17 +105,15 @@ export class ObjectGraphDataEntry {
             }
         }
 
-        if (eDirection == eApplyGraphStateDirection.eParent) {
+        if (eDirection == eApplyGraphStateDirection.eSelf ||
+            eDirection == eApplyGraphStateDirection.eParent) {
             if (objectGraphState.eType) {
                 if (!this.childrenObjectTypes.has(objectGraphState.eType)) {
                     this.childrenObjectTypes.add(objectGraphState.eType);
                     retValue = true;
                 }
             }
-        }
 
-        if (eDirection == eApplyGraphStateDirection.eSelf ||
-            eDirection == eApplyGraphStateDirection.eParent) {
             if (objectGraphState.captureMethod) {
                 if (!this.childrenCaptureMethods.has(objectGraphState.captureMethod)) {
                     this.childrenCaptureMethods.add(objectGraphState.captureMethod);
