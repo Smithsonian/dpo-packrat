@@ -502,6 +502,7 @@ export type MutationUploadAssetArgs = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSystemObjectForAttachment?: Maybe<Scalars['Int']>;
 };
 
 export type UploadAssetInput = {
@@ -509,6 +510,7 @@ export type UploadAssetInput = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSystemObjectForAttachment?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -2567,6 +2569,7 @@ export type UploadAssetMutationVariables = Exact<{
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSystemObjectForAttachment?: Maybe<Scalars['Int']>;
 }>;
 
 
@@ -3964,8 +3967,13 @@ export type DiscardUploadedAssetVersionsMutationHookResult = ReturnType<typeof u
 export type DiscardUploadedAssetVersionsMutationResult = Apollo.MutationResult<DiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
 export const UploadAssetDocument = gql`
-    mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int) {
-  uploadAsset(file: $file, type: $type, idAsset: $idAsset) {
+    mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int, $idSystemObjectForAttachment: Int) {
+  uploadAsset(
+    file: $file
+    type: $type
+    idAsset: $idAsset
+    idSystemObjectForAttachment: $idSystemObjectForAttachment
+  ) {
     status
     idAssetVersions
     error
@@ -3990,6 +3998,7 @@ export type UploadAssetMutationFn = Apollo.MutationFunction<UploadAssetMutation,
  *      file: // value for 'file'
  *      type: // value for 'type'
  *      idAsset: // value for 'idAsset'
+ *      idSystemObjectForAttachment: // value for 'idSystemObjectForAttachment'
  *   },
  * });
  */
