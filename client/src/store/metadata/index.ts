@@ -113,9 +113,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             schema.validateSync(fields, options);
         } catch (error) {
             hasError = true;
-
-            for (const message of error.errors) {
-                toast.warn(message, { autoClose: false });
+            if (error instanceof yup.ValidationError) {
+                for (const message of error.errors) {
+                    toast.warn(message, { autoClose: false });
+                }
             }
         }
 
