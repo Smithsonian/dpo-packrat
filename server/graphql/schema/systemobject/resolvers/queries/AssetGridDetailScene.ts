@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../../../../db';
+import * as H from '../../../../../utils/helpers';
 import { RouteBuilder } from '../../../../../http/routes/routeBuilder';
 import { AssetGridDetailBase, ColumnObject, LinkObject, eAssetGridColumnType, eIcon, eLinkOrigin } from './AssetGridCommon';
 
@@ -12,10 +13,18 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
     version: number;
     dateCreated: Date;
     size: string;
-    // TODO: introduce additional columns/properties here
-    isAttachment: boolean;
 
-    constructor(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, vocabulary: DBAPI.Vocabulary) {
+    isAttachment: boolean | null;
+    type: string | null;
+    category: string | null;
+    units: string | null;
+    modelType: string | null;
+    fileType: string | null;
+    gltfStandardized: boolean | null;
+    dracoCompressed: boolean | null;
+    title: string | null;
+
+    constructor(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, vocabulary: DBAPI.Vocabulary, metadataMap: Map<string, string>) {
         super(idSystemObject, assetVersion.idAsset, assetVersion.idAssetVersion);
         this.link = { label: null, path: `${RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion)}`, icon: eIcon.eIconDownload, origin: eLinkOrigin.eServer };
         this.name = { label: assetVersion.FileName, path: `${RouteBuilder.RepositoryDetails(idSystemObject)}`, icon: null, origin: eLinkOrigin.eClient };
@@ -24,8 +33,16 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
         this.version = assetVersion.Version;
         this.dateCreated = assetVersion.DateCreated;
         this.size = assetVersion.StorageSize.toString();
-        // TODO: introduce additional columns/properties here
-        this.isAttachment = true;
+
+        this.isAttachment = H.Helpers.safeBoolean(metadataMap.get('isAttachment'));
+        this.type = H.Helpers.safeString(metadataMap.get('type'));
+        this.category = H.Helpers.safeString(metadataMap.get('category'));
+        this.units = H.Helpers.safeString(metadataMap.get('units'));
+        this.modelType = H.Helpers.safeString(metadataMap.get('modelType'));
+        this.fileType = H.Helpers.safeString(metadataMap.get('fileType'));
+        this.gltfStandardized = H.Helpers.safeBoolean(metadataMap.get('gltfStandardized'));
+        this.dracoCompressed = H.Helpers.safeBoolean(metadataMap.get('dracoCompressed'));
+        this.title = H.Helpers.safeString(metadataMap.get('title'));
     }
 
     static getColumns(): ColumnObject[] {
@@ -37,9 +54,21 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
             { colName: 'version', colLabel: 'Version', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'center' },
             { colName: 'dateCreated', colLabel: 'Date Created', colDisplay: true, colType: eAssetGridColumnType.eDate, colAlign: 'center' },
             { colName: 'size', colLabel: 'Size', colDisplay: true, colType: eAssetGridColumnType.eFileSize, colAlign: 'center' },
-            // TODO: introduce additional columns/properties here
-            { colName: 'isAttachment', colLabel: 'Is Attachment?', colDisplay: true, colType: eAssetGridColumnType.eBoolean, colAlign: 'center' }
+
+            { colName: 'isAttachment', colLabel: 'Att?', colDisplay: true, colType: eAssetGridColumnType.eBoolean, colAlign: 'center' },
+            { colName: 'type', colLabel: 'Type', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'category', colLabel: 'Type', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'units', colLabel: 'Units', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'modelType', colLabel: 'Model Type', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'fileType', colLabel: 'File Type', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'gltfStandardized', colLabel: 'glTF Std', colDisplay: true, colType: eAssetGridColumnType.eBoolean, colAlign: 'center' },
+            { colName: 'dracoCompressed', colLabel: 'Draco Compr', colDisplay: true, colType: eAssetGridColumnType.eBoolean, colAlign: 'center' },
+            { colName: 'title', colLabel: 'Title', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
         ];
+    }
+
+    static getMetadataColumnNames(): string[] {
+        return ['isAttachment', 'type', 'category', 'units', 'modelType', 'fileType', 'gltfStandardized', 'dracoCompressed', 'title'];
     }
 }
 

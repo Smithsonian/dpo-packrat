@@ -21,9 +21,8 @@ type SceneAssetCollector = {
 };
 
 export class PublishScene {
-    private ICol: COL.ICollection;
     private idSystemObject: number;
-    private eState: DBAPI.ePublishedState;
+    private analyzed: boolean = false;
 
     private scene?: DBAPI.Scene | null;
     private systemObjectVersion?: DBAPI.SystemObjectVersion | null;
@@ -41,23 +40,41 @@ export class PublishScene {
 
     private sharedName?: string | undefined = undefined;
 
-    constructor(ICol: COL.ICollection, idSystemObject: number, eState: DBAPI.ePublishedState) {
-        this.ICol = ICol;
+    constructor(idSystemObject: number) {
         this.idSystemObject = idSystemObject;
-        this.eState = eState;
     }
 
-    async publish(): Promise<boolean> {
-        if (!await this.fetchScene() || !this.scene || !this.subject)
-            return false;
-        LOG.info(`PublishScene.publish UUID ${this.scene.EdanUUID}`, LOG.LS.eCOLL);
+    /** Has no side effects (i.e. just computes the resource list) */
+    async computeResourceList(): Promise<COL.Edan3DResource[] | null> {
+        if (!this.analyzed) {
+            const result: boolean = await this.analyze();
+            if (!result)
+                return null;
+        }
 
-        // Process models, building a mapping from the model's idSystemObject -> ModelSceneXref, for those models that are for Downloads
-        if (!await this.computeMSXMap() || !this.DownloadMSXMap)
-            return false;
+        if (!this.scene)
+            return null;
+        const edan3DResourceList: COL.Edan3DResource[] = [];
+        for (const SAC of this.SacList.values()) {
+            if (!SAC.model) // SAC is not a download, skip it
+                continue;
 
-        // collect and analyze assets
-        if (!await this.collectAssets() || this.SacList.length <= 0)
+            // compute download entry
+            const resource: COL.Edan3DResource | null = await this.extractResource(SAC, this.scene.EdanUUID!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            if (resource)
+                edan3DResourceList.push(resource);
+        }
+        return edan3DResourceList;
+    }
+
+    async publish(ICol: COL.ICollection, ePublishedStateIntended: DBAPI.ePublishedState): Promise<boolean> {
+        if (!this.analyzed) {
+            const result: boolean = await this.analyze(ePublishedStateIntended);
+            if (!result)
+                return false;
+        }
+
+        if (!this.scene || !this.subject)
             return false;
 
         // stage scene
@@ -65,7 +82,7 @@ export class PublishScene {
             return false;
 
         // create EDAN 3D Package
-        let edanRecord: COL.EdanRecord | null = await this.ICol.createEdan3DPackage(this.sharedName, this.sceneFile);
+        let edanRecord: COL.EdanRecord | null = await ICol.createEdan3DPackage(this.sharedName, this.sceneFile);
         if (!edanRecord) {
             LOG.error('PublishScene.publish EDAN failed', LOG.LS.eCOLL);
             return false;
@@ -77,10 +94,10 @@ export class PublishScene {
             return false;
 
         // update SystemObjectVersion.PublishedState
-        if (!await this.updatePublishedState())
+        if (!await this.updatePublishedState(ePublishedStateIntended))
             return false;
 
-        const { status, publicSearch, downloads } = this.computeEdanSearchFlags(edanRecord, this.eState);
+        const { status, publicSearch, downloads } = this.computeEdanSearchFlags(edanRecord, ePublishedStateIntended);
         const haveDownloads: boolean = (this.edan3DResourceList.length > 0);
         const updatePackage: boolean = haveDownloads        // we have downloads, or
             || (status !== edanRecord.status)               // publication status changed
@@ -94,7 +111,7 @@ export class PublishScene {
             };
 
             LOG.info(`PublishScene.publish updating ${edanRecord.url}`, LOG.LS.eCOLL);
-            edanRecord = await this.ICol.updateEdan3DPackage(edanRecord.url, E3DPackage, status, publicSearch);
+            edanRecord = await ICol.updateEdan3DPackage(edanRecord.url, E3DPackage, status, publicSearch);
             if (!edanRecord) {
                 LOG.error('PublishScene.publish Edan3DPackage update failed', LOG.LS.eCOLL);
                 return false;
@@ -105,7 +122,22 @@ export class PublishScene {
         return true;
     }
 
-    private async fetchScene(): Promise<boolean> {
+    private async analyze(ePublishedStateIntended?: DBAPI.ePublishedState): Promise<boolean> {
+        this.analyzed = true;
+        if (!await this.fetchScene(ePublishedStateIntended) || !this.scene || !this.subject)
+            return false;
+        LOG.info(`PublishScene.analyze UUID ${this.scene.EdanUUID}`, LOG.LS.eCOLL);
+
+        // Process models, building a mapping from the model's idSystemObject -> ModelSceneXref, for those models that are for Downloads
+        if (!await this.computeMSXMap() || !this.DownloadMSXMap)
+            return false;
+        // collect and analyze assets
+        if (!await this.collectAssets(ePublishedStateIntended) || this.SacList.length <= 0)
+            return false;
+        return true;
+    }
+
+    private async fetchScene(ePublishedStateIntended?: DBAPI.ePublishedState): Promise<boolean> {
         const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(this.idSystemObject);
         if (!oID) {
             LOG.error(`PublishScene.fetchScene unable to retrieve object details from ${this.idSystemObject}`, LOG.LS.eCOLL);
@@ -131,7 +163,9 @@ export class PublishScene {
             return false;
         }
 
-        if (this.eState !== DBAPI.ePublishedState.eNotPublished &&
+        // If we're intending to change publishing state, verify that we can given the intended published state
+        if (ePublishedStateIntended !== undefined &&
+            ePublishedStateIntended !== DBAPI.ePublishedState.eNotPublished &&
             (!this.scene.ApprovedForPublication || !this.scene.PosedAndQCd)) {
             LOG.error(`PublishScene.fetchScene attempting to publish non-Approved and/or non-QC'd scene ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
             return false;
@@ -178,7 +212,7 @@ export class PublishScene {
         return true;
     }
 
-    private async collectAssets(): Promise<boolean> {
+    private async collectAssets(ePublishedStateIntended?: DBAPI.ePublishedState): Promise<boolean> {
         if (!this.DownloadMSXMap)
             return false;
         this.assetVersions = await DBAPI.AssetVersion.fetchLatestFromSystemObject(this.idSystemObject);
@@ -216,20 +250,22 @@ export class PublishScene {
                 this.sceneFile = assetVersion.FileName;
                 this.extractedPath = asset.FilePath;
 
-                // extract scene's SVX.JSON for use in updating EDAN search status and creating downloads
-                const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
-                if (!RSR.success || !RSR.readStream) {
-                    LOG.error(`PublishScene.collectAssets failed to extract stream for scene's asset version ${assetVersion.idAssetVersion}`, LOG.LS.eCOLL);
-                    return false;
-                }
+                // if we're intending to publish, extract scene's SVX.JSON for use in updating EDAN search status and creating downloads
+                if (ePublishedStateIntended !== undefined) {
+                    const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
+                    if (!RSR.success || !RSR.readStream) {
+                        LOG.error(`PublishScene.collectAssets failed to extract stream for scene's asset version ${assetVersion.idAssetVersion}`, LOG.LS.eCOLL);
+                        return false;
+                    }
 
-                const svx: SvxReader = new SvxReader();
-                stageRes = await svx.loadFromStream(RSR.readStream);
-                if (!stageRes.success) {
-                    LOG.error(`PublishScene.collectAssets failed to extract scene's svx.json contents: ${stageRes.error}`, LOG.LS.eCOLL);
-                    return false;
+                    const svx: SvxReader = new SvxReader();
+                    stageRes = await svx.loadFromStream(RSR.readStream);
+                    if (!stageRes.success) {
+                        LOG.error(`PublishScene.collectAssets failed to extract scene's svx.json contents: ${stageRes.error}`, LOG.LS.eCOLL);
+                        return false;
+                    }
+                    this.svxDocument = svx.SvxDocument;
                 }
-                this.svxDocument = svx.SvxDocument;
             }
         }
         return true;
@@ -432,7 +468,7 @@ export class PublishScene {
         return { filename, url, type, title, name, attributes, category };
     }
 
-    private async updatePublishedState(): Promise<boolean> {
+    private async updatePublishedState(ePublishedStateIntended: DBAPI.ePublishedState): Promise<boolean> {
         if (!this.systemObjectVersion)
             return false;
 
@@ -440,11 +476,11 @@ export class PublishScene {
         const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(this.idSystemObject);
         if (LR && LR.License &&
             DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) === DBAPI.ePublishedState.eNotPublished)
-            this.eState = DBAPI.ePublishedState.eNotPublished;
-        LOG.info(`PublishScene.updatePublishedState computed license ${LR ? JSON.stringify(LR.License, H.Helpers.saferStringify) : 'none'}, resulting in published state of ${this.eState}`, LOG.LS.eCOLL);
+            ePublishedStateIntended = DBAPI.ePublishedState.eNotPublished;
+        LOG.info(`PublishScene.updatePublishedState computed license ${LR ? JSON.stringify(LR.License, H.Helpers.saferStringify) : 'none'}, resulting in published state of ${ePublishedStateIntended}`, LOG.LS.eCOLL);
 
-        if (this.systemObjectVersion.publishedStateEnum() !== this.eState) {
-            this.systemObjectVersion.setPublishedState(this.eState);
+        if (this.systemObjectVersion.publishedStateEnum() !== ePublishedStateIntended) {
+            this.systemObjectVersion.setPublishedState(ePublishedStateIntended);
             if (!await this.systemObjectVersion.update()) {
                 LOG.error(`PublishScene.updatePublishedState unable to update published state for ${JSON.stringify(this.systemObjectVersion, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
                 return false;
