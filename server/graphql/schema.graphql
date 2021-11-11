@@ -128,13 +128,14 @@ type Mutation {
   updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
   updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
   updateUser(input: UpdateUserInput!): CreateUserResult!
-  uploadAsset(file: Upload!, type: Int!, idAsset: Int): UploadAssetResult!
+  uploadAsset(file: Upload!, type: Int!, idAsset: Int, idSystemObjectForAttachment: Int): UploadAssetResult!
 }
 
 type UploadAssetInput {
   file: Upload!
   type: Int!
   idAsset: Int
+  idSystemObjectForAttachment: Int
 }
 
 enum UploadStatus {
