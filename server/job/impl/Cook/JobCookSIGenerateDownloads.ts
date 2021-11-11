@@ -282,6 +282,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 LOG.error(error, LOG.LS.eJOB);
                 return { success: false, error };
             }
+
+            // FIXME: Add scene asset metadata for attachments
         }
 
         // Clone scene's systemObjectVersion, using the assetVersionOverrideMap populated with new/updated assets

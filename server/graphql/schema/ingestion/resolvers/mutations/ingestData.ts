@@ -866,6 +866,7 @@ class IngestDataWorker extends ResolverBase {
             }
         }
 
+        // FIXME: create scene metadata (for attachments a.k.a. downloads a.k.a. resources)
 
         if (scene.idAssetVersion)
             this.assetVersionMap.set(scene.idAssetVersion, sceneDB);
