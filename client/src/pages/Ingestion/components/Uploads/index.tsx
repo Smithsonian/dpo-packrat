@@ -11,7 +11,7 @@ import KeepAlive from 'react-activation';
 import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
-import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute, eIngestionMode } from '../../../../constants';
 import { useMetadataStore, useUploadStore, useVocabularyStore } from '../../../../store';
 import { Colors } from '../../../../theme';
 import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
@@ -90,7 +90,7 @@ function Uploads(): React.ReactElement {
 
     // Responsible for setting UpdateMode state and file type so that it files to be updated will have the appropriate file type
     useEffect(() => {
-        setUpdateMode(urlParams.get('mode') === '1');
+        setUpdateMode(Number(urlParams.get('mode')) === eIngestionMode.eIngest);
         if (urlParams.has('fileType')) setUpdateWorkflowFileType(Number(urlParams.get('fileType')));
     }, [setUpdateMode, window.location.search]);
 
@@ -176,8 +176,12 @@ function Uploads(): React.ReactElement {
             toast.dismiss();
             const toBeIngested = getSelectedFiles(completed, true);
 
-            // if every selected file is for update, skip the subject/items step
-            toBeIngested.every(file => file.idAsset) ? onNext() : await history.push(nextStep);
+            // if every selected file is for update OR attach, skip the subject/items step
+            if (toBeIngested.every(file => file.idAsset) /* || toBeIngested.every(file => file.idSystemObject) */) {
+                onNext();
+            } else {
+                await history.push(nextStep);
+            }
         } catch {
             setGettingAssetDetails(false);
         }

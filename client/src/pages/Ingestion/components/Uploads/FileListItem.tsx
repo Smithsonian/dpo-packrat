@@ -143,6 +143,7 @@ interface FileListItemProps {
     type: number;
     status: string;
     idAsset: number | undefined;
+    // idSystemObjectAttachmentParent: number | undefined;
     uploadPendingList: boolean | undefined;
     onSelect: (id: FileId, selected: boolean) => void;
     onUpload: (id: FileId) => void;
@@ -166,6 +167,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         failed,
         uploading,
         idAsset,
+        // idSystemObjectAttachmentParent
         uploadPendingList,
         onChangeType,
         onUpload,
@@ -216,6 +218,39 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         hidden: { opacity: 0.5 }
     };
 
+    let content;
+    if (idAsset || (uploadPendingList && mode)) {
+        content =  (
+            <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
+                <MenuItem value={updateWorkflowFileType || type}>Update</MenuItem>
+            </Select>
+        )
+    } 
+    /* else if (idSystemObjectAttachmentParent || (uploadPendingList && mode)) {
+        content = (
+            <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
+                <MenuItem value={updateWorkflowFileType || type}>Attachment</MenuItem>
+            </Select>
+        )
+    } */
+    else {
+        content = (
+            <Select
+                value={type}
+                disabled={complete || uploading}
+                className={classes.typeSelect}
+                onChange={({ target: { value } }) => onChangeType(id, value as number)}
+                disableUnderline
+            >
+                {typeOptions.map((option: VocabularyOption, index) => (
+                    <MenuItem key={index} value={option.idVocabulary}>
+                        {option.Term}
+                    </MenuItem>
+                ))}
+            </Select>
+        )
+    }
+
     return (
         <motion.div className={classes.container} variants={variants} initial='hidden' animate='visible' whileTap={{ scale: complete ? 0.98 : 1 }}>
             <Box className={classes.item} onClick={select}>
@@ -246,25 +281,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                     </Typography>
                 </Box>
                 <Box className={classes.type}>
-                    {idAsset || (uploadPendingList && mode) ? (
-                        <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
-                            <MenuItem value={updateWorkflowFileType || type}>Update</MenuItem>
-                        </Select>
-                    ) : (
-                        <Select
-                            value={type}
-                            disabled={complete || uploading}
-                            className={classes.typeSelect}
-                            onChange={({ target: { value } }) => onChangeType(id, value as number)}
-                            disableUnderline
-                        >
-                            {typeOptions.map((option: VocabularyOption, index) => (
-                                <MenuItem key={index} value={option.idVocabulary}>
-                                    {option.Term}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    )}
+                    {content}
                 </Box>
                 <Box className={classes.options}>{options}</Box>
             </Box>
