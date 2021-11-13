@@ -171,7 +171,7 @@ async function extractMetadata(idSystemObject: number, metadataColumns: string[]
     if (!navigation)
         return false;
 
-    const metadataFilter: NAV.MetadataFilter = { idRoot: idSystemObject, forAssetChildren: true, metadataColumns };
+    const metadataFilter: NAV.MetadataFilter = { idRoot: idSystemObject, forAssetChildren: true, metadataColumns, rows: 300 };
     const metadataResult: NAV.MetadataResult = await navigation.getMetadata(metadataFilter);
     const metadataColLen: number = metadataFilter.metadataColumns.length;
     if (!metadataResult.success) {

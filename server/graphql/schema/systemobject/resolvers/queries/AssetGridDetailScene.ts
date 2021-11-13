@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../../../../db';
+// import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 import { RouteBuilder } from '../../../../../http/routes/routeBuilder';
 import { AssetGridDetailBase, ColumnObject, LinkObject, eAssetGridColumnType, eIcon, eLinkOrigin } from './AssetGridCommon';
@@ -34,15 +35,16 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
         this.dateCreated = assetVersion.DateCreated;
         this.size = assetVersion.StorageSize.toString();
 
-        this.isAttachment = H.Helpers.safeBoolean(metadataMap.get('isAttachment'));
+        this.isAttachment = H.Helpers.safeBoolean(metadataMap.get('isattachment'));
         this.type = H.Helpers.safeString(metadataMap.get('type'));
         this.category = H.Helpers.safeString(metadataMap.get('category'));
         this.units = H.Helpers.safeString(metadataMap.get('units'));
-        this.modelType = H.Helpers.safeString(metadataMap.get('modelType'));
-        this.fileType = H.Helpers.safeString(metadataMap.get('fileType'));
-        this.gltfStandardized = H.Helpers.safeBoolean(metadataMap.get('gltfStandardized'));
-        this.dracoCompressed = H.Helpers.safeBoolean(metadataMap.get('dracoCompressed'));
+        this.modelType = H.Helpers.safeString(metadataMap.get('modeltype'));
+        this.fileType = H.Helpers.safeString(metadataMap.get('filetype'));
+        this.gltfStandardized = H.Helpers.safeBoolean(metadataMap.get('gltfstandardized'));
+        this.dracoCompressed = H.Helpers.safeBoolean(metadataMap.get('dracocompressed'));
         this.title = H.Helpers.safeString(metadataMap.get('title'));
+        // LOG.info(`AssetGridDetailScene(${idSystemObject}): ${JSON.stringify(metadataMap, H.Helpers.saferStringify)}, ${JSON.stringify(this)}`, LOG.LS.eGQL);
     }
 
     static getColumns(): ColumnObject[] {
@@ -57,7 +59,7 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
 
             { colName: 'isAttachment', colLabel: 'Att?', colDisplay: true, colType: eAssetGridColumnType.eBoolean, colAlign: 'center' },
             { colName: 'type', colLabel: 'Type', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
-            { colName: 'category', colLabel: 'Type', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'category', colLabel: 'Category', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
             { colName: 'units', colLabel: 'Units', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
             { colName: 'modelType', colLabel: 'Model Type', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
             { colName: 'fileType', colLabel: 'File Type', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
@@ -68,7 +70,7 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
     }
 
     static getMetadataColumnNames(): string[] {
-        return ['isAttachment', 'type', 'category', 'units', 'modelType', 'fileType', 'gltfStandardized', 'dracoCompressed', 'title'];
+        return ['isattachment', 'type', 'category', 'units', 'modeltype', 'filetype', 'gltfstandardized', 'dracocompressed', 'title'];
     }
 }
 
