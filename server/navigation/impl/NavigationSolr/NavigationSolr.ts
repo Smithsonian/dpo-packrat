@@ -361,6 +361,12 @@ export class NavigationSolr implements NAV.INavigation {
             filterColumns.push(metadataColumn.toLowerCase() + '_v');
         SQ = SQ.fl(filterColumns);
 
+        // request up to filter.rows entries, sorted by id desc, and use the cursor mark, if any is provided
+        if (filter.rows > 0)
+            SQ = SQ.rows(filter.rows);
+        SQ = SQ.sort({ id: 'desc' }); // sort by id desc (idSystemObject)
+        SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
+
         LOG.info(`NavigationSolr.computeSolrMetaQuery ${JSON.stringify(filter)}:\n${this._solrClientMeta.solrUrl()}/select?${SQ.build()}`, LOG.LS.eNAV);
         return SQ;
     }
@@ -402,9 +408,13 @@ export class NavigationSolr implements NAV.INavigation {
             entries.push(entry);
         }
 
+        let cursorMark: string | null = queryResult.result.nextCursorMark ? queryResult.result.nextCursorMark : null;
+        if (cursorMark == filter.cursorMark)    // solr returns the same cursorMark as the initial query when there are no more results; if so, clear out cursorMark
+            cursorMark = null;
+
         // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
         // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(entries)}`, LOG.LS.eNAV);
-        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns };
+        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
     private computeMetaMetadata(doc: any, metadataColumns: string[]): string [] {

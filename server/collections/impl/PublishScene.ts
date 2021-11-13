@@ -2,6 +2,7 @@ import { Config } from '../../config';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as COL from '../../collections/interface/';
+import * as META from '../../metadata';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ZIP from '../../utils/zipStream';
@@ -12,7 +13,7 @@ import { IDocument } from '../../types/voyager';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 
-type SceneAssetCollector = {
+export type SceneAssetCollector = {
     idSystemObject: number;
     asset: DBAPI.Asset;
     assetVersion: DBAPI.AssetVersion;
@@ -45,7 +46,7 @@ export class PublishScene {
     }
 
     /** Has no side effects (i.e. just computes the resource list) */
-    async computeResourceList(): Promise<COL.Edan3DResource[] | null> {
+    async computeResourceMap(): Promise<Map<SceneAssetCollector, COL.Edan3DResource> | null> {
         if (!this.analyzed) {
             const result: boolean = await this.analyze();
             if (!result)
@@ -54,7 +55,7 @@ export class PublishScene {
 
         if (!this.scene)
             return null;
-        const edan3DResourceList: COL.Edan3DResource[] = [];
+        const resourceMap: Map<SceneAssetCollector, COL.Edan3DResource> = new Map<SceneAssetCollector, COL.Edan3DResource>();
         for (const SAC of this.SacList.values()) {
             if (!SAC.model) // SAC is not a download, skip it
                 continue;
@@ -62,9 +63,9 @@ export class PublishScene {
             // compute download entry
             const resource: COL.Edan3DResource | null = await this.extractResource(SAC, this.scene.EdanUUID!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (resource)
-                edan3DResourceList.push(resource);
+                resourceMap.set(SAC, resource);
         }
-        return edan3DResourceList;
+        return resourceMap;
     }
 
     async publish(ICol: COL.ICollection, ePublishedStateIntended: DBAPI.ePublishedState): Promise<boolean> {
@@ -122,6 +123,54 @@ export class PublishScene {
         return true;
     }
 
+    static async extractSceneMetadata(idSystemObject: number, idUser: number | null): Promise<H.IOResults> {
+        const publishScene: PublishScene = new PublishScene(idSystemObject);
+        const resourceMap: Map<SceneAssetCollector, COL.Edan3DResource> | null = await publishScene.computeResourceMap();
+        if (!resourceMap)
+            return { success: false, error: 'PublishScene.extractSceneMetadata failed to compute resource map' };
+
+        // LOG.info(`extractSceneMetadata(${idSystemObject}) handling ${resourceMap.size} resources`, LOG.LS.eCOLL);
+        const retValue: H.IOResults = { success: true, error: '' };
+        for (const [ SAC, resource ] of resourceMap) {
+            // LOG.info(`extractSceneMetadata(${idSystemObject}, ${SAC.idSystemObject}) = ${JSON.stringify(resource)}`, LOG.LS.eCOLL);
+            const extractor: META.MetadataExtractor = new META.MetadataExtractor();
+            extractor.metadata.set('isAttachment', '1');
+            if (resource.type)
+                extractor.metadata.set('type', resource.type);
+            if (resource.category)
+                extractor.metadata.set('category', resource.category);
+            if (resource.title)
+                extractor.metadata.set('title', resource.title);
+            if (resource.attributes) {
+                for (const attribute of resource.attributes) {
+                    if (attribute.UNITS)
+                        extractor.metadata.set('units', attribute.UNITS);
+                    if (attribute.MODEL_FILE_TYPE)
+                        extractor.metadata.set('modelType', attribute.MODEL_FILE_TYPE);
+                    if (attribute.FILE_TYPE)
+                        extractor.metadata.set('fileType', attribute.FILE_TYPE);
+                    if (attribute.GLTF_STANDARDIZED)
+                        extractor.metadata.set('gltfStandardized', attribute.GLTF_STANDARDIZED ? '1' : '0');
+                    if (attribute.DRACO_COMPRESSED)
+                        extractor.metadata.set('dracoCompressed', attribute.DRACO_COMPRESSED ? '1' : '0');
+                }
+            }
+
+            if (extractor.metadata.size > 0) {
+                const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(SAC.assetVersion);
+                const results: H.IOResults = SOI ? await META.MetadataManager.persistExtractor(SOI.idSystemObject, idSystemObject, extractor, idUser) // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                    : { success: false, error: 'Unable to compute idSystemObject for asset version' };
+                if (!results.success) {
+                    const error: string = `PublishScene.extractSceneMetadata unable to persist scene attachment metadata for asset version ${JSON.stringify(SAC.assetVersion, H.Helpers.saferStringify)}: ${results.error}`;
+                    LOG.error(error, LOG.LS.eCOLL);
+                    retValue.error += (retValue.error ? '\n' : '') + error;
+                    retValue.success = false;
+                }
+            }
+        }
+        return retValue;
+    }
+
     private async analyze(ePublishedStateIntended?: DBAPI.ePublishedState): Promise<boolean> {
         this.analyzed = true;
         if (!await this.fetchScene(ePublishedStateIntended) || !this.scene || !this.subject)
@@ -145,7 +194,7 @@ export class PublishScene {
         }
 
         if (oID.eObjectType !== DBAPI.eSystemObjectType.eScene) {
-            LOG.error(`PublishScene.fetchScene received eSceneQCd event for non scene object ${JSON.stringify(oID, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+            LOG.error(`PublishScene.fetchScene called for non scene object ${JSON.stringify(oID, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
             return false;
         }
 

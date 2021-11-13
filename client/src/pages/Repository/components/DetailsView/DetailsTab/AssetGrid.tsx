@@ -21,7 +21,7 @@ import { updateSystemObjectUploadRedirect, attachSystemObjectUploadRedirect } fr
 import { useHistory } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import MUIDataTable from 'mui-datatables';
-import GetAppIcon from '@material-ui/icons/GetApp';
+import { CheckCircleOutline, GetApp } from '@material-ui/icons';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import { DataTableOptions } from '../../../../../types/component';
@@ -173,8 +173,15 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
 
             switch (colType) {
                 case eAssetGridColumnType.eString:
-                case eAssetGridColumnType.eBoolean:
                 case eAssetGridColumnType.eNumber:
+                    break;
+                case eAssetGridColumnType.eBoolean:
+                    gridColumnObject.options = {
+                        ...gridColumnObject.options,
+                        customBodyRender(value) {
+                            return value ? <CheckCircleOutline /> : '';
+                        }
+                    };
                     break;
                 case eAssetGridColumnType.eDate:
                     gridColumnObject.options = {
@@ -250,7 +257,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
 
     const renderIcon = (type: eIcon) => {
         if (type === eIcon.eIconDownload) {
-            return <GetAppIcon />;
+            return <GetApp />;
         }
         return;
     };
@@ -322,7 +329,6 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                         Add Attachment
                     </Button>
                 </Box>
-                
             </Box>
         </React.Fragment>
     );
