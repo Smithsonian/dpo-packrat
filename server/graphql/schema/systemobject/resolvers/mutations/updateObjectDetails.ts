@@ -57,10 +57,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         const message = `Unable to update identifier with id ${idIdentifier}; update failed`;
                         LOG.error(message, LOG.LS.eDB);
                         return { success: false, message };
-                    } else {
-                        const message = `Unable to fetch identifier with id ${idIdentifier}; update failed`;
-                        LOG.error(message, LOG.LS.eDB);
-                        return { success: false, message };
                     }
                 }
             }
