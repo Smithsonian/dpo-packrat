@@ -169,23 +169,12 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
     };
 
     // creates a unique map of asset.filePath and file.idVVariantType
-    const foldersMap = new Map<string, number>();
-
-    const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(idCaptureData);
-    if (CDFiles) {
-        for (const file of CDFiles) {
-            const asset = await DBAPI.Asset.fetch(file.idAsset);
-            if (asset) {
-                if (!foldersMap.has(asset.FilePath) && file.idVVariantType) {
-                    foldersMap.set(asset.FilePath, file.idVVariantType);
-                }
-            }
-        }
+    const foldersMap: Map<string, number> | null = await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(idCaptureData);
+    if (foldersMap) {
+        foldersMap.forEach((value, key) => {
+            fields.folders.push({ name: key, variantType: value });
+        });
     }
-
-    foldersMap.forEach((value, key) => {
-        fields.folders.push({ name: key, variantType: value });
-    });
 
     const CaptureData = await DBAPI.CaptureData.fetch(idCaptureData);
     fields = {

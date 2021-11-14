@@ -666,10 +666,57 @@ export type GetAssetResult = {
   Asset?: Maybe<Asset>;
 };
 
+export type UpdatePhotogrammetryMetadata = {
+  __typename?: 'UpdatePhotogrammetryMetadata';
+  name: Scalars['String'];
+  dateCaptured: Scalars['String'];
+  datasetType: Scalars['Int'];
+  description: Scalars['String'];
+  cameraSettingUniform: Scalars['Boolean'];
+  datasetFieldId?: Maybe<Scalars['Int']>;
+  itemPositionType?: Maybe<Scalars['Int']>;
+  itemPositionFieldId?: Maybe<Scalars['Int']>;
+  itemArrangementFieldId?: Maybe<Scalars['Int']>;
+  focusType?: Maybe<Scalars['Int']>;
+  lightsourceType?: Maybe<Scalars['Int']>;
+  backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+  clusterType?: Maybe<Scalars['Int']>;
+  clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+  folders: Array<IngestFolder>;
+};
+
+export type UpdateModelMetadata = {
+  __typename?: 'UpdateModelMetadata';
+  name: Scalars['String'];
+  creationMethod: Scalars['Int'];
+  modality: Scalars['Int'];
+  purpose: Scalars['Int'];
+  units: Scalars['Int'];
+  dateCaptured: Scalars['String'];
+  modelFileType: Scalars['Int'];
+};
+
+export type UpdateSceneMetadata = {
+  __typename?: 'UpdateSceneMetadata';
+  name: Scalars['String'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
+  referenceModels?: Maybe<Array<ReferenceModel>>;
+};
+
+export type UpdatedAssetVersionMetadata = {
+  __typename?: 'UpdatedAssetVersionMetadata';
+  idAssetVersion: Scalars['Int'];
+  CaptureDataPhoto?: Maybe<UpdatePhotogrammetryMetadata>;
+  Model?: Maybe<UpdateModelMetadata>;
+  Scene?: Maybe<UpdateSceneMetadata>;
+};
+
 export type GetUploadedAssetVersionResult = {
   __typename?: 'GetUploadedAssetVersionResult';
   AssetVersion: Array<AssetVersion>;
   idAssetVersionsUpdated: Array<Scalars['Int']>;
+  UpdatedAssetVersionMetadata: Array<UpdatedAssetVersionMetadata>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -3107,6 +3154,27 @@ export type GetUploadedAssetVersionQuery = (
           & Pick<Vocabulary, 'idVocabulary' | 'Term'>
         )> }
       )> }
+    )>, UpdatedAssetVersionMetadata: Array<(
+      { __typename?: 'UpdatedAssetVersionMetadata' }
+      & Pick<UpdatedAssetVersionMetadata, 'idAssetVersion'>
+      & { CaptureDataPhoto?: Maybe<(
+        { __typename?: 'UpdatePhotogrammetryMetadata' }
+        & Pick<UpdatePhotogrammetryMetadata, 'name' | 'dateCaptured' | 'datasetType' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId'>
+        & { folders: Array<(
+          { __typename?: 'IngestFolder' }
+          & Pick<IngestFolder, 'name' | 'variantType'>
+        )> }
+      )>, Model?: Maybe<(
+        { __typename?: 'UpdateModelMetadata' }
+        & Pick<UpdateModelMetadata, 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType'>
+      )>, Scene?: Maybe<(
+        { __typename?: 'UpdateSceneMetadata' }
+        & Pick<UpdateSceneMetadata, 'name' | 'approvedForPublication' | 'posedAndQCd'>
+        & { referenceModels?: Maybe<Array<(
+          { __typename?: 'ReferenceModel' }
+          & Pick<ReferenceModel, 'idSystemObject' | 'name' | 'usage' | 'quality' | 'fileSize' | 'resolution' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z'>
+        )>> }
+      )> }
     )> }
   ) }
 );
@@ -5231,6 +5299,57 @@ export const GetUploadedAssetVersionDocument = gql`
       }
     }
     idAssetVersionsUpdated
+    UpdatedAssetVersionMetadata {
+      idAssetVersion
+      CaptureDataPhoto {
+        name
+        dateCaptured
+        datasetType
+        description
+        cameraSettingUniform
+        datasetFieldId
+        itemPositionType
+        itemPositionFieldId
+        itemArrangementFieldId
+        focusType
+        lightsourceType
+        backgroundRemovalMethod
+        clusterType
+        clusterGeometryFieldId
+        folders {
+          name
+          variantType
+        }
+      }
+      Model {
+        name
+        creationMethod
+        modality
+        purpose
+        units
+        dateCaptured
+        modelFileType
+      }
+      Scene {
+        name
+        approvedForPublication
+        posedAndQCd
+        referenceModels {
+          idSystemObject
+          name
+          usage
+          quality
+          fileSize
+          resolution
+          boundingBoxP1X
+          boundingBoxP1Y
+          boundingBoxP1Z
+          boundingBoxP2X
+          boundingBoxP2Y
+          boundingBoxP2Z
+        }
+      }
+    }
   }
 }
     `;

@@ -2316,6 +2316,18 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(captureDataFile).toBeTruthy();
     });
 
+    test('DB Fetch CaptureDataFile: CaptureDataFile.fetchFolderVariantMapFromCaptureData', async () => {
+        let folderVariantMap: Map<string, number> | null = null;
+        if (captureData) {
+            folderVariantMap = await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(captureData.idCaptureData);
+            if (folderVariantMap && assetThumbnail && vocabulary) {
+                expect(folderVariantMap.has(assetThumbnail.FilePath)).toBeTruthy();
+                expect(folderVariantMap.get(assetThumbnail.FilePath)).toEqual(vocabulary.idVocabulary);
+            }
+        }
+        expect(captureDataFile).toBeTruthy();
+    });
+
     test('DB Fetch By ID: CaptureDataGroup', async () => {
         let captureDataGroupFetch: DBAPI.CaptureDataGroup | null = null;
         if (captureDataGroup) {
@@ -7544,6 +7556,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.CaptureData.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.CaptureDataFile.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureDataFile.fetchFromCaptureData(0)).toBeNull();
+        expect(await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(0)).toBeNull();
         expect(await DBAPI.CaptureDataGroup.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureDataGroup.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.CaptureDataGroupCaptureDataXref.fetch(0)).toBeNull();

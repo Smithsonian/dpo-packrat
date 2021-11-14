@@ -1,7 +1,9 @@
 /* eslint-disable camelcase */
 import { CaptureDataFile as CaptureDataFileBase } from '@prisma/client';
+import { Asset } from './Asset';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 
 export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implements CaptureDataFileBase {
     idCaptureDataFile!: number;
@@ -77,6 +79,33 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             LOG.error('DBAPI.CaptureDataFile.fetchFromCaptureData', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    /** Returns map from asset filePath -> idVVariantType */
+    static async fetchFolderVariantMapFromCaptureData(idCaptureData: number): Promise<Map<string, number> | null> {
+        if (!idCaptureData)
+            return null;
+        // creates a unique map of asset.filePath and file.idVVariantType
+        const folderVariantMap = new Map<string, number>();
+
+        const CDFiles: CaptureDataFile[] | null = await CaptureDataFile.fetchFromCaptureData(idCaptureData); /* istanbul ignore next */
+        if (!CDFiles) {
+            LOG.error(`DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData failed to retrieve CaptureDataFiles from ${idCaptureData}`, LOG.LS.eDB);
+            return null;
+        }
+
+        for (const CDFile of CDFiles) {
+            const asset: Asset | null = await Asset.fetch(CDFile.idAsset); /* istanbul ignore next */
+            if (!asset) {
+                LOG.error(`DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData failed to fetch asset from ${JSON.stringify(CDFile, H.Helpers.saferStringify)}`, LOG.LS.eDB);
+                return null;
+            }
+
+            if (!folderVariantMap.has(asset.FilePath) && CDFile.idVVariantType) {
+                folderVariantMap.set(asset.FilePath, CDFile.idVVariantType);
+            }
+        }
+        return folderVariantMap;
     }
 }
 
