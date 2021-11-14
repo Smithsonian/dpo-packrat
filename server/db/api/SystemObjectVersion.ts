@@ -133,8 +133,14 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
         if (!idSystemObject)
             return null;
         try {
-            const prisma: PrismaClient = new PrismaClient();
-            return await prisma.$transaction(async (prisma) => {
+            const prismaClient: PrismaClient | DBC.PrismaClientTrans = DBC.DBConnection.prisma;
+            // if our current prisma client does not have the $transaction method, then we're in a transaction already, so just do the work
+            if (!DBC.DBConnection.isFullPrismaClient(prismaClient))
+                return SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, assetVersionOverrideMap);
+
+            // otherwise, start a new transaction:
+            // LOG.info('DBAPI.SystemObjectVersion.cloneObjectAndXrefs starting a new DB transaction', LOG.LS.eDB);
+            return await prismaClient.$transaction(async (prisma) => {
                 const transactionNumber: number = await DBC.DBConnection.setPrismaTransaction(prisma);
                 const retValue: SystemObjectVersion | null = await SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, assetVersionOverrideMap);
                 DBC.DBConnection.clearPrismaTransaction(transactionNumber);

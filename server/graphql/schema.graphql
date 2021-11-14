@@ -280,9 +280,52 @@ type GetAssetResult {
   Asset: Asset
 }
 
+type UpdatePhotogrammetryMetadata {
+  name: String!
+  dateCaptured: String!
+  datasetType: Int!
+  description: String!
+  cameraSettingUniform: Boolean!
+  datasetFieldId: Int
+  itemPositionType: Int
+  itemPositionFieldId: Int
+  itemArrangementFieldId: Int
+  focusType: Int
+  lightsourceType: Int
+  backgroundRemovalMethod: Int
+  clusterType: Int
+  clusterGeometryFieldId: Int
+  folders: [IngestFolder!]!
+}
+
+type UpdateModelMetadata {
+  name: String!
+  creationMethod: Int!
+  modality: Int!
+  purpose: Int!
+  units: Int!
+  dateCaptured: String!
+  modelFileType: Int!
+}
+
+type UpdateSceneMetadata {
+  name: String!
+  approvedForPublication: Boolean!
+  posedAndQCd: Boolean!
+  referenceModels: [ReferenceModel!]
+}
+
+type UpdatedAssetVersionMetadata {
+  idAssetVersion: Int!
+  CaptureDataPhoto: UpdatePhotogrammetryMetadata
+  Model: UpdateModelMetadata
+  Scene: UpdateSceneMetadata
+}
+
 type GetUploadedAssetVersionResult {
   AssetVersion: [AssetVersion!]!
   idAssetVersionsUpdated: [Int!]!
+  UpdatedAssetVersionMetadata: [UpdatedAssetVersionMetadata!]!
 }
 
 input GetContentsForAssetVersionsInput {
