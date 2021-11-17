@@ -38,6 +38,7 @@ type ComputeSceneInfoResult = {
     assetVersionGeometry?: DBAPI.AssetVersion | undefined;
     assetVersionDiffuse?: DBAPI.AssetVersion | undefined;
     assetVersionMTL?: DBAPI.AssetVersion | undefined;
+    scene?: DBAPI.Scene | undefined;
 };
 
 export class WorkflowEngine implements WF.IWorkflowEngine {
@@ -216,6 +217,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                             }
                         } else if (CSIR.idScene !== oID.idObject) {
                             LOG.error(`WorkflowEngine.eventIngestionIngestObject encountered multiple scenes ([${CSIR.idScene}, ${oID.idObject}])`, LOG.LS.eWF);
+                            return null;
+                        } else if (CSIR.scene !== undefined && !CSIR.scene.PosedAndQCd) { // we have scene info, and that scene has not been posed and QCd
+                            LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)} which has not been PosedAndQCd`, LOG.LS.eWF);
                             return null;
                         }
                     }
@@ -656,12 +660,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 CMIR = undefined;
         }
         if (!CMIR) {
-            LOG.error(`WorkflowEngine.computeSceneInfo unable to compute scene's master model source for ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
+            LOG.info(`WorkflowEngine.computeSceneInfo unable to compute scene's master model source for ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
             return { exitEarly: true };
         }
 
         const retValue = { exitEarly: false, idScene, idModel: CMIR.idModel, idSystemObjectScene, assetSVX, assetVersionGeometry: CMIR.assetVersionGeometry,
-            assetVersionDiffuse: CMIR.assetVersionDiffuse, assetVersionMTL: CMIR.assetVersionMTL };
+            assetVersionDiffuse: CMIR.assetVersionDiffuse, assetVersionMTL: CMIR.assetVersionMTL, scene: sceneConstellation && sceneConstellation.Scene ? sceneConstellation.Scene : undefined };
         LOG.info(`WorkflowEngine.computeSceneInfo returning ${JSON.stringify(retValue, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         return retValue;
     }
