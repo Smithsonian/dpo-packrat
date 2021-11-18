@@ -1112,7 +1112,7 @@ export class AssetStorageAdapter {
             if (!DWSR.success)
                 return { asset: null, assetVersion, success: false, error: `AssetStorageAdapter.discardAssetVersion: ${DWSR.error}` };
         } else
-            LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion} skipped IStorage.discardWriteStream as asset reference count is ${storageKeyStagingCount} > 1`, LOG.LS.eSTR);
+            LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion} skipped IStorage.discardWriteStream as asset reference count is ${storageKeyStagingCount} !== 1`, LOG.LS.eSTR);
 
         // retire assetVersion
         if (!await DBAPI.SystemObject.retireSystemObject(assetVersion)) /* istanbul ignore next */
