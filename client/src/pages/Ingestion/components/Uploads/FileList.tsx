@@ -33,7 +33,7 @@ function FileList(props: FileListProps): React.ReactElement {
 
     const onSelect = (id: FileId, selected: boolean): void => selectFile(id, selected);
 
-const getFileList = ({ id, name, size, status, selected, progress, type, idAsset /*, idSystemObjectParentAttachment */ }: IngestionFile, index: number) => {
+    const getFileList = ({ id, name, size, status, selected, progress, type, idAsset /*, idSystemObjectForAttachment */ }: IngestionFile, index: number) => {
         const uploading = (status === FileUploadStatus.UPLOADING || status === FileUploadStatus.PROCESSING);
         const complete = status === FileUploadStatus.COMPLETE;
         const failed = status === FileUploadStatus.FAILED;
@@ -63,7 +63,7 @@ const getFileList = ({ id, name, size, status, selected, progress, type, idAsset
                     onRetry={onRetry}
                     onRemove={onRemove}
                     idAsset={idAsset}
-                    // idSystemObjectParentAttachment={idSystemObjectParentAttachment}
+                    // idSystemObjectForAttachment={idSystemObjectForAttachment}
                     uploadPendingList={uploadPendingList}
                 />
             </AnimatePresence>

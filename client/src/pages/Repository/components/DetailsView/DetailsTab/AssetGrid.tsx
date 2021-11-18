@@ -285,7 +285,8 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
     }
 
     const addAttachment = () => {
-        const newEndpoint = attachSystemObjectUploadRedirect(idSystemObject);
+        const { assetType } = assetRows[0];
+        const newEndpoint = attachSystemObjectUploadRedirect(idSystemObject, assetType);
         history.push(newEndpoint);
     };
 
@@ -325,9 +326,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                     </Button>
                 </Box>
                 <Box display='flex' flexDirection='row' alignItems='center' style={{ alignSelf: 'flex-end' }}>
-                    <Button className={classes.btn} variant='contained' color='primary' onClick={addAttachment}>
-                        Add Attachment
-                    </Button>
+                    { systemObjectType === eSystemObjectType.eScene && (<Button className={classes.btn} variant='contained' color='primary' onClick={addAttachment}>Add Attachment</Button>) }
                 </Box>
             </Box>
         </React.Fragment>
