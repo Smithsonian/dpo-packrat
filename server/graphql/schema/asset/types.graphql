@@ -27,9 +27,12 @@ type AssetVersion {
     FileName: String!
     Ingested: Boolean
     Version: Int!
+    idSOAttachment: Int
     Asset: Asset
     User: User
     SystemObject: SystemObject
+    SOAttachment: SystemObject
+    SOAttachmentObjectType: Int
 }
 
 type AssetGroup {

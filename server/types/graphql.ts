@@ -784,9 +784,12 @@ export type AssetVersion = {
   FileName: Scalars['String'];
   Ingested?: Maybe<Scalars['Boolean']>;
   Version: Scalars['Int'];
+  idSOAttachment?: Maybe<Scalars['Int']>;
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
+  SOAttachment?: Maybe<SystemObject>;
+  SOAttachmentObjectType?: Maybe<Scalars['Int']>;
 };
 
 export type AssetGroup = {
