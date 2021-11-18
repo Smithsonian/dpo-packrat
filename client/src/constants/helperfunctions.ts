@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+export enum eIngestionMode {
+    eUpdate = 1,
+    eIngest = 2,
+    eAttach = 3
+}
+
 export function toTitleCase(str: string): string {
     return str.replace(/\w\S*/g, txt => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -115,11 +121,15 @@ export const updateSystemObjectUploadRedirect = (idAsset: number | undefined | n
     if (idAssetVersion) assetVersion = `&idAssetVersion=${idAssetVersion}`;
     if (assetType) fileType = `&fileType=${assetType}`;
 
-    return `/ingestion/uploads?${asset}${assetVersion}${fileType}&type=${ObjectType}&mode=1`;
+    return `/ingestion/uploads?${asset}${assetVersion}${fileType}&type=${ObjectType}&mode=${eIngestionMode.eUpdate}`;
 };
 
 export const ingestSystemObjectUploadRedirect = (fileName: string) => {
-    return `/ingestion/uploads?name=${fileName}&mode=2`;
+    return `/ingestion/uploads?name=${fileName}&mode=${eIngestionMode.eIngest}`;
+};
+
+export const attachSystemObjectUploadRedirect = (idSystemObject: number, ObjectType: number | undefined | null) => {
+    return `/ingestion/uploads?idSystemObjectForAttachment=${idSystemObject}&fileType=${ObjectType}&mode=${eIngestionMode.eAttach}`;
 };
 
 export const truncateWithEllipses = (text: string, max: number) => text.substr(0, max - 1) + (text.length > max ? ' ...' : '');

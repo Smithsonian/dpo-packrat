@@ -8,7 +8,6 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
     const { user } = context;
     if (!user)
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
-
     const { idUser } = user;
 
     // fetch asset versions that have "false" for ingested and are not retired for this user.
@@ -56,6 +55,7 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
         }
     }
 
+    // LOG.info(`getUploadedAssetVersion returning AssetVersion=${JSON.stringify(AssetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
     return { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata };
 }
 

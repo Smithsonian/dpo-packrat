@@ -15,6 +15,8 @@ const getUploadedAssetVersion = gql`
                         Term
                     }
                 }
+                idSOAttachment
+                SOAttachmentObjectType
             }
             idAssetVersionsUpdated
             UpdatedAssetVersionMetadata {

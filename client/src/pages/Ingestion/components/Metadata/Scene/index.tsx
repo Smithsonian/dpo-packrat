@@ -17,6 +17,7 @@ import { eSystemObjectType } from '../../../../../types/server';
 import { toast } from 'react-toastify';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
 import ObjectSelectModal from '../Model/ObjectSelectModal';
+import AttachmentMetadataForm, { metadataRow } from '../AttachmentMetadataForm';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -33,7 +34,8 @@ function Scene(props: SceneProps): React.ReactElement {
     const { metadataIndex, setInvalidMetadataStep } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
-    const { scene } = metadata;
+    const { scene, file } = metadata;
+    const { idAsset } = file;
     const updateMetadataField = useMetadataStore(state => state.updateMetadataField);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
@@ -79,6 +81,7 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
+    // need some kind of indicator to figure out if the scene is an update or not
 
     useEffect(() => {
         async function fetchSceneConstellation() {
@@ -161,6 +164,39 @@ function Scene(props: SceneProps): React.ReactElement {
         onModalClose();
     };
 
+    const attachmentArr: metadataRow[] = [
+        { name: 'attachmentType', label: 'Type', type: 'string' },
+        { name: 'attachmentCategory', label: 'Category', type: 'string' },
+        { name: 'attachmentUnits', label: 'Units', type: 'string' },
+        { name: 'attachmentModelType', label: 'Model Type', type: 'string' },
+        { name: 'attachmentFileType', label: 'File Type', type: 'string' },
+        { name: 'attachmentgltfStandardized', label: 'glTF Standardized', type: 'boolean' },
+        { name: 'attachmentDracoCompressed', label: 'Draco Compressed', type: 'boolean' },
+        { name: 'attachmentTitle', label: 'Title', type: 'string' }
+    ];
+
+    const {
+        attachmentType,
+        attachmentCategory,
+        attachmentUnits,
+        attachmentModelType,
+        attachmentFileType,
+        attachmentgltfStandardized,
+        attachmentDracoCompressed,
+        attachmentTitle
+    } = metadata?.scene;
+
+    const attachmentMetadata = {
+        attachmentType,
+        attachmentCategory,
+        attachmentUnits,
+        attachmentModelType,
+        attachmentFileType,
+        attachmentgltfStandardized,
+        attachmentDracoCompressed,
+        attachmentTitle
+    };
+
     return (
         <Box className={classes.container}>
             <AssetIdentifiers
@@ -199,6 +235,9 @@ function Scene(props: SceneProps): React.ReactElement {
                 posedAndQCd={scene.posedAndQCd}
                 EdanUUID={scene.EdanUUID}
             />
+            {/* NOTE: replace idASset with idSystemObjectForAttachment */}
+            {idAsset && <AttachmentMetadataForm metadatas={attachmentArr} metadataState={attachmentMetadata} setNameField={setNameField} setCheckboxField={setCheckboxField} />}
+
             <ObjectSelectModal
                 open={modalOpen}
                 onSelectedObjects={onSelectedObjects}

@@ -173,6 +173,14 @@ export const defaultSceneFields: SceneFields = {
     EdanUUID: '',
     approvedForPublication: false,
     posedAndQCd: false,
+    attachmentType: '',
+    attachmentCategory: '',
+    attachmentUnits: '',
+    attachmentModelType: '',
+    attachmentFileType: '',
+    attachmentgltfStandardized: false,
+    attachmentDracoCompressed: false,
+    attachmentTitle: ''
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;

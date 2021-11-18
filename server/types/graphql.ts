@@ -499,6 +499,7 @@ export type MutationUploadAssetArgs = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSystemObjectForAttachment?: Maybe<Scalars['Int']>;
 };
 
 export type UploadAssetInput = {
@@ -506,6 +507,7 @@ export type UploadAssetInput = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSystemObjectForAttachment?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -782,9 +784,12 @@ export type AssetVersion = {
   FileName: Scalars['String'];
   Ingested?: Maybe<Scalars['Boolean']>;
   Version: Scalars['Int'];
+  idSOAttachment?: Maybe<Scalars['Int']>;
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
+  SOAttachment?: Maybe<SystemObject>;
+  SOAttachmentObjectType?: Maybe<Scalars['Int']>;
 };
 
 export type AssetGroup = {
@@ -990,6 +995,14 @@ export type IngestSceneInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  attachmentType?: Maybe<Scalars['String']>;
+  attachmentCategory?: Maybe<Scalars['String']>;
+  attachmentUnits?: Maybe<Scalars['String']>;
+  attachmentModelType?: Maybe<Scalars['String']>;
+  attachmentFileType?: Maybe<Scalars['String']>;
+  attachmentgltfStandardized?: Maybe<Scalars['Boolean']>;
+  attachmentDracoCompressed?: Maybe<Scalars['Boolean']>;
+  attachmentTitle?: Maybe<Scalars['String']>;
 };
 
 export type IngestOtherInput = {

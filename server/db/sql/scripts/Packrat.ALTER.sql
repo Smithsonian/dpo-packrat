@@ -180,3 +180,13 @@ ADD CONSTRAINT `fk_sentinel_user1`
   ON UPDATE NO ACTION;
 
 -- 2021-11-04 Deployed to Staging
+
+-- 2021-11-17 Jon
+ALTER TABLE AssetVersion ADD COLUMN `idSOAttachment` int(11) NULL;
+ALTER TABLE AssetVersion
+ADD CONSTRAINT `fk_assetversion_systemobject1`
+  FOREIGN KEY (`idSOAttachment`)
+  REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
