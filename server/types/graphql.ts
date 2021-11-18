@@ -992,6 +992,14 @@ export type IngestSceneInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  attachmentType?: Maybe<Scalars['String']>;
+  attachmentCategory?: Maybe<Scalars['String']>;
+  attachmentUnits?: Maybe<Scalars['String']>;
+  attachmentModelType?: Maybe<Scalars['String']>;
+  attachmentFileType?: Maybe<Scalars['String']>;
+  attachmentgltfStandardized?: Maybe<Scalars['Boolean']>;
+  attachmentDracoCompressed?: Maybe<Scalars['Boolean']>;
+  attachmentTitle?: Maybe<Scalars['String']>;
 };
 
 export type IngestOtherInput = {

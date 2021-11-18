@@ -21,7 +21,7 @@ interface ApolloFile {
 
 export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult> {
     const { user } = context;
-    const uploadAssetWorker: UploadAssetWorker = new UploadAssetWorker(user, await args.file, args.idAsset, args.type);
+    const uploadAssetWorker: UploadAssetWorker = new UploadAssetWorker(user, await args.file, args.idAsset, args.type, args.idSystemObjectForAttachment);
     return await uploadAssetWorker.upload();
 }
 
@@ -31,13 +31,15 @@ class UploadAssetWorker extends ResolverBase {
     private idAsset: number | undefined | null;
     private type: number;
     private LS: LocalStore | null = null;
+    private idSystemObjectForAttachment: number | undefined | null;
 
-    constructor(user: User | undefined, apolloFile: ApolloFile, idAsset: number | undefined | null, type: number) {
+    constructor(user: User | undefined, apolloFile: ApolloFile, idAsset: number | undefined | null, type: number, idSystemObjectForAttachment: number | undefined | null) {
         super();
         this.user = user;
         this.apolloFile = apolloFile;
         this.idAsset = idAsset;
         this.type = type;
+        this.idSystemObjectForAttachment = idSystemObjectForAttachment;
     }
 
     async upload(): Promise<UploadAssetResult> {
@@ -62,7 +64,9 @@ class UploadAssetWorker extends ResolverBase {
             return { status: UploadStatus.Failed, error: 'User not authenticated' };
         }
 
-        if (!this.idAsset)
+        if (this.idSystemObjectForAttachment)
+            await this.appendToWFReport(`<b>Upload starting</b>: ATTACH ${this.apolloFile.filename}`, true);
+        else if (!this.idAsset)
             await this.appendToWFReport(`<b>Upload starting</b>: ADD ${this.apolloFile.filename}`, true);
         else
             await this.appendToWFReport(`<b>Upload starting</b>: UPDATE ${this.apolloFile.filename}`, true);
@@ -206,7 +210,7 @@ class UploadAssetWorker extends ResolverBase {
                     if (assetVersion.Ingested === null) {
                         assetVersion.Ingested = false;
                         if (!await assetVersion.update())
-                            LOG.error('uploadAsset post-upload workflow suceeded, but unable to update asset version ingested flag', LOG.LS.eGQL);
+                            LOG.error('uploadAsset post-upload workflow succeeded, but unable to update asset version ingested flag', LOG.LS.eGQL);
                     }
                 } else {
                     await this.appendToWFReport(`uploadAsset post-upload workflow error: ${results.error}`, true, true);

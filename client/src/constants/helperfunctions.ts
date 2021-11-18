@@ -128,8 +128,8 @@ export const ingestSystemObjectUploadRedirect = (fileName: string) => {
     return `/ingestion/uploads?name=${fileName}&mode=${eIngestionMode.eIngest}`;
 };
 
-export const attachSystemObjectUploadRedirect = (idSystemObject: number) => {
-    return `/ingestion/uploads?idSystemObjectAttachmentParent=${idSystemObject}&mode=${eIngestionMode.eAttach}`
-}
+export const attachSystemObjectUploadRedirect = (idSystemObject: number, ObjectType: number | undefined | null) => {
+    return `/ingestion/uploads?idSystemObjectForAttachment=${idSystemObject}&fileType=${ObjectType}&mode=${eIngestionMode.eAttach}`;
+};
 
 export const truncateWithEllipses = (text: string, max: number) => text.substr(0, max - 1) + (text.length > max ? ' ...' : '');

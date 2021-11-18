@@ -220,6 +220,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 uploadAssetInputs.idAsset = Number(urlParams.get('idAsset'));
             if (urlParams.has('idSystemObject'))
                 uploadAssetInputs.idSystemObjectForAttachment = Number(urlParams.get('idSystemObject'));
+            if (urlParams.has('idSystemObjectForAttachment'))
+                uploadAssetInputs.idSystemObjectForAttachment = Number(urlParams.get('idSystemObjectForAttachment'));
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
                 variables: uploadAssetInputs,
@@ -228,7 +230,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 onProgress,
                 onCancel
             });
-
+            // console.log('uploadassetinputs', uploadAssetInputs);
             const { uploadAsset }: UploadAssetMutation = data;
 
             if (uploadAsset) {

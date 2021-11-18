@@ -19,6 +19,7 @@ import { FileId, VocabularyOption, useUploadStore } from '../../../../store';
 import { palette } from '../../../../theme';
 import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
+import { eIngestionMode } from '../../../../constants';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -143,7 +144,7 @@ interface FileListItemProps {
     type: number;
     status: string;
     idAsset: number | undefined;
-    // idSystemObjectAttachmentParent: number | undefined;
+    // idSystemObjectForAttachment: number | undefined;
     uploadPendingList: boolean | undefined;
     onSelect: (id: FileId, selected: boolean) => void;
     onUpload: (id: FileId) => void;
@@ -167,7 +168,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         failed,
         uploading,
         idAsset,
-        // idSystemObjectAttachmentParent
+        // idSystemObjectForAttachment
         uploadPendingList,
         onChangeType,
         onUpload,
@@ -183,10 +184,11 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     const retry = () => onRetry(id);
     const select = () => (complete ? onSelect(id, !selected) : null);
     const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.has('mode');
+    const mode = urlParams.get('mode');
 
     let options: React.ReactNode = null;
 
+    // This useEffect block automatically sets the file type of a FileListItem based on the correct type
     useEffect(() => {
         if (updateWorkflowFileType) onChangeType(id, updateWorkflowFileType);
     }, [updateWorkflowFileType]);
@@ -219,21 +221,21 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     };
 
     let content;
-    if (idAsset || (uploadPendingList && mode)) {
+
+    // completed list || pending list
+    if (idAsset || (uploadPendingList && mode === String(eIngestionMode.eUpdate))) {
         content =  (
             <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
                 <MenuItem value={updateWorkflowFileType || type}>Update</MenuItem>
             </Select>
-        )
-    } 
-    /* else if (idSystemObjectAttachmentParent || (uploadPendingList && mode)) {
+        );
+    } else if (/* TODO: 450 idSystemObjectForAttachment */uploadPendingList && mode === String(eIngestionMode.eAttach)) {
         content = (
             <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
                 <MenuItem value={updateWorkflowFileType || type}>Attachment</MenuItem>
             </Select>
-        )
-    } */
-    else {
+        );
+    } else {
         content = (
             <Select
                 value={type}
@@ -248,7 +250,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                     </MenuItem>
                 ))}
             </Select>
-        )
+        );
     }
 
     return (
