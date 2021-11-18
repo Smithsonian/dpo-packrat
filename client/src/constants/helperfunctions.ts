@@ -129,7 +129,7 @@ export const ingestSystemObjectUploadRedirect = (fileName: string) => {
 };
 
 export const attachSystemObjectUploadRedirect = (idSystemObject: number, ObjectType: number | undefined | null) => {
-    return `/ingestion/uploads?idSystemObjectForAttachment=${idSystemObject}&fileType=${ObjectType}&mode=${eIngestionMode.eAttach}`;
+    return `/ingestion/uploads?idSOAttachment=${idSystemObject}&fileType=${ObjectType}&mode=${eIngestionMode.eAttach}`;
 };
 
 export const truncateWithEllipses = (text: string, max: number) => text.substr(0, max - 1) + (text.length > max ? ' ...' : '');

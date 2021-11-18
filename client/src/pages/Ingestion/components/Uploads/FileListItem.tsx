@@ -144,7 +144,7 @@ interface FileListItemProps {
     type: number;
     status: string;
     idAsset: number | undefined;
-    // idSystemObjectForAttachment: number | undefined;
+    idSOAttachment: number | undefined;
     uploadPendingList: boolean | undefined;
     onSelect: (id: FileId, selected: boolean) => void;
     onUpload: (id: FileId) => void;
@@ -168,7 +168,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         failed,
         uploading,
         idAsset,
-        // idSystemObjectForAttachment
+        idSOAttachment,
         uploadPendingList,
         onChangeType,
         onUpload,
@@ -229,7 +229,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                 <MenuItem value={updateWorkflowFileType || type}>Update</MenuItem>
             </Select>
         );
-    } else if (/* TODO: 450 idSystemObjectForAttachment */uploadPendingList && mode === String(eIngestionMode.eAttach)) {
+    } else if (idSOAttachment || (uploadPendingList && mode === String(eIngestionMode.eAttach))) {
         content = (
             <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
                 <MenuItem value={updateWorkflowFileType || type}>Attachment</MenuItem>

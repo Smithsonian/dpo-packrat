@@ -187,7 +187,7 @@ function Uploads(): React.ReactElement {
             const toBeIngested = getSelectedFiles(completed, true);
 
             // if every selected file is for update OR attach, skip the subject/items step
-            if (toBeIngested.every(file => file.idAsset) /* || toBeIngested.every(file => file.idSystemObject) */) {
+            if (toBeIngested.every(file => file.idAsset ||  file.idSOAttachment)) {
                 onNext();
             } else {
                 await history.push(nextStep);

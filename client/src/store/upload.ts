@@ -38,6 +38,7 @@ export type IngestionFile = {
     selected: boolean;
     cancel: (() => void) | null;
     idAsset?: number;
+    idSOAttachment?: number;
 };
 
 type UploadStore = {
@@ -218,10 +219,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             const uploadAssetInputs: UploadAssetInput = { file, type };
             if (urlParams.has('idAsset'))
                 uploadAssetInputs.idAsset = Number(urlParams.get('idAsset'));
-            if (urlParams.has('idSystemObject'))
-                uploadAssetInputs.idSystemObjectForAttachment = Number(urlParams.get('idSystemObject'));
-            if (urlParams.has('idSystemObjectForAttachment'))
-                uploadAssetInputs.idSystemObjectForAttachment = Number(urlParams.get('idSystemObjectForAttachment'));
+            if (urlParams.has('idSOAttachment'))
+                uploadAssetInputs.idSOAttachment = Number(urlParams.get('idSOAttachment'));
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
                 variables: uploadAssetInputs,
