@@ -787,9 +787,12 @@ export type AssetVersion = {
   FileName: Scalars['String'];
   Ingested?: Maybe<Scalars['Boolean']>;
   Version: Scalars['Int'];
+  idSOAttachment?: Maybe<Scalars['Int']>;
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
+  SOAttachment?: Maybe<SystemObject>;
+  SOAttachmentObjectType?: Maybe<Scalars['Int']>;
 };
 
 export type AssetGroup = {
@@ -3156,7 +3159,7 @@ export type GetUploadedAssetVersionQuery = (
     & Pick<GetUploadedAssetVersionResult, 'idAssetVersionsUpdated'>
     & { AssetVersion: Array<(
       { __typename?: 'AssetVersion' }
-      & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated'>
+      & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated' | 'idSOAttachment' | 'SOAttachmentObjectType'>
       & { Asset?: Maybe<(
         { __typename?: 'Asset' }
         & Pick<Asset, 'idAsset'>
@@ -5314,6 +5317,8 @@ export const GetUploadedAssetVersionDocument = gql`
           Term
         }
       }
+      idSOAttachment
+      SOAttachmentObjectType
     }
     idAssetVersionsUpdated
     UpdatedAssetVersionMetadata {

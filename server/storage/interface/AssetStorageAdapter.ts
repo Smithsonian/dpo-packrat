@@ -54,6 +54,7 @@ export type AssetStorageCommitNewAssetInput = {
     FilePath: string;
     idAssetGroup: number | null;
     idVAssetType: number;
+    idSOAttachment?: number | null;
     idUserCreator: number;
     DateCreated: Date;
 };
@@ -62,6 +63,7 @@ export type AssetStorageCommitNewAssetVersionInput = {
     storageKey: string;
     storageHash: string | null;
     asset: DBAPI.Asset;
+    idSOAttachment?: number | null;
     assetNameOverride: string | null;
     idUserCreator: number;
     DateCreated: Date;
@@ -171,7 +173,7 @@ export class AssetStorageAdapter {
      * Creates and persists Asset and AssetVersion
      */
     static async commitNewAsset(commitNewAssetInput: AssetStorageCommitNewAssetInput): Promise<AssetStorageResultCommit> {
-        const { storageKey, storageHash, FileName, FilePath, idAssetGroup, idVAssetType, idUserCreator, DateCreated } = commitNewAssetInput;
+        const { storageKey, storageHash, FileName, FilePath, idAssetGroup, idVAssetType, idSOAttachment, idUserCreator, DateCreated } = commitNewAssetInput;
         const asset: DBAPI.Asset = new DBAPI.Asset({
             FileName,
             FilePath,
@@ -182,7 +184,7 @@ export class AssetStorageAdapter {
             idAsset: 0
         });
 
-        return await AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash, asset, assetNameOverride: null, idUserCreator, DateCreated });
+        return await AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash, asset, assetNameOverride: null, idSOAttachment, idUserCreator, DateCreated });
     }
 
     /**
@@ -190,7 +192,7 @@ export class AssetStorageAdapter {
      * Creates and persists AssetVersion (and Asset if Asset.idAsset is 0)
      */
     static async commitNewAssetVersion(commitNewAssetVersionInput: AssetStorageCommitNewAssetVersionInput): Promise<AssetStorageResultCommit> {
-        const { storageKey, storageHash, asset, assetNameOverride, idUserCreator, DateCreated } = commitNewAssetVersionInput;
+        const { storageKey, storageHash, asset, assetNameOverride, idSOAttachment, idUserCreator, DateCreated } = commitNewAssetVersionInput;
         const commitWriteStreamInput: STORE.CommitWriteStreamInput = { storageKey, storageHash };
 
         LOG.info(`AssetStorageAdapter.commitNewAssetVersion idAsset ${asset.idAsset}: ${commitWriteStreamInput.storageKey}`, LOG.LS.eSTR);
@@ -211,12 +213,12 @@ export class AssetStorageAdapter {
         // detect & handle bulk ingest
         const isBulkIngest: boolean = (await asset.assetType() == eVocabularyID.eAssetAssetTypeBulkIngestion);
         return (isBulkIngest)
-            ? await AssetStorageAdapter.commitNewAssetVersionBulk(commitWriteStreamInput, asset, idUserCreator, DateCreated, resStorage, storage)
-            : await AssetStorageAdapter.commitNewAssetVersionNonBulk(commitWriteStreamInput, asset, idUserCreator, DateCreated, assetNameOverride, resStorage);
+            ? await AssetStorageAdapter.commitNewAssetVersionBulk(commitWriteStreamInput, asset, idSOAttachment, idUserCreator, DateCreated, resStorage, storage)
+            : await AssetStorageAdapter.commitNewAssetVersionNonBulk(commitWriteStreamInput, asset, idSOAttachment, idUserCreator, DateCreated, assetNameOverride, resStorage);
     }
 
     private static async commitNewAssetVersionNonBulk(commitWriteStreamInput: STORE.CommitWriteStreamInput,
-        asset: DBAPI.Asset, idUserCreator: number, DateCreated: Date, assetNameOverride: string | null,
+        asset: DBAPI.Asset, idSOAttachment: number | null | undefined, idUserCreator: number, DateCreated: Date, assetNameOverride: string | null,
         resStorage: STORE.CommitWriteStreamResult):
         Promise<AssetStorageResultCommit> {
 
@@ -226,7 +228,7 @@ export class AssetStorageAdapter {
         }
 
         const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(asset, idUserCreator,
-            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, null, assetNameOverride, ingested);
+            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, idSOAttachment, null, assetNameOverride, ingested);
         /* istanbul ignore else */
         if (assetVersion)
             return { assets: [ asset ], assetVersions: [ assetVersion ], success: true, error: '' };
@@ -236,7 +238,7 @@ export class AssetStorageAdapter {
 
     // split bulk ingest into separate assets and asset versions, one per system object in the bulk ingest
     private static async commitNewAssetVersionBulk(commitWriteStreamInput: STORE.CommitWriteStreamInput,
-        asset: DBAPI.Asset, idUserCreator: number, DateCreated: Date, resStorage: STORE.CommitWriteStreamResult,
+        asset: DBAPI.Asset, idSOAttachment: number | null | undefined, idUserCreator: number, DateCreated: Date, resStorage: STORE.CommitWriteStreamResult,
         storage: IStorage): Promise<AssetStorageResultCommit> {
 
         // Compute path to bagit zip; crack it open; pass it off to bulkIngestReader
@@ -281,7 +283,7 @@ export class AssetStorageAdapter {
             const assetNameOverride: string = `Part ${objectNumber} of bulk ${asset.FileName}`;
             objectNumber++;
             const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(assetClone, idUserCreator,
-                DateCreated, resStorage, commitWriteStreamInput.storageKey, true, ingestedObject, assetNameOverride, ingested); /* istanbul ignore else */
+                DateCreated, resStorage, commitWriteStreamInput.storageKey, true, idSOAttachment, ingestedObject, assetNameOverride, ingested); /* istanbul ignore else */
             if (assetVersion) {
                 assets.push(assetClone);
                 assetVersions.push(assetVersion);
@@ -295,7 +297,7 @@ export class AssetStorageAdapter {
     /** creates asset (if asset.idAsset == 0) and creates an assetVersion */
     private static async createAssetConstellation(asset: DBAPI.Asset, idUserCreator: number,
         DateCreated: Date, resStorage: STORE.CommitWriteStreamResult, storageKey: string,
-        BulkIngest: boolean, ingestedObject: IngestMetadata | null,
+        BulkIngest: boolean, idSOAttachment: number | null | undefined, ingestedObject: IngestMetadata | null,
         assetNameOverride: string | null, Ingested: boolean | null): Promise<DBAPI.AssetVersion | null> {
         // LOG.info(`AssetStorageAdapter.createAssetConstellation for ${JSON.stringify(asset)} with override name ${assetNameOverride}`, LOG.LS.eSTR);
         if (asset.idAsset == 0) {
@@ -320,6 +322,7 @@ export class AssetStorageAdapter {
             StorageKeyStaging: storageKey,
             Ingested,
             BulkIngest,
+            idSOAttachment: idSOAttachment ?? null,
             idAssetVersion: 0
         });
 
@@ -603,7 +606,7 @@ export class AssetStorageAdapter {
             if (!assetVersionComponent) {
                 const CWSR: STORE.CommitWriteStreamResult = { storageHash: hashResults.hash, storageSize: hashResults.dataLength, success: true, error: '' };
                 assetVersionComponent = await AssetStorageAdapter.createAssetConstellation(assetComponent, assetVersion.idUserCreator,
-                    assetVersion.DateCreated, CWSR, '', false, null, null, ingested); /* istanbul ignore next */
+                    assetVersion.DateCreated, CWSR, '', false, null, null, null, ingested); /* istanbul ignore next */
                 promoteAssetNeeded = true;
             }
 
@@ -1186,6 +1189,7 @@ export class AssetStorageAdapter {
             StorageKeyStaging: assetVersionOld.StorageKeyStaging,
             Ingested: assetVersionOld.Ingested,
             BulkIngest: assetVersionOld.BulkIngest,
+            idSOAttachment: assetVersionOld.idSOAttachment,
             idAssetVersion: 0
         });
 
