@@ -19,6 +19,7 @@ import { FileId, VocabularyOption, useUploadStore } from '../../../../store';
 import { palette } from '../../../../theme';
 import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
+import { eIngestionMode } from '../../../../constants';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -143,6 +144,7 @@ interface FileListItemProps {
     type: number;
     status: string;
     idAsset: number | undefined;
+    // idSystemObjectForAttachment: number | undefined;
     uploadPendingList: boolean | undefined;
     onSelect: (id: FileId, selected: boolean) => void;
     onUpload: (id: FileId) => void;
@@ -166,6 +168,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         failed,
         uploading,
         idAsset,
+        // idSystemObjectForAttachment
         uploadPendingList,
         onChangeType,
         onUpload,
@@ -181,10 +184,11 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     const retry = () => onRetry(id);
     const select = () => (complete ? onSelect(id, !selected) : null);
     const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.has('mode');
+    const mode = urlParams.get('mode');
 
     let options: React.ReactNode = null;
 
+    // This useEffect block automatically sets the file type of a FileListItem based on the correct type
     useEffect(() => {
         if (updateWorkflowFileType) onChangeType(id, updateWorkflowFileType);
     }, [updateWorkflowFileType]);
@@ -216,6 +220,39 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         hidden: { opacity: 0.5 }
     };
 
+    let content;
+
+    // completed list || pending list
+    if (idAsset || (uploadPendingList && mode === String(eIngestionMode.eUpdate))) {
+        content =  (
+            <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
+                <MenuItem value={updateWorkflowFileType || type}>Update</MenuItem>
+            </Select>
+        );
+    } else if (/* TODO: 450 idSystemObjectForAttachment */uploadPendingList && mode === String(eIngestionMode.eAttach)) {
+        content = (
+            <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
+                <MenuItem value={updateWorkflowFileType || type}>Attachment</MenuItem>
+            </Select>
+        );
+    } else {
+        content = (
+            <Select
+                value={type}
+                disabled={complete || uploading}
+                className={classes.typeSelect}
+                onChange={({ target: { value } }) => onChangeType(id, value as number)}
+                disableUnderline
+            >
+                {typeOptions.map((option: VocabularyOption, index) => (
+                    <MenuItem key={index} value={option.idVocabulary}>
+                        {option.Term}
+                    </MenuItem>
+                ))}
+            </Select>
+        );
+    }
+
     return (
         <motion.div className={classes.container} variants={variants} initial='hidden' animate='visible' whileTap={{ scale: complete ? 0.98 : 1 }}>
             <Box className={classes.item} onClick={select}>
@@ -246,25 +283,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                     </Typography>
                 </Box>
                 <Box className={classes.type}>
-                    {idAsset || (uploadPendingList && mode) ? (
-                        <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
-                            <MenuItem value={updateWorkflowFileType || type}>Update</MenuItem>
-                        </Select>
-                    ) : (
-                        <Select
-                            value={type}
-                            disabled={complete || uploading}
-                            className={classes.typeSelect}
-                            onChange={({ target: { value } }) => onChangeType(id, value as number)}
-                            disableUnderline
-                        >
-                            {typeOptions.map((option: VocabularyOption, index) => (
-                                <MenuItem key={index} value={option.idVocabulary}>
-                                    {option.Term}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    )}
+                    {content}
                 </Box>
                 <Box className={classes.options}>{options}</Box>
             </Box>

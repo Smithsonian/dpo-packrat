@@ -91,6 +91,14 @@ input IngestSceneInput {
     identifiers: [IngestIdentifierInput!]!
     sourceObjects: [RelatedObjectInput!]!
     derivedObjects: [RelatedObjectInput!]!
+    attachmentType: String
+    attachmentCategory: String
+    attachmentUnits: String
+    attachmentModelType: String
+    attachmentFileType: String
+    attachmentgltfStandardized: Boolean
+    attachmentDracoCompressed: Boolean
+    attachmentTitle: String
 }
 
 input IngestOtherInput {

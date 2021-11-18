@@ -11,7 +11,7 @@ import { eVocabularySetID, eSystemObjectType } from '../types/server';
 import { generateFileId } from '../utils/upload';
 import { useVocabularyStore } from './vocabulary';
 import { apolloClient, apolloUploader } from '../graphql';
-import { DiscardUploadedAssetVersionsDocument, DiscardUploadedAssetVersionsMutation, UploadAssetDocument, UploadAssetMutation, UploadStatus } from '../types/graphql';
+import { DiscardUploadedAssetVersionsDocument, DiscardUploadedAssetVersionsMutation, UploadAssetDocument, UploadAssetMutation, UploadStatus, UploadAssetInput } from '../types/graphql';
 import { FetchResult } from '@apollo/client';
 import { parseFileId } from './utils';
 import { UploadEvents, UploadEventType, UploadCompleteEvent, UploadProgressEvent, UploadSetCancelEvent, UploadFailedEvent } from '../utils/events';
@@ -215,8 +215,13 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 UploadEvents.dispatch(UploadEventType.SET_CANCELLED, setCancelEvent);
             };
 
-            const uploadAssetInputs = urlParams.has('idAsset') ? { file, type, idAsset: Number(urlParams.get('idAsset')) } : { file, type };
-
+            const uploadAssetInputs: UploadAssetInput = { file, type };
+            if (urlParams.has('idAsset'))
+                uploadAssetInputs.idAsset = Number(urlParams.get('idAsset'));
+            if (urlParams.has('idSystemObject'))
+                uploadAssetInputs.idSystemObjectForAttachment = Number(urlParams.get('idSystemObject'));
+            if (urlParams.has('idSystemObjectForAttachment'))
+                uploadAssetInputs.idSystemObjectForAttachment = Number(urlParams.get('idSystemObjectForAttachment'));
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
                 variables: uploadAssetInputs,
@@ -225,7 +230,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 onProgress,
                 onCancel
             });
-
+            // console.log('uploadassetinputs', uploadAssetInputs);
             const { uploadAsset }: UploadAssetMutation = data;
 
             if (uploadAsset) {

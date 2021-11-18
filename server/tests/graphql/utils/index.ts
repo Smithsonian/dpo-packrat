@@ -154,6 +154,7 @@ class TestSuiteUtils {
             idAssetVersion: 0,
             Ingested: false,
             BulkIngest: false,
+            idSOAttachment: null,
             Version: 0
         };
     };

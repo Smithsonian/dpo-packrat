@@ -19,6 +19,7 @@ import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
+import { PublishScene } from '../../../../../collections/impl/PublishScene';
 
 type AssetPair = {
     asset: DBAPI.Asset;
@@ -866,6 +867,11 @@ class IngestDataWorker extends ResolverBase {
             }
         }
 
+        if (SOI) {
+            const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(SOI.idSystemObject, this.user?.idUser ?? null);
+            if (!metadataResult.success)
+                LOG.error(`ingestData unable to persist scene attachment metadata: ${metadataResult.error}`, LOG.LS.eGQL);
+        }
 
         if (scene.idAssetVersion)
             this.assetVersionMap.set(scene.idAssetVersion, sceneDB);
