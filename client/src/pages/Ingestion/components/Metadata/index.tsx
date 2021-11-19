@@ -27,7 +27,8 @@ import {
     useMetadataStore,
     useProjectStore,
     useVocabularyStore,
-    useUploadStore
+    useUploadStore,
+    useAttachmentStore
 } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
 import Model from './Model';
@@ -75,6 +76,7 @@ function Metadata(): React.ReactElement {
     const getSelectedProject = useProjectStore(state => state.getSelectedProject);
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
     const [metadatas, getMetadataInfo, validateFields] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields]);
+    const resetAttachmentEntries = useAttachmentStore(state => state.resetAttachmentEntries);
     const { ingestionStart, ingestionComplete } = useIngest();
     const getAssetType = useVocabularyStore(state => state.getAssetType);
     const [setUpdateMode] = useUploadStore(state => [state.setUpdateMode]);
@@ -96,7 +98,7 @@ function Metadata(): React.ReactElement {
                     }
                 });
                 // set breadcrumb name to attachment parent
-                if (parentName) setBreadcrumbNames([parentName, metadatas[metadataIndex]?.file?.name]);
+                setBreadcrumbNames([parentName ?? 'Unknown', `Attachment ${metadatas[metadataIndex]?.file?.name}`]);
             } else if (metadatas[metadataIndex]?.file?.idAsset) {
                 // update case
                 setBreadcrumbNames([metadatas[metadataIndex]?.file?.name]);
@@ -150,6 +152,7 @@ function Metadata(): React.ReactElement {
             if (success) {
                 toast.success('Ingestion complete');
                 ingestionComplete();
+                resetAttachmentEntries();
                 setUpdateMode(false);
             } else {
                 toast.error(`Ingestion failed, please try again later. Error: ${message}`);
@@ -227,11 +230,11 @@ function BreadcrumbsHeader(props: BreadcrumbsHeaderProps) {
     if (customBreadcrumbs && customBreadcrumbsArr?.length) {
         const crumbs: React.ReactNode[] = [];
         for (let i = 1; i < customBreadcrumbsArr.length; i++) {
-            crumbs.push(<Typography color='inherit'>{customBreadcrumbsArr[i]}</Typography>);
+            crumbs.push(<Typography key={i} color='inherit'>{customBreadcrumbsArr[i]}</Typography>);
         }
         content = (
             <Breadcrumbs className={classes.breadcrumbs} separator={<MdNavigateNext color='inherit' size={20} />}>
-                <Typography color='inherit'>Specify metadata for: {customBreadcrumbsArr[0]}</Typography>
+                <Typography key={0} color='inherit'>Specify metadata for {customBreadcrumbsArr[0]}</Typography>
                 {crumbs}
             </Breadcrumbs>
         );
