@@ -35,7 +35,7 @@ function Scene(props: SceneProps): React.ReactElement {
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { scene, file } = metadata;
-    const { idAsset } = file;
+    const { idSOAttachment } = file;
     const updateMetadataField = useMetadataStore(state => state.updateMetadataField);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
@@ -235,8 +235,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 posedAndQCd={scene.posedAndQCd}
                 EdanUUID={scene.EdanUUID}
             />
-            {/* NOTE: replace idASset with idSystemObjectForAttachment */}
-            {idAsset && <AttachmentMetadataForm metadatas={attachmentArr} metadataState={attachmentMetadata} setNameField={setNameField} setCheckboxField={setCheckboxField} />}
+            {idSOAttachment && <AttachmentMetadataForm metadatas={attachmentArr} metadataState={attachmentMetadata} setNameField={setNameField} setCheckboxField={setCheckboxField} />}
 
             <ObjectSelectModal
                 open={modalOpen}
