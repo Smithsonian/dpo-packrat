@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Uploads
  *
@@ -68,6 +69,8 @@ function Uploads(): React.ReactElement {
     const history = useHistory();
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
+    // this state will be responsible for feeding metadata the info it needs for update
+    const [updatedAssetVersionMetadata, setUpdatedAssetVersionMetadata] = useState();
 
     const [updateVocabularyEntries, getEntries] = useVocabularyStore(state => [state.updateVocabularyEntries, state.getEntries]);
     const [completed, discardFiles, setUpdateMode, setUpdateWorkflowFileType, getSelectedFiles, selectFile] = useUploadStore(state => [
@@ -158,7 +161,8 @@ function Uploads(): React.ReactElement {
                 await history.push(nextRoute);
             }
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error.toString());
             return;
         }
     };
@@ -167,7 +171,7 @@ function Uploads(): React.ReactElement {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
         try {
             setGettingAssetDetails(true);
-            const data = await updateMetadataSteps();
+            const data = await updateMetadataSteps(updatedAssetVersionMetadata);
             const { valid, selectedFiles, error } = data;
             setGettingAssetDetails(false);
 
@@ -216,7 +220,13 @@ function Uploads(): React.ReactElement {
             </Helmet>
             <Box className={classes.content}>
                 <KeepAlive>
-                    <AliveUploadComponents onDiscard={onDiscard} onIngest={onIngest} discardingFiles={discardingFiles} gettingAssetDetails={gettingAssetDetails} />
+                    <AliveUploadComponents
+                        onDiscard={onDiscard}
+                        onIngest={onIngest}
+                        discardingFiles={discardingFiles}
+                        gettingAssetDetails={gettingAssetDetails}
+                        setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata}
+                    />
                 </KeepAlive>
             </Box>
         </Box>
@@ -228,10 +238,11 @@ type AliveUploadComponentsProps = {
     gettingAssetDetails: boolean;
     onDiscard: () => Promise<void>;
     onIngest: () => Promise<void>;
+    setUpdatedAssetVersionMetadata: (metadata: any) => void;
 };
 
 function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactElement {
-    const { discardingFiles, gettingAssetDetails, onDiscard, onIngest } = props;
+    const { discardingFiles, gettingAssetDetails, onDiscard, onIngest, setUpdatedAssetVersionMetadata } = props;
     const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [
         state.onProgressEvent,
         state.onSetCancelledEvent,
@@ -285,7 +296,7 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
                 onClickRight={onIngest}
                 uploadVersion
             />
-            <UploadCompleteList />
+            <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
         </React.Fragment>
     );
 }
