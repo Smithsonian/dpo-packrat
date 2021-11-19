@@ -7,7 +7,7 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { AssetIdentifiers } from '../../../../../components';
-import { StateIdentifier, useMetadataStore, StateRelatedObject, useRepositoryStore, useSubjectStore } from '../../../../../store';
+import { StateIdentifier, useMetadataStore, StateRelatedObject, useRepositoryStore, useSubjectStore, useAttachmentStore, eAttachmentType, SceneAttachment } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import ReferenceModels from './ReferenceModels';
 import SceneDataGrid from './SceneDataGrid';
@@ -39,6 +39,7 @@ function Scene(props: SceneProps): React.ReactElement {
     const updateMetadataField = useMetadataStore(state => state.updateMetadataField);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
+    const [createNewAttachmentEntry, updateAttachmentEntry, getAttachmentEntry] = useAttachmentStore(state => [state.createNewAttachmentEntry, state.updateAttachmentEntry, state.getAttachmentEntry]);
     // state responsible for ReferenceModels
     const [referenceModels, setReferenceModels] = useState([
         {
@@ -81,7 +82,19 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
-    // need some kind of indicator to figure out if the scene is an update or not
+    const [attachment, setAttachment] = useState<SceneAttachment>({
+        idAssetVersion: Number(idAssetVersion),
+        type: '',
+        units: '',
+        modelType: '',
+        fileType: '',
+        title: '',
+        category: '',
+        gltfStandardized: false,
+        dracoCompressed: false,
+        systemCreated: false,
+        identifiers: [] as StateIdentifier[]
+    });
 
     useEffect(() => {
         async function fetchSceneConstellation() {
@@ -104,6 +117,16 @@ function Scene(props: SceneProps): React.ReactElement {
         fetchSceneConstellation();
     }, [idAssetVersion, metadataIndex, setInvalidMetadataStep, scene.directory]);
 
+
+    useEffect(() => {
+        if (idSOAttachment) {
+            createNewAttachmentEntry(Number(idAssetVersion), eAttachmentType.eScene);
+            const newAttachment = getAttachmentEntry(Number(idAssetVersion), eAttachmentType.eScene);
+            if (newAttachment) setAttachment(newAttachment);
+        }
+    }, [idSOAttachment, createNewAttachmentEntry, getAttachmentEntry, idAssetVersion]);
+
+
     const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
     const subjectIdSystemObject = useGetSubjectQuery({
         variables: {
@@ -118,14 +141,28 @@ function Scene(props: SceneProps): React.ReactElement {
         updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.scene);
     };
 
+    const onAttachmentIdentifierChange = (identifiers: StateIdentifier[]) => {
+        updateAttachmentEntry(Number(idAssetVersion), eAttachmentType.eScene, 'identifiers', identifiers);
+    };
+
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
         updateMetadataField(metadataIndex, name, checked, MetadataType.scene);
     };
 
+    const setAttachmentCheckboxField = ({ target }): void => {
+        const { name, checked } = target;
+        updateAttachmentEntry(Number(idAssetVersion), eAttachmentType.eScene, name, checked);
+    };
+
     const setNameField = ({ target }): void => {
         const { name, value } = target;
         updateMetadataField(metadataIndex, name, value, MetadataType.scene);
+    };
+
+    const setAttachmentNameField = ({ target }): void => {
+        const { name, value } = target;
+        updateAttachmentEntry(Number(idAssetVersion), eAttachmentType.eScene, name, value);
     };
 
     const openSourceObjectModal = async () => {
@@ -162,51 +199,6 @@ function Scene(props: SceneProps): React.ReactElement {
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
         updateMetadataField(metadataIndex, objectRelationship === RelatedObjectType.Source ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.scene);
         onModalClose();
-    };
-
-    const attachmentArr: metadataRow[] = [
-        { name: 'attachmentType', label: 'Type', type: 'string' },
-        { name: 'attachmentCategory', label: 'Category', type: 'string' },
-        { name: 'attachmentUnits', label: 'Units', type: 'string' },
-        { name: 'attachmentModelType', label: 'Model Type', type: 'string' },
-        { name: 'attachmentFileType', label: 'File Type', type: 'string' },
-        { name: 'attachmentgltfStandardized', label: 'glTF Standardized', type: 'boolean' },
-        { name: 'attachmentDracoCompressed', label: 'Draco Compressed', type: 'boolean' },
-        { name: 'attachmentTitle', label: 'Title', type: 'string' }
-    ];
-    /* TODO:450 */
-    // pull from attachment state store
-    // const {
-    //     attachmentType,
-    //     attachmentCategory,
-    //     attachmentUnits,
-    //     attachmentModelType,
-    //     attachmentFileType,
-    //     attachmentgltfStandardized,
-    //     attachmentDracoCompressed,
-    //     attachmentTitle
-    // } = metadata?.scene;
-
-    // const attachmentMetadata = {
-    //     attachmentType,
-    //     attachmentCategory,
-    //     attachmentUnits,
-    //     attachmentModelType,
-    //     attachmentFileType,
-    //     attachmentgltfStandardized,
-    //     attachmentDracoCompressed,
-    //     attachmentTitle
-    // };
-
-    const attachmentMetadataMock = {
-        attachmentType: '',
-        attachmentCategory: '',
-        attachmentUnits: '',
-        attachmentModelType: '',
-        attachmentFileType: '',
-        attachmentgltfStandardized: false,
-        attachmentDracoCompressed: false,
-        attachmentTitle: ''
     };
 
     let content: JSX.Element = (
@@ -259,9 +251,59 @@ function Scene(props: SceneProps): React.ReactElement {
         </React.Fragment>
     );
 
-    if (idSOAttachment)
-        content = <AttachmentMetadataForm metadatas={attachmentArr} metadataState={attachmentMetadataMock} setNameField={setNameField} setCheckboxField={setCheckboxField} />;
+    if (idSOAttachment) {
+        const attachmentArr: metadataRow[] = [
+            { name: 'type', label: 'Type', type: 'string' },
+            { name: 'category', label: 'Category', type: 'string' },
+            { name: 'units', label: 'Units', type: 'string' },
+            { name: 'modelType', label: 'Model Type', type: 'string' },
+            { name: 'fileType', label: 'File Type', type: 'string' },
+            { name: 'gltfStandardized', label: 'glTF Standardized', type: 'boolean' },
+            { name: 'dracoCompressed', label: 'Draco Compressed', type: 'boolean' },
+            { name: 'title', label: 'Title', type: 'string' }
+        ];
 
+        const {
+            type,
+            category,
+            units,
+            modelType,
+            fileType,
+            gltfStandardized,
+            dracoCompressed,
+            title
+        } = attachment;
+
+        const attachmentMetadata = {
+            type,
+            category,
+            units,
+            modelType,
+            fileType,
+            gltfStandardized,
+            dracoCompressed,
+            title
+        };
+
+        content = (
+            <React.Fragment>
+                <AssetIdentifiers
+                    systemCreated={attachment.systemCreated}
+                    identifiers={attachment.identifiers}
+                    onSystemCreatedChange={setAttachmentCheckboxField}
+                    onAddIdentifer={onAttachmentIdentifierChange}
+                    onUpdateIdentifer={onAttachmentIdentifierChange}
+                    onRemoveIdentifer={onAttachmentIdentifierChange}
+                />
+                <AttachmentMetadataForm
+                    metadatas={attachmentArr}
+                    metadataState={attachmentMetadata}
+                    setNameField={setAttachmentNameField}
+                    setCheckboxField={setAttachmentCheckboxField}
+                />
+            </React.Fragment>
+        );
+    }
 
     return (
         <Box className={classes.container}>

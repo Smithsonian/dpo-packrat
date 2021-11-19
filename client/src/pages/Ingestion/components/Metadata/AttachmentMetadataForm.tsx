@@ -35,7 +35,7 @@ export interface metadataRow {
 
 interface AttachmentMetadataProps {
     metadatas: metadataRow[];
-    metadataState: { [name: string]: boolean | string | undefined };
+    metadataState: { [name: string]: boolean | string | undefined | null };
     setNameField: ({ target }: { target: any }) => void;
     setCheckboxField: ({ target }: { target: any }) => void;
 }
