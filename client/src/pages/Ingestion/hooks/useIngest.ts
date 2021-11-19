@@ -240,16 +240,16 @@ function useIngest(): UseIngest {
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);
                     if (idAsset) {
                         sceneData.idAsset = idAsset;
-
-                        const { attachmentType, attachmentCategory, attachmentUnits, attachmentFileType, attachmentModelType, attachmentgltfStandardized, attachmentDracoCompressed, attachmentTitle } = scene;
-                        if (attachmentType) sceneData.attachmentType = attachmentType;
-                        if (attachmentCategory) sceneData.attachmentCategory = attachmentCategory;
-                        if (attachmentUnits) sceneData.attachmentUnits = attachmentUnits;
-                        if (attachmentModelType) sceneData.attachmentModelType = attachmentModelType;
-                        if (attachmentFileType) sceneData.attachmentFileType = attachmentFileType;
-                        if (typeof attachmentgltfStandardized === 'boolean') sceneData.attachmentgltfStandardized = attachmentgltfStandardized;
-                        if (typeof attachmentDracoCompressed === 'boolean') sceneData.attachmentDracoCompressed = attachmentDracoCompressed;
-                        if (attachmentTitle) sceneData.attachmentTitle = attachmentTitle;
+                        /* TODO: 450 */
+                        // const { attachmentType, attachmentCategory, attachmentUnits, attachmentFileType, attachmentModelType, attachmentgltfStandardized, attachmentDracoCompressed, attachmentTitle } = scene;
+                        // if (attachmentType) sceneData.attachmentType = attachmentType;
+                        // if (attachmentCategory) sceneData.attachmentCategory = attachmentCategory;
+                        // if (attachmentUnits) sceneData.attachmentUnits = attachmentUnits;
+                        // if (attachmentModelType) sceneData.attachmentModelType = attachmentModelType;
+                        // if (attachmentFileType) sceneData.attachmentFileType = attachmentFileType;
+                        // if (typeof attachmentgltfStandardized === 'boolean') sceneData.attachmentgltfStandardized = attachmentgltfStandardized;
+                        // if (typeof attachmentDracoCompressed === 'boolean') sceneData.attachmentDracoCompressed = attachmentDracoCompressed;
+                        // if (attachmentTitle) sceneData.attachmentTitle = attachmentTitle;
                     }
 
                     // console.log('sceneData', sceneData);
@@ -282,7 +282,8 @@ function useIngest(): UseIngest {
                 photogrammetry: ingestPhotogrammetry,
                 model: ingestModel,
                 scene: ingestScene,
-                other: ingestOther
+                other: ingestOther,
+                sceneAttachment: []
             };
             console.log('** IngestDataInput', input);
 

@@ -174,31 +174,43 @@ function Scene(props: SceneProps): React.ReactElement {
         { name: 'attachmentDracoCompressed', label: 'Draco Compressed', type: 'boolean' },
         { name: 'attachmentTitle', label: 'Title', type: 'string' }
     ];
+    /* TODO:450 */
+    // pull from attachment state store
+    // const {
+    //     attachmentType,
+    //     attachmentCategory,
+    //     attachmentUnits,
+    //     attachmentModelType,
+    //     attachmentFileType,
+    //     attachmentgltfStandardized,
+    //     attachmentDracoCompressed,
+    //     attachmentTitle
+    // } = metadata?.scene;
 
-    const {
-        attachmentType,
-        attachmentCategory,
-        attachmentUnits,
-        attachmentModelType,
-        attachmentFileType,
-        attachmentgltfStandardized,
-        attachmentDracoCompressed,
-        attachmentTitle
-    } = metadata?.scene;
+    // const attachmentMetadata = {
+    //     attachmentType,
+    //     attachmentCategory,
+    //     attachmentUnits,
+    //     attachmentModelType,
+    //     attachmentFileType,
+    //     attachmentgltfStandardized,
+    //     attachmentDracoCompressed,
+    //     attachmentTitle
+    // };
 
-    const attachmentMetadata = {
-        attachmentType,
-        attachmentCategory,
-        attachmentUnits,
-        attachmentModelType,
-        attachmentFileType,
-        attachmentgltfStandardized,
-        attachmentDracoCompressed,
-        attachmentTitle
+    const attachmentMetadataMock = {
+        attachmentType: '',
+        attachmentCategory: '',
+        attachmentUnits: '',
+        attachmentModelType: '',
+        attachmentFileType: '',
+        attachmentgltfStandardized: false,
+        attachmentDracoCompressed: false,
+        attachmentTitle: ''
     };
 
-    return (
-        <Box className={classes.container}>
+    let content: JSX.Element = (
+        <React.Fragment>
             <AssetIdentifiers
                 systemCreated={scene.systemCreated}
                 identifiers={scene.identifiers}
@@ -235,7 +247,6 @@ function Scene(props: SceneProps): React.ReactElement {
                 posedAndQCd={scene.posedAndQCd}
                 EdanUUID={scene.EdanUUID}
             />
-            {idSOAttachment && <AttachmentMetadataForm metadatas={attachmentArr} metadataState={attachmentMetadata} setNameField={setNameField} setCheckboxField={setCheckboxField} />}
 
             <ObjectSelectModal
                 open={modalOpen}
@@ -245,6 +256,16 @@ function Scene(props: SceneProps): React.ReactElement {
                 relationship={objectRelationship}
                 objectType={eSystemObjectType.eScene}
             />
+        </React.Fragment>
+    );
+
+    if (idSOAttachment)
+        content = <AttachmentMetadataForm metadatas={attachmentArr} metadataState={attachmentMetadataMock} setNameField={setNameField} setCheckboxField={setCheckboxField} />;
+
+
+    return (
+        <Box className={classes.container}>
+            {content}
         </Box>
     );
 }
