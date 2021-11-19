@@ -242,6 +242,25 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return null;
         }
 
+        const eModelType: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.mapModelFileByExtensionID(CMIR.assetVersionGeometry.FileName);
+        switch (eModelType) {
+            // Allowable types!
+            case CACHE.eVocabularyID.eModelFileTypestl:
+            case CACHE.eVocabularyID.eModelFileTypeply:
+            case CACHE.eVocabularyID.eModelFileTypeobj:
+            case CACHE.eVocabularyID.eModelFileTypefbx:
+            case CACHE.eVocabularyID.eModelFileTypewrl:
+            case CACHE.eVocabularyID.eModelFileTypex3d:
+            case CACHE.eVocabularyID.eModelFileTypedae:
+                break;
+
+            // All others will not result in scene or download generation
+            default:
+                LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping unsupported model type ${eModelType ? CACHE.eVocabularyID[eModelType] : 'unknown'} for ${JSON.stringify(CMIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+                return null;
+        }
+
+
         const SOGeometry: DBAPI.SystemObject| null = await CMIR.assetVersionGeometry.fetchSystemObject();
         if (!SOGeometry) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry file systemobject from ${JSON.stringify(CMIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);

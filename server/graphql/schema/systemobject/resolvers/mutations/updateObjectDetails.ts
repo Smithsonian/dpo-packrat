@@ -145,6 +145,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         case eSystemObjectType.eSubject: {
             if (data.Subject) {
                 const { Altitude, Latitude, Longitude, R0, R1, R2, R3, TS0, TS1, TS2 } = data.Subject;
+                const geoLocationProvided: boolean = Altitude !== null || Latitude !== null || Longitude !== null || R0 !== null ||
+                    R1 !== null || R2 !== null || R3 !== null || TS0 !== null || TS1 !== null || TS2 !== null;
                 const Subject = await DBAPI.Subject.fetch(idObject);
 
                 if (Subject) {
@@ -175,7 +177,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             LOG.error(message, LOG.LS.eDB);
                             return { success: false, message };
                         }
-                    } else {
+                    } else if (geoLocationProvided) {
                         const GeoLocationInput = {
                             idGeoLocation: 0,
                             Altitude: maybe<number>(Altitude),
@@ -216,6 +218,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         case eSystemObjectType.eItem: {
             if (data.Item) {
                 const { EntireSubject, Altitude, Latitude, Longitude, R0, R1, R2, R3, TS0, TS1, TS2 } = data.Item;
+                const geoLocationProvided: boolean = Altitude !== null || Latitude !== null || Longitude !== null || R0 !== null ||
+                    R1 !== null || R2 !== null || R3 !== null || TS0 !== null || TS1 !== null || TS2 !== null;
                 const Item = await DBAPI.Item.fetch(idObject);
                 if (Item) {
                     Item.Name = data.Name;
@@ -246,7 +250,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             LOG.error(message, LOG.LS.eDB);
                             return { success: false, message };
                         }
-                    } else {
+                    } else if (geoLocationProvided) {
                         const GeoLocationInput = {
                             idGeoLocation: 0,
                             Altitude: maybe<number>(Altitude),
