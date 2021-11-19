@@ -37,7 +37,7 @@ import {
     IngestOtherInput,
     IngestPhotogrammetryInput,
     IngestProjectInput,
-    IngestSceneAttachment,
+    IngestSceneAttachmentInput,
     IngestSceneInput,
     IngestSubjectInput,
 } from '../../../types/graphql';
@@ -268,10 +268,10 @@ function useIngest(): UseIngest {
 
             // check to see if any attachments exist and then transform the type
             const sceneAttachments = getAllAttachmentEntries(eAttachmentType.eScene);
-            const sceneAttachment: IngestSceneAttachment[] = [];
+            const sceneAttachment: IngestSceneAttachmentInput[] = [];
             if (sceneAttachments.length) {
                 sceneAttachments.forEach(attachment => {
-                    const attachmentData: IngestSceneAttachment = {
+                    const attachmentData: IngestSceneAttachmentInput = {
                         idAssetVersion: attachment.idAssetVersion,
                         systemCreated: attachment.systemCreated,
                         identifiers: getIngestIdentifiers(attachment.identifiers)
@@ -295,7 +295,7 @@ function useIngest(): UseIngest {
                 item: ingestItem,
                 photogrammetry: ingestPhotogrammetry,
                 model: ingestModel,
-                scene: ingestScene,
+                scene: sceneAttachments.length ? [] : ingestScene,
                 other: ingestOther,
                 sceneAttachment
             };

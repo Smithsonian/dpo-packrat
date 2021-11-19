@@ -601,7 +601,7 @@ input IngestOtherInput {
   identifiers: [IngestIdentifierInput!]!
 }
 
-input IngestSceneAttachment {
+input IngestSceneAttachmentInput {
   type: String
   category: String
   units: String
@@ -623,7 +623,7 @@ input IngestDataInput {
   model: [IngestModelInput!]!
   scene: [IngestSceneInput!]!
   other: [IngestOtherInput!]!
-  sceneAttachment: [IngestSceneAttachment!]!
+  sceneAttachment: [IngestSceneAttachmentInput!]!
 }
 
 type IngestDataResult {
