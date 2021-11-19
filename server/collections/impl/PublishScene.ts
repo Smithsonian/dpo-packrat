@@ -19,6 +19,7 @@ export type SceneAssetCollector = {
     assetVersion: DBAPI.AssetVersion;
     model?: DBAPI.Model;
     modelSceneXref?: DBAPI.ModelSceneXref;
+    isAttachment?: boolean;
 };
 
 export class PublishScene {
@@ -281,17 +282,36 @@ export class PublishScene {
                 return false;
             }
 
+            // determine if assetVersion is an attachment by examining metadata
+            let isAttachment: boolean = false;
+            const SOAssetVersion: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+            if (!SOAssetVersion) {
+                LOG.error(`PublishScene.collectAssets unable to compute system object for ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+                return false;
+            }
+            const metadataSet: DBAPI.Metadata[] | null = await  DBAPI.Metadata.fetchFromSystemObject(SOAssetVersion.idSystemObject);
+            if (metadataSet) {
+                for (const metadata of metadataSet) {
+                    if (metadata.Name === 'isAttachment') {
+                        isAttachment = (metadata.ValueShort === '1');
+                        break;
+                    }
+                }
+            } else
+                LOG.error(`PublishScene.collectAssets unable to compute metadata for ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+
+
             if (asset.idSystemObject) {
                 const modelSceneXref: DBAPI.ModelSceneXref | undefined = this.DownloadMSXMap.get(asset.idSystemObject ?? 0);
                 if (!modelSceneXref)
-                    this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion });
+                    this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, isAttachment });
                 else {
                     const model: DBAPI.Model | null = await DBAPI.Model.fetch(modelSceneXref.idModel);
                     if (!model) {
                         LOG.error(`PublishScene.collectAssets unable to load model from xref ${JSON.stringify(modelSceneXref, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
                         return false;
                     }
-                    this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, model, modelSceneXref });
+                    this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, model, modelSceneXref, isAttachment: true });
                 }
             }
 
@@ -328,7 +348,7 @@ export class PublishScene {
         // second pass: zip up appropriate assets; prepare to copy downloads
         const zip: ZIP.ZipStream = new ZIP.ZipStream();
         for (const SAC of this.SacList.values()) {
-            if (SAC.model) // skip downloads
+            if (SAC.model || SAC.isAttachment) // skip downloads
                 continue;
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(SAC.asset, SAC.assetVersion);
@@ -387,7 +407,7 @@ export class PublishScene {
         this.resourcesHotFolder = path.join(Config.collection.edan.resourcesHotFolder, this.scene.EdanUUID!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
         for (const SAC of this.SacList.values()) {
-            if (!SAC.model) // SAC is not a download, skip it
+            if (!SAC.model && !SAC.isAttachment) // SAC is not a attachment, skip it
                 continue;
 
             if (!await this.ensureResourceHotFolderExists())
