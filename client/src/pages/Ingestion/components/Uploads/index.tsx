@@ -161,7 +161,8 @@ function Uploads(): React.ReactElement {
                 await history.push(nextRoute);
             }
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error.toString());
             return;
         }
     };
