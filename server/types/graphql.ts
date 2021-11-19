@@ -995,19 +995,25 @@ export type IngestSceneInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
-  attachmentType?: Maybe<Scalars['String']>;
-  attachmentCategory?: Maybe<Scalars['String']>;
-  attachmentUnits?: Maybe<Scalars['String']>;
-  attachmentModelType?: Maybe<Scalars['String']>;
-  attachmentFileType?: Maybe<Scalars['String']>;
-  attachmentgltfStandardized?: Maybe<Scalars['Boolean']>;
-  attachmentDracoCompressed?: Maybe<Scalars['Boolean']>;
-  attachmentTitle?: Maybe<Scalars['String']>;
 };
 
 export type IngestOtherInput = {
   idAssetVersion: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  systemCreated: Scalars['Boolean'];
+  identifiers: Array<IngestIdentifierInput>;
+};
+
+export type IngestSceneAttachment = {
+  type?: Maybe<Scalars['String']>;
+  category?: Maybe<Scalars['String']>;
+  units?: Maybe<Scalars['String']>;
+  modelType?: Maybe<Scalars['String']>;
+  fileType?: Maybe<Scalars['String']>;
+  gltfStandardized?: Maybe<Scalars['Boolean']>;
+  dracoCompressed?: Maybe<Scalars['Boolean']>;
+  title?: Maybe<Scalars['String']>;
+  idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
 };
@@ -1020,6 +1026,7 @@ export type IngestDataInput = {
   model: Array<IngestModelInput>;
   scene: Array<IngestSceneInput>;
   other: Array<IngestOtherInput>;
+  sceneAttachment: Array<IngestSceneAttachment>;
 };
 
 export type IngestDataResult = {

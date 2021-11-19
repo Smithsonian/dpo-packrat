@@ -172,15 +172,7 @@ export const defaultSceneFields: SceneFields = {
     directory: '',
     EdanUUID: '',
     approvedForPublication: false,
-    posedAndQCd: false,
-    attachmentType: '',
-    attachmentCategory: '',
-    attachmentUnits: '',
-    attachmentModelType: '',
-    attachmentFileType: '',
-    attachmentgltfStandardized: false,
-    attachmentDracoCompressed: false,
-    attachmentTitle: ''
+    posedAndQCd: false
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;

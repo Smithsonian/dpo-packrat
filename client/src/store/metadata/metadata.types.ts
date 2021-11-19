@@ -117,14 +117,6 @@ export type SceneFields = {
     approvedForPublication: boolean;
     posedAndQCd: boolean;
     idAsset?: number;
-    attachmentType?: string;
-    attachmentCategory?: string;
-    attachmentUnits?: string;
-    attachmentModelType?: string;
-    attachmentFileType?: string;
-    attachmentgltfStandardized?: boolean;
-    attachmentDracoCompressed?: boolean;
-    attachmentTitle?: string;
 };
 
 export type OtherFields = {
