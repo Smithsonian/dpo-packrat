@@ -203,19 +203,13 @@ export class Helpers {
     }
 
     static async removeFile(filename: string): Promise<IOResults> {
-        const res: IOResults = {
-            success: true,
-            error: ''
-        };
-
         try {
             await fsp.unlink(filename);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.removeFile', LOG.LS.eSYS, error);
-            res.success = false;
-            res.error = `Unable to remove file ${filename}: ${error}`;
+            return { success: false, error: `Unable to remove file ${filename}: ${error}` };
         }
-        return res;
+        return { success: true, error: '' };
     }
 
     static async createDirectory(directory: string): Promise<IOResults> {

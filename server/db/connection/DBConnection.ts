@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
+
 import { PrismaClient } from '@prisma/client';
 import { ASL, LocalStore } from '../../utils/localStore';
 
-type PrismaClientTrans = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>;
+export type PrismaClientTrans = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>;
 
 export class DBConnection {
     private static dbConnection: DBConnection;
@@ -17,7 +19,7 @@ export class DBConnection {
         return DBConnection.dbConnection;
     }
 
-    private get prisma(): PrismaClientTrans {
+    private get prisma(): PrismaClient | PrismaClientTrans {
         if (!this._prisma)
             this._prisma = new PrismaClient();
         if (this._prismaTransMap.size > 0) {
@@ -59,7 +61,7 @@ export class DBConnection {
         }
     }
 
-    static get prisma(): PrismaClientTrans {
+    static get prisma(): PrismaClient | PrismaClientTrans {
         return DBConnection.getInstance().prisma;
     }
 
@@ -73,5 +75,9 @@ export class DBConnection {
 
     static async disconnect(): Promise<void> {
         await DBConnection.getInstance().disconnect();
+    }
+
+    static isFullPrismaClient(prisma: any): prisma is PrismaClient {
+        return prisma && prisma.$transaction && typeof(prisma.$transaction) === 'function';
     }
 }
