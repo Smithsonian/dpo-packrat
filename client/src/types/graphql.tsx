@@ -1007,7 +1007,7 @@ export type IngestOtherInput = {
   identifiers: Array<IngestIdentifierInput>;
 };
 
-export type IngestSceneAttachment = {
+export type IngestSceneAttachmentInput = {
   type?: Maybe<Scalars['String']>;
   category?: Maybe<Scalars['String']>;
   units?: Maybe<Scalars['String']>;
@@ -1029,7 +1029,7 @@ export type IngestDataInput = {
   model: Array<IngestModelInput>;
   scene: Array<IngestSceneInput>;
   other: Array<IngestOtherInput>;
-  sceneAttachment: Array<IngestSceneAttachment>;
+  sceneAttachment: Array<IngestSceneAttachmentInput>;
 };
 
 export type IngestDataResult = {
