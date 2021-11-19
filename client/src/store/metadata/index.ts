@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Metadata Store
  *
@@ -49,7 +50,7 @@ type MetadataStore = {
     validateFields: (fields: ValidateFields, schema: ValidateFieldsSchema) => boolean;
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
     getMetadataInfo: (id: FileId) => MetadataInfo;
-    updateMetadataSteps: () => Promise<MetadataUpdate>;
+    updateMetadataSteps: (existingMetadata: any) => Promise<MetadataUpdate>;
     updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => void;
     updateMetadataFolders: () => Promise<void>;
     updateCameraSettings: (metadatas: StateMetadata[]) => Promise<StateMetadata[]>;
@@ -139,13 +140,13 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             isLast
         };
     },
-    updateMetadataSteps: async (): Promise<MetadataUpdate> => {
+    updateMetadataSteps: async (existingMetadata: any): Promise<MetadataUpdate> => {
         const { completed, getSelectedFiles } = useUploadStore.getState();
         const { getInitialEntry } = useVocabularyStore.getState();
         const { addSubjects } = useSubjectStore.getState();
         const { addProjects } = useProjectStore.getState();
         const { addItems } = useItemStore.getState();
-
+        const { UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet } = existingMetadata;
         const selectedFiles = getSelectedFiles(completed, true);
 
         if (!selectedFiles.length) {
@@ -201,9 +202,9 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
             if (data) {
                 const {
+                    // Note: Details comes mostly empty in normal ingestion and update mode. Not sure if intended
                     getAssetVersionsDetails: { Details }
                 } = data;
-
                 const subjects: StateSubject[] = [];
                 const projects: StateProject[] = [];
                 const items: StateItem[] = [];
@@ -219,6 +220,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         Model,
                         Scene
                     } = Details[index];
+                    const existingIdAssetVersion = idAssetVersionsUpdatedSet.has(idAssetVersion);
+                    const updateModel = UpdatedAssetVersionMetadata.find((asset) => asset.idAssetVersion === idAssetVersion && asset?.Model)?.Model;
+                    const updateScene = UpdatedAssetVersionMetadata.find((asset) => asset.idAssetVersion === idAssetVersion && asset?.Scene)?.Scene;
+                    const updatePhoto = UpdatedAssetVersionMetadata.find((asset) => asset.idAssetVersion === idAssetVersion && asset?.CaptureDataPhoto)?.CaptureDataPhoto;
 
                     if (foundSubjectUnitIdentifier) {
                         const subject: StateSubject = parseSubjectUnitIdentifierToState(foundSubjectUnitIdentifier);
@@ -300,6 +305,39 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         };
                         metadatas.push(metadataStep);
                     } else {
+                        if (existingIdAssetVersion && updatePhoto) {
+                            const { datasetType, name, dateCaptured, description, cameraSettingUniform, datasetFieldId, itemPositionType, itemPositionFieldId, itemArrangementFieldId, focusType, lightsourceType, backgroundRemovalMethod, clusterType, clusterGeometryFieldId, folders } = updatePhoto;
+                            if (datasetType) metadataStep.photogrammetry.datasetType = datasetType;
+                            if (name) metadataStep.photogrammetry.name = name;
+                            if (new Date(dateCaptured)) metadataStep.photogrammetry.dateCaptured = new Date(dateCaptured);
+                            if (description) metadataStep.photogrammetry.description = description;
+                            if (typeof cameraSettingUniform === 'boolean') metadataStep.photogrammetry.cameraSettingUniform = cameraSettingUniform;
+                            if (datasetFieldId) metadataStep.photogrammetry.datasetFieldId = datasetFieldId;
+                            if (itemPositionType) metadataStep.photogrammetry.itemPositionType = itemPositionType;
+                            if (itemPositionFieldId) metadataStep.photogrammetry.itemPositionFieldId = itemPositionFieldId;
+                            if (itemArrangementFieldId) metadataStep.photogrammetry.itemArrangementFieldId = itemArrangementFieldId;
+                            if (focusType) metadataStep.photogrammetry.focusType = focusType;
+                            if (lightsourceType) metadataStep.photogrammetry.lightsourceType = lightsourceType;
+                            if (backgroundRemovalMethod) metadataStep.photogrammetry.backgroundRemovalMethod = backgroundRemovalMethod;
+                            if (clusterType) metadataStep.photogrammetry.clusterType = clusterType;
+                            if (clusterGeometryFieldId) metadataStep.photogrammetry.clusterGeometryFieldId = clusterGeometryFieldId;
+                            if (folders) metadataStep.photogrammetry.folders = folders;
+                        }
+                        if (existingIdAssetVersion && updateModel) {
+                            const { creationMethod, modality, units, purpose, modelFileType } = updateModel;
+                            if (creationMethod) metadataStep.model.creationMethod = creationMethod;
+                            if (modality) metadataStep.model.modality = modality;
+                            if (units) metadataStep.model.units = units;
+                            if (purpose) metadataStep.model.purpose = purpose;
+                            if (modelFileType) metadataStep.model.creationMethod = creationMethod;
+                        }
+                        if (existingIdAssetVersion && updateScene) {
+                            const { name, posedAndQCd, referenceModels, approvedForPublication } = updateScene;
+                            if (name) metadataStep.scene.name = name;
+                            if (typeof posedAndQCd === 'boolean') metadataStep.scene.posedAndQCd = posedAndQCd;
+                            if (typeof approvedForPublication === 'boolean') metadataStep.scene.approvedForPublication = approvedForPublication;
+                            if (referenceModels) metadataStep.scene.referenceModels = referenceModels;
+                        }
                         metadatas.push(metadataStep);
                     }
                 }

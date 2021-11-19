@@ -48,8 +48,11 @@ class IngestDataWorker extends ResolverBase {
     private ingestModel: boolean = false;
     private ingestScene: boolean = false;
     private ingestOther: boolean = false;
+    private ingestAttachmentScene: boolean = false;
+
     private ingestNew: boolean = false;
     private ingestUpdate: boolean = false;
+    private ingestAttachment: boolean = false;
     private assetVersionSet: Set<number> = new Set<number>(); // set of idAssetVersions
 
     private assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>();     // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
@@ -137,8 +140,10 @@ class IngestDataWorker extends ResolverBase {
             // wire subjects to item
             if (!await this.wireSubjectsToItem(subjectsDB, itemDB))
                 return { success: false, message: 'failure to wire subjects to item' };
-        } else
+        } else if (this.ingestUpdate)
             await this.appendToWFReport('Ingesting content for updated object');
+        else if (this.ingestAttachment)
+            await this.appendToWFReport('Ingesting content for attachment');
 
         if (this.ingestPhotogrammetry) {
             for (const photogrammetry of this.input.photogrammetry) {
@@ -169,6 +174,13 @@ class IngestDataWorker extends ResolverBase {
             for (const other of this.input.other) {
                 if (!await this.createOtherObjects(other))
                     return { success: false, message: 'failure to create other object' };
+            }
+        }
+
+        if (this.ingestAttachmentScene) {
+            for (const sceneAttachment of this.input.sceneAttachment) {
+                if (!await this.createSceneAttachment(sceneAttachment))
+                    return { success: false, message: 'failure to create scene attachment' };
             }
         }
 
@@ -920,6 +932,40 @@ class IngestDataWorker extends ResolverBase {
         return true;
     }
 
+    private async createSceneAttachment(sceneAttachment: IngestSceneAttachmentInput): Promise<boolean> {
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(sceneAttachment.idAssetVersion);
+        if (!assetVersion) {
+            LOG.error(`ingestData could not fetch asset version for ${sceneAttachment.idAssetVersion}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        const idAsset: number = assetVersion.idAsset;
+        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
+        if (!asset) {
+            LOG.error(`ingestData could not fetch asset for ${idAsset}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        if (!await this.handleIdentifiers(asset, sceneAttachment.systemCreated, sceneAttachment.identifiers))
+            return false;
+
+        // if the asset version is an attachment to a specific system object, use that system object as the owner of the new asset version
+        let SOOwner: DBAPI.SystemObjectBased | null = null;
+        if (assetVersion.idSOAttachment) {
+            const SOP: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(assetVersion.idSOAttachment);
+            if (!SOP) {
+                LOG.error(`ingestData could not fetch system object paids from ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                return false;
+            }
+            SOOwner = SOP.SystemObjectBased;
+        }
+        if (!SOOwner)
+            SOOwner = asset;
+
+        this.assetVersionMap.set(sceneAttachment.idAssetVersion, SOOwner);
+        return true;
+    }
+
     private async wireItemToAssetOwners(itemDB: DBAPI.Item): Promise<boolean> {
         for (const SOBased of this.assetVersionMap.values()) {
             const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, SOBased);
@@ -1074,10 +1120,11 @@ class IngestDataWorker extends ResolverBase {
     }
 
     async validateInput(): Promise<H.IOResults> {
-        this.ingestPhotogrammetry = this.input.photogrammetry && this.input.photogrammetry.length > 0;
-        this.ingestModel = this.input.model && this.input.model.length > 0;
-        this.ingestScene = this.input.scene && this.input.scene.length > 0;
-        this.ingestOther = this.input.other && this.input.other.length > 0;
+        this.ingestPhotogrammetry   = this.input.photogrammetry && this.input.photogrammetry.length > 0;
+        this.ingestModel            = this.input.model && this.input.model.length > 0;
+        this.ingestScene            = this.input.scene && this.input.scene.length > 0;
+        this.ingestOther            = this.input.other && this.input.other.length > 0;
+        this.ingestAttachmentScene  = this.input.sceneAttachment && this.input.sceneAttachment.length > 0;
         this.ingestNew = false;
         this.ingestUpdate = false;
 
@@ -1185,15 +1232,24 @@ class IngestDataWorker extends ResolverBase {
             }
         }
 
+        if (this.ingestAttachmentScene) {
+            this.ingestAttachment = true;
+            for (const sceneAttachment of this.input.sceneAttachment) {
+                if (sceneAttachment.idAssetVersion)
+                    this.assetVersionSet.add(sceneAttachment.idAssetVersion);
+            }
+        }
+
         // data validation; FYI ... this.input.project is allowed to be unspecified
-        if (this.ingestNew && this.ingestUpdate) {
-            const error: string = 'ingestData called with an unsupported mix of additions and updates';
+        const flavors: number = (this.ingestNew ? 1 : 0) + (this.ingestUpdate ? 1 : 0) + (this.ingestAttachment ? 1 : 0);
+        if (flavors > 1) {
+            const error: string = 'ingestData called with an unsupported mix of additions, updates, and attachments';
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
 
-        if (!this.ingestNew && !this.ingestUpdate) {
-            const error: string = 'ingestData called without both additions and updates';
+        if (flavors === 0) {
+            const error: string = 'ingestData called without one of additions, updates, or attachments';
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
