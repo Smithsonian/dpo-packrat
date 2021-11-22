@@ -102,11 +102,11 @@ input IngestOtherInput {
 }
 
 input IngestSceneAttachmentInput {
-    type: String
-    category: String
-    units: String
-    modelType: String
-    fileType: String
+    type: Int
+    category: Int
+    units: Int
+    modelType: Int
+    fileType: Int
     gltfStandardized: Boolean
     dracoCompressed: Boolean
     title: String

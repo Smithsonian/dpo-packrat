@@ -114,7 +114,7 @@ function useIngest(): UseIngest {
             lodash.forEach(metadatasList, metadata => {
                 console.log('ingestionStart metadata', metadata);
                 const { file, photogrammetry, model, scene, other } = metadata;
-                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, other: isOther } = getAssetType(file.type);
+                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, /* attachment: isAttachment, */ other: isOther } = getAssetType(file.type);
 
                 if (isPhotogrammetry) {
                     const {
@@ -247,6 +247,10 @@ function useIngest(): UseIngest {
                     ingestScene.push(sceneData);
                 }
 
+                // if (isAttachment) {
+                //
+                // }
+
                 if (isOther) {
                     const { identifiers, systemCreated } = other;
 
@@ -276,8 +280,9 @@ function useIngest(): UseIngest {
                         systemCreated: attachment.systemCreated,
                         identifiers: getIngestIdentifiers(attachment.identifiers)
                     };
-                    const { type, units, modelType, fileType, gltfStandardized, dracoCompressed, title } = attachment;
+                    const { type, category, units, modelType, fileType, gltfStandardized, dracoCompressed, title } = attachment;
                     if (type) attachmentData.type = type;
+                    if (category) attachmentData.category = category;
                     if (units) attachmentData.units = units;
                     if (modelType) attachmentData.modelType = modelType;
                     if (fileType) attachmentData.fileType = fileType;

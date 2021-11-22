@@ -11,7 +11,8 @@
 import React from 'react';
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { InputField, FieldType } from '../../../../components';
+import { InputField, SelectField, FieldType } from '../../../../components';
+import { useVocabularyStore, VocabularyOption } from '../../../../store';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -30,34 +31,57 @@ const useStyles = makeStyles(() => ({
 export interface metadataRow {
     name: string;
     label: string;
-    type: 'string' | 'boolean';
+    type: 'string' | 'index' | 'boolean';
+    index?: number;
 }
 
 interface AttachmentMetadataProps {
     metadatas: metadataRow[];
-    metadataState: { [name: string]: boolean | string | undefined | null };
+    metadataState: { [name: string]: boolean | string | number | undefined | null };
     setNameField: ({ target }: { target: any }) => void;
     setCheckboxField: ({ target }: { target: any }) => void;
 }
 
 
 function AttachmentMetadataForm(props: AttachmentMetadataProps): React.ReactElement {
+    const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const { metadatas, metadataState, setNameField, setCheckboxField } = props;
     const classes = useStyles();
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
-    const rows = metadatas.map(({ type, label, name }) => {
+    const rows = metadatas.map(({ type, label, name, index }) => {
         if (type === 'boolean') {
             return (
                 <FieldType key={name} required label={label} direction='row' containerProps={rowFieldProps}>
                     <Checkbox name={name} checked={metadataState[name] as boolean} color='primary' onChange={setCheckboxField} />
                 </FieldType>
             );
-        } else {
+        } else if (type === 'index') {
+            let options: VocabularyOption[] = [];
+
+            if (index) {
+                options = getEntries(index);
+                if (!options || options.length === 0) {
+                    console.log(`AttachmentMetadataForm called for ${name} of type 'index', finding no entries`);
+                    options = [];
+                }
+            } else
+                console.log(`AttachmentMetadataForm called for ${name} of type 'index', without an index`);
+
             return (
-                <InputField key={name} required type='string' label={label} value={metadataState[name] as string} name={name} onChange={setNameField} />
+                <SelectField
+                    required
+                    label={label}
+                    // error={errors.model.creationMethod}
+                    value={metadataState[name] as number}
+                    name={name}
+                    onChange={setNameField}
+                    options={options}
+                />
             );
-        }
+        } else
+            return ( <InputField key={name} required type='string' label={label} value={metadataState[name] as string} name={name} onChange={setNameField} /> );
+
     });
 
     return (

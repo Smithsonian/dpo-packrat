@@ -144,6 +144,7 @@ async function isPreferredAsset(idVAssetType: number, SO: DBAPI.SystemObject): P
         case CACHE.eVocabularyID.eAssetAssetTypeBulkIngestion:
         case CACHE.eVocabularyID.eAssetAssetTypeCaptureDataFile:
         case CACHE.eVocabularyID.eAssetAssetTypeModelUVMapFile:
+        case CACHE.eVocabularyID.eAssetAssetTypeAttachment:
         case CACHE.eVocabularyID.eAssetAssetTypeOther:
         case undefined:
         default:
