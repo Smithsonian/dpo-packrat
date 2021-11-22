@@ -19,7 +19,7 @@ export type SceneAssetCollector = {
     assetVersion: DBAPI.AssetVersion;
     model?: DBAPI.Model;
     modelSceneXref?: DBAPI.ModelSceneXref;
-    isAttachment?: boolean;
+    metadataSet?: DBAPI.Metadata[] | null;
 };
 
 export class PublishScene {
@@ -300,18 +300,17 @@ export class PublishScene {
             } else
                 LOG.error(`PublishScene.collectAssets unable to compute metadata for ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
 
-
             if (asset.idSystemObject) {
                 const modelSceneXref: DBAPI.ModelSceneXref | undefined = this.DownloadMSXMap.get(asset.idSystemObject ?? 0);
                 if (!modelSceneXref)
-                    this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, isAttachment });
+                    this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, metadataSet: isAttachment ? metadataSet : undefined });
                 else {
                     const model: DBAPI.Model | null = await DBAPI.Model.fetch(modelSceneXref.idModel);
                     if (!model) {
                         LOG.error(`PublishScene.collectAssets unable to load model from xref ${JSON.stringify(modelSceneXref, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
                         return false;
                     }
-                    this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, model, modelSceneXref, isAttachment: true });
+                    this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, model, modelSceneXref, metadataSet: isAttachment ? metadataSet : undefined });
                 }
             }
 
@@ -348,7 +347,7 @@ export class PublishScene {
         // second pass: zip up appropriate assets; prepare to copy downloads
         const zip: ZIP.ZipStream = new ZIP.ZipStream();
         for (const SAC of this.SacList.values()) {
-            if (SAC.model || SAC.isAttachment) // skip downloads
+            if (SAC.model || SAC.metadataSet) // skip downloads
                 continue;
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(SAC.asset, SAC.assetVersion);
@@ -407,7 +406,7 @@ export class PublishScene {
         this.resourcesHotFolder = path.join(Config.collection.edan.resourcesHotFolder, this.scene.EdanUUID!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
         for (const SAC of this.SacList.values()) {
-            if (!SAC.model && !SAC.isAttachment) // SAC is not a attachment, skip it
+            if (!SAC.model && !SAC.metadataSet) // SAC is not a attachment, skip it
                 continue;
 
             if (!await this.ensureResourceHotFolderExists())
@@ -454,77 +453,137 @@ export class PublishScene {
     }
 
     private async extractResource(SAC: SceneAssetCollector, uuid: string): Promise<COL.Edan3DResource | null> {
-        if (!SAC.model || !SAC.modelSceneXref)
-            return null;
-
         let type: COL.Edan3DResourceType | undefined = undefined;
-        const typeV: DBAPI.Vocabulary | undefined = SAC.model.idVCreationMethod ? await CACHE.VocabularyCache.vocabulary(SAC.model.idVCreationMethod) : undefined;
-        switch (typeV?.Term) {
-            default: LOG.error(`PublishScene.extractResource found no type mapping for ${typeV?.Term}`, LOG.LS.eCOLL); break;
-            case undefined: break;
-            case 'Scan To Mesh':    type = '3D mesh'; break;
-            case 'CAD':             type = 'CAD model'; break;
-        }
-
         let UNITS: COL.Edan3DResourceAttributeUnits | undefined = undefined;
-        const unitsV: DBAPI.Vocabulary | undefined = SAC.model.idVUnits ? await CACHE.VocabularyCache.vocabulary(SAC.model.idVUnits) : undefined;
-        switch (unitsV?.Term) {
-            default: LOG.error(`PublishScene.extractResource found no units mapping for ${unitsV?.Term}`, LOG.LS.eCOLL); break;
-            case undefined: break;
-            case 'Millimeter':  UNITS = 'mm'; break;
-            case 'Centimeter':  UNITS = 'cm'; break;
-            case 'Meter':       UNITS = 'm'; break;
-            case 'Kilometer':   UNITS = 'km'; break;
-            case 'Inch':        UNITS = 'in'; break;
-            case 'Foot':        UNITS = 'ft'; break;
-            case 'Yard':        UNITS = 'yd'; break;
-            case 'Mile':        UNITS = 'mi'; break;
-        }
-
         let MODEL_FILE_TYPE: COL.Edan3DResourceAttributeModelFileType | undefined = undefined;
-        const modelTypeV: DBAPI.Vocabulary | undefined = SAC.model.idVFileType ? await CACHE.VocabularyCache.vocabulary(SAC.model.idVFileType) : undefined;
-        switch (modelTypeV?.Term) {
-            default: LOG.error(`PublishScene.extractResource found no model file type mapping for ${modelTypeV?.Term}`, LOG.LS.eCOLL); break;
-            case undefined: break;
-            case 'obj - Alias Wavefront Object':                MODEL_FILE_TYPE = 'obj'; break;
-            case 'ply - Stanford Polygon File Format':          MODEL_FILE_TYPE = 'ply'; break;
-            case 'stl - StereoLithography':                     MODEL_FILE_TYPE = 'stl'; break;
-            case 'glb - GL Transmission Format Binary':         MODEL_FILE_TYPE = 'glb'; break;
-            case 'gltf - GL Transmission Format':               MODEL_FILE_TYPE = 'gltf'; break;
-            case 'usdz - Universal Scene Description (zipped)': MODEL_FILE_TYPE = 'usdz'; break;
-            case 'x3d':                                         MODEL_FILE_TYPE = 'x3d'; break;
-            // case 'usd - Universal Scene Description':           break;
-            // case 'wrl - VRML':                                  break;
-            // case 'dae - COLLADA':                               break;
-            // case 'fbx - Filmbox':                               break;
-            // case 'ma - Maya':                                   break;
-            // case '3ds - 3D Studio':                             break;
-            // case 'ptx':                                         break;
-            // case 'pts':                                         break;
-        }
-
         let FILE_TYPE: COL.Edan3DResourceAttributeFileType | undefined = undefined;
-        switch (path.extname(SAC.assetVersion.FileName).toLowerCase()) {
-            default: LOG.error(`PublishScene.extractResource found no file type mapping for ${SAC.assetVersion.FileName}`, LOG.LS.eCOLL); break;
-            case '.zip':    FILE_TYPE = 'zip'; break;
-            case '.glb':    FILE_TYPE = 'glb'; break;
-            case '.usdz':   FILE_TYPE = 'usdz'; break;
-        }
-
-        const GLTF_STANDARDIZED: boolean = true;                            // per Jon Blundel, 8/19/2021, models generated by Cook for downloads meets this criteria
+        let GLTF_STANDARDIZED: boolean = true;                            // per Jon Blundel, 8/19/2021, models generated by Cook for downloads meets this criteria
         let DRACO_COMPRESSED: boolean = false;
         let category: COL.Edan3DResourceCategory | undefined = undefined;   // Possible values: 'Full resolution', 'Medium resolution', 'Low resolution', 'Watertight', 'iOS AR model'
 
-        switch (SAC.modelSceneXref.Usage?.replace('Download ', '').toLowerCase()) {
-            case undefined:
-            case 'webassetglblowuncompressed':  category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; break;
-            case 'webassetglbarcompressed':     category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; DRACO_COMPRESSED = true; break;
-            case 'usdz':                        category = 'iOS AR model';      MODEL_FILE_TYPE = 'usdz'; break;
-            case 'objzipfull':                  category = 'Full resolution';   MODEL_FILE_TYPE = 'obj'; break;
-            case 'objziplow':                   category = 'Low resolution';    MODEL_FILE_TYPE = 'obj'; break;
-            case 'gltfziplow':                  category = 'Low resolution';    MODEL_FILE_TYPE = 'gltf'; break;
+        if (SAC.metadataSet) {
+            for (const metadata of SAC.metadataSet) {
+                switch (metadata.Name.toLowerCase()) {
+                    case 'type':
+                        switch (metadata.ValueShort) {
+                            case '3D mesh':
+                            case 'CAD model':
+                                type = metadata.ValueShort;
+                                break;
+                        } break;
+
+                    case 'category':
+                        switch (metadata.ValueShort) {
+                            case 'Low resolution':
+                            case 'iOS AR model':
+                            case 'Full resolution':
+                                category = metadata.ValueShort;
+                                break;
+                        } break;
+
+                    case 'units':
+                        switch (metadata.ValueShort) {
+                            case 'mm':
+                            case 'cm':
+                            case 'm':
+                            case 'km':
+                            case 'in':
+                            case 'ft':
+                            case 'yd':
+                            case 'mi':
+                                UNITS = metadata.ValueShort;
+                                break;
+                        } break;
+
+                    case 'modeltype':
+                        switch (metadata.ValueShort) {
+                            case 'obj':
+                            case 'ply':
+                            case 'stl':
+                            case 'glb':
+                            case 'gltf':
+                            case 'usdz':
+                            case 'x3d':
+                                MODEL_FILE_TYPE = metadata.ValueShort;
+                                break;
+                        } break;
+
+                    case 'filetype':
+                        switch (metadata.ValueShort) {
+                            case 'zip':
+                            case 'glb':
+                            case 'usdz':
+                                FILE_TYPE = metadata.ValueShort;
+                                break;
+                        } break;
+
+                    case 'gltfstandardized': GLTF_STANDARDIZED = (metadata.ValueShort === '1'); break;
+                    case 'dracocompressed':  DRACO_COMPRESSED = (metadata.ValueShort === '1'); break;
+                }
+            }
         }
 
+        if (SAC.model && SAC.modelSceneXref) {
+            const typeV: DBAPI.Vocabulary | undefined = SAC.model.idVCreationMethod ? await CACHE.VocabularyCache.vocabulary(SAC.model.idVCreationMethod) : undefined;
+            switch (typeV?.Term) {
+                default: LOG.error(`PublishScene.extractResource found no type mapping for ${typeV?.Term}`, LOG.LS.eCOLL); break;
+                case undefined: break;
+                case 'Scan To Mesh':    type = '3D mesh'; break;
+                case 'CAD':             type = 'CAD model'; break;
+            }
+
+            const unitsV: DBAPI.Vocabulary | undefined = SAC.model.idVUnits ? await CACHE.VocabularyCache.vocabulary(SAC.model.idVUnits) : undefined;
+            switch (unitsV?.Term) {
+                default: LOG.error(`PublishScene.extractResource found no units mapping for ${unitsV?.Term}`, LOG.LS.eCOLL); break;
+                case undefined: break;
+                case 'Millimeter':  UNITS = 'mm'; break;
+                case 'Centimeter':  UNITS = 'cm'; break;
+                case 'Meter':       UNITS = 'm'; break;
+                case 'Kilometer':   UNITS = 'km'; break;
+                case 'Inch':        UNITS = 'in'; break;
+                case 'Foot':        UNITS = 'ft'; break;
+                case 'Yard':        UNITS = 'yd'; break;
+                case 'Mile':        UNITS = 'mi'; break;
+            }
+
+            const modelTypeV: DBAPI.Vocabulary | undefined = SAC.model.idVFileType ? await CACHE.VocabularyCache.vocabulary(SAC.model.idVFileType) : undefined;
+            switch (modelTypeV?.Term) {
+                default: LOG.error(`PublishScene.extractResource found no model file type mapping for ${modelTypeV?.Term}`, LOG.LS.eCOLL); break;
+                case undefined: break;
+                case 'obj - Alias Wavefront Object':                MODEL_FILE_TYPE = 'obj'; break;
+                case 'ply - Stanford Polygon File Format':          MODEL_FILE_TYPE = 'ply'; break;
+                case 'stl - StereoLithography':                     MODEL_FILE_TYPE = 'stl'; break;
+                case 'glb - GL Transmission Format Binary':         MODEL_FILE_TYPE = 'glb'; break;
+                case 'gltf - GL Transmission Format':               MODEL_FILE_TYPE = 'gltf'; break;
+                case 'usdz - Universal Scene Description (zipped)': MODEL_FILE_TYPE = 'usdz'; break;
+                case 'x3d':                                         MODEL_FILE_TYPE = 'x3d'; break;
+                // case 'usd - Universal Scene Description':           break;
+                // case 'wrl - VRML':                                  break;
+                // case 'dae - COLLADA':                               break;
+                // case 'fbx - Filmbox':                               break;
+                // case 'ma - Maya':                                   break;
+                // case '3ds - 3D Studio':                             break;
+                // case 'ptx':                                         break;
+                // case 'pts':                                         break;
+            }
+
+            switch (path.extname(SAC.assetVersion.FileName).toLowerCase()) {
+                default: LOG.error(`PublishScene.extractResource found no file type mapping for ${SAC.assetVersion.FileName}`, LOG.LS.eCOLL); break;
+                case '.zip':    FILE_TYPE = 'zip'; break;
+                case '.glb':    FILE_TYPE = 'glb'; break;
+                case '.usdz':   FILE_TYPE = 'usdz'; break;
+            }
+
+            switch (SAC.modelSceneXref.Usage?.replace('Download ', '').toLowerCase()) {
+                case undefined:
+                case 'webassetglblowuncompressed':  category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; break;
+                case 'webassetglbarcompressed':     category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; DRACO_COMPRESSED = true; break;
+                case 'usdz':                        category = 'iOS AR model';      MODEL_FILE_TYPE = 'usdz'; break;
+                case 'objzipfull':                  category = 'Full resolution';   MODEL_FILE_TYPE = 'obj'; break;
+                case 'objziplow':                   category = 'Low resolution';    MODEL_FILE_TYPE = 'obj'; break;
+                case 'gltfziplow':                  category = 'Low resolution';    MODEL_FILE_TYPE = 'gltf'; break;
+            }
+        }
 
         const subjectName: string = this.subject ? this.subject.Name : '';
         const sceneName: string = this.scene ? this.scene.Name : '';

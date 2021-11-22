@@ -7,7 +7,7 @@ import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import path from 'path';
 import { toast } from 'react-toastify';
-import { eVocabularySetID, eSystemObjectType } from '../types/server';
+import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '../types/server';
 import { generateFileId } from '../utils/upload';
 import { useVocabularyStore } from './vocabulary';
 import { apolloClient, apolloUploader } from '../graphql';
@@ -219,8 +219,14 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             const uploadAssetInputs: UploadAssetInput = { file, type };
             if (urlParams.has('idAsset'))
                 uploadAssetInputs.idAsset = Number(urlParams.get('idAsset'));
-            if (urlParams.has('idSOAttachment'))
+            if (urlParams.has('idSOAttachment')) {
                 uploadAssetInputs.idSOAttachment = Number(urlParams.get('idSOAttachment'));
+
+                const { getVocabularyId } = useVocabularyStore.getState();
+                uploadAssetInputs.type = getVocabularyId(eVocabularyID.eAssetAssetTypeAttachment) ?? 0;
+            }
+
+            console.log('uploadassetinputs', uploadAssetInputs);
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
                 variables: uploadAssetInputs,
@@ -229,7 +235,6 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 onProgress,
                 onCancel
             });
-            // console.log('uploadassetinputs', uploadAssetInputs);
             const { uploadAsset }: UploadAssetMutation = data;
 
             if (uploadAsset) {

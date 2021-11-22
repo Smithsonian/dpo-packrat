@@ -18,6 +18,7 @@ import { toast } from 'react-toastify';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
 import ObjectSelectModal from '../Model/ObjectSelectModal';
 import AttachmentMetadataForm, { metadataRow } from '../AttachmentMetadataForm';
+import { eVocabularySetID } from '../../../../../types/server';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -40,6 +41,7 @@ function Scene(props: SceneProps): React.ReactElement {
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [createNewAttachmentEntry, updateAttachmentEntry, getAttachmentEntry] = useAttachmentStore(state => [state.createNewAttachmentEntry, state.updateAttachmentEntry, state.getAttachmentEntry]);
+
     // state responsible for ReferenceModels
     const [referenceModels, setReferenceModels] = useState([
         {
@@ -84,12 +86,12 @@ function Scene(props: SceneProps): React.ReactElement {
     const idAssetVersion = urlParams.get('fileId');
     const [attachment, setAttachment] = useState<SceneAttachment>({
         idAssetVersion: Number(idAssetVersion),
-        type: '',
-        units: '',
-        modelType: '',
-        fileType: '',
+        type: null,
+        units: null,
+        modelType: null,
+        fileType: null,
+        category: null,
         title: '',
-        category: '',
         gltfStandardized: false,
         dracoCompressed: false,
         systemCreated: false,
@@ -253,11 +255,11 @@ function Scene(props: SceneProps): React.ReactElement {
 
     if (idSOAttachment) {
         const attachmentArr: metadataRow[] = [
-            { name: 'type', label: 'Type', type: 'string' },
-            { name: 'category', label: 'Category', type: 'string' },
-            { name: 'units', label: 'Units', type: 'string' },
-            { name: 'modelType', label: 'Model Type', type: 'string' },
-            { name: 'fileType', label: 'File Type', type: 'string' },
+            { name: 'type', label: 'Type', type: 'index', index: eVocabularySetID.eEdan3DResourceType },
+            { name: 'category', label: 'Category', type: 'index', index: eVocabularySetID.eEdan3DResourceCategory },
+            { name: 'units', label: 'Units', type: 'index', index: eVocabularySetID.eEdan3DResourceAttributeUnits },
+            { name: 'modelType', label: 'Model Type', type: 'index', index: eVocabularySetID.eEdan3DResourceAttributeModelFileType },
+            { name: 'fileType', label: 'File Type', type: 'index', index: eVocabularySetID.eEdan3DResourceAttributeFileType },
             { name: 'gltfStandardized', label: 'glTF Standardized', type: 'boolean' },
             { name: 'dracoCompressed', label: 'Draco Compressed', type: 'boolean' },
             { name: 'title', label: 'Title', type: 'string' }

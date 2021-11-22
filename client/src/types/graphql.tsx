@@ -1008,11 +1008,11 @@ export type IngestOtherInput = {
 };
 
 export type IngestSceneAttachmentInput = {
-  type?: Maybe<Scalars['String']>;
-  category?: Maybe<Scalars['String']>;
-  units?: Maybe<Scalars['String']>;
-  modelType?: Maybe<Scalars['String']>;
-  fileType?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['Int']>;
+  category?: Maybe<Scalars['Int']>;
+  units?: Maybe<Scalars['Int']>;
+  modelType?: Maybe<Scalars['Int']>;
+  fileType?: Maybe<Scalars['Int']>;
   gltfStandardized?: Maybe<Scalars['Boolean']>;
   dracoCompressed?: Maybe<Scalars['Boolean']>;
   title?: Maybe<Scalars['String']>;

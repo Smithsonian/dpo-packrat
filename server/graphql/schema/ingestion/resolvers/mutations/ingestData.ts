@@ -941,6 +941,7 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async createSceneAttachment(sceneAttachment: IngestSceneAttachmentInput): Promise<boolean> {
+        LOG.info(`ingestData.createSceneAttachment(${JSON.stringify(sceneAttachment)})`, LOG.LS.eGQL);
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(sceneAttachment.idAssetVersion);
         if (!assetVersion) {
             LOG.error(`ingestData could not fetch asset version for ${sceneAttachment.idAssetVersion}`, LOG.LS.eGQL);
@@ -980,15 +981,15 @@ class IngestDataWorker extends ResolverBase {
         const extractor: META.MetadataExtractor = new META.MetadataExtractor();
         extractor.metadata.set('isAttachment', '1');
         if (sceneAttachment.type)
-            extractor.metadata.set('type', sceneAttachment.type);
+            extractor.metadata.set('type', await IngestDataWorker.convertVocabToString(sceneAttachment.type));
         if (sceneAttachment.category)
-            extractor.metadata.set('category', sceneAttachment.category);
+            extractor.metadata.set('category', await IngestDataWorker.convertVocabToString(sceneAttachment.category));
         if (sceneAttachment.units)
-            extractor.metadata.set('units', sceneAttachment.units);
+            extractor.metadata.set('units', await IngestDataWorker.convertVocabToString(sceneAttachment.units));
         if (sceneAttachment.modelType)
-            extractor.metadata.set('modelType', sceneAttachment.modelType);
+            extractor.metadata.set('modelType', await IngestDataWorker.convertVocabToString(sceneAttachment.modelType));
         if (sceneAttachment.fileType)
-            extractor.metadata.set('fileType', sceneAttachment.fileType);
+            extractor.metadata.set('fileType', await IngestDataWorker.convertVocabToString(sceneAttachment.fileType));
         if (sceneAttachment.gltfStandardized)
             extractor.metadata.set('gltfStandardized', sceneAttachment.gltfStandardized ? '1' : '0');
         if (sceneAttachment.dracoCompressed)
@@ -1002,6 +1003,11 @@ class IngestDataWorker extends ResolverBase {
 
         this.assetVersionMap.set(sceneAttachment.idAssetVersion, { SOOwner, isAttachment: true }); // store attachment without unzipping
         return true;
+    }
+
+    private static async convertVocabToString(idVocabulary: number): Promise<string> {
+        const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabulary);
+        return vocab ? vocab.Term : '';
     }
 
     private async wireItemToAssetOwners(itemDB: DBAPI.Item): Promise<boolean> {

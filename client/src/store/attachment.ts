@@ -17,11 +17,11 @@ interface AttachmentMetadata {
 }
 
 export interface SceneAttachment extends AttachmentMetadata {
-    type: string | null;
-    category: string | null;
-    units: string | null;
-    modelType: string | null;
-    fileType: string | null;
+    type: number | null;        // vocabulary id
+    category: number | null;    // vocabulary id
+    units: number | null;       // vocabulary id
+    modelType: number | null;   // vocabulary id
+    fileType: number | null;    // vocabulary id
     gltfStandardized: boolean | null;
     dracoCompressed: boolean | null;
     title: string | null;
@@ -47,11 +47,11 @@ export const useAttachmentStore = create<AttachmentStore>((set: SetState<Attachm
                 const attachmentsCopy = [...sceneAttachments];
                 attachmentsCopy.push({
                     idAssetVersion,
-                    type: '',
-                    category: '',
-                    units: '',
-                    modelType: '',
-                    fileType: '',
+                    type: null,
+                    category: null,
+                    units: null,
+                    modelType: null,
+                    fileType: null,
                     gltfStandardized: false,
                     dracoCompressed: false,
                     title: '',
