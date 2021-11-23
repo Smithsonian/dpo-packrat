@@ -126,7 +126,7 @@ function Header(): React.ReactElement {
     return (
         <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
             <Box display='flex' flex={3.5}>
-                <Typography className={classes.header}>Reference Models(s)</Typography>
+                <Typography className={classes.header}>Reference Models</Typography>
             </Box>
             <Box display='flex' flex={0.75}>
                 <Typography className={classes.header}>Usage</Typography>

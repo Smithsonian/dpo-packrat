@@ -35,6 +35,7 @@ import {
     IngestOtherInput,
     IngestPhotogrammetryInput,
     IngestProjectInput,
+    IngestSceneAttachmentInput,
     IngestSceneInput,
     IngestSubjectInput,
 } from '../../../types/graphql';
@@ -105,12 +106,13 @@ function useIngest(): UseIngest {
             const ingestModel: IngestModelInput[] = [];
             const ingestScene: IngestSceneInput[] = [];
             const ingestOther: IngestOtherInput[] = [];
+            const ingestSceneAttachment: IngestSceneAttachmentInput[] = [];
 
             const metadatasList = metadatas.length === 0 ? getMetadatas() : metadatas;
             lodash.forEach(metadatasList, metadata => {
                 console.log('ingestionStart metadata', metadata);
-                const { file, photogrammetry, model, scene, other } = metadata;
-                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, other: isOther } = getAssetType(file.type);
+                const { file, photogrammetry, model, scene, other, sceneAttachment } = metadata;
+                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, attachment: isAttachment, other: isOther } = getAssetType(file.type);
 
                 if (isPhotogrammetry) {
                     const {
@@ -252,6 +254,25 @@ function useIngest(): UseIngest {
                     ingestScene.push(sceneData);
                 }
 
+                if (isAttachment) {
+                    const { type, category, units, modelType, fileType, gltfStandardized, dracoCompressed, title, idAssetVersion, systemCreated, identifiers } = sceneAttachment;
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+                    const sceneAttachmentData: IngestSceneAttachmentInput = {
+                        type,
+                        category,
+                        units,
+                        modelType,
+                        fileType,
+                        gltfStandardized,
+                        dracoCompressed,
+                        title,
+                        idAssetVersion,
+                        systemCreated,
+                        identifiers: ingestIdentifiers
+                    };
+                    ingestSceneAttachment.push(sceneAttachmentData);
+                }
+
                 if (isOther) {
                     const { identifiers, systemCreated } = other;
 
@@ -279,7 +300,8 @@ function useIngest(): UseIngest {
                 photogrammetry: ingestPhotogrammetry,
                 model: ingestModel,
                 scene: ingestScene,
-                other: ingestOther
+                other: ingestOther,
+                sceneAttachment: ingestSceneAttachment
             };
             console.log('** IngestDataInput', input);
 

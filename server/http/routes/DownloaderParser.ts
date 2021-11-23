@@ -13,6 +13,7 @@ export enum eDownloadMode {
     eWorkflowReport,
     eWorkflowSet,
     eJobRun,
+    eSystemObjectVersionComment,
     eUnknown
 }
 
@@ -25,6 +26,7 @@ export interface DownloaderParserResults {
     assetVersions?: DBAPI.AssetVersion[];
     WFReports?: DBAPI.WorkflowReport[];
     jobRun?: DBAPI.JobRun;
+    comment?: string | null;
 }
 
 export class DownloaderParser {
@@ -33,6 +35,7 @@ export class DownloaderParser {
     private idAsset: number | null = null;
     private idSystemObject: number | null = null;
     private idSystemObjectVersion: number | null = null;
+    private idSystemObjectVersionComment: number | null = null;
 
     private idWorkflow: number | null = null;
     private idWorkflowReport: number | null = null;
@@ -64,6 +67,7 @@ export class DownloaderParser {
     get idWorkflowReportV(): number | null { return this.idWorkflowReport; }
     get idWorkflowSetV(): number | null { return this.idWorkflowSet; }
     get idJobRunV(): number | null { return this.idJobRun; }
+    get idSystemObjectVersionCommentV(): number | null { return this.idSystemObjectVersionComment; }
 
     get systemObjectPathV(): string | null { return this.systemObjectPath; }
     get fileMapV(): Map<string, DBAPI.AssetVersion> { return this.fileMap; }
@@ -90,6 +94,7 @@ export class DownloaderParser {
         // LOG.info(`DownloadParser.parseArguments(${this.requestPath}), idSystemObjectU = ${idSystemObjectU}`, LOG.LS.eHTTP);
 
         const idSystemObjectVersionU = this.requestQuery.idSystemObjectVersion;
+        const idSystemObjectVersionCommentU = this.requestQuery.idSystemObjectVersionComment;
         const idAssetU = this.requestQuery.idAsset;
         const idAssetVersionU = this.requestQuery.idAssetVersion;
         const idWorkflowU = this.requestQuery.idWorkflow;
@@ -97,8 +102,8 @@ export class DownloaderParser {
         const idWorkflowSetU = this.requestQuery.idWorkflowSet;
         const idJobRunU = this.requestQuery.idJobRun;
 
-        const urlParamCount: number = (idSystemObjectU ? 1 : 0) + (idSystemObjectVersionU ? 1 : 0) + (idAssetU ? 1 : 0)
-            + (idAssetVersionU ? 1 : 0) + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0)
+        const urlParamCount: number = (idSystemObjectU ? 1 : 0) + (idSystemObjectVersionU ? 1 : 0) + (idSystemObjectVersionCommentU ? 1 : 0)
+            + (idAssetU ? 1 : 0) + (idAssetVersionU ? 1 : 0) + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0)
             + (idJobRunU ? 1 : 0);
         if (urlParamCount != 1) {
             LOG.error(`DownloadParser called with ${urlParamCount} parameters, expected 1`, LOG.LS.eHTTP);
@@ -273,6 +278,23 @@ export class DownloaderParser {
             }
             return { success: true, jobRun }; // this.emitDownloadJobRun(jobRun);
         }
+
+        if (idSystemObjectVersionCommentU) {
+            this.idSystemObjectVersionComment = H.Helpers.safeNumber(idSystemObjectVersionCommentU);
+            if (!this.idSystemObjectVersionComment) {
+                LOG.error(`${this.rootURL}?idSystemObjectVersionComment=${idSystemObjectVersionCommentU} invalid parameter`, LOG.LS.eHTTP);
+                return this.recordStatus(404);
+            }
+            this.eMode = eDownloadMode.eSystemObjectVersionComment;
+
+            const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(this.idSystemObjectVersionComment!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            if (!systemObjectVersion) {
+                LOG.error(`${this.rootURL}?idSystemObjectVersionComment=${this.idSystemObjectVersionComment} unable to fetch system object version`, LOG.LS.eHTTP);
+                return this.recordStatus(404);
+            }
+            return { success: true, comment: systemObjectVersion.Comment };
+        }
+
         return this.recordStatus(404);
     }
 

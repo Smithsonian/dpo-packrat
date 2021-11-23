@@ -121,8 +121,8 @@ export class EdanCollection implements COL.ICollection {
                 LOG.error(`EdanCollection.publish called with invalid ePublishState ${ePublishState} for idSystemObject ${idSystemObject}`, LOG.LS.eCOLL);
                 return false;
         }
-        const PS: PublishScene = new PublishScene(this, idSystemObject, ePublishState);
-        return PS.publish();
+        const PS: PublishScene = new PublishScene(idSystemObject);
+        return PS.publish(this, ePublishState);
     }
 
     async createEdanMDM(edanmdm: COL.EdanMDMContent, status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {

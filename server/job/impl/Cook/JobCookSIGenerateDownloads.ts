@@ -10,6 +10,7 @@ import * as CACHE from '../../../cache';
 import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
+import { PublishScene } from '../../../collections/impl/PublishScene';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 
@@ -151,6 +152,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         // record updated asset -> asset version, for use in rolling a new SystemObjectVersion for the scene
         const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
+        const LS: LocalStore = await ASL.getOrCreateStore();
+        const idUserCreator: number = LS?.idUser ?? 0;
 
         for (const [downloadType, downloadFile] of downloadMap) {
             const RSR: STORE.ReadStreamResult = await this.fetchFile(downloadFile);
@@ -206,8 +209,6 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             }
 
             // ingest model assets, and associate them with the correct model
-            const LS: LocalStore = await ASL.getOrCreateStore();
-            const idUserCreator: number = LS?.idUser ?? 0;
             const ISI: STORE.IngestStreamOrFileInput = {
                 readStream: RSR.readStream,
                 localFilePath: null,
@@ -219,6 +220,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 allowZipCracking: false,
                 idUserCreator,
                 SOBased: model,
+                Comment: 'Created by Cook si-generate-downloads'
             };
             const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
             if (!ISR.success) {
@@ -285,12 +287,19 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         }
 
         // Clone scene's systemObjectVersion, using the assetVersionOverrideMap populated with new/updated assets
-        const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(sceneSystemObject.idSystemObject, null, assetVersionOverrideMap);
+        const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(sceneSystemObject.idSystemObject, null,
+            'Created by Cook si-generate-downloads', assetVersionOverrideMap);
         if (!SOV) {
             const error: string = `JobCookSIGenerateDownloads.createSystemObjects unable to clone SystemObjectVersion for ${JSON.stringify(sceneSystemObject, H.Helpers.saferStringify)}`;
             LOG.error(error, LOG.LS.eJOB);
             return { success: false, error };
         }
+
+        // Add scene asset metadata for attachments
+        // LOG.info('JobCookSIGenerateDownloads.createSystemObjects calling PublishScene.extractSceneMetadata', LOG.LS.eJOB);
+        const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(sceneSystemObject.idSystemObject, LS?.idUser ?? null);
+        if (!metadataResult.success)
+            LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to persist scene attachment metadata: ${metadataResult.error}`, LOG.LS.eJOB);
 
         return { success: true, error: '' };
     }

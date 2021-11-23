@@ -25,7 +25,7 @@ import { StateSubject, useSubjectStore } from '../subject';
 import { FileId, IngestionFile, useUploadStore } from '../upload';
 import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from '../utils';
 import { useVocabularyStore } from '../vocabulary';
-import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema } from './metadata.defaults';
+import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema, defaultSceneAttachmentFields } from './metadata.defaults';
 import {
     FieldErrors,
     MetadataFieldValue,
@@ -36,6 +36,7 @@ import {
     OtherFields,
     PhotogrammetryFields,
     SceneFields,
+    SceneAttachmentFields,
     StateFolder,
     StateIdentifier,
     StateMetadata,
@@ -188,6 +189,11 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             identifiers: defaultIdentifierField
         };
 
+        const defaultSceneAttachment: SceneAttachmentFields ={
+            ...defaultSceneAttachmentFields,
+            identifiers: defaultIdentifierField
+        };
+
         try {
             const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({
                 query: GetAssetVersionsDetailsDocument,
@@ -252,7 +258,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         photogrammetry: defaultPhotogrammetry,
                         model: defaultModel,
                         scene: defaultScene,
-                        other: defaultOther
+                        other: defaultOther,
+                        sceneAttachment: defaultSceneAttachment
                     };
 
                     if (CaptureDataPhoto) {
