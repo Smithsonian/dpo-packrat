@@ -8,7 +8,7 @@
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Colors } from '../../theme';
 import LoadingButton from '../controls/LoadingButton';
@@ -56,11 +56,13 @@ interface SidebarBottomNavigatorProps {
     rightRoute?: string;
     onClickRight?: () => void;
     invalidMetadataStep?: boolean;
+    isLast?: boolean;
 }
 
 function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.ReactElement {
-    const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading, uploadVersion, invalidMetadataStep } = props;
+    const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading, uploadVersion, invalidMetadataStep, isLast } = props;
     const classes = useStyles();
+    const [disable, setDisable] = useState(false);
 
     let leftButton = (
         <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={leftLoading || false} onClick={onClickLeft}>
@@ -69,7 +71,9 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
     );
 
     let rightButton = (
-        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={rightLoading || false} onClick={onClickRight}>
+        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={rightLoading || false} disabled={disable}
+            onClick={ !isLast ? onClickRight : () => { setDisable(true); if (onClickRight) onClickRight(); } }
+        >
             {rightLabel}
         </LoadingButton>
     );

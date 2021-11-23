@@ -208,6 +208,7 @@ function Metadata(): React.ReactElement {
                 rightLabel={isLast ? 'Finish' : 'Next'}
                 onClickRight={onNext}
                 invalidMetadataStep={invalidMetadataStep}
+                isLast={isLast}
             />
         </Box>
     );
