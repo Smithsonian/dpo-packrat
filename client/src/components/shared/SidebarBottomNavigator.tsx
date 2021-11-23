@@ -65,7 +65,7 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
     const [disable, setDisable] = useState(false);
 
     let leftButton = (
-        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={leftLoading || false} onClick={onClickLeft}>
+        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={leftLoading || false} disabled={disable} onClick={onClickLeft}>
             {leftLabel}
         </LoadingButton>
     );
