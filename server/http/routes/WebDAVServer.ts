@@ -432,6 +432,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                         allowZipCracking: false,
                         idUserCreator,
                         SOBased,
+                        Comment: 'Created by WebDAV Save'
                     };
                     const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
                     if (!ISR.success)

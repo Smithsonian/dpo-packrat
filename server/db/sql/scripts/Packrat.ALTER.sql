@@ -225,3 +225,6 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (28, 5, 'iOS AR
 
 UPDATE Vocabulary SET SortOrder = 17 WHERE idVocabularySet = 20 AND Term = 'Other';
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 16, 'Attachment');
+
+-- 2021-11-23 Jon
+ALTER TABLE SystemObjectVersion ADD COLUMN Comment text NULL;

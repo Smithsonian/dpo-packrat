@@ -391,7 +391,7 @@ async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
         // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
-        const IAI: STORE.IngestAssetInput = { asset, assetVersion, allowZipCracking: true, SOBased: TestCase.SOBased, idSystemObject: null, opInfo };
+        const IAI: STORE.IngestAssetInput = { asset, assetVersion, allowZipCracking: true, SOBased: TestCase.SOBased, idSystemObject: null, opInfo, Comment: null };
         const ISR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(IAI);
 
         if (!ISR.success && expectSuccess)
@@ -566,7 +566,8 @@ async function testIngestAssetFailure(TestCase: AssetStorageAdapterTestCase): Pr
         allowZipCracking: true,
         SOBased: TestCase.SOBased,
         idSystemObject: null,
-        opInfo
+        opInfo,
+        Comment: null
     };
     const ISR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(IAI);
     TestCase.assetVersions[0].StorageKeyStaging = storageKeyStagingOld;

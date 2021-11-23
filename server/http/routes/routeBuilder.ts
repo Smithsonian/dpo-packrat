@@ -38,6 +38,11 @@ export class RouteBuilder {
         return RouteBuilder.ApplyPrefix(`/download?idSystemObjectVersion=${idSystemObjectVersion}`, eMode);
     }
 
+    /** Downloads the comment for the system object version with idSystemObjectVersion */
+    static DownloadSystemObjectVersionComment(idSystemObjectVersion: number, eMode?: eHrefMode | undefined): string {
+        return RouteBuilder.ApplyPrefix(`/download?idSystemObjectVersionComment=${idSystemObjectVersion}`, eMode);
+    }
+
     /** Downloads the WorkflowReport(s) for the specified workflow ID */
     static DownloadWorkflow(idWorkflow: number, eMode?: eHrefMode | undefined): string {
         return RouteBuilder.ApplyPrefix(`/download?idWorkflow=${idWorkflow}`, eMode);

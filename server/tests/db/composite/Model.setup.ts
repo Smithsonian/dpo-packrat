@@ -346,7 +346,8 @@ export class ModelTestSetup {
             idVAssetType: this.vocabModel.idVocabulary,
             allowZipCracking: true,
             idUserCreator: this.userOwner.idUser,
-            SOBased: model
+            SOBased: model,
+            Comment: null
         };
 
         const { success, asset, assetVersion } = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);

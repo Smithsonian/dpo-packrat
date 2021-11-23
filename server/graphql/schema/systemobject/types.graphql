@@ -49,7 +49,9 @@ type SystemObjectVersion {
     idSystemObject: Int!
     PublishedState: Int!
     DateCreated: DateTime!
+    Comment: String
     SystemObject: SystemObject
+    CommentLink: String
 }
 
 type Identifier {

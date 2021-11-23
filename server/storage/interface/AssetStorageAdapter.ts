@@ -30,6 +30,7 @@ export type IngestAssetInput = {
     SOBased: DBAPI.SystemObjectBased | null;    // supply either SOBased or idSystemObject
     idSystemObject: number | null;              // supply either SOBased or idSystemObject
     opInfo: STORE.OperationInfo;
+    Comment: string | null;                    // Optional comment used to create new system object version
 };
 
 export type IngestAssetResult = {
@@ -88,6 +89,7 @@ export type IngestStreamOrFileInput = {
     allowZipCracking: boolean;
     idUserCreator: number;
     SOBased: DBAPI.SystemObjectBased;
+    Comment: string | null;
 };
 
 export type IngestStreamOrFileResult = {
@@ -396,7 +398,7 @@ export class AssetStorageAdapter {
     }
 
     static async ingestAsset(ingestAssetInput: IngestAssetInput): Promise<IngestAssetResult> {
-        const { SOBased, idSystemObject } = ingestAssetInput;
+        const { SOBased, idSystemObject, Comment } = ingestAssetInput;
         if (!idSystemObject && !SOBased) {
             const error: string = 'ingestAsset called without system object information';
             LOG.error(error, LOG.LS.eSTR);
@@ -424,7 +426,7 @@ export class AssetStorageAdapter {
                 assetVersionOverrideMap.set(assetVersion.idAsset, assetVersion.idAssetVersion);
         }
 
-        const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(ingestAssetInput.idSystemObject, null, assetVersionOverrideMap);
+        const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(ingestAssetInput.idSystemObject, null, Comment, assetVersionOverrideMap);
         if (!SOV) {
             IAR.success = false;
             IAR.error = 'DB Failure creating SystemObjectVersion';
@@ -848,6 +850,7 @@ export class AssetStorageAdapter {
             SOBased: ISI.SOBased,
             idSystemObject: null,
             opInfo,
+            Comment: ISI.Comment
         };
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
