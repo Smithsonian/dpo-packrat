@@ -38,6 +38,12 @@ type AssetVersionInfo = {
     isAttachment: boolean;
 };
 
+type IdentifierResults = {
+    success: boolean;
+    identifierValue?: string;
+    error?: string;
+};
+
 export default async function ingestData(_: Parent, args: MutationIngestDataArgs, context: Context): Promise<IngestDataResult> {
     const { input } = args;
     const { user } = context;
@@ -49,6 +55,7 @@ class IngestDataWorker extends ResolverBase {
     private input: IngestDataInput;
     private user: User | undefined;
     private vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
+    private ICOL: COL.ICollection | undefined = undefined;
 
     private ingestPhotogrammetry: boolean = false;
     private ingestModel: boolean = false;
@@ -214,6 +221,12 @@ class IngestDataWorker extends ResolverBase {
         return { success: true };
     }
 
+    private getICollection(): COL.ICollection {
+        if (!this.ICOL)
+            this.ICOL = COL.CollectionFactory.getInstance();
+        return this.ICOL;
+    }
+
     private async getVocabularyARK(): Promise<DBAPI.Vocabulary | undefined> {
         if (!this.vocabularyARK) {
             this.vocabularyARK = await VocabularyCache.vocabularyByEnum(eVocabularyID.eIdentifierIdentifierTypeARK);
@@ -225,11 +238,41 @@ class IngestDataWorker extends ResolverBase {
         return this.vocabularyARK;
     }
 
+    private async validateIdentifiers(identifiers: IngestIdentifierInput[] | undefined): Promise<H.IOResults> {
+        if (identifiers) {
+            for (const identifier of identifiers) {
+                const results: IdentifierResults = await this.validateIdentifier(identifier);
+                if (!results.success) {
+                    LOG.error(`ingestData failed to validate identifier ${JSON.stringify(identifier)}: ${results.error}`, LOG.LS.eGQL);
+                    return { success: false, error: results.error ?? '' };
+                }
+            }
+        }
+        return { success: true, error: '' };
+    }
+
+    private async validateIdentifier(identifier: IngestIdentifierInput): Promise<IdentifierResults> {
+        // compute identifier; for ARKs, extract the ID from a URL that may be housing the ARK ID
+        const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
+        if (!vocabularyARK)
+            return { success: false, error: 'Unable to compute ARK Vocabulary ID' };
+        let identifierValue: string;
+        if (identifier.identifierType == vocabularyARK.idVocabulary) {
+            const arkId: string | null = this.getICollection().extractArkFromUrl(identifier.identifier);
+            if (!arkId)
+                return { success: false, error: `Invalid ark ${identifier.identifier}` };
+            else
+                identifierValue = arkId;
+        } else
+            identifierValue = identifier.identifier;
+        return { success: true, identifierValue };
+    }
+
     private async handleIdentifiers(SOBased: DBAPI.SystemObjectBased, systemCreated: boolean,
         identifiers: IngestIdentifierInput[] | undefined): Promise<boolean> {
         if (systemCreated) {
             if (!await this.createIdentifierForObject(null, SOBased)) {
-                LOG.error(`ingestData unable to create identifier for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData unable to create system identifier for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
                 return false;
             }
         }
@@ -237,7 +280,7 @@ class IngestDataWorker extends ResolverBase {
         if (identifiers && identifiers.length > 0) {
             for (const identifier of identifiers) {
                 if (!await this.createIdentifierForObject(identifier, SOBased)) {
-                    LOG.error(`ingestData unable to create identifier for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData unable to create identifier ${JSON.stringify(identifier)} for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
                     return false;
                 }
             }
@@ -253,11 +296,9 @@ class IngestDataWorker extends ResolverBase {
             return false;
         }
 
-        const ICOL: COL.ICollection = COL.CollectionFactory.getInstance();
-
         if (!identifier) {
             // create system identifier when needed
-            const arkId: string = ICOL.generateArk(null, false);
+            const arkId: string = this.getICollection().generateArk(null, false);
             const identifierSystemDB: DBAPI.Identifier | null = await this.createIdentifier(arkId, SO, null, true);
             if (!identifierSystemDB) {
                 LOG.error(`ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
@@ -266,26 +307,13 @@ class IngestDataWorker extends ResolverBase {
                 return true;
         } else { // use identifier provided by user
             // compute identifier; for ARKs, extract the ID from a URL that may be housing the ARK ID
-            const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
-            if (!vocabularyARK)
-                return false;
-            let IdentifierValue: string;
-            if (identifier.identifierType == vocabularyARK.idVocabulary) {
-                const arkId: string | null = ICOL.extractArkFromUrl(identifier.identifier);
-                if (!arkId) {
-                    LOG.error(`ingestData asked to create an ark indentifier with invalid ark ${identifier.identifier} no value for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
-                    return false;
-                } else
-                    IdentifierValue = arkId;
-            } else
-                IdentifierValue = identifier.identifier;
-
-            if (!IdentifierValue) {
-                LOG.error(`ingestData asked to create an indentifier with no value for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+            const identiferResults: IdentifierResults = await this.validateIdentifier(identifier);
+            if (!identiferResults.success || !identiferResults.identifierValue) {
+                LOG.error(`ingestData failed to create an indentifier ${JSON.stringify(identifier)} for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
                 return false;
             }
 
-            const identifierDB: DBAPI.Identifier | null = await this.createIdentifier(IdentifierValue, SO, identifier.identifierType, false);
+            const identifierDB: DBAPI.Identifier | null = await this.createIdentifier(identiferResults.identifierValue, SO, identifier.identifierType, false);
             if (!identifierDB)
                 return false;
         }
@@ -1197,6 +1225,10 @@ class IngestDataWorker extends ResolverBase {
                     }
                 }
 
+                const identiferResults: H.IOResults = await this.validateIdentifiers(photogrammetry.identifiers);
+                if (!identiferResults.success)
+                    return identiferResults;
+
                 if (photogrammetry.idAssetVersion)
                     this.assetVersionSet.add(photogrammetry.idAssetVersion);
                 if (photogrammetry.idAsset)
@@ -1227,6 +1259,10 @@ class IngestDataWorker extends ResolverBase {
                         }
                     }
                 }
+
+                const identiferResults: H.IOResults = await this.validateIdentifiers(model.identifiers);
+                if (!identiferResults.success)
+                    return identiferResults;
 
                 if (model.idAssetVersion)
                     this.assetVersionSet.add(model.idAssetVersion);
@@ -1259,6 +1295,10 @@ class IngestDataWorker extends ResolverBase {
                     }
                 }
 
+                const identiferResults: H.IOResults = await this.validateIdentifiers(scene.identifiers);
+                if (!identiferResults.success)
+                    return identiferResults;
+
                 if (scene.idAssetVersion)
                     this.assetVersionSet.add(scene.idAssetVersion);
                 if (scene.idAsset)
@@ -1270,6 +1310,10 @@ class IngestDataWorker extends ResolverBase {
 
         if (this.ingestOther) {
             for (const other of this.input.other) {
+                const identiferResults: H.IOResults = await this.validateIdentifiers(other.identifiers);
+                if (!identiferResults.success)
+                    return identiferResults;
+
                 if (other.idAssetVersion)
                     this.assetVersionSet.add(other.idAssetVersion);
                 if (other.idAsset)
@@ -1282,6 +1326,10 @@ class IngestDataWorker extends ResolverBase {
         if (this.ingestAttachmentScene) {
             this.ingestAttachment = true;
             for (const sceneAttachment of this.input.sceneAttachment) {
+                const identiferResults: H.IOResults = await this.validateIdentifiers(sceneAttachment.identifiers);
+                if (!identiferResults.success)
+                    return identiferResults;
+
                 if (sceneAttachment.idAssetVersion)
                     this.assetVersionSet.add(sceneAttachment.idAssetVersion);
             }
