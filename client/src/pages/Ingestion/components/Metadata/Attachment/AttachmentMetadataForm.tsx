@@ -11,8 +11,8 @@
 import React from 'react';
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { InputField, SelectField, FieldType } from '../../../../components';
-import { useVocabularyStore, VocabularyOption } from '../../../../store';
+import { InputField, SelectField, FieldType } from '../../../../../components';
+import { useVocabularyStore, VocabularyOption } from '../../../../../store';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -70,9 +70,9 @@ function AttachmentMetadataForm(props: AttachmentMetadataProps): React.ReactElem
 
             return (
                 <SelectField
+                    key={name}
                     required
                     label={label}
-                    // error={errors.model.creationMethod}
                     value={metadataState[name] as number}
                     name={name}
                     onChange={setNameField}

@@ -22,9 +22,7 @@ import {
     useProjectStore,
     useSubjectStore,
     useUploadStore,
-    useVocabularyStore,
-    useAttachmentStore,
-    eAttachmentType
+    useVocabularyStore
 } from '../../../store';
 import {
     IngestDataDocument,
@@ -61,7 +59,6 @@ function useIngest(): UseIngest {
     const [getSelectedItem, resetItems] = useItemStore(state => [state.getSelectedItem, state.reset]);
     const [metadatas, getSelectedIdentifiers, resetMetadatas, getMetadatas] = useMetadataStore(state => [state.metadatas, state.getSelectedIdentifiers, state.reset, state.getMetadatas]);
     const getAssetType = useVocabularyStore(state => state.getAssetType);
-    const getAllAttachmentEntries = useAttachmentStore(state => state.getAllAttachmentEntries);
 
     const history = useHistory();
 
@@ -109,12 +106,13 @@ function useIngest(): UseIngest {
             const ingestModel: IngestModelInput[] = [];
             const ingestScene: IngestSceneInput[] = [];
             const ingestOther: IngestOtherInput[] = [];
+            const ingestSceneAttachment: IngestSceneAttachmentInput[] = [];
 
             const metadatasList = metadatas.length === 0 ? getMetadatas() : metadatas;
             lodash.forEach(metadatasList, metadata => {
                 console.log('ingestionStart metadata', metadata);
-                const { file, photogrammetry, model, scene, other } = metadata;
-                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, /* attachment: isAttachment, */ other: isOther } = getAssetType(file.type);
+                const { file, photogrammetry, model, scene, other, sceneAttachment } = metadata;
+                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, attachment: isAttachment, other: isOther } = getAssetType(file.type);
 
                 if (isPhotogrammetry) {
                     const {
@@ -247,9 +245,24 @@ function useIngest(): UseIngest {
                     ingestScene.push(sceneData);
                 }
 
-                // if (isAttachment) {
-                //
-                // }
+                if (isAttachment) {
+                    const { type, category, units, modelType, fileType, gltfStandardized, dracoCompressed, title, idAssetVersion, systemCreated, identifiers } = sceneAttachment;
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+                    const sceneAttachmentData: IngestSceneAttachmentInput = {
+                        type,
+                        category,
+                        units,
+                        modelType,
+                        fileType,
+                        gltfStandardized,
+                        dracoCompressed,
+                        title,
+                        idAssetVersion,
+                        systemCreated,
+                        identifiers: ingestIdentifiers
+                    };
+                    ingestSceneAttachment.push(sceneAttachmentData);
+                }
 
                 if (isOther) {
                     const { identifiers, systemCreated } = other;
@@ -270,39 +283,15 @@ function useIngest(): UseIngest {
                 }
             });
 
-            // check to see if any attachments exist and then transform the type
-            const sceneAttachments = getAllAttachmentEntries(eAttachmentType.eScene);
-            const sceneAttachment: IngestSceneAttachmentInput[] = [];
-            if (sceneAttachments.length) {
-                sceneAttachments.forEach(attachment => {
-                    const attachmentData: IngestSceneAttachmentInput = {
-                        idAssetVersion: attachment.idAssetVersion,
-                        systemCreated: attachment.systemCreated,
-                        identifiers: getIngestIdentifiers(attachment.identifiers)
-                    };
-                    const { type, category, units, modelType, fileType, gltfStandardized, dracoCompressed, title } = attachment;
-                    if (type) attachmentData.type = type;
-                    if (category) attachmentData.category = category;
-                    if (units) attachmentData.units = units;
-                    if (modelType) attachmentData.modelType = modelType;
-                    if (fileType) attachmentData.fileType = fileType;
-                    if (title) attachmentData.title = title;
-                    if (typeof gltfStandardized === 'boolean') attachmentData.gltfStandardized = gltfStandardized;
-                    if (typeof dracoCompressed === 'boolean') attachmentData.dracoCompressed = dracoCompressed;
-
-                    sceneAttachment.push(attachmentData);
-                });
-            }
-
             const input: IngestDataInput = {
                 subjects: ingestSubjects,
                 project: ingestProject,
                 item: ingestItem,
                 photogrammetry: ingestPhotogrammetry,
                 model: ingestModel,
-                scene: sceneAttachments.length ? [] : ingestScene,
+                scene: ingestScene,
                 other: ingestOther,
-                sceneAttachment
+                sceneAttachment: ingestSceneAttachment
             };
             console.log('** IngestDataInput', input);
 

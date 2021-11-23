@@ -135,7 +135,7 @@ function Uploads(): React.ReactElement {
             const queuedUploadedFiles = getSelectedFiles(completed, true);
             const metadataStepRequiredAssetTypesSet = new Set();
             assetTypes.forEach(assetType => {
-                if (assetType.Term === 'Capture Data Set: Photogrammetry' || assetType.Term === 'Model' || assetType.Term === 'Scene')
+                if (assetType.Term === 'Capture Data Set: Photogrammetry' || assetType.Term === 'Model' || assetType.Term === 'Scene' || assetType.Term === 'Attachment')
                     metadataStepRequiredAssetTypesSet.add(assetType.idVocabulary);
             });
 

@@ -7,7 +7,7 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { AssetIdentifiers } from '../../../../../components';
-import { StateIdentifier, useMetadataStore, StateRelatedObject, useRepositoryStore, useSubjectStore, useAttachmentStore, eAttachmentType, SceneAttachment } from '../../../../../store';
+import { StateIdentifier, useMetadataStore, StateRelatedObject, useRepositoryStore, useSubjectStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import ReferenceModels from './ReferenceModels';
 import SceneDataGrid from './SceneDataGrid';
@@ -17,8 +17,6 @@ import { eSystemObjectType } from '../../../../../types/server';
 import { toast } from 'react-toastify';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
 import ObjectSelectModal from '../Model/ObjectSelectModal';
-import AttachmentMetadataForm, { metadataRow } from '../AttachmentMetadataForm';
-import { eVocabularySetID } from '../../../../../types/server';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -35,12 +33,10 @@ function Scene(props: SceneProps): React.ReactElement {
     const { metadataIndex, setInvalidMetadataStep } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
-    const { scene, file } = metadata;
-    const { idSOAttachment } = file;
+    const { scene } = metadata;
     const updateMetadataField = useMetadataStore(state => state.updateMetadataField);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
-    const [createNewAttachmentEntry, updateAttachmentEntry, getAttachmentEntry] = useAttachmentStore(state => [state.createNewAttachmentEntry, state.updateAttachmentEntry, state.getAttachmentEntry]);
 
     // state responsible for ReferenceModels
     const [referenceModels, setReferenceModels] = useState([
@@ -84,19 +80,6 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
-    const [attachment, setAttachment] = useState<SceneAttachment>({
-        idAssetVersion: Number(idAssetVersion),
-        type: null,
-        units: null,
-        modelType: null,
-        fileType: null,
-        category: null,
-        title: '',
-        gltfStandardized: false,
-        dracoCompressed: false,
-        systemCreated: false,
-        identifiers: [] as StateIdentifier[]
-    });
 
     useEffect(() => {
         async function fetchSceneConstellation() {
@@ -119,16 +102,6 @@ function Scene(props: SceneProps): React.ReactElement {
         fetchSceneConstellation();
     }, [idAssetVersion, metadataIndex, setInvalidMetadataStep, scene.directory]);
 
-
-    useEffect(() => {
-        if (idSOAttachment) {
-            createNewAttachmentEntry(Number(idAssetVersion), eAttachmentType.eScene);
-            const newAttachment = getAttachmentEntry(Number(idAssetVersion), eAttachmentType.eScene);
-            if (newAttachment) setAttachment(newAttachment);
-        }
-    }, [idSOAttachment, createNewAttachmentEntry, getAttachmentEntry, idAssetVersion]);
-
-
     const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
     const subjectIdSystemObject = useGetSubjectQuery({
         variables: {
@@ -143,28 +116,14 @@ function Scene(props: SceneProps): React.ReactElement {
         updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.scene);
     };
 
-    const onAttachmentIdentifierChange = (identifiers: StateIdentifier[]) => {
-        updateAttachmentEntry(Number(idAssetVersion), eAttachmentType.eScene, 'identifiers', identifiers);
-    };
-
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
         updateMetadataField(metadataIndex, name, checked, MetadataType.scene);
     };
 
-    const setAttachmentCheckboxField = ({ target }): void => {
-        const { name, checked } = target;
-        updateAttachmentEntry(Number(idAssetVersion), eAttachmentType.eScene, name, checked);
-    };
-
     const setNameField = ({ target }): void => {
         const { name, value } = target;
         updateMetadataField(metadataIndex, name, value, MetadataType.scene);
-    };
-
-    const setAttachmentNameField = ({ target }): void => {
-        const { name, value } = target;
-        updateAttachmentEntry(Number(idAssetVersion), eAttachmentType.eScene, name, value);
     };
 
     const openSourceObjectModal = async () => {
@@ -203,8 +162,8 @@ function Scene(props: SceneProps): React.ReactElement {
         onModalClose();
     };
 
-    let content: JSX.Element = (
-        <React.Fragment>
+    return (
+        <Box className={classes.container}>
             <AssetIdentifiers
                 systemCreated={scene.systemCreated}
                 identifiers={scene.identifiers}
@@ -250,66 +209,6 @@ function Scene(props: SceneProps): React.ReactElement {
                 relationship={objectRelationship}
                 objectType={eSystemObjectType.eScene}
             />
-        </React.Fragment>
-    );
-
-    if (idSOAttachment) {
-        const attachmentArr: metadataRow[] = [
-            { name: 'type', label: 'Type', type: 'index', index: eVocabularySetID.eEdan3DResourceType },
-            { name: 'category', label: 'Category', type: 'index', index: eVocabularySetID.eEdan3DResourceCategory },
-            { name: 'units', label: 'Units', type: 'index', index: eVocabularySetID.eEdan3DResourceAttributeUnits },
-            { name: 'modelType', label: 'Model Type', type: 'index', index: eVocabularySetID.eEdan3DResourceAttributeModelFileType },
-            { name: 'fileType', label: 'File Type', type: 'index', index: eVocabularySetID.eEdan3DResourceAttributeFileType },
-            { name: 'gltfStandardized', label: 'glTF Standardized', type: 'boolean' },
-            { name: 'dracoCompressed', label: 'Draco Compressed', type: 'boolean' },
-            { name: 'title', label: 'Title', type: 'string' }
-        ];
-
-        const {
-            type,
-            category,
-            units,
-            modelType,
-            fileType,
-            gltfStandardized,
-            dracoCompressed,
-            title
-        } = attachment;
-
-        const attachmentMetadata = {
-            type,
-            category,
-            units,
-            modelType,
-            fileType,
-            gltfStandardized,
-            dracoCompressed,
-            title
-        };
-
-        content = (
-            <React.Fragment>
-                <AssetIdentifiers
-                    systemCreated={attachment.systemCreated}
-                    identifiers={attachment.identifiers}
-                    onSystemCreatedChange={setAttachmentCheckboxField}
-                    onAddIdentifer={onAttachmentIdentifierChange}
-                    onUpdateIdentifer={onAttachmentIdentifierChange}
-                    onRemoveIdentifer={onAttachmentIdentifierChange}
-                />
-                <AttachmentMetadataForm
-                    metadatas={attachmentArr}
-                    metadataState={attachmentMetadata}
-                    setNameField={setAttachmentNameField}
-                    setCheckboxField={setAttachmentCheckboxField}
-                />
-            </React.Fragment>
-        );
-    }
-
-    return (
-        <Box className={classes.container}>
-            {content}
         </Box>
     );
 }
