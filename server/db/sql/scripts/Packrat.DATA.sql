@@ -128,7 +128,8 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 12, 'Model
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 13, 'Scene');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 14, 'Project Documentation');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 15, 'Intermediary File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 16, 'Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 16, 'Attachment');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 17, 'Other');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 1, 'Cook: bake');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 2, 'Cook: decimate-unwrap');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 3, 'Cook: decimate');
