@@ -5,7 +5,7 @@ import * as LOG from '../../../../../utils/logger';
 
 export default async function rollbackSystemObjectVersion(_: Parent, args: MutationRollbackSystemObjectVersionArgs): Promise<RollbackSystemObjectVersionResult> {
     const { input } = args;
-    const { idSystemObjectVersion } = input;
+    const { idSystemObjectVersion /*, rollbackNotes */ } = input;
 
     const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(idSystemObjectVersion);
     if (!SOV) {

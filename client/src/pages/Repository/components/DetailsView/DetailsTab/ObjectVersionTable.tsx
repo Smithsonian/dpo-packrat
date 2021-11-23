@@ -1,11 +1,11 @@
 /* eslint-disable react/jsx-max-props-per-line */
 
-import { Box, Typography, Button } from '@material-ui/core';
+import { Box, Typography, Button, Tooltip } from '@material-ui/core';
 import clsx from 'clsx';
 import React, { useState }from 'react';
-import { EmptyTable, TextArea } from '../../../../../components';
+import { EmptyTable, TextArea, ToolTip } from '../../../../../components';
 import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repository';
-import { extractISOMonthDateYear, updateSystemObjectUploadRedirect } from '../../../../../constants/helperfunctions';
+import { extractISOMonthDateYear, updateSystemObjectUploadRedirect, truncateWithEllipses } from '../../../../../constants/helperfunctions';
 import { rollbackSystemObjectVersion, useObjectAssets } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetGrid';
 import { PublishedStateEnumToString, eSystemObjectType } from '../../../../../types/server';
@@ -29,7 +29,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     const [expanded, setExpanded] = useState<number>(-1);
     const [rollbackNotes, setRollbackNotes] = useState<string>('');
 
-    const headers: string[] = ['Link', 'Published State', 'Action', 'Timestamp'];
+    const headers: string[] = ['Link', 'Published State', 'Action', 'Timestamp', 'Notes'];
 
     const { data } = useObjectAssets(idSystemObject);
 
@@ -38,25 +38,18 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     }
 
     const onRollback = async (idSystemObjectVersion: number) => {
-        const { data } = await rollbackSystemObjectVersion(idSystemObjectVersion);
+        const { data } = await rollbackSystemObjectVersion(idSystemObjectVersion, rollbackNotes);
         if (data.rollbackSystemObjectVersion.success) {
             toast.success(`Successfully rolled back to to ${idSystemObjectVersion}!`);
+            setRollbackNotes('');
         } else {
             toast.error(`Error when attempting to rollback to ${idSystemObjectVersion}. Reason: ${data.message}`);
         }
     };
 
-    console.log('onRollback', onRollback);
     /*
         TODO:
-            -Connect rollback button to onRollback
-            -Add the rollbackNotes to the mutation
-                -modify the mutation
-            -End of rollback procedure?
-                -close rollback
-                -erase notes
-            -Add Notes column
-                -notes has a truncated message, on hover, and acts as a link
+            style
     */
 
     let redirect = () => {};
@@ -70,7 +63,6 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
 
     const onExpand = (row) => {
         setRollbackNotes('');
-
         if (row === expanded) {
             setExpanded(-1);
         } else {
@@ -98,6 +90,20 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
 
                 <tbody>
                     {objectVersions.map((version, index) =>  {
+                        const rollback = () => onRollback(version.idSystemObjectVersion);
+                        const cancel = () => onExpand(index);
+                        const notes = (
+                            <Tooltip arrow title={<ToolTip text={truncateWithEllipses(version.Comment, 1000)} />}>
+                                {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'center', color: 'black' }} target='_blank' rel='noreferrer noopener'>
+                                    <Typography>
+                                        {truncateWithEllipses(version.Comment, 30)}
+                                    </Typography>
+                                </a> : <Typography>
+                                    {truncateWithEllipses(version.Comment, 30)}
+                                </Typography>}
+                            </Tooltip>
+                        );
+
                         return (
                             <>
                                 <tr key={index}>
@@ -126,6 +132,9 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                     <td align='center'>
                                         <Typography>{extractISOMonthDateYear(version.DateCreated)}</Typography>
                                     </td>
+                                    <td>
+                                        {notes}
+                                    </td>
                                 </tr>
                                 {
                                     expanded === index ? (
@@ -134,8 +143,8 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                                 <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} height='5vh' placeholder='Please provide rollback notes...' />
                                             </td>
                                             <td>
-                                                <Button>Rollback</Button>
-                                                <Button onClick={() => onExpand(index)}>Cancel</Button>
+                                                <Button onClick={rollback}>Rollback</Button>
+                                                <Button onClick={cancel}>Cancel</Button>
                                             </td>
                                         </tr>
                                     ) : null

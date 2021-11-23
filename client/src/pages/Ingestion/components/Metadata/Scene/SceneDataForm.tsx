@@ -32,7 +32,6 @@ interface SceneData {
     EdanUUID: string | null;
     ApprovedForPublication: boolean;
     PosedAndQCd: boolean;
-    UpdateNotes?: string;
 }
 
 interface SceneDataProps {
