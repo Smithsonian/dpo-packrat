@@ -8,7 +8,7 @@
  */
 import { Box, makeStyles, Typography } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
@@ -251,6 +251,11 @@ function Model(props: ModelProps): React.ReactElement {
     return (
         <React.Fragment>
             <Box className={classes.container}>
+                <Box mb={2}>
+                    {/* TODO: 454 make sure state is hooked up properly and that it's validated and it's conditional */}
+                    <TextArea label='Update Notes' value={model.updateNotes} name={'updateNotes'} onChange={setNameField} />
+                </Box>
+
                 <Box mb={2}>
                     <AssetIdentifiers
                         systemCreated={model.systemCreated}

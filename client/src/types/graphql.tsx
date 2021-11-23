@@ -956,6 +956,7 @@ export type IngestPhotogrammetryInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type RelatedObjectInput = {
@@ -980,6 +981,7 @@ export type IngestModelInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type IngestSceneInput = {
@@ -993,6 +995,7 @@ export type IngestSceneInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type IngestOtherInput = {
@@ -1000,6 +1003,7 @@ export type IngestOtherInput = {
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type IngestDataInput = {

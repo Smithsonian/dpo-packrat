@@ -54,7 +54,8 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     clusterType: null,
     clusterGeometryFieldId: null,
     cameraSettingUniform: false,
-    directory: ''
+    directory: '',
+    updateNotes: ''
 };
 
 export type PhotogrammetrySchemaType = typeof photogrammetryFieldsSchema;
@@ -125,7 +126,8 @@ export const defaultModelFields: ModelFields = {
     units: null,
     purpose: null,
     modelFileType: null,
-    directory: ''
+    directory: '',
+    updateNotes: ''
 };
 
 export type ModelSchemaType = typeof modelFieldsSchema;
@@ -173,6 +175,7 @@ export const defaultSceneFields: SceneFields = {
     EdanUUID: '',
     approvedForPublication: false,
     posedAndQCd: false,
+    updateNotes: ''
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;

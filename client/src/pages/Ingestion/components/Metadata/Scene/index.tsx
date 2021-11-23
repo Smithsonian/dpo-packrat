@@ -10,13 +10,14 @@ import { AssetIdentifiers } from '../../../../../components';
 import { StateIdentifier, useMetadataStore, StateRelatedObject, useRepositoryStore, useSubjectStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import ReferenceModels from './ReferenceModels';
-import SceneDataGrid from './SceneDataGrid';
+import SceneDataForm from './SceneDataForm';
 import { apolloClient } from '../../../../../graphql/index';
 import { GetSceneForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
 import { eSystemObjectType } from '../../../../../types/server';
 import { toast } from 'react-toastify';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
 import ObjectSelectModal from '../Model/ObjectSelectModal';
+import { TextArea } from '../../../../../components';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -57,7 +58,7 @@ function Scene(props: SceneProps): React.ReactElement {
             idScene: 0
         }
     ]);
-    // state responsible for SceneDataGrid
+    // state responsible for SceneDataForm
     const [sceneData, setSceneData] = useState({
         idScene: 0,
         idAssetThumbnail: 0,
@@ -72,7 +73,8 @@ function Scene(props: SceneProps): React.ReactElement {
         CountTour: 0,
         EdanUUID: '',
         ApprovedForPublication: false,
-        PosedAndQCd: false
+        PosedAndQCd: false,
+        UpdateNotes: ''
     });
     const [modalOpen, setModalOpen] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
@@ -122,6 +124,8 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const setNameField = ({ target }): void => {
         const { name, value } = target;
+        console.log('name', name, 'value', value);
+        console.log('scene.updateNotes', scene.updateNotes);
         updateMetadataField(metadataIndex, name, value, MetadataType.scene);
     };
 
@@ -163,6 +167,10 @@ function Scene(props: SceneProps): React.ReactElement {
 
     return (
         <Box className={classes.container}>
+            <Box mb={2}>
+                {/* TODO: 454 make sure state is hooked up properly and that it's validated and it's conditional */}
+                <TextArea label='Update Notes' value={scene.updateNotes} name={'updateNotes'} onChange={setNameField} />
+            </Box>
             <AssetIdentifiers
                 systemCreated={scene.systemCreated}
                 identifiers={scene.identifiers}
@@ -190,7 +198,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 />
             </Box>
             <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
-            <SceneDataGrid
+            <SceneDataForm
                 sceneData={sceneData}
                 setCheckboxField={setCheckboxField}
                 setNameField={setNameField}
@@ -198,6 +206,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 approvedForPublication={scene.approvedForPublication}
                 posedAndQCd={scene.posedAndQCd}
                 EdanUUID={scene.EdanUUID}
+                idAssetVersion={Number(idAssetVersion)}
             />
             <ObjectSelectModal
                 open={modalOpen}
