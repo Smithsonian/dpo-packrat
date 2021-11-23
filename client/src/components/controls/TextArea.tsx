@@ -50,7 +50,7 @@ function TextArea(props: TextAreaProps): React.ReactElement {
                 width={viewMode ? 'auto' : undefined}
             >
                 <DebounceInput
-                forceNotifyByEnter={false}
+                    forceNotifyByEnter={false}
                     element={'textarea'}
                     disabled={disabled}
                     value={value || ''}
@@ -60,7 +60,7 @@ function TextArea(props: TextAreaProps): React.ReactElement {
                     debounceTimeout={400}
                     placeholder={placeholder}
                 />
-            </FieldType> : 
+            </FieldType> :
             <DebounceInput
                 forceNotifyByEnter={false}
                 element={'textarea'}
