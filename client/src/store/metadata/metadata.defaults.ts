@@ -4,7 +4,7 @@
  * Default field definitions for the metadata store.
  */
 import * as yup from 'yup';
-import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields } from './metadata.types';
+import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields, SceneAttachmentFields } from './metadata.types';
 
 const identifierWhenSelectedValidation = {
     is: true,
@@ -206,6 +206,34 @@ export const defaultOtherFields: OtherFields = {
 export type OtherSchemaType = typeof otherFieldsSchema;
 
 export const otherFieldsSchema = yup.object().shape({
+    systemCreated: yup.boolean().required(),
+    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation)
+});
+
+export const defaultSceneAttachmentFields: SceneAttachmentFields = {
+    type: null,
+    category: null,
+    units: null,
+    modelType: null,
+    fileType: null,
+    gltfStandardized: false,
+    dracoCompressed: false,
+    title: '',
+    systemCreated: false,
+    identifiers: [],
+    idAssetVersion: 0
+};
+
+export const sceneAttachmentFieldsSchema = yup.object().shape({
+    type: yup.number().nullable(true),
+    category: yup.number().nullable(true),
+    units: yup.number().nullable(true),
+    modelType: yup.number().nullable(true),
+    fileType: yup.number().nullable(true),
+    gltfStandardized: yup.boolean().required(),
+    dracoCompressed: yup.boolean().required(),
+    title: yup.string().nullable(true),
+    idAssetVersion: yup.number().required(),
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation)
 });

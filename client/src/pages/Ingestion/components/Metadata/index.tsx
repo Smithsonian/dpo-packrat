@@ -27,14 +27,14 @@ import {
     useMetadataStore,
     useProjectStore,
     useVocabularyStore,
-    useUploadStore,
-    useAttachmentStore
+    useUploadStore
 } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
 import Model from './Model';
 import Other from './Other';
 import Photogrammetry from './Photogrammetry';
 import Scene from './Scene';
+import Attachment from './Attachment';
 import { Helmet } from 'react-helmet';
 import { apolloClient } from '../../../../graphql';
 import { GetSystemObjectDetailsDocument } from '../../../../types/graphql';
@@ -76,7 +76,6 @@ function Metadata(): React.ReactElement {
     const getSelectedProject = useProjectStore(state => state.getSelectedProject);
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
     const [metadatas, getMetadataInfo, validateFields] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields]);
-    const resetAttachmentEntries = useAttachmentStore(state => state.resetAttachmentEntries);
     const { ingestionStart, ingestionComplete } = useIngest();
     const getAssetType = useVocabularyStore(state => state.getAssetType);
     const [setUpdateMode] = useUploadStore(state => [state.setUpdateMode]);
@@ -152,7 +151,6 @@ function Metadata(): React.ReactElement {
             if (success) {
                 toast.success('Ingestion complete');
                 ingestionComplete();
-                resetAttachmentEntries();
                 setUpdateMode(false);
             } else {
                 toast.error(`Ingestion failed, please try again later. Error: ${message}`);
@@ -178,7 +176,12 @@ function Metadata(): React.ReactElement {
         }
 
         if (assetType.model) {
+            // Model takes in additional props for onPrevious, onClickRight, isLast, and rightLoading because it imports an additional copy of <SidebarBottomNavigator />
             return <Model metadataIndex={metadataIndex} onPrevious={onPrevious} onClickRight={onNext} isLast={isLast} rightLoading={ingestionLoading} />;
+        }
+
+        if (assetType.attachment) {
+            return <Attachment metadataIndex={metadataIndex} />;
         }
 
         return <Other metadataIndex={metadataIndex} />;
