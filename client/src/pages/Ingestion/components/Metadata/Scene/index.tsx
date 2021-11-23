@@ -124,8 +124,6 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const setNameField = ({ target }): void => {
         const { name, value } = target;
-        console.log('name', name, 'value', value);
-        console.log('scene.updateNotes', scene.updateNotes);
         updateMetadataField(metadataIndex, name, value, MetadataType.scene);
     };
 

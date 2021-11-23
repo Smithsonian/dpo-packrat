@@ -1650,6 +1650,7 @@ export type RollbackSystemObjectVersionResult = {
 
 export type RollbackSystemObjectVersionInput = {
   idSystemObjectVersion: Scalars['Int'];
+  rollbackNotes: Scalars['String'];
 };
 
 export type CreateSubjectWithIdentifiersResult = {
@@ -1998,6 +1999,8 @@ export type SystemObjectVersion = {
   PublishedState: Scalars['Int'];
   DateCreated: Scalars['DateTime'];
   SystemObject?: Maybe<SystemObject>;
+  Comment: Scalars['String'];
+  CommentLink?: Maybe<Scalars['String']>;
 };
 
 export type Identifier = {

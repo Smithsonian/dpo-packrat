@@ -24,6 +24,7 @@ import DebounceNumberInput from './controls/DebounceNumberInput';
 import CheckboxField from './controls/CheckboxField';
 import ReadOnlyRow from './controls/ReadOnlyRow';
 import TextArea from './controls/TextArea';
+import { ToolTip } from './controls/ToolTip';
 
 export {
     Header,
@@ -47,7 +48,8 @@ export {
     DebounceNumberInput,
     CheckboxField,
     ReadOnlyRow,
-    TextArea
+    TextArea,
+    ToolTip
 };
 
 export type { RepositoryIconProps };

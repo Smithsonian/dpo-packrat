@@ -1210,6 +1210,7 @@ type RollbackSystemObjectVersionResult {
 
 input RollbackSystemObjectVersionInput {
   idSystemObjectVersion: Int!
+  rollbackNotes: String!
 }
 
 type CreateSubjectWithIdentifiersResult {
@@ -1532,6 +1533,8 @@ type SystemObjectVersion {
   PublishedState: Int!
   DateCreated: DateTime!
   SystemObject: SystemObject
+  Comment: String!
+  CommentLink: String
 }
 
 type Identifier {
