@@ -15,18 +15,19 @@ const rootURL: string = '/download';
 
 /** Used to provide download access to assets and reports. Access with one of the following URL patterns:
  * ASSETS:
- * /download?idAssetVersion=ID:         Downloads the specified version of the specified asset
- * /download?idAsset=ID:                Downloads the most recent asset version of the specified asset
- * /download?idSystemObject=ID:         Computes the assets attached to system object with idSystemObject = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
- * /download/idSystemObject-ID:         Computes the assets attached to system object with idSystemObject = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
- * /download/idSystemObject-ID/FOO/BAR: Computes the asset  attached to system object with idSystemObject = ID, found at the path /FOO/BAR.
- * /download?idSystemObjectVersion=ID:  Computes the assets attached to system object version with idSystemObjectVersion = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
+ * /download?idAssetVersion=ID:                 Downloads the specified version of the specified asset
+ * /download?idAsset=ID:                        Downloads the most recent asset version of the specified asset
+ * /download?idSystemObject=ID:                 Computes the assets attached to system object with idSystemObject = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
+ * /download/idSystemObject-ID:                 Computes the assets attached to system object with idSystemObject = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
+ * /download/idSystemObject-ID/FOO/BAR:         Computes the asset  attached to system object with idSystemObject = ID, found at the path /FOO/BAR.
+ * /download?idSystemObjectVersion=ID:          Computes the assets attached to system object version with idSystemObjectVersion = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
  *
  * REPORTS:
- * /download?idWorkflow=ID:             Downloads the WorkflowReport(s) for the specified workflow ID
- * /download?idWorkflowReport=ID:       Downloads the specified WorkflowReport
- * /download?idWorkflowSet=ID:          Downloads the WorkflowReport(s) for workflows in the specified workflow set
- * /download?idJobRun=ID:               Downloads the JobRun output for idJobRun with the specified ID
+ * /download?idWorkflow=ID:                     Downloads the WorkflowReport(s) for the specified workflow ID
+ * /download?idWorkflowReport=ID:               Downloads the specified WorkflowReport
+ * /download?idWorkflowSet=ID:                  Downloads the WorkflowReport(s) for workflows in the specified workflow set
+ * /download?idJobRun=ID:                       Downloads the JobRun output for idJobRun with the specified ID
+ * /download?idSystemObjectVersionComment=ID    Downloads the SystemObjectVersion.Comment for the SystemObjectVersion with the specified ID
  */
 export async function download(request: Request, response: Response): Promise<boolean> {
     const DL: Downloader = new Downloader(request, response);
@@ -93,6 +94,10 @@ class Downloader {
 
             case eDownloadMode.eJobRun:
                 return DPResults.jobRun ? await this.emitDownloadJobRun(DPResults.jobRun) : this.sendError(404);
+
+            case eDownloadMode.eSystemObjectVersionComment:
+                return DPResults.comment ? await this.emitDownloadComment(DPResults.comment, this.downloaderParser.idSystemObjectVersionCommentV) : this.sendError(404);
+
         }
         return this.sendError(404);
     }
@@ -187,6 +192,14 @@ class Downloader {
         this.response.setHeader('Content-disposition', `inline; filename=JobRun.${jobRun.idJobRun}.htm`);
         this.response.setHeader('Content-type', 'application/json');
         this.response.write(jobRun.Output ?? '');
+        this.response.end();
+        return true;
+    }
+
+    private async emitDownloadComment(content: string | null, idSystemObjectVersion: number | null): Promise<boolean> {
+        this.response.setHeader('Content-disposition', `inline; filename=SystemObjectVersion.${idSystemObjectVersion ? idSystemObjectVersion : ''}.htm`);
+        this.response.setHeader('Content-type', 'text/plain');
+        this.response.write(content ?? '');
         this.response.end();
         return true;
     }

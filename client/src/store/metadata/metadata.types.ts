@@ -12,13 +12,15 @@ export type StateMetadata = {
     scene: SceneFields;
     other: OtherFields;
     file: IngestionFile;
+    sceneAttachment: SceneAttachmentFields;
 };
 
 export enum MetadataType {
     photogrammetry = 'photogrammetry',
     model = 'model',
     scene = 'scene',
-    other = 'other'
+    other = 'other',
+    sceneAttachment = 'sceneAttachment'
 }
 
 export type MetadataInfo = {
@@ -128,12 +130,26 @@ export type OtherFields = {
     idAsset?: number;
 };
 
+export type SceneAttachmentFields = {
+    type: number | null;
+    category: number | null;
+    units: number | null;
+    modelType: number | null;
+    fileType: number | null;
+    gltfStandardized: boolean;
+    dracoCompressed: boolean;
+    title: string;
+    idAssetVersion: number;
+    systemCreated: boolean;
+    identifiers: StateIdentifier[];
+};
+
 export type StateRelatedObject = RelatedObject;
 
 export type StateReferenceModel = ReferenceModel;
 
 export type StateDetailVersion = DetailVersion;
 
-export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields;
+export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields | SceneAttachmentFields;
 
 export { ReferenceModelAction };

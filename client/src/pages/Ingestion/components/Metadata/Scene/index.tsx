@@ -38,6 +38,7 @@ function Scene(props: SceneProps): React.ReactElement {
     const updateMetadataField = useMetadataStore(state => state.updateMetadataField);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
+
     // state responsible for ReferenceModels
     const [referenceModels, setReferenceModels] = useState([
         {
@@ -206,6 +207,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 EdanUUID={scene.EdanUUID}
                 idAssetVersion={Number(idAssetVersion)}
             />
+
             <ObjectSelectModal
                 open={modalOpen}
                 onSelectedObjects={onSelectedObjects}

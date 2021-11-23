@@ -80,10 +80,11 @@ interface ModelProps {
     onClickRight: () => Promise<void>;
     isLast: boolean;
     rightLoading: boolean;
+    disableNavigation: boolean;
 }
 
 function Model(props: ModelProps): React.ReactElement {
-    const { metadataIndex, onPrevious, onClickRight, isLast, rightLoading } = props;
+    const { metadataIndex, onPrevious, onClickRight, isLast, rightLoading, disableNavigation } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { model } = metadata;
@@ -377,6 +378,7 @@ function Model(props: ModelProps): React.ReactElement {
                     onClickLeft={onPrevious}
                     rightLabel={isLast ? 'Finish' : 'Next'}
                     onClickRight={onClickRight}
+                    disableNavigation={disableNavigation}
                 />
                 <ObjectMeshTable modelObjects={modelObjects} />
             </Box>

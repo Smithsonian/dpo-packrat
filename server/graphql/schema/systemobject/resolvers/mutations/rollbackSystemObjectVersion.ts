@@ -14,7 +14,7 @@ export default async function rollbackSystemObjectVersion(_: Parent, args: Mutat
         return { success: false, message };
     }
 
-    const SOVRollback: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(SOV.idSystemObject, SOV.idSystemObjectVersion);
+    const SOVRollback: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(SOV.idSystemObject, SOV.idSystemObjectVersion, null /* FIXME: add comment here! */);
     if (!SOVRollback) {
         const message: string = 'rollbackSystemObjectVersion SystemObjectVersion.cloneObjectAndXrefs failed';
         LOG.error(message, LOG.LS.eGQL);

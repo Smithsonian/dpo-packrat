@@ -104,6 +104,20 @@ input IngestOtherInput {
     updateNotes: String
 }
 
+input IngestSceneAttachmentInput {
+    type: Int
+    category: Int
+    units: Int
+    modelType: Int
+    fileType: Int
+    gltfStandardized: Boolean
+    dracoCompressed: Boolean
+    title: String
+    idAssetVersion: Int!
+    systemCreated: Boolean!
+    identifiers: [IngestIdentifierInput!]!
+}
+
 input IngestDataInput {
     subjects: [IngestSubjectInput!]!
     project: IngestProjectInput!
@@ -112,6 +126,7 @@ input IngestDataInput {
     model: [IngestModelInput!]!
     scene: [IngestSceneInput!]!
     other: [IngestOtherInput!]!
+    sceneAttachment: [IngestSceneAttachmentInput!]!
 }
 
 type IngestDataResult {

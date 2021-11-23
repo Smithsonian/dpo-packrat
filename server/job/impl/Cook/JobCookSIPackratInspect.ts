@@ -657,6 +657,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             StorageKeyStaging: '',
             Ingested: null,
             BulkIngest: false,
+            idSOAttachment: null,
             idAssetVersion
         });
         return new DBAPI.ModelAsset(asset, assetVersion, isModel, channelList);

@@ -623,6 +623,7 @@ describe('DB Creation Test Suite', () => {
                 StorageKeyStaging: UTIL.randomStorageKey('/test/asset/path/'),
                 Ingested: true,
                 BulkIngest: false,
+                idSOAttachment: null,
                 idAssetVersion: 0
             });
         expect(assetVersion).toBeTruthy();
@@ -647,6 +648,7 @@ describe('DB Creation Test Suite', () => {
                 StorageKeyStaging: '',
                 Ingested: false,
                 BulkIngest: true,
+                idSOAttachment: null,
                 idAssetVersion: 0
             });
             assetVersionNotIngested2 = await UTIL.createAssetVersionTest({
@@ -660,6 +662,7 @@ describe('DB Creation Test Suite', () => {
                 StorageKeyStaging: '',
                 Ingested: false,
                 BulkIngest: true,
+                idSOAttachment: null,
                 idAssetVersion: 0
             });
         }
@@ -680,6 +683,7 @@ describe('DB Creation Test Suite', () => {
                 StorageKeyStaging: '',
                 Ingested: null,
                 BulkIngest: true,
+                idSOAttachment: null,
                 idAssetVersion: 0
             });
         expect(assetVersionNotProcessed).toBeTruthy();
@@ -1117,7 +1121,7 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: AssetVersion For Model', async () => {
-        if (assetModel && userActive)
+        if (assetModel && userActive && systemObjectScene)
             assetVersionModel = await UTIL.createAssetVersionTest({
                 idAsset: assetModel.idAsset,
                 Version: 0,
@@ -1129,6 +1133,7 @@ describe('DB Creation Test Suite', () => {
                 StorageKeyStaging: UTIL.randomStorageKey('/test/asset/path/'),
                 Ingested: true,
                 BulkIngest: false,
+                idSOAttachment: systemObjectScene.idSystemObject,
                 idAssetVersion: 0
             });
         expect(assetVersionModel).toBeTruthy();
@@ -1340,6 +1345,7 @@ describe('DB Creation Test Suite', () => {
                 idSystemObject: systemObjectScene.idSystemObject,
                 PublishedState: 0,
                 DateCreated: UTIL.nowCleansed(),
+                Comment: null,
                 idSystemObjectVersion: 0
             });
         }
@@ -2089,6 +2095,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 StorageKeyStaging: '',
                 Ingested: true,
                 BulkIngest: false,
+                idSOAttachment: null,
                 idAssetVersion: 0
             });
         expect(assetVersion2).toBeTruthy();
@@ -2105,6 +2112,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 StorageKeyStaging: '',
                 Ingested: true,
                 BulkIngest: false,
+                idSOAttachment: null,
                 idAssetVersion: 0
             });
         expect(assetVersion3).toBeTruthy();
@@ -2932,7 +2940,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch SystemObjectVersion: SystemObjectVersion.clone latest', async () => {
         let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
         if (systemObjectScene) {
-            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, null);
+            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, null, null);
             if (systemObjectVersionFetch && systemObjectVersion)
                 expect(systemObjectVersionFetch.idSystemObjectVersion).toBeGreaterThan(systemObjectVersion.idSystemObjectVersion);
         }
@@ -2942,7 +2950,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch SystemObjectVersion: SystemObjectVersion.clone specific', async () => {
         let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
         if (systemObjectScene && systemObjectVersion && assetVersion) {
-            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, systemObjectVersion.idSystemObjectVersion, new Map<number, number>([[assetVersion.idAsset, assetVersion.idAssetVersion]]));
+            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, systemObjectVersion.idSystemObjectVersion, 'Update Comment', new Map<number, number>([[assetVersion.idAsset, assetVersion.idAssetVersion]]));
             if (systemObjectVersionFetch && systemObjectVersion)
                 expect(systemObjectVersionFetch.idSystemObjectVersion).toBeGreaterThan(systemObjectVersion.idSystemObjectVersion);
         }
@@ -5854,6 +5862,34 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: AssetVersion.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (assetVersionModel) {
+            assetVersionModel.idSOAttachment = null;
+            bUpdated = await assetVersionModel.update();
+
+            const assetVersionFetch: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(assetVersionModel.idAssetVersion);
+            expect(assetVersionFetch).toBeTruthy();
+            if (assetVersionFetch)
+                expect(assetVersionFetch.idSOAttachment).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: AssetVersion.update reconnect', async () => {
+        let bUpdated: boolean = false;
+        if (assetVersionModel && systemObjectScene) {
+            assetVersionModel.idSOAttachment = systemObjectScene.idSystemObject;
+            bUpdated = await assetVersionModel.update();
+
+            const assetVersionFetch: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(assetVersionModel.idAssetVersion);
+            expect(assetVersionFetch).toBeTruthy();
+            if (assetVersionFetch)
+                expect(assetVersionFetch.idSOAttachment).toEqual(systemObjectScene.idSystemObject);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: CaptureData.update', async () => {
         let bUpdated: boolean = false;
         if (captureData && assetWithoutAG) {
@@ -7702,7 +7738,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObjectVersion.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersion.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(0)).toBeNull();
-        expect(await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(0, null, undefined)).toBeNull();
+        expect(await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(0, null, null, undefined)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromSystemObjectVersion(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromAssetVersion(0)).toBeNull();

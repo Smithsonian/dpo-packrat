@@ -128,13 +128,14 @@ type Mutation {
   updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
   updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
   updateUser(input: UpdateUserInput!): CreateUserResult!
-  uploadAsset(file: Upload!, type: Int!, idAsset: Int): UploadAssetResult!
+  uploadAsset(file: Upload!, type: Int!, idAsset: Int, idSOAttachment: Int): UploadAssetResult!
 }
 
 type UploadAssetInput {
   file: Upload!
   type: Int!
   idAsset: Int
+  idSOAttachment: Int
 }
 
 enum UploadStatus {
@@ -389,9 +390,12 @@ type AssetVersion {
   FileName: String!
   Ingested: Boolean
   Version: Int!
+  idSOAttachment: Int
   Asset: Asset
   User: User
   SystemObject: SystemObject
+  SOAttachment: SystemObject
+  SOAttachmentObjectType: Int
 }
 
 type AssetGroup {
@@ -601,6 +605,20 @@ input IngestOtherInput {
   updateNotes: String
 }
 
+input IngestSceneAttachmentInput {
+  type: Int
+  category: Int
+  units: Int
+  modelType: Int
+  fileType: Int
+  gltfStandardized: Boolean
+  dracoCompressed: Boolean
+  title: String
+  idAssetVersion: Int!
+  systemCreated: Boolean!
+  identifiers: [IngestIdentifierInput!]!
+}
+
 input IngestDataInput {
   subjects: [IngestSubjectInput!]!
   project: IngestProjectInput!
@@ -609,6 +627,7 @@ input IngestDataInput {
   model: [IngestModelInput!]!
   scene: [IngestSceneInput!]!
   other: [IngestOtherInput!]!
+  sceneAttachment: [IngestSceneAttachmentInput!]!
 }
 
 type IngestDataResult {

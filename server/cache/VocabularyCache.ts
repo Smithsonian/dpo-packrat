@@ -32,6 +32,11 @@ export enum eVocabularySetID {
     eJobJobType,
     eWorkflowType,
     eWorkflowEvent,
+    eEdan3DResourceAttributeUnits,
+    eEdan3DResourceAttributeModelFileType,
+    eEdan3DResourceAttributeFileType,
+    eEdan3DResourceType,
+    eEdan3DResourceCategory,
     eNone = -1
 }
 
@@ -54,6 +59,7 @@ export enum eVocabularyID {
     eAssetAssetTypeScene,
     eAssetAssetTypeProjectDocumentation,
     eAssetAssetTypeIntermediaryFile,
+    eAssetAssetTypeAttachment,
     eAssetAssetTypeOther,
     eMetadataMetadataSourceBulkIngestion,
     eMetadataMetadataSourceImage,
@@ -132,6 +138,31 @@ export enum eVocabularyID {
     eWorkflowStepTypeStart,
     eWorkflowEventIngestionUploadAssetVersion,
     eWorkflowEventIngestionIngestObject,
+    eEdan3DResourceAttributeUnitsmm,
+    eEdan3DResourceAttributeUnitscm,
+    eEdan3DResourceAttributeUnitsm,
+    eEdan3DResourceAttributeUnitskm,
+    eEdan3DResourceAttributeUnitsin,
+    eEdan3DResourceAttributeUnitsft,
+    eEdan3DResourceAttributeUnitsyd,
+    eEdan3DResourceAttributeUnitsmi,
+    eEdan3DResourceAttributeModelFileTypeobj,
+    eEdan3DResourceAttributeModelFileTypeply,
+    eEdan3DResourceAttributeModelFileTypestl,
+    eEdan3DResourceAttributeModelFileTypeglb,
+    eEdan3DResourceAttributeModelFileTypex3d,
+    eEdan3DResourceAttributeModelFileTypegltf,
+    eEdan3DResourceAttributeModelFileTypeusdz,
+    eEdan3DResourceAttributeFileTypezip,
+    eEdan3DResourceAttributeFileTypeglb,
+    eEdan3DResourceAttributeFileTypeusdz,
+    eEdan3DResourceType3dmesh,
+    eEdan3DResourceTypeCADmodel,
+    eEdan3DResourceCategoryFullresolution,
+    eEdan3DResourceCategoryMediumresolution,
+    eEdan3DResourceCategoryLowresolution,
+    eEdan3DResourceCategoryWatertight,
+    eEdan3DResourceCategoryiOSARmodel,
     eNone = -1
 }
 
@@ -213,6 +244,11 @@ export class VocabularyCache {
                 case 'Job.JobType':                             eVocabSetEnum = eVocabularySetID.eJobJobType; break;
                 case 'Workflow.Type':                           eVocabSetEnum = eVocabularySetID.eWorkflowType; break;
                 case 'Workflow.Event':                          eVocabSetEnum = eVocabularySetID.eWorkflowEvent; break;
+                case 'Edan3DResource.AttributeUnits':           eVocabSetEnum = eVocabularySetID.eEdan3DResourceAttributeUnits; break;
+                case 'Edan3DResource.AttributeModelFileType':   eVocabSetEnum = eVocabularySetID.eEdan3DResourceAttributeModelFileType; break;
+                case 'Edan3DResource.AttributeFileType':        eVocabSetEnum = eVocabularySetID.eEdan3DResourceAttributeFileType; break;
+                case 'Edan3DResource.Type':                     eVocabSetEnum = eVocabularySetID.eEdan3DResourceType; break;
+                case 'Edan3DResource.Category':                 eVocabSetEnum = eVocabularySetID.eEdan3DResourceCategory; break;
             }
 
             /* istanbul ignore else */
@@ -260,6 +296,7 @@ export class VocabularyCache {
                         case 'Scene':                               eVocabEnum = eVocabularyID.eAssetAssetTypeScene; break;
                         case 'Project Documentation':               eVocabEnum = eVocabularyID.eAssetAssetTypeProjectDocumentation; break;
                         case 'Intermediary File':                   eVocabEnum = eVocabularyID.eAssetAssetTypeIntermediaryFile; break;
+                        case 'Attachment':                          eVocabEnum = eVocabularyID.eAssetAssetTypeAttachment; break;
                         case 'Other':                               eVocabEnum = eVocabularyID.eAssetAssetTypeOther; break;
                     }
                 } break;
@@ -403,6 +440,56 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Ingestion: Upload Asset Version': eVocabEnum = eVocabularyID.eWorkflowEventIngestionUploadAssetVersion; break;
                         case 'Ingestion: Ingest Object':        eVocabEnum = eVocabularyID.eWorkflowEventIngestionIngestObject; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eEdan3DResourceAttributeUnits: {
+                    switch (vocabulary.Term) {
+                        case 'mm': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeUnitsmm; break;
+                        case 'cm': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeUnitscm; break;
+                        case 'm': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeUnitsm; break;
+                        case 'km': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeUnitskm; break;
+                        case 'in': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeUnitsin; break;
+                        case 'ft': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeUnitsft; break;
+                        case 'yd': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeUnitsyd; break;
+                        case 'mi': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeUnitsmi; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eEdan3DResourceAttributeModelFileType: {
+                    switch (vocabulary.Term) {
+                        case 'obj': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeModelFileTypeobj; break;
+                        case 'ply': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeModelFileTypeply; break;
+                        case 'stl': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeModelFileTypestl; break;
+                        case 'glb': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeModelFileTypeglb; break;
+                        case 'x3d': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeModelFileTypex3d; break;
+                        case 'gltf': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeModelFileTypegltf; break;
+                        case 'usdz': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeModelFileTypeusdz; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eEdan3DResourceAttributeFileType: {
+                    switch (vocabulary.Term) {
+                        case 'zip': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeFileTypezip; break;
+                        case 'glb': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeFileTypeglb; break;
+                        case 'usdz': eVocabEnum = eVocabularyID.eEdan3DResourceAttributeFileTypeusdz; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eEdan3DResourceType: {
+                    switch (vocabulary.Term) {
+                        case '3d mesh': eVocabEnum = eVocabularyID.eEdan3DResourceType3dmesh; break;
+                        case 'CAD model': eVocabEnum = eVocabularyID.eEdan3DResourceTypeCADmodel; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eEdan3DResourceCategory: {
+                    switch (vocabulary.Term) {
+                        case 'Full resolution': eVocabEnum = eVocabularyID.eEdan3DResourceCategoryFullresolution; break;
+                        case 'Medium resolution': eVocabEnum = eVocabularyID.eEdan3DResourceCategoryMediumresolution; break;
+                        case 'Low resolution': eVocabEnum = eVocabularyID.eEdan3DResourceCategoryLowresolution; break;
+                        case 'Watertight': eVocabEnum = eVocabularyID.eEdan3DResourceCategoryWatertight; break;
+                        case 'iOS AR model': eVocabEnum = eVocabularyID.eEdan3DResourceCategoryiOSARmodel; break;
                     }
                 } break;
             }
