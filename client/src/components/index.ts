@@ -23,6 +23,7 @@ import EnvBanner from './shared/EnvBanner';
 import DebounceNumberInput from './controls/DebounceNumberInput';
 import CheckboxField from './controls/CheckboxField';
 import ReadOnlyRow from './controls/ReadOnlyRow';
+import TextArea from './controls/TextArea';
 
 export {
     Header,
@@ -45,7 +46,8 @@ export {
     EnvBanner,
     DebounceNumberInput,
     CheckboxField,
-    ReadOnlyRow
+    ReadOnlyRow,
+    TextArea
 };
 
 export type { RepositoryIconProps };

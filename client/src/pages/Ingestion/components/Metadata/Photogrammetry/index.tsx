@@ -8,7 +8,7 @@
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, TextArea } from '../../../../../components';
 import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore, useRepositoryStore, useSubjectStore, StateRelatedObject } from '../../../../../store';
 import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
@@ -142,6 +142,10 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     return (
         <Box className={classes.container}>
+            <Box mb={2}>
+                {/* TODO: 454 make sure state is hooked up properly and that it's validated and it's conditional */}
+                <TextArea label='Update Notes' value={photogrammetry.updateNotes} name={'updateNotes'} onChange={setNameField} />
+            </Box>
             <AssetIdentifiers
                 systemCreated={photogrammetry.systemCreated}
                 identifiers={photogrammetry.identifiers}
