@@ -676,6 +676,7 @@ model SystemObjectVersion {
   idSystemObject                      Int
   PublishedState                      Int
   DateCreated                         DateTime                              @mariasql.DateTime(0)
+  Comment                             String?                               @mariasql.Text
   SystemObject                        SystemObject                          @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobjectversion_systemobject")
   SystemObjectVersionAssetVersionXref SystemObjectVersionAssetVersionXref[]
 

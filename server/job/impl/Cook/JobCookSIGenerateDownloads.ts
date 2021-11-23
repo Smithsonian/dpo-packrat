@@ -220,6 +220,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 allowZipCracking: false,
                 idUserCreator,
                 SOBased: model,
+                Comment: 'Created by Cook si-generate-downloads'
             };
             const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
             if (!ISR.success) {
@@ -286,7 +287,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         }
 
         // Clone scene's systemObjectVersion, using the assetVersionOverrideMap populated with new/updated assets
-        const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(sceneSystemObject.idSystemObject, null, assetVersionOverrideMap);
+        const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(sceneSystemObject.idSystemObject, null,
+            'Created by Cook si-generate-downloads', assetVersionOverrideMap);
         if (!SOV) {
             const error: string = `JobCookSIGenerateDownloads.createSystemObjects unable to clone SystemObjectVersion for ${JSON.stringify(sceneSystemObject, H.Helpers.saferStringify)}`;
             LOG.error(error, LOG.LS.eJOB);

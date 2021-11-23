@@ -10,6 +10,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
     idSystemObject!: number;
     PublishedState!: number;
     DateCreated!: Date;
+    Comment!: string | null;
 
     constructor(input: SystemObjectVersionBase) {
         super(input);
@@ -35,20 +36,22 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             idSystemObjectVersion: systemObjectVersion.idSystemObjectVersion,
             idSystemObject: systemObjectVersion.idSystemObject,
             PublishedState: systemObjectVersion.PublishedState,
-            DateCreated: systemObjectVersion.DateCreated
+            DateCreated: systemObjectVersion.DateCreated,
+            Comment: systemObjectVersion.Comment
         });
     }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idSystemObject, PublishedState, DateCreated } = this;
+            const { idSystemObject, PublishedState, DateCreated, Comment } = this;
             ({ idSystemObjectVersion: this.idSystemObjectVersion, idSystemObject: this.idSystemObject,
-                PublishedState: this.PublishedState, DateCreated: this.DateCreated } =
+                PublishedState: this.PublishedState, DateCreated: this.DateCreated, Comment: this.Comment } =
                 await DBC.DBConnection.prisma.systemObjectVersion.create({
                     data: {
                         SystemObject: { connect: { idSystemObject }, },
                         PublishedState,
                         DateCreated,
+                        Comment
                     },
                 }));
             return true;
@@ -60,13 +63,14 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idSystemObjectVersion, idSystemObject, PublishedState, DateCreated } = this;
+            const { idSystemObjectVersion, idSystemObject, PublishedState, DateCreated, Comment } = this;
             return await DBC.DBConnection.prisma.systemObjectVersion.update({
                 where: { idSystemObjectVersion, },
                 data: {
                     SystemObject: { connect: { idSystemObject }, },
                     PublishedState,
                     DateCreated,
+                    Comment,
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
@@ -128,7 +132,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
      * The published state of the clone is set to ePublishedState.eNotPublished. An optional assetVersionOverrideMap may
      * be supplied; this mapping from idAsset to idAssetVersion can be used to override the cloned xref records.
      * Returns the newly created SystemObjectVersion or null if failure */
-    static async cloneObjectAndXrefs(idSystemObject: number, idSystemObjectVersion: number | null,
+    static async cloneObjectAndXrefs(idSystemObject: number, idSystemObjectVersion: number | null, Comment: string | null,
         assetVersionOverrideMap?: Map<number, number> | undefined): Promise<SystemObjectVersion | null> {
         if (!idSystemObject)
             return null;
@@ -136,13 +140,13 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             const prismaClient: PrismaClient | DBC.PrismaClientTrans = DBC.DBConnection.prisma;
             // if our current prisma client does not have the $transaction method, then we're in a transaction already, so just do the work
             if (!DBC.DBConnection.isFullPrismaClient(prismaClient))
-                return SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, assetVersionOverrideMap);
+                return SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, Comment, assetVersionOverrideMap);
 
             // otherwise, start a new transaction:
             // LOG.info('DBAPI.SystemObjectVersion.cloneObjectAndXrefs starting a new DB transaction', LOG.LS.eDB);
             return await prismaClient.$transaction(async (prisma) => {
                 const transactionNumber: number = await DBC.DBConnection.setPrismaTransaction(prisma);
-                const retValue: SystemObjectVersion | null = await SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, assetVersionOverrideMap);
+                const retValue: SystemObjectVersion | null = await SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, Comment, assetVersionOverrideMap);
                 DBC.DBConnection.clearPrismaTransaction(transactionNumber);
                 return retValue;
             });
@@ -153,7 +157,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
     }
 
     private static async cloneObjectAndXrefsTrans(idSystemObject: number, idSystemObjectVersion: number | null,
-        assetVersionOverrideMap?: Map<number, number> | undefined): Promise<SystemObjectVersion | null> {
+        Comment: string | null, assetVersionOverrideMap?: Map<number, number> | undefined): Promise<SystemObjectVersion | null> {
         try {
             // LOG.info(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans(${idSystemObject}, ${idSystemObjectVersion}, ${JSON.stringify(assetVersionOverrideMap, H.Helpers.saferStringify)})`, LOG.LS.eDB);
             // fetch latest SystemObjectVerion's mapping of idAsset -> idAssetVersion
@@ -170,7 +174,8 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 idSystemObjectVersion: 0,
                 idSystemObject,
                 PublishedState: ePublishedState.eNotPublished,
-                DateCreated: new Date()
+                DateCreated: new Date(),
+                Comment
             }); /* istanbul ignore next */
 
             if (!await SOV.create()) {
