@@ -372,6 +372,7 @@ function Model(props: ModelProps): React.ReactElement {
                     onClickLeft={onPrevious}
                     rightLabel={isLast ? 'Finish' : 'Next'}
                     onClickRight={onClickRight}
+                    isLast={isLast}
                 />
                 <ObjectMeshTable modelObjects={modelObjects} />
             </Box>
