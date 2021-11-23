@@ -108,6 +108,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eAssetAssetTypeScene: testVocabulary(vocabulary, 'Scene'); break;
                     case eVocabularyID.eAssetAssetTypeProjectDocumentation: testVocabulary(vocabulary, 'Project Documentation'); break;
                     case eVocabularyID.eAssetAssetTypeIntermediaryFile: testVocabulary(vocabulary, 'Intermediary File'); break;
+                    case eVocabularyID.eAssetAssetTypeAttachment: testVocabulary(vocabulary, 'Attachment'); break;
                     case eVocabularyID.eAssetAssetTypeOther: testVocabulary(vocabulary, 'Other'); break;
 
                     case eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry: testVocabulary(vocabulary, 'Photogrammetry'); break;
@@ -197,8 +198,34 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
                     case eVocabularyID.eWorkflowStepTypeStart:                  testVocabulary(vocabulary, 'Start'); break;
 
-                    case eVocabularyID.eWorkflowEventIngestionUploadAssetVersion: testVocabulary(vocabulary, 'Ingestion: Upload Asset Version'); break;
-                    case eVocabularyID.eWorkflowEventIngestionIngestObject:     testVocabulary(vocabulary, 'Ingestion: Ingest Object'); break;
+                    case eVocabularyID.eWorkflowEventIngestionUploadAssetVersion:   testVocabulary(vocabulary, 'Ingestion: Upload Asset Version'); break;
+                    case eVocabularyID.eWorkflowEventIngestionIngestObject:         testVocabulary(vocabulary, 'Ingestion: Ingest Object'); break;
+
+                    case eVocabularyID.eEdan3DResourceAttributeUnitsmm:             testVocabulary(vocabulary, 'mm'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeUnitscm:             testVocabulary(vocabulary, 'cm'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeUnitsm:              testVocabulary(vocabulary, 'm'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeUnitskm:             testVocabulary(vocabulary, 'km'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeUnitsin:             testVocabulary(vocabulary, 'in'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeUnitsft:             testVocabulary(vocabulary, 'ft'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeUnitsyd:             testVocabulary(vocabulary, 'yd'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeUnitsmi:             testVocabulary(vocabulary, 'mi'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypeobj:    testVocabulary(vocabulary, 'obj'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypeply:    testVocabulary(vocabulary, 'ply'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypestl:    testVocabulary(vocabulary, 'stl'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypeglb:    testVocabulary(vocabulary, 'glb'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypex3d:    testVocabulary(vocabulary, 'x3d'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypegltf:   testVocabulary(vocabulary, 'gltf'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypeusdz:   testVocabulary(vocabulary, 'usdz'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeFileTypezip:         testVocabulary(vocabulary, 'zip'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeFileTypeglb:         testVocabulary(vocabulary, 'glb'); break;
+                    case eVocabularyID.eEdan3DResourceAttributeFileTypeusdz:        testVocabulary(vocabulary, 'usdz'); break;
+                    case eVocabularyID.eEdan3DResourceType3dmesh:                   testVocabulary(vocabulary, '3d mesh'); break;
+                    case eVocabularyID.eEdan3DResourceTypeCADmodel:                 testVocabulary(vocabulary, 'CAD model'); break;
+                    case eVocabularyID.eEdan3DResourceCategoryFullresolution:       testVocabulary(vocabulary, 'Full resolution'); break;
+                    case eVocabularyID.eEdan3DResourceCategoryMediumresolution:     testVocabulary(vocabulary, 'Medium resolution'); break;
+                    case eVocabularyID.eEdan3DResourceCategoryLowresolution:        testVocabulary(vocabulary, 'Low resolution'); break;
+                    case eVocabularyID.eEdan3DResourceCategoryWatertight:           testVocabulary(vocabulary, 'Watertight'); break;
+                    case eVocabularyID.eEdan3DResourceCategoryiOSARmodel:           testVocabulary(vocabulary, 'iOS AR model'); break;
 
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
@@ -256,6 +283,11 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularySetID.eJobJobType:
                     case eVocabularySetID.eWorkflowType:
                     case eVocabularySetID.eWorkflowEvent:
+                    case eVocabularySetID.eEdan3DResourceAttributeUnits:
+                    case eVocabularySetID.eEdan3DResourceAttributeModelFileType:
+                    case eVocabularySetID.eEdan3DResourceAttributeFileType:
+                    case eVocabularySetID.eEdan3DResourceType:
+                    case eVocabularySetID.eEdan3DResourceCategory:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet)
@@ -462,6 +494,31 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowStepWorkflowStepType, 'Start');
             await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowEvent, 'Ingestion: Upload Asset Version');
             await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowEvent, 'Ingestion: Ingest Object');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'mm');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'cm');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'm');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'km');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'in');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'ft');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'yd');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'mi');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'obj');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'ply');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'stl');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'glb');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'x3d');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'gltf');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'usdz');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeFileType, 'zip');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeFileType, 'glb');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeFileType, 'usdz');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceType, '3d mesh');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceType, 'CAD model');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'Full resolution');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'Medium resolution');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'Low resolution');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'Watertight');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'iOS AR model');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
             await testVocabularyBySetAndTerm(eVocabularySetID.eNone, 'Other', false);
         });
@@ -598,6 +655,13 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeIngestion, eVocabularySetID.eWorkflowType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeUpload, eVocabularySetID.eWorkflowType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowStepTypeStart, eVocabularySetID.eWorkflowStepWorkflowStepType)).toBeTruthy();
+
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowEventIngestionUploadAssetVersion, eVocabularySetID.eWorkflowEvent)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceAttributeUnitsmm, eVocabularySetID.eEdan3DResourceAttributeUnits)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceAttributeModelFileTypeobj, eVocabularySetID.eEdan3DResourceAttributeModelFileType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceAttributeFileTypezip, eVocabularySetID.eEdan3DResourceAttributeFileType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceType3dmesh, eVocabularySetID.eEdan3DResourceType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceCategoryFullresolution, eVocabularySetID.eEdan3DResourceCategory)).toBeTruthy();
 
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eNone, eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eNone)).toBeFalsy();

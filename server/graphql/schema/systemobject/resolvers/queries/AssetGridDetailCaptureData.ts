@@ -49,4 +49,8 @@ export class AssetGridDetailCaptureData extends AssetGridDetailBase {
             { colName: 'dateCreated', colLabel: 'Date Created', colDisplay: true, colType: eAssetGridColumnType.eDate, colAlign: 'center' },
         ];
     }
+
+    static getMetadataColumnNames(): string[] {
+        return ['variant', 'iso', 'lens', 'fnumber', 'imageheight', 'imagewidth'];
+    }
 }

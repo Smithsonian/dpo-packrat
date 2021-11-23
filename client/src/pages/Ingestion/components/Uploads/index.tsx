@@ -12,7 +12,7 @@ import KeepAlive from 'react-activation';
 import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
-import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute, eIngestionMode } from '../../../../constants';
 import { useMetadataStore, useUploadStore, useVocabularyStore } from '../../../../store';
 import { Colors } from '../../../../theme';
 import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
@@ -88,13 +88,24 @@ function Uploads(): React.ReactElement {
         state.getMetadatas
     ]);
     const { ingestionStart, ingestionComplete } = useIngest();
-
+    const assetTypes = getEntries(eVocabularySetID.eAssetAssetType);
+    let idVAssetType: number;
     const urlParams = new URLSearchParams(window.location.search);
 
     // Responsible for setting UpdateMode state and file type so that it files to be updated will have the appropriate file type
     useEffect(() => {
-        setUpdateMode(urlParams.get('mode') === '1');
-        if (urlParams.has('fileType')) setUpdateWorkflowFileType(Number(urlParams.get('fileType')));
+        setUpdateMode(Number(urlParams.get('mode')) === eIngestionMode.eIngest);
+        const fileType = urlParams.get('fileType');
+        if (fileType && typeof fileType === 'string') {
+            for (let i = 0; i < assetTypes.length; i++) {
+                if (assetTypes[i].Term === fileType) {
+                    idVAssetType = assetTypes[i].idVocabulary;
+                    break;
+                }
+            }
+            // setting update workflow file type here allows the FileListItem to automatically select the correct asset type
+            setUpdateWorkflowFileType(idVAssetType);
+        }
     }, [setUpdateMode, window.location.search]);
 
     // Responsible for checking if there's an uploaded model with the same name as the one intended to be ingested. If there is, automatically select it and start the ingestion workflow
@@ -122,10 +133,9 @@ function Uploads(): React.ReactElement {
             await updateMetadataFolders();
 
             const queuedUploadedFiles = getSelectedFiles(completed, true);
-            const assetTypes = getEntries(eVocabularySetID.eAssetAssetType);
             const metadataStepRequiredAssetTypesSet = new Set();
             assetTypes.forEach(assetType => {
-                if (assetType.Term === 'Capture Data Set: Photogrammetry' || assetType.Term === 'Model' || assetType.Term === 'Scene')
+                if (assetType.Term === 'Capture Data Set: Photogrammetry' || assetType.Term === 'Model' || assetType.Term === 'Scene' || assetType.Term === 'Attachment')
                     metadataStepRequiredAssetTypesSet.add(assetType.idVocabulary);
             });
 
@@ -151,7 +161,8 @@ function Uploads(): React.ReactElement {
                 await history.push(nextRoute);
             }
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error.toString());
             return;
         }
     };
@@ -179,8 +190,12 @@ function Uploads(): React.ReactElement {
             toast.dismiss();
             const toBeIngested = getSelectedFiles(completed, true);
 
-            // if every selected file is for update, skip the subject/items step
-            toBeIngested.every(file => file.idAsset) ? onNext() : await history.push(nextStep);
+            // if every selected file is for update OR attach, skip the subject/items step
+            if (toBeIngested.every(file => file.idAsset ||  file.idSOAttachment)) {
+                onNext();
+            } else {
+                await history.push(nextStep);
+            }
         } catch {
             setGettingAssetDetails(false);
         }

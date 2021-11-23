@@ -174,7 +174,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     else
                         LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl} unexpected response ${axiosResponse?.status}`, LOG.LS.eJOB);
                 } catch (error) {
-                    const message: string | null = error.message;
+                    const message: string | null = (error instanceof Error) ? error.message : null;
                     LOG.info(`JobCook [${this.name()}] creating job via ${requestUrl} failed with error ${message}`, LOG.LS.eJOB);
 
                     res = (message && message.indexOf('getaddrinfo ENOTFOUND') > -1)
@@ -386,8 +386,10 @@ export abstract class JobCook<T> extends JobPackrat {
                                     stagingSuccess = (baseName === fileName);
                                     break;
                                 }
-                            } catch (error) {
-                                if (error?.status === 404)
+                            } catch (err) {
+                                const error: any = err;
+                                const status: number | undefined = (error && typeof(error['status']) === 'number') ? error['status'] : undefined;
+                                if (status === 404)
                                     LOG.info(`JobCook [${this.name()}] JobCook.stageFiles stat ${pollingLocation} received 404 Not Found`, LOG.LS.eJOB);
                                 else
                                     LOG.error(`JobCook [${this.name()}] JobCook.stageFiles stat ${pollingLocation}`, LOG.LS.eJOB, error);

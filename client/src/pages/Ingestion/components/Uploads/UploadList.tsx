@@ -76,7 +76,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
 
     const urlParams = new URLSearchParams(window.location.search);
     useEffect(() => {
-        if (urlParams.get('mode') === '1') open();
+        if (urlParams.has('mode')) open();
     }, [open]);
 
     return (

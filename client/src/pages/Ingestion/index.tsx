@@ -33,13 +33,14 @@ function Ingestion(): React.ReactElement {
 
     const [options, setOptions] = useState<IngestionSidebarOption[]>([]);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.has('mode');
+    // check metadata. if every entry is update (idAsset) or attachment (idSOAttachment) then we want to skip the subject/item step
+    const includeSubjectItem = !metadatas.every((metadata) => metadata.file.idAsset || metadata.file.idSOAttachment);
+
     useEffect(() => {
         const updatedOptions: IngestionSidebarOption[] = [];
 
         if (metadatas.length) {
-            if (!mode) {
+            if (includeSubjectItem) {
                 updatedOptions.push({
                     title: 'Subject & Item',
                     route: INGESTION_ROUTE.ROUTES.SUBJECT_ITEM,
@@ -59,7 +60,7 @@ function Ingestion(): React.ReactElement {
         }
 
         setOptions(updatedOptions);
-    }, [metadatas, mode]);
+    }, [metadatas, includeSubjectItem]);
 
     const routeChangeCheck = ({ pathname }): boolean | string => {
         let allowChange: boolean = true;
