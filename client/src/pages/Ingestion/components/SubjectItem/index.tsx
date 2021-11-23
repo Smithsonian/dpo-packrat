@@ -117,7 +117,8 @@ function SubjectItem(): React.ReactElement {
             await updateMetadataFolders();
             setMetadataStepLoading(false);
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error);
             setMetadataStepLoading(false);
             return;
         }
