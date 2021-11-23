@@ -21,7 +21,7 @@ interface ApolloFile {
 
 export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult> {
     const { user } = context;
-    const uploadAssetWorker: UploadAssetWorker = new UploadAssetWorker(user, await args.file, args.idAsset, args.type);
+    const uploadAssetWorker: UploadAssetWorker = new UploadAssetWorker(user, await args.file, args.idAsset, args.type, args.idSOAttachment);
     return await uploadAssetWorker.upload();
 }
 
@@ -31,13 +31,15 @@ class UploadAssetWorker extends ResolverBase {
     private idAsset: number | undefined | null;
     private type: number;
     private LS: LocalStore | null = null;
+    private idSOAttachment: number | undefined | null;
 
-    constructor(user: User | undefined, apolloFile: ApolloFile, idAsset: number | undefined | null, type: number) {
+    constructor(user: User | undefined, apolloFile: ApolloFile, idAsset: number | undefined | null, type: number, idSOAttachment: number | undefined | null) {
         super();
         this.user = user;
         this.apolloFile = apolloFile;
         this.idAsset = idAsset;
         this.type = type;
+        this.idSOAttachment = idSOAttachment;
     }
 
     async upload(): Promise<UploadAssetResult> {
@@ -62,10 +64,13 @@ class UploadAssetWorker extends ResolverBase {
             return { status: UploadStatus.Failed, error: 'User not authenticated' };
         }
 
-        if (!this.idAsset)
-            await this.appendToWFReport(`<b>Upload starting</b>: ADD ${this.apolloFile.filename}`, true);
+        const { filename, createReadStream } = this.apolloFile;
+        if (this.idSOAttachment)
+            await this.appendToWFReport(`<b>Upload starting</b>: ATTACH ${filename}`, true);
+        else if (!this.idAsset)
+            await this.appendToWFReport(`<b>Upload starting</b>: ADD ${filename}`, true);
         else
-            await this.appendToWFReport(`<b>Upload starting</b>: UPDATE ${this.apolloFile.filename}`, true);
+            await this.appendToWFReport(`<b>Upload starting</b>: UPDATE ${filename}`, true);
 
         const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
@@ -73,7 +78,6 @@ class UploadAssetWorker extends ResolverBase {
             return { status: UploadStatus.Failed, error: 'Storage unavailable' };
         }
 
-        const { filename, createReadStream } = this.apolloFile;
         const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
         if (WSResult.error || !WSResult.writeStream || !WSResult.storageKey) {
             LOG.error(`uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`, LOG.LS.eGQL);
@@ -138,6 +142,7 @@ class UploadAssetWorker extends ResolverBase {
                 FilePath: '',
                 idAssetGroup: 0,
                 idVAssetType: idVocabulary,
+                idSOAttachment: this.idSOAttachment,
                 idUserCreator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 DateCreated: new Date()
             };
@@ -154,6 +159,7 @@ class UploadAssetWorker extends ResolverBase {
                 storageKey,
                 storageHash: null,
                 asset,
+                idSOAttachment: this.idSOAttachment,
                 assetNameOverride: filename,
                 idUserCreator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 DateCreated: new Date()
@@ -206,7 +212,7 @@ class UploadAssetWorker extends ResolverBase {
                     if (assetVersion.Ingested === null) {
                         assetVersion.Ingested = false;
                         if (!await assetVersion.update())
-                            LOG.error('uploadAsset post-upload workflow suceeded, but unable to update asset version ingested flag', LOG.LS.eGQL);
+                            LOG.error('uploadAsset post-upload workflow succeeded, but unable to update asset version ingested flag', LOG.LS.eGQL);
                     }
                 } else {
                     await this.appendToWFReport(`uploadAsset post-upload workflow error: ${results.error}`, true, true);

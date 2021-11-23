@@ -53,7 +53,7 @@ export function parseProjectToState(project: Project, selected: boolean): StateP
 }
 
 export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary: Vocabulary, idAsset: number | null = null): IngestionFile {
-    const { idAssetVersion, StorageSize, FileName } = assetVersion;
+    const { idAssetVersion, StorageSize, FileName, idSOAttachment } = assetVersion;
     const { idVocabulary } = vocabulary;
 
     const id = String(idAssetVersion);
@@ -69,6 +69,7 @@ export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary:
         cancel: null
     };
     if (idAsset) result.idAsset = idAsset;
+    if (idSOAttachment) result.idSOAttachment = idSOAttachment;
     return result;
 }
 

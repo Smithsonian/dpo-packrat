@@ -54,6 +54,7 @@ export type AssetStorageCommitNewAssetInput = {
     FilePath: string;
     idAssetGroup: number | null;
     idVAssetType: number;
+    idSOAttachment?: number | null;
     idUserCreator: number;
     DateCreated: Date;
 };
@@ -62,6 +63,7 @@ export type AssetStorageCommitNewAssetVersionInput = {
     storageKey: string;
     storageHash: string | null;
     asset: DBAPI.Asset;
+    idSOAttachment?: number | null;
     assetNameOverride: string | null;
     idUserCreator: number;
     DateCreated: Date;
@@ -171,7 +173,7 @@ export class AssetStorageAdapter {
      * Creates and persists Asset and AssetVersion
      */
     static async commitNewAsset(commitNewAssetInput: AssetStorageCommitNewAssetInput): Promise<AssetStorageResultCommit> {
-        const { storageKey, storageHash, FileName, FilePath, idAssetGroup, idVAssetType, idUserCreator, DateCreated } = commitNewAssetInput;
+        const { storageKey, storageHash, FileName, FilePath, idAssetGroup, idVAssetType, idSOAttachment, idUserCreator, DateCreated } = commitNewAssetInput;
         const asset: DBAPI.Asset = new DBAPI.Asset({
             FileName,
             FilePath,
@@ -182,7 +184,7 @@ export class AssetStorageAdapter {
             idAsset: 0
         });
 
-        return await AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash, asset, assetNameOverride: null, idUserCreator, DateCreated });
+        return await AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash, asset, assetNameOverride: null, idSOAttachment, idUserCreator, DateCreated });
     }
 
     /**
@@ -190,7 +192,7 @@ export class AssetStorageAdapter {
      * Creates and persists AssetVersion (and Asset if Asset.idAsset is 0)
      */
     static async commitNewAssetVersion(commitNewAssetVersionInput: AssetStorageCommitNewAssetVersionInput): Promise<AssetStorageResultCommit> {
-        const { storageKey, storageHash, asset, assetNameOverride, idUserCreator, DateCreated } = commitNewAssetVersionInput;
+        const { storageKey, storageHash, asset, assetNameOverride, idSOAttachment, idUserCreator, DateCreated } = commitNewAssetVersionInput;
         const commitWriteStreamInput: STORE.CommitWriteStreamInput = { storageKey, storageHash };
 
         LOG.info(`AssetStorageAdapter.commitNewAssetVersion idAsset ${asset.idAsset}: ${commitWriteStreamInput.storageKey}`, LOG.LS.eSTR);
@@ -211,12 +213,12 @@ export class AssetStorageAdapter {
         // detect & handle bulk ingest
         const isBulkIngest: boolean = (await asset.assetType() == eVocabularyID.eAssetAssetTypeBulkIngestion);
         return (isBulkIngest)
-            ? await AssetStorageAdapter.commitNewAssetVersionBulk(commitWriteStreamInput, asset, idUserCreator, DateCreated, resStorage, storage)
-            : await AssetStorageAdapter.commitNewAssetVersionNonBulk(commitWriteStreamInput, asset, idUserCreator, DateCreated, assetNameOverride, resStorage);
+            ? await AssetStorageAdapter.commitNewAssetVersionBulk(commitWriteStreamInput, asset, idSOAttachment, idUserCreator, DateCreated, resStorage, storage)
+            : await AssetStorageAdapter.commitNewAssetVersionNonBulk(commitWriteStreamInput, asset, idSOAttachment, idUserCreator, DateCreated, assetNameOverride, resStorage);
     }
 
     private static async commitNewAssetVersionNonBulk(commitWriteStreamInput: STORE.CommitWriteStreamInput,
-        asset: DBAPI.Asset, idUserCreator: number, DateCreated: Date, assetNameOverride: string | null,
+        asset: DBAPI.Asset, idSOAttachment: number | null | undefined, idUserCreator: number, DateCreated: Date, assetNameOverride: string | null,
         resStorage: STORE.CommitWriteStreamResult):
         Promise<AssetStorageResultCommit> {
 
@@ -226,7 +228,7 @@ export class AssetStorageAdapter {
         }
 
         const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(asset, idUserCreator,
-            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, null, assetNameOverride, ingested);
+            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, idSOAttachment, null, assetNameOverride, ingested);
         /* istanbul ignore else */
         if (assetVersion)
             return { assets: [ asset ], assetVersions: [ assetVersion ], success: true, error: '' };
@@ -236,7 +238,7 @@ export class AssetStorageAdapter {
 
     // split bulk ingest into separate assets and asset versions, one per system object in the bulk ingest
     private static async commitNewAssetVersionBulk(commitWriteStreamInput: STORE.CommitWriteStreamInput,
-        asset: DBAPI.Asset, idUserCreator: number, DateCreated: Date, resStorage: STORE.CommitWriteStreamResult,
+        asset: DBAPI.Asset, idSOAttachment: number | null | undefined, idUserCreator: number, DateCreated: Date, resStorage: STORE.CommitWriteStreamResult,
         storage: IStorage): Promise<AssetStorageResultCommit> {
 
         // Compute path to bagit zip; crack it open; pass it off to bulkIngestReader
@@ -281,7 +283,7 @@ export class AssetStorageAdapter {
             const assetNameOverride: string = `Part ${objectNumber} of bulk ${asset.FileName}`;
             objectNumber++;
             const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(assetClone, idUserCreator,
-                DateCreated, resStorage, commitWriteStreamInput.storageKey, true, ingestedObject, assetNameOverride, ingested); /* istanbul ignore else */
+                DateCreated, resStorage, commitWriteStreamInput.storageKey, true, idSOAttachment, ingestedObject, assetNameOverride, ingested); /* istanbul ignore else */
             if (assetVersion) {
                 assets.push(assetClone);
                 assetVersions.push(assetVersion);
@@ -295,7 +297,7 @@ export class AssetStorageAdapter {
     /** creates asset (if asset.idAsset == 0) and creates an assetVersion */
     private static async createAssetConstellation(asset: DBAPI.Asset, idUserCreator: number,
         DateCreated: Date, resStorage: STORE.CommitWriteStreamResult, storageKey: string,
-        BulkIngest: boolean, ingestedObject: IngestMetadata | null,
+        BulkIngest: boolean, idSOAttachment: number | null | undefined, ingestedObject: IngestMetadata | null,
         assetNameOverride: string | null, Ingested: boolean | null): Promise<DBAPI.AssetVersion | null> {
         // LOG.info(`AssetStorageAdapter.createAssetConstellation for ${JSON.stringify(asset)} with override name ${assetNameOverride}`, LOG.LS.eSTR);
         if (asset.idAsset == 0) {
@@ -320,6 +322,7 @@ export class AssetStorageAdapter {
             StorageKeyStaging: storageKey,
             Ingested,
             BulkIngest,
+            idSOAttachment: idSOAttachment ?? null,
             idAssetVersion: 0
         });
 
@@ -603,7 +606,7 @@ export class AssetStorageAdapter {
             if (!assetVersionComponent) {
                 const CWSR: STORE.CommitWriteStreamResult = { storageHash: hashResults.hash, storageSize: hashResults.dataLength, success: true, error: '' };
                 assetVersionComponent = await AssetStorageAdapter.createAssetConstellation(assetComponent, assetVersion.idUserCreator,
-                    assetVersion.DateCreated, CWSR, '', false, null, null, ingested); /* istanbul ignore next */
+                    assetVersion.DateCreated, CWSR, '', false, null, null, null, ingested); /* istanbul ignore next */
                 promoteAssetNeeded = true;
             }
 
@@ -634,49 +637,60 @@ export class AssetStorageAdapter {
         if (!IAR.success)
             return IAR;
 
-        // If no other assets exist for this bulk ingest, retire the asset version and remove the staged file
-        const relatedAV: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchByStorageKeyStaging(assetVersion.StorageKeyStaging);
-        if (relatedAV && relatedAV.length == 1) {
-            const ASR: AssetStorageResult = await AssetStorageAdapter.discardAssetVersion(assetVersion); /* istanbul ignore next */
-            if (!ASR.success) {
-                const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker: ${ASR.error}`;
-                LOG.error(error, LOG.LS.eSTR);
-                return { success: false, error, assets, assetVersions, systemObjectVersion: null };
-            }
-        } else /* istanbul ignore next */ if (!await DBAPI.SystemObject.retireSystemObject(assetVersion)) {  // otherwise just retire the asset version
-            const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to retire AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+        // Discard the source file if we're the last one using it, retire the asset version, clear the StorageKeyStaging, and retire the asset if all versions are retired
+        const ASR: AssetStorageResult = await AssetStorageAdapter.discardAssetVersion(assetVersion); /* istanbul ignore next */
+        if (ASR.success)
+            return { success: true, error: '', assets, assetVersions, systemObjectVersion: null };
+        else {
+            const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker: ${ASR.error}`;
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error, assets, assetVersions, systemObjectVersion: null };
         }
 
-        // clear StorageKeyStaging from this retired asset version
-        assetVersion.StorageKeyStaging = '';
-        // assetVersion.Ingested = true;
-        if (!await assetVersion.update()) /* istanbul ignore next */ {
-            const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to clear staging storage key from AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eSTR);
-            return { success: false, error, assets, assetVersions, systemObjectVersion: null };
-        }
+        // // otherwise just retire the asset version, clear the StorageKeyStaging, and retire the master asset if all versions are retired
+        // if (!await DBAPI.SystemObject.retireSystemObject(assetVersion)) {
+        //     const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to retire AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+        //     LOG.error(error, LOG.LS.eSTR);
+        //     return { success: false, error, assets, assetVersions, systemObjectVersion: null };
+        // }
+        //
+        // // clear StorageKeyStaging from this retired asset version
+        // assetVersion.StorageKeyStaging = '';
+        // // assetVersion.Ingested = true;
+        // if (!await assetVersion.update()) /* istanbul ignore next */ {
+        //     const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to clear staging storage key from AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+        //     LOG.error(error, LOG.LS.eSTR);
+        //     return { success: false, error, assets, assetVersions, systemObjectVersion: null };
+        // }
+        //
+        // // Retire the asset that represented this piece of the bulk ingest ... if and only if all versions are also retired
+        // // We have a wacky flow when updating an existing system object, which is represented as a package of files in a zip (such as a scene or model)
+        // // In that case, the zip file gets added as a new version of the existing asset.  We will discard that asset version (above) ...
+        // // but we don't want to retire the asset -- that asset remains the "master asset" for the system object in question.
+        // /* istanbul ignore next */
+        // const retireRes: H.IOResults = await AssetStorageAdapter.retireAssetIfAllVersionsAreRetired(asset);
+        // return (retireRes.success)
+        //     ? { success: true, error: '', assets, assetVersions, systemObjectVersion: null }
+        //     : { success: false, error: retireRes.error, assets, assetVersions, systemObjectVersion: null };
+    }
 
-        // Retire the asset that represented this piece of the bulk ingest ... if and only if all versions are also retired
-        // We have a wacky flow when updating an existing system object, which is represented as a package of files in a zip (such as a scene or model)
-        // In that case, the zip file gets added as a new version of the existing asset.  We will discard that asset version (above) ...
-        // but we don't want to retire the asset -- that asset remains the "master asset" for the system object in question.
-        /* istanbul ignore next */
+    private static async retireAssetIfAllVersionsAreRetired(asset: DBAPI.Asset): Promise<H.IOResults> {
+        LOG.info(`AssetStorageAdapter.retireAssetIfAllVersionsAreRetired ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
         const assetVersionsNotRetired: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromAsset(asset.idAsset, false);
-        let retireAsset: boolean = false;
-        if (assetVersionsNotRetired)
-            retireAsset = (assetVersionsNotRetired.length === 0);
-        else
-            LOG.error(`AssetStorageAdapter.ingestAssetBulkZipWorker unable to compute non-retired asset versions from asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
-
-        if (retireAsset && !await DBAPI.SystemObject.retireSystemObject(asset)) {
-            const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to retire Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
+        if (!assetVersionsNotRetired) {
+            const error: string = `AssetStorageAdapter.retireAssetIfAllVersionsAreRetired unable to compute non-retired asset versions from asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
             LOG.error(error, LOG.LS.eSTR);
-            return { success: false, error, assets, assetVersions, systemObjectVersion: null };
+            return { success: false, error };
         }
+        if (assetVersionsNotRetired.length > 0)
+            return { success: true, error: '' };
 
-        return { success: true, error: '', assets, assetVersions, systemObjectVersion: null };
+        if (!await DBAPI.SystemObject.retireSystemObject(asset)) {
+            const error: string = `AssetStorageAdapter.retireAssetIfAllVersionsAreRetired unable to retire Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+        return { success: true, error: '' };
     }
 
     private static async promoteAssetWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
@@ -1075,18 +1089,12 @@ export class AssetStorageAdapter {
     }
 
     /** This method removes staged files from our storage system (i.e. uploaded but not ingested). If successful,
-     * it then retires the asset version
-     */
+     * it then retires the asset version, clears the StorageKeyStaging, and retires the asset, when all versions are retired */
     static async discardAssetVersion(assetVersion: DBAPI.AssetVersion): Promise<AssetStorageResult> {
         LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}`, LOG.LS.eSTR);
         // only works for staged versions -- fail if not staged
         if (assetVersion.Ingested || !assetVersion.StorageKeyStaging)
             return { asset: null, assetVersion, success: false, error: 'AssetStorageAdapter.discardAssetVersion: Ingested asset versions cannot be discarded' };
-
-        // fetch storage interface
-        const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
-        if (!storage)
-            return { asset: null, assetVersion, success: false, error: 'AssetStorageAdapter.discardAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()' };
 
         // discard staged asset
         // Bulk Ingest and Zip files may be referenced by multiple asset versions. To avoid removing the file referenced by these,
@@ -1098,16 +1106,39 @@ export class AssetStorageAdapter {
             return { asset: null, assetVersion, success: false, error };
         }
         if (storageKeyStagingCount === 1) {
+            // fetch storage interface
+            const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
+            if (!storage)
+                return { asset: null, assetVersion, success: false, error: 'AssetStorageAdapter.discardAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()' };
+
             const DWSR: STORE.DiscardWriteStreamResult = await storage.discardWriteStream({ storageKey: assetVersion.StorageKeyStaging });
             if (!DWSR.success)
                 return { asset: null, assetVersion, success: false, error: `AssetStorageAdapter.discardAssetVersion: ${DWSR.error}` };
         } else
-            LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion} skipped IStorage.discardWriteStream as asset reference count is ${storageKeyStagingCount} > 1`, LOG.LS.eSTR);
+            LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion} skipped IStorage.discardWriteStream as asset reference count is ${storageKeyStagingCount} !== 1`, LOG.LS.eSTR);
 
         // retire assetVersion
-        return (await DBAPI.SystemObject.retireSystemObject(assetVersion))
-            ? { asset: null, assetVersion: null, success: true, error: '' } /* istanbul ignore next */
-            : { asset: null, assetVersion: null, success: false, error: 'AssetStorageAdapter.discardAssetVersion: SystemObject.retireSystemObject failed' };
+        if (!await DBAPI.SystemObject.retireSystemObject(assetVersion)) /* istanbul ignore next */
+            return { asset: null, assetVersion: null, success: false, error: 'AssetStorageAdapter.discardAssetVersion: SystemObject.retireSystemObject failed' };
+
+        // clear StorageKeyStaging from this retired asset version
+        assetVersion.StorageKeyStaging = '';
+        // assetVersion.Ingested = true;
+        if (!await assetVersion.update()) /* istanbul ignore next */ {
+            const error: string = `AssetStorageAdapter.discardAssetVersion unable to clear staging storage key from AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+            LOG.error(error, LOG.LS.eSTR);
+            return { asset: null, assetVersion: null, success: false, error };
+        }
+
+        // Retire the asset associated with this asset version ... if and only if all versions are also retired
+        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
+        if (!asset)
+            return { asset: null, assetVersion: null, success: false, error: `AssetStorageAdapter.discardAssetVersion: Unable to fetch asset ${assetVersion.idAsset}` };
+
+        const retireRes: H.IOResults = await AssetStorageAdapter.retireAssetIfAllVersionsAreRetired(asset);
+        return (retireRes.success)
+            ? { asset: null, assetVersion: null, success: true, error: '' }
+            : { asset: null, assetVersion: null, success: false, error: retireRes.error };
     }
 
     private static async actOnAssetWorker(asset: DBAPI.Asset, opInfo: STORE.OperationInfo,
@@ -1186,6 +1217,7 @@ export class AssetStorageAdapter {
             StorageKeyStaging: assetVersionOld.StorageKeyStaging,
             Ingested: assetVersionOld.Ingested,
             BulkIngest: assetVersionOld.BulkIngest,
+            idSOAttachment: assetVersionOld.idSOAttachment,
             idAssetVersion: 0
         });
 

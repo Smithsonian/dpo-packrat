@@ -502,6 +502,7 @@ export type MutationUploadAssetArgs = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSOAttachment?: Maybe<Scalars['Int']>;
 };
 
 export type UploadAssetInput = {
@@ -509,6 +510,7 @@ export type UploadAssetInput = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSOAttachment?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -785,9 +787,12 @@ export type AssetVersion = {
   FileName: Scalars['String'];
   Ingested?: Maybe<Scalars['Boolean']>;
   Version: Scalars['Int'];
+  idSOAttachment?: Maybe<Scalars['Int']>;
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
+  SOAttachment?: Maybe<SystemObject>;
+  SOAttachmentObjectType?: Maybe<Scalars['Int']>;
 };
 
 export type AssetGroup = {
@@ -1002,6 +1007,20 @@ export type IngestOtherInput = {
   identifiers: Array<IngestIdentifierInput>;
 };
 
+export type IngestSceneAttachmentInput = {
+  type?: Maybe<Scalars['Int']>;
+  category?: Maybe<Scalars['Int']>;
+  units?: Maybe<Scalars['Int']>;
+  modelType?: Maybe<Scalars['Int']>;
+  fileType?: Maybe<Scalars['Int']>;
+  gltfStandardized?: Maybe<Scalars['Boolean']>;
+  dracoCompressed?: Maybe<Scalars['Boolean']>;
+  title?: Maybe<Scalars['String']>;
+  idAssetVersion: Scalars['Int'];
+  systemCreated: Scalars['Boolean'];
+  identifiers: Array<IngestIdentifierInput>;
+};
+
 export type IngestDataInput = {
   subjects: Array<IngestSubjectInput>;
   project: IngestProjectInput;
@@ -1010,6 +1029,7 @@ export type IngestDataInput = {
   model: Array<IngestModelInput>;
   scene: Array<IngestSceneInput>;
   other: Array<IngestOtherInput>;
+  sceneAttachment: Array<IngestSceneAttachmentInput>;
 };
 
 export type IngestDataResult = {
@@ -2615,6 +2635,7 @@ export type UploadAssetMutationVariables = Exact<{
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSOAttachment?: Maybe<Scalars['Int']>;
 }>;
 
 
@@ -3145,7 +3166,7 @@ export type GetUploadedAssetVersionQuery = (
     & Pick<GetUploadedAssetVersionResult, 'idAssetVersionsUpdated'>
     & { AssetVersion: Array<(
       { __typename?: 'AssetVersion' }
-      & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated'>
+      & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated' | 'idSOAttachment' | 'SOAttachmentObjectType'>
       & { Asset?: Maybe<(
         { __typename?: 'Asset' }
         & Pick<Asset, 'idAsset'>
@@ -4033,8 +4054,13 @@ export type DiscardUploadedAssetVersionsMutationHookResult = ReturnType<typeof u
 export type DiscardUploadedAssetVersionsMutationResult = Apollo.MutationResult<DiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
 export const UploadAssetDocument = gql`
-    mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int) {
-  uploadAsset(file: $file, type: $type, idAsset: $idAsset) {
+    mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int, $idSOAttachment: Int) {
+  uploadAsset(
+    file: $file
+    type: $type
+    idAsset: $idAsset
+    idSOAttachment: $idSOAttachment
+  ) {
     status
     idAssetVersions
     error
@@ -4059,6 +4085,7 @@ export type UploadAssetMutationFn = Apollo.MutationFunction<UploadAssetMutation,
  *      file: // value for 'file'
  *      type: // value for 'type'
  *      idAsset: // value for 'idAsset'
+ *      idSOAttachment: // value for 'idSOAttachment'
  *   },
  * });
  */
@@ -5297,6 +5324,8 @@ export const GetUploadedAssetVersionDocument = gql`
           Term
         }
       }
+      idSOAttachment
+      SOAttachmentObjectType
     }
     idAssetVersionsUpdated
     UpdatedAssetVersionMetadata {

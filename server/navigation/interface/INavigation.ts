@@ -115,6 +115,8 @@ export type MetadataFilter = {
     idRoot: number;                         // idSystemObject for whom to fetch metadata, either its own metadata (forAssetChildren === false) or that of its asset version childrens' metadata (forAssetChildren === true)
     forAssetChildren: boolean;              // true means metadata of asset version children; false means metadata of idRoot. True is typically desired when fetching a set of metadata for an asset grid.
     metadataColumns: string[];              // empty array means retrieve no metadata, which is an error condition
+    rows: number;                           // max result row count; a value of 0 means "all"
+    cursorMark?: string;                    // a non-empty value indicates a cursor position through a set of result values, used to request the next set of values
 };
 
 export type MetadataResultEntry = {
@@ -128,6 +130,7 @@ export type MetadataResult = {
     error: string;
     entries: MetadataResultEntry[];
     metadataColumns: string[];
+    cursorMark?: string | null;             // when provided, additional results are available by requesting another navigation, using this returned value for the MetadataFilter.cursorMark
 };
 
 export interface INavigation {

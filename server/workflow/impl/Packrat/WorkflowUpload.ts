@@ -116,6 +116,7 @@ export class WorkflowUpload implements WF.IWorkflow {
     }
 
     private async validateFile(fileName: string, readStream: NodeJS.ReadableStream): Promise<H.IOResults> {
+        let extension: string = '';
         try {
             // validate scene file by loading it:
             if (fileName.toLowerCase().endsWith('.svx.json')) {
@@ -127,7 +128,7 @@ export class WorkflowUpload implements WF.IWorkflow {
                     : this.handleError(`WorkflowUpload.validateFile failed to parse svx file ${fileName}: ${svxRes.error}`);
             }
 
-            const extension: string = path.extname(fileName).toLowerCase();
+            extension = path.extname(fileName).toLowerCase();
             switch (extension) {
                 case '.avif':
                 case '.gif':
@@ -152,7 +153,8 @@ export class WorkflowUpload implements WF.IWorkflow {
                 default: break;
             }
         } catch (error) {
-            return this.handleError(`WorkflowUpload.validateFile encountered exception processing ${fileName}${(error instanceof Error) ? ': ' + error.message : ''}`);
+            const message: string = `WorkflowUpload.validateFile encountered exception processing ${fileName}${(error instanceof Error) ? ': ' + error.message : ''}`;
+            return (extension !== '.svg') ? this.handleError(message) : this.appendToWFReport(message);
         }
         return { success: true, error: '' };
     }

@@ -163,7 +163,7 @@ describe('AssetStorageAdapter Methods', () => {
     test('AssetStorageAdapter.discardAssetVersion', async() => {
         const TestCase2 = await testCommitNewAsset(null, 15000, OHTS.captureData1);
         await testDiscardAssetVersion(TestCase2, true);  // first time should succeed
-        await testDiscardAssetVersion(TestCase2, true);  // second time should succeed ... we allow discards to be done again
+        await testDiscardAssetVersion(TestCase2, false); // discard of discarded asset should fail
 
         await testDiscardAssetVersion(TestCase1, false); // discard of ingested asset should fail
     });
@@ -229,7 +229,7 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         TestCase = { assets: [], assetVersions: [], SOBased };
 
         TestCase.assets.push(new DBAPI.Asset({ idAsset: 0, FileName: fileNameAsset, FilePath: H.Helpers.randomSlug(), idAssetGroup: null, idVAssetType: vocabulary.idVocabulary, idSystemObject: null, StorageKey: '' }));
-        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, Version: 0 }));
+        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, idSOAttachment: null, Version: 0 }));
         newAsset = true;
     } else {
         TestCase.SOBased = SOBased;
@@ -602,7 +602,7 @@ async function testGetAssetVersionContents(TestCase: AssetStorageAdapterTestCase
 }
 
 async function testDiscardAssetVersion(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
-    // LOG.info(`testDiscardAssetVersion ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
+    // LOG.info(`testDiscardAssetVersion ${JSON.stringify(TestCase, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
     for (let index = 0; index < TestCase.assets.length; index++) {
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 

@@ -91,11 +91,26 @@ input IngestSceneInput {
     identifiers: [IngestIdentifierInput!]!
     sourceObjects: [RelatedObjectInput!]!
     derivedObjects: [RelatedObjectInput!]!
+    
 }
 
 input IngestOtherInput {
     idAssetVersion: Int!
     idAsset: Int
+    systemCreated: Boolean!
+    identifiers: [IngestIdentifierInput!]!
+}
+
+input IngestSceneAttachmentInput {
+    type: Int
+    category: Int
+    units: Int
+    modelType: Int
+    fileType: Int
+    gltfStandardized: Boolean
+    dracoCompressed: Boolean
+    title: String
+    idAssetVersion: Int!
     systemCreated: Boolean!
     identifiers: [IngestIdentifierInput!]!
 }
@@ -108,6 +123,7 @@ input IngestDataInput {
     model: [IngestModelInput!]!
     scene: [IngestSceneInput!]!
     other: [IngestOtherInput!]!
+    sceneAttachment: [IngestSceneAttachmentInput!]!
 }
 
 type IngestDataResult {
