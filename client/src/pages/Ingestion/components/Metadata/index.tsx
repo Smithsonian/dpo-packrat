@@ -70,6 +70,7 @@ function Metadata(): React.ReactElement {
     const location = useLocation();
     const history = useHistory();
     const [ingestionLoading, setIngestionLoading] = useState(false);
+    const [disableNavigation, setDisableNavigation] = useState(false);
     const [invalidMetadataStep, setInvalidMetadataStep] = useState<boolean>(false);
     const [breadcrumbNames, setBreadcrumbNames] = useState<string[]>([]);
 
@@ -144,6 +145,7 @@ function Metadata(): React.ReactElement {
         }
 
         if (isLast) {
+            setDisableNavigation(true);
             setIngestionLoading(true);
             const { success, message } = await ingestionStart();
             setIngestionLoading(false);
@@ -153,6 +155,7 @@ function Metadata(): React.ReactElement {
                 ingestionComplete();
                 setUpdateMode(false);
             } else {
+                setDisableNavigation(false);
                 toast.error(`Ingestion failed, please try again later. Error: ${message}`);
             }
         } else {
@@ -177,7 +180,7 @@ function Metadata(): React.ReactElement {
 
         if (assetType.model) {
             // Model takes in additional props for onPrevious, onClickRight, isLast, and rightLoading because it imports an additional copy of <SidebarBottomNavigator />
-            return <Model metadataIndex={metadataIndex} onPrevious={onPrevious} onClickRight={onNext} isLast={isLast} rightLoading={ingestionLoading} />;
+            return <Model metadataIndex={metadataIndex} onPrevious={onPrevious} onClickRight={onNext} isLast={isLast} rightLoading={ingestionLoading} disableNavigation={disableNavigation} />;
         }
 
         if (assetType.attachment) {
@@ -211,7 +214,7 @@ function Metadata(): React.ReactElement {
                 rightLabel={isLast ? 'Finish' : 'Next'}
                 onClickRight={onNext}
                 invalidMetadataStep={invalidMetadataStep}
-                isLast={isLast}
+                disableNavigation={disableNavigation}
             />
         </Box>
     );
