@@ -148,9 +148,17 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <Box mb={2}>
-                {idAsset && <TextArea label='Update Notes' value={photogrammetry.updateNotes} name='updateNotes' onChange={setNameField} placeholder='Update notes...' />}
-            </Box>
+            {idAsset && (
+                <Box mb={2}>
+                    <TextArea
+                        label='Update Notes'
+                        value={photogrammetry.updateNotes}
+                        name='updateNotes'
+                        onChange={setNameField}
+                        placeholder='Update notes...'
+                    />
+                </Box>
+            )}
             <AssetIdentifiers
                 systemCreated={photogrammetry.systemCreated}
                 identifiers={photogrammetry.identifiers}
