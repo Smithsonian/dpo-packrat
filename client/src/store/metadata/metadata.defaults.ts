@@ -34,6 +34,11 @@ const identifiersWhenValidation = {
     then: yup.array().of(identifierSchema).test(identifierValidation)
 };
 
+const notesWhenUpdate = {
+    is: value => value > 0,
+    then: yup.string().required()
+};
+
 export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     systemCreated: true,
     identifiers: [],
@@ -54,7 +59,9 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     clusterType: null,
     clusterGeometryFieldId: null,
     cameraSettingUniform: false,
-    directory: ''
+    directory: '',
+    updateNotes: '',
+    idAsset: 0
 };
 
 export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
@@ -94,7 +101,8 @@ export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
         .positive('Cluster Geometry Field ID must be a positive integer')
         .max(2147483647, 'Cluster Geometry Field ID is too large'),
     cameraSettingUniform: yup.boolean().required(),
-    directory: yup.string()
+    directory: yup.string(),
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
 });
 
 export const photogrammetryFieldsSchema = photogrammetryFieldsSchemaUpdate.shape({
@@ -126,7 +134,9 @@ export const defaultModelFields: ModelFields = {
     units: null,
     purpose: null,
     modelFileType: null,
-    directory: ''
+    directory: '',
+    updateNotes: '',
+    idAsset: 0
 };
 
 export const modelFieldsSchemaUpdate = yup.object().shape({
@@ -157,7 +167,8 @@ export const modelFieldsSchemaUpdate = yup.object().shape({
     boundingBoxP2X: yup.number().nullable(true),
     boundingBoxP2Y: yup.number().nullable(true),
     boundingBoxP2Z: yup.number().nullable(true),
-    directory: yup.string()
+    directory: yup.string(),
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
 });
 
 export const modelFieldsSchema = modelFieldsSchemaUpdate.shape({
@@ -174,7 +185,9 @@ export const defaultSceneFields: SceneFields = {
     directory: '',
     EdanUUID: '',
     approvedForPublication: false,
-    posedAndQCd: false
+    posedAndQCd: false,
+    updateNotes: '',
+    idAsset: 0
 };
 
 export const referenceModelSchema = yup.object().shape({
@@ -194,7 +207,8 @@ export const referenceModelSchema = yup.object().shape({
 export const sceneFieldsSchemaUpdate = yup.object().shape({
     systemCreated: yup.boolean().required(),
     referenceModels: yup.array().of(referenceModelSchema),
-    directory: yup.string()
+    directory: yup.string(),
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
 });
 
 export const sceneFieldsSchema = sceneFieldsSchemaUpdate.shape({
@@ -204,7 +218,9 @@ export const sceneFieldsSchema = sceneFieldsSchemaUpdate.shape({
 
 export const defaultOtherFields: OtherFields = {
     systemCreated: true,
-    identifiers: []
+    identifiers: [],
+    updateNotes: '',
+    idAsset: 0
 };
 
 export const otherFieldsSchemaUpdate = yup.object().shape({

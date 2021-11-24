@@ -60,6 +60,8 @@ const getSystemObjectDetails = gql`
                 idSystemObject
                 PublishedState
                 DateCreated
+                Comment
+                CommentLink
             }
             licenseInherited
             license {

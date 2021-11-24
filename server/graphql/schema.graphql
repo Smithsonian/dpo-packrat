@@ -555,6 +555,7 @@ input IngestPhotogrammetryInput {
   identifiers: [IngestIdentifierInput!]!
   sourceObjects: [RelatedObjectInput!]!
   derivedObjects: [RelatedObjectInput!]!
+  updateNotes: String
 }
 
 input RelatedObjectInput {
@@ -579,6 +580,7 @@ input IngestModelInput {
   identifiers: [IngestIdentifierInput!]!
   sourceObjects: [RelatedObjectInput!]!
   derivedObjects: [RelatedObjectInput!]!
+  updateNotes: String
 }
 
 input IngestSceneInput {
@@ -592,6 +594,7 @@ input IngestSceneInput {
   identifiers: [IngestIdentifierInput!]!
   sourceObjects: [RelatedObjectInput!]!
   derivedObjects: [RelatedObjectInput!]!
+  updateNotes: String
 }
 
 input IngestOtherInput {
@@ -599,6 +602,7 @@ input IngestOtherInput {
   idAsset: Int
   systemCreated: Boolean!
   identifiers: [IngestIdentifierInput!]!
+  updateNotes: String
 }
 
 input IngestSceneAttachmentInput {
@@ -1225,6 +1229,7 @@ type RollbackSystemObjectVersionResult {
 
 input RollbackSystemObjectVersionInput {
   idSystemObjectVersion: Int!
+  rollbackNotes: String!
 }
 
 type CreateSubjectWithIdentifiersResult {
@@ -1546,7 +1551,9 @@ type SystemObjectVersion {
   idSystemObject: Int!
   PublishedState: Int!
   DateCreated: DateTime!
+  Comment: String
   SystemObject: SystemObject
+  CommentLink: String
 }
 
 type Identifier {

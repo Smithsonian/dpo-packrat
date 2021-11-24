@@ -212,6 +212,7 @@ type RollbackSystemObjectVersionResult {
 
 input RollbackSystemObjectVersionInput {
     idSystemObjectVersion: Int!
+    rollbackNotes: String!
 }
 
 type CreateSubjectWithIdentifiersResult {

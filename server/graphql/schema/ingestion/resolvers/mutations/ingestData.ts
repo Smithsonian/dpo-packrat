@@ -564,7 +564,7 @@ class IngestDataWorker extends ResolverBase {
         }
 
         if (photogrammetry.idAssetVersion) {
-            this.assetVersionMap.set(photogrammetry.idAssetVersion, { SOOwner: captureDataDB, isAttachment: false, Comment: /* FIXME: add comment here */ null });
+            this.assetVersionMap.set(photogrammetry.idAssetVersion, { SOOwner: captureDataDB, isAttachment: false, Comment: photogrammetry.updateNotes ?? null });
             this.ingestPhotoMap.set(photogrammetry.idAssetVersion, photogrammetry);
         }
 
@@ -718,7 +718,7 @@ class IngestDataWorker extends ResolverBase {
 
         // LOG.info(`ingestData createModelObjects model=${JSON.stringify(model, H.Helpers.saferStringify)} vs asset=${JSON.stringify(asset, H.Helpers.saferStringify)}vs assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         if (model.idAssetVersion) {
-            this.assetVersionMap.set(model.idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: /* FIXME: add comment here */ null });
+            this.assetVersionMap.set(model.idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: model.updateNotes ?? null });
             const MI: ModelInfo = { model, idModel: modelDB.idModel, JCOutput };
             this.ingestModelMap.set(model.idAssetVersion, MI);
             LOG.info(`ingestData createModelObjects computed ${JSON.stringify(MI, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
@@ -777,7 +777,7 @@ class IngestDataWorker extends ResolverBase {
                 continue;
             }
             const modelDB: DBAPI.Model = JCOutput.modelConstellation.Model; // retrieve again, as we may have swapped the object above, in JCOutput.persist
-            this.assetVersionMap.set(idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: /* FIXME: add comment here */ null });
+            this.assetVersionMap.set(idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: AVInfo.Comment });
 
             const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(modelDB);
             const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
@@ -923,7 +923,7 @@ class IngestDataWorker extends ResolverBase {
         }
 
         if (scene.idAssetVersion)
-            this.assetVersionMap.set(scene.idAssetVersion, { SOOwner: sceneDB, isAttachment: false, Comment: /* FIXME: add comment here */ null });
+            this.assetVersionMap.set(scene.idAssetVersion, { SOOwner: sceneDB, isAttachment: false, Comment: scene.updateNotes ?? null });
         return { success, transformUpdated };
     }
 
@@ -964,7 +964,7 @@ class IngestDataWorker extends ResolverBase {
             if (!SOOwner)
                 SOOwner = asset;
 
-            this.assetVersionMap.set(other.idAssetVersion, { SOOwner, isAttachment: false, Comment: /* FIXME: add comment here */ null });
+            this.assetVersionMap.set(other.idAssetVersion, { SOOwner, isAttachment: false, Comment: other.updateNotes ?? null });
         }
         return true;
     }
@@ -1030,7 +1030,7 @@ class IngestDataWorker extends ResolverBase {
         if (!results.success)
             LOG.error('ingestData could not persist attachment metadata', LOG.LS.eGQL);
 
-        this.assetVersionMap.set(sceneAttachment.idAssetVersion, { SOOwner, isAttachment: true, Comment: /* FIXME: add comment here */ null }); // store attachment without unzipping
+        this.assetVersionMap.set(sceneAttachment.idAssetVersion, { SOOwner, isAttachment: true, Comment: null }); // store attachment without unzipping
         return true;
     }
 

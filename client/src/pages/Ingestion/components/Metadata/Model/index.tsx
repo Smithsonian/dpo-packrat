@@ -8,7 +8,7 @@
  */
 import { Box, makeStyles, Typography } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
@@ -87,7 +87,8 @@ function Model(props: ModelProps): React.ReactElement {
     const { metadataIndex, onPrevious, onClickRight, isLast, rightLoading, disableNavigation } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
-    const { model } = metadata;
+    const { model, file } = metadata;
+    const { idAsset } = file;
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
@@ -138,6 +139,11 @@ function Model(props: ModelProps): React.ReactElement {
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
+
+    useEffect(() => {
+        if (idAsset)
+            updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.model);
+    }, [metadataIndex, idAsset, updateMetadataField]);
 
     useEffect(() => {
         async function fetchModelConstellation() {
@@ -252,6 +258,12 @@ function Model(props: ModelProps): React.ReactElement {
     return (
         <React.Fragment>
             <Box className={classes.container}>
+                {idAsset && (
+                    <Box mb={2}>
+                        <TextArea label='Update Notes' value={model.updateNotes} name='updateNotes' onChange={setNameField} placeholder='Update notes...' />
+                    </Box>
+                )}
+
                 <Box mb={2}>
                     <AssetIdentifiers
                         systemCreated={model.systemCreated}

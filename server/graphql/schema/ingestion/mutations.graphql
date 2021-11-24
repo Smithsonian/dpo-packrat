@@ -54,6 +54,7 @@ input IngestPhotogrammetryInput {
     identifiers: [IngestIdentifierInput!]!
     sourceObjects: [RelatedObjectInput!]!
     derivedObjects: [RelatedObjectInput!]!
+    updateNotes: String
 }
 
 input RelatedObjectInput {
@@ -78,6 +79,7 @@ input IngestModelInput {
     identifiers: [IngestIdentifierInput!]!
     sourceObjects: [RelatedObjectInput!]!
     derivedObjects: [RelatedObjectInput!]!
+    updateNotes: String
 }
 
 input IngestSceneInput {
@@ -91,7 +93,7 @@ input IngestSceneInput {
     identifiers: [IngestIdentifierInput!]!
     sourceObjects: [RelatedObjectInput!]!
     derivedObjects: [RelatedObjectInput!]!
-    
+    updateNotes: String
 }
 
 input IngestOtherInput {
@@ -99,6 +101,7 @@ input IngestOtherInput {
     idAsset: Int
     systemCreated: Boolean!
     identifiers: [IngestIdentifierInput!]!
+    updateNotes: String
 }
 
 input IngestSceneAttachmentInput {
