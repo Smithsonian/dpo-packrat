@@ -47,6 +47,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
             toast.success(`Successfully rolled back to to ${idSystemObjectVersion}!`);
             setRollbackNotes('');
             setExpanded(-1);
+            history.push(`/repository/details/${idSystemObject}`);
         } else {
             toast.error(`Error when attempting to rollback to ${idSystemObjectVersion}. Reason: ${data.message}`);
         }
