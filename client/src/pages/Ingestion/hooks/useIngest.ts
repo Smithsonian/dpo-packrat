@@ -274,7 +274,7 @@ function useIngest(): UseIngest {
                 }
 
                 if (isOther) {
-                    const { identifiers, systemCreated } = other;
+                    const { identifiers, systemCreated, updateNotes } = other;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
                     const otherData: IngestOtherInput = {
@@ -287,6 +287,7 @@ function useIngest(): UseIngest {
                     if (idAsset) {
                         otherData.idAsset = idAsset;
                         otherData.systemCreated = false;
+                        otherData.updateNotes = updateNotes;
                     }
 
                     ingestOther.push(otherData);

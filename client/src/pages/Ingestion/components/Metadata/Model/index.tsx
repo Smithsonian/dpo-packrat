@@ -141,6 +141,11 @@ function Model(props: ModelProps): React.ReactElement {
     const idAssetVersion = urlParams.get('fileId');
 
     useEffect(() => {
+        if (idAsset)
+            updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.model);
+    }, [metadataIndex, idAsset, updateMetadataField]);
+
+    useEffect(() => {
         async function fetchModelConstellation() {
             const { data } = await apolloClient.query({
                 query: GetModelConstellationForAssetVersionDocument,
@@ -254,8 +259,7 @@ function Model(props: ModelProps): React.ReactElement {
         <React.Fragment>
             <Box className={classes.container}>
                 <Box mb={2}>
-                    {/* TODO: 454 make sure state is hooked up properly and that it's validated and it's conditional */}
-                    {idAsset && <TextArea label='Update Notes' value={model.updateNotes} name={'updateNotes'} onChange={setNameField} />}
+                    {idAsset && <TextArea label='Update Notes' value={model.updateNotes} name='updateNotes' onChange={setNameField} placeholder='Update notes...' />}
                 </Box>
 
                 <Box mb={2}>
