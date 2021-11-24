@@ -39,7 +39,8 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [modalOpen, setModalOpen] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
-    const { photogrammetry } = metadata;
+    const { photogrammetry, file } = metadata;
+    const { idAsset } = file;
     const errors = getFieldErrors(metadata);
 
     const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
@@ -144,7 +145,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         <Box className={classes.container}>
             <Box mb={2}>
                 {/* TODO: 454 make sure state is hooked up properly and that it's validated and it's conditional */}
-                <TextArea label='Update Notes' value={photogrammetry.updateNotes} name={'updateNotes'} onChange={setNameField} />
+                {idAsset && <TextArea label='Update Notes' value={photogrammetry.updateNotes} name={'updateNotes'} onChange={setNameField} />}
             </Box>
             <AssetIdentifiers
                 systemCreated={photogrammetry.systemCreated}

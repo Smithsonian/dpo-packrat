@@ -87,7 +87,8 @@ function Model(props: ModelProps): React.ReactElement {
     const { metadataIndex, onPrevious, onClickRight, isLast, rightLoading, disableNavigation } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
-    const { model } = metadata;
+    const { model, file } = metadata;
+    const { idAsset } = file;
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
@@ -254,7 +255,7 @@ function Model(props: ModelProps): React.ReactElement {
             <Box className={classes.container}>
                 <Box mb={2}>
                     {/* TODO: 454 make sure state is hooked up properly and that it's validated and it's conditional */}
-                    <TextArea label='Update Notes' value={model.updateNotes} name={'updateNotes'} onChange={setNameField} />
+                    {idAsset && <TextArea label='Update Notes' value={model.updateNotes} name={'updateNotes'} onChange={setNameField} />}
                 </Box>
 
                 <Box mb={2}>

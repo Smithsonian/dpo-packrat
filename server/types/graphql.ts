@@ -2018,8 +2018,8 @@ export type SystemObjectVersion = {
   idSystemObject: Scalars['Int'];
   PublishedState: Scalars['Int'];
   DateCreated: Scalars['DateTime'];
+  Comment?: Maybe<Scalars['String']>;
   SystemObject?: Maybe<SystemObject>;
-  Comment: Scalars['String'];
   CommentLink?: Maybe<Scalars['String']>;
 };
 
