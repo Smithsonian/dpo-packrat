@@ -64,11 +64,8 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     idAsset: 0
 };
 
-export type PhotogrammetrySchemaType = typeof photogrammetryFieldsSchema;
-
-export const photogrammetryFieldsSchema = yup.object().shape({
+export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
     systemCreated: yup.boolean().required(),
-    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     folders: yup.array().of(folderSchema),
     name: yup.string().required('Name cannot be empty'),
     // description: yup.string().required('Description cannot be empty'),
@@ -108,6 +105,10 @@ export const photogrammetryFieldsSchema = yup.object().shape({
     updateNotes: yup.string().when('idAsset', notesWhenUpdate)
 });
 
+export const photogrammetryFieldsSchema = photogrammetryFieldsSchemaUpdate.shape({
+    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
+});
+
 const uvMapSchema = yup.object().shape({
     id: yup.number().required(),
     name: yup.string().required(),
@@ -138,12 +139,9 @@ export const defaultModelFields: ModelFields = {
     idAsset: 0
 };
 
-export type ModelSchemaType = typeof modelFieldsSchema;
-
-export const modelFieldsSchema = yup.object().shape({
+export const modelFieldsSchemaUpdate = yup.object().shape({
     name: yup.string().min(1, 'Name must have at least one character').required('Name is required'),
     systemCreated: yup.boolean().required(),
-    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     uvMaps: yup.array().of(uvMapSchema),
     sourceObjects: yup.array().of(sourceObjectSchema),
     dateCaptured: yup.date().typeError('Date Captured is required'),
@@ -173,6 +171,10 @@ export const modelFieldsSchema = yup.object().shape({
     updateNotes: yup.string().when('idAsset', notesWhenUpdate)
 });
 
+export const modelFieldsSchema = modelFieldsSchemaUpdate.shape({
+    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
+});
+
 export const defaultSceneFields: SceneFields = {
     systemCreated: true,
     identifiers: [],
@@ -188,8 +190,6 @@ export const defaultSceneFields: SceneFields = {
     idAsset: 0
 };
 
-export type SceneSchemaType = typeof sceneFieldsSchema;
-
 export const referenceModelSchema = yup.object().shape({
     idSystemObject: yup.number().required(),
     name: yup.string().required(),
@@ -204,13 +204,17 @@ export const referenceModelSchema = yup.object().shape({
     action: yup.number().required()
 });
 
-export const sceneFieldsSchema = yup.object().shape({
+export const sceneFieldsSchemaUpdate = yup.object().shape({
     systemCreated: yup.boolean().required(),
-    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     referenceModels: yup.array().of(referenceModelSchema),
     directory: yup.string(),
     updateNotes: yup.string().when('idAsset', notesWhenUpdate)
 });
+
+export const sceneFieldsSchema = sceneFieldsSchemaUpdate.shape({
+    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
+});
+
 
 export const defaultOtherFields: OtherFields = {
     systemCreated: true,
@@ -219,10 +223,11 @@ export const defaultOtherFields: OtherFields = {
     idAsset: 0
 };
 
-export type OtherSchemaType = typeof otherFieldsSchema;
-
-export const otherFieldsSchema = yup.object().shape({
+export const otherFieldsSchemaUpdate = yup.object().shape({
     systemCreated: yup.boolean().required(),
+});
+
+export const otherFieldsSchema = otherFieldsSchemaUpdate.shape({
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation)
 });
 
@@ -254,4 +259,13 @@ export const sceneAttachmentFieldsSchema = yup.object().shape({
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation)
 });
 
-export type ValidateFieldsSchema = PhotogrammetrySchemaType | ModelSchemaType | SceneSchemaType | OtherSchemaType;
+export type PhotogrammetrySchemaType = typeof photogrammetryFieldsSchema;
+export type PhotogrammetrySchemaUpdateType = typeof photogrammetryFieldsSchemaUpdate;
+export type ModelSchemaType = typeof modelFieldsSchema;
+export type ModelSchemaUpdateType = typeof modelFieldsSchemaUpdate;
+export type SceneSchemaType = typeof sceneFieldsSchema;
+export type SceneSchemaUpdateType = typeof sceneFieldsSchemaUpdate;
+export type OtherSchemaType = typeof otherFieldsSchema;
+export type OtherSchemaUpdateType = typeof otherFieldsSchemaUpdate;
+
+export type ValidateFieldsSchema = PhotogrammetrySchemaType | PhotogrammetrySchemaUpdateType | ModelSchemaType | ModelSchemaUpdateType | SceneSchemaType | SceneSchemaUpdateType | OtherSchemaType | OtherSchemaUpdateType;

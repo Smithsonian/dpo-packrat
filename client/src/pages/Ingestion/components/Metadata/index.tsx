@@ -16,10 +16,14 @@ import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import {
     FileId,
-    modelFieldsSchema,
-    otherFieldsSchema,
     photogrammetryFieldsSchema,
+    photogrammetryFieldsSchemaUpdate,
+    modelFieldsSchema,
+    modelFieldsSchemaUpdate,
     sceneFieldsSchema,
+    sceneFieldsSchemaUpdate,
+    otherFieldsSchema,
+    otherFieldsSchemaUpdate,
     StateItem,
     StateMetadata,
     StateProject,
@@ -125,22 +129,30 @@ function Metadata(): React.ReactElement {
 
     const onNext = async (): Promise<void> => {
         if (assetType.photogrammetry) {
-            const hasError: boolean = validateFields(metadata.photogrammetry, photogrammetryFieldsSchema);
+            const hasError: boolean = metadata.file.idAsset
+                ? validateFields(metadata.photogrammetry, photogrammetryFieldsSchemaUpdate)
+                : validateFields(metadata.photogrammetry, photogrammetryFieldsSchema);
             if (hasError) return;
         }
 
         if (assetType.model) {
-            const hasError: boolean = validateFields(metadata.model, modelFieldsSchema);
+            const hasError: boolean = metadata.file.idAsset
+                ? validateFields(metadata.model, modelFieldsSchemaUpdate)
+                : validateFields(metadata.model, modelFieldsSchema);
             if (hasError) return;
         }
 
         if (assetType.scene) {
-            const hasError: boolean = validateFields(metadata.scene, sceneFieldsSchema);
+            const hasError: boolean = metadata.file.idAsset
+                ? validateFields(metadata.scene, sceneFieldsSchemaUpdate)
+                : validateFields(metadata.scene, sceneFieldsSchema);
             if (hasError) return;
         }
 
         if (assetType.other) {
-            const hasError: boolean = validateFields(metadata.other, otherFieldsSchema);
+            const hasError: boolean = metadata.file.idAsset
+                ? validateFields(metadata.other, otherFieldsSchemaUpdate)
+                : validateFields(metadata.other, otherFieldsSchema);
             if (hasError) return;
         }
 

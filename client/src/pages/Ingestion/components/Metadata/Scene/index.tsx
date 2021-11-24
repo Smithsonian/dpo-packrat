@@ -172,8 +172,8 @@ function Scene(props: SceneProps): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <Box mb={2}>
-                {idAsset && (
+            {idAsset && (
+                <Box mb={2}>
                     <TextArea
                         label='Update Notes'
                         value={scene.updateNotes}
@@ -181,8 +181,9 @@ function Scene(props: SceneProps): React.ReactElement {
                         onChange={setNameField}
                         placeholder='Update notes...'
                     />
-                )}
-            </Box>
+                </Box>
+            )}
+
             <AssetIdentifiers
                 systemCreated={scene.systemCreated}
                 identifiers={scene.identifiers}
