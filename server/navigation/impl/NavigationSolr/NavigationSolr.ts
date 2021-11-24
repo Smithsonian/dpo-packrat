@@ -446,15 +446,18 @@ export class NavigationSolr implements NAV.INavigation {
     }
 
     private computeMetadataFromNumber(value: number | undefined): string {
-        return (value == undefined) ? '' : value.toString();
+        return (value === undefined) ? '' : value.toString();
     }
 
     private computeMetadataFromBoolean(value: boolean | undefined): string {
-        return (value == undefined) ? '' : value ? 'true' : 'false';
+        return (value === undefined) ? '' : value ? 'true' : 'false';
     }
 
-    private computeMetadataFromDate(value: Date | undefined): string {
-        return (value == undefined) ? '' : value.toISOString().substring(0, 10);
+    private computeMetadataFromDate(value: string | undefined): string {
+        if (value === undefined)
+            return '';
+        const date: Date | null = H.Helpers.safeDate(value);
+        return (!date) ? '' : date.toISOString().substring(0, 10);
     }
 
     private computeMetadataFromStringArray(values: string[] | undefined): string {
