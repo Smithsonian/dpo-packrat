@@ -22,6 +22,9 @@ const rootURL: string = '/download';
  * /download/idSystemObject-ID/FOO/BAR:         Computes the asset  attached to system object with idSystemObject = ID, found at the path /FOO/BAR.
  * /download?idSystemObjectVersion=ID:          Computes the assets attached to system object version with idSystemObjectVersion = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
  *
+ * METADATA:
+ * /download?idMetadata=ID:                     Downloads the specified metadata, which may be text or an asset
+ *
  * REPORTS:
  * /download?idWorkflow=ID:                     Downloads the WorkflowReport(s) for the specified workflow ID
  * /download?idWorkflowReport=ID:               Downloads the specified WorkflowReport
@@ -87,6 +90,14 @@ class Downloader {
                     return await this.emitDownloadZip(DPResults.assetVersions);
                 return true;
 
+            case eDownloadMode.eMetadata:
+                if (DPResults.content)
+                    return await this.emitDownloadContent(DPResults.content, `MetadataContent.${this.downloaderParser.idMetadataV}.htm`);
+                else if (DPResults.assetVersion)
+                    return await this.emitDownload(DPResults.assetVersion);
+                else
+                    return this.sendError(404);
+
             case eDownloadMode.eWorkflow:
             case eDownloadMode.eWorkflowReport:
             case eDownloadMode.eWorkflowSet:
@@ -96,7 +107,7 @@ class Downloader {
                 return DPResults.jobRun ? await this.emitDownloadJobRun(DPResults.jobRun) : this.sendError(404);
 
             case eDownloadMode.eSystemObjectVersionComment:
-                return DPResults.comment ? await this.emitDownloadComment(DPResults.comment, this.downloaderParser.idSystemObjectVersionCommentV) : this.sendError(404);
+                return DPResults.content ? await this.emitDownloadContent(DPResults.content, `VersionComment.${this.downloaderParser.idSystemObjectVersionCommentV}.htm`) : this.sendError(404);
 
         }
         return this.sendError(404);
@@ -196,8 +207,8 @@ class Downloader {
         return true;
     }
 
-    private async emitDownloadComment(content: string | null, idSystemObjectVersion: number | null): Promise<boolean> {
-        this.response.setHeader('Content-disposition', `inline; filename=SystemObjectVersion.${idSystemObjectVersion ? idSystemObjectVersion : ''}.htm`);
+    private async emitDownloadContent(content: string | null, filename: string | null): Promise<boolean> {
+        this.response.setHeader('Content-disposition', `inline; filename=${filename ?? 'content.txt'}`);
         this.response.setHeader('Content-type', 'text/plain');
         this.response.write(content ?? '');
         this.response.end();
