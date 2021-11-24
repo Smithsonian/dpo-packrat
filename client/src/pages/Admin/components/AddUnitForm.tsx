@@ -116,7 +116,8 @@ function AddUnitForm(): React.ReactElement {
             }
             return isValidName && isValidAbbreviation;
         } catch (error) {
-            toast.warn(error);
+            if (error instanceof Error)
+                toast.warn(error);
         } finally {
             setIsUpdatingData(false);
         }
