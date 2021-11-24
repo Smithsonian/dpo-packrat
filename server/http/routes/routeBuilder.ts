@@ -39,8 +39,8 @@ export class RouteBuilder {
     }
 
     /** Downloads the comment for the system object version with idSystemObjectVersion */
-    static DownloadSystemObjectVersionComment(idSystemObjectVersion: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`/download?idSystemObjectVersionComment=${idSystemObjectVersion}`, eMode);
+    static DownloadMetadata(idMetadata: number, eMode?: eHrefMode | undefined): string {
+        return RouteBuilder.ApplyPrefix(`/download?idMetadata=${idMetadata}`, eMode);
     }
 
     /** Downloads the WorkflowReport(s) for the specified workflow ID */
@@ -61,6 +61,11 @@ export class RouteBuilder {
     /** Downloads the JobRun output for idJobRun with the specified ID */
     static DownloadJobRun(idJobRun: number, eMode?: eHrefMode | undefined): string {
         return RouteBuilder.ApplyPrefix(`/download?idJobRun=${idJobRun}`, eMode);
+    }
+
+    /** Downloads the comment for the system object version with idSystemObjectVersion */
+    static DownloadSystemObjectVersionComment(idSystemObjectVersion: number, eMode?: eHrefMode | undefined): string {
+        return RouteBuilder.ApplyPrefix(`/download?idSystemObjectVersionComment=${idSystemObjectVersion}`, eMode);
     }
 
     private static ApplyPrefix(path: string, eMode?: eHrefMode | undefined): string {
