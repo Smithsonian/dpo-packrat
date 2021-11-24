@@ -3,7 +3,7 @@
 import React from 'react';
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { /*TextArea,*/ InputField, FieldType, ReadOnlyRow } from '../../../../../components';
+import { InputField, FieldType, ReadOnlyRow } from '../../../../../components';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -46,7 +46,7 @@ interface SceneDataProps {
 }
 
 function SceneDataForm(props: SceneDataProps): React.ReactElement {
-    const { sceneData, setCheckboxField, setNameField, name, approvedForPublication, posedAndQCd, EdanUUID /*, idAssetVersion*/ } = props;
+    const { sceneData, setCheckboxField, setNameField, name, approvedForPublication, posedAndQCd, EdanUUID } = props;
     const classes = useStyles();
     if (!sceneData)
         return <Box></Box>;

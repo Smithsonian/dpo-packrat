@@ -258,9 +258,11 @@ function Model(props: ModelProps): React.ReactElement {
     return (
         <React.Fragment>
             <Box className={classes.container}>
-                <Box mb={2}>
-                    {idAsset && <TextArea label='Update Notes' value={model.updateNotes} name='updateNotes' onChange={setNameField} placeholder='Update notes...' />}
-                </Box>
+                {idAsset && (
+                    <Box mb={2}>
+                        <TextArea label='Update Notes' value={model.updateNotes} name='updateNotes' onChange={setNameField} placeholder='Update notes...' />
+                    </Box>
+                )}
 
                 <Box mb={2}>
                     <AssetIdentifiers

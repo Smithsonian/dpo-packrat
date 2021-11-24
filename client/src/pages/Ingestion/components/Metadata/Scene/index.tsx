@@ -218,7 +218,6 @@ function Scene(props: SceneProps): React.ReactElement {
                 approvedForPublication={scene.approvedForPublication}
                 posedAndQCd={scene.posedAndQCd}
                 EdanUUID={scene.EdanUUID}
-                idAssetVersion={Number(idAssetVersion)}
             />
 
             <ObjectSelectModal
