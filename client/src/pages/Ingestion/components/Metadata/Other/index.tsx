@@ -41,13 +41,15 @@ function Other(props: OtherProps): React.ReactElement {
     return (
         <Box mt='20px'>
             {idAsset && (
-                <TextArea
-                    label='Update Notes'
-                    value={other.updateNotes}
-                    name='updateNotes'
-                    onChange={setNameField}
-                    placeholder='Update notes...'
-                />
+                <Box mb={2}>
+                    <TextArea
+                        label='Update Notes'
+                        value={other.updateNotes}
+                        name='updateNotes'
+                        onChange={setNameField}
+                        placeholder='Update notes...'
+                    />
+                </Box>
             )}
             <AssetIdentifiers
                 systemCreated={other.systemCreated}
