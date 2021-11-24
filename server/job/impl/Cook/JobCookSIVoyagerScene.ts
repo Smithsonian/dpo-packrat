@@ -183,6 +183,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             allowZipCracking: false,
             idUserCreator,
             SOBased: scene,
+            Comment: 'Created by Cook si-voyager-scene'
         };
         let ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!ISR.success) {
@@ -284,6 +285,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                         allowZipCracking: false,
                         idUserCreator,
                         SOBased: model,
+                        Comment: 'Created by Cook si-voyager-scene'
                     };
                     ISR = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISIModel);
                     if (!ISR.success) {

@@ -1345,6 +1345,7 @@ describe('DB Creation Test Suite', () => {
                 idSystemObject: systemObjectScene.idSystemObject,
                 PublishedState: 0,
                 DateCreated: UTIL.nowCleansed(),
+                Comment: null,
                 idSystemObjectVersion: 0
             });
         }
@@ -2939,7 +2940,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch SystemObjectVersion: SystemObjectVersion.clone latest', async () => {
         let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
         if (systemObjectScene) {
-            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, null);
+            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, null, null);
             if (systemObjectVersionFetch && systemObjectVersion)
                 expect(systemObjectVersionFetch.idSystemObjectVersion).toBeGreaterThan(systemObjectVersion.idSystemObjectVersion);
         }
@@ -2949,7 +2950,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch SystemObjectVersion: SystemObjectVersion.clone specific', async () => {
         let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
         if (systemObjectScene && systemObjectVersion && assetVersion) {
-            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, systemObjectVersion.idSystemObjectVersion, new Map<number, number>([[assetVersion.idAsset, assetVersion.idAssetVersion]]));
+            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, systemObjectVersion.idSystemObjectVersion, 'Update Comment', new Map<number, number>([[assetVersion.idAsset, assetVersion.idAssetVersion]]));
             if (systemObjectVersionFetch && systemObjectVersion)
                 expect(systemObjectVersionFetch.idSystemObjectVersion).toBeGreaterThan(systemObjectVersion.idSystemObjectVersion);
         }
@@ -7737,7 +7738,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObjectVersion.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersion.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(0)).toBeNull();
-        expect(await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(0, null, undefined)).toBeNull();
+        expect(await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(0, null, null, undefined)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromSystemObjectVersion(0)).toBeNull();
         expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromAssetVersion(0)).toBeNull();
