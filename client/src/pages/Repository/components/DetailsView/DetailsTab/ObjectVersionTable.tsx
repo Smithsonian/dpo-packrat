@@ -42,15 +42,11 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
         if (data.rollbackSystemObjectVersion.success) {
             toast.success(`Successfully rolled back to to ${idSystemObjectVersion}!`);
             setRollbackNotes('');
+            setExpanded(-1);
         } else {
             toast.error(`Error when attempting to rollback to ${idSystemObjectVersion}. Reason: ${data.message}`);
         }
     };
-
-    /*
-        TODO:
-            style
-    */
 
     let redirect = () => {};
     if (data && data.getAssetDetailsForSystemObject?.assetDetailRows?.[0]) {
@@ -72,7 +68,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
 
     return (
         <Box>
-            <table className={classes.container}>
+            <table className={classes.container} style={{ tableLayout: 'fixed' }}>
                 <thead>
                     <tr>
                         {headers.map((header, index: number) => (
@@ -92,20 +88,21 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                     {objectVersions.map((version, index) =>  {
                         const rollback = () => onRollback(version.idSystemObjectVersion);
                         const cancel = () => onExpand(index);
-                        const notes = (
-                            <Tooltip arrow title={<ToolTip text={truncateWithEllipses(version.Comment, 1000)} />}>
-                                {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'center', color: 'black' }} target='_blank' rel='noreferrer noopener'>
-                                    <Typography>
+                        const comment =
+                            version.Comment ? (
+                                <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(version.Comment, 1000)} /> }>
+                                    {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'center', color: 'black' }} target='_blank' rel='noreferrer noopener'>
+                                        <Typography>
+                                            {truncateWithEllipses(version.Comment, 30)}
+                                        </Typography>
+                                    </a> : <Typography>
                                         {truncateWithEllipses(version.Comment, 30)}
-                                    </Typography>
-                                </a> : <Typography>
-                                    {truncateWithEllipses(version.Comment, 30)}
-                                </Typography>}
-                            </Tooltip>
-                        );
+                                    </Typography>}
+                                </Tooltip>
+                            ) : null;
 
                         return (
-                            <>
+                            <React.Fragment key={index}>
                                 <tr key={index}>
                                     <td align='center'>
                                         <a
@@ -133,23 +130,25 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                         <Typography>{extractISOMonthDateYear(version.DateCreated)}</Typography>
                                     </td>
                                     <td>
-                                        {notes}
+                                        {comment}
                                     </td>
                                 </tr>
                                 {
                                     expanded === index ? (
                                         <tr>
-                                            <td colSpan={3}>
+                                            <td colSpan={4} align='center'>
                                                 <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} height='5vh' placeholder='Please provide rollback notes...' />
                                             </td>
-                                            <td>
-                                                <Button onClick={rollback}>Rollback</Button>
-                                                <Button onClick={cancel}>Cancel</Button>
+                                            <td colSpan={1} align='left'>
+                                                <Box width='100%'>
+                                                    <Button onClick={rollback} className={classes.btn} style={{ padding: 2, marginRight: '2px' }} variant='contained' color='primary'>Rollback</Button>
+                                                    <Button onClick={cancel} className={classes.btn} style={{ padding: 2 }} variant='contained' color='primary'>Cancel</Button>
+                                                </Box>
                                             </td>
                                         </tr>
                                     ) : null
                                 }
-                            </>
+                            </React.Fragment>
                         );
                     })}
                     <tr>

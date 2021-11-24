@@ -1551,8 +1551,8 @@ type SystemObjectVersion {
   idSystemObject: Int!
   PublishedState: Int!
   DateCreated: DateTime!
+  Comment: String
   SystemObject: SystemObject
-  Comment: String!
   CommentLink: String
 }
 

@@ -34,7 +34,8 @@ function Scene(props: SceneProps): React.ReactElement {
     const { metadataIndex, setInvalidMetadataStep } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
-    const { scene } = metadata;
+    const { scene, file } = metadata;
+    const { idAsset } = file;
     const updateMetadataField = useMetadataStore(state => state.updateMetadataField);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
@@ -168,7 +169,7 @@ function Scene(props: SceneProps): React.ReactElement {
         <Box className={classes.container}>
             <Box mb={2}>
                 {/* TODO: 454 make sure state is hooked up properly and that it's validated and it's conditional */}
-                <TextArea label='Update Notes' value={scene.updateNotes} name={'updateNotes'} onChange={setNameField} />
+                {idAsset && <TextArea label='Update Notes' value={scene.updateNotes} name={'updateNotes'} onChange={setNameField} />}
             </Box>
             <AssetIdentifiers
                 systemCreated={scene.systemCreated}
