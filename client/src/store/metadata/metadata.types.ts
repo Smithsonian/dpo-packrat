@@ -89,6 +89,7 @@ export type PhotogrammetryFields = {
     cameraSettingUniform: boolean;
     directory: string;
     idAsset?: number;
+    updateNotes?: string;
 };
 
 export type ModelFields = {
@@ -105,6 +106,7 @@ export type ModelFields = {
     modelFileType: number | null;
     directory: string;
     idAsset?: number;
+    updateNotes?: string;
 };
 
 export type SceneFields = {
@@ -119,12 +121,14 @@ export type SceneFields = {
     approvedForPublication: boolean;
     posedAndQCd: boolean;
     idAsset?: number;
+    updateNotes?: string;
 };
 
 export type OtherFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     idAsset?: number;
+    updateNotes?: string;
 };
 
 export type SceneAttachmentFields = {

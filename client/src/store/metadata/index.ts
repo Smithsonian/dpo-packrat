@@ -381,7 +381,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         const { metadatas } = get();
 
         if (!(name in metadatas[metadataIndex][metadataType])) {
-            throw new Error(`Field ${name} doesn't exist on a ${metadataType} asset`);
+            toast.error(`Field ${name} doesn't exist on a ${metadataType} asset`);
+            return;
         }
 
         const updatedMetadatas = lodash.map(metadatas, (metadata: StateMetadata, index: number) => {

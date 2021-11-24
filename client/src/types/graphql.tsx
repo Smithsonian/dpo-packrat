@@ -961,6 +961,7 @@ export type IngestPhotogrammetryInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type RelatedObjectInput = {
@@ -985,6 +986,7 @@ export type IngestModelInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type IngestSceneInput = {
@@ -998,6 +1000,7 @@ export type IngestSceneInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type IngestOtherInput = {
@@ -1005,6 +1008,7 @@ export type IngestOtherInput = {
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type IngestSceneAttachmentInput = {
@@ -1669,6 +1673,7 @@ export type RollbackSystemObjectVersionResult = {
 
 export type RollbackSystemObjectVersionInput = {
   idSystemObjectVersion: Scalars['Int'];
+  rollbackNotes: Scalars['String'];
 };
 
 export type CreateSubjectWithIdentifiersResult = {
@@ -2016,7 +2021,9 @@ export type SystemObjectVersion = {
   idSystemObject: Scalars['Int'];
   PublishedState: Scalars['Int'];
   DateCreated: Scalars['DateTime'];
+  Comment?: Maybe<Scalars['String']>;
   SystemObject?: Maybe<SystemObject>;
+  CommentLink?: Maybe<Scalars['String']>;
 };
 
 export type Identifier = {
@@ -3645,7 +3652,7 @@ export type GetSystemObjectDetailsQuery = (
       & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
     )>, objectVersions: Array<(
       { __typename?: 'SystemObjectVersion' }
-      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated'>
+      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated' | 'Comment' | 'CommentLink'>
     )>, license?: Maybe<(
       { __typename?: 'License' }
       & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
@@ -6462,6 +6469,8 @@ export const GetSystemObjectDetailsDocument = gql`
       idSystemObject
       PublishedState
       DateCreated
+      Comment
+      CommentLink
     }
     licenseInherited
     license {

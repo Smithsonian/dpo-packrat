@@ -11,10 +11,10 @@ const useStyles = makeStyles(() => ({
         '& > *': {
             width: 'fit-content',
             minWidth: '300px',
-            height: '20px',
             '&:not(:last-child)': {
                 borderBottom: '1px solid #D8E5EE'
-            }
+            },
+            height: '20px'
         }
     }
 }));
@@ -40,11 +40,12 @@ interface SceneDataProps {
     EdanUUID: string;
     approvedForPublication: boolean;
     posedAndQCd: boolean;
+    idAssetVersion?: number;
     setNameField: ({ target }: { target: EventTarget }) => void;
     setCheckboxField: ({ target }: { target: EventTarget }) => void;
 }
 
-function SceneDataGrid(props: SceneDataProps): React.ReactElement {
+function SceneDataForm(props: SceneDataProps): React.ReactElement {
     const { sceneData, setCheckboxField, setNameField, name, approvedForPublication, posedAndQCd, EdanUUID } = props;
     const classes = useStyles();
     if (!sceneData)
@@ -77,4 +78,4 @@ function SceneDataGrid(props: SceneDataProps): React.ReactElement {
     );
 }
 
-export default SceneDataGrid;
+export default SceneDataForm;
