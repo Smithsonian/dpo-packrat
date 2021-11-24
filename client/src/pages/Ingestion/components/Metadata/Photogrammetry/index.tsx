@@ -7,7 +7,7 @@
  */
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, TextArea } from '../../../../../components';
 import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore, useRepositoryStore, useSubjectStore, StateRelatedObject } from '../../../../../store';
 import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
@@ -42,6 +42,11 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { photogrammetry, file } = metadata;
     const { idAsset } = file;
     const errors = getFieldErrors(metadata);
+
+    useEffect(() => {
+        if (idAsset)
+            updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.photogrammetry);
+    }, [metadataIndex, idAsset, updateMetadataField]);
 
     const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
     const subjectIdSystemObject = useGetSubjectQuery({
@@ -144,8 +149,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box mb={2}>
-                {/* TODO: 454 make sure state is hooked up properly and that it's validated and it's conditional */}
-                {idAsset && <TextArea label='Update Notes' value={photogrammetry.updateNotes} name={'updateNotes'} onChange={setNameField} />}
+                {idAsset && <TextArea label='Update Notes' value={photogrammetry.updateNotes} name='updateNotes' onChange={setNameField} placeholder='Update notes...' />}
             </Box>
             <AssetIdentifiers
                 systemCreated={photogrammetry.systemCreated}

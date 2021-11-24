@@ -38,6 +38,10 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     }
 
     const onRollback = async (idSystemObjectVersion: number) => {
+        if (rollbackNotes.length < 1) {
+            toast.error('Please provide rollback notes');
+            return;
+        }
         const { data } = await rollbackSystemObjectVersion(idSystemObjectVersion, rollbackNotes);
         if (data.rollbackSystemObjectVersion.success) {
             toast.success(`Successfully rolled back to to ${idSystemObjectVersion}!`);

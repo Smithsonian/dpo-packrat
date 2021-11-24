@@ -85,6 +85,11 @@ function Scene(props: SceneProps): React.ReactElement {
     const idAssetVersion = urlParams.get('fileId');
 
     useEffect(() => {
+        if (idAsset)
+            updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.scene);
+    }, [metadataIndex, idAsset, updateMetadataField]);
+
+    useEffect(() => {
         async function fetchSceneConstellation() {
             const { data } = await apolloClient.query({
                 query: GetSceneForAssetVersionDocument,
@@ -168,8 +173,15 @@ function Scene(props: SceneProps): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box mb={2}>
-                {/* TODO: 454 make sure state is hooked up properly and that it's validated and it's conditional */}
-                {idAsset && <TextArea label='Update Notes' value={scene.updateNotes} name={'updateNotes'} onChange={setNameField} />}
+                {idAsset && (
+                    <TextArea
+                        label='Update Notes'
+                        value={scene.updateNotes}
+                        name='updateNotes'
+                        onChange={setNameField}
+                        placeholder='Update notes...'
+                    />
+                )}
             </Box>
             <AssetIdentifiers
                 systemCreated={scene.systemCreated}

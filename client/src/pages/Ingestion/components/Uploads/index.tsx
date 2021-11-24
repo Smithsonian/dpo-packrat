@@ -89,7 +89,6 @@ function Uploads(): React.ReactElement {
     ]);
     const { ingestionStart, ingestionComplete } = useIngest();
     const assetTypes = getEntries(eVocabularySetID.eAssetAssetType);
-    console.log('assetTypes', assetTypes);
     let idVAssetType: number;
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -141,7 +140,6 @@ function Uploads(): React.ReactElement {
             });
 
             // Change this line to read the file types
-            console.log('queuedUPloadedFiles', queuedUploadedFiles);
             if (queuedUploadedFiles.every(file => !metadataStepRequiredAssetTypesSet.has(file.type))) {
                 const { success, message } = await ingestionStart();
                 if (success) {

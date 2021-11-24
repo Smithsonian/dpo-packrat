@@ -128,6 +128,7 @@ export type OtherFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     idAsset?: number;
+    updateNotes?: string;
 };
 
 export type SceneAttachmentFields = {

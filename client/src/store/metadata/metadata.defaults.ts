@@ -34,6 +34,11 @@ const identifiersWhenValidation = {
     then: yup.array().of(identifierSchema).test(identifierValidation)
 };
 
+const notesWhenUpdate = {
+    is: value => value > 0,
+    then: yup.string().required()
+};
+
 export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     systemCreated: true,
     identifiers: [],
@@ -55,7 +60,8 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     clusterGeometryFieldId: null,
     cameraSettingUniform: false,
     directory: '',
-    updateNotes: ''
+    updateNotes: '',
+    idAsset: 0
 };
 
 export type PhotogrammetrySchemaType = typeof photogrammetryFieldsSchema;
@@ -98,7 +104,8 @@ export const photogrammetryFieldsSchema = yup.object().shape({
         .positive('Cluster Geometry Field ID must be a positive integer')
         .max(2147483647, 'Cluster Geometry Field ID is too large'),
     cameraSettingUniform: yup.boolean().required(),
-    directory: yup.string()
+    directory: yup.string(),
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
 });
 
 const uvMapSchema = yup.object().shape({
@@ -127,7 +134,8 @@ export const defaultModelFields: ModelFields = {
     purpose: null,
     modelFileType: null,
     directory: '',
-    updateNotes: ''
+    updateNotes: '',
+    idAsset: 0
 };
 
 export type ModelSchemaType = typeof modelFieldsSchema;
@@ -161,7 +169,8 @@ export const modelFieldsSchema = yup.object().shape({
     boundingBoxP2X: yup.number().nullable(true),
     boundingBoxP2Y: yup.number().nullable(true),
     boundingBoxP2Z: yup.number().nullable(true),
-    directory: yup.string()
+    directory: yup.string(),
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
 });
 
 export const defaultSceneFields: SceneFields = {
@@ -175,7 +184,8 @@ export const defaultSceneFields: SceneFields = {
     EdanUUID: '',
     approvedForPublication: false,
     posedAndQCd: false,
-    updateNotes: ''
+    updateNotes: '',
+    idAsset: 0
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;
@@ -198,12 +208,15 @@ export const sceneFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     referenceModels: yup.array().of(referenceModelSchema),
-    directory: yup.string()
+    directory: yup.string(),
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
 });
 
 export const defaultOtherFields: OtherFields = {
     systemCreated: true,
-    identifiers: []
+    identifiers: [],
+    updateNotes: '',
+    idAsset: 0
 };
 
 export type OtherSchemaType = typeof otherFieldsSchema;
