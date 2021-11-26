@@ -6,7 +6,6 @@
 
 import * as React from 'react';
 import useScript from '../../../hooks/useScript';
-import '../../../../../global/voyager-story.min.css';
 import '../../../../../global/quill.snow.css';
 
 declare global {
@@ -27,6 +26,10 @@ type VoyagerStoryProps = {
 
 function VoyagerStory(props: VoyagerStoryProps): React.ReactElement {
     const { root, document, width, height, mode } = props;
+
+    React.useEffect(() => {
+        require('../../../../../global/voyager-story.min.css');
+    }, []);
 
     useScript('https://code.jquery.com/pep/0.4.3/pep.min.js');
     useScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/104/three.min.js');
