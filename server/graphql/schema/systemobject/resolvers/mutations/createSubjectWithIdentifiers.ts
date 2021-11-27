@@ -1,25 +1,30 @@
 import { CreateSubjectWithIdentifiersResult, MutationCreateSubjectWithIdentifiersArgs } from '../../../../../types/graphql';
-import { Parent } from '../../../../../types/resolvers';
+import { Parent, Context } from '../../../../../types/resolvers';
+import { handleMetadata } from './updateObjectDetails';
 import * as DBAPI from '../../../../../db';
 import * as COL from '../../../../../collections/interface';
-import { VocabularyCache, eVocabularySetID } from '../../../../../cache';
+import * as LOG from '../../../../../utils/logger';
+import * as H from '../../../../../utils/helpers';
+import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 
-export default async function createSubjectWithIdentifiers(_: Parent, args: MutationCreateSubjectWithIdentifiersArgs): Promise<CreateSubjectWithIdentifiersResult> {
+export default async function createSubjectWithIdentifiers(_: Parent, args: MutationCreateSubjectWithIdentifiersArgs, context: Context): Promise<CreateSubjectWithIdentifiersResult> {
     const {
-        input: { systemCreated, identifiers, subject }
+        input: { systemCreated, identifiers, subject, metadata }
     } = args;
+    const { user } = context;
     const { idUnit, Name, idGeoLocation } = subject;
-    const ICOL: COL.ICollection = COL.CollectionFactory.getInstance();
+
+    const identifierTypeARK: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eIdentifierIdentifierTypeARK);
+    if (!identifierTypeARK)
+        return { success: false, message: 'Unable to lookup ARK Vocabulary' };
+    const idIentifierType = identifierTypeARK.idVocabulary;
 
     const identifiersList: DBAPI.Identifier[] = [];
-
-    const ARKId: string = ICOL.generateArk(null, false);
-    const identifierTypeARK = await VocabularyCache.vocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'ARK');
-    const idIentifierType = identifierTypeARK?.idVocabulary || 79;
-
     let idIdentifierPreferred: null | number = null;
 
     if (systemCreated) {
+        const ICOL: COL.ICollection = COL.CollectionFactory.getInstance();
+        const ARKId: string = ICOL.generateArk(null, false);
         const Identifier = new DBAPI.Identifier({
             idIdentifier: 0,
             idVIdentifierType: idIentifierType,
@@ -28,10 +33,11 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
         });
 
         const successfulIdentifierCreation = await Identifier.create();
-        if (successfulIdentifierCreation) idIdentifierPreferred = Identifier.idIdentifier;
+        if (successfulIdentifierCreation)
+            idIdentifierPreferred = Identifier.idIdentifier;
     }
 
-    for await (const identifier of identifiers) {
+    for (const identifier of identifiers) {
         const Identifier = new DBAPI.Identifier({
             idIdentifier: 0,
             idVIdentifierType: identifier.identifierType,
@@ -42,22 +48,19 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
         const successfulIdentifierCreation = await Identifier.create();
         if (successfulIdentifierCreation) {
             identifiersList.push(Identifier);
-
-            // TODO: Do we want system created to always be preferred?
-            // If so, uncomment the next line and comment the line after
-            // if (identifier.preferred && !idIdentifierPreferred) {
-            if (identifier.preferred) idIdentifierPreferred = Identifier.idIdentifier;
+            if (identifier.preferred)
+                idIdentifierPreferred = Identifier.idIdentifier;
         }
     }
 
     if (idIdentifierPreferred === null) {
         const preferredIdentifier = identifiersList.find(identifier => identifier.idVIdentifierType === idIentifierType);
-        if (preferredIdentifier?.idIdentifier) idIdentifierPreferred = preferredIdentifier.idIdentifier;
+        if (preferredIdentifier?.idIdentifier)
+            idIdentifierPreferred = preferredIdentifier.idIdentifier;
     }
 
-    if (idIdentifierPreferred === null) {
-        return { success: false, message: 'Error when setting preferred identifier for subject' };
-    }
+    if (idIdentifierPreferred === null)
+        return sendResult(false, 'Error setting preferred identifier for subject');
 
     const Subject = new DBAPI.Subject({
         idSubject: 0,
@@ -67,17 +70,28 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
         idAssetThumbnail: null,
         idIdentifierPreferred
     });
-    const successfulSubjectCreation = await Subject.create();
+    if (!await Subject.create())
+        return sendResult(false, 'Error creating subject');
 
-    if (successfulSubjectCreation) {
-        const SO = await Subject.fetchSystemObject();
-        for await (const identifier of identifiersList) {
-            if (SO?.idSystemObject) identifier.idSystemObject = SO.idSystemObject;
-            await identifier.update();
-        }
-    } else {
-        return { success: false, message: 'Error when creating subject' };
+    const SO = await Subject.fetchSystemObject();
+    if (!SO)
+        return sendResult(false, 'Unable to compute system object; subject only partially created');
+
+    for (const identifier of identifiersList) {
+        if (SO.idSystemObject)
+            identifier.idSystemObject = SO.idSystemObject;
+        await identifier.update();
     }
 
-    return { success: true, message: '' };
+    const metadataRes: H.IOResults = await handleMetadata(SO.idSystemObject, metadata, user);
+    if (!metadataRes.success)
+        return sendResult(false, metadataRes.error);
+
+    return sendResult(true);
+}
+
+function sendResult(success: boolean, message?: string): CreateSubjectWithIdentifiersResult {
+    if (!success)
+        LOG.error(`createSubjectWithIdentifier: ${message}`, LOG.LS.eGQL);
+    return { success, message: message ?? '' };
 }

@@ -118,6 +118,7 @@ type Mutation {
   createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
   deleteIdentifier(input: DeleteIdentifierInput!): DeleteIdentifierResult!
+  deleteMetadata(input: DeleteMetadataInput!): DeleteMetadataResult!
   deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
@@ -1138,6 +1139,12 @@ input StakeholderDetailFieldsInput {
   PhoneNumberOffice: String
 }
 
+input MetadataInput {
+  idMetadata: Int
+  Name: String!
+  Value: String!
+}
+
 input UpdateObjectDetailsDataInput {
   Name: String
   Retired: Boolean
@@ -1154,6 +1161,7 @@ input UpdateObjectDetailsDataInput {
   AssetVersion: AssetVersionDetailFieldsInput
   Actor: ActorDetailFieldsInput
   Stakeholder: StakeholderDetailFieldsInput
+  Metadata: [MetadataInput!]
   Identifiers: [UpdateIdentifier!]
 }
 
@@ -1222,6 +1230,14 @@ input DeleteIdentifierInput {
   idIdentifier: Int!
 }
 
+type DeleteMetadataResult {
+  success: Boolean!
+}
+
+input DeleteMetadataInput {
+  idMetadata: Int!
+}
+
 type RollbackSystemObjectVersionResult {
   success: Boolean!
   message: String!
@@ -1241,6 +1257,7 @@ input CreateSubjectWithIdentifiersInput {
   identifiers: [CreateIdentifierInput!]!
   subject: CreateSubjectInput!
   systemCreated: Boolean!
+  metadata: [MetadataInput!]
 }
 
 input CreateIdentifierInput {
@@ -1568,14 +1585,16 @@ type Identifier {
 type Metadata {
   idMetadata: Int!
   Name: String!
-  idSystemObject: Int
+  ValueShort: String
+  ValueExtended: String
+  idAssetVersionValue: Int
   idUser: Int
   idVMetadataSource: Int
-  idAssetVersionValue: Int
-  ValueExtended: String
-  ValueShort: String
+  idSystemObject: Int
+  idSystemObjectParent: Int
   AssetVersionValue: AssetVersion
   SystemObject: SystemObject
+  SystemObjectParent: SystemObject
   User: User
   VMetadataSource: Vocabulary
 }
