@@ -97,10 +97,10 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                             version.Comment ? (
                                 <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(version.Comment, 1000)} /> }>
                                     {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'center', color: 'black' }} target='_blank' rel='noreferrer noopener'>
-                                        <Typography>
+                                        <Typography className={clsx(classes.value)}>
                                             {truncateWithEllipses(version.Comment, 30)}
                                         </Typography>
-                                    </a> : <Typography>
+                                    </a> : <Typography className={clsx(classes.value)}>
                                         {truncateWithEllipses(version.Comment, 30)}
                                     </Typography>}
                                 </Tooltip>
@@ -125,6 +125,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                             <Typography
                                                 style={{ width: 'fit-content', whiteSpace: 'nowrap', color: 'rgb(0,121,196)', cursor: 'pointer' }}
                                                 onClick={() => onExpand(index)}
+                                                className={clsx(classes.value)}
                                             >
                                                 Rollback
                                                 {expanded === index ? <MdExpandLess /> : <MdExpandMore />}
@@ -132,7 +133,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                         )}
                                     </td>
                                     <td align='center'>
-                                        <Typography>{extractISOMonthDateYear(version.DateCreated)}</Typography>
+                                        <Typography className={clsx(classes.value)}>{extractISOMonthDateYear(version.DateCreated)}</Typography>
                                     </td>
                                     <td>
                                         {comment}
@@ -142,12 +143,12 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                     expanded === index ? (
                                         <tr>
                                             <td colSpan={4} align='center'>
-                                                <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} height='5vh' placeholder='Please provide rollback notes...' />
+                                                <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} placeholder='Please provide rollback notes...' rows='4' />
                                             </td>
                                             <td colSpan={1} align='left'>
-                                                <Box width='100%'>
-                                                    <Button onClick={rollback} className={classes.btn} style={{ padding: 2, marginRight: '2px' }} variant='contained' color='primary'>Rollback</Button>
-                                                    <Button onClick={cancel} className={classes.btn} style={{ padding: 2 }} variant='contained' color='primary'>Cancel</Button>
+                                                <Box>
+                                                    <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5, marginRight: '4px' }} variant='contained' color='primary'>Rollback</Button>
+                                                    <Button onClick={cancel} className={classes.btn} style={{ padding: 0 }} variant='contained' color='primary'>Cancel</Button>
                                                 </Box>
                                             </td>
                                         </tr>

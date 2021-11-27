@@ -25,7 +25,9 @@ function LoadingButton(props: LoadingButtonProps): React.ReactElement {
     const classes = useStyles();
 
     return (
-        <Button className={clsx(classes.button, className)} variant='contained' color='primary' {...rest}>
+        <Button className={clsx(classes.button, className)} variant='contained' color='primary' disabled={loading}
+            {...rest}
+        >
             {!loading && props.children}
             {loading && <Progress color='inherit' size={loaderSize || 20} />}
         </Button>
