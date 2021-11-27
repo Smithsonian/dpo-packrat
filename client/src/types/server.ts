@@ -27,6 +27,7 @@ export enum eVocabularySetID {
     eEdan3DResourceAttributeFileType,
     eEdan3DResourceType,
     eEdan3DResourceCategory,
+    eEdanMDMFields,
     eNone = -1
 }
 
@@ -135,6 +136,24 @@ export enum eVocabularyID {
     eEdan3DResourceCategoryLowresolution,
     eEdan3DResourceCategoryWatertight,
     eEdan3DResourceCategoryiOSARmodel,
+    eEdanMDMFieldsLabel,
+    eEdanMDMFieldsTitle,
+    eEdanMDMFieldsRecordID,
+    eEdanMDMFieldsUnit,
+    eEdanMDMFieldsLicense,
+    eEdanMDMFieldsLicenseText,
+    eEdanMDMFieldsObjectType,
+    eEdanMDMFieldsDate,
+    eEdanMDMFieldsPlace,
+    eEdanMDMFieldsTopic,
+    eEdanMDMFieldsIdentifierFT,
+    eEdanMDMFieldsDataSourceFT,
+    eEdanMDMFieldsDateFT,
+    eEdanMDMFieldsNameFT,
+    eEdanMDMFieldsObjectRightsFT,
+    eEdanMDMFieldsPlaceFT,
+    eEdanMDMFieldsTaxonomicNameFT,
+    eEdanMDMFieldsNotesFT,
     eNone = -1
 }
 
