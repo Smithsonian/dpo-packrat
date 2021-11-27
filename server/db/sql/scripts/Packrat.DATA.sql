@@ -22,11 +22,12 @@ INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (20, 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (21, 'Job.JobType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (22, 'Workflow.Type', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (23, 'Workflow.Event', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (24, 'Edan3DResource.AttributeUnits', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (25, 'Edan3DResource.AttributeModelFileType', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (26, 'Edan3DResource.AttributeFileType', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (27, 'Edan3DResource.Type', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (28, 'Edan3DResource.Category', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (24, 'Edan.3DResourceAttributeUnits', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (25, 'Edan.3DResourceAttributeModelFileType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (26, 'Edan.3DResourceAttributeFileType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (27, 'Edan.3DResourceType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (28, 'Edan.3DResourceCategory', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (29, 'Edan.MDMFields', 1);
 
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 1, 'Photogrammetry');
@@ -175,6 +176,24 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (28, 2, 'Medium
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (28, 3, 'Low resolution');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (28, 4, 'Watertight');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (28, 5, 'iOS AR model');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 1, 'Label');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 2, 'Title');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 3, 'Record ID');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 4, 'Unit');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 5, 'License');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 6, 'License Text');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 7, 'Object Type');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 8, 'Date');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 9, 'Place');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 10, 'Topic');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 11, 'Identifier (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 12, 'Data Source (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 13, 'Date (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 14, 'Name (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 15, 'Object Rights (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 16, 'Place (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 17, 'Taxonomic Name (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 18, 'Notes (FT)');
 
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary 
 WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
