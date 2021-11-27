@@ -114,7 +114,8 @@ function AddProjectForm(): React.ReactElement {
             }
             return isValidName;
         } catch (error) {
-            toast.warn(error);
+            if (error instanceof Error)
+                toast.warn(error);
         } finally {
             setIsUpdatingData(false);
         }

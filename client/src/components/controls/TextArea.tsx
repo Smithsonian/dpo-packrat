@@ -12,7 +12,7 @@ import FieldType from '../shared/FieldType';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     description: {
-        height: ({ height }: TextAreaProps) => height ?? '10vh',
+        height: ({ height, rows }: TextAreaProps) => rows ? 'undefined' : height,
         width: '80%',
         padding: 10,
         resize: 'none',
@@ -21,7 +21,8 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         backgroundColor: palette.background.paper,
         borderRadius: 5,
         fontWeight: typography.fontWeightRegular,
-        fontFamily: typography.fontFamily
+        fontFamily: typography.fontFamily,
+        fontSize: '0.8em'
     }
 }));
 
@@ -33,10 +34,11 @@ interface TextAreaProps extends ViewableProps {
     error?: boolean;
     placeholder?: string;
     height?: string;
+    rows?: string;
 }
 
 function TextArea(props: TextAreaProps): React.ReactElement {
-    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, placeholder } = props;
+    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, placeholder, rows } = props;
     const classes = useStyles(props);
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
@@ -59,6 +61,7 @@ function TextArea(props: TextAreaProps): React.ReactElement {
                     onChange={onChange}
                     debounceTimeout={400}
                     placeholder={placeholder}
+                    rows={rows}
                 />
             </FieldType> :
             <DebounceInput
@@ -71,6 +74,7 @@ function TextArea(props: TextAreaProps): React.ReactElement {
                 onChange={onChange}
                 debounceTimeout={400}
                 placeholder={placeholder}
+                rows={rows}
             />
         )
     );

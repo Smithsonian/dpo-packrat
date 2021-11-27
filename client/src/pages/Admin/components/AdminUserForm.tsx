@@ -157,7 +157,8 @@ function AdminUserForm(): React.ReactElement {
             setValidEmailInput(validEmailResponse);
             return validNameResponse && validEmailResponse;
         } catch (error) {
-            toast.warn(error);
+            if (error instanceof Error)
+                toast.warn(error);
         }
     };
 
