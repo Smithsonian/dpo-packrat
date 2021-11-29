@@ -182,6 +182,7 @@ export enum eVocabularyID {
     eEdanMDMFieldsPlaceFT,
     eEdanMDMFieldsTaxonomicNameFT,
     eEdanMDMFieldsNotesFT,
+    eEdanMDMFieldsPhysicalDescriptionFT,
     eNone = -1
 }
 
@@ -533,6 +534,7 @@ export class VocabularyCache {
                         case 'Place (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsPlaceFT; break;
                         case 'Taxonomic Name (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsTaxonomicNameFT; break;
                         case 'Notes (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsNotesFT; break;
+                        case 'Physical Description (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsPhysicalDescriptionFT; break;
                     }
                 }
             }

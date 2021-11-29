@@ -1,6 +1,6 @@
 import { CreateSubjectWithIdentifiersResult, MutationCreateSubjectWithIdentifiersArgs } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
-import { handleMetadata } from './updateObjectDetails';
+import { handleMetadata, publishSubject } from './updateObjectDetails';
 import * as DBAPI from '../../../../../db';
 import * as COL from '../../../../../collections/interface';
 import * as LOG from '../../../../../utils/logger';
@@ -83,9 +83,13 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
         await identifier.update();
     }
 
-    const metadataRes: H.IOResults = await handleMetadata(SO.idSystemObject, metadata, user);
-    if (!metadataRes.success)
-        return sendResult(false, metadataRes.error);
+    let res: H.IOResults = await handleMetadata(SO.idSystemObject, metadata, user);
+    if (!res.success)
+        return sendResult(false, res.error);
+
+    res = await publishSubject(SO.idSystemObject);
+    if (!res.success)
+        return sendResult(false, res.error);
 
     return sendResult(true);
 }

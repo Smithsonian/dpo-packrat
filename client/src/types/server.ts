@@ -154,6 +154,7 @@ export enum eVocabularyID {
     eEdanMDMFieldsPlaceFT,
     eEdanMDMFieldsTaxonomicNameFT,
     eEdanMDMFieldsNotesFT,
+    eEdanMDMFieldsPhysicalDescriptionFT,
     eNone = -1
 }
 

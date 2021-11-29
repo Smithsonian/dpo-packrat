@@ -1582,6 +1582,7 @@ export type StakeholderDetailFieldsInput = {
 export type MetadataInput = {
   idMetadata?: Maybe<Scalars['Int']>;
   Name: Scalars['String'];
+  Label: Scalars['String'];
   Value: Scalars['String'];
 };
 
