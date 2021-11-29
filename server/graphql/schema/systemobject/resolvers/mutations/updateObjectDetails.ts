@@ -1,7 +1,8 @@
 import { eSystemObjectType } from '../../../../../db';
 import { UpdateObjectDetailsResult, MutationUpdateObjectDetailsArgs, MetadataInput, User } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
-import * as LOG from '../../../../../utils';
+import * as COL from '../../../../../collections/interface/';
+import * as LOG from '../../../../../utils/logger';
 import * as DBAPI from '../../../../../db';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
@@ -432,6 +433,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             break;
     }
 
+    if (objectType === eSystemObjectType.eSubject) {
+        const publishRes: H.IOResults = await publishSubject(idSystemObject);
+        if (!publishRes.success)
+            return sendResult(false, publishRes.error);
+    }
+
     return { success: true, message: '' };
 }
 
@@ -446,7 +453,10 @@ export async function handleMetadata(idSystemObject: number, metadatas: Metadata
         return { success: true, error: '' };
 
     for (const metadataInput of metadatas) {
-        const valueLen: number = metadataInput.Value.length;
+        // handle wacky case of Edan metadata, which sometimes has a custom "Label".  In this case, encode the metadata label and value into a single value, separated by COL.EdanLabelContentDelimiter
+        const value: string = (metadataInput.Label ? metadataInput.Label + COL.EdanLabelContentDelimiter : '') + metadataInput.Value;
+
+        const valueLen: number = value.length;
         if (metadataInput.idMetadata) {
             // Updating existing metadata
             const metadata: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadataInput.idMetadata);
@@ -454,11 +464,11 @@ export async function handleMetadata(idSystemObject: number, metadatas: Metadata
                 return { success: false, error: `Unable to fetch metadata with id ${metadataInput.idMetadata}; update failed` };
 
             if (valueLen <= 255) {
-                metadata.ValueShort = metadataInput.Value;
+                metadata.ValueShort = value;
                 metadata.ValueExtended = null;
             } else {
                 metadata.ValueShort = null;
-                metadata.ValueExtended = metadataInput.Value;
+                metadata.ValueExtended = value;
             }
             metadata.idAssetVersionValue = null;
             if (!await metadata.update())
@@ -467,8 +477,8 @@ export async function handleMetadata(idSystemObject: number, metadatas: Metadata
             // Creating new metadata!
             const metadata: DBAPI.Metadata = new DBAPI.Metadata({
                 Name: metadataInput.Name,
-                ValueShort: valueLen <= 255 ? metadataInput.Value : null,
-                ValueExtended: valueLen <= 255 ? null : metadataInput.Value,
+                ValueShort: valueLen <= 255 ? value : null,
+                ValueExtended: valueLen <= 255 ? null : value,
                 idAssetVersionValue: null,
                 idUser: user?.idUser ?? null,
                 idVMetadataSource: null,
@@ -483,3 +493,8 @@ export async function handleMetadata(idSystemObject: number, metadatas: Metadata
     return { success: true, error: '' };
 }
 
+export async function publishSubject(idSystemObject: number): Promise<H.IOResults> {
+    const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
+    const success: boolean = await ICol.publish(idSystemObject, DBAPI.ePublishedState.ePublished);
+    return { success, error: success ? '' : 'Error encountered during publishing' };
+}

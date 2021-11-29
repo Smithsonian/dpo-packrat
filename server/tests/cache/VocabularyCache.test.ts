@@ -244,6 +244,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eEdanMDMFieldsPlaceFT:                       testVocabulary(vocabulary, 'Place (FT)'); break;
                     case eVocabularyID.eEdanMDMFieldsTaxonomicNameFT:               testVocabulary(vocabulary, 'Taxonomic Name (FT)'); break;
                     case eVocabularyID.eEdanMDMFieldsNotesFT:                       testVocabulary(vocabulary, 'Notes (FT)'); break;
+                    case eVocabularyID.eEdanMDMFieldsPhysicalDescriptionFT:         testVocabulary(vocabulary, 'Physical Description (FT)'); break;
 
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
