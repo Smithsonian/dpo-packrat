@@ -11,6 +11,8 @@ import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { ASL, LocalStore } from '../../../../../utils/localStore';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { eEventKey } from '../../../../../event/interface/EventEnums';
 
 interface ApolloFile {
     filename: string;
@@ -59,12 +61,14 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     private async uploadWorker(): Promise<UploadAssetResult> {
+        const { filename, createReadStream } = this.apolloFile;
+        AuditFactory.audit({ url: `/ingestion/uploads/${filename}`, auth: (this.user !== undefined) }, { eObjectType: DBAPI.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 }, eEventKey.eHTTPUpload);
+
         if (!this.user) {
             LOG.error('uploadAsset unable to retrieve user context', LOG.LS.eGQL);
             return { status: UploadStatus.Failed, error: 'User not authenticated' };
         }
 
-        const { filename, createReadStream } = this.apolloFile;
         if (this.idSOAttachment)
             await this.appendToWFReport(`<b>Upload starting</b>: ATTACH ${filename}`, true);
         else if (!this.idAsset)
