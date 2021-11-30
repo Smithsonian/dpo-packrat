@@ -2,6 +2,7 @@ export enum eEventTopic {
     eAuth = 1,
     eDB = 2,
     ePublish = 3,
+    eHTTP = 4,
 }
 
 export enum eEventKey {
@@ -9,5 +10,7 @@ export enum eEventKey {
     eDBUpdate = 2,
     eDBDelete = 3,
     eAuthLogin = 4,
-    eSceneQCd = 5
+    eSceneQCd = 5,
+    eHTTPDownload = 6,
+    eHTTPUpload = 7,
 }
