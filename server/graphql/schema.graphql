@@ -668,7 +668,7 @@ input ClearLicenseAssignmentInput {
 
 type ClearLicenseAssignmentResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 input AssignLicenseInput {
@@ -678,7 +678,7 @@ input AssignLicenseInput {
 
 type AssignLicenseResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 input GetLicenseInput {
@@ -939,7 +939,7 @@ type NavigationResultEntry {
 
 type GetObjectChildrenResult {
   success: Boolean!
-  error: String!
+  error: String
   entries: [NavigationResultEntry!]!
   metadataColumns: [Int!]!
   cursorMark: String
@@ -1168,7 +1168,7 @@ input UpdateObjectDetailsDataInput {
 
 type UpdateObjectDetailsResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 input ExistingRelationship {
@@ -1185,7 +1185,7 @@ input UpdateDerivedObjectsInput {
 
 type UpdateDerivedObjectsResult {
   success: Boolean!
-  message: String!
+  message: String
   status: String!
 }
 
@@ -1198,7 +1198,7 @@ input UpdateSourceObjectsInput {
 
 type UpdateSourceObjectsResult {
   success: Boolean!
-  message: String!
+  message: String
   status: String!
 }
 
@@ -1241,7 +1241,7 @@ input DeleteMetadataInput {
 
 type RollbackSystemObjectVersionResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 input RollbackSystemObjectVersionInput {
@@ -1251,7 +1251,7 @@ input RollbackSystemObjectVersionInput {
 
 type CreateSubjectWithIdentifiersResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 input CreateSubjectWithIdentifiersInput {
@@ -1275,7 +1275,7 @@ input PublishInput {
 
 type PublishResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 scalar JSON

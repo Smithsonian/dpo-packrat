@@ -9,7 +9,7 @@ class LocalAuth implements IAuth {
         }
 
         LOG.info(`LocalAuth.verifyUser successful login for ${email}`, LOG.LS.eAUTH);
-        return { success: true, error: null };
+        return { success: true };
     }
 }
 

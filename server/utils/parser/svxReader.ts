@@ -145,7 +145,7 @@ export class SvxExtraction {
         }
         svx.tourCount = tourCount;
         svx.extractModelDetails();
-        return { svx, results: { success: true, error: '' } };
+        return { svx, results: { success: true } };
     }
 }
 
@@ -186,7 +186,7 @@ export class SvxReader {
                 return { success: false, error: 'Invalid SVX json' };
 
             this.SvxDocument = this.SvxExtraction.document;
-            return { success: true, error: '' };
+            return { success: true };
         } catch (err) {
             const error: string = 'SvxReader.loadFromJSON failed processing invalid json';
             LOG.error(error, LOG.LS.eSYS, err);

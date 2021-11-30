@@ -450,7 +450,7 @@ function sendResult(success: boolean, message?: string): UpdateObjectDetailsResu
 
 export async function handleMetadata(idSystemObject: number, metadatas: MetadataInput[] | null | undefined, user: User | undefined): Promise<H.IOResults> {
     if (!metadatas)
-        return { success: true, error: '' };
+        return { success: true };
 
     for (const metadataInput of metadatas) {
         // handle wacky case of Edan metadata, which sometimes has a custom "Label".  In this case, encode the metadata label and value into a single value, separated by COL.EdanLabelContentDelimiter
@@ -490,7 +490,7 @@ export async function handleMetadata(idSystemObject: number, metadatas: Metadata
                 return { success: false, error: `Unable to create metadata ${JSON.stringify(metadata)}` };
         }
     }
-    return { success: true, error: '' };
+    return { success: true };
 }
 
 export async function publishSubject(idSystemObject: number): Promise<H.IOResults> {

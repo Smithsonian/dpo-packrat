@@ -288,7 +288,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
         // Send audit update for model, now that we've finished writing dependent objects, to help ensure full indexing of this model
         await this.modelConstellation.Model.audit(eEventKey.eDBUpdate);
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     static async extract(output: any, fileName: string | null, dateCreated: Date | null): Promise<JobCookSIPackratInspectOutput> {
@@ -676,7 +676,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     }
 
     async cleanupJob(): Promise<H.IOResults> {
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     protected async getParameters(): Promise<JobCookSIPackratInspectParameters> {
@@ -726,8 +726,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 readStream,
                 fileName: file,
                 storageHash: null,
-                success: true,
-                error: ''
+                success: true
             });
 
             // If we haven't yet defined the source mesh and we are processing a geometry file (eVocabID is defined), use this file as our source mesh:

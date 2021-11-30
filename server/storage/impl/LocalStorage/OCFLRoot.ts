@@ -47,10 +47,7 @@ export class OCFLRoot {
         const results: ComputeWriteStreamLocationResults = {
             locationPublic: '<INVALID>',
             locationPrivate: '<INVALID>',
-            ioResults: {
-                success: false,
-                error: '',
-            }
+            ioResults: { success: false }
         };
 
         if (!fileName || !H.Helpers.validFilename(fileName))

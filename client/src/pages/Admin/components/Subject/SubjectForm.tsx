@@ -260,7 +260,7 @@ function SubjectForm(): React.ReactElement {
                 reset();
                 history.push('/admin/subjects');
             } else {
-                toast.error(`Error: Failure To Create Subject - ${message}`);
+                toast.error(`Failure To Create Subject: ${message}`);
             }
         } catch (error) {
             if (error instanceof Error)

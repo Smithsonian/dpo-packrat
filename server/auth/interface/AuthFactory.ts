@@ -9,7 +9,7 @@ import { eEventKey } from '../../event/interface/EventEnums';
 
 export type VerifiedUser = {
     user: DBAPI.User | null;
-    error: string | null;
+    error?: string | null;
 };
 
 class AuthFactory {
@@ -59,7 +59,7 @@ class AuthFactory {
         LOG.info(`AuthFactory.verifyUser ${email} successfully authenticated`, LOG.LS.eAUTH);
         AuditFactory.audit({ email }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthLogin);
 
-        return { user, error: null };
+        return { user };
     }
 }
 

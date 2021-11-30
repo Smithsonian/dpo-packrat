@@ -249,7 +249,7 @@ class IngestDataWorker extends ResolverBase {
                 }
             }
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private async validateIdentifier(identifier: IngestIdentifierInput): Promise<IdentifierResults> {
@@ -1370,7 +1370,7 @@ class IngestDataWorker extends ResolverBase {
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private async handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetResult): Promise<{ success: boolean, transformUpdated: boolean }> {
@@ -1611,7 +1611,7 @@ class IngestDataWorker extends ResolverBase {
         }
 
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
-        return { success: true, error: '', workflowEngine, workflow, workflowReport };
+        return { success: true, workflowEngine, workflow, workflowReport };
     }
 }
 
