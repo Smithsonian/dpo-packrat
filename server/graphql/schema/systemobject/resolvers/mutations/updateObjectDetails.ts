@@ -444,7 +444,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
 function sendResult(success: boolean, message?: string): UpdateObjectDetailsResult {
     if (!success)
-        LOG.error(`createSubjectWithIdentifier: ${message}`, LOG.LS.eGQL);
+        LOG.error(`updateObjectDetails: ${message}`, LOG.LS.eGQL);
     return { success, message: message ?? '' };
 }
 
