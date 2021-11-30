@@ -57,6 +57,7 @@ export type EdanMDMContent = {
     freeText?: {
         identifier?: EdanLabelContent[];
         dataSource?: EdanLabelContent[];
+        date?: EdanLabelContent[];
         name?: EdanLabelContent[];
         objectRights?: EdanLabelContent[];
         place?: EdanLabelContent[];
@@ -113,3 +114,5 @@ export type EdanRecord = {
     publicSearch: boolean;
     linkedContent: any;
 };
+
+export const EdanLabelContentDelimiter: string = '$PR$';
