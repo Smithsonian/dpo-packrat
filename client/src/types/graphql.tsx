@@ -1083,7 +1083,7 @@ export type ClearLicenseAssignmentInput = {
 export type ClearLicenseAssignmentResult = {
   __typename?: 'ClearLicenseAssignmentResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type AssignLicenseInput = {
@@ -1094,7 +1094,7 @@ export type AssignLicenseInput = {
 export type AssignLicenseResult = {
   __typename?: 'AssignLicenseResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetLicenseInput = {
@@ -1374,7 +1374,7 @@ export type NavigationResultEntry = {
 export type GetObjectChildrenResult = {
   __typename?: 'GetObjectChildrenResult';
   success: Scalars['Boolean'];
-  error: Scalars['String'];
+  error?: Maybe<Scalars['String']>;
   entries: Array<NavigationResultEntry>;
   metadataColumns: Array<Scalars['Int']>;
   cursorMark?: Maybe<Scalars['String']>;
@@ -1612,7 +1612,7 @@ export type UpdateObjectDetailsDataInput = {
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type ExistingRelationship = {
@@ -1630,7 +1630,7 @@ export type UpdateDerivedObjectsInput = {
 export type UpdateDerivedObjectsResult = {
   __typename?: 'UpdateDerivedObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1644,7 +1644,7 @@ export type UpdateSourceObjectsInput = {
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1691,7 +1691,7 @@ export type DeleteMetadataInput = {
 export type RollbackSystemObjectVersionResult = {
   __typename?: 'RollbackSystemObjectVersionResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type RollbackSystemObjectVersionInput = {
@@ -1702,7 +1702,7 @@ export type RollbackSystemObjectVersionInput = {
 export type CreateSubjectWithIdentifiersResult = {
   __typename?: 'CreateSubjectWithIdentifiersResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type CreateSubjectWithIdentifiersInput = {
@@ -1727,7 +1727,7 @@ export type PublishInput = {
 export type PublishResult = {
   __typename?: 'PublishResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 

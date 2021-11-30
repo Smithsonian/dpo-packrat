@@ -1,6 +1,6 @@
 export type VerifyUserResult = {
     success: boolean;
-    error: string | null;
+    error?: string | null;
 };
 
 export interface IAuth {

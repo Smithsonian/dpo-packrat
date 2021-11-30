@@ -155,7 +155,7 @@ class Downloader {
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
             if (!RSR.success || !RSR.readStream) {
-                LOG.error(`${errorMsgBase} failed to extract stream for asset version ${assetVersion.idAssetVersion}`, LOG.LS.eHTTP);
+                LOG.error(`${errorMsgBase} failed to extract stream for asset version ${assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eHTTP);
                 return this.sendError(500);
             }
 

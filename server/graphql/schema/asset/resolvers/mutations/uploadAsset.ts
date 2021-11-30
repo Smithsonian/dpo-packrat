@@ -79,7 +79,7 @@ class UploadAssetWorker extends ResolverBase {
         }
 
         const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
-        if (WSResult.error || !WSResult.writeStream || !WSResult.storageKey) {
+        if (!WSResult.success || !WSResult.writeStream || !WSResult.storageKey) {
             LOG.error(`uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`, LOG.LS.eGQL);
             return { status: UploadStatus.Failed, error: 'Storage unavailable' };
         }
@@ -206,7 +206,7 @@ class UploadAssetWorker extends ResolverBase {
                 };
 
                 const workflow: WF.IWorkflow | null = await this.workflowHelper.workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion, workflowParams);
-                const results = workflow ? await workflow.waitForCompletion(3600000) : { success: true, error: '' };
+                const results = workflow ? await workflow.waitForCompletion(3600000) : { success: true };
                 if (results.success) {
                     idAssetVersions.push(assetVersion.idAssetVersion);
                     if (assetVersion.Ingested === null) {
@@ -271,7 +271,7 @@ class UploadAssetWorker extends ResolverBase {
         }
 
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
-        const results: H.IOResults = workflow ? await workflow.waitForCompletion(3600000) : { success: true, error: '' };
+        const results: H.IOResults = workflow ? await workflow.waitForCompletion(3600000) : { success: true };
         if (!results.success) {
             for (const assetVersion of assetVersions)
                 await this.retireFailedUpload(assetVersion);
@@ -279,14 +279,14 @@ class UploadAssetWorker extends ResolverBase {
             return results;
         }
 
-        return { success: true, error: '', workflowEngine, workflow, workflowReport };
+        return { success: true, workflowEngine, workflow, workflowReport };
     }
 
     private async retireFailedUpload(assetVersion: DBAPI.AssetVersion): Promise<H.IOResults> {
         const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
         if (SO) {
             if (await SO.retireObject())
-                return { success: true, error: '' };
+                return { success: true };
             const error: string = 'uploadAsset post-upload workflow error handler failed to retire uploaded asset';
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };

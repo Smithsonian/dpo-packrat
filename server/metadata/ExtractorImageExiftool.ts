@@ -84,7 +84,7 @@ export class ExtractorImageExiftool implements IExtractor  {
                         metadata.set('ImageWidth', dimensions.width.toString());
                 }
 
-                return { success: true, error: '', metadata };
+                return { success: true, metadata };
             } catch (err) /* istanbul ignore next */ {
                 const res: H.IOResults = (err instanceof Error) ? await this.handleExiftoolException(err) : { success: false, error: 'Unknown error' };
                 if (!res.success)
@@ -117,7 +117,7 @@ export class ExtractorImageExiftool implements IExtractor  {
                     return res;
             }
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private async handleExiftoolException(err: Error): Promise<IExtractorResults> {

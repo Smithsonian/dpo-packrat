@@ -208,7 +208,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     break;
 
                 case DBAPI.eSystemObjectType.eScene:
-                    if (modelTransformUpdated) { // only progress through scene ingestion workflows if our model transform was ingested
+                    if (modelTransformUpdated) { // only progress through scene ingestion workflows if our model transform was updated
                         if (!CSIR) {
                             CSIR = await this.computeSceneInfo(oID.idObject, asset.idSystemObject);
                             if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {

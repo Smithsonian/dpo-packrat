@@ -19,7 +19,7 @@ export class WorkflowUpload implements WF.IWorkflow {
     private workflowParams: WF.WorkflowParameters;
     private workflowData: DBAPI.WorkflowConstellation;
     private workflowReport: REP.IReport | null = null;
-    private results: H.IOResults = { success: true, error: '' };
+    private results: H.IOResults = { success: true };
 
     static async constructWorkflow(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowUpload | null> {
         return new WorkflowUpload(workflowParams, WFC);
@@ -47,7 +47,7 @@ export class WorkflowUpload implements WF.IWorkflow {
     }
 
     async update(_workflowStep: DBAPI.WorkflowStep, _jobRun: DBAPI.JobRun): Promise<WF.WorkflowUpdateResults> {
-        return { success: true, workflowComplete: true, error: '' };
+        return { success: true, workflowComplete: true };
     }
 
     async updateStatus(eStatus: DBAPI.eWorkflowJobRunStatus): Promise<WF.WorkflowUpdateResults> {
@@ -90,7 +90,7 @@ export class WorkflowUpload implements WF.IWorkflow {
             if (!RSR.success || !RSR.readStream || !RSR.fileName)
                 return this.handleError(`WorkflowUpload.validateFiles unable to read asset version ${idAssetVersion}: ${RSR.error}`);
 
-            let fileRes: H.IOResults = { success: true, error: '' };
+            let fileRes: H.IOResults = { success: true };
             if (path.extname(RSR.fileName).toLowerCase() !== '.zip')
                 fileRes = await this.validateFile(RSR.fileName, RSR.readStream);
             else {
@@ -156,12 +156,12 @@ export class WorkflowUpload implements WF.IWorkflow {
             const message: string = `WorkflowUpload.validateFile encountered exception processing ${fileName}${(error instanceof Error) ? ': ' + error.message : ''}`;
             return (extension !== '.svg') ? this.handleError(message) : this.appendToWFReport(message);
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private async appendToWFReport(message: string): Promise<H.IOResults> {
         LOG.info(message, LOG.LS.eWF);
-        return (this.workflowReport) ? this.workflowReport.append(message) : { success: true, error: '' };
+        return (this.workflowReport) ? this.workflowReport.append(message) : { success: true };
     }
 
     private async handleError(error: string): Promise<H.IOResults> {
