@@ -246,6 +246,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (status === UploadStatus.Failed) {
+                    console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}`);
                     const failedEvent: UploadFailedEvent = { id };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
 
@@ -253,11 +254,14 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                     toast.error(errorMessage);
                 }
             }
-        } catch ({ message }) {
+        } catch (error) {
+            const message: string = (error instanceof Error) ? error.message : '';
+            console.log(`startUploadTransfer Exception ${message}`);
             const file = getFile(id, pending);
 
             if (file) {
                 if (file.status !== FileUploadStatus.CANCELLED) {
+                    console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, Exception ${message}`);
                     const failedEvent: UploadFailedEvent = { id };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
                 }
