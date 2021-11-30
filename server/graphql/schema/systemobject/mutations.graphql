@@ -125,6 +125,7 @@ input StakeholderDetailFieldsInput {
 input MetadataInput {
     idMetadata: Int
     Name: String!
+    Label: String!
     Value: String!
 }
 

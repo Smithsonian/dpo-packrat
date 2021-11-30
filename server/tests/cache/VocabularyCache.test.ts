@@ -226,6 +226,25 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eEdan3DResourceCategoryLowresolution:        testVocabulary(vocabulary, 'Low resolution'); break;
                     case eVocabularyID.eEdan3DResourceCategoryWatertight:           testVocabulary(vocabulary, 'Watertight'); break;
                     case eVocabularyID.eEdan3DResourceCategoryiOSARmodel:           testVocabulary(vocabulary, 'iOS AR model'); break;
+                    case eVocabularyID.eEdanMDMFieldsLabel:                         testVocabulary(vocabulary, 'Label'); break;
+                    case eVocabularyID.eEdanMDMFieldsTitle:                         testVocabulary(vocabulary, 'Title'); break;
+                    case eVocabularyID.eEdanMDMFieldsRecordID:                      testVocabulary(vocabulary, 'Record ID'); break;
+                    case eVocabularyID.eEdanMDMFieldsUnit:                          testVocabulary(vocabulary, 'Unit'); break;
+                    case eVocabularyID.eEdanMDMFieldsLicense:                       testVocabulary(vocabulary, 'License'); break;
+                    case eVocabularyID.eEdanMDMFieldsLicenseText:                   testVocabulary(vocabulary, 'License Text'); break;
+                    case eVocabularyID.eEdanMDMFieldsObjectType:                    testVocabulary(vocabulary, 'Object Type'); break;
+                    case eVocabularyID.eEdanMDMFieldsDate:                          testVocabulary(vocabulary, 'Date'); break;
+                    case eVocabularyID.eEdanMDMFieldsPlace:                         testVocabulary(vocabulary, 'Place'); break;
+                    case eVocabularyID.eEdanMDMFieldsTopic:                         testVocabulary(vocabulary, 'Topic'); break;
+                    case eVocabularyID.eEdanMDMFieldsIdentifierFT:                  testVocabulary(vocabulary, 'Identifier (FT)'); break;
+                    case eVocabularyID.eEdanMDMFieldsDataSourceFT:                  testVocabulary(vocabulary, 'Data Source (FT)'); break;
+                    case eVocabularyID.eEdanMDMFieldsDateFT:                        testVocabulary(vocabulary, 'Date (FT)'); break;
+                    case eVocabularyID.eEdanMDMFieldsNameFT:                        testVocabulary(vocabulary, 'Name (FT)'); break;
+                    case eVocabularyID.eEdanMDMFieldsObjectRightsFT:                testVocabulary(vocabulary, 'Object Rights (FT)'); break;
+                    case eVocabularyID.eEdanMDMFieldsPlaceFT:                       testVocabulary(vocabulary, 'Place (FT)'); break;
+                    case eVocabularyID.eEdanMDMFieldsTaxonomicNameFT:               testVocabulary(vocabulary, 'Taxonomic Name (FT)'); break;
+                    case eVocabularyID.eEdanMDMFieldsNotesFT:                       testVocabulary(vocabulary, 'Notes (FT)'); break;
+                    case eVocabularyID.eEdanMDMFieldsPhysicalDescriptionFT:         testVocabulary(vocabulary, 'Physical Description (FT)'); break;
 
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
@@ -288,6 +307,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularySetID.eEdan3DResourceAttributeFileType:
                     case eVocabularySetID.eEdan3DResourceType:
                     case eVocabularySetID.eEdan3DResourceCategory:
+                    case eVocabularySetID.eEdanMDMFields:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet)
@@ -519,6 +539,25 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'Low resolution');
             await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'Watertight');
             await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'iOS AR model');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Label');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Title');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Record ID');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Unit');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'License');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'License Text');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Object Type');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Date');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Place');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Topic');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Identifier (FT)');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Data Source (FT)');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Date (FT)');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Name (FT)');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Object Rights (FT)');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Place (FT)');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Taxonomic Name (FT)');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Notes (FT)');
+
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
             await testVocabularyBySetAndTerm(eVocabularySetID.eNone, 'Other', false);
         });
@@ -662,6 +701,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceAttributeFileTypezip, eVocabularySetID.eEdan3DResourceAttributeFileType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceType3dmesh, eVocabularySetID.eEdan3DResourceType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceCategoryFullresolution, eVocabularySetID.eEdan3DResourceCategory)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdanMDMFieldsNameFT, eVocabularySetID.eEdanMDMFields)).toBeTruthy();
 
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eNone, eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eNone)).toBeFalsy();
