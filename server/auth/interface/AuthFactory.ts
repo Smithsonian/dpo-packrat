@@ -29,18 +29,22 @@ class AuthFactory {
     static async verifyUser(email: string, password: string): Promise<VerifiedUser> {
         const auth: IAuth = AuthFactory.getInstance();
         const verifyRes: VerifyUserResult = await auth.verifyUser(email, password);
-        if (!verifyRes.success)
+        if (!verifyRes.success) {
+            AuditFactory.audit({ email, error: verifyRes.error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
             return { user: null, error: verifyRes.error };
+        }
 
         const users: DBAPI.User[] | null = await DBAPI.User.fetchByEmail(email);
         if (!users || users.length == 0) {
             const error: string = `${email} is not a Packrat user`;
+            AuditFactory.audit({ email, error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
             LOG.error(`AuthFactory.verifyUser: ${error}`, LOG.LS.eAUTH);
             return { user: null, error };
         }
 
         if (users.length > 1) {
             const error: string = `Multiple users exist for ${email}`;
+            AuditFactory.audit({ email, error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
             LOG.error(`AuthFactory.verifyUser: ${error}`, LOG.LS.eAUTH);
             return { user: null, error };
         }
@@ -48,6 +52,7 @@ class AuthFactory {
         const user: DBAPI.User = users[0];
         if (!user.Active) {
             const error: string = `${email} is not active in Packrat`;
+            AuditFactory.audit({ email, error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
             LOG.info(`AuthFactory.verifyUser: ${error}`, LOG.LS.eAUTH);
             return { user: null, error };
         }
