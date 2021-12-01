@@ -287,6 +287,7 @@ export enum eAuditType {
     eSceneQCd = 5,
     eHTTPDownload = 6,
     eHTTPUpload = 7,
+    eAuthFailed = 8,
 }
 
 export enum eLicense {
