@@ -71,6 +71,8 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
             case eAuditType.eDBDelete:
             case eAuditType.eAuthLogin:
             case eAuditType.eSceneQCd:
+            case eAuditType.eHTTPDownload:
+            case eAuditType.eHTTPUpload:
                 return this.AuditType; /* istanbul ignore next */
             default: return eAuditType.eUnknown;
         }
