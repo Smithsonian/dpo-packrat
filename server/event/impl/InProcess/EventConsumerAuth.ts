@@ -19,11 +19,12 @@ export class EventConsumerAuth extends EventConsumer {
             }
 
             switch (dataItem.key) {
-                case EVENT.eEventKey.eAuthLogin: {
+                case EVENT.eEventKey.eAuthLogin:
+                case EVENT.eEventKey.eAuthFailed: {
                     const audit: DBAPI.Audit = EventConsumerDB.convertDataToAudit(dataItem.value);
                     if (audit.idAudit === 0)
                         audit.create(); // don't use await so this happens asynchronously
-                    LOG.info(`EventConsumerAuth.eventWorker Login idUser ${audit.idUser}`, LOG.LS.eEVENT);
+                    LOG.info(`EventConsumerAuth.eventWorker Login idUser ${audit.idUser} ${dataItem.key === EVENT.eEventKey.eAuthLogin ? 'failed' : 'succeeded'}`, LOG.LS.eEVENT);
                 } break;
 
                 default:
