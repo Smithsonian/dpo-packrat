@@ -37,6 +37,7 @@ export enum eVocabularySetID {
     eEdan3DResourceAttributeFileType,
     eEdan3DResourceType,
     eEdan3DResourceCategory,
+    eEdanMDMFields,
     eNone = -1
 }
 
@@ -163,6 +164,25 @@ export enum eVocabularyID {
     eEdan3DResourceCategoryLowresolution,
     eEdan3DResourceCategoryWatertight,
     eEdan3DResourceCategoryiOSARmodel,
+    eEdanMDMFieldsLabel,
+    eEdanMDMFieldsTitle,
+    eEdanMDMFieldsRecordID,
+    eEdanMDMFieldsUnit,
+    eEdanMDMFieldsLicense,
+    eEdanMDMFieldsLicenseText,
+    eEdanMDMFieldsObjectType,
+    eEdanMDMFieldsDate,
+    eEdanMDMFieldsPlace,
+    eEdanMDMFieldsTopic,
+    eEdanMDMFieldsIdentifierFT,
+    eEdanMDMFieldsDataSourceFT,
+    eEdanMDMFieldsDateFT,
+    eEdanMDMFieldsNameFT,
+    eEdanMDMFieldsObjectRightsFT,
+    eEdanMDMFieldsPlaceFT,
+    eEdanMDMFieldsTaxonomicNameFT,
+    eEdanMDMFieldsNotesFT,
+    eEdanMDMFieldsPhysicalDescriptionFT,
     eNone = -1
 }
 
@@ -244,11 +264,12 @@ export class VocabularyCache {
                 case 'Job.JobType':                             eVocabSetEnum = eVocabularySetID.eJobJobType; break;
                 case 'Workflow.Type':                           eVocabSetEnum = eVocabularySetID.eWorkflowType; break;
                 case 'Workflow.Event':                          eVocabSetEnum = eVocabularySetID.eWorkflowEvent; break;
-                case 'Edan3DResource.AttributeUnits':           eVocabSetEnum = eVocabularySetID.eEdan3DResourceAttributeUnits; break;
-                case 'Edan3DResource.AttributeModelFileType':   eVocabSetEnum = eVocabularySetID.eEdan3DResourceAttributeModelFileType; break;
-                case 'Edan3DResource.AttributeFileType':        eVocabSetEnum = eVocabularySetID.eEdan3DResourceAttributeFileType; break;
-                case 'Edan3DResource.Type':                     eVocabSetEnum = eVocabularySetID.eEdan3DResourceType; break;
-                case 'Edan3DResource.Category':                 eVocabSetEnum = eVocabularySetID.eEdan3DResourceCategory; break;
+                case 'Edan.3DResourceAttributeUnits':           eVocabSetEnum = eVocabularySetID.eEdan3DResourceAttributeUnits; break;
+                case 'Edan.3DResourceAttributeModelFileType':   eVocabSetEnum = eVocabularySetID.eEdan3DResourceAttributeModelFileType; break;
+                case 'Edan.3DResourceAttributeFileType':        eVocabSetEnum = eVocabularySetID.eEdan3DResourceAttributeFileType; break;
+                case 'Edan.3DResourceType':                     eVocabSetEnum = eVocabularySetID.eEdan3DResourceType; break;
+                case 'Edan.3DResourceCategory':                 eVocabSetEnum = eVocabularySetID.eEdan3DResourceCategory; break;
+                case 'Edan.MDMFields':                          eVocabSetEnum = eVocabularySetID.eEdanMDMFields; break;
             }
 
             /* istanbul ignore else */
@@ -492,6 +513,30 @@ export class VocabularyCache {
                         case 'iOS AR model': eVocabEnum = eVocabularyID.eEdan3DResourceCategoryiOSARmodel; break;
                     }
                 } break;
+
+                case eVocabularySetID.eEdanMDMFields: {
+                    switch (vocabulary.Term) {
+                        case 'Label': eVocabEnum = eVocabularyID.eEdanMDMFieldsLabel; break;
+                        case 'Title': eVocabEnum = eVocabularyID.eEdanMDMFieldsTitle; break;
+                        case 'Record ID': eVocabEnum = eVocabularyID.eEdanMDMFieldsRecordID; break;
+                        case 'Unit': eVocabEnum = eVocabularyID.eEdanMDMFieldsUnit; break;
+                        case 'License': eVocabEnum = eVocabularyID.eEdanMDMFieldsLicense; break;
+                        case 'License Text': eVocabEnum = eVocabularyID.eEdanMDMFieldsLicenseText; break;
+                        case 'Object Type': eVocabEnum = eVocabularyID.eEdanMDMFieldsObjectType; break;
+                        case 'Date': eVocabEnum = eVocabularyID.eEdanMDMFieldsDate; break;
+                        case 'Place': eVocabEnum = eVocabularyID.eEdanMDMFieldsPlace; break;
+                        case 'Topic': eVocabEnum = eVocabularyID.eEdanMDMFieldsTopic; break;
+                        case 'Identifier (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsIdentifierFT; break;
+                        case 'Data Source (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsDataSourceFT; break;
+                        case 'Date (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsDateFT; break;
+                        case 'Name (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsNameFT; break;
+                        case 'Object Rights (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsObjectRightsFT; break;
+                        case 'Place (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsPlaceFT; break;
+                        case 'Taxonomic Name (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsTaxonomicNameFT; break;
+                        case 'Notes (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsNotesFT; break;
+                        case 'Physical Description (FT)': eVocabEnum = eVocabularyID.eEdanMDMFieldsPhysicalDescriptionFT; break;
+                    }
+                }
             }
 
             if (eVocabEnum != eVocabularyID.eNone) {

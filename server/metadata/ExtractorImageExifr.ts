@@ -9,7 +9,7 @@ import { imageSize } from 'image-size';
 
 export class ExtractorImageExifr implements IExtractor  {
     async initialize(): Promise<IExtractorResults> {
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     fileTypeHandled(fileName: string): boolean {
@@ -71,7 +71,7 @@ export class ExtractorImageExifr implements IExtractor  {
             return { success: false, error: `ExtractorImageExifr.extractMetadata failed: ${JSON.stringify(err, H.Helpers.saferStringify)}` };
         }
 
-        return { success: true, error: '', metadata };
+        return { success: true, metadata };
     }
 
     eMetadataSource(): CACHE.eVocabularyID | null {

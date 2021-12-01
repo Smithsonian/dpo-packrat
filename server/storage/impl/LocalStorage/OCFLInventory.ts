@@ -271,7 +271,7 @@ export class OCFLInventoryVersions {
 export type OCFLInventoryReadResults = {
     ocflInventory: OCFLInventory | null;
     success: boolean;
-    error: string;
+    error?: string;
 };
 
 export type OCFLInventoryType = {
@@ -461,10 +461,7 @@ export class OCFLInventory implements OCFLInventoryType {
             const destDigest: string = OCFLInventory.inventoryDigestPath(ocflObject, version);
             await fs.writeFile(destDigest, digestContents);
 
-            return {
-                success: true,
-                error: ''
-            };
+            return { success: true };
         } catch (error) /* istanbul ignore next */ {
             LOG.error('OCFLInventory.writeToDesk', LOG.LS.eSTR, error);
             return {
@@ -497,8 +494,7 @@ export class OCFLInventory implements OCFLInventoryType {
     private static async readFromDiskWorker(ocflObject: OCFLObject, version: number): Promise<OCFLInventoryReadResults> {
         const retValue: OCFLInventoryReadResults = {
             ocflInventory: null,
-            success: false,
-            error: ''
+            success: false
         };
 
         const dest: string = OCFLInventory.inventoryFilePath(ocflObject, version);

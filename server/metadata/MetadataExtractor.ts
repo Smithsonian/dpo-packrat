@@ -67,7 +67,7 @@ export class MetadataExtractor {
     }
 
     private async initializeExtractorImage(): Promise<IExtractorResults> {
-        let results: IExtractorResults = { success: true, error: '' };
+        let results: IExtractorResults = { success: true };
         if (MetadataExtractor.extractorImage)
             return results;
 

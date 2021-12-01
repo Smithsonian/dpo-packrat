@@ -8,7 +8,7 @@ export class MetadataManager {
     static async persistExtractor(idSystemObject: number, idSystemObjectParent: number, extractor: MetadataExtractor, idUser: number | null): Promise<H.IOResults> {
         const metadataCount: number = extractor.metadata.size;
         if (metadataCount === 0)
-            return { success: true, error: '' };
+            return { success: true };
 
         LOG.info(`MetadataManager.persistExtractor(${idSystemObject}, ${idSystemObjectParent}) persisting ${metadataCount} key/value pairs`, LOG.LS.eMETA);
 

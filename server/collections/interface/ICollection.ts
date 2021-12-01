@@ -12,7 +12,7 @@ export type CollectionQueryResultRecord = {
 export type CollectionQueryResults = {
     records: CollectionQueryResultRecord[];
     rowCount: number;
-    error: string | null;
+    error?: string | null;
 };
 
 export type CollectionQueryOptions = {

@@ -37,7 +37,6 @@ export class NavigationSolr implements NAV.INavigation {
     async getMetadata(filter: NAV.MetadataFilter): Promise<NAV.MetadataResult> {
         const SQ: solr.Query = await this.computeSolrMetaQuery(filter);
         return await this.executeSolrMetaQuery(filter, SQ);
-        // return { success: false, error: 'Not Implemented', entries: [], metadataColumns: filter.metadataColumns };
     }
 
     async getIndexer(): Promise<NAV.IIndexer | null> {
@@ -258,7 +257,7 @@ export class NavigationSolr implements NAV.INavigation {
         if (cursorMark == filter.cursorMark)    // solr returns the same cursorMark as the initial query when there are no more results; if so, clear out cursorMark
             cursorMark = null;
         // LOG.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
-        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns, cursorMark };
+        return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
     private computeNavMetadata(doc: any, metadataColumns: NAV.eMetadata[]): string[] {
@@ -414,7 +413,7 @@ export class NavigationSolr implements NAV.INavigation {
 
         // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
         // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(entries)}`, LOG.LS.eNAV);
-        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns, cursorMark };
+        return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
     private computeMetaMetadata(doc: any, metadataColumns: string[]): string [] {
@@ -435,7 +434,7 @@ export class NavigationSolr implements NAV.INavigation {
                         LOG.error('NavigationSolr.executeSolrQueryWorker', LOG.LS.eNAV, err);
                         resolve({ result: null, error: err });
                     } else
-                        resolve({ result: obj, error: null });
+                        resolve({ result: obj });
                 });
             request;
         });

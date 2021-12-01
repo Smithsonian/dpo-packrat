@@ -3,7 +3,6 @@ import passport from 'passport';
 
 import { AuthFactory, VerifiedUser } from '../interface';
 import * as DBAPI from '../../db';
-// import { ASL, LocalStore } from '../../utils/localStore';
 
 const options = {
     usernameField: 'email'
@@ -11,11 +10,10 @@ const options = {
 
 const verifyFunction = async (email: string, password: string, done) => {
     const { user, error }: VerifiedUser = await AuthFactory.verifyUser(email, password);
-    if (error) {
+    if (error)
         done(error, null);
-    } else {
+    else
         done(null, user);
-    }
 };
 
 const Strategy = new PassportLocal.Strategy(options, verifyFunction);

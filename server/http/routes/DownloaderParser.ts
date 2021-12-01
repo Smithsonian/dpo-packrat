@@ -14,6 +14,7 @@ export enum eDownloadMode {
     eWorkflowSet,
     eJobRun,
     eSystemObjectVersionComment,
+    eMetadata,
     eUnknown
 }
 
@@ -26,7 +27,7 @@ export interface DownloaderParserResults {
     assetVersions?: DBAPI.AssetVersion[];
     WFReports?: DBAPI.WorkflowReport[];
     jobRun?: DBAPI.JobRun;
-    comment?: string | null;
+    content?: string | null;
 }
 
 export class DownloaderParser {
@@ -35,12 +36,14 @@ export class DownloaderParser {
     private idAsset: number | null = null;
     private idSystemObject: number | null = null;
     private idSystemObjectVersion: number | null = null;
-    private idSystemObjectVersionComment: number | null = null;
+
+    private idMetadata: number | null = null;
 
     private idWorkflow: number | null = null;
     private idWorkflowReport: number | null = null;
     private idWorkflowSet: number | null = null;
     private idJobRun: number | null = null;
+    private idSystemObjectVersionComment: number | null = null;
 
     private systemObjectPath: string | null = null;                                             // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
     private fileMap: Map<string, DBAPI.AssetVersion> = new Map<string, DBAPI.AssetVersion>();   // Map of asset files path -> asset version
@@ -62,6 +65,8 @@ export class DownloaderParser {
     get idAssetV(): number | null { return this.idAsset; }
     get idSystemObjectV(): number | null { return this.idSystemObject; }
     get idSystemObjectVersionV(): number | null { return this.idSystemObjectVersion; }
+
+    get idMetadataV(): number | null { return this.idMetadata; }
 
     get idWorkflowV(): number | null { return this.idWorkflow; }
     get idWorkflowReportV(): number | null { return this.idWorkflowReport; }
@@ -93,18 +98,22 @@ export class DownloaderParser {
             idSystemObjectU = this.requestQuery.idSystemObject;
         // LOG.info(`DownloadParser.parseArguments(${this.requestPath}), idSystemObjectU = ${idSystemObjectU}`, LOG.LS.eHTTP);
 
-        const idSystemObjectVersionU = this.requestQuery.idSystemObjectVersion;
-        const idSystemObjectVersionCommentU = this.requestQuery.idSystemObjectVersionComment;
         const idAssetU = this.requestQuery.idAsset;
         const idAssetVersionU = this.requestQuery.idAssetVersion;
+        const idSystemObjectVersionU = this.requestQuery.idSystemObjectVersion;
+
+        const idMetadataU = this.requestQuery.idMetadata;
+
         const idWorkflowU = this.requestQuery.idWorkflow;
         const idWorkflowReportU = this.requestQuery.idWorkflowReport;
         const idWorkflowSetU = this.requestQuery.idWorkflowSet;
         const idJobRunU = this.requestQuery.idJobRun;
+        const idSystemObjectVersionCommentU = this.requestQuery.idSystemObjectVersionComment;
 
-        const urlParamCount: number = (idSystemObjectU ? 1 : 0) + (idSystemObjectVersionU ? 1 : 0) + (idSystemObjectVersionCommentU ? 1 : 0)
-            + (idAssetU ? 1 : 0) + (idAssetVersionU ? 1 : 0) + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0)
-            + (idJobRunU ? 1 : 0);
+        const urlParamCount: number = (idSystemObjectU ? 1 : 0) + (idSystemObjectVersionU ? 1 : 0)
+            + (idAssetU ? 1 : 0) + (idAssetVersionU ? 1 : 0) + (idMetadataU ? 1 : 0)
+            + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0)
+            + (idJobRunU ? 1 : 0) + (idSystemObjectVersionCommentU ? 1 : 0);
         if (urlParamCount != 1) {
             LOG.error(`DownloadParser called with ${urlParamCount} parameters, expected 1`, LOG.LS.eHTTP);
             return this.recordStatus(404);
@@ -215,6 +224,37 @@ export class DownloaderParser {
             return { success: true, assetVersions }; // await this.emitDownloadZip(assetVersions);
         }
 
+        if (idMetadataU) {
+            this.idMetadata = H.Helpers.safeNumber(idMetadataU);
+            if (!this.idMetadata) {
+                LOG.error(`${this.rootURL}?idMetadata=${idMetadataU} invalid parameter`, LOG.LS.eHTTP);
+                return this.recordStatus(404);
+            }
+            this.eMode = eDownloadMode.eMetadata;
+
+            const metadata: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(this.idMetadata!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            if (!metadata) {
+                LOG.error(`${this.rootURL}?idMetadata=${this.idMetadata} unable to fetch metadata`, LOG.LS.eHTTP);
+                return this.recordStatus(404);
+            }
+
+            if (metadata.ValueShort)
+                return { success: true, content: `${metadata.Name} = ${metadata.ValueShort}` };
+            else if (metadata.ValueExtended)
+                return { success: true, content: `${metadata.Name}\n${metadata.ValueExtended}` };
+            else if (metadata.idAssetVersionValue) {
+                const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(metadata.idAssetVersionValue);
+                if (!assetVersion) {
+                    LOG.error(`${this.rootURL}?idMetadata=${this.idMetadata} unable to fetch asset version`, LOG.LS.eHTTP);
+                    return this.recordStatus(404);
+                }
+                return { success: true, assetVersion };
+            }
+
+            LOG.error(`${this.rootURL}?idMetadata=${this.idMetadata} called without metadata value`, LOG.LS.eHTTP);
+            return this.recordStatus(404);
+        }
+
         if (idWorkflowU) {
             this.idWorkflow = H.Helpers.safeNumber(idWorkflowU);
             if (!this.idWorkflow) {
@@ -292,7 +332,7 @@ export class DownloaderParser {
                 LOG.error(`${this.rootURL}?idSystemObjectVersionComment=${this.idSystemObjectVersionComment} unable to fetch system object version`, LOG.LS.eHTTP);
                 return this.recordStatus(404);
             }
-            return { success: true, comment: systemObjectVersion.Comment };
+            return { success: true, content: systemObjectVersion.Comment };
         }
 
         return this.recordStatus(404);

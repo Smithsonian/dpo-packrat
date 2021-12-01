@@ -4,8 +4,10 @@ import fetch, { RequestInit } from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
 import * as COL from '../interface';
 import { PublishScene } from './PublishScene';
+import { PublishSubject } from './PublishSubject';
 import { Config } from '../../config';
 import * as DBAPI from '../../db';
+import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
@@ -35,7 +37,6 @@ export class EdanCollection implements COL.ICollection {
         const result: COL.CollectionQueryResults = {
             records,
             rowCount: 0,
-            error: ''
         };
 
         let gatherRaw: boolean | undefined = false;
@@ -121,8 +122,25 @@ export class EdanCollection implements COL.ICollection {
                 LOG.error(`EdanCollection.publish called with invalid ePublishState ${ePublishState} for idSystemObject ${idSystemObject}`, LOG.LS.eCOLL);
                 return false;
         }
-        const PS: PublishScene = new PublishScene(idSystemObject);
-        return PS.publish(this, ePublishState);
+
+        const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+        if (!oID) {
+            LOG.error(`EdanCollection.publish(${idSystemObject}) unable to compute object id and type`, LOG.LS.eCOLL);
+            return false;
+        }
+
+        switch (oID.eObjectType) {
+            case DBAPI.eSystemObjectType.eScene: {
+                const PS: PublishScene = new PublishScene(idSystemObject);
+                return PS.publish(this, ePublishState);
+            }
+            case DBAPI.eSystemObjectType.eSubject: {
+                const PS: PublishSubject = new PublishSubject(idSystemObject);
+                const PSRes: H.IOResults = await PS.publish(this);
+                return PSRes.success;
+            }
+        }
+        return false;
     }
 
     async createEdanMDM(edanmdm: COL.EdanMDMContent, status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {

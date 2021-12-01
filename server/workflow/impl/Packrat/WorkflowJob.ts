@@ -108,7 +108,7 @@ export class WorkflowJob implements WF.IWorkflow {
 
         // start job asynchronously, by not using await, so that we remain unblocked:
         job.executeJob(new Date());
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     async update(workflowStep: DBAPI.WorkflowStep, jobRun: DBAPI.JobRun): Promise<WF.WorkflowUpdateResults> {
@@ -119,7 +119,7 @@ export class WorkflowJob implements WF.IWorkflow {
             case DBAPI.eWorkflowJobRunStatus.eError:
             case DBAPI.eWorkflowJobRunStatus.eCancelled:
                 LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} Already Completed`, LOG.LS.eWF);
-                return { success: true, workflowComplete: true, error: '' }; // job is already done
+                return { success: true, workflowComplete: true }; // job is already done
         }
 
         let dateCompleted: Date | null = null;
@@ -130,7 +130,7 @@ export class WorkflowJob implements WF.IWorkflow {
         switch (eWorkflowStepState) {
             case DBAPI.eWorkflowJobRunStatus.eDone:
                 dateCompleted = new Date();
-                this.results = { success: true, error: '' };
+                this.results = { success: true };
                 break;
             case DBAPI.eWorkflowJobRunStatus.eError:
             case DBAPI.eWorkflowJobRunStatus.eCancelled:
@@ -168,7 +168,7 @@ export class WorkflowJob implements WF.IWorkflow {
             LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eWorkflowJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowJobRunStatus[eWorkflowStepState]}`, LOG.LS.eWF);
         // LOG.error(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${JSON.stringify(jobRun)} - ${JSON.stringify(workflowStep)}`, new Error(), LOG.LS.eWF);
 
-        return (dbUpdateResult) ? { success: true, workflowComplete, error: '' } : { success: false, workflowComplete, error: 'Database Error' };
+        return (dbUpdateResult) ? { success: true, workflowComplete } : { success: false, workflowComplete, error: 'Database Error' };
     }
 
     async updateStatus(eStatus: DBAPI.eWorkflowJobRunStatus): Promise<WF.WorkflowUpdateResults> {
@@ -239,13 +239,13 @@ export class WorkflowJob implements WF.IWorkflow {
 
         // confirm that this.workflowParams.idSystemObject are asset versions; ultimately, we will want to allow a model and/or capture data, depending on the recipe
         if (!this.workflowParams.idSystemObject)
-            return { success: true, error: '' }; // OK to call without objects to act on, at least at this point -- the job itself may complain once started
+            return { success: true }; // OK to call without objects to act on, at least at this point -- the job itself may complain once started
 
         const WFUVersion: WorkflowUtilExtractAssetVersions = await WorkflowUtil.extractAssetVersions(this.workflowParams.idSystemObject);
         if (!WFUVersion.success)
             return { success: false, error: WFUVersion.error };
 
         this.idAssetVersions = WFUVersion.idAssetVersions;
-        return { success: true, error: '' };
+        return { success: true };
     }
 }
