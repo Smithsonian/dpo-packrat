@@ -63,7 +63,7 @@ const getSystemObjectDetails = gql`
                 Comment
                 CommentLink
             }
-            licenseInherited
+            licenseInheritance
             license {
                 idLicense
                 Name

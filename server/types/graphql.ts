@@ -1910,7 +1910,7 @@ export type GetSystemObjectDetailsResult = {
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
-  licenseInherited?: Maybe<Scalars['Boolean']>;
+  licenseInheritance?: Maybe<Scalars['Int']>;
 };
 
 export type GetSourceObjectIdentiferInput = {

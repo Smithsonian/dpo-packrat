@@ -171,7 +171,7 @@ function DetailsView(): React.ReactElement {
         sourceObjects,
         derivedObjects,
         objectVersions,
-        licenseInherited = null
+        licenseInheritance = null
     } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
@@ -467,7 +467,7 @@ function DetailsView(): React.ReactElement {
                     originalFields={data.getSystemObjectDetails}
                     license={withDefaultValueNumber(details.idLicense, 0)}
                     idSystemObject={idSystemObject}
-                    licenseInherited={licenseInherited}
+                    licenseInheritance={licenseInheritance}
                     path={objectAncestors}
                 />
                 <Box display='flex' flex={2.2} flexDirection='column'>

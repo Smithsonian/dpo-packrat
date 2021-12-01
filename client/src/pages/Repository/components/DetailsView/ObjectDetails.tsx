@@ -96,7 +96,7 @@ interface ObjectDetailsProps {
     path?: RepositoryPath[][] | null;
     idSystemObject: number;
     license?: number;
-    licenseInherited?: boolean | null;
+    licenseInheritance?: number | null;
 }
 
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
@@ -117,7 +117,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         onLicenseUpdate,
         idSystemObject,
         license,
-        licenseInherited,
+        licenseInheritance,
         path
     } = props;
     const [licenseList, setLicenseList] = useState<License[]>([]);
@@ -134,12 +134,19 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         setLicenseList(licenses);
     }, [getEntries]);
 
-    const calculateAncestorDetails = ancestorPath => {
-        if (ancestorPath.length < 2) return ancestorPath[0][0];
-        return ancestorPath[ancestorPath.length - 2][0];
-    };
-
-    const ancestor = calculateAncestorDetails(path);
+    let licenseSource: RepositoryPath | null = null;
+    if (licenseInheritance && path) {
+        for (const objectAncestorList of path) {
+            for (const objectAncestor of objectAncestorList) {
+                if (objectAncestor.idSystemObject === licenseInheritance) {
+                    licenseSource = objectAncestor;
+                    break;
+                }
+            }
+            if (licenseSource)
+                break;
+        }
+    }
 
     const onClearLicenseAssignment = async () => {
         setLoading(true);
@@ -218,7 +225,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     }
                 />
             )}
-            {licenseInherited ? (
+            {licenseSource ? (
                 <Detail
                     label='License'
                     valueComponent={
@@ -226,9 +233,9 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             <Box fontStyle='italic'>
                                 <Typography>{licenseList.find(lic => lic.idLicense === license)?.Name}</Typography>
                             </Box>
-                            <Typography>{' Inherited from '}</Typography>
-                            <NewTabLink className={classes.link} to={`/repository/details/${ancestor?.idSystemObject}`} target='_blank'>
-                                <Typography>{`${getTermForSystemObjectType(ancestor?.objectType)} ${ancestor?.name}`}</Typography>
+                            <Typography>{' inherited from '}</Typography>
+                            <NewTabLink className={classes.link} to={`/repository/details/${licenseSource.idSystemObject}`} target='_blank'>
+                                <Typography>{`${getTermForSystemObjectType(licenseSource.objectType)} ${licenseSource.name}`}</Typography>
                             </NewTabLink>
                             <LoadingButton onClick={onAssignInheritedLicense} className={classes.loadingBtn} loading={loading}>
                                 Assign License
