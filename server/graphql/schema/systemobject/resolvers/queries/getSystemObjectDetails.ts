@@ -76,7 +76,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         derivedObjects,
         objectVersions,
         license: LR?.License,
-        licenseInherited: LR?.inherited,
+        licenseInheritance: LR?.inherited ? LR?.LicenseAssignment?.idSystemObject : undefined,
     };
 }
 
