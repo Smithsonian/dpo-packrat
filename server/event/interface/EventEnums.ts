@@ -13,4 +13,5 @@ export enum eEventKey {
     eSceneQCd = 5,
     eHTTPDownload = 6,
     eHTTPUpload = 7,
+    eAuthFailed = 8,
 }
