@@ -41,11 +41,13 @@ export class AuditEventGenerator {
             let AuditType: eAuditType = eAuditType.eDBUpdate;
             let eventTopic: EVENT.eEventTopic = EVENT.eEventTopic.eDB;
             switch (key) {
-                case EVENT.eEventKey.eDBCreate: AuditType = eAuditType.eDBCreate; break;
-                case EVENT.eEventKey.eDBUpdate: AuditType = eAuditType.eDBUpdate; break;
-                case EVENT.eEventKey.eDBDelete: AuditType = eAuditType.eDBDelete; break;
-                case EVENT.eEventKey.eAuthLogin: AuditType = eAuditType.eAuthLogin; eventTopic = EVENT.eEventTopic.eAuth; break;
-                case EVENT.eEventKey.eSceneQCd: AuditType = eAuditType.eSceneQCd; eventTopic = EVENT.eEventTopic.ePublish; break;
+                case EVENT.eEventKey.eDBCreate:     AuditType = eAuditType.eDBCreate;       eventTopic = EVENT.eEventTopic.eDB;         break;
+                case EVENT.eEventKey.eDBUpdate:     AuditType = eAuditType.eDBUpdate;       eventTopic = EVENT.eEventTopic.eDB;         break;
+                case EVENT.eEventKey.eDBDelete:     AuditType = eAuditType.eDBDelete;       eventTopic = EVENT.eEventTopic.eDB;         break;
+                case EVENT.eEventKey.eAuthLogin:    AuditType = eAuditType.eAuthLogin;      eventTopic = EVENT.eEventTopic.eAuth;       break;
+                case EVENT.eEventKey.eSceneQCd:     AuditType = eAuditType.eSceneQCd;       eventTopic = EVENT.eEventTopic.ePublish;    break;
+                case EVENT.eEventKey.eHTTPDownload: AuditType = eAuditType.eHTTPDownload;   eventTopic = EVENT.eEventTopic.eHTTP;       break;
+                case EVENT.eEventKey.eHTTPUpload:   AuditType = eAuditType.eHTTPUpload;     eventTopic = EVENT.eEventTopic.eHTTP;       break;
             }
 
             const value: Audit = {
