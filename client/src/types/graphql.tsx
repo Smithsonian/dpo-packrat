@@ -1913,7 +1913,7 @@ export type GetSystemObjectDetailsResult = {
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
-  licenseInherited?: Maybe<Scalars['Boolean']>;
+  licenseInheritance?: Maybe<Scalars['Int']>;
 };
 
 export type GetSourceObjectIdentiferInput = {
@@ -3664,7 +3664,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInherited'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInheritance'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -6544,7 +6544,7 @@ export const GetSystemObjectDetailsDocument = gql`
       Comment
       CommentLink
     }
-    licenseInherited
+    licenseInheritance
     license {
       idLicense
       Name
