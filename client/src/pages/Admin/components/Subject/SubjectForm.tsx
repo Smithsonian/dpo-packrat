@@ -195,7 +195,8 @@ function SubjectForm(): React.ReactElement {
 
             return isValidName && isValidUnit && isValidIdentifiers;
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error);
         }
     };
 
@@ -247,7 +248,7 @@ function SubjectForm(): React.ReactElement {
                 subject: { idUnit: subjectUnit, Name: subjectName, idGeoLocation },
                 systemCreated
             };
-            console.log('createSubjectsWithIdentifiersInput', createSubjectWithIdentifiersInput);
+            // console.log('createSubjectsWithIdentifiersInput', createSubjectWithIdentifiersInput);
 
             const {
                 data: {
@@ -259,10 +260,11 @@ function SubjectForm(): React.ReactElement {
                 reset();
                 history.push('/admin/subjects');
             } else {
-                toast.error(`Error: Failure To Create Subject - ${message}`);
+                toast.error(`Failure To Create Subject: ${message}`);
             }
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error);
         }
     };
 

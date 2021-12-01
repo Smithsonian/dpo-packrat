@@ -351,6 +351,7 @@ export type Mutation = {
   createVocabulary: CreateVocabularyResult;
   createVocabularySet: CreateVocabularySetResult;
   deleteIdentifier: DeleteIdentifierResult;
+  deleteMetadata: DeleteMetadataResult;
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
@@ -442,6 +443,11 @@ export type MutationCreateVocabularySetArgs = {
 
 export type MutationDeleteIdentifierArgs = {
   input: DeleteIdentifierInput;
+};
+
+
+export type MutationDeleteMetadataArgs = {
+  input: DeleteMetadataInput;
 };
 
 
@@ -1074,7 +1080,7 @@ export type ClearLicenseAssignmentInput = {
 export type ClearLicenseAssignmentResult = {
   __typename?: 'ClearLicenseAssignmentResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type AssignLicenseInput = {
@@ -1085,7 +1091,7 @@ export type AssignLicenseInput = {
 export type AssignLicenseResult = {
   __typename?: 'AssignLicenseResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetLicenseInput = {
@@ -1365,7 +1371,7 @@ export type NavigationResultEntry = {
 export type GetObjectChildrenResult = {
   __typename?: 'GetObjectChildrenResult';
   success: Scalars['Boolean'];
-  error: Scalars['String'];
+  error?: Maybe<Scalars['String']>;
   entries: Array<NavigationResultEntry>;
   metadataColumns: Array<Scalars['Int']>;
   cursorMark?: Maybe<Scalars['String']>;
@@ -1573,6 +1579,13 @@ export type StakeholderDetailFieldsInput = {
   PhoneNumberOffice?: Maybe<Scalars['String']>;
 };
 
+export type MetadataInput = {
+  idMetadata?: Maybe<Scalars['Int']>;
+  Name: Scalars['String'];
+  Label: Scalars['String'];
+  Value: Scalars['String'];
+};
+
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
@@ -1589,13 +1602,14 @@ export type UpdateObjectDetailsDataInput = {
   AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
   Actor?: Maybe<ActorDetailFieldsInput>;
   Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+  Metadata?: Maybe<Array<MetadataInput>>;
   Identifiers?: Maybe<Array<UpdateIdentifier>>;
 };
 
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type ExistingRelationship = {
@@ -1613,7 +1627,7 @@ export type UpdateDerivedObjectsInput = {
 export type UpdateDerivedObjectsResult = {
   __typename?: 'UpdateDerivedObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1627,7 +1641,7 @@ export type UpdateSourceObjectsInput = {
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1662,10 +1676,19 @@ export type DeleteIdentifierInput = {
   idIdentifier: Scalars['Int'];
 };
 
+export type DeleteMetadataResult = {
+  __typename?: 'DeleteMetadataResult';
+  success: Scalars['Boolean'];
+};
+
+export type DeleteMetadataInput = {
+  idMetadata: Scalars['Int'];
+};
+
 export type RollbackSystemObjectVersionResult = {
   __typename?: 'RollbackSystemObjectVersionResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type RollbackSystemObjectVersionInput = {
@@ -1676,13 +1699,14 @@ export type RollbackSystemObjectVersionInput = {
 export type CreateSubjectWithIdentifiersResult = {
   __typename?: 'CreateSubjectWithIdentifiersResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type CreateSubjectWithIdentifiersInput = {
   identifiers: Array<CreateIdentifierInput>;
   subject: CreateSubjectInput;
   systemCreated: Scalars['Boolean'];
+  metadata?: Maybe<Array<MetadataInput>>;
 };
 
 export type CreateIdentifierInput = {
@@ -1700,7 +1724,7 @@ export type PublishInput = {
 export type PublishResult = {
   __typename?: 'PublishResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 
@@ -2037,14 +2061,16 @@ export type Metadata = {
   __typename?: 'Metadata';
   idMetadata: Scalars['Int'];
   Name: Scalars['String'];
-  idSystemObject?: Maybe<Scalars['Int']>;
+  ValueShort?: Maybe<Scalars['String']>;
+  ValueExtended?: Maybe<Scalars['String']>;
+  idAssetVersionValue?: Maybe<Scalars['Int']>;
   idUser?: Maybe<Scalars['Int']>;
   idVMetadataSource?: Maybe<Scalars['Int']>;
-  idAssetVersionValue?: Maybe<Scalars['Int']>;
-  ValueExtended?: Maybe<Scalars['String']>;
-  ValueShort?: Maybe<Scalars['String']>;
+  idSystemObject?: Maybe<Scalars['Int']>;
+  idSystemObjectParent?: Maybe<Scalars['Int']>;
   AssetVersionValue?: Maybe<AssetVersion>;
   SystemObject?: Maybe<SystemObject>;
+  SystemObjectParent?: Maybe<SystemObject>;
   User?: Maybe<User>;
   VMetadataSource?: Maybe<Vocabulary>;
 };

@@ -13,12 +13,12 @@ import * as LOG from './logger';
 
 export type IOResults = {
     success: boolean;
-    error: string;
+    error?: string;
 };
 
 export type IOResultsSized = {
     success: boolean;
-    error: string;
+    error?: string;
     size: number;
 };
 
@@ -26,13 +26,13 @@ export type HashResults = {
     hash: string;
     dataLength: number;
     success: boolean;
-    error: string;
+    error?: string;
 };
 
 export type StatResults = {
     stat: Stats | null;
     success: boolean;
-    error: string;
+    error?: string;
 };
 
 export class Helpers {
@@ -70,73 +70,47 @@ export class Helpers {
     }
 
     static async copyFile(nameSource: string, nameDestination: string, allowOverwrite: boolean = true): Promise<IOResults> {
-        const res: IOResults = {
-            success: true,
-            error: ''
-        };
-
         try {
             await fsp.copyFile(nameSource, nameDestination, allowOverwrite ? 0 : fs.constants.COPYFILE_EXCL);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.copyFile', LOG.LS.eSYS, error);
-            res.success = false;
-            res.error = `Unable to copy ${nameSource} to ${nameDestination}: ${error}`;
+            return { success: false, error: `Unable to copy ${nameSource} to ${nameDestination}: ${error}` };
         }
-        return res;
+        return { success: true };
     }
 
     static async moveFile(nameSource: string, nameDestination: string): Promise<IOResults> {
-        const res: IOResults = {
-            success: true,
-            error: ''
-        };
-
         try {
             await fsp.rename(nameSource, nameDestination);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.moveFile', LOG.LS.eSYS, error);
-            res.success = false;
-            res.error = `Unable to move ${nameSource} to ${nameDestination}: ${error}`;
+            return { success: false, error: `Unable to move ${nameSource} to ${nameDestination}: ${error}` };
         }
-        return res;
+        return { success: true };
     }
 
     static async fileOrDirExists(name: string): Promise<IOResults> {
-        const res: IOResults = {
-            success: true,
-            error: ''
-        };
-
         try {
             const stats = await fsp.stat(name);
             /* istanbul ignore next */ // executing this code requires something like a symlink/junction point, which I don't want to create just for test coverage
-            if (!stats.isFile && !stats.isDirectory) {
-                res.success = false;
-                res.error = `${name} does not exist`;
-            }
+            if (!stats.isFile && !stats.isDirectory)
+                return { success: false, error: `${name} does not exist` };
         } catch (error) /* istanbul ignore next */ {
             // LOG.error('Helpers.fileOrDirExists', LOG.LS.eSYS, error);
-            res.success = false;
-            res.error = `${name} does not exist: ${error}`;
+            return { success: false, error: `${name} does not exist: ${error}` };
         }
-        return res;
+        return { success: true };
     }
 
     static async ensureFileExists(filename: string): Promise<IOResults> {
-        const res: IOResults = {
-            success: true,
-            error: ''
-        };
-
         try {
             const fileHandle: fsp.FileHandle = await fsp.open(filename, 'a');
             await fileHandle.close();
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.ensureFileExists', LOG.LS.eSYS, error);
-            res.success = false;
-            res.error = `Unable to ensure existence of ${filename}: ${error}`;
+            return { success: false, error: `Unable to ensure existence of ${filename}: ${error}` };
         }
-        return res;
+        return { success: true };
     }
 
     static async initializeFile(source: string | null, dest: string, description: string): Promise<IOResults> {
@@ -209,41 +183,29 @@ export class Helpers {
             LOG.error('Helpers.removeFile', LOG.LS.eSYS, error);
             return { success: false, error: `Unable to remove file ${filename}: ${error}` };
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     static async createDirectory(directory: string): Promise<IOResults> {
-        const res: IOResults = {
-            success: true,
-            error: ''
-        };
-
         try {
             await fsp.mkdir(directory, { recursive: true });
             // if (!fs.existsSync(directory))
             //     fs.mkdirsSync(directory);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.createDirectory', LOG.LS.eSYS, error);
-            res.success = false;
-            res.error = `Unable to create directory ${directory}: ${error}`;
+            return { success: false, error: `Unable to create directory ${directory}: ${error}` };
         }
-        return res;
+        return { success: true };
     }
 
     static async removeDirectory(directory: string, recursive: boolean = false): Promise<IOResults> {
-        const res: IOResults = {
-            success: true,
-            error: ''
-        };
-
         try {
             await fsp.rmdir(directory, { recursive });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.removeDirectory', LOG.LS.eSYS, error);
-            res.success = false;
-            res.error = `Unable to remove directory ${directory}: ${error}`;
+            return { success: false, error: `Unable to remove directory ${directory}: ${error}` };
         }
-        return res;
+        return { success: true };
     }
 
     static async initializeDirectory(directory: string, description: string): Promise<IOResults> {
@@ -288,8 +250,7 @@ export class Helpers {
     static async stat(filePath: string): Promise<StatResults> {
         const res: StatResults = {
             stat: null,
-            success: true,
-            error: ''
+            success: true
         };
 
         try {
@@ -326,7 +287,7 @@ export class Helpers {
 
             return new Promise<HashResults>((resolve) => {
                 stream.on('data', (chunk: Buffer) => { dataLength += chunk.length; });
-                stream.on('end', () => { resolve({ hash: hash.digest('hex'), dataLength, success: true, error: '' }); });
+                stream.on('end', () => { resolve({ hash: hash.digest('hex'), dataLength, success: true }); });
                 stream.on('error', () => { resolve({ hash: '', dataLength: 0, success: false, error: 'Helpers.computeHashFromFile() Stream Error' }); });
             });
         } catch (error) /* istanbul ignore next */ {
@@ -417,10 +378,10 @@ export class Helpers {
                 readStream.on('data', (chunk: Buffer) => { size += chunk.length; });
                 /* istanbul ignore else */
                 if (!waitOnEnd) {
-                    writeStream.on('finish', () => { resolve({ success: true, error: '', size }); }); /* istanbul ignore next */
-                    writeStream.on('end', () => { resolve({ success: true, error: '', size }); }); /* istanbul ignore next */
+                    writeStream.on('finish', () => { resolve({ success: true, size }); }); /* istanbul ignore next */
+                    writeStream.on('end', () => { resolve({ success: true, size }); }); /* istanbul ignore next */
                 } else {
-                    writeStream.on('end', () => { resolve({ success: true, error: '', size }); });
+                    writeStream.on('end', () => { resolve({ success: true, size }); });
                 } /* istanbul ignore next */
                 writeStream.on('error', () => { resolve({ success: false, error: 'Unknown stream error', size }); });
             });

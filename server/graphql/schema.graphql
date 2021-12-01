@@ -118,6 +118,7 @@ type Mutation {
   createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
   deleteIdentifier(input: DeleteIdentifierInput!): DeleteIdentifierResult!
+  deleteMetadata(input: DeleteMetadataInput!): DeleteMetadataResult!
   deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
@@ -667,7 +668,7 @@ input ClearLicenseAssignmentInput {
 
 type ClearLicenseAssignmentResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 input AssignLicenseInput {
@@ -677,7 +678,7 @@ input AssignLicenseInput {
 
 type AssignLicenseResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 input GetLicenseInput {
@@ -938,7 +939,7 @@ type NavigationResultEntry {
 
 type GetObjectChildrenResult {
   success: Boolean!
-  error: String!
+  error: String
   entries: [NavigationResultEntry!]!
   metadataColumns: [Int!]!
   cursorMark: String
@@ -1138,6 +1139,13 @@ input StakeholderDetailFieldsInput {
   PhoneNumberOffice: String
 }
 
+input MetadataInput {
+  idMetadata: Int
+  Name: String!
+  Label: String!
+  Value: String!
+}
+
 input UpdateObjectDetailsDataInput {
   Name: String
   Retired: Boolean
@@ -1154,12 +1162,13 @@ input UpdateObjectDetailsDataInput {
   AssetVersion: AssetVersionDetailFieldsInput
   Actor: ActorDetailFieldsInput
   Stakeholder: StakeholderDetailFieldsInput
+  Metadata: [MetadataInput!]
   Identifiers: [UpdateIdentifier!]
 }
 
 type UpdateObjectDetailsResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 input ExistingRelationship {
@@ -1176,7 +1185,7 @@ input UpdateDerivedObjectsInput {
 
 type UpdateDerivedObjectsResult {
   success: Boolean!
-  message: String!
+  message: String
   status: String!
 }
 
@@ -1189,7 +1198,7 @@ input UpdateSourceObjectsInput {
 
 type UpdateSourceObjectsResult {
   success: Boolean!
-  message: String!
+  message: String
   status: String!
 }
 
@@ -1222,9 +1231,17 @@ input DeleteIdentifierInput {
   idIdentifier: Int!
 }
 
+type DeleteMetadataResult {
+  success: Boolean!
+}
+
+input DeleteMetadataInput {
+  idMetadata: Int!
+}
+
 type RollbackSystemObjectVersionResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 input RollbackSystemObjectVersionInput {
@@ -1234,13 +1251,14 @@ input RollbackSystemObjectVersionInput {
 
 type CreateSubjectWithIdentifiersResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 input CreateSubjectWithIdentifiersInput {
   identifiers: [CreateIdentifierInput!]!
   subject: CreateSubjectInput!
   systemCreated: Boolean!
+  metadata: [MetadataInput!]
 }
 
 input CreateIdentifierInput {
@@ -1257,7 +1275,7 @@ input PublishInput {
 
 type PublishResult {
   success: Boolean!
-  message: String!
+  message: String
 }
 
 scalar JSON
@@ -1568,14 +1586,16 @@ type Identifier {
 type Metadata {
   idMetadata: Int!
   Name: String!
-  idSystemObject: Int
+  ValueShort: String
+  ValueExtended: String
+  idAssetVersionValue: Int
   idUser: Int
   idVMetadataSource: Int
-  idAssetVersionValue: Int
-  ValueExtended: String
-  ValueShort: String
+  idSystemObject: Int
+  idSystemObjectParent: Int
   AssetVersionValue: AssetVersion
   SystemObject: SystemObject
+  SystemObjectParent: SystemObject
   User: User
   VMetadataSource: Vocabulary
 }

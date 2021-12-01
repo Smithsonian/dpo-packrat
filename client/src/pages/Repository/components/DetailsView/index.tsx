@@ -429,7 +429,7 @@ function DetailsView(): React.ReactElement {
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
             } else {
-                throw new Error(data?.updateObjectDetails?.message);
+                throw new Error(data?.updateObjectDetails?.message ?? '');
             }
         } catch (error) {
             if (error instanceof Error)

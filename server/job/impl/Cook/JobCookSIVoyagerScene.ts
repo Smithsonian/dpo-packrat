@@ -64,7 +64,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     async cleanupJob(): Promise<H.IOResults> {
         try {
             if (!this._results.success)
-                return { success: true, error: '' };
+                return { success: true };
             if (this.cleanupCalled)
                 return { success: true, error: 'cleanupJob already called, exiting early' };
             this.cleanupCalled = true;
@@ -315,7 +315,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             }
         }
 
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     protected async getParameters(): Promise<JobCookSIVoyagerSceneParameters> {

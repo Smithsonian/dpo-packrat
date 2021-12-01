@@ -107,7 +107,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
     async waitForCompletion(timeout: number): Promise<H.IOResults> {
         if (this._complete)
-            return { success: true, error: '' };
+            return { success: true };
         const waitMutex: MutexInterface = withTimeout(new Mutex(), timeout);
         this._completionMutexes.push(waitMutex);
 
@@ -117,7 +117,7 @@ export abstract class JobCook<T> extends JobPackrat {
             releaseInner();
         } catch (error) {
             if (error === E_CANCELED)                   // we're done
-                return { success: true, error: '' };
+                return { success: true };
             else if (error === E_TIMEOUT)               // we timed out
                 return { success: false, error: `JobCook [${this.name()}] JobCook.waitForCompletion timed out after ${timeout}ms` };
             else
@@ -125,7 +125,7 @@ export abstract class JobCook<T> extends JobPackrat {
         } finally {
             releaseOuter();
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private async pollingLoop(timeout: number): Promise<H.IOResults> {
@@ -157,7 +157,7 @@ export abstract class JobCook<T> extends JobPackrat {
     // #region JobPackrat interface
     async startJobWorker(_fireDate: Date): Promise<H.IOResults> {
         let requestCount: number = 0;
-        let res: H.IOResults = { success: false, error: '' };
+        let res: H.IOResults = { success: false };
 
         try {
             // Create job via POST to /job
@@ -196,7 +196,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
             // Initiate job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/run
             requestCount = 0;
-            res = { success: false, error: '' };
+            res = { success: false };
             requestUrl = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
             LOG.info(`JobCook [${this.name()}] running job: ${requestUrl}`, LOG.LS.eJOB);
             while (true) {
@@ -216,7 +216,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     await H.Helpers.sleep(CookRetryDelay);
             }
 
-            res = { success: true, error: '' };
+            res = { success: true };
         } finally {
             if (!res.success)
                 await this.signalCompletion();
@@ -229,7 +229,7 @@ export abstract class JobCook<T> extends JobPackrat {
     async cancelJobWorker(): Promise<H.IOResults> {
         // Cancel job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/cancel
         let requestCount: number = 0;
-        let res: H.IOResults = { success: false, error: '' };
+        let res: H.IOResults = { success: false };
         const requestUrl: string = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/cancel`;
         LOG.info(`JobCook [${this.name()}] cancelling job: ${requestUrl}`, LOG.LS.eJOB);
         while (true) {
@@ -250,7 +250,7 @@ export abstract class JobCook<T> extends JobPackrat {
         }
 
         LOG.info(`JobCook [${this.name()}] cancelled`, LOG.LS.eJOB);
-        return { success: true, error: '' };
+        return { success: true };
     }
     // #endregion
 
@@ -305,7 +305,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     headers: { 'Content-Type': 'application/octet-stream' }
                 };
                 const RS: Readable = webdavClient.createReadStream(destination, webdavWSOpts);
-                return { readStream: RS, fileName, storageHash: null, success: true, error: '' };
+                return { readStream: RS, fileName, storageHash: null, success: true };
             } catch (error) {
                 LOG.error('JobCook [${this.name()}] JobCook.fetchFile', LOG.LS.eJOB, error);
                 return { readStream: null, fileName, storageHash: null, success: false, error: JSON.stringify(error) };
@@ -316,9 +316,9 @@ export abstract class JobCook<T> extends JobPackrat {
 
     protected async stageFiles(): Promise<H.IOResults> {
         if (!this._idAssetVersions)
-            return { success: true, error: '' };
+            return { success: true };
 
-        let resOuter: H.IOResults = { success: true, error: '' };
+        let resOuter: H.IOResults = { success: true };
         for (const idAssetVersion of this._idAssetVersions) {
             const resInner: H.IOResults = await JobCook._stagingSempaphoreWrite.runExclusive(async (value) => {
                 try {

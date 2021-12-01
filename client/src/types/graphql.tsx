@@ -354,6 +354,7 @@ export type Mutation = {
   createVocabulary: CreateVocabularyResult;
   createVocabularySet: CreateVocabularySetResult;
   deleteIdentifier: DeleteIdentifierResult;
+  deleteMetadata: DeleteMetadataResult;
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
@@ -445,6 +446,11 @@ export type MutationCreateVocabularySetArgs = {
 
 export type MutationDeleteIdentifierArgs = {
   input: DeleteIdentifierInput;
+};
+
+
+export type MutationDeleteMetadataArgs = {
+  input: DeleteMetadataInput;
 };
 
 
@@ -1077,7 +1083,7 @@ export type ClearLicenseAssignmentInput = {
 export type ClearLicenseAssignmentResult = {
   __typename?: 'ClearLicenseAssignmentResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type AssignLicenseInput = {
@@ -1088,7 +1094,7 @@ export type AssignLicenseInput = {
 export type AssignLicenseResult = {
   __typename?: 'AssignLicenseResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetLicenseInput = {
@@ -1368,7 +1374,7 @@ export type NavigationResultEntry = {
 export type GetObjectChildrenResult = {
   __typename?: 'GetObjectChildrenResult';
   success: Scalars['Boolean'];
-  error: Scalars['String'];
+  error?: Maybe<Scalars['String']>;
   entries: Array<NavigationResultEntry>;
   metadataColumns: Array<Scalars['Int']>;
   cursorMark?: Maybe<Scalars['String']>;
@@ -1576,6 +1582,13 @@ export type StakeholderDetailFieldsInput = {
   PhoneNumberOffice?: Maybe<Scalars['String']>;
 };
 
+export type MetadataInput = {
+  idMetadata?: Maybe<Scalars['Int']>;
+  Name: Scalars['String'];
+  Label: Scalars['String'];
+  Value: Scalars['String'];
+};
+
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
@@ -1592,13 +1605,14 @@ export type UpdateObjectDetailsDataInput = {
   AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
   Actor?: Maybe<ActorDetailFieldsInput>;
   Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+  Metadata?: Maybe<Array<MetadataInput>>;
   Identifiers?: Maybe<Array<UpdateIdentifier>>;
 };
 
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type ExistingRelationship = {
@@ -1616,7 +1630,7 @@ export type UpdateDerivedObjectsInput = {
 export type UpdateDerivedObjectsResult = {
   __typename?: 'UpdateDerivedObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1630,7 +1644,7 @@ export type UpdateSourceObjectsInput = {
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1665,10 +1679,19 @@ export type DeleteIdentifierInput = {
   idIdentifier: Scalars['Int'];
 };
 
+export type DeleteMetadataResult = {
+  __typename?: 'DeleteMetadataResult';
+  success: Scalars['Boolean'];
+};
+
+export type DeleteMetadataInput = {
+  idMetadata: Scalars['Int'];
+};
+
 export type RollbackSystemObjectVersionResult = {
   __typename?: 'RollbackSystemObjectVersionResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type RollbackSystemObjectVersionInput = {
@@ -1679,13 +1702,14 @@ export type RollbackSystemObjectVersionInput = {
 export type CreateSubjectWithIdentifiersResult = {
   __typename?: 'CreateSubjectWithIdentifiersResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type CreateSubjectWithIdentifiersInput = {
   identifiers: Array<CreateIdentifierInput>;
   subject: CreateSubjectInput;
   systemCreated: Scalars['Boolean'];
+  metadata?: Maybe<Array<MetadataInput>>;
 };
 
 export type CreateIdentifierInput = {
@@ -1703,7 +1727,7 @@ export type PublishInput = {
 export type PublishResult = {
   __typename?: 'PublishResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 
@@ -2040,14 +2064,16 @@ export type Metadata = {
   __typename?: 'Metadata';
   idMetadata: Scalars['Int'];
   Name: Scalars['String'];
-  idSystemObject?: Maybe<Scalars['Int']>;
+  ValueShort?: Maybe<Scalars['String']>;
+  ValueExtended?: Maybe<Scalars['String']>;
+  idAssetVersionValue?: Maybe<Scalars['Int']>;
   idUser?: Maybe<Scalars['Int']>;
   idVMetadataSource?: Maybe<Scalars['Int']>;
-  idAssetVersionValue?: Maybe<Scalars['Int']>;
-  ValueExtended?: Maybe<Scalars['String']>;
-  ValueShort?: Maybe<Scalars['String']>;
+  idSystemObject?: Maybe<Scalars['Int']>;
+  idSystemObjectParent?: Maybe<Scalars['Int']>;
   AssetVersionValue?: Maybe<AssetVersion>;
   SystemObject?: Maybe<SystemObject>;
+  SystemObjectParent?: Maybe<SystemObject>;
   User?: Maybe<User>;
   VMetadataSource?: Maybe<Vocabulary>;
 };
@@ -2796,6 +2822,19 @@ export type DeleteIdentifierMutation = (
   & { deleteIdentifier: (
     { __typename?: 'DeleteIdentifierResult' }
     & Pick<DeleteIdentifierResult, 'success'>
+  ) }
+);
+
+export type DeleteMetadataMutationVariables = Exact<{
+  input: DeleteMetadataInput;
+}>;
+
+
+export type DeleteMetadataMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteMetadata: (
+    { __typename?: 'DeleteMetadataResult' }
+    & Pick<DeleteMetadataResult, 'success'>
   ) }
 );
 
@@ -4453,6 +4492,39 @@ export function useDeleteIdentifierMutation(baseOptions?: Apollo.MutationHookOpt
 export type DeleteIdentifierMutationHookResult = ReturnType<typeof useDeleteIdentifierMutation>;
 export type DeleteIdentifierMutationResult = Apollo.MutationResult<DeleteIdentifierMutation>;
 export type DeleteIdentifierMutationOptions = Apollo.BaseMutationOptions<DeleteIdentifierMutation, DeleteIdentifierMutationVariables>;
+export const DeleteMetadataDocument = gql`
+    mutation deleteMetadata($input: DeleteMetadataInput!) {
+  deleteMetadata(input: $input) {
+    success
+  }
+}
+    `;
+export type DeleteMetadataMutationFn = Apollo.MutationFunction<DeleteMetadataMutation, DeleteMetadataMutationVariables>;
+
+/**
+ * __useDeleteMetadataMutation__
+ *
+ * To run a mutation, you first call `useDeleteMetadataMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteMetadataMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteMetadataMutation, { data, loading, error }] = useDeleteMetadataMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteMetadataMutation(baseOptions?: Apollo.MutationHookOptions<DeleteMetadataMutation, DeleteMetadataMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteMetadataMutation, DeleteMetadataMutationVariables>(DeleteMetadataDocument, options);
+      }
+export type DeleteMetadataMutationHookResult = ReturnType<typeof useDeleteMetadataMutation>;
+export type DeleteMetadataMutationResult = Apollo.MutationResult<DeleteMetadataMutation>;
+export type DeleteMetadataMutationOptions = Apollo.BaseMutationOptions<DeleteMetadataMutation, DeleteMetadataMutationVariables>;
 export const DeleteObjectConnectionDocument = gql`
     mutation deleteObjectConnection($input: DeleteObjectConnectionInput!) {
   deleteObjectConnection(input: $input) {
