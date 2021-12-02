@@ -1908,10 +1908,12 @@ export type GetSystemObjectDetailsResult = {
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
   objectVersions: Array<SystemObjectVersion>;
+  metadata: Array<Metadata>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  assetOwner?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
   licenseInheritance?: Maybe<Scalars['Int']>;
 };
@@ -3680,6 +3682,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, item?: Maybe<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
+    )>, assetOwner?: Maybe<(
+      { __typename?: 'RepositoryPath' }
+      & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
     )>, objectAncestors: Array<Array<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
@@ -3692,6 +3697,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, objectVersions: Array<(
       { __typename?: 'SystemObjectVersion' }
       & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated' | 'Comment' | 'CommentLink'>
+    )>, metadata: Array<(
+      { __typename?: 'Metadata' }
+      & Pick<Metadata, 'idMetadata' | 'Name' | 'ValueShort' | 'ValueExtended' | 'idAssetVersionValue' | 'idVMetadataSource'>
     )>, license?: Maybe<(
       { __typename?: 'License' }
       & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
@@ -6519,6 +6527,11 @@ export const GetSystemObjectDetailsDocument = gql`
       name
       objectType
     }
+    assetOwner {
+      idSystemObject
+      name
+      objectType
+    }
     objectAncestors {
       idSystemObject
       name
@@ -6543,6 +6556,14 @@ export const GetSystemObjectDetailsDocument = gql`
       DateCreated
       Comment
       CommentLink
+    }
+    metadata {
+      idMetadata
+      Name
+      ValueShort
+      ValueExtended
+      idAssetVersionValue
+      idVMetadataSource
     }
     licenseInheritance
     license {
