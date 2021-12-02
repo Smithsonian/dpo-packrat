@@ -1909,6 +1909,7 @@ export type GetSystemObjectDetailsResult = {
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  assetOwner?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
   licenseInheritance?: Maybe<Scalars['Int']>;
 };
