@@ -1908,6 +1908,7 @@ export type GetSystemObjectDetailsResult = {
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
   objectVersions: Array<SystemObjectVersion>;
+  metadata: Array<Metadata>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
@@ -3696,6 +3697,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, objectVersions: Array<(
       { __typename?: 'SystemObjectVersion' }
       & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated' | 'Comment' | 'CommentLink'>
+    )>, metadata: Array<(
+      { __typename?: 'Metadata' }
+      & Pick<Metadata, 'idMetadata' | 'Name' | 'ValueShort' | 'ValueExtended' | 'idAssetVersionValue' | 'idVMetadataSource'>
     )>, license?: Maybe<(
       { __typename?: 'License' }
       & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
@@ -6552,6 +6556,14 @@ export const GetSystemObjectDetailsDocument = gql`
       DateCreated
       Comment
       CommentLink
+    }
+    metadata {
+      idMetadata
+      Name
+      ValueShort
+      ValueExtended
+      idAssetVersionValue
+      idVMetadataSource
     }
     licenseInheritance
     license {

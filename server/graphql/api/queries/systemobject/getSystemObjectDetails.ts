@@ -68,6 +68,14 @@ const getSystemObjectDetails = gql`
                 Comment
                 CommentLink
             }
+            metadata {
+                idMetadata
+                Name
+                ValueShort
+                ValueExtended
+                idAssetVersionValue
+                idVMetadataSource
+            }
             licenseInheritance
             license {
                 idLicense
