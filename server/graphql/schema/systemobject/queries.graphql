@@ -172,10 +172,12 @@ type GetSystemObjectDetailsResult {
     sourceObjects: [RelatedObject!]!
     derivedObjects: [RelatedObject!]!
     objectVersions: [SystemObjectVersion!]!
+    metadata: [Metadata!]!
     unit: RepositoryPath
     project: RepositoryPath
     subject: RepositoryPath
     item: RepositoryPath
+    assetOwner: RepositoryPath
     license: License
     licenseInheritance: Int
 }
