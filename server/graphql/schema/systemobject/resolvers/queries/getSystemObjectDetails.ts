@@ -57,6 +57,13 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject, OGD);
     // LOG.info('getSystemObjectDetails 3', LOG.LS.eGQL);
 
+    const metadata: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchFromSystemObject(idSystemObject);
+    if (!metadata) {
+        const message: string = `Unable to retrieve metadata for ID: ${idSystemObject}`;
+        LOG.error(`getSystemObjectDetails: ${message}`, LOG.LS.eGQL);
+        throw new Error(message);
+    }
+
     return {
         idSystemObject,
         idObject: oID.idObject,
@@ -77,6 +84,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         sourceObjects,
         derivedObjects,
         objectVersions,
+        metadata,
         assetOwner,
         license: LR?.License,
         licenseInheritance: LR?.inherited ? LR?.LicenseAssignment?.idSystemObject : undefined,
