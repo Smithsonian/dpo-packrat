@@ -128,7 +128,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             <Box>
                 {assetOwner &&
                 (
-                    <Box display='flex' className={classes.assetOwner}>
+                    <Box className={classes.assetOwner}>
                         <Typography>Asset Owner:</Typography>
                         &nbsp;
                         <Typography className={classes.assetOwnerType}>{getTermForSystemObjectType(assetOwner.objectType)}</Typography>
