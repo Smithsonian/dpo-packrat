@@ -167,6 +167,7 @@ function DetailsView(): React.ReactElement {
         project,
         subject,
         item,
+        assetOwner,
         objectAncestors,
         sourceObjects,
         derivedObjects,
@@ -498,6 +499,7 @@ function DetailsView(): React.ReactElement {
                     disabled={disabled}
                     idSystemObject={idSystemObject}
                     objectType={objectType}
+                    assetOwner={assetOwner}
                     sourceObjects={sourceObjects}
                     derivedObjects={derivedObjects}
                     onAddSourceObject={onAddSourceObject}

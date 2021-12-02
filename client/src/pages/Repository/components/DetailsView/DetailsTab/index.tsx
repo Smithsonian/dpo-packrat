@@ -6,7 +6,7 @@
  *
  * This component renders details tab for the DetailsView component.
  */
-import { Box, Tab, TabProps, Tabs, Button } from '@material-ui/core';
+import { Box, Tab, TabProps, Tabs, Button, Typography } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
 import { StateRelatedObject } from '../../../../../store';
@@ -25,7 +25,8 @@ import {
     StakeholderDetailFieldsInput,
     GetDetailsTabDataForObjectQueryResult,
     UnitDetailFieldsInput,
-    SystemObjectVersion
+    SystemObjectVersion,
+    RepositoryPath
 } from '../../../../../types/graphql';
 import { eSystemObjectType } from '../../../../../types/server';
 import RelatedObjectsList from '../../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
@@ -46,6 +47,8 @@ import UnitDetails from './UnitDetails';
 import ObjectVersionTable from './ObjectVersionTable';
 import { deleteObjectConnection } from '../../../hooks/useDetailsView';
 import { sharedButtonProps } from '../../../../../utils/shared';
+import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
+import { NewTabLink } from '../../../../../components';
 import { useHistory } from 'react-router-dom';
 import { updateSystemObjectUploadRedirect } from '../../../../../constants';
 import AssetGrid from './AssetGrid';
@@ -56,6 +59,18 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     tabpanel: {
         backgroundColor: fade(palette.primary.main, 0.25)
+    },
+    assetOwner: {
+        display: 'flex',
+        width: '100%',
+        marginBottom: 12
+    },
+    assetOwnerLink: {
+        color: palette.primary.main,
+        textDecoration: 'underline',
+    },
+    assetOwnerType: {
+        color: palette.primary.main,
     },
     updateButton: sharedButtonProps
 }));
@@ -84,6 +99,7 @@ type DetailsTabParams = {
     disabled: boolean;
     idSystemObject: number;
     objectType: eSystemObjectType;
+    assetOwner: RepositoryPath | undefined | null;
     sourceObjects: StateRelatedObject[];
     derivedObjects: StateRelatedObject[];
     onAddSourceObject: () => void;
@@ -94,7 +110,7 @@ type DetailsTabParams = {
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
-    const { disabled, idSystemObject, objectType, sourceObjects, derivedObjects, onAddSourceObject, onAddDerivedObject, onUpdateDetail, objectVersions, detailQuery } = props;
+    const { disabled, idSystemObject, objectType, assetOwner, sourceObjects, derivedObjects, onAddSourceObject, onAddDerivedObject, onUpdateDetail, objectVersions, detailQuery } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
     const history = useHistory();
@@ -109,26 +125,40 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     let tabPanels: React.ReactNode = null;
     const RelatedTab = (index: number) => (
         <TabPanel value={tab} index={index}>
-            <RelatedObjectsList
-                disabled={disabled}
-                type={RelatedObjectType.Source}
-                relatedObjects={sourceObjects}
-                onAdd={onAddSourceObject}
-                currentObject={idSystemObject}
-                onRemoveConnection={deleteObjectConnection}
-                objectType={objectType}
-                relationshipLanguage='Parent(s)'
-            />
-            <RelatedObjectsList
-                disabled={disabled}
-                type={RelatedObjectType.Derived}
-                relatedObjects={derivedObjects}
-                onAdd={onAddDerivedObject}
-                currentObject={idSystemObject}
-                onRemoveConnection={deleteObjectConnection}
-                objectType={objectType}
-                relationshipLanguage='Child(ren)'
-            />
+            <Box>
+                {assetOwner &&
+                (
+                    <Box display='flex' className={classes.assetOwner}>
+                        <Typography>Asset Owner:</Typography>
+                        &nbsp;
+                        <Typography className={classes.assetOwnerType}>{getTermForSystemObjectType(assetOwner.objectType)}</Typography>
+                        &nbsp;
+                        <NewTabLink to={getDetailsUrlForObject(assetOwner.idSystemObject)}>
+                            <Typography className={classes.assetOwnerLink}>{assetOwner.name}</Typography>
+                        </NewTabLink>
+                    </Box>
+                )}
+                <RelatedObjectsList
+                    disabled={disabled}
+                    type={RelatedObjectType.Source}
+                    relatedObjects={sourceObjects}
+                    onAdd={onAddSourceObject}
+                    currentObject={idSystemObject}
+                    onRemoveConnection={deleteObjectConnection}
+                    objectType={objectType}
+                    relationshipLanguage='Parent(s)'
+                />
+                <RelatedObjectsList
+                    disabled={disabled}
+                    type={RelatedObjectType.Derived}
+                    relatedObjects={derivedObjects}
+                    onAdd={onAddDerivedObject}
+                    currentObject={idSystemObject}
+                    onRemoveConnection={deleteObjectConnection}
+                    objectType={objectType}
+                    relationshipLanguage='Child(ren)'
+                />
+            </Box>
         </TabPanel>
     );
 

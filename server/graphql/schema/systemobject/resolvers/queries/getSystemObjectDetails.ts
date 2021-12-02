@@ -51,6 +51,8 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         throw new Error(message);
     }
 
+    const assetOwner: RepositoryPath | undefined = await computeAssetOwner(oID);
+
     const name: string = await resolveNameForObject(idSystemObject);
     const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject, OGD);
     // LOG.info('getSystemObjectDetails 3', LOG.LS.eGQL);
@@ -75,6 +77,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         sourceObjects,
         derivedObjects,
         objectVersions,
+        assetOwner,
         license: LR?.License,
         licenseInheritance: LR?.inherited ? LR?.LicenseAssignment?.idSystemObject : undefined,
     };
@@ -287,4 +290,43 @@ async function objectToRepositoryPath(objects: Objects, objectType: DBAPI.eSyste
 async function resolveNameForObject(idSystemObject: number): Promise<string> {
     const name: string | undefined = await CACHE.SystemObjectCache.getObjectNameByID(idSystemObject);
     return name || unknownName;
+}
+
+async function computeAssetOwner(oID: DBAPI.ObjectIDAndType): Promise<RepositoryPath | undefined> {
+    let idAsset: number | undefined = undefined;
+
+    switch (oID.eObjectType) {
+        case DBAPI.eSystemObjectType.eAsset:
+            idAsset = oID.idObject;
+            break;
+
+        case DBAPI.eSystemObjectType.eAssetVersion: {
+            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(oID.idObject);
+            if (!assetVersion)
+                LOG.error(`getSystemObjectDetails: failed to load asset version with id ${oID.idObject}`, LOG.LS.eGQL);
+            else
+                idAsset = assetVersion.idAsset;
+        } break;
+    }
+
+    if (!idAsset)
+        return undefined;
+
+    const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
+    if (!asset) {
+        LOG.error(`getSystemObjectDetails: failed to load asset with id ${idAsset}`, LOG.LS.eGQL);
+        return undefined;
+    }
+
+    if (!asset.idSystemObject)
+        return undefined;
+
+    const oIDParent: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(asset.idSystemObject);
+    if (!oIDParent) {
+        LOG.error(`getSystemObjectDetails: failed to load system object information for idSystemObject ${asset.idSystemObject}`, LOG.LS.eGQL);
+        return undefined;
+    }
+
+    const name: string = await resolveNameForObject(asset.idSystemObject);
+    return { idSystemObject: asset.idSystemObject, name, objectType: oIDParent.eObjectType };
 }
