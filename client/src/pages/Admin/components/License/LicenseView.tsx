@@ -155,7 +155,6 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
     };
 
     const search = () => {
-        console.log('searchFiler', searchFilter);
         queryByFilter(searchFilter);
     };
 
