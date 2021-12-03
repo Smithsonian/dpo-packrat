@@ -583,7 +583,8 @@ export class AssetStorageAdapter {
             let promoteAssetNeeded: boolean = false;
             let assetVersionComponent: DBAPI.AssetVersion | null = null;
             let assetComponent: DBAPI.Asset | null = asset.idSystemObject ?
-                await DBAPI.Asset.fetchMatching(asset.idSystemObject, FileName, FilePath, idVAssetType) : null;
+                await DBAPI.Asset.fetchMatching(asset.idSystemObject, FileName, idVAssetType) : null;
+                // await DBAPI.Asset.fetchMatching(asset.idSystemObject, FileName, FilePath, idVAssetType) : null;
 
             if (assetComponent) {
                 LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker FOUND matching idSystemObject=${asset.idSystemObject}; FileName=${FileName}; FilePath=${FilePath}; idVAssetType=${idVAssetType}; assetComponent=${JSON.stringify(assetComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
