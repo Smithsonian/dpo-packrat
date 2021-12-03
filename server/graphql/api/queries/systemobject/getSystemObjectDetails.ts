@@ -75,6 +75,8 @@ const getSystemObjectDetails = gql`
                 ValueExtended
                 idAssetVersionValue
                 idVMetadataSource
+                Value
+                Label
             }
             licenseInheritance
             license {

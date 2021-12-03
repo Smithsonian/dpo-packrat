@@ -2078,6 +2078,8 @@ export type Metadata = {
   SystemObjectParent?: Maybe<SystemObject>;
   User?: Maybe<User>;
   VMetadataSource?: Maybe<Vocabulary>;
+  Label?: Maybe<Scalars['String']>;
+  Value?: Maybe<Scalars['String']>;
 };
 
 export type CreateUnitInput = {
@@ -3699,7 +3701,7 @@ export type GetSystemObjectDetailsQuery = (
       & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated' | 'Comment' | 'CommentLink'>
     )>, metadata: Array<(
       { __typename?: 'Metadata' }
-      & Pick<Metadata, 'idMetadata' | 'Name' | 'ValueShort' | 'ValueExtended' | 'idAssetVersionValue' | 'idVMetadataSource'>
+      & Pick<Metadata, 'idMetadata' | 'Name' | 'ValueShort' | 'ValueExtended' | 'idAssetVersionValue' | 'idVMetadataSource' | 'Value' | 'Label'>
     )>, license?: Maybe<(
       { __typename?: 'License' }
       & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
@@ -6564,6 +6566,8 @@ export const GetSystemObjectDetailsDocument = gql`
       ValueExtended
       idAssetVersionValue
       idVMetadataSource
+      Value
+      Label
     }
     licenseInheritance
     license {

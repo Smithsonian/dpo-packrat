@@ -2075,6 +2075,8 @@ export type Metadata = {
   SystemObjectParent?: Maybe<SystemObject>;
   User?: Maybe<User>;
   VMetadataSource?: Maybe<Vocabulary>;
+  Label?: Maybe<Scalars['String']>;
+  Value?: Maybe<Scalars['String']>;
 };
 
 export type CreateUnitInput = {
