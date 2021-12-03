@@ -4,6 +4,7 @@
 
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
+import * as COL from '../../../../../collections/interface';
 
 const Metadata = {
     AssetVersionValue: async (parent: Parent): Promise<DBAPI.AssetVersion | null> => {
@@ -20,7 +21,24 @@ const Metadata = {
     },
     VMetadataSource: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
         return parent.idVMetadataSource ? await DBAPI.Vocabulary.fetch(parent.idVMetadataSource) : null;
-    }
+    },
+    Label: (parent: Parent): string => {
+        const { label, content } = computeLabelAndContent(parent);
+        content;
+        return label;
+    },
+    Value: (parent: Parent): string => {
+        const { label, content } = computeLabelAndContent(parent);
+        label;
+        return content;
+    },
 };
+
+function computeLabelAndContent(parent: Parent): { label: string, content: string } {
+    let value: string | undefined | null = parent.ValueShort;
+    if (!value)
+        value = parent.ValueExtended;
+    return COL.parseEdanMetadata(value ?? '');
+}
 
 export default Metadata;
