@@ -1,5 +1,6 @@
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
+import * as COL from '../../collections/interface';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
@@ -274,11 +275,13 @@ export class DownloaderParser {
                 return this.recordStatus(404);
             }
 
-            if (metadata.ValueShort)
-                return { success: true, content: `${metadata.Name} = ${metadata.ValueShort}` };
-            else if (metadata.ValueExtended)
-                return { success: true, content: `${metadata.Name}\n${metadata.ValueExtended}` };
-            else if (metadata.idAssetVersionValue) {
+            const value: string | null = metadata.ValueShort ?? metadata.ValueExtended;
+            if (value) {
+                const { label, content } = COL.parseEdanMetadata(value);
+                const seperator: string = metadata.ValueExtended || label ? '\n' : ' = ';
+                const labelPrefix: string = label ? `Label = ${label}\nValue = ` : '';
+                return { success: true, content: `${metadata.Name}${seperator}${labelPrefix}${content}` };
+            } else if (metadata.idAssetVersionValue) {
                 const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(metadata.idAssetVersionValue);
                 if (!assetVersion) {
                     LOG.error(`${this.requestURL} unable to fetch asset version`, LOG.LS.eHTTP);
