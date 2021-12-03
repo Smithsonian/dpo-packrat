@@ -2256,8 +2256,14 @@ describe('DB Fetch By ID Test Suite', () => {
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eUnknown);
             audit.setAuditType(DBAPI.eAuditType.eAuthLogin);
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eAuthLogin);
+            audit.setAuditType(DBAPI.eAuditType.eAuthFailed);
+            expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eAuthFailed);
             audit.setAuditType(DBAPI.eAuditType.eSceneQCd);
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eSceneQCd);
+            audit.setAuditType(DBAPI.eAuditType.eHTTPDownload);
+            expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eHTTPDownload);
+            audit.setAuditType(DBAPI.eAuditType.eHTTPUpload);
+            expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eHTTPUpload);
             audit.setAuditType(DBAPI.eAuditType.eDBCreate);
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eDBCreate);
             audit.setAuditType(DBAPI.eAuditType.eDBUpdate);

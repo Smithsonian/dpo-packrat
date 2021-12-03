@@ -167,11 +167,12 @@ function DetailsView(): React.ReactElement {
         project,
         subject,
         item,
+        assetOwner,
         objectAncestors,
         sourceObjects,
         derivedObjects,
         objectVersions,
-        licenseInherited = null
+        licenseInheritance = null
     } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
@@ -429,7 +430,7 @@ function DetailsView(): React.ReactElement {
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
             } else {
-                throw new Error(data?.updateObjectDetails?.message);
+                throw new Error(data?.updateObjectDetails?.message ?? '');
             }
         } catch (error) {
             if (error instanceof Error)
@@ -467,7 +468,7 @@ function DetailsView(): React.ReactElement {
                     originalFields={data.getSystemObjectDetails}
                     license={withDefaultValueNumber(details.idLicense, 0)}
                     idSystemObject={idSystemObject}
-                    licenseInherited={licenseInherited}
+                    licenseInheritance={licenseInheritance}
                     path={objectAncestors}
                 />
                 <Box display='flex' flex={2.2} flexDirection='column'>
@@ -498,6 +499,7 @@ function DetailsView(): React.ReactElement {
                     disabled={disabled}
                     idSystemObject={idSystemObject}
                     objectType={objectType}
+                    assetOwner={assetOwner}
                     sourceObjects={sourceObjects}
                     derivedObjects={derivedObjects}
                     onAddSourceObject={onAddSourceObject}

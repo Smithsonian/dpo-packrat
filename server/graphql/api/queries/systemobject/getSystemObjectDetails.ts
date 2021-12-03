@@ -38,6 +38,11 @@ const getSystemObjectDetails = gql`
                 name
                 objectType
             }
+            assetOwner {
+                idSystemObject
+                name
+                objectType
+            }
             objectAncestors {
                 idSystemObject
                 name
@@ -63,7 +68,15 @@ const getSystemObjectDetails = gql`
                 Comment
                 CommentLink
             }
-            licenseInherited
+            metadata {
+                idMetadata
+                Name
+                ValueShort
+                ValueExtended
+                idAssetVersionValue
+                idVMetadataSource
+            }
+            licenseInheritance
             license {
                 idLicense
                 Name

@@ -5,7 +5,7 @@ import * as LOG from '../../../utils/logger';
 
 export type WorkflowUtilExtractAssetVersions = {
     success: boolean;
-    error: string;
+    error?: string;
     idAssetVersions: number[] | null;
 };
 
@@ -13,7 +13,7 @@ export class WorkflowUtil {
     static async extractAssetVersions(idSOs: number[] | null): Promise<WorkflowUtilExtractAssetVersions> {
         // confirm that idSystemObject are asset versions; ultimately, we will want to allow a model and/or capture data, depending on the recipe
         if (!idSOs)
-            return { success: true, error: '', idAssetVersions: null }; // OK to call without objects to act on, at least at this point -- the job itself may complain once started
+            return { success: true, idAssetVersions: null }; // OK to call without objects to act on, at least at this point -- the job itself may complain once started
 
         const idAssetVersions: number[] | null = [];
         for (const idSystemObject of idSOs) {
@@ -29,6 +29,6 @@ export class WorkflowUtil {
             }
             idAssetVersions.push(OID.idObject);
         }
-        return { success: true, error: '', idAssetVersions };
+        return { success: true, idAssetVersions };
     }
 }

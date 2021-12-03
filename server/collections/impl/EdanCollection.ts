@@ -37,7 +37,6 @@ export class EdanCollection implements COL.ICollection {
         const result: COL.CollectionQueryResults = {
             records,
             rowCount: 0,
-            error: ''
         };
 
         let gatherRaw: boolean | undefined = false;

@@ -17,10 +17,10 @@ import * as fs from 'fs-extra';
 import mime from 'mime';
 
 export type AssetStorageResult = {
-    asset: DBAPI.Asset | null,
-    assetVersion: DBAPI.AssetVersion | null,
-    success: boolean,
-    error: string
+    asset: DBAPI.Asset | null;
+    assetVersion: DBAPI.AssetVersion | null;
+    success: boolean;
+    error?: string;
 };
 
 export type IngestAssetInput = {
@@ -34,18 +34,18 @@ export type IngestAssetInput = {
 };
 
 export type IngestAssetResult = {
-    success: boolean,
-    error: string
-    assets?: DBAPI.Asset[] | null | undefined,
-    assetVersions?: DBAPI.AssetVersion[] | null | undefined,
-    systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined,
+    success: boolean;
+    error?: string;
+    assets?: DBAPI.Asset[] | null | undefined;
+    assetVersions?: DBAPI.AssetVersion[] | null | undefined;
+    systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined;
 };
 
 export type AssetStorageResultCommit = {
-    assets: DBAPI.Asset[] | null,
-    assetVersions: DBAPI.AssetVersion[] | null,
-    success: boolean,
-    error: string
+    assets: DBAPI.Asset[] | null;
+    assetVersions: DBAPI.AssetVersion[] | null;
+    success: boolean;
+    error?: string;
 };
 
 export type AssetStorageCommitNewAssetInput = {
@@ -72,7 +72,7 @@ export type AssetStorageCommitNewAssetVersionInput = {
 
 export type CrackAssetResult = {
     success: boolean;
-    error: string;
+    error?: string;
     zip: IZip | null;
     asset: DBAPI.Asset | null;
     isBagit: boolean;
@@ -94,17 +94,17 @@ export type IngestStreamOrFileInput = {
 
 export type IngestStreamOrFileResult = {
     success: boolean;
-    error: string;
+    error?: string;
     asset?: DBAPI.Asset | null | undefined;
     assetVersion?: DBAPI.AssetVersion | null | undefined;
     systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined;
 };
 
 type AssetFileOrStreamResult = {
-    success: boolean,
-    fileName?: string,
-    stream?: NodeJS.ReadableStream,
-    error?: string
+    success: boolean;
+    fileName?: string;
+    stream?: NodeJS.ReadableStream;
+    error?: string;
 };
 
 /**
@@ -233,7 +233,7 @@ export class AssetStorageAdapter {
             DateCreated, resStorage, commitWriteStreamInput.storageKey, false, idSOAttachment, null, assetNameOverride, ingested);
         /* istanbul ignore else */
         if (assetVersion)
-            return { assets: [ asset ], assetVersions: [ assetVersion ], success: true, error: '' };
+            return { assets: [ asset ], assetVersions: [ assetVersion ], success: true };
         else
             return { assets: null, assetVersions: null, success: false, error: 'AssetStorageAdapter.commitNewAssetVersionNonBulk unable to create assets & asset versions' };
     }
@@ -293,7 +293,7 @@ export class AssetStorageAdapter {
                 return { assets: null, assetVersions: null, success: false, error: 'AssetStorageAdapter.commitNewAssetVersionBulk unable to create assets & asset versions' };
         }
 
-        return { assets, assetVersions, success: true, error: '' };
+        return { assets, assetVersions, success: true };
     }
 
     /** creates asset (if asset.idAsset == 0) and creates an assetVersion */
@@ -483,7 +483,7 @@ export class AssetStorageAdapter {
             if (!ASR.success || !ASR.asset || !ASR.assetVersion)
                 return { success: false, error: ASR.error };
             else
-                return { success: true, error: '', assets: [ASR.asset], assetVersions: [ASR.assetVersion], systemObjectVersion: null };
+                return { success: true, assets: [ASR.asset], assetVersions: [ASR.assetVersion], systemObjectVersion: null };
         }
     }
 
@@ -492,7 +492,7 @@ export class AssetStorageAdapter {
         const assets: DBAPI.Asset[] = [];
         const assetVersions: DBAPI.AssetVersion[] = [];
         const eAssetTypeMaster: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType);
-        let IAR: IngestAssetResult = { success: true, error: '' };
+        let IAR: IngestAssetResult = { success: true };
 
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${asset.FilePath}/` : '';
@@ -606,7 +606,7 @@ export class AssetStorageAdapter {
             }
 
             if (!assetVersionComponent) {
-                const CWSR: STORE.CommitWriteStreamResult = { storageHash: hashResults.hash, storageSize: hashResults.dataLength, success: true, error: '' };
+                const CWSR: STORE.CommitWriteStreamResult = { storageHash: hashResults.hash, storageSize: hashResults.dataLength, success: true };
                 assetVersionComponent = await AssetStorageAdapter.createAssetConstellation(assetComponent, assetVersion.idUserCreator,
                     assetVersion.DateCreated, CWSR, '', false, null, null, null, ingested); /* istanbul ignore next */
                 promoteAssetNeeded = true;
@@ -642,7 +642,7 @@ export class AssetStorageAdapter {
         // Discard the source file if we're the last one using it, retire the asset version, clear the StorageKeyStaging, and retire the asset if all versions are retired
         const ASR: AssetStorageResult = await AssetStorageAdapter.discardAssetVersion(assetVersion); /* istanbul ignore next */
         if (ASR.success)
-            return { success: true, error: '', assets, assetVersions, systemObjectVersion: null };
+            return { success: true, assets, assetVersions, systemObjectVersion: null };
         else {
             const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker: ${ASR.error}`;
             LOG.error(error, LOG.LS.eSTR);
@@ -672,7 +672,7 @@ export class AssetStorageAdapter {
         // /* istanbul ignore next */
         // const retireRes: H.IOResults = await AssetStorageAdapter.retireAssetIfAllVersionsAreRetired(asset);
         // return (retireRes.success)
-        //     ? { success: true, error: '', assets, assetVersions, systemObjectVersion: null }
+        //     ? { success: true, assets, assetVersions, systemObjectVersion: null }
         //     : { success: false, error: retireRes.error, assets, assetVersions, systemObjectVersion: null };
     }
 
@@ -685,14 +685,14 @@ export class AssetStorageAdapter {
             return { success: false, error };
         }
         if (assetVersionsNotRetired.length > 0)
-            return { success: true, error: '' };
+            return { success: true };
 
         if (!await DBAPI.SystemObject.retireSystemObject(asset)) {
             const error: string = `AssetStorageAdapter.retireAssetIfAllVersionsAreRetired unable to retire Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private static async promoteAssetWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
@@ -753,7 +753,7 @@ export class AssetStorageAdapter {
         // Extract metadata; note that we do this using the promoted asset & asset version
         // Staged content would be easier to fetch, but it may be coming in via a zip stream,
         // which we cannot simply read and then re-read for ingestion.
-        let res: H.IOResults = { success: true, error: '' };
+        let res: H.IOResults = { success: true };
         const extractor: META.MetadataExtractor = new META.MetadataExtractor();
         const AFOSR: AssetFileOrStreamResult = await AssetStorageAdapter.assetFileOrStream(storage, asset, assetVersion);
         if (AFOSR.success && (AFOSR.fileName || AFOSR.stream))
@@ -774,7 +774,7 @@ export class AssetStorageAdapter {
         } else
             LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to extract metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
 
-        return { asset, assetVersion, success: res.success, error: '' };
+        return { asset, assetVersion, success: res.success };
     }
 
     static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestStreamOrFileResult> {
@@ -1006,9 +1006,8 @@ export class AssetStorageAdapter {
     private static async crackAssetWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<CrackAssetResult> {
         const AFOSR: AssetFileOrStreamResult = await AssetStorageAdapter.assetFileOrStream(storage, asset, assetVersion);
         if (!AFOSR.success) {
-            const error: string = AFOSR.error ?? '';
-            LOG.error(error, LOG.LS.eSTR);
-            return { success: false, error, zip: null, asset: null, isBagit: false };
+            LOG.error(AFOSR.error ?? '', LOG.LS.eSTR);
+            return { success: false, error: AFOSR.error, zip: null, asset: null, isBagit: false };
         }
 
         const isZipFilename: boolean = (path.extname(assetVersion.FileName).toLowerCase() === '.zip');
@@ -1042,7 +1041,7 @@ export class AssetStorageAdapter {
             LOG.error('AssetStorageAdapter.crackAsset', LOG.LS.eSTR, error);
             return { success: false, error: `AssetStorageAdapter.crackAsset ${JSON.stringify(error, H.Helpers.saferStringify)}`, zip: null, asset: null, isBagit: false };
         }
-        return { success: true, error: '', zip: reader, asset, isBagit: isBulkIngest };
+        return { success: true, zip: reader, asset, isBagit: isBulkIngest };
     }
 
     static async getAssetVersionContents(assetVersion: DBAPI.AssetVersion): Promise<AssetVersionContent> {
@@ -1140,7 +1139,7 @@ export class AssetStorageAdapter {
 
         const retireRes: H.IOResults = await AssetStorageAdapter.retireAssetIfAllVersionsAreRetired(asset);
         return (retireRes.success)
-            ? { asset: null, assetVersion: null, success: true, error: '' }
+            ? { asset: null, assetVersion: null, success: true }
             : { asset: null, assetVersion: null, success: false, error: retireRes.error };
     }
 
@@ -1160,7 +1159,6 @@ export class AssetStorageAdapter {
             asset,
             assetVersion: null,
             success: false,
-            error: ''
         };
         let fileNameNew: string = '';
 
