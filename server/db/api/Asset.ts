@@ -149,7 +149,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
 
     /** Fetches assets that are connected to the specified idSystemObject (via that object's last SystemObjectVersion,
      * and that SystemObjectVersionAssetVersionXref's records). For those assets, we look for a match on FileName, FilePath */
-    static async fetchMatching(idSystemObject: number, FileName: string, FilePath: string, idVAssetType: number): Promise<Asset | null> {
+    static async fetchMatching(idSystemObject: number, FileName: string, /* FilePath: string, */ idVAssetType: number): Promise<Asset | null> {
         if (!idSystemObject)
             return null;
         try {
@@ -165,10 +165,10 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                                                    FROM SystemObjectVersion
                                                    WHERE idSystemObject = ${idSystemObject})
                   AND A.FileName = ${FileName} 
-                  AND A.FilePath = ${FilePath}
                   AND A.idVAssetType = ${idVAssetType}
                 ORDER BY SOV.idSystemObjectVersion DESC
                 LIMIT 1;`; //, Asset);
+                // AND A.FilePath = ${FilePath} removed
             /* istanbul ignore if */
             if (!assets || assets.length == 0)
                 return null;
