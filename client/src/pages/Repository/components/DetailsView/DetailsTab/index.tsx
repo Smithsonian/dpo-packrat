@@ -151,7 +151,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             <MetadataDisplayTable type={type} />
             <MetadataControlTable type={type} />
         </TabPanel>
-    )
+    );
 
     const sharedProps = {
         onUpdateDetail,

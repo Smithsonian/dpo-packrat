@@ -5,17 +5,17 @@ import create, { GetState, SetState } from 'zustand';
 import { MetadataInput } from '../types/graphql';
 import { toast } from 'react-toastify';
 //  import lodash from 'lodash';
-import { deleteMetadata } from '../pages/Repository/hooks/useDetailsView'; 
+import { deleteMetadata } from '../pages/Repository/hooks/useDetailsView';
 
 export enum eObjectMetadataType {
     eSubjectView = 1,
     eSubjectCreation = 2,
     eDetailView = 3
-};
+}
 
 export interface MetadataState extends MetadataInput {
     isImmutable: boolean;
-};
+}
 
 type ObjectMetadataStore = {
     metadataControl: MetadataState[];
@@ -27,7 +27,7 @@ type ObjectMetadataStore = {
     createMetadata: () => void;
     deleteMetadata: (id: number, index: number) => Promise<void>;
 };
- 
+
 export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState<ObjectMetadataStore>, get: GetState<ObjectMetadataStore>) => ({
     metadataControl: [],
     metadataDisplay: [],
@@ -35,7 +35,7 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
         /*
             make sure to initialize the fields
             if we're working for a subject,
-            make sure it's populated with the following 
+            make sure it's populated with the following
             Label
             Title
             Record ID
@@ -67,7 +67,7 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
             // TODO: use the data that's fed through the function to populate it
         }
     },
-    resetMetadata: () => { 
+    resetMetadata: () => {
         set({ metadataControl: [], metadataDisplay: [] });
     },
     updateMetadata: (id, index, field, value) => {
@@ -96,7 +96,7 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
                 Label,
                 Name,
                 Value
-            }
+            };
         });
         const metadataInputDisplay = metadataDisplay.map(({ idMetadata, Label, Name, Value }) => {
             return {
@@ -104,8 +104,8 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
                 Label,
                 Name,
                 Value
-            }
-        })
+            };
+        });
         return [...metadataInputControl, ...metadataInputDisplay];
     },
     createMetadata: () => {
@@ -124,7 +124,7 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
     deleteMetadata: async (id, index) => {
         const { metadataControl, metadataDisplay } = get();
         if (id > 0) {
-             const metadataCopy = [...metadataDisplay];
+            const metadataCopy = [...metadataDisplay];
             const result = await deleteMetadata(id);
             if (result.data.success) {
                 toast.success(`Metadata with id ${id} successfully deleted`);
@@ -138,4 +138,3 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
         }
     }
 }));
- 

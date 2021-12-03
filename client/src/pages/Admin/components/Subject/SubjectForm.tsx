@@ -93,7 +93,7 @@ function SubjectForm(): React.ReactElement {
     const [validUnit, setValidUnit] = useState(true);
     const [subjects, reset] = useSubjectStore(state => [state.subjects, state.reset]);
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
-    const [getAllMetadataEntries, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.resetMetadata])
+    const [getAllMetadataEntries, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.resetMetadata]);
     const schema = yup.object().shape({
         subjectName: yup.string().min(1),
         subjectUnit: yup.number().positive(),
@@ -322,7 +322,7 @@ function SubjectForm(): React.ReactElement {
                     subjectView
                 />
                 <Box mb={3}>
-                   <MetadataControlTable type={eObjectMetadataType.eSubjectCreation} />
+                    <MetadataControlTable type={eObjectMetadataType.eSubjectCreation} />
                 </Box>
                 <Button className={classes.btn} onClick={onCreateSubject}>
                     Create

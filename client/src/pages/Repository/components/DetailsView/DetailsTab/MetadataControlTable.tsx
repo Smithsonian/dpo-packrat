@@ -52,10 +52,10 @@ type MetadataControlRowProps = {
     licenses: string[];
     units: string[];
     mdmFields: VocabularyOption[];
-    style: {[className:string]: string}
+    style: {[className: string]: string}
 };
 
-/* 
+/*
     1) xThe parent will decide how it wants to initialize the state
         -subject view
         xsubject creation
@@ -78,7 +78,7 @@ type MetadataControlRowProps = {
     6) Style
 */
 
-/* 
+/*
     Styling:
         font and font size
 */
@@ -95,7 +95,19 @@ function MetadataControlTable(props: MetadataControlTableProps): React.ReactElem
     const entries = getEntries(eVocabularySetID.eEdanMDMFields);
 
     const rows = metadata.map((row, index) => {
-        return (<MetadataControlRow key={index} metadata={row} index={index} updateMetadata={updateMetadata} deleteMetadata={deleteMetadata} units={units} licenses={licenses} mdmFields={entries} style={classes} />)
+        return (
+            <MetadataControlRow
+                key={index}
+                metadata={row}
+                index={index}
+                updateMetadata={updateMetadata}
+                deleteMetadata={deleteMetadata}
+                units={units}
+                licenses={licenses}
+                mdmFields={entries}
+                style={classes}
+            />
+        );
     });
 
     useEffect(() => {
@@ -139,16 +151,12 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
         Case 3: Not Required, No Label, Remove
         Case 4: Not Required, Label, Remove
             -includes any other metadata type
-    
-        TODO: refactor so that cases are relevant to each column. e.g. 
-
     */
-    let row: React.ReactElement;
     const isRequired = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License']);
     const noLabel = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License', 'License Text', 'Object Type', 'Date', 'Place', 'Topic']);
     const noRemove = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License', 'License Text']);
 
-    let valueInput = <TextField className={style.textField} onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Value', e.target.value)} value={Value}/>
+    let valueInput = <TextField className={style.textField} onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Value', e.target.value)} value={Value} />;
 
     if (Name === 'License') {
         valueInput = (
@@ -172,15 +180,15 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
             </Select>
         );
     }
-    row = (
+    const row = (
         <TableRow>
             <TableCell>
                 {isImmutable ? <Typography>{Name}</Typography> : <Autocomplete freeSolo renderInput={(params) => <TextField className={style.textField} {...params} />} options={mdmFields.map((option) => option.Term)} onInputChange={(_e, value) => { updateMetadata(idMetadata ?? 0, index, 'Name', value); updateMetadata(idMetadata ?? 0, index, 'Value', ''); updateMetadata(idMetadata ?? 0, index, 'Label', ''); }} />}
             </TableCell>
-            <TableCell>{noLabel.has(Name) ? null : <TextField className={style.textField} onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Label', e.target.value)} value={Label}/>}</TableCell>
+            <TableCell>{noLabel.has(Name) ? null : <TextField className={style.textField} onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Label', e.target.value)} value={Label} />}</TableCell>
             <TableCell>{valueInput}</TableCell>
             <TableCell>{isRequired.has(Name) ? '*' : null}</TableCell>
-            <TableCell>{noRemove.has(Name) ? null : <MdRemoveCircleOutline onClick={() => deleteMetadata(idMetadata ?? 0, index)} style={{ cursor: 'pointer' }}/>}</TableCell>
+            <TableCell>{noRemove.has(Name) ? null : <MdRemoveCircleOutline onClick={() => deleteMetadata(idMetadata ?? 0, index)} style={{ cursor: 'pointer' }} />}</TableCell>
         </TableRow>
     );
 
