@@ -159,12 +159,7 @@ export class PublishSubject {
     private static transformIntoLabelContent(metadataList: string[]): COL.EdanLabelContent[] {
         const retValue: COL.EdanLabelContent[] = [];
         for (const metadata of metadataList) {
-            let [label, content] = metadata.split(COL.EdanLabelContentDelimiter, 2);
-            if (content === undefined) {
-                content = label;
-                label = '';
-            }
-            retValue.push({ label, content });
+            retValue.push(COL.parseEdanMetadata(metadata));
         }
         return retValue;
     }

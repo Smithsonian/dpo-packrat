@@ -1600,6 +1600,8 @@ type Metadata {
   SystemObjectParent: SystemObject
   User: User
   VMetadataSource: Vocabulary
+  Label: String
+  Value: String
 }
 
 input CreateUnitInput {

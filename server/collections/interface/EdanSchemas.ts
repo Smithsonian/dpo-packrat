@@ -116,3 +116,12 @@ export type EdanRecord = {
 };
 
 export const EdanLabelContentDelimiter: string = '$PR$';
+
+export function parseEdanMetadata(metadata: string): { label: string, content: string } {
+    let [label, content] = metadata.split(EdanLabelContentDelimiter, 2);
+    if (content === undefined) {
+        content = label;
+        label = '';
+    }
+    return { label, content };
+}
