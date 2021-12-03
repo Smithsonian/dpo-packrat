@@ -9,7 +9,7 @@ import { eSystemObjectType } from '../../../../../db';
 
 export default async function deleteObjectConnection(_: Parent, args: MutationDeleteObjectConnectionArgs): Promise<DeleteObjectConnectionResult> {
     const { input: { idSystemObjectMaster, objectTypeMaster, idSystemObjectDerived, objectTypeDerived } } = args;
-    let result = { success: true, details: 'Relationship Removed!' };
+    let result: DeleteObjectConnectionResult = { success: true, details: 'Relationship Removed!' };
 
     const idSystemObjectXrefs = await DBAPI.SystemObjectXref.fetchXref(idSystemObjectMaster, idSystemObjectDerived);
 
@@ -28,8 +28,9 @@ export default async function deleteObjectConnection(_: Parent, args: MutationDe
             if (success) {
                 LOG.info(`deleted SystemObjectXref ${xref.idSystemObjectXref}`, LOG.LS.eGQL);
             } else {
-                LOG.error(`unable to delete SystemObjectXref ${xref.idSystemObjectXref} ${error}`, LOG.LS.eGQL);
-                result = { success: false, details: error };
+                const details: string = `unable to delete SystemObjectXref ${xref.idSystemObjectXref} ${error}`;
+                LOG.error(details, LOG.LS.eGQL);
+                result = { success: false, details };
                 break;
             }
         }

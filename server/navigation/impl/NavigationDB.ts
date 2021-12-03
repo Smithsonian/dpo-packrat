@@ -45,7 +45,7 @@ export class NavigationDB implements NAV.INavigation {
             }
 
         }
-        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns };
+        return { success: true, entries, metadataColumns: filter.metadataColumns };
     }
 
     private static async getChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
@@ -79,7 +79,7 @@ export class NavigationDB implements NAV.INavigation {
             default:
                 return { success: false, error: 'Not implemented', entries, metadataColumns: filter.metadataColumns };
         }
-        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns };
+        return { success: true, entries, metadataColumns: filter.metadataColumns };
     }
 
     /* #region Units */

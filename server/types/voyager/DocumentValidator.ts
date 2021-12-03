@@ -62,6 +62,6 @@ export class DocumentValidator
             return { success: false, error };
         }
 
-        return { success: true, error: '' };
+        return { success: true };
     }
 }

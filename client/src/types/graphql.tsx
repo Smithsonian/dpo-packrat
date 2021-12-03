@@ -1083,7 +1083,7 @@ export type ClearLicenseAssignmentInput = {
 export type ClearLicenseAssignmentResult = {
   __typename?: 'ClearLicenseAssignmentResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type AssignLicenseInput = {
@@ -1094,7 +1094,7 @@ export type AssignLicenseInput = {
 export type AssignLicenseResult = {
   __typename?: 'AssignLicenseResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetLicenseInput = {
@@ -1374,7 +1374,7 @@ export type NavigationResultEntry = {
 export type GetObjectChildrenResult = {
   __typename?: 'GetObjectChildrenResult';
   success: Scalars['Boolean'];
-  error: Scalars['String'];
+  error?: Maybe<Scalars['String']>;
   entries: Array<NavigationResultEntry>;
   metadataColumns: Array<Scalars['Int']>;
   cursorMark?: Maybe<Scalars['String']>;
@@ -1612,7 +1612,7 @@ export type UpdateObjectDetailsDataInput = {
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type ExistingRelationship = {
@@ -1630,7 +1630,7 @@ export type UpdateDerivedObjectsInput = {
 export type UpdateDerivedObjectsResult = {
   __typename?: 'UpdateDerivedObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1644,7 +1644,7 @@ export type UpdateSourceObjectsInput = {
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1691,7 +1691,7 @@ export type DeleteMetadataInput = {
 export type RollbackSystemObjectVersionResult = {
   __typename?: 'RollbackSystemObjectVersionResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type RollbackSystemObjectVersionInput = {
@@ -1702,7 +1702,7 @@ export type RollbackSystemObjectVersionInput = {
 export type CreateSubjectWithIdentifiersResult = {
   __typename?: 'CreateSubjectWithIdentifiersResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type CreateSubjectWithIdentifiersInput = {
@@ -1727,7 +1727,7 @@ export type PublishInput = {
 export type PublishResult = {
   __typename?: 'PublishResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 
@@ -1908,12 +1908,14 @@ export type GetSystemObjectDetailsResult = {
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
   objectVersions: Array<SystemObjectVersion>;
+  metadata: Array<Metadata>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  assetOwner?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
-  licenseInherited?: Maybe<Scalars['Boolean']>;
+  licenseInheritance?: Maybe<Scalars['Int']>;
 };
 
 export type GetSourceObjectIdentiferInput = {
@@ -3664,7 +3666,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInherited'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInheritance'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3680,6 +3682,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, item?: Maybe<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
+    )>, assetOwner?: Maybe<(
+      { __typename?: 'RepositoryPath' }
+      & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
     )>, objectAncestors: Array<Array<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
@@ -3692,6 +3697,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, objectVersions: Array<(
       { __typename?: 'SystemObjectVersion' }
       & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated' | 'Comment' | 'CommentLink'>
+    )>, metadata: Array<(
+      { __typename?: 'Metadata' }
+      & Pick<Metadata, 'idMetadata' | 'Name' | 'ValueShort' | 'ValueExtended' | 'idAssetVersionValue' | 'idVMetadataSource'>
     )>, license?: Maybe<(
       { __typename?: 'License' }
       & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
@@ -6519,6 +6527,11 @@ export const GetSystemObjectDetailsDocument = gql`
       name
       objectType
     }
+    assetOwner {
+      idSystemObject
+      name
+      objectType
+    }
     objectAncestors {
       idSystemObject
       name
@@ -6544,7 +6557,15 @@ export const GetSystemObjectDetailsDocument = gql`
       Comment
       CommentLink
     }
-    licenseInherited
+    metadata {
+      idMetadata
+      Name
+      ValueShort
+      ValueExtended
+      idAssetVersionValue
+      idVMetadataSource
+    }
+    licenseInheritance
     license {
       idLicense
       Name

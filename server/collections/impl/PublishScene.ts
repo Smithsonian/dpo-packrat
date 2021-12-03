@@ -131,7 +131,7 @@ export class PublishScene {
             return { success: false, error: 'PublishScene.extractSceneMetadata failed to compute resource map' };
 
         // LOG.info(`extractSceneMetadata(${idSystemObject}) handling ${resourceMap.size} resources`, LOG.LS.eCOLL);
-        const retValue: H.IOResults = { success: true, error: '' };
+        const retValue: H.IOResults = { success: true };
         for (const [ SAC, resource ] of resourceMap) {
             // LOG.info(`extractSceneMetadata(${idSystemObject}, ${SAC.idSystemObject}) = ${JSON.stringify(resource)}`, LOG.LS.eCOLL);
             const extractor: META.MetadataExtractor = new META.MetadataExtractor();
@@ -273,7 +273,7 @@ export class PublishScene {
 
         // first pass through assets: detect and record the scene file (first file to match *.svx.json); lookup supporting information
         // prepare to extract and discard the path to this file, so that the scene zip is "rooted" at the svx.json
-        let stageRes: H.IOResults = { success: true, error: '' };
+        let stageRes: H.IOResults = { success: true };
         for (const assetVersion of this.assetVersions) {
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
             LOG.info(`PublishScene.collectAssets considering assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)} asset=${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
@@ -322,7 +322,7 @@ export class PublishScene {
                 if (ePublishedStateIntended !== undefined) {
                     const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
                     if (!RSR.success || !RSR.readStream) {
-                        LOG.error(`PublishScene.collectAssets failed to extract stream for scene's asset version ${assetVersion.idAssetVersion}`, LOG.LS.eCOLL);
+                        LOG.error(`PublishScene.collectAssets failed to extract stream for scene's asset version ${assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eCOLL);
                         return false;
                     }
 
@@ -342,7 +342,7 @@ export class PublishScene {
     private async stageSceneFiles(): Promise<boolean> {
         if (this.SacList.length <= 0 || !this.scene)
             return false;
-        let stageRes: H.IOResults = { success: true, error: '' };
+        let stageRes: H.IOResults = { success: true };
 
         // second pass: zip up appropriate assets; prepare to copy downloads
         const zip: ZIP.ZipStream = new ZIP.ZipStream();
@@ -352,7 +352,7 @@ export class PublishScene {
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(SAC.asset, SAC.assetVersion);
             if (!RSR.success || !RSR.readStream) {
-                LOG.error(`PublishScene.stageSceneFiles failed to extract stream for asset version ${SAC.assetVersion.idAssetVersion}`, LOG.LS.eCOLL);
+                LOG.error(`PublishScene.stageSceneFiles failed to extract stream for asset version ${SAC.assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eCOLL);
                 return false;
             }
 
@@ -401,7 +401,7 @@ export class PublishScene {
         if (this.SacList.length <= 0 || !this.scene)
             return false;
         // third pass: stage downloads
-        let stageRes: H.IOResults = { success: true, error: '' };
+        let stageRes: H.IOResults = { success: true };
         this.edan3DResourceList = [];
         this.resourcesHotFolder = path.join(Config.collection.edan.resourcesHotFolder, this.scene.EdanUUID!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
@@ -414,7 +414,7 @@ export class PublishScene {
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(SAC.asset, SAC.assetVersion);
             if (!RSR.success || !RSR.readStream) {
-                LOG.error(`PublishScene.stageDownloads failed to extract stream for asset version ${SAC.assetVersion.idAssetVersion}`, LOG.LS.eCOLL);
+                LOG.error(`PublishScene.stageDownloads failed to extract stream for asset version ${SAC.assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eCOLL);
                 return false;
             }
 

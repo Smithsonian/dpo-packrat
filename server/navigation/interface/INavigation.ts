@@ -105,7 +105,7 @@ export type NavigationResultEntry = {
 
 export type NavigationResult = {
     success: boolean;
-    error: string;
+    error?: string;
     entries: NavigationResultEntry[];
     metadataColumns: eMetadata[];
     cursorMark?: string | null;             // when provided, additional results are available by requesting another navigation, using this returned value for the NavigationFilter.cursorMark
@@ -127,7 +127,7 @@ export type MetadataResultEntry = {
 
 export type MetadataResult = {
     success: boolean;
-    error: string;
+    error?: string;
     entries: MetadataResultEntry[];
     metadataColumns: string[];
     cursorMark?: string | null;             // when provided, additional results are available by requesting another navigation, using this returned value for the MetadataFilter.cursorMark

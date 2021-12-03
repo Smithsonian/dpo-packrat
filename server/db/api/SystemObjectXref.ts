@@ -95,7 +95,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
         }
 
         return (await this.delete())
-            ? { success: true, error: '' } /* istanbul ignore next */
+            ? { success: true } /* istanbul ignore next */
             : { success: false, error: `Database error deleting xref ${JSON.stringify(this)}` };
     }
 

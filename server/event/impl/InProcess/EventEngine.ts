@@ -4,6 +4,7 @@ import { EventConsumer } from './EventConsumer';
 import { EventConsumerAuth } from './EventConsumerAuth';
 import { EventConsumerDB } from './EventConsumerDB';
 import { EventConsumerPublish } from './EventConsumerPublish';
+import { EventConsumerHTTP } from './EventConsumerHTTP';
 import { IEventData } from '../../interface';
 import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';
@@ -17,6 +18,7 @@ export class EventEngine implements EVENT.IEventEngine {
         this.createConsumer(EVENT.eEventTopic.eDB);
         this.createConsumer(EVENT.eEventTopic.eAuth);
         this.createConsumer(EVENT.eEventTopic.ePublish);
+        this.createConsumer(EVENT.eEventTopic.eHTTP);
     }
 
     async createProducer(): Promise<EVENT.IEventProducer | null> {
@@ -38,6 +40,7 @@ export class EventEngine implements EVENT.IEventEngine {
             case EVENT.eEventTopic.eAuth: consumer = new EventConsumerAuth(this); break;
             case EVENT.eEventTopic.eDB: consumer = new EventConsumerDB(this); break;
             case EVENT.eEventTopic.ePublish: consumer = new EventConsumerPublish(this); break;
+            case EVENT.eEventTopic.eHTTP: consumer = new EventConsumerHTTP(this); break;
             default: {
                 LOG.error(`EventEngine.createConsumer called with an unexpected topic ${EVENT.eEventTopic[eTopic]}`, LOG.LS.eEVENT);
                 return null;

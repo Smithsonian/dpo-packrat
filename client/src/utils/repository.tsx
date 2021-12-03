@@ -304,10 +304,10 @@ export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undef
     switch (eMode) {
         default:
         case eVoyagerStoryMode.eViewer: dlPath='download'; break;
-        case eVoyagerStoryMode.eEdit:   dlPath='download-wd'; break;
-        case eVoyagerStoryMode.eQC:     dlPath='download-wd'; break;
-        case eVoyagerStoryMode.eAuthor: dlPath='download-wd'; break;
-        case eVoyagerStoryMode.eExpert: dlPath='download-wd'; break;
+        case eVoyagerStoryMode.eEdit:   dlPath='webdav'; break;
+        case eVoyagerStoryMode.eQC:     dlPath='webdav'; break;
+        case eVoyagerStoryMode.eAuthor: dlPath='webdav'; break;
+        case eVoyagerStoryMode.eExpert: dlPath='webdav'; break;
     }
     return `${serverEndPoint}/${dlPath}/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
 }
