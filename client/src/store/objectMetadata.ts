@@ -2,9 +2,8 @@
  * object metadata tab state store
  */
 import create, { GetState, SetState } from 'zustand';
-import { MetadataInput } from '../types/graphql';
+import { MetadataInput, Metadata } from '../types/graphql';
 import { toast } from 'react-toastify';
-//  import lodash from 'lodash';
 import { deleteMetadata } from '../pages/Repository/hooks/useDetailsView';
 
 export enum eObjectMetadataType {
@@ -17,10 +16,35 @@ export interface MetadataState extends MetadataInput {
     isImmutable: boolean;
 }
 
+/*
+    idMetadata
+    Name
+    ValueShort
+    ValuExtended
+    idAssetVersionValue
+    idVMetadataSource
+*/
+/*
+    idMetadata: Scalars['Int'];
+    Name: Scalars['String'];
+    ValueShort?: Maybe<Scalars['String']>;
+    ValueExtended?: Maybe<Scalars['String']>;
+    idAssetVersionValue?: Maybe<Scalars['Int']>;
+    idUser?: Maybe<Scalars['Int']>;
+    idVMetadataSource?: Maybe<Scalars['Int']>;
+    idSystemObject?: Maybe<Scalars['Int']>;
+    idSystemObjectParent?: Maybe<Scalars['Int']>;
+    AssetVersionValue?: Maybe<AssetVersion>;
+    SystemObject?: Maybe<SystemObject>;
+    SystemObjectParent?: Maybe<SystemObject>;
+    User?: Maybe<User>;
+    VMetadataSource?: Maybe<Vocabulary>;
+*/
+
 type ObjectMetadataStore = {
     metadataControl: MetadataState[];
-    metadataDisplay: MetadataState[];
-    initializeMetadata: (type: eObjectMetadataType) => void;
+    metadataDisplay: Metadata[];
+    initializeMetadata: (type: eObjectMetadataType, metadata?: Metadata[]) => void;
     resetMetadata: () => void;
     updateMetadata: (id: number, index: number, field: string, value: string) => void;
     getAllMetadataEntries: () => MetadataInput[];
@@ -31,20 +55,8 @@ type ObjectMetadataStore = {
 export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState<ObjectMetadataStore>, get: GetState<ObjectMetadataStore>) => ({
     metadataControl: [],
     metadataDisplay: [],
-    initializeMetadata: (type) => {
-        /*
-            make sure to initialize the fields
-            if we're working for a subject,
-            make sure it's populated with the following
-            Label
-            Title
-            Record ID
-            Unit, "DPO" selected from a Unit drop down
-            Access
-            License:  this is a special case in which we show the license selector drop down (the same control that we have on detail/edit pages)
-            License Text (Not Required!)
-        */
-
+    initializeMetadata: (type, metadata) => {
+        console.log('metadata', metadata, 'type', type);
         // TODO: populate the metadataDisplay array too
         if (type === eObjectMetadataType.eSubjectCreation) {
             const defaultMetadataFields = [{
@@ -63,14 +75,23 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
                 idMetadata: 0, Label: '', Name: 'License Text', Value: '', isImmutable: true
             }];
             set({ metadataControl: defaultMetadataFields });
-        } else if (type === eObjectMetadataType.eSubjectView) {
+        }
+        if (type === eObjectMetadataType.eSubjectView) {
             // TODO: use the data that's fed through the function to populate it
+            // metadata should only be populated into the MetadataControl arr
+            // note: make sure to keep those default fields immutable
+        }
+        if (type === eObjectMetadataType.eDetailView) {
+            // TODO: populate the metadata into the metadataDisplay
+            // alter the metadata to fit metadataControl
+            // metadata should only populated into the MetadataDisplay arr
         }
     },
     resetMetadata: () => {
         set({ metadataControl: [], metadataDisplay: [] });
     },
     updateMetadata: (id, index, field, value) => {
+        // TODO: update this function to know which array to look at.
         const { metadataControl, metadataDisplay } = get();
         if (id > 0) {
             const metadataCopy = [...metadataDisplay];
@@ -98,13 +119,9 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
                 Value
             };
         });
-        const metadataInputDisplay = metadataDisplay.map(({ idMetadata, Label, Name, Value }) => {
-            return {
-                idMetadata,
-                Label,
-                Name,
-                Value
-            };
+        // TODO: filter the metadataInputDisplay to match MetadataInput type
+        const metadataInputDisplay = metadataDisplay.map((metadata) => {
+            return convertMetadataToMetadataInput(metadata);
         });
         return [...metadataInputControl, ...metadataInputDisplay];
     },
@@ -138,3 +155,13 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
         }
     }
 }));
+
+const convertMetadataToMetadataInput = (metadata: Metadata): MetadataInput => {
+    const { idMetadata, Name, ValueShort, ValueExtended } = metadata;
+    return {
+        idMetadata,
+        Name,
+        Label: '',
+        Value: ValueExtended ? ValueExtended : ValueShort ? ValueShort : ''
+    };
+};

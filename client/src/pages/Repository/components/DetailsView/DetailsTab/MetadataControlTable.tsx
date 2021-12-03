@@ -20,11 +20,10 @@ const useStyles = makeStyles(({ palette }) => ({
     btn: {
         ...sharedButtonProps,
         width: 'fit-content',
-        marginBottom: '2px'
     },
     container: {
         backgroundColor: palette.secondary.light,
-        marginTop: '2px'
+        marginBottom: '2px'
     },
     headerRow: {
         borderBottom: '1.5px solid black'
@@ -35,8 +34,7 @@ const useStyles = makeStyles(({ palette }) => ({
         justifyContent: 'flex-end'
     },
     textField: {
-        width: '90%',
-        borderBottom: 'rgb(118, 118, 118)'
+        width: '90%'
     }
 }));
 
