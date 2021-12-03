@@ -253,4 +253,4 @@ export function useAllUnits(): GetUnitsFromNameSearchQueryResult {
         },
         fetchPolicy: 'no-cache'
     });
-};
+}
