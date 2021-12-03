@@ -172,9 +172,11 @@ function DetailsView(): React.ReactElement {
         sourceObjects,
         derivedObjects,
         objectVersions,
+        metadata,
         licenseInheritance = null
     } = data.getSystemObjectDetails;
 
+    console.log('metadata from detailsView', metadata);
     const disabled: boolean = !allowed;
 
     const addIdentifer = () => {
@@ -507,6 +509,7 @@ function DetailsView(): React.ReactElement {
                     onUpdateDetail={onUpdateDetail}
                     objectVersions={objectVersions}
                     detailQuery={detailQuery}
+                    metadata={metadata}
                 />
                 <Box display='flex' flex={1} padding={2}>
                     <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />

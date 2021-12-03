@@ -13,7 +13,7 @@ import { Typography } from '@material-ui/core';
 import { DataGrid, GridColumns } from '@material-ui/data-grid';
 import { useObjectMetadataStore, useVocabularyStore, eObjectMetadataType } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
-import { MetadataInput } from '../../../../../types/graphql';
+import { Metadata } from '../../../../../types/graphql';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -23,7 +23,8 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     container: {
         backgroundColor: palette.secondary.light,
-        marginTop: '2px'
+        marginTop: '2px',
+        minHeight: '10vh'
     },
     headerRow: {
         borderBottom: '1.5px solid black'
@@ -32,7 +33,7 @@ const useStyles = makeStyles(({ palette }) => ({
 
 type MetadataDisplayTableProps = {
     type: eObjectMetadataType;
-    metadata?: MetadataInput[]
+    metadata: Metadata[]
 };
 
 /*
@@ -49,12 +50,12 @@ Note that metadata with "ValueShort" content can be edited and need to be persis
 */
 
 function MetadataDisplayTable(props: MetadataDisplayTableProps): React.ReactElement {
-    const { type } = props;
+    const { type, metadata } = props;
     const classes = useStyles();
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const sources = getEntries(eVocabularySetID.eMetadataMetadataSource);
     console.log('sources', sources);
-    const [metadata /*, updateMetadata, deleteMetadata*/, initializeMetadata] = useObjectMetadataStore(state => [state.metadataDisplay /*, state.updateMetadata, state.deleteMetadata*/, state.initializeMetadata]);
+    const [metadataDisplay /*, updateMetadata, deleteMetadata*/, initializeMetadata] = useObjectMetadataStore(state => [state.metadataDisplay /*, state.updateMetadata, state.deleteMetadata*/, state.initializeMetadata]);
 
 
     const columnHeader: GridColumns = [
@@ -70,6 +71,7 @@ function MetadataDisplayTable(props: MetadataDisplayTableProps): React.ReactElem
             field: 'Value',
             headerName: 'Value',
             flex: 5,
+            sortable: false,
             renderCell: params => (
                 <Typography>{params.row.ValueShort}</Typography>
             )
@@ -86,6 +88,7 @@ function MetadataDisplayTable(props: MetadataDisplayTableProps): React.ReactElem
             field: '',
             headerName: '',
             flex: 1,
+            sortable: false,
             renderCell: params => (
                 <MdRemoveCircleOutline onClick={() => console.log(params.row.idMetadata)} />
             )
@@ -93,22 +96,20 @@ function MetadataDisplayTable(props: MetadataDisplayTableProps): React.ReactElem
     ];
     useEffect(() => {
     // TODO include the metadata rows to be initialized
-        initializeMetadata(type);
+        initializeMetadata(type, metadata);
     }, []);
 
     return (
-        <React.Fragment>
-            <DataGrid
-                rows={metadata}
-                columns={columnHeader}
-                rowHeight={30}
-                scrollbarSize={5}
-                density='compact'
-                disableSelectionOnClick
-                hideFooter
-                className={classes.container}
-            />
-        </React.Fragment>
+        <DataGrid
+            rows={metadataDisplay}
+            columns={columnHeader}
+            rowHeight={30}
+            scrollbarSize={5}
+            density='compact'
+            disableSelectionOnClick
+            hideFooter
+            className={classes.container}
+        />
     );
 }
 

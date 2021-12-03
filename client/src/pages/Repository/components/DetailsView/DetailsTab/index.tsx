@@ -26,7 +26,8 @@ import {
     GetDetailsTabDataForObjectQueryResult,
     UnitDetailFieldsInput,
     SystemObjectVersion,
-    RepositoryPath
+    RepositoryPath,
+    Metadata
 } from '../../../../../types/graphql';
 import { eSystemObjectType } from '../../../../../types/server';
 import RelatedObjectsList from '../../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
@@ -109,10 +110,11 @@ type DetailsTabParams = {
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
     objectVersions: SystemObjectVersion[];
     detailQuery: any;
+    metadata: Metadata[]
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
-    const { disabled, idSystemObject, objectType, assetOwner, sourceObjects, derivedObjects, onAddSourceObject, onAddDerivedObject, onUpdateDetail, objectVersions, detailQuery } = props;
+    const { disabled, idSystemObject, objectType, assetOwner, sourceObjects, derivedObjects, onAddSourceObject, onAddDerivedObject, onUpdateDetail, objectVersions, detailQuery, metadata } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
     const history = useHistory();
@@ -176,10 +178,14 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         </TabPanel>
     );
 
-    const MetadataTab = (index: number, type: eObjectMetadataType) => (
+    const MetadataTab = (index: number, type: eObjectMetadataType, metadata: Metadata[]) => (
         <TabPanel value={tab} index={index}>
-            <MetadataDisplayTable type={type} />
-            <MetadataControlTable type={type} />
+            <Box mb={5}>
+                <MetadataDisplayTable type={type} metadata={metadata} />
+            </Box>
+            <Box>
+                <MetadataControlTable type={type} />
+            </Box>
         </TabPanel>
     );
 
@@ -216,7 +222,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <UnitDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
-                    {MetadataTab(2, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(2, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -228,7 +234,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <ProjectDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
-                    {MetadataTab(2, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(2, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -240,7 +246,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <SubjectDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
-                    {MetadataTab(2, eObjectMetadataType.eSubjectView)}
+                    {MetadataTab(2, eObjectMetadataType.eSubjectView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -252,7 +258,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <ItemDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
-                    {MetadataTab(2, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(2, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -266,7 +272,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                     </TabPanel>
                     {RelatedTab(2)}
                     {ObjectVersionTableTab(3, eSystemObjectType.eCaptureData)}
-                    {MetadataTab(4, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(4, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -280,7 +286,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                     </TabPanel>
                     {RelatedTab(2)}
                     {ObjectVersionTableTab(3, eSystemObjectType.eModel)}
-                    {MetadataTab(4, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(4, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -294,7 +300,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                     </TabPanel>
                     {RelatedTab(2)}
                     {ObjectVersionTableTab(3, eSystemObjectType.eScene)}
-                    {MetadataTab(4, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(4, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -308,7 +314,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                     </TabPanel>
                     {RelatedTab(2)}
                     {ObjectVersionTableTab(3, eSystemObjectType.eIntermediaryFile)}
-                    {MetadataTab(4, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(4, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -322,7 +328,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                     </TabPanel>
                     {RelatedTab(2)}
                     {ObjectVersionTableTab(3, eSystemObjectType.eProjectDocumentation)}
-                    {MetadataTab(4, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(4, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -340,7 +346,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
-                    {MetadataTab(3, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(3, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -352,7 +358,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetVersionDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
-                    {MetadataTab(2, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(2, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -364,7 +370,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <ActorDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
-                    {MetadataTab(2, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(2, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
@@ -376,7 +382,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <StakeholderDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
-                    {MetadataTab(2, eObjectMetadataType.eDetailView)}
+                    {MetadataTab(2, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
