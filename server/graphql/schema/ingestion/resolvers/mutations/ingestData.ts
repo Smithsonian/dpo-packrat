@@ -611,17 +611,23 @@ class IngestDataWorker extends ResolverBase {
                 assetToVersionMap.set(assetVersion.idAsset, assetVersion);
 
             for (const asset of ingestAssetRes.assets || []) {
-                // map asset's file path to variant type
-                let idVVariantType: number = folderVariantMap.get(asset.FilePath.toLowerCase()) || 0;
-                if (!idVVariantType) {  // if that failed, try again with the last part of the path
-                    let lastSlash: number = asset.FilePath.lastIndexOf('/');
-                    if (lastSlash === -1)
-                        lastSlash = asset.FilePath.lastIndexOf('\\');
-                    const variantPath = asset.FilePath.substring(lastSlash + 1).toLowerCase();
+                const assetVersion: DBAPI.AssetVersion | undefined = assetToVersionMap.get(asset.idAsset);
 
-                    idVVariantType = folderVariantMap.get(variantPath) || 0;
+                // map asset's file path to variant type
+                let idVVariantType: number = 0;
+
+                if (assetVersion) {
+                    idVVariantType = folderVariantMap.get(assetVersion.FilePath.toLowerCase()) ?? 0;
+                    if (!idVVariantType) {  // if that failed, try again with the last part of the path
+                        let lastSlash: number = assetVersion.FilePath.lastIndexOf('/');
+                        if (lastSlash === -1)
+                            lastSlash = assetVersion.FilePath.lastIndexOf('\\');
+                        const variantPath = assetVersion.FilePath.substring(lastSlash + 1).toLowerCase();
+
+                        idVVariantType = folderVariantMap.get(variantPath) ?? 0;
+                    }
+                    // LOG.info(`ingestData mapped ${assetVersion.FilePath} to variant ${idVVariantType}`, LOG.LS.eGQL);
                 }
-                // LOG.info(`ingestData mapped ${asset.FilePath} to variant ${idVVariantType}`, LOG.LS.eGQL);
 
                 const CDF: DBAPI.CaptureDataFile = new DBAPI.CaptureDataFile({
                     idCaptureData: SOOwner.idCaptureData,
@@ -638,7 +644,6 @@ class IngestDataWorker extends ResolverBase {
 
                 // look up asset.idAsset -> assetVersion -> SO
                 if (SOParent) {
-                    const assetVersion: DBAPI.AssetVersion | undefined = assetToVersionMap.get(asset.idAsset);
                     const SOAssetVersion: DBAPI.SystemObject | null = assetVersion ? await assetVersion.fetchSystemObject() : null;
 
                     // gather metadata in extractor

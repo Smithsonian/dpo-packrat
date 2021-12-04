@@ -316,7 +316,7 @@ export class PublishScene {
 
             if (!this.sceneFile && assetVersion.FileName.toLowerCase().endsWith('.svx.json')) {
                 this.sceneFile = assetVersion.FileName;
-                this.extractedPath = asset.FilePath;
+                this.extractedPath = assetVersion.FilePath;
 
                 // if we're intending to publish, extract scene's SVX.JSON for use in updating EDAN search status and creating downloads
                 if (ePublishedStateIntended !== undefined) {
@@ -356,7 +356,8 @@ export class PublishScene {
                 return false;
             }
 
-            let rebasedPath: string = this.extractedPath ? SAC.asset.FilePath.replace(this.extractedPath, '') : SAC.asset.FilePath;
+            const filePath: string = SAC.assetVersion.FilePath;
+            let rebasedPath: string = this.extractedPath ? filePath.replace(this.extractedPath, '') : filePath;
             if (this.extractedPath && rebasedPath.startsWith('/'))
                 rebasedPath = rebasedPath.substring(1);
 

@@ -257,11 +257,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (!CDFiles)
                         return sendResult(false, `Unable to fetch Capture Data Files with id ${CaptureData.idCaptureData}; update failed`);
                     for (const file of CDFiles) {
-                        const asset = await DBAPI.Asset.fetch(file.idAsset);
-                        if (!asset)
-                            return sendResult(false, `Unable to fetch asset with id ${file.idAsset}; update failed`);
+                        const assetVersion = await DBAPI.AssetVersion.fetchLatestFromAsset(file.idAsset);
+                        if (!assetVersion)
+                            return sendResult(false, `Unable to fetch asset version with idAsset ${file.idAsset}; update failed`);
 
-                        const newVariantType = foldersMap.get(asset.FilePath);
+                        const newVariantType = foldersMap.get(assetVersion.FilePath);
                         file.idVVariantType = newVariantType || file.idVVariantType;
                         if (!await file.update())
                             return sendResult(false, `Unable to update Capture Data File with id ${file.idCaptureDataFile}; update failed`);
@@ -344,9 +344,15 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             const Asset = await DBAPI.Asset.fetch(IntermediaryFile.idAsset);
             if (!Asset)
                 return sendResult(false, `Unable to fetch Asset using IntermediaryFile.idAsset ${IntermediaryFile.idAsset}; update failed`);
-
             Asset.FileName = data.Name;
             if (!await Asset.update())
+                return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+
+            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(IntermediaryFile.idAsset);
+            if (!assetVersion)
+                return sendResult(false, `Unable to fetch Asset Version using IntermediaryFile.idAsset ${IntermediaryFile.idAsset}; update failed`);
+            assetVersion.FileName = data.Name;
+            if (!await assetVersion.update())
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
@@ -372,8 +378,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
             Asset.FileName = data.Name;
             if (data.Asset) {
-                const { FilePath, AssetType } = data.Asset;
-                if (FilePath) Asset.FilePath = FilePath;
+                const { AssetType } = data.Asset;
                 if (AssetType) Asset.idVAssetType = AssetType;
             }
 
@@ -388,7 +393,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
             AssetVersion.FileName = data.Name;
             if (data.AssetVersion) {
-                const { Ingested } = data.AssetVersion;
+                const { FilePath, Ingested } = data.AssetVersion;
+                if (FilePath) AssetVersion.FilePath = FilePath;
                 if (!isUndefined(Ingested))
                     AssetVersion.Ingested = Ingested;
             }

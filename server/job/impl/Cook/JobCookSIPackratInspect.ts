@@ -639,7 +639,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         isModel: boolean, channelList: string[] | null): DBAPI.ModelAsset {
         const asset: DBAPI.Asset = new DBAPI.Asset({
             FileName,
-            FilePath: '',
             idAssetGroup: null,
             idVAssetType: 0,
             idSystemObject: null,
@@ -658,6 +657,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             Ingested: null,
             BulkIngest: false,
             idSOAttachment: null,
+            FilePath: '',
             idAssetVersion
         });
         return new DBAPI.ModelAsset(asset, assetVersion, isModel, channelList);

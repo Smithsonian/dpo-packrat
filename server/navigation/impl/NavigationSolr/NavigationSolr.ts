@@ -323,9 +323,9 @@ export class NavigationSolr implements NAV.INavigation {
                 case NAV.eMetadata.eSceneCountMeta:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountMeta)); break;
                 case NAV.eMetadata.eSceneCountSetup:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountSetup)); break;
                 case NAV.eMetadata.eSceneCountTour:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountTour)); break;
-                case NAV.eMetadata.eAssetFileName:                      metadata.push(this.computeMetadataFromStringArray(doc.AssetFileName)); break;
-                case NAV.eMetadata.eAssetFilePath:                      metadata.push(this.computeMetadataFromString(doc.AssetFilePath)); break;
                 case NAV.eMetadata.eAssetType:                          metadata.push(this.computeMetadataFromString(doc.AssetType)); break;
+                case NAV.eMetadata.eAVFileName:                         metadata.push(this.computeMetadataFromStringArray(doc.AVFileName)); break;
+                case NAV.eMetadata.eAVFilePath:                         metadata.push(this.computeMetadataFromString(doc.AVFilePath)); break;
                 case NAV.eMetadata.eAVUserCreator:                      metadata.push(this.computeMetadataFromString(doc.AVUserCreator)); break;
                 case NAV.eMetadata.eAVStorageHash:                      metadata.push(this.computeMetadataFromString(doc.AVStorageHash)); break;
                 case NAV.eMetadata.eAVStorageSize:                      metadata.push(this.computeMetadataFromNumber(doc.AVStorageSize)); break;

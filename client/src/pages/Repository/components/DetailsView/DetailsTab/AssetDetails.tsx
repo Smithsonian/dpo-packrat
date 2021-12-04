@@ -6,7 +6,7 @@
  */
 import { Box } from '@material-ui/core';
 import React, { useEffect } from 'react';
-import { InputField, Loader, SelectField } from '../../../../../components';
+import { Loader, SelectField } from '../../../../../components';
 import { useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
 import { isFieldUpdated } from '../../../../../utils/repository';
@@ -26,11 +26,6 @@ function AssetDetails(props: DetailComponentProps): React.ReactElement {
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
     }
-
-    const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = event.target;
-        updateDetailField(eSystemObjectType.eAsset, name, value);
-    };
 
     const setIdField = ({ target }): void => {
         const { name, value } = target;
@@ -57,16 +52,6 @@ function AssetDetails(props: DetailComponentProps): React.ReactElement {
                 name='AssetType'
                 onChange={setIdField}
                 options={getEntries(eVocabularySetID.eAssetAssetType)}
-            />
-            <InputField
-                viewMode
-                required
-                updated={isFieldUpdated(AssetDetails, assetData, 'FilePath')}
-                disabled={disabled}
-                label='FilePath'
-                value={AssetDetails?.FilePath}
-                name='FilePath'
-                onChange={onSetField}
             />
         </Box>
     );

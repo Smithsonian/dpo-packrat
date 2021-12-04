@@ -143,7 +143,6 @@ const getDetailsTabDataForObject = gql`
                 Description
             }
             Asset {
-                FilePath
                 AssetType
                 idAsset
             }
@@ -155,6 +154,7 @@ const getDetailsTabDataForObject = gql`
                 Version
                 idAsset
                 idAssetVersion
+                FilePath
             }
             Actor {
                 OrganizationName

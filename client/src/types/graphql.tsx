@@ -769,7 +769,6 @@ export type Asset = {
   __typename?: 'Asset';
   idAsset: Scalars['Int'];
   FileName: Scalars['String'];
-  FilePath: Scalars['String'];
   idAssetGroup?: Maybe<Scalars['Int']>;
   idVAssetType?: Maybe<Scalars['Int']>;
   idSystemObject?: Maybe<Scalars['Int']>;
@@ -794,6 +793,7 @@ export type AssetVersion = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version: Scalars['Int'];
   idSOAttachment?: Maybe<Scalars['Int']>;
+  FilePath: Scalars['String'];
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
@@ -1558,11 +1558,11 @@ export type ProjectDocumentationDetailFieldsInput = {
 };
 
 export type AssetDetailFieldsInput = {
-  FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
 };
 
 export type AssetVersionDetailFieldsInput = {
+  FilePath?: Maybe<Scalars['String']>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
   Ingested?: Maybe<Scalars['Boolean']>;
@@ -1831,7 +1831,6 @@ export type ProjectDocumentationDetailFields = {
 
 export type AssetDetailFields = {
   __typename?: 'AssetDetailFields';
-  FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
   Asset?: Maybe<Asset>;
   idAsset?: Maybe<Scalars['Int']>;
@@ -1839,6 +1838,7 @@ export type AssetDetailFields = {
 
 export type AssetVersionDetailFields = {
   __typename?: 'AssetVersionDetailFields';
+  FilePath?: Maybe<Scalars['String']>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
   Ingested?: Maybe<Scalars['Boolean']>;
@@ -3593,10 +3593,10 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<ProjectDocumentationDetailFields, 'Description'>
     )>, Asset?: Maybe<(
       { __typename?: 'AssetDetailFields' }
-      & Pick<AssetDetailFields, 'FilePath' | 'AssetType' | 'idAsset'>
+      & Pick<AssetDetailFields, 'AssetType' | 'idAsset'>
     )>, AssetVersion?: Maybe<(
       { __typename?: 'AssetVersionDetailFields' }
-      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion'>
+      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion' | 'FilePath'>
     )>, Actor?: Maybe<(
       { __typename?: 'ActorDetailFields' }
       & Pick<ActorDetailFields, 'OrganizationName'>
@@ -6317,7 +6317,6 @@ export const GetDetailsTabDataForObjectDocument = gql`
       Description
     }
     Asset {
-      FilePath
       AssetType
       idAsset
     }
@@ -6329,6 +6328,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       Version
       idAsset
       idAssetVersion
+      FilePath
     }
     Actor {
       OrganizationName
