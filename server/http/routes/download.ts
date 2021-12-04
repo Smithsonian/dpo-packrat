@@ -164,7 +164,7 @@ export class Downloader {
                 return this.sendError(500);
             }
 
-            const fileNameAndPath: string = path.posix.join(asset.FilePath, assetVersion.FileName);
+            const fileNameAndPath: string = path.posix.join(assetVersion.FilePath, assetVersion.FileName);
             const res: H.IOResults = await zip.add(fileNameAndPath, RSR.readStream);
             if (!res.success) {
                 LOG.error(`${errorMsgBase} failed to add asset version ${assetVersion.idAssetVersion} to zip: ${res.error}`, LOG.LS.eHTTP);

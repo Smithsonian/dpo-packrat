@@ -804,8 +804,6 @@ export class IndexSolr implements NAV.IIndexer {
             return false;
         }
         doc.CommonName = asset.FileName;
-        doc.AssetFileName = asset.FileName;
-        doc.AssetFilePath = asset.FilePath;
         doc.AssetType = await this.lookupVocabulary(asset.idVAssetType);
         this.countAsset++;
         return true;
@@ -823,7 +821,9 @@ export class IndexSolr implements NAV.IIndexer {
             LOG.error(`IndexSolr.handleAssetVersion failed to compute idUserCreator from ${assetVersion.idUserCreator}`, LOG.LS.eNAV);
             return false;
         }
-        doc.CommonName = `Version ${assetVersion.Version}`;
+        doc.CommonName = `${assetVersion.FileName} v${assetVersion.Version}`;
+        doc.AVFileName = assetVersion.FileName;
+        doc.AVFilePath = assetVersion.FilePath;
         doc.AVUserCreator = user.Name;
         doc.AVStorageHash = assetVersion.StorageHash;
         doc.AVStorageSize = Number(assetVersion.StorageSize);

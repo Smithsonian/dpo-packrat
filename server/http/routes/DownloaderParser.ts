@@ -203,13 +203,7 @@ export class DownloaderParser {
             const pathToMatch: string = this.systemObjectPath.toLowerCase();
             let assetVersionMatch: DBAPI.AssetVersion | null = null;
             for (const assetVersion of assetVersions) {
-                const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
-                if (!asset) {
-                    LOG.error(`${this.requestURL} unable to fetch asset from assetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eHTTP);
-                    return this.recordStatus(404);
-                }
-
-                const pathAssetVersion: string = ((asset.FilePath !== '' && asset.FilePath !== '.') ? `/${asset.FilePath}` : '') + `/${assetVersion.FileName}`;
+                const pathAssetVersion: string = ((assetVersion.FilePath !== '' && assetVersion.FilePath !== '.') ? `/${assetVersion.FilePath}` : '') + `/${assetVersion.FileName}`;
                 const pathAssetVersionNorm: string = pathAssetVersion.toLowerCase();
                 if (pathToMatch === pathAssetVersionNorm) {
                     assetVersionMatch = assetVersion;
