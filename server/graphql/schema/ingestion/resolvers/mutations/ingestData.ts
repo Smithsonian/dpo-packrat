@@ -936,15 +936,12 @@ class IngestDataWorker extends ResolverBase {
         // "other" means we're simply creating an asset version (and associated asset)
         // fetch the associated asset and use that for identifiers
         // BUT ... populate this.assetVersionMap with the system object that owns the specified asset ... or if none, the asset itself.
-        let idAsset: number | null | undefined = other.idAsset;
-        if (!idAsset) {
-            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(other.idAssetVersion);
-            if (!assetVersion) {
-                LOG.error(`ingestData could not fetch asset version for ${other.idAssetVersion}`, LOG.LS.eGQL);
-                return false;
-            }
-            idAsset = assetVersion.idAsset;
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(other.idAssetVersion);
+        if (!assetVersion) {
+            LOG.error(`ingestData could not fetch asset version for ${other.idAssetVersion}`, LOG.LS.eGQL);
+            return false;
         }
+        const idAsset: number = other.idAsset ?? assetVersion.idAsset;
 
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
         if (!asset) {
@@ -970,6 +967,56 @@ class IngestDataWorker extends ResolverBase {
                 SOOwner = asset;
 
             this.assetVersionMap.set(other.idAssetVersion, { SOOwner, isAttachment: false, Comment: other.updateNotes ?? null });
+        }
+
+        // if we're updating an existing asset, fetch variant metadata from the most recent version; if found, use it again
+        await this.extractAndReuseMetadata(other, asset, assetVersion);
+        return true;
+    }
+
+    private async extractAndReuseMetadata(other: IngestOtherInput, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<boolean> {
+        if (!other.idAsset)
+            return true; // nothing to do
+
+        // fetch metadata with idSystemObject set to most recent asset version, name = 'variant'
+        const assetVesionLatest: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(other.idAsset);
+        if (!assetVesionLatest) {
+            LOG.error(`ingestData could not fetch latest asset version from asset ${other.idAsset}`, LOG.LS.eGQL);
+            return false;
+        }
+        const SOAssetVersionLatest: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVesionLatest);
+        if (!SOAssetVersionLatest) {
+            LOG.error(`ingestData could not fetch system object from asset version ${assetVesionLatest.idAssetVersion}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        const SOAssetVersionCurrent: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+        if (!SOAssetVersionCurrent) {
+            LOG.error(`ingestData could not fetch system object from ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchFromSystemObject(SOAssetVersionLatest.idSystemObject);
+        if (!metadataList) {
+            LOG.error(`ingestData could not fetch metadata for system object ${SOAssetVersionLatest.idSystemObject}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        for (const metadata of metadataList) {
+            if (metadata.Name.toLowerCase() === 'variant') {
+                // record metadata
+                const extractor: META.MetadataExtractor = new META.MetadataExtractor();
+                extractor.metadata.set('variant', metadata.ValueShort ?? metadata.ValueExtended ?? '');
+
+                const results: H.IOResults = await META.MetadataManager.persistExtractor(SOAssetVersionCurrent.idSystemObject, asset.idSystemObject ?? SOAssetVersionLatest.idSystemObject,
+                    extractor, this.user?.idUser ?? null);
+                if (!results.success) {
+                    LOG.error(`ingestData could not persist variant metadata for ${SOAssetVersionLatest.idSystemObject}: ${results.error}`, LOG.LS.eGQL);
+                    return false;
+                }
+
+                return true;
+            }
         }
         return true;
     }
