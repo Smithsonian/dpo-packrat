@@ -308,6 +308,28 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         return assetVersions;
     }
 
+    static async fetchFirstFromAsset(idAsset: number): Promise<AssetVersion | null> {
+        if (!idAsset)
+            return null;
+        try {
+            const assetVersions: AssetVersionBase[] | null = // DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                SELECT *
+                FROM AssetVersion
+                WHERE idAsset = ${idAsset}
+                  AND VERSION = 1`; //, AssetVersion);
+            /* istanbul ignore if */
+            if (!assetVersions || assetVersions.length == 0)
+                return null;
+            const assetVersion: AssetVersionBase = assetVersions[0];
+            // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
+            return AssetVersion.constructFromPrisma(assetVersion);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.AssetVersion.fetchFirstFromAsset', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
     static async fetchLatestFromAsset(idAsset: number): Promise<AssetVersion | null> {
         if (!idAsset)
             return null;

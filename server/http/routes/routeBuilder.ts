@@ -78,6 +78,17 @@ export class RouteBuilder {
             case eHrefMode.ePrependServerURL: prefix = Config.http.serverUrl; break;
         }
 
-        return (prefix) ? prefix + (path.startsWith('/') ? path : '/' + path) : path;
+        if (!prefix)
+            return path;
+
+        const prefixEndsWithSlash: boolean = prefix.endsWith('/');
+        const pathStartsWithSlash: boolean = path.startsWith('/');
+        const slashCount: number = (prefixEndsWithSlash ? 1 : 0) + (pathStartsWithSlash ? 1 : 0);
+        if (slashCount === 1)                           // exactly one separator,
+            return prefix + path;                       // just concat
+        else if (slashCount === 0)                      // exactly no separators,
+            return `${prefix}/${path}`;                 // concat with slash separator
+        else                                            // exactly two separators,
+            return `${prefix}${path.substring(1)}`;     // remove one separator
     }
 }
