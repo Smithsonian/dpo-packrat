@@ -68,7 +68,7 @@ export class IndexSolr implements NAV.IIndexer {
             if (!await this.handleAncestors(docs, OGDE)) // updates docs, if there are ancestors and if OGDE has children data
                 return false;
 
-            // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(doc, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eNAV);
+            // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(doc, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
             const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackrat);
             try {
                 let res: H.IOResults = await solrClient.add(docs);
@@ -493,6 +493,8 @@ export class IndexSolr implements NAV.IIndexer {
 
         if (OGDEH.childrenDateCreated.length > 0)
             doc.ChildrenDateCreated = create ? OGDEH.childrenDateCreated : { 'add': OGDEH.childrenDateCreated };
+
+        // LOG.info(`IndexSolr.extractCommonChildrenFields doc=${JSON.stringify(doc, H.Helpers.saferStringify)}, OGDEH=${JSON.stringify(OGDEH, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
     }
 
     private async computeVocabulary(idVocabulary: number | null): Promise<string | undefined> {
