@@ -1,6 +1,6 @@
 import * as LOG from '../utils/logger';
 import { CacheControl } from './CacheControl';
-import { Vocabulary, VocabularySet } from '../db';
+import { Vocabulary, VocabularySet, SystemObject } from '../db';
 import * as path from 'path';
 
 /**
@@ -801,6 +801,41 @@ export class VocabularyCache {
             default: eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeUnknown; break;
         }
         return await VocabularyCache.vocabularyByEnum(eVocabID);
+    }
+
+    static async isPreferredAsset(idVAssetType: number, SO: SystemObject): Promise<boolean> {
+        switch (await VocabularyCache.vocabularyIdToEnum(idVAssetType)) {
+            case eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry:
+            case eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde:
+            case eVocabularyID.eAssetAssetTypeCaptureDataSetDicom:
+            case eVocabularyID.eAssetAssetTypeCaptureDataSetLaserLine:
+            case eVocabularyID.eAssetAssetTypeCaptureDataSetSphericalLaser:
+            case eVocabularyID.eAssetAssetTypeCaptureDataSetStructuredLight:
+            case eVocabularyID.eAssetAssetTypeCaptureDataSetOther:
+                return SO.idCaptureData ? true : false;
+
+            case eVocabularyID.eAssetAssetTypeModel:
+            case eVocabularyID.eAssetAssetTypeModelGeometryFile:
+                return SO.idModel ? true : false;
+
+            case eVocabularyID.eAssetAssetTypeScene:
+                return SO.idScene ? true : false;
+
+            case eVocabularyID.eAssetAssetTypeProjectDocumentation:
+                return SO.idProjectDocumentation ? true : false;
+
+            case eVocabularyID.eAssetAssetTypeIntermediaryFile:
+                return SO.idIntermediaryFile ? true : false;
+
+            case eVocabularyID.eAssetAssetTypeBulkIngestion:
+            case eVocabularyID.eAssetAssetTypeCaptureDataFile:
+            case eVocabularyID.eAssetAssetTypeModelUVMapFile:
+            case eVocabularyID.eAssetAssetTypeAttachment:
+            case eVocabularyID.eAssetAssetTypeOther:
+            case undefined:
+            default:
+                return false;
+        }
     }
 
     static async flush(): Promise<void> {

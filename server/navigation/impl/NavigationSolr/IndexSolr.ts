@@ -781,6 +781,22 @@ export class IndexSolr implements NAV.IIndexer {
         doc.SceneEdanUUID = scene.EdanUUID;
         doc.ScenePosedAndQCd = scene.PosedAndQCd;
         doc.SceneApprovedForPublication = scene.ApprovedForPublication;
+
+        // fetch assets, find preferred asset (svx.json), if found, find first version, use that date
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(objectGraphDataEntry.systemObjectIDType.idSystemObject);
+        const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(objectGraphDataEntry.systemObjectIDType.idSystemObject);
+        if (SO && assets) {
+            for (const asset of assets) {
+                if (await CACHE.VocabularyCache.isPreferredAsset(asset.idVAssetType, SO)) {
+                    const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchFirstFromAsset(asset.idAsset);
+                    if (assetVersion) {
+                        doc.CommonDateCreated = assetVersion.DateCreated;
+                        doc.ChildrenDateCreated = [assetVersion.DateCreated];
+                    }
+                    break;
+                }
+            }
+        }
         this.countScene++;
         return true;
     }
@@ -816,8 +832,16 @@ export class IndexSolr implements NAV.IIndexer {
             LOG.error(`IndexSolr.handleAsset failed to compute asset from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
+
         doc.CommonName = asset.FileName;
         doc.AssetType = await this.lookupVocabulary(asset.idVAssetType);
+
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchFirstFromAsset(asset.idAsset);
+        if (assetVersion) {
+            doc.CommonDateCreated = assetVersion.DateCreated;
+            doc.ChildrenDateCreated = [assetVersion.DateCreated];
+        }
+
         this.countAsset++;
         return true;
     }
