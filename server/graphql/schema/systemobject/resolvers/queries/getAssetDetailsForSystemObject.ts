@@ -102,7 +102,7 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
         // If we haven't yet identified a preferred assetDetail record, examine this asset's asset type,
         // and compare that to the system object that we've fetched.
         if (!assetDetailPreferred) {
-            if (await isPreferredAsset(asset.idVAssetType, SO)) {
+            if (await CACHE.VocabularyCache.isPreferredAsset(asset.idVAssetType, SO)) {
                 assetDetailPreferred = assetDetail;
                 continue;
             }
@@ -115,41 +115,6 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
         assetDetailRows.unshift(assetDetailPreferred);
 
     return { columns, assetDetailRows };
-}
-
-async function isPreferredAsset(idVAssetType: number, SO: DBAPI.SystemObject): Promise<boolean> {
-    switch (await CACHE.VocabularyCache.vocabularyIdToEnum(idVAssetType)) {
-        case CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry:
-        case CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde:
-        case CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetDicom:
-        case CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetLaserLine:
-        case CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetSphericalLaser:
-        case CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetStructuredLight:
-        case CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetOther:
-            return SO.idCaptureData ? true : false;
-
-        case CACHE.eVocabularyID.eAssetAssetTypeModel:
-        case CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile:
-            return SO.idModel ? true : false;
-
-        case CACHE.eVocabularyID.eAssetAssetTypeScene:
-            return SO.idScene ? true : false;
-
-        case CACHE.eVocabularyID.eAssetAssetTypeProjectDocumentation:
-            return SO.idProjectDocumentation ? true : false;
-
-        case CACHE.eVocabularyID.eAssetAssetTypeIntermediaryFile:
-            return SO.idIntermediaryFile ? true : false;
-
-        case CACHE.eVocabularyID.eAssetAssetTypeBulkIngestion:
-        case CACHE.eVocabularyID.eAssetAssetTypeCaptureDataFile:
-        case CACHE.eVocabularyID.eAssetAssetTypeModelUVMapFile:
-        case CACHE.eVocabularyID.eAssetAssetTypeAttachment:
-        case CACHE.eVocabularyID.eAssetAssetTypeOther:
-        case undefined:
-        default:
-            return false;
-    }
 }
 
 async function computeMetadataSet(oIDAV: DBAPI.ObjectIDAndType, metadataMetaMap: Map<number, Map<string, string>>): Promise<Map<string, string>> {

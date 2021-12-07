@@ -8,7 +8,7 @@
 import { Box, makeStyles, Typography, Button } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import { CheckboxField, FieldType, Loader } from '../../../../../components';
+import { CheckboxField, InputField, FieldType, Loader } from '../../../../../components';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { DetailComponentProps } from './index';
@@ -30,7 +30,7 @@ export const useStyles = makeStyles(({ palette }) => ({
 function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const { data, loading, onUpdateDetail, objectType } = props;
-    let { disabled } = props;
+    const { disabled } = props;
     const history = useHistory();
     const [AssetVersionDetails, updateDetailField] = useDetailTabStore(state => [state.AssetVersionDetails, state.updateDetailField]);
 
@@ -41,6 +41,11 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
     }
+
+    const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = event.target;
+        updateDetailField(eSystemObjectType.eAssetVersion, name, value);
+    };
 
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
@@ -70,19 +75,28 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
         };
     }
 
-    disabled = true;
     return (
         <Box>
             <FieldType required label='Version' direction='row' containerProps={rowFieldProps} width='auto'>
                 <Typography className={classes.value}>{AssetVersionDetails.Version}</Typography>
             </FieldType>
+            <InputField
+                viewMode
+                required
+                updated={isFieldUpdated(AssetVersionDetails, assetVersionData, 'FilePath')}
+                disabled={disabled}
+                label='File Path'
+                value={assetVersionData?.FilePath}
+                name='FilePath'
+                onChange={onSetField}
+            />
             <FieldType required label='Creator' direction='row' containerProps={rowFieldProps} width='auto'>
                 <Typography className={classes.value}>{AssetVersionDetails.Creator}</Typography>
             </FieldType>
             <FieldType required label='Date Created' direction='row' containerProps={rowFieldProps} width='auto'>
                 <Typography className={classes.value}>{AssetVersionDetails.DateCreated}</Typography>
             </FieldType>
-            <FieldType required label='StorageSize' direction='row' containerProps={rowFieldProps} width='auto'>
+            <FieldType required label='Storage Size' direction='row' containerProps={rowFieldProps} width='auto'>
                 <Typography className={classes.value}>{formatBytes(AssetVersionDetails.StorageSize ?? 0)}</Typography>
             </FieldType>
 
@@ -90,7 +104,7 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
                 viewMode
                 required
                 updated={isFieldUpdated(AssetVersionDetails, assetVersionData, 'Ingested')}
-                disabled={disabled}
+                disabled
                 name='Ingested'
                 label='Ingested'
                 value={AssetVersionDetails.Ingested ?? false}

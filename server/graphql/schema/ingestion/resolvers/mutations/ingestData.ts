@@ -210,6 +210,9 @@ class IngestDataWorker extends ResolverBase {
         if (this.ingestModel)
             await this.createModelDerivedObjects(ingestResMap);
 
+        if (this.ingestOther)
+            await this.createOtherDerivedObjects(ingestResMap);
+
         // wire item to asset-owning objects; do this *after* createModelDerivedObjects
         if (itemDB) {
             if (!await this.wireItemToAssetOwners(itemDB))
@@ -611,17 +614,23 @@ class IngestDataWorker extends ResolverBase {
                 assetToVersionMap.set(assetVersion.idAsset, assetVersion);
 
             for (const asset of ingestAssetRes.assets || []) {
-                // map asset's file path to variant type
-                let idVVariantType: number = folderVariantMap.get(asset.FilePath.toLowerCase()) || 0;
-                if (!idVVariantType) {  // if that failed, try again with the last part of the path
-                    let lastSlash: number = asset.FilePath.lastIndexOf('/');
-                    if (lastSlash === -1)
-                        lastSlash = asset.FilePath.lastIndexOf('\\');
-                    const variantPath = asset.FilePath.substring(lastSlash + 1).toLowerCase();
+                const assetVersion: DBAPI.AssetVersion | undefined = assetToVersionMap.get(asset.idAsset);
 
-                    idVVariantType = folderVariantMap.get(variantPath) || 0;
+                // map asset's file path to variant type
+                let idVVariantType: number = 0;
+
+                if (assetVersion) {
+                    idVVariantType = folderVariantMap.get(assetVersion.FilePath.toLowerCase()) ?? 0;
+                    if (!idVVariantType) {  // if that failed, try again with the last part of the path
+                        let lastSlash: number = assetVersion.FilePath.lastIndexOf('/');
+                        if (lastSlash === -1)
+                            lastSlash = assetVersion.FilePath.lastIndexOf('\\');
+                        const variantPath = assetVersion.FilePath.substring(lastSlash + 1).toLowerCase();
+
+                        idVVariantType = folderVariantMap.get(variantPath) ?? 0;
+                    }
+                    // LOG.info(`ingestData mapped ${assetVersion.FilePath} to variant ${idVVariantType}`, LOG.LS.eGQL);
                 }
-                // LOG.info(`ingestData mapped ${asset.FilePath} to variant ${idVVariantType}`, LOG.LS.eGQL);
 
                 const CDF: DBAPI.CaptureDataFile = new DBAPI.CaptureDataFile({
                     idCaptureData: SOOwner.idCaptureData,
@@ -638,7 +647,6 @@ class IngestDataWorker extends ResolverBase {
 
                 // look up asset.idAsset -> assetVersion -> SO
                 if (SOParent) {
-                    const assetVersion: DBAPI.AssetVersion | undefined = assetToVersionMap.get(asset.idAsset);
                     const SOAssetVersion: DBAPI.SystemObject | null = assetVersion ? await assetVersion.fetchSystemObject() : null;
 
                     // gather metadata in extractor
@@ -931,15 +939,12 @@ class IngestDataWorker extends ResolverBase {
         // "other" means we're simply creating an asset version (and associated asset)
         // fetch the associated asset and use that for identifiers
         // BUT ... populate this.assetVersionMap with the system object that owns the specified asset ... or if none, the asset itself.
-        let idAsset: number | null | undefined = other.idAsset;
-        if (!idAsset) {
-            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(other.idAssetVersion);
-            if (!assetVersion) {
-                LOG.error(`ingestData could not fetch asset version for ${other.idAssetVersion}`, LOG.LS.eGQL);
-                return false;
-            }
-            idAsset = assetVersion.idAsset;
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(other.idAssetVersion);
+        if (!assetVersion) {
+            LOG.error(`ingestData could not fetch asset version for ${other.idAssetVersion}`, LOG.LS.eGQL);
+            return false;
         }
+        const idAsset: number = other.idAsset ?? assetVersion.idAsset;
 
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
         if (!asset) {
@@ -965,6 +970,95 @@ class IngestDataWorker extends ResolverBase {
                 SOOwner = asset;
 
             this.assetVersionMap.set(other.idAssetVersion, { SOOwner, isAttachment: false, Comment: other.updateNotes ?? null });
+        }
+
+        return true;
+    }
+
+    private async createOtherDerivedObjects(ingestResMap: Map<number, IngestAssetResult | null>): Promise<boolean> {
+        let res: boolean = true;
+        for (const idAssetVersion of this.assetVersionMap.keys()) {
+            // LOG.info(`ingestData createOtherDerivedObjects idAssetVersion=${idAssetVersion}`, LOG.LS.eGQL);
+            const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
+            if (!ingestAssetRes) {
+                LOG.error(`ingestData createOtherDerivedObjects unable to locate ingest results for idAssetVersion ${idAssetVersion}`, LOG.LS.eGQL);
+                res = false;
+                continue;
+            }
+            if (!ingestAssetRes.success) {
+                LOG.error(`ingestData createOtherDerivedObjects failed for idAssetVersion ${idAssetVersion}: ${ingestAssetRes.error}`, LOG.LS.eGQL);
+                res = false;
+                continue;
+            }
+
+            const assetToVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>(); // map of idAsset -> AssetVersion
+            for (const assetVersion of ingestAssetRes.assetVersions || [])
+                assetToVersionMap.set(assetVersion.idAsset, assetVersion);
+
+            for (const asset of ingestAssetRes.assets || []) {
+                const assetVersion: DBAPI.AssetVersion | undefined = assetToVersionMap.get(asset.idAsset);
+                if (!assetVersion) {
+                    LOG.error(`ingestData createOtherDerivedObjects could not fetch asset version for ${asset.idAsset}`, LOG.LS.eGQL);
+                    res = false;
+                    continue;
+                }
+
+                // if we're updating an existing asset, fetch variant metadata from the second-to-last version
+                await this.extractAndReuseMetadata(assetVersion.idAsset, asset, assetVersion);
+            }
+        }
+        return res;
+    }
+
+    private async extractAndReuseMetadata(idAsset: number | null | undefined, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<boolean> {
+        // LOG.info(`ingestData.extractAndReuseMetadata idAsset=${idAsset}, asset=${JSON.stringify(asset, H.Helpers.saferStringify)}, assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+        if (!idAsset)
+            return true; // nothing to do
+
+        // we have already created a new asset version for idAsset; find the next to last, if any, and use that to extract variant metadata
+        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromAsset(idAsset);
+        if (!assetVersions) {
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch asset versions from asset ${idAsset}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        if (assetVersions.length < 2)
+            return true;
+
+        const assetVesionPenultimate: DBAPI.AssetVersion = assetVersions[assetVersions.length - 2];
+        const SOAssetVersionPenultimate: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVesionPenultimate);
+        if (!SOAssetVersionPenultimate) {
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch system object from asset version ${assetVesionPenultimate.idAssetVersion}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        const SOAssetVersionCurrent: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+        if (!SOAssetVersionCurrent) {
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch system object from ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchFromSystemObject(SOAssetVersionPenultimate.idSystemObject);
+        if (!metadataList) {
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch metadata for system object ${SOAssetVersionPenultimate.idSystemObject}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        for (const metadata of metadataList) {
+            if (metadata.Name.toLowerCase() === 'variant') {
+                // record metadata
+                const extractor: META.MetadataExtractor = new META.MetadataExtractor();
+                extractor.metadata.set('variant', metadata.ValueShort ?? metadata.ValueExtended ?? '');
+
+                const results: H.IOResults = await META.MetadataManager.persistExtractor(SOAssetVersionCurrent.idSystemObject, asset.idSystemObject ?? SOAssetVersionPenultimate.idSystemObject,
+                    extractor, this.user?.idUser ?? null);
+                if (!results.success) {
+                    LOG.error(`ingestData could not persist variant metadata for ${SOAssetVersionPenultimate.idSystemObject}: ${results.error}`, LOG.LS.eGQL);
+                    return false;
+                }
+
+                return true;
+            }
         }
         return true;
     }
@@ -1181,12 +1275,17 @@ class IngestDataWorker extends ResolverBase {
             }
             await this.appendToWFReport(message);
 
+            const parameters = {
+                modelTransformUpdated,
+                assetsIngested: IAR.assetsIngested
+            };
+
             const workflowParams: WF.WorkflowParameters = {
                 eWorkflowType: null,
                 idSystemObject,
                 idProject: null, // TODO: update with project ID
                 idUserInitiator: user.idUser,
-                parameters: modelTransformUpdated ? { modelTransformUpdated } : null
+                parameters
             };
 
             // send workflow engine event, but don't wait for results

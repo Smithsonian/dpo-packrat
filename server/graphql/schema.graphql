@@ -368,7 +368,6 @@ scalar BigInt
 type Asset {
   idAsset: Int!
   FileName: String!
-  FilePath: String!
   idAssetGroup: Int
   idVAssetType: Int
   idSystemObject: Int
@@ -392,6 +391,7 @@ type AssetVersion {
   Ingested: Boolean
   Version: Int!
   idSOAttachment: Int
+  FilePath: String!
   Asset: Asset
   User: User
   SystemObject: SystemObject
@@ -1115,11 +1115,11 @@ input ProjectDocumentationDetailFieldsInput {
 }
 
 input AssetDetailFieldsInput {
-  FilePath: String
   AssetType: Int
 }
 
 input AssetVersionDetailFieldsInput {
+  FilePath: String
   Creator: String
   DateCreated: DateTime
   Ingested: Boolean
@@ -1371,13 +1371,13 @@ type ProjectDocumentationDetailFields {
 }
 
 type AssetDetailFields {
-  FilePath: String
   AssetType: Int
   Asset: Asset
   idAsset: Int
 }
 
 type AssetVersionDetailFields {
+  FilePath: String
   Creator: String
   DateCreated: DateTime
   Ingested: Boolean

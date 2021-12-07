@@ -13,6 +13,12 @@ import { Parent } from '../../../../../types/resolvers';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 
+type PublishedStateInfo = {
+    publishedState: string;
+    publishedEnum: DBAPI.ePublishedState;
+    publishable: boolean;
+};
+
 export default async function getSystemObjectDetails(_: Parent, args: QueryGetSystemObjectDetailsArgs): Promise<GetSystemObjectDetailsResult> {
     const { input } = args;
     const { idSystemObject } = input;
@@ -30,7 +36,8 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
     const derivedObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Derived);
     const objectVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
-    const { publishedState, publishedEnum, publishable } = await getPublishedState(idSystemObject, oID);
+    const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject, OGD);
+    const publishedStateInfo: PublishedStateInfo = await getPublishedState(idSystemObject, oID, LR);
     const identifiers = await getIngestIdentifiers(idSystemObject);
 
     if (!oID) {
@@ -54,7 +61,6 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const assetOwner: RepositoryPath | undefined = await computeAssetOwner(oID);
 
     const name: string = await resolveNameForObject(idSystemObject);
-    const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject, OGD);
     // LOG.info('getSystemObjectDetails 3', LOG.LS.eGQL);
 
     const metadata: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchFromSystemObject(idSystemObject);
@@ -71,9 +77,9 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         retired: systemObject.Retired,
         objectType: oID.eObjectType,
         allowed: true, // TODO: True until Access control is implemented (Post MVP)
-        publishedState,
-        publishedEnum,
-        publishable,
+        publishedState: publishedStateInfo.publishedState,
+        publishedEnum: publishedStateInfo.publishedEnum,
+        publishable: publishedStateInfo.publishable,
         thumbnail: null,
         unit,
         project,
@@ -91,15 +97,23 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     };
 }
 
-async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndType | undefined): Promise<{ publishedState: string, publishedEnum: DBAPI.ePublishedState, publishable: boolean }> {
+async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndType | undefined,
+    LR: DBAPI.LicenseResolver | undefined): Promise<PublishedStateInfo> {
     const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
     const publishedEnum: DBAPI.ePublishedState = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished;
     const publishedState: string = DBAPI.PublishedStateEnumToString(publishedEnum);
+
+    const mayBePublished: boolean = (LR != null) &&
+                                    (LR.License != null) &&
+                                    (DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) !== DBAPI.ePublishedState.eNotPublished);
+
     let publishable: boolean = false;
     if (oID && oID.eObjectType == DBAPI.eSystemObjectType.eScene) {
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
         if (scene)
-            publishable = scene.ApprovedForPublication && scene.PosedAndQCd;
+            publishable = scene.ApprovedForPublication && // Approved for Publication
+                          scene.PosedAndQCd &&            // Posed and QCd
+                          mayBePublished;                 // License defined and allows publishing
         else
             LOG.error(`Unable to compute scene for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
     }

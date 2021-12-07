@@ -25,11 +25,11 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
     dracoCompressed: boolean | null;
     title: string | null;
 
-    constructor(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, vocabulary: DBAPI.Vocabulary, metadataMap: Map<string, string>) {
+    constructor(_asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, vocabulary: DBAPI.Vocabulary, metadataMap: Map<string, string>) {
         super(idSystemObject, assetVersion.idAsset, assetVersion.idAssetVersion);
         this.link = { label: null, path: `${RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion)}`, icon: eIcon.eIconDownload, origin: eLinkOrigin.eServer };
         this.name = { label: assetVersion.FileName, path: `${RouteBuilder.RepositoryDetails(idSystemObject)}`, icon: null, origin: eLinkOrigin.eClient };
-        this.filePath = asset.FilePath;
+        this.filePath = assetVersion.FilePath;
         this.assetType = vocabulary.Term;
         this.version = assetVersion.Version;
         this.dateCreated = assetVersion.DateCreated;

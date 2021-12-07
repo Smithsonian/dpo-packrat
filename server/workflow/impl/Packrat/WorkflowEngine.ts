@@ -170,6 +170,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         const modelTransformUpdated: boolean = workflowParams.parameters?.modelTransformUpdated !== undefined
             ? workflowParams.parameters.modelTransformUpdated : false;
+        const assetsIngested: boolean = workflowParams.parameters?.assetsIngested !== undefined
+            ?  workflowParams.parameters.assetsIngested : false;
+
         let workflow: WF.IWorkflow | null = null;
         let CMIR: ComputeModelInfoResult | undefined = undefined;
         let CSIR: ComputeSceneInfoResult | undefined = undefined;
@@ -228,15 +231,20 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
 
         if (CMIR)
-            workflow = await this.eventIngestionIngestObjectModel(CMIR, workflowParams);
+            workflow = await this.eventIngestionIngestObjectModel(CMIR, workflowParams, assetsIngested);
 
         if (CSIR)
-            workflow = await this.eventIngestionIngestObjectScene(CSIR, workflowParams);
+            workflow = await this.eventIngestionIngestObjectScene(CSIR, workflowParams, assetsIngested);
 
         return workflow;
     }
 
-    private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
+    private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean): Promise<WF.IWorkflow | null> {
+        if (!assetsIngested) {
+            LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            return null;
+        }
+
         if (CMIR.assetVersionGeometry === undefined) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry and/or diffuse texture from model ${CMIR.idModel}`, LOG.LS.eWF);
             return null;
@@ -351,7 +359,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return workflow;
     }
 
-    private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
+    private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean): Promise<WF.IWorkflow | null> {
+        if (!assetsIngested) {
+            LOG.info(`WorkflowEngine.eventIngestionIngestObjectScene skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CSIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            return null;
+        }
+
         if (CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute geometry and/or scene asset version from scene ${CSIR.idScene}`, LOG.LS.eWF);
             return null;

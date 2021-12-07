@@ -4,7 +4,6 @@ scalar BigInt
 type Asset {
     idAsset: Int!
     FileName: String!
-    FilePath: String!
     idAssetGroup: Int
     idVAssetType: Int
     idSystemObject: Int
@@ -28,6 +27,7 @@ type AssetVersion {
     Ingested: Boolean
     Version: Int!
     idSOAttachment: Int
+    FilePath: String!
     Asset: Asset
     User: User
     SystemObject: SystemObject

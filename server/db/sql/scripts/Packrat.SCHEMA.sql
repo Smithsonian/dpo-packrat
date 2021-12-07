@@ -64,7 +64,6 @@ CREATE TABLE IF NOT EXISTS `Actor` (
 CREATE TABLE IF NOT EXISTS `Asset` (
   `idAsset` int(11) NOT NULL AUTO_INCREMENT,
   `FileName` varchar(512) NOT NULL,
-  `FilePath` varchar(512) NOT NULL,
   `idAssetGroup` int(11) DEFAULT NULL,
   `idVAssetType` int(11) NOT NULL,
   `idSystemObject` int(11) DEFAULT NULL,
@@ -91,6 +90,7 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `Ingested` boolean DEFAULT NULL,
   `BulkIngest` boolean NOT NULL,
   `idSOAttachment` int(11) NULL,
+  `FilePath` varchar(512) NULL,
   PRIMARY KEY (`idAssetVersion`),
   KEY `AssetVersion_idAsset_Version` (`idAsset`,`Version`),
   KEY `AssetVersion_StorageHash` (`StorageHash`),

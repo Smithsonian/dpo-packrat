@@ -101,13 +101,13 @@ type ProjectDocumentationDetailFields {
     Description: String
 }
 type AssetDetailFields {
-    FilePath: String
     AssetType: Int
     Asset: Asset
     idAsset: Int
 }
 
 type AssetVersionDetailFields {
+    FilePath: String
     Creator: String
     DateCreated: DateTime
     Ingested: Boolean

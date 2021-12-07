@@ -135,12 +135,19 @@ function Uploads(): React.ReactElement {
             const queuedUploadedFiles = getSelectedFiles(completed, true);
             const metadataStepRequiredAssetTypesSet = new Set();
             assetTypes.forEach(assetType => {
-                if (assetType.Term === 'Capture Data Set: Photogrammetry' || assetType.Term === 'Model' || assetType.Term === 'Scene' || assetType.Term === 'Attachment')
-                    metadataStepRequiredAssetTypesSet.add(assetType.idVocabulary);
+                switch (assetType.Term) {
+                    case 'Capture Data Set: Photogrammetry':
+                    case 'Capture Data File':
+                    case 'Model':
+                    case 'Scene':
+                    case 'Attachment':
+                        metadataStepRequiredAssetTypesSet.add(assetType.idVocabulary);
+                        break;
+                }
             });
 
-            // Change this line to read the file types
-            if (queuedUploadedFiles.every(file => !metadataStepRequiredAssetTypesSet.has(file.type))) {
+            // Start ingestion if every file is not an update and does not require metadata
+            if (queuedUploadedFiles.every(file => !file.idAsset && !metadataStepRequiredAssetTypesSet.has(file.type))) {
                 const { success, message } = await ingestionStart();
                 if (success) {
                     toast.success('Ingestion complete');
