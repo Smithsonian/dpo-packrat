@@ -75,9 +75,9 @@ export class IndexSolr implements NAV.IIndexer {
                 if (res.success)
                     res = await solrClient.commit();
                 if (!res.success)
-                    LOG.error(`IndexSolr.indexObject failed: ${res.error}`, LOG.LS.eNAV);
+                    LOG.error(`IndexSolr.indexObject failed: ${res.error}, docs=${JSON.stringify(docs, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
             } catch (error) {
-                LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed`, LOG.LS.eNAV, error);
+                LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed, docs=${JSON.stringify(docs, H.Helpers.saferStringify)}`, LOG.LS.eNAV, error);
                 return false;
             }
 

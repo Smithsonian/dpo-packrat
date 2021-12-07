@@ -40,6 +40,7 @@ export type IngestAssetResult = {
     assetVersions?: DBAPI.AssetVersion[] | null | undefined;
     systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined;
     assetsUnzipped?: boolean | undefined;
+    assetsIngested?: boolean | undefined;
 };
 
 export type AssetStorageResultCommit = {
@@ -437,7 +438,6 @@ export class AssetStorageAdapter {
             return IAR;
         }
         IAR.systemObjectVersion = SOV;
-
         return IAR;
     }
 
@@ -487,7 +487,7 @@ export class AssetStorageAdapter {
             if (!ASR.success || !ASR.asset || !ASR.assetVersion)
                 return { success: false, error: ASR.error };
             else
-                return { success: true, assets: [ASR.asset], assetVersions: [ASR.assetVersion], systemObjectVersion: null };
+                return { success: true, assets: [ASR.asset], assetVersions: [ASR.assetVersion], systemObjectVersion: null, assetsIngested: true };
         }
     }
 
@@ -497,6 +497,7 @@ export class AssetStorageAdapter {
         const assetVersions: DBAPI.AssetVersion[] = [];
         const eAssetTypeMaster: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType);
         let IAR: IngestAssetResult = { success: true };
+        let assetsIngested: boolean = false;
 
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${assetVersion.FilePath}/` : '';
@@ -629,7 +630,9 @@ export class AssetStorageAdapter {
             // Create a storage key, Promote the asset, Update the asset
             if (promoteAssetNeeded) {
                 const ASR: AssetStorageResult = await AssetStorageAdapter.promoteAssetWorker(storage, assetComponent, assetVersionComponent, metadata, opInfo, inputStream); /* istanbul ignore next */
-                if (!ASR.success) {
+                if (ASR.success)
+                    assetsIngested = true;
+                else {
                     const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to promote Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${ASR.error}`;
                     LOG.error(error, LOG.LS.eSTR);
                     if (IAR.success)
@@ -653,7 +656,7 @@ export class AssetStorageAdapter {
             return { success: false, error, assets, assetVersions, systemObjectVersion: null };
         }
 
-        return { success: true, assets, assetVersions, systemObjectVersion: null, assetsUnzipped: true };
+        return { success: true, assets, assetVersions, systemObjectVersion: null, assetsUnzipped: true, assetsIngested };
     }
 
     private static async retireAssetIfAllVersionsAreRetired(asset: DBAPI.Asset): Promise<H.IOResults> {
