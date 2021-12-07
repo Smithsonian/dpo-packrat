@@ -93,7 +93,7 @@ function SubjectForm(): React.ReactElement {
     const [validUnit, setValidUnit] = useState(true);
     const [subjects, reset] = useSubjectStore(state => [state.subjects, state.reset]);
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
-    const [getAllMetadataEntries, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.resetMetadata]);
+    const [getAllMetadataEntries, resetMetadata, validateMetadataFields, initializeMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.resetMetadata, state.validateMetadataFields, state.initializeMetadata]);
     const schema = yup.object().shape({
         subjectName: yup.string().min(1),
         subjectUnit: yup.number().positive(),
@@ -160,6 +160,10 @@ function SubjectForm(): React.ReactElement {
     }, [subjects, getEntries]);
 
     useEffect(() => {
+        initializeMetadata(eObjectMetadataType.eSubjectCreation);
+    }, []);
+
+    useEffect(() => {
         return () => {
             reset();
             resetMetadata();
@@ -200,7 +204,12 @@ function SubjectForm(): React.ReactElement {
             const isValidIdentifiers = (await schema.isValid({ subjectIdentifiers })) || systemCreated;
             if (!isValidIdentifiers) toast.error('Creation Failed: Must Either Include Identifier Or Have System Create One', { autoClose: false });
 
-            return isValidName && isValidUnit && isValidIdentifiers;
+            const invalidMetadata = validateMetadataFields(eObjectMetadataType.eSubjectCreation);
+            if (invalidMetadata.length) {
+                invalidMetadata.forEach(message => toast.error(message, { autoClose: false }));
+            }
+
+            return isValidName && isValidUnit && isValidIdentifiers && !invalidMetadata;
         } catch (error) {
             if (error instanceof Error)
                 toast.error(error);
@@ -256,7 +265,7 @@ function SubjectForm(): React.ReactElement {
                 systemCreated,
                 metadata
             };
-            console.log('createSubjectsWithIdentifiersInput', createSubjectWithIdentifiersInput);
+            // console.log('createSubjectsWithIdentifiersInput', createSubjectWithIdentifiersInput);
 
             const {
                 data: {
@@ -322,7 +331,7 @@ function SubjectForm(): React.ReactElement {
                     subjectView
                 />
                 <Box mb={3}>
-                    <MetadataControlTable type={eObjectMetadataType.eSubjectCreation} />
+                    <MetadataControlTable type={eObjectMetadataType.eSubjectCreation} metadataData={[]} />
                 </Box>
                 <Button className={classes.btn} onClick={onCreateSubject}>
                     Create

@@ -5,6 +5,8 @@ import create, { GetState, SetState } from 'zustand';
 import { MetadataInput, Metadata } from '../types/graphql';
 import { toast } from 'react-toastify';
 import { deleteMetadata } from '../pages/Repository/hooks/useDetailsView';
+import lodash from 'lodash';
+
 
 export enum eObjectMetadataType {
     eSubjectView = 1,
@@ -16,101 +18,127 @@ export interface MetadataState extends MetadataInput {
     isImmutable: boolean;
 }
 
-/*
-    idMetadata
-    Name
-    ValueShort
-    ValuExtended
-    idAssetVersionValue
-    idVMetadataSource
-*/
-/*
-    idMetadata: Scalars['Int'];
-    Name: Scalars['String'];
-    ValueShort?: Maybe<Scalars['String']>;
-    ValueExtended?: Maybe<Scalars['String']>;
-    idAssetVersionValue?: Maybe<Scalars['Int']>;
-    idUser?: Maybe<Scalars['Int']>;
-    idVMetadataSource?: Maybe<Scalars['Int']>;
-    idSystemObject?: Maybe<Scalars['Int']>;
-    idSystemObjectParent?: Maybe<Scalars['Int']>;
-    AssetVersionValue?: Maybe<AssetVersion>;
-    SystemObject?: Maybe<SystemObject>;
-    SystemObjectParent?: Maybe<SystemObject>;
-    User?: Maybe<User>;
-    VMetadataSource?: Maybe<Vocabulary>;
-*/
+interface MetadataWithId extends Metadata {
+    id: number;
+}
 
 type ObjectMetadataStore = {
     metadataControl: MetadataState[];
-    metadataDisplay: Metadata[];
+    metadataDisplay: MetadataWithId[];
+    initialControl: MetadataState[];
+    initialDisplay: MetadataWithId[];
+    mdmFields: Set<string>;
+    initializeMdmEntries: (entries: string[]) => void;
     initializeMetadata: (type: eObjectMetadataType, metadata?: Metadata[]) => void;
     resetMetadata: () => void;
     updateMetadata: (id: number, index: number, field: string, value: string) => void;
     getAllMetadataEntries: () => MetadataInput[];
+    getAllMdmFieldsArr: () => string[];
     createMetadata: () => void;
     deleteMetadata: (id: number, index: number) => Promise<void>;
+    areMetadataUpdated: () => boolean;
+    validateMetadataFields: (type?: eObjectMetadataType) => string[];
 };
+
+export const isUniqueSubjectFields = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License', 'License Text']);
+export const isRequired = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License']);
+export const noLabel = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License', 'License Text', 'Object Type', 'Date', 'Place', 'Topic']);
 
 export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState<ObjectMetadataStore>, get: GetState<ObjectMetadataStore>) => ({
     metadataControl: [],
     metadataDisplay: [],
+    initialControl: [],
+    initialDisplay: [],
+    mdmFields: new Set(),
+    initializeMdmEntries: (entries): void => {
+        const mdmFields = new Set<string>();
+        entries.forEach(entry => mdmFields.add(entry));
+        set({ mdmFields });
+    },
     initializeMetadata: (type, metadata) => {
-        console.log('metadata', metadata, 'type', type);
-        // TODO: populate the metadataDisplay array too
+        const { mdmFields } = get();
+        const uniqueFieldSet = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License', 'License Text']);
+        console.log('initializing this should only happen once');
+        // subject creation will default with a set array of fields
         if (type === eObjectMetadataType.eSubjectCreation) {
-            const defaultMetadataFields = [{
-                idMetadata: 0, Label: '', Name: 'Label', Value: '', isImmutable: true
-            }, {
-                idMetadata: 0, Label: '', Name: 'Title', Value: '', isImmutable: true
-            }, {
-                idMetadata: 0, Label: '', Name: 'Record ID', Value: '', isImmutable: true
-            }, {
-                idMetadata: 0, Label: '', Name: 'Unit', Value: '', isImmutable: true
-            }, {
-                idMetadata: 0, Label: '', Name: 'Access', Value: '', isImmutable: true
-            }, {
-                idMetadata: 0, Label: '', Name: 'License', Value: '', isImmutable: true
-            }, {
-                idMetadata: 0, Label: '', Name: 'License Text', Value: '', isImmutable: true
-            }];
-            set({ metadataControl: defaultMetadataFields });
+            const defaultMetadataFields: MetadataState[] = [];
+            uniqueFieldSet.forEach(immutable => defaultMetadataFields.push({
+                idMetadata: 0, Label: '', Name: immutable, Value: '', isImmutable: true
+            }));
+            set({ metadataControl: defaultMetadataFields, metadataDisplay: [], initialControl: defaultMetadataFields, initialDisplay: [] });
         }
+        // subject view will render MDM fields in control and everything else in display
         if (type === eObjectMetadataType.eSubjectView) {
-            // TODO: use the data that's fed through the function to populate it
-            // metadata should only be populated into the MetadataControl arr
-            // note: make sure to keep those default fields immutable
+            const metadataControl: MetadataState[] = [];
+            const metadataDisplay: MetadataWithId[] = [];
+            console.log('mdmFields', mdmFields);
+            metadata?.forEach((entry) => {
+                if (mdmFields.has(entry.Name)) {
+                    metadataControl.push({
+                        idMetadata: entry.idMetadata,
+                        Name: entry.Name,
+                        Label: entry?.Label ?? '',
+                        Value: entry?.Value ?? '',
+                        isImmutable: false
+                    });
+                } else {
+                    metadataDisplay.push({
+                        ...entry,
+                        id: entry.idMetadata
+                    });
+                }
+            });
+            console.log('initializing subject view display', metadataDisplay, 'control', metadataControl);
+            set({ metadataControl, metadataDisplay, initialDisplay: metadataDisplay, initialControl: metadataControl });
         }
+        // detail view will render everything in the metadataDisplay array
         if (type === eObjectMetadataType.eDetailView) {
-            // TODO: populate the metadata into the metadataDisplay
-            // alter the metadata to fit metadataControl
-            // metadata should only populated into the MetadataDisplay arr
+            const metadataWithId: MetadataWithId[] = metadata?.map((metadata) => {
+                return {
+                    ...metadata,
+                    id: metadata.idMetadata
+                };
+            }) ?? [];
+            console.log('initializing detail view display', metadataWithId);
+            set({ metadataDisplay: metadataWithId, metadataControl: [], initialDisplay: metadataWithId, initialControl: [] });
         }
     },
     resetMetadata: () => {
-        set({ metadataControl: [], metadataDisplay: [] });
+        set({ metadataControl: [], metadataDisplay: [], mdmFields: new Set() });
     },
     updateMetadata: (id, index, field, value) => {
-        // TODO: update this function to know which array to look at.
+        console.log('id', id, 'index', index, 'field', field, 'value', value);
         const { metadataControl, metadataDisplay } = get();
         if (id > 0) {
-            const metadataCopy = [...metadataDisplay];
-            const target = metadataCopy.find(metadata => metadata.idMetadata === id);
-            if (!target) {
+            console.log('case 1');
+            const controlIndex = metadataControl.findIndex(metadata => metadata.idMetadata === id);
+            const displayIndex = metadataDisplay.findIndex(metadata => metadata.idMetadata === id);
+            console.log('controlIndex', controlIndex, 'displayIndex', displayIndex);
+            if (controlIndex > -1) {
+                const controlCopy = [...metadataControl];
+                controlCopy[controlIndex][field] = value;
+                console.log('controlCopy', controlCopy);
+                set({ metadataControl: controlCopy });
+            } else if (displayIndex > -1) {
+                const displayCopy = [...metadataDisplay];
+                displayCopy[displayIndex][field] = value;
+                console.log('displayCopy', displayCopy);
+                set({ metadataDisplay: displayCopy });
+            } else {
                 toast.error(`Cannot update metadata row of id ${id}`);
                 return;
             }
-            target[field] = value;
-            set({ metadataDisplay: metadataCopy });
         } else {
-            const metadataCopy = [...metadataControl];
-            const target = metadataCopy[index];
+            console.log('case 2');
+            const controlCopy = [...metadataControl];
+            const target = controlCopy[index];
             target[field] = value;
-            set({ metadataControl: metadataCopy });
+            set({ metadataControl: controlCopy });
         }
     },
     getAllMetadataEntries: () => {
         const { metadataControl, metadataDisplay } = get();
+        console.log('getAllMetadataEntries', metadataControl, metadataDisplay);
         const metadataInputControl = metadataControl.map(({ idMetadata, Label, Name, Value }) => {
             return {
                 idMetadata,
@@ -119,11 +147,19 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
                 Value
             };
         });
-        // TODO: filter the metadataInputDisplay to match MetadataInput type
-        const metadataInputDisplay = metadataDisplay.map((metadata) => {
-            return convertMetadataToMetadataInput(metadata);
+
+        const metadataInputDisplay: MetadataInput[] = [];
+        metadataDisplay.forEach(metadata => {
+            if (metadata.ValueShort)
+                metadataInputDisplay.push(convertMetadataToMetadataInput(metadata));
         });
         return [...metadataInputControl, ...metadataInputDisplay];
+    },
+    getAllMdmFieldsArr: () => {
+        const { mdmFields } = get();
+        const result: string[] = [];
+        mdmFields.forEach(field => result.push(field));
+        return result;
     },
     createMetadata: () => {
         const { metadataControl } = get();
@@ -141,27 +177,93 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
     deleteMetadata: async (id, index) => {
         const { metadataControl, metadataDisplay } = get();
         if (id > 0) {
-            const metadataCopy = [...metadataDisplay];
+            const confirm = window.confirm('Are you sure you wish to remove this metadata entry?');
+            if (!confirm) return;
+
+            const controlIndex = metadataControl.findIndex(metadata => metadata.idMetadata === id);
+            const displayIndex = metadataDisplay.findIndex(metadata => metadata.idMetadata === id);
             const result = await deleteMetadata(id);
             if (result.data.success) {
                 toast.success(`Metadata with id ${id} successfully deleted`);
+                if (controlIndex > -1)
+                    set({ metadataControl: [...metadataControl.slice(0, controlIndex), ...metadataControl.slice(controlIndex + 1)] });
+                if (displayIndex > -1)
+                    set({ metadataDisplay: [...metadataDisplay.slice(0, displayIndex), ...metadataDisplay.slice(displayIndex + 1)] });
             } else {
                 toast.error(`An error occurred when deleting metadata with id ${id}`);
             }
-            set({ metadataDisplay: metadataCopy.filter(metadata => metadata.idMetadata !== id) });
         } else {
-            const metadataCopy = [...metadataControl];
-            set({ metadataControl: [...metadataCopy.slice(0, index), ...metadataCopy.slice(index + 1)] });
+            set({ metadataControl: [...metadataControl.slice(0, index), ...metadataControl.slice(index + 1)] });
         }
+    },
+    areMetadataUpdated: () => {
+        // TODO for some reason both controls and both displays update at the same time
+        // NOTE: update are still registered when adding a new row
+        const { metadataControl, initialControl, metadataDisplay, initialDisplay } = get();
+        console.log('checking update');
+        const controlChange = !lodash.isEqual(metadataControl, initialControl);
+        console.log('metadataControl', metadataControl, 'initial', initialControl);
+        const displayChange = !lodash.isEqual(metadataDisplay, initialDisplay);
+        console.log('metadataDisplay', metadataDisplay, 'initial', initialDisplay);
+        console.log('controlChange', controlChange, 'displayChange', displayChange);
+        return controlChange || displayChange;
+    },
+    validateMetadataFields: (type) => {
+        const { metadataControl } = get();
+        const errorArr: string[] = [];
+        // for now, we have a subject creation case and a generic case
+        if (type === eObjectMetadataType.eSubjectCreation) {
+            const uniqueMap = new Map();
+            isUniqueSubjectFields.forEach(field => {
+                uniqueMap.set(field, true);
+            });
+            metadataControl.forEach(metadata => {
+                const isUnique = isUniqueSubjectFields.has(metadata.Name);
+                if (isUnique) {
+                    const inMap = uniqueMap.get(metadata.Name);
+                    if (inMap) {
+                        if (!metadata.Value && metadata.Name !== 'License Text')
+                            errorArr.push(`${metadata.Name} requires a value`);
+                        uniqueMap.delete(metadata.Name);
+                    } else {
+                        errorArr.push(`${metadata.Name} field should only have 1 entry`);
+                    }
+                }
+                if (!metadata.Name && (metadata.Value || metadata.Label)) {
+                    if (metadata.Value) {
+                        errorArr.push(`Row with value ${metadata.Value} requires a name`);
+                    } else {
+                        errorArr.push(`Row with label ${metadata.Label} requires a name`);
+                    }
+                }
+            });
+
+            uniqueMap.forEach((_value, key) => {
+                if (key !== 'License Text')
+                    errorArr.push(`${key} field is required in subject creation`);
+            });
+        } else {
+            metadataControl.forEach(metadata => {
+                if (!metadata.Name && (metadata.Value || metadata.Label)) {
+                    if (metadata.Value) {
+                        errorArr.push(`Row with value ${metadata.Value} requires a name`);
+                    } else {
+                        errorArr.push(`Row with label ${metadata.Label} requires a name`);
+                    }
+                }
+            });
+        }
+
+        return errorArr;
     }
 }));
 
 const convertMetadataToMetadataInput = (metadata: Metadata): MetadataInput => {
-    const { idMetadata, Name, ValueShort, ValueExtended } = metadata;
+    const { idMetadata, Name, ValueShort, ValueExtended, Label, Value } = metadata;
     return {
         idMetadata,
         Name,
-        Label: '',
-        Value: ValueExtended ? ValueExtended : ValueShort ? ValueShort : ''
+        Label: Label ?? '',
+        Value: ValueExtended ? ValueExtended : ValueShort && Value ? Value : ''
     };
 };

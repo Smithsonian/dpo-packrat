@@ -13,7 +13,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType } from '../../../../store';
+import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -78,6 +78,81 @@ type DetailsFields = {
     idLicense?: number;
 };
 
+const mockData = [
+    {
+        id: 74,
+        idMetadata: 74,
+        Name: 'Test',
+        ValueShort: 'Test test testing',
+        Value: 'Test test testing',
+        Label: 'Haro',
+        VMetadataSource: {
+            idVocabulary: 84,
+            idVocabularySet: 1,
+            SortOrder: 1,
+            Term: 'Test'
+        }
+    },
+    {
+        id: 77,
+        idMetadata: 77,
+        Name: 'Test3',
+        Label: 'Haro',
+        idAssetVersionValue: 22,
+        VMetadataSource: {
+            idVocabulary: 120,
+            idVocabularySet: 1,
+            SortOrder: 1,
+            Term: 'Test'
+        }
+    },
+    {
+        id: 88,
+        idMetadata: 88,
+        Name: 'Test2',
+        ValueExtended: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
+        Value: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
+        Label: 'Haro',
+        idAssetVersionValue: 22,
+        VMetadataSource: {
+            idVocabulary: 120,
+            idVocabularySet: 1,
+            SortOrder: 1,
+            Term: 'Test'
+        }
+    },
+    {
+        id: 90,
+        idMetadata: 90,
+        Name: 'Label',
+        ValueExtended: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
+        Value: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
+        Label: 'Haro',
+        idAssetVersionValue: 22,
+        VMetadataSource: {
+            idVocabulary: 120,
+            idVocabularySet: 1,
+            SortOrder: 1,
+            Term: 'Test'
+        }
+    },
+    {
+        id: 99,
+        idMetadata: 99,
+        Name: 'Notes (FT)',
+        ValueExtended: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
+        Value: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
+        Label: 'Haro',
+        idAssetVersionValue: 22,
+        VMetadataSource: {
+            idVocabulary: 120,
+            idVocabularySet: 1,
+            SortOrder: 1,
+            Term: 'Test'
+        }
+    }
+];
+
 function DetailsView(): React.ReactElement {
     const classes = useStyles();
     const params = useParams<DetailsParams>();
@@ -92,6 +167,7 @@ function DetailsView(): React.ReactElement {
     const { data, loading } = useObjectDetails(idSystemObject);
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
+    const [updatedMetadata, setUpdatedMetadata] = useState(false);
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [
         stateIdentifiers,
@@ -120,6 +196,9 @@ function DetailsView(): React.ReactElement {
         state.getDetail,
         state.getDetailsViewFieldErrors
     ]);
+    const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields, initializeMetadata, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields, state.initializeMetadata, state.resetMetadata]);
+    // const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields]);
+
     const objectDetailsData = data;
 
     useEffect(() => {
@@ -140,9 +219,17 @@ function DetailsView(): React.ReactElement {
 
     useEffect(() => {
         if (data && !loading) {
-            const { name, retired, license } = data.getSystemObjectDetails;
+            const { name, retired, license, metadata } = data.getSystemObjectDetails;
+            console.log('metadata', metadata);
             setDetails({ name, retired, idLicense: license?.idLicense || 0 });
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
+            if (objectType === eSystemObjectType.eSubject) {
+                initializeMetadata(eObjectMetadataType.eSubjectView, mockData); // comment me!
+                // initializeMetadata(eObjectMetadataType.eSubjectView, metadata); // comment me out!
+            } else {
+                initializeMetadata(eObjectMetadataType.eDetailView, mockData); // comment me!
+                // initializeMetadata(eObjectMetadataType.eDetailView, metadata); // comment me out!
+            }
         }
     }, [data, loading, initializeIdentifierState]);
 
@@ -150,6 +237,17 @@ function DetailsView(): React.ReactElement {
     useEffect(() => {
         setUpdatedIdentifiers(areIdentifiersUpdated());
     }, [stateIdentifiers]);
+
+    // TODO not working
+    useEffect(() => {
+        setUpdatedMetadata(areMetadataUpdated());
+    }, [metadataControl, metadataDisplay, areMetadataUpdated]);
+
+    useEffect(() => {
+        return () => {
+            resetMetadata();
+        };
+    }, []);
 
     if (!data || !params.idSystemObject) {
         return <ObjectNotFoundView loading={loading} />;
@@ -176,7 +274,6 @@ function DetailsView(): React.ReactElement {
         licenseInheritance = null
     } = data.getSystemObjectDetails;
 
-    console.log('metadata from detailsView', metadata);
     const disabled: boolean = !allowed;
 
     const addIdentifer = () => {
@@ -327,6 +424,11 @@ function DetailsView(): React.ReactElement {
         updatedData.Name = updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name;
         updatedData.Identifiers = stateIdentifiersWithIdSystemObject || [];
 
+        const invalidMetadata = validateMetadataFields();
+        if (invalidMetadata.length) {
+            invalidMetadata.forEach(message => toast.error(message, { autoClose: false }));
+        }
+
         // Create another validation here to make sure that the appropriate SO types are being checked
         const errors = await getDetailsViewFieldErrors(updatedData, objectType);
         if (errors.length) {
@@ -428,6 +530,10 @@ function DetailsView(): React.ReactElement {
                 };
             }
 
+            const metadata = getAllMetadataEntries().filter(entry => entry.Name);
+            console.log('metadata', metadata);
+            updatedData.Metadata = metadata;
+
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
@@ -493,7 +599,7 @@ function DetailsView(): React.ReactElement {
                 <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
                     Update
                 </LoadingButton>
-                {updatedIdentifiers && <div style={{ fontStyle: 'italic', marginLeft: '5px' }}>Update needed to save your identifier data entry</div>}
+                {(updatedIdentifiers || updatedMetadata) && <div style={{ fontStyle: 'italic', marginLeft: '5px' }}>Update needed to save your data</div>}
             </Box>
 
             <Box display='flex'>
