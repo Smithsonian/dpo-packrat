@@ -38,6 +38,8 @@ function Other(props: OtherProps): React.ReactElement {
         const { name, value } = target;
         updateMetadataField(metadataIndex, name, value, MetadataType.other);
     };
+
+    // console.log(`Other index.tsx other=${JSON.stringify(other)}`);
     return (
         <Box mt='20px'>
             {idAsset && (

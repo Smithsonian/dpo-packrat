@@ -89,7 +89,6 @@ model Actor {
 model Asset {
   idAsset                                         Int                  @id @default(autoincrement())
   FileName                                        String               @mariasql.VarChar(512)
-  FilePath                                        String               @mariasql.VarChar(512)
   idAssetGroup                                    Int?
   idVAssetType                                    Int
   idSystemObject                                  Int?
@@ -131,6 +130,7 @@ model AssetVersion {
   Ingested                                               Boolean?
   BulkIngest                                             Boolean
   idSOAttachment                                         Int?
+  FilePath                                               String                                @mariasql.VarChar(512)
   Asset                                                  Asset                                 @relation(fields: [idAsset], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_assetversion_asset1")
   SystemObject_AssetVersion_idSOAttachmentToSystemObject SystemObject?                         @relation("AssetVersion_idSOAttachmentToSystemObject", fields: [idSOAttachment], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_assetversion_systemobject1")
   User                                                   User                                  @relation(fields: [idUserCreator], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_assetversion_user1")

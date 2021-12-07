@@ -235,7 +235,6 @@ describe('DB Creation Test Suite', () => {
         if (assetGroup && vocabulary)
             assetThumbnail = await UTIL.createAssetTest({
                 FileName: 'Test Asset Thumbnail',
-                FilePath: '/test/asset/path/thumbnail',
                 idAssetGroup: assetGroup.idAssetGroup,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: null,
@@ -251,7 +250,6 @@ describe('DB Creation Test Suite', () => {
         if (vocabBulkIngest)
             assetBulkIngest = await UTIL.createAssetTest({
                 FileName: 'Test Asset Bulk Ingest',
-                FilePath: '/test/asset/path/bulkingest',
                 idAssetGroup: null,
                 idVAssetType: vocabBulkIngest.idVocabulary,
                 idSystemObject: null,
@@ -600,7 +598,6 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary&& systemObjectSubject)
             assetWithoutAG = await UTIL.createAssetTest({
                 FileName: 'Test Asset Without AG',
-                FilePath: '/test/asset/path/without-ag',
                 idAssetGroup: null,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectSubject.idSystemObject,
@@ -615,7 +612,7 @@ describe('DB Creation Test Suite', () => {
             assetVersion = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
                 Version: 0,
-                FileName: assetThumbnail.FilePath,
+                FileName: assetThumbnail.FileName,
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
@@ -624,6 +621,7 @@ describe('DB Creation Test Suite', () => {
                 Ingested: true,
                 BulkIngest: false,
                 idSOAttachment: null,
+                FilePath: '/test/asset/path/thumbnail',
                 idAssetVersion: 0
             });
         expect(assetVersion).toBeTruthy();
@@ -640,7 +638,7 @@ describe('DB Creation Test Suite', () => {
             assetVersionNotIngested = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
                 Version: 0,
-                FileName: assetThumbnail.FilePath,
+                FileName: assetThumbnail.FileName,
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum Not Ingested',
@@ -649,12 +647,13 @@ describe('DB Creation Test Suite', () => {
                 Ingested: false,
                 BulkIngest: true,
                 idSOAttachment: null,
+                FilePath: '/test/asset/path/thumbnail',
                 idAssetVersion: 0
             });
             assetVersionNotIngested2 = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
                 Version: 0,
-                FileName: assetThumbnail.FilePath,
+                FileName: assetThumbnail.FileName,
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum Not Ingested 2',
@@ -663,6 +662,7 @@ describe('DB Creation Test Suite', () => {
                 Ingested: false,
                 BulkIngest: true,
                 idSOAttachment: null,
+                FilePath: '/test/asset/path/thumbnail',
                 idAssetVersion: 0
             });
         }
@@ -675,7 +675,7 @@ describe('DB Creation Test Suite', () => {
             assetVersionNotProcessed = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
                 Version: 0,
-                FileName: assetThumbnail.FilePath,
+                FileName: assetThumbnail.FileName,
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum Not Processed',
@@ -684,6 +684,7 @@ describe('DB Creation Test Suite', () => {
                 Ingested: null,
                 BulkIngest: true,
                 idSOAttachment: null,
+                FilePath: '/test/asset/path/thumbnail',
                 idAssetVersion: 0
             });
         expect(assetVersionNotProcessed).toBeTruthy();
@@ -1110,7 +1111,6 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary&& systemObjectModel)
             assetModel = await UTIL.createAssetTest({
                 FileName: 'Test Asset Model',
-                FilePath: '/test/asset/path/model',
                 idAssetGroup: null,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectModel.idSystemObject,
@@ -1125,7 +1125,7 @@ describe('DB Creation Test Suite', () => {
             assetVersionModel = await UTIL.createAssetVersionTest({
                 idAsset: assetModel.idAsset,
                 Version: 0,
-                FileName: assetModel.FilePath,
+                FileName: assetModel.FileName,
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
@@ -1134,6 +1134,7 @@ describe('DB Creation Test Suite', () => {
                 Ingested: true,
                 BulkIngest: false,
                 idSOAttachment: systemObjectScene.idSystemObject,
+                FilePath: '/test/asset/path/model',
                 idAssetVersion: 0
             });
         expect(assetVersionModel).toBeTruthy();
@@ -2082,6 +2083,17 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetVersionFetch).toBeTruthy();
     });
 
+    test('DB Fetch AssetVersion: AssetVersion.fetchFirstFromAsset Not Ingested, Bulk Ingested', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFirstFromAsset(assetThumbnail.idAsset);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual(assetVersion);
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
     test('DB Creation: AssetVersion 2 & 3', async () => {
         if (assetThumbnail && userActive)
             assetVersion2 = await UTIL.createAssetVersionTest({
@@ -2096,6 +2108,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 Ingested: true,
                 BulkIngest: false,
                 idSOAttachment: null,
+                FilePath: '/test/asset/path/thumbnail',
                 idAssetVersion: 0
             });
         expect(assetVersion2).toBeTruthy();
@@ -2113,6 +2126,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 Ingested: true,
                 BulkIngest: false,
                 idSOAttachment: null,
+                FilePath: '/test/asset/path/thumbnail',
                 idAssetVersion: 0
             });
         expect(assetVersion3).toBeTruthy();
@@ -2124,6 +2138,17 @@ describe('DB Fetch By ID Test Suite', () => {
             assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(assetVersion3);
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchFirstFromAsset Ingested', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFirstFromAsset(assetThumbnail.idAsset);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual(assetVersion);
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -2334,9 +2359,9 @@ describe('DB Fetch By ID Test Suite', () => {
         let folderVariantMap: Map<string, number> | null = null;
         if (captureData) {
             folderVariantMap = await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(captureData.idCaptureData);
-            if (folderVariantMap && assetThumbnail && vocabulary) {
-                expect(folderVariantMap.has(assetThumbnail.FilePath)).toBeTruthy();
-                expect(folderVariantMap.get(assetThumbnail.FilePath)).toEqual(vocabulary.idVocabulary);
+            if (folderVariantMap && assetVersion && vocabulary) {
+                expect(folderVariantMap.has(assetVersion.FilePath)).toBeTruthy();
+                expect(folderVariantMap.get(assetVersion.FilePath)).toEqual(vocabulary.idVocabulary);
             }
         }
         expect(captureDataFile).toBeTruthy();
@@ -7008,9 +7033,7 @@ describe('DB Update Test Suite', () => {
     test('DB Fetch Asset: Asset.fetchMatching', async () => {
         let assetFetch: DBAPI.Asset | null = null;
         if (systemObjectScene && assetWithoutAG && assetVersion) {
-            // LOG.info(`*** DBAPI.Asset.fetchMatching(${systemObjectScene.idSystemObject}, '${assetWithoutAG.FileName}', '${assetWithoutAG.FilePath}', ${assetWithoutAG.idVAssetType}, '${assetVersion.StorageHash}');`, LOG.LS.eTEST);
-            assetFetch = await DBAPI.Asset.fetchMatching(systemObjectScene.idSystemObject,
-                assetWithoutAG.FileName, assetWithoutAG.FilePath, assetWithoutAG.idVAssetType);
+            assetFetch = await DBAPI.Asset.fetchMatching(systemObjectScene.idSystemObject, assetWithoutAG.FileName, assetWithoutAG.idVAssetType);
             expect(assetFetch).toEqual(assetWithoutAG);
         }
         expect(assetFetch).toBeTruthy();
@@ -7576,7 +7599,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Asset.fetchByStorageKey('')).toBeNull();
         expect(await DBAPI.Asset.fetchFromAssetGroup(0)).toBeNull();
         expect(await DBAPI.Asset.fetchFromSystemObject(0)).toBeNull();
-        expect(await DBAPI.Asset.fetchMatching(0, '', '', 0)).toBeNull();
+        expect(await DBAPI.Asset.fetchMatching(0, '', 0)).toBeNull();
         expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
@@ -7585,6 +7608,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetVersion.fetchFromSystemObjectVersion(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchLatestFromSystemObject(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchLatestFromAsset(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFirstFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true, true)).toBeNull();

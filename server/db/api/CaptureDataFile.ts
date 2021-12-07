@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { CaptureDataFile as CaptureDataFileBase } from '@prisma/client';
-import { Asset } from './Asset';
+import { AssetVersion } from './AssetVersion';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
@@ -85,7 +85,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
     static async fetchFolderVariantMapFromCaptureData(idCaptureData: number): Promise<Map<string, number> | null> {
         if (!idCaptureData)
             return null;
-        // creates a unique map of asset.filePath and file.idVVariantType
+        // creates a unique map of AssetVersion.filePath and file.idVVariantType
         const folderVariantMap = new Map<string, number>();
 
         const CDFiles: CaptureDataFile[] | null = await CaptureDataFile.fetchFromCaptureData(idCaptureData); /* istanbul ignore next */
@@ -95,15 +95,14 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
         }
 
         for (const CDFile of CDFiles) {
-            const asset: Asset | null = await Asset.fetch(CDFile.idAsset); /* istanbul ignore next */
-            if (!asset) {
-                LOG.error(`DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData failed to fetch asset from ${JSON.stringify(CDFile, H.Helpers.saferStringify)}`, LOG.LS.eDB);
+            const assetVersion: AssetVersion | null = await AssetVersion.fetchLatestFromAsset(CDFile.idAsset); /* istanbul ignore next */
+            if (!assetVersion) {
+                LOG.error(`DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData failed to fetch assetVersion from ${JSON.stringify(CDFile, H.Helpers.saferStringify)}`, LOG.LS.eDB);
                 return null;
             }
 
-            if (!folderVariantMap.has(asset.FilePath) && CDFile.idVVariantType) {
-                folderVariantMap.set(asset.FilePath, CDFile.idVVariantType);
-            }
+            if (!folderVariantMap.has(assetVersion.FilePath) && CDFile.idVVariantType)
+                folderVariantMap.set(assetVersion.FilePath, CDFile.idVVariantType);
         }
         return folderVariantMap;
     }

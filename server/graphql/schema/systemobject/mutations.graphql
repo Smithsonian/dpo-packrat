@@ -98,11 +98,11 @@ input ProjectDocumentationDetailFieldsInput {
     Description: String
 }
 input AssetDetailFieldsInput {
-    FilePath: String
     AssetType: Int
 }
 
 input AssetVersionDetailFieldsInput {
+    FilePath: String
     Creator: String
     DateCreated: DateTime
     Ingested: Boolean

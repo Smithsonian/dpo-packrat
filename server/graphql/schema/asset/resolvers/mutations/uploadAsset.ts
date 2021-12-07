@@ -159,12 +159,21 @@ class UploadAssetWorker extends ResolverBase {
                 LOG.error(error, LOG.LS.eGQL);
                 return { status: UploadStatus.Failed, error };
             }
+
+            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(this.idAsset);
+            if (!assetVersion) {
+                const error: string = `uploadAsset unable to fetch latest asset version from asset ${this.idAsset}`;
+                LOG.error(error, LOG.LS.eGQL);
+                return { status: UploadStatus.Failed, error };
+            }
+
             const ASCNAVI: STORE.AssetStorageCommitNewAssetVersionInput = {
                 storageKey,
                 storageHash: null,
                 asset,
                 idSOAttachment: this.idSOAttachment,
                 assetNameOverride: filename,
+                FilePath: assetVersion.FilePath,
                 idUserCreator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 DateCreated: new Date()
             };
