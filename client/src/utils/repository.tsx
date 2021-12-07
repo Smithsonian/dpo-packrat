@@ -268,6 +268,10 @@ export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | un
     return `${serverEndPoint}/download?idSystemObjectVersion=${idSystemObjectVersion}`;
 }
 
+export function getDownloadValueForMetadata(serverEndPoint: string | undefined, idMetadata): string {
+    return `${serverEndPoint}/download?idMetadata=${idMetadata}`;
+}
+
 export enum eVoyagerStoryMode {
     eViewer,
     eEdit,

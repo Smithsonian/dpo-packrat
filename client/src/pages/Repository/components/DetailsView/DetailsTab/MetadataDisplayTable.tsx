@@ -8,16 +8,19 @@
 * This is the top table
 */
 
-import React, { useEffect } from 'react';
-import { Typography } from '@material-ui/core';
+import React from 'react';
+import { Typography, Tooltip, TextField } from '@material-ui/core';
+import clsx from 'clsx';
 import { DataGrid, GridColumns } from '@material-ui/data-grid';
-import { useObjectMetadataStore, useVocabularyStore, eObjectMetadataType } from '../../../../../store';
+import { useObjectMetadataStore, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
-import { Metadata } from '../../../../../types/graphql';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { makeStyles } from '@material-ui/core/styles';
+import { truncateWithEllipses } from '../../../../../constants';
+import { ToolTip } from '../../../../../components';
+import { getDownloadValueForMetadata, getDownloadAssetVersionUrlForObject } from '../../../../../utils/repository';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, typography }) => ({
     btn: {
         width: 'fit-content'
     },
@@ -28,87 +31,100 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     headerRow: {
         borderBottom: '1.5px solid black'
+    },
+    textField: {
+        width: '100%'
+    },
+    text: {
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily,
+        fontSize: '1em'
     }
 }));
 
-type MetadataDisplayTableProps = {
-    type: eObjectMetadataType;
-    metadata: Metadata[]
-};
-
-/*
-Create a "Metadata" control which can be used on a new "Metadata" tab on Detail/Edit pages, as well as in the Admin > Subject > New Subject UI.  This control will display a sortable table of Metadata where Metadata.idSystemObject matches the idSystemObject of the edited item (or is empty, for new subjects), with the following columns:
-
-"Name": Metadata.Name
-"Value": one of the following, based on whichever is non-null:
-Metadata.ValueShort:  display the value in a textarea edit field, allowing the user to edit the content.
-Metadata.ValueExtended:  display the first 30 characters, followed by "...". Render this as a hyperlink to a download page for the metadata, via RouteBuilder.DownloadMetadata(Metadata.idMetadata, eHrefMode.ePrependServerURL)
-Metadata.idAssetVersionValue: render "Asset Version ${Metadata.idAssetVersionValue}" as a download link for the asset version.  Use RouteBuilder.DownloadAssetVersion(Metadata.idAssetVersionValue, eHrefMode.ePrependServerURL), similar to what we do in the AssetGrid.
-"Source": translation of idVMetadataSource to Vocabulary
-A minus button; when clicked, the metadata row is removed; prompt the user to confirm this change with the message "Are you sure you want to remove this metadata?".  If the user says "Yes", persist this change and refresh the grid.
-Note that metadata with "ValueShort" content can be edited and need to be persisted at the appropriate time – most likely when the user clicks the "Update" button on the detail/edit form.  Provide text next to the button indicating that an "Update" is needed to save these edits, similar to what happens when an identifier is edited.
-*/
-
-function MetadataDisplayTable(props: MetadataDisplayTableProps): React.ReactElement {
-    const { type, metadata } = props;
+function MetadataDisplayTable(): React.ReactElement {
+    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
     const classes = useStyles();
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const sources = getEntries(eVocabularySetID.eMetadataMetadataSource);
-    console.log('sources', sources);
-    const [metadataDisplay /*, updateMetadata, deleteMetadata*/, initializeMetadata] = useObjectMetadataStore(state => [state.metadataDisplay /*, state.updateMetadata, state.deleteMetadata*/, state.initializeMetadata]);
-
+    const sourcesMap = new Map();
+    sources.forEach(source => {
+        if (!sourcesMap.has(source.idVocabulary)) {
+            sourcesMap.set(source.idVocabulary, source.Term);
+        }
+    });
+    const [metadataDisplay, updateMetadata, deleteMetadata] = useObjectMetadataStore(state => [state.metadataDisplay, state.updateMetadata, state.deleteMetadata]);
 
     const columnHeader: GridColumns = [
         {
             field: 'Name',
             headerName: 'Name',
-            flex: 2,
+            flex: 1.5,
             renderCell: params => (
-                <Typography>{params.row.Name}</Typography>
+                <Typography className={clsx(classes.textField, classes.text)}>{params.row.Name}</Typography>
             )
         },
         {
             field: 'Value',
             headerName: 'Value',
-            flex: 5,
+            flex: 6,
             sortable: false,
-            renderCell: params => (
-                <Typography>{params.row.ValueShort}</Typography>
-            )
+            renderCell: ({ row: { ValueExtended, Value, idAssetVersionValue, idMetadata } }) => {
+                let content: React.ReactElement;
+                if (ValueExtended) {
+                    content = (
+                        <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(Value, 1000)} /> }>
+                            <a href={getDownloadValueForMetadata(REACT_APP_PACKRAT_SERVER_ENDPOINT, idMetadata)} rel='noopener noreferrer' target='_blank'>
+                                <Typography className={clsx(classes.textField, classes.text)}>{truncateWithEllipses(Value, 90)}</Typography>
+                            </a>
+                        </Tooltip>
+                    );
+                } else if (idAssetVersionValue) {
+                    content = (
+                        <a href={getDownloadAssetVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idAssetVersionValue)} rel='noopener noreferrer' target='_blank'>
+                            <Typography className={clsx(classes.textField, classes.text)}>{`Asset Version ${idAssetVersionValue}`}</Typography>
+                        </a>
+                    );
+                } else {
+                    content = (
+                        <TextField onChange={(e) => updateMetadata(idMetadata, 0, 'Value', e.target.value)} value={Value} InputProps={{ className: classes.text }} style={{ width: '100%' }} />
+                    );
+                }
+
+                return content;
+            }
         },
         {
             field: 'Source',
             headerName: 'Source',
-            flex: 3,
+            flex: 1.5,
+            sortable: false,
             renderCell: params => (
-                <Typography>{params.row.idvMetadataSource}</Typography>
+                <Typography className={clsx(classes.textField, classes.text)}>{sourcesMap.get(params.row.VMetadataSource.idVocabulary)}</Typography>
             )
         },
         {
-            field: '',
+            field: ' ',
             headerName: '',
-            flex: 1,
+            flex: 0.5,
             sortable: false,
             renderCell: params => (
-                <MdRemoveCircleOutline onClick={() => console.log(params.row.idMetadata)} />
+                <MdRemoveCircleOutline onClick={() => deleteMetadata(params.row.idMetadata, 0)} style={{ cursor: 'pointer' }} />
             )
         }
     ];
-    useEffect(() => {
-    // TODO include the metadata rows to be initialized
-        initializeMetadata(type, metadata);
-    }, []);
 
     return (
         <DataGrid
             rows={metadataDisplay}
             columns={columnHeader}
-            rowHeight={30}
+            rowHeight={40}
             scrollbarSize={5}
             density='compact'
             disableSelectionOnClick
             hideFooter
             className={classes.container}
+            autoHeight
         />
     );
 }

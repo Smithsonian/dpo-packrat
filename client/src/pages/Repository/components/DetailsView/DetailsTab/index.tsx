@@ -180,11 +180,11 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     const MetadataTab = (index: number, type: eObjectMetadataType, metadata: Metadata[]) => (
         <TabPanel value={tab} index={index}>
-            <Box mb={5}>
-                <MetadataDisplayTable type={type} metadata={metadata} />
+            <Box mb={3}>
+                <MetadataDisplayTable />
             </Box>
             <Box>
-                <MetadataControlTable type={type} />
+                <MetadataControlTable type={type} metadataData={metadata} />
             </Box>
         </TabPanel>
     );
