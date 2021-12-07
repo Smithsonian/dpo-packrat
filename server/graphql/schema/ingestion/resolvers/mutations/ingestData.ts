@@ -1275,12 +1275,17 @@ class IngestDataWorker extends ResolverBase {
             }
             await this.appendToWFReport(message);
 
+            const parameters = {
+                modelTransformUpdated,
+                assetsIngested: IAR.assetsIngested
+            };
+
             const workflowParams: WF.WorkflowParameters = {
                 eWorkflowType: null,
                 idSystemObject,
                 idProject: null, // TODO: update with project ID
                 idUserInitiator: user.idUser,
-                parameters: modelTransformUpdated ? { modelTransformUpdated } : null
+                parameters
             };
 
             // send workflow engine event, but don't wait for results
