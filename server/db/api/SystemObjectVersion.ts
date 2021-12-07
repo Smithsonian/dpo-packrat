@@ -139,6 +139,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
         try {
             const prismaClient: PrismaClient | DBC.PrismaClientTrans = DBC.DBConnection.prisma;
             // if our current prisma client does not have the $transaction method, then we're in a transaction already, so just do the work
+            /* istanbul ignore next */
             if (!DBC.DBConnection.isFullPrismaClient(prismaClient))
                 return SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, Comment, assetVersionOverrideMap);
 

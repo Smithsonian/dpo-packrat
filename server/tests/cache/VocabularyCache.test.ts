@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as DB from '../../db';
+import * as DBAPI from '../../db';
 import * as H from '../../utils/helpers';
 import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
-// import * as LOG from '../../utils/logger';
-/*
+import * as LOG from '../../utils/logger';
+
 afterAll(async done => {
     await H.Helpers.sleep(4000);
     done();
 });
-*/
+
 enum eCacheTestMode {
     eInitial,
     eClear,
@@ -23,10 +23,10 @@ const vocabularyCacheTest = (): void => {
 };
 
 function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
-    let vocabularyAll: DB.Vocabulary[] | null = null;
-    let vocabularySetAll: DB.VocabularySet[] | null = null;
-    const vocabularyMap: Map<number, DB.Vocabulary> = new Map<number, DB.Vocabulary>();
-    const vocabularySetMap: Map<number, DB.VocabularySet> = new Map<number, DB.VocabularySet>();
+    let vocabularyAll: DBAPI.Vocabulary[] | null = null;
+    let vocabularySetAll: DBAPI.VocabularySet[] | null = null;
+    const vocabularyMap: Map<number, DBAPI.Vocabulary> = new Map<number, DBAPI.Vocabulary>();
+    const vocabularySetMap: Map<number, DBAPI.VocabularySet> = new Map<number, DBAPI.VocabularySet>();
 
     let description: string = '';
     switch (eMode) {
@@ -43,11 +43,11 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 case eCacheTestMode.eFlush: await VocabularyCache.flush(); break;
             }
 
-            vocabularyAll = await DB.Vocabulary.fetchAll();
+            vocabularyAll = await DBAPI.Vocabulary.fetchAll();
             expect(vocabularyAll).toBeTruthy();
             expect(vocabularyAll ? vocabularyAll.length : /* istanbul ignore next */ 0).toBeGreaterThan(0);
 
-            vocabularySetAll = await DB.VocabularySet.fetchAll();
+            vocabularySetAll = await DBAPI.VocabularySet.fetchAll();
             expect(vocabularySetAll).toBeTruthy();
             expect(vocabularySetAll ? vocabularySetAll.length : /* istanbul ignore next */ 0).toBeGreaterThan(0);
 
@@ -67,7 +67,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             if (!vocabularyAll)
                 return;
             for (const vocabulary of vocabularyAll) {
-                const vocabularyInCache: DB.Vocabulary | undefined =
+                const vocabularyInCache: DBAPI.Vocabulary | undefined =
                     await VocabularyCache.vocabulary(vocabulary.idVocabulary);
                 expect(vocabularyInCache).toBeTruthy();
                 /* istanbul ignore else */
@@ -86,7 +86,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 if (!isNaN(Number(sVocabID)))
                     continue;
                 const eVocabID: eVocabularyID = (<any>eVocabularyID)[sVocabID];
-                const vocabulary: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
+                const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
 
                 switch (eVocabID) {
                     case eVocabularyID.eIdentifierIdentifierTypeARK: testVocabulary(vocabulary, 'ARK'); break;
@@ -257,7 +257,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             if (!vocabularySetAll)
                 return;
             for (const vocabularySet of vocabularySetAll) {
-                const vocabularySetInCache: DB.VocabularySet | undefined =
+                const vocabularySetInCache: DBAPI.VocabularySet | undefined =
                     await VocabularyCache.vocabularySet(vocabularySet.idVocabularySet);
                 expect(vocabularySetInCache).toBeTruthy();
                 /* istanbul ignore else */
@@ -276,7 +276,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 if (!isNaN(Number(sVocabSetID)))
                     continue;
                 const eVocabSetID: eVocabularySetID = (<any>eVocabularySetID)[sVocabSetID];
-                const vocabularySet: DB.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
+                const vocabularySet: DBAPI.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
 
                 switch (eVocabSetID) {
                     case eVocabularySetID.eCaptureDataCaptureMethod:
@@ -330,7 +330,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             if (!vocabularySetAll)
                 return;
             for (const vocabularySet of vocabularySetAll) {
-                const vocabularySetEntriesInCache: DB.Vocabulary[] | undefined =
+                const vocabularySetEntriesInCache: DBAPI.Vocabulary[] | undefined =
                     await VocabularyCache.vocabularySetEntries(vocabularySet.idVocabularySet);
                 expect(vocabularySetEntriesInCache).toBeTruthy();
                 /* istanbul ignore else */
@@ -369,7 +369,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     continue;
 
                 // compute the vocabulary set entries
-                const vocabularySetEntriesInCacheByEnum: DB.Vocabulary[] | undefined =
+                const vocabularySetEntriesInCacheByEnum: DBAPI.Vocabulary[] | undefined =
                     await VocabularyCache.vocabularySetEntriesByEnum(eVocabSetID);
                 expect(vocabularySetEntriesInCacheByEnum).toBeTruthy();
 
@@ -382,7 +382,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     continue;
 
                 // compute the vocabulary set entries from the enum converted to an ID
-                const vocabularySetEntriesInCache: DB.Vocabulary[] | undefined =
+                const vocabularySetEntriesInCache: DBAPI.Vocabulary[] | undefined =
                     await VocabularyCache.vocabularySetEntries(nVocabSetID);
                 expect(vocabularySetEntriesInCache).toBeTruthy();
 
@@ -390,7 +390,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 expect(H.Helpers.arraysEqual(vocabularySetEntriesInCacheByEnum, vocabularySetEntriesInCache)).toBeTruthy();
             }
 
-            const vocabularySetEntriesInCacheByEnumNone: DB.Vocabulary[] | undefined =
+            const vocabularySetEntriesInCacheByEnumNone: DBAPI.Vocabulary[] | undefined =
                 await VocabularyCache.vocabularySetEntriesByEnum(eVocabularySetID.eNone);
             expect(vocabularySetEntriesInCacheByEnumNone).toBeUndefined();
         });
@@ -624,6 +624,26 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testMapModelChannelMaterialType('FOOBARFAULTY',   eVocabularyID.eModelMaterialChannelMaterialTypeUnknown);
         });
 
+        test('Cache: VocabularyCache.isPreferredAsset ' + description, async () => {
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry, DBAPI.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde, DBAPI.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetDicom, DBAPI.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetLaserLine, DBAPI.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetSphericalLaser, DBAPI.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetStructuredLight, DBAPI.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetOther, DBAPI.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeModel, DBAPI.eSystemObjectType.eModel);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeModelGeometryFile, DBAPI.eSystemObjectType.eModel);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeScene, DBAPI.eSystemObjectType.eScene);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeProjectDocumentation, DBAPI.eSystemObjectType.eProjectDocumentation);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeIntermediaryFile, DBAPI.eSystemObjectType.eIntermediaryFile);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeBulkIngestion, DBAPI.eSystemObjectType.eUnknown);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataFile, DBAPI.eSystemObjectType.eUnknown);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeModelUVMapFile, DBAPI.eSystemObjectType.eUnknown);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeAttachment, DBAPI.eSystemObjectType.eUnknown);
+            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeOther, DBAPI.eSystemObjectType.eUnknown);
+        });
+
         test('Cache: VocabularyCache.vocabularyEnumToId and vocabularyIdToEnum ' + description, async () => {
             // iterate through all enums of eVocabularyID; for each:
             for (const sVocabID in eVocabularyID) {
@@ -653,7 +673,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     continue;
                 // LOG.info(`VocabularyCache.vocabularySetEnumToId of ${sVocabSetID}`, LOG.LS.eTEST);
                 const eVocabSetID: eVocabularySetID = (<any>eVocabularySetID)[sVocabSetID];
-                const vocabularySet: DB.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
+                const vocabularySet: DBAPI.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
                 const vocabSetID: number | undefined = await VocabularyCache.vocabularySetEnumToId(eVocabSetID);
 
                 if (eVocabSetID != eVocabularySetID.eNone) {
@@ -719,7 +739,7 @@ function vocabularyCacheTestClearFlush(): void {
     });
 }
 
-function testVocabulary(vocabulary: DB.Vocabulary | undefined, termExpected: string): void {
+function testVocabulary(vocabulary: DBAPI.Vocabulary | undefined, termExpected: string): void {
     // LOG.info(`VocabularyCacheTest testVocabulary ${termExpected} ${JSON.stringify(vocabulary)}`, LOG.LS.eTEST);
     expect(vocabulary).toBeTruthy();
     /* istanbul ignore else */
@@ -728,7 +748,7 @@ function testVocabulary(vocabulary: DB.Vocabulary | undefined, termExpected: str
 }
 
 async function testVocabularyBySetAndTerm(eVocabSetId: eVocabularySetID, term: string, expectSuccess: boolean = true): Promise<void> {
-    const vocabulary: DB.Vocabulary | undefined = await VocabularyCache.vocabularyBySetAndTerm(eVocabSetId, term);
+    const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyBySetAndTerm(eVocabSetId, term);
     if (expectSuccess)
         expect(vocabulary).toBeTruthy();
     if (vocabulary)
@@ -737,8 +757,8 @@ async function testVocabularyBySetAndTerm(eVocabSetId: eVocabularySetID, term: s
 
 async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: eVocabularyID): Promise<void> {
     // LOG.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
-    const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapPhotogrammetryVariantType(variantType);
-    const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
+    const vocabObserved: DBAPI.Vocabulary | undefined = await VocabularyCache.mapPhotogrammetryVariantType(variantType);
+    const vocabExpected: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
     if (eVocabID != eVocabularyID.eNone) {
         expect(vocabObserved).toBeTruthy();
         expect(vocabExpected).toBeTruthy();
@@ -751,8 +771,8 @@ async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: e
 
 async function testMapModelFileByExtension(modelExtension: string, eVocabID: eVocabularyID): Promise<void> {
     // LOG.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
-    const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapModelFileByExtension(modelExtension);
-    const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
+    const vocabObserved: DBAPI.Vocabulary | undefined = await VocabularyCache.mapModelFileByExtension(modelExtension);
+    const vocabExpected: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
     if (eVocabID != eVocabularyID.eNone) {
         expect(vocabObserved).toBeTruthy();
         expect(vocabExpected).toBeTruthy();
@@ -765,8 +785,8 @@ async function testMapModelFileByExtension(modelExtension: string, eVocabID: eVo
 
 async function testMapModelChannelMaterialType(materialType: string, eVocabID: eVocabularyID): Promise<void> {
     // LOG.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
-    const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapModelChannelMaterialType(materialType);
-    const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
+    const vocabObserved: DBAPI.Vocabulary | undefined = await VocabularyCache.mapModelChannelMaterialType(materialType);
+    const vocabExpected: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
     if (eVocabID != eVocabularyID.eNone) {
         expect(vocabObserved).toBeTruthy();
         expect(vocabExpected).toBeTruthy();
@@ -775,6 +795,52 @@ async function testMapModelChannelMaterialType(materialType: string, eVocabID: e
         expect(vocabExpected).toBeFalsy();
     }
     expect(vocabObserved).toEqual(vocabExpected);
+}
+
+async function testIsPreferredAsset(eVocabID: eVocabularyID, eObjectType: DBAPI.eSystemObjectType): Promise<void> {
+    const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
+    expect(vocabulary).toBeTruthy();
+
+    if (!vocabulary)
+        return;
+
+    let expectFailure: boolean = false;
+    let SOMatch: DBAPI.SystemObject;
+    const SONonMatch: DBAPI.SystemObject = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false });
+    switch (eObjectType) {
+        case DBAPI.eSystemObjectType.eCaptureData:          SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 1, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eModel:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 1, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eScene:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 1, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eProjectDocumentation: SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 1, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eIntermediaryFile:     SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 1, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+
+        case DBAPI.eSystemObjectType.eActor:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 1, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eAsset:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 1, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eAssetVersion:         SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 1, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eItem:                 SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 1, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eProject:              SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 1, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eStakeholder:          SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 1, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eSubject:              SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 1, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eUnit:                 SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 1, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case DBAPI.eSystemObjectType.eUnknown:              SOMatch = SONonMatch; expectFailure = true; break;
+
+        default:
+            expect(false).toBeTruthy();
+            return;
+    }
+
+    const match: boolean = await VocabularyCache.isPreferredAsset(vocabulary.idVocabulary, SOMatch);
+    const nonMatch: boolean = await VocabularyCache.isPreferredAsset(vocabulary.idVocabulary, SONonMatch);
+    if (!expectFailure) {
+        if (!match)
+            LOG.error(`testIsPreferredAsset(${eVocabularyID[eVocabID]}, ${DBAPI.eSystemObjectType[eObjectType]}): ${JSON.stringify(vocabulary)} FAILED`, LOG.LS.eTEST);
+        // else
+        //     LOG.info(`testIsPreferredAsset(${eVocabularyID[eVocabID]}, ${DBAPI.eSystemObjectType[eObjectType]}): ${JSON.stringify(vocabulary)} Success`, LOG.LS.eTEST);
+        expect(match).toBeTruthy();
+    } else
+        expect(match).toBeFalsy();
+
+    expect(nonMatch).toBeFalsy();
 }
 
 export default vocabularyCacheTest;
