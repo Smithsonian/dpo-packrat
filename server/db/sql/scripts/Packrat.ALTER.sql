@@ -256,3 +256,14 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 16, 'Place
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 17, 'Taxonomic Name (FT)');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 18, 'Notes (FT)');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 19, 'Physical Description (FT)');
+
+-- 2021-12-03 Jon
+ALTER TABLE AssetVersion ADD COLUMN FilePath varchar(512) NULL;
+
+UPDATE AssetVersion AS AV
+JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+SET AV.FilePath = A.FilePath;
+
+ALTER TABLE Asset DROP COLUMN `FilePath`;
+
+ALTER TABLE AssetVersion MODIFY COLUMN `FilePath` varchar(512) NOT NULL;
