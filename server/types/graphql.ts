@@ -766,7 +766,6 @@ export type Asset = {
   __typename?: 'Asset';
   idAsset: Scalars['Int'];
   FileName: Scalars['String'];
-  FilePath: Scalars['String'];
   idAssetGroup?: Maybe<Scalars['Int']>;
   idVAssetType?: Maybe<Scalars['Int']>;
   idSystemObject?: Maybe<Scalars['Int']>;
@@ -791,6 +790,7 @@ export type AssetVersion = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version: Scalars['Int'];
   idSOAttachment?: Maybe<Scalars['Int']>;
+  FilePath: Scalars['String'];
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
@@ -1555,11 +1555,11 @@ export type ProjectDocumentationDetailFieldsInput = {
 };
 
 export type AssetDetailFieldsInput = {
-  FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
 };
 
 export type AssetVersionDetailFieldsInput = {
+  FilePath?: Maybe<Scalars['String']>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
   Ingested?: Maybe<Scalars['Boolean']>;
@@ -1828,7 +1828,6 @@ export type ProjectDocumentationDetailFields = {
 
 export type AssetDetailFields = {
   __typename?: 'AssetDetailFields';
-  FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
   Asset?: Maybe<Asset>;
   idAsset?: Maybe<Scalars['Int']>;
@@ -1836,6 +1835,7 @@ export type AssetDetailFields = {
 
 export type AssetVersionDetailFields = {
   __typename?: 'AssetVersionDetailFields';
+  FilePath?: Maybe<Scalars['String']>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
   Ingested?: Maybe<Scalars['Boolean']>;
@@ -2075,6 +2075,8 @@ export type Metadata = {
   SystemObjectParent?: Maybe<SystemObject>;
   User?: Maybe<User>;
   VMetadataSource?: Maybe<Vocabulary>;
+  Label?: Maybe<Scalars['String']>;
+  Value?: Maybe<Scalars['String']>;
 };
 
 export type CreateUnitInput = {

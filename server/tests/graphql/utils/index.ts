@@ -133,7 +133,6 @@ class TestSuiteUtils {
     createAssetInput = (idVAssetType: number): Asset => {
         return {
             FileName: 'Test Asset Thumbnail',
-            FilePath: '/test/asset/path',
             idSystemObject: null,
             idAssetGroup: null,
             idVAssetType,
@@ -155,6 +154,7 @@ class TestSuiteUtils {
             Ingested: false,
             BulkIngest: false,
             idSOAttachment: null,
+            FilePath: '/test/asset/path',
             Version: 0
         };
     };

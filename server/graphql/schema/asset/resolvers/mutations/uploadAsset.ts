@@ -165,6 +165,7 @@ class UploadAssetWorker extends ResolverBase {
                 asset,
                 idSOAttachment: this.idSOAttachment,
                 assetNameOverride: filename,
+                FilePath: '',
                 idUserCreator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 DateCreated: new Date()
             };

@@ -11,7 +11,7 @@ export class ModelAsset {
     constructor(asset: Asset, assetVersion: AssetVersion, isModel: boolean, channelList: string[] | null) {
         this.Asset = asset;
         this.AssetVersion = assetVersion;
-        this.AssetName = asset.FileName;
+        this.AssetName = assetVersion.FileName;
         this.AssetType = (isModel) ? 'Model' : 'Texture Map' + (channelList ? ` ${channelList.sort().join(', ')}` : '');
     }
 

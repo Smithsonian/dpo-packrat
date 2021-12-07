@@ -1,5 +1,6 @@
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
+import * as COL from '../../collections/interface';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
@@ -202,13 +203,7 @@ export class DownloaderParser {
             const pathToMatch: string = this.systemObjectPath.toLowerCase();
             let assetVersionMatch: DBAPI.AssetVersion | null = null;
             for (const assetVersion of assetVersions) {
-                const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
-                if (!asset) {
-                    LOG.error(`${this.requestURL} unable to fetch asset from assetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eHTTP);
-                    return this.recordStatus(404);
-                }
-
-                const pathAssetVersion: string = ((asset.FilePath !== '' && asset.FilePath !== '.') ? `/${asset.FilePath}` : '') + `/${assetVersion.FileName}`;
+                const pathAssetVersion: string = ((assetVersion.FilePath !== '' && assetVersion.FilePath !== '.') ? `/${assetVersion.FilePath}` : '') + `/${assetVersion.FileName}`;
                 const pathAssetVersionNorm: string = pathAssetVersion.toLowerCase();
                 if (pathToMatch === pathAssetVersionNorm) {
                     assetVersionMatch = assetVersion;
@@ -274,11 +269,13 @@ export class DownloaderParser {
                 return this.recordStatus(404);
             }
 
-            if (metadata.ValueShort)
-                return { success: true, content: `${metadata.Name} = ${metadata.ValueShort}` };
-            else if (metadata.ValueExtended)
-                return { success: true, content: `${metadata.Name}\n${metadata.ValueExtended}` };
-            else if (metadata.idAssetVersionValue) {
+            const value: string | null = metadata.ValueShort ?? metadata.ValueExtended;
+            if (value) {
+                const { label, content } = COL.parseEdanMetadata(value);
+                const seperator: string = metadata.ValueExtended || label ? '\n' : ' = ';
+                const labelPrefix: string = label ? `Label = ${label}\nValue = ` : '';
+                return { success: true, content: `${metadata.Name}${seperator}${labelPrefix}${content}` };
+            } else if (metadata.idAssetVersionValue) {
                 const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(metadata.idAssetVersionValue);
                 if (!assetVersion) {
                     LOG.error(`${this.requestURL} unable to fetch asset version`, LOG.LS.eHTTP);
