@@ -210,6 +210,9 @@ class IngestDataWorker extends ResolverBase {
         if (this.ingestModel)
             await this.createModelDerivedObjects(ingestResMap);
 
+        if (this.ingestOther)
+            await this.createOtherDerivedObjects(ingestResMap);
+
         // wire item to asset-owning objects; do this *after* createModelDerivedObjects
         if (itemDB) {
             if (!await this.wireItemToAssetOwners(itemDB))
@@ -969,36 +972,75 @@ class IngestDataWorker extends ResolverBase {
             this.assetVersionMap.set(other.idAssetVersion, { SOOwner, isAttachment: false, Comment: other.updateNotes ?? null });
         }
 
-        // if we're updating an existing asset, fetch variant metadata from the most recent version; if found, use it again
-        await this.extractAndReuseMetadata(other, asset, assetVersion);
         return true;
     }
 
-    private async extractAndReuseMetadata(other: IngestOtherInput, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<boolean> {
-        if (!other.idAsset)
+    private async createOtherDerivedObjects(ingestResMap: Map<number, IngestAssetResult | null>): Promise<boolean> {
+        let res: boolean = true;
+        for (const idAssetVersion of this.assetVersionMap.keys()) {
+            // LOG.info(`ingestData createOtherDerivedObjects idAssetVersion=${idAssetVersion}`, LOG.LS.eGQL);
+            const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
+            if (!ingestAssetRes) {
+                LOG.error(`ingestData createOtherDerivedObjects unable to locate ingest results for idAssetVersion ${idAssetVersion}`, LOG.LS.eGQL);
+                res = false;
+                continue;
+            }
+            if (!ingestAssetRes.success) {
+                LOG.error(`ingestData createOtherDerivedObjects failed for idAssetVersion ${idAssetVersion}: ${ingestAssetRes.error}`, LOG.LS.eGQL);
+                res = false;
+                continue;
+            }
+
+            const assetToVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>(); // map of idAsset -> AssetVersion
+            for (const assetVersion of ingestAssetRes.assetVersions || [])
+                assetToVersionMap.set(assetVersion.idAsset, assetVersion);
+
+            for (const asset of ingestAssetRes.assets || []) {
+                const assetVersion: DBAPI.AssetVersion | undefined = assetToVersionMap.get(asset.idAsset);
+                if (!assetVersion) {
+                    LOG.error(`ingestData createOtherDerivedObjects could not fetch asset version for ${asset.idAsset}`, LOG.LS.eGQL);
+                    res = false;
+                    continue;
+                }
+
+                // if we're updating an existing asset, fetch variant metadata from the second-to-last version
+                await this.extractAndReuseMetadata(assetVersion.idAsset, asset, assetVersion);
+            }
+        }
+        return res;
+    }
+
+    private async extractAndReuseMetadata(idAsset: number | null | undefined, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<boolean> {
+        // LOG.info(`ingestData.extractAndReuseMetadata idAsset=${idAsset}, asset=${JSON.stringify(asset, H.Helpers.saferStringify)}, assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+        if (!idAsset)
             return true; // nothing to do
 
-        // fetch metadata with idSystemObject set to most recent asset version, name = 'variant'
-        const assetVesionLatest: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(other.idAsset);
-        if (!assetVesionLatest) {
-            LOG.error(`ingestData could not fetch latest asset version from asset ${other.idAsset}`, LOG.LS.eGQL);
+        // we have already created a new asset version for idAsset; find the next to last, if any, and use that to extract variant metadata
+        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromAsset(idAsset);
+        if (!assetVersions) {
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch asset versions from asset ${idAsset}`, LOG.LS.eGQL);
             return false;
         }
-        const SOAssetVersionLatest: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVesionLatest);
-        if (!SOAssetVersionLatest) {
-            LOG.error(`ingestData could not fetch system object from asset version ${assetVesionLatest.idAssetVersion}`, LOG.LS.eGQL);
+
+        if (assetVersions.length < 2)
+            return true;
+
+        const assetVesionPenultimate: DBAPI.AssetVersion = assetVersions[assetVersions.length - 2];
+        const SOAssetVersionPenultimate: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVesionPenultimate);
+        if (!SOAssetVersionPenultimate) {
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch system object from asset version ${assetVesionPenultimate.idAssetVersion}`, LOG.LS.eGQL);
             return false;
         }
 
         const SOAssetVersionCurrent: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
         if (!SOAssetVersionCurrent) {
-            LOG.error(`ingestData could not fetch system object from ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch system object from ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
             return false;
         }
 
-        const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchFromSystemObject(SOAssetVersionLatest.idSystemObject);
+        const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchFromSystemObject(SOAssetVersionPenultimate.idSystemObject);
         if (!metadataList) {
-            LOG.error(`ingestData could not fetch metadata for system object ${SOAssetVersionLatest.idSystemObject}`, LOG.LS.eGQL);
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch metadata for system object ${SOAssetVersionPenultimate.idSystemObject}`, LOG.LS.eGQL);
             return false;
         }
 
@@ -1008,10 +1050,10 @@ class IngestDataWorker extends ResolverBase {
                 const extractor: META.MetadataExtractor = new META.MetadataExtractor();
                 extractor.metadata.set('variant', metadata.ValueShort ?? metadata.ValueExtended ?? '');
 
-                const results: H.IOResults = await META.MetadataManager.persistExtractor(SOAssetVersionCurrent.idSystemObject, asset.idSystemObject ?? SOAssetVersionLatest.idSystemObject,
+                const results: H.IOResults = await META.MetadataManager.persistExtractor(SOAssetVersionCurrent.idSystemObject, asset.idSystemObject ?? SOAssetVersionPenultimate.idSystemObject,
                     extractor, this.user?.idUser ?? null);
                 if (!results.success) {
-                    LOG.error(`ingestData could not persist variant metadata for ${SOAssetVersionLatest.idSystemObject}: ${results.error}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData could not persist variant metadata for ${SOAssetVersionPenultimate.idSystemObject}: ${results.error}`, LOG.LS.eGQL);
                     return false;
                 }
 
