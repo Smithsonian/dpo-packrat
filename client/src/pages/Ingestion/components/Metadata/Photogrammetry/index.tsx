@@ -145,6 +145,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         onModalClose();
     };
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
+    // console.log(`Photogrammetry.index.tsx photogrammetry=${JSON.stringify(photogrammetry)}`);
 
     return (
         <Box className={classes.container}>

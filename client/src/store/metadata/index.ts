@@ -216,6 +216,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 const items: StateItem[] = [];
                 const metadatas: StateMetadata[] = [];
 
+                // console.log(`useMetaStore Details=${JSON.stringify(Details)}`);
                 for (let index = 0; index < Details.length; index++) {
                     const {
                         idAssetVersion,
@@ -230,6 +231,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     const updateModel = UpdatedAssetVersionMetadata.find((asset) => asset.idAssetVersion === idAssetVersion && asset?.Model)?.Model;
                     const updateScene = UpdatedAssetVersionMetadata.find((asset) => asset.idAssetVersion === idAssetVersion && asset?.Scene)?.Scene;
                     const updatePhoto = UpdatedAssetVersionMetadata.find((asset) => asset.idAssetVersion === idAssetVersion && asset?.CaptureDataPhoto)?.CaptureDataPhoto;
+                    // console.log(`useMetaStore idAssetVersion=${idAssetVersion}; existingIdAssetVersion=${existingIdAssetVersion}`);
+                    // console.log(`useMetaStore updateModel=${JSON.stringify(updateModel)}`);
+                    // console.log(`useMetaStore updateScene=${JSON.stringify(updateScene)}`);
+                    // console.log(`useMetaStore updatePhoto=${JSON.stringify(updatePhoto)}`);
 
                     if (foundSubjectUnitIdentifier) {
                         const subject: StateSubject = parseSubjectUnitIdentifierToState(foundSubjectUnitIdentifier);
@@ -312,6 +317,13 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         };
                         metadatas.push(metadataStep);
                     } else {
+                        if (existingIdAssetVersion) {
+                            metadataStep.photogrammetry.systemCreated = false; // don't default to requesting a system-created identifier, by default
+                            metadataStep.model.systemCreated = false; // don't default to requesting a system-created identifier, by default
+                            metadataStep.scene.systemCreated = false; // don't default to requesting a system-created identifier, by default
+                            metadataStep.other.systemCreated = false; // don't default to requesting a system-created identifier, by default
+                        }
+
                         if (existingIdAssetVersion && updatePhoto) {
                             const { datasetType, name, dateCaptured, description, cameraSettingUniform, datasetFieldId, itemPositionType, itemPositionFieldId, itemArrangementFieldId, focusType, lightsourceType, backgroundRemovalMethod, clusterType, clusterGeometryFieldId, folders } = updatePhoto;
                             if (datasetType) metadataStep.photogrammetry.datasetType = datasetType;
@@ -329,7 +341,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (clusterType) metadataStep.photogrammetry.clusterType = clusterType;
                             if (clusterGeometryFieldId) metadataStep.photogrammetry.clusterGeometryFieldId = clusterGeometryFieldId;
                             if (folders) metadataStep.photogrammetry.folders = folders;
-                            metadataStep.photogrammetry.systemCreated = false; // don't default to requesting a system-created identifier, by default
                         }
                         if (existingIdAssetVersion && updateModel) {
                             const { creationMethod, modality, units, purpose, modelFileType } = updateModel;
@@ -338,7 +349,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (units) metadataStep.model.units = units;
                             if (purpose) metadataStep.model.purpose = purpose;
                             if (modelFileType) metadataStep.model.creationMethod = creationMethod;
-                            metadataStep.model.systemCreated = false; // don't default to requesting a system-created identifier, by default
                         }
                         if (existingIdAssetVersion && updateScene) {
                             const { name, posedAndQCd, referenceModels, approvedForPublication } = updateScene;
@@ -346,9 +356,9 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (typeof posedAndQCd === 'boolean') metadataStep.scene.posedAndQCd = posedAndQCd;
                             if (typeof approvedForPublication === 'boolean') metadataStep.scene.approvedForPublication = approvedForPublication;
                             if (referenceModels) metadataStep.scene.referenceModels = referenceModels;
-                            metadataStep.scene.systemCreated = false; // don't default to requesting a system-created identifier, by default
                         }
                         metadatas.push(metadataStep);
+                        // console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
                     }
                 }
 
