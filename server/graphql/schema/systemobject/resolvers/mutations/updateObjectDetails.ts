@@ -56,13 +56,18 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         }
     }
 
-    if (data.License) {
-        const reassignedLicense: DBAPI.License | null = await DBAPI.License.fetch(data.License);
-        if (!reassignedLicense)
-            return sendResult(false, `Unable to fetch license with id ${data.License}; update failed`);
+    if (data.License != null) {
+        if (data.License > 0) {
+            const reassignedLicense: DBAPI.License | null = await DBAPI.License.fetch(data.License);
+            if (!reassignedLicense)
+                return sendResult(false, `Unable to fetch license with id ${data.License}; update failed`);
 
-        if (!await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense))
-            return sendResult(false, `Unable to reassign license with id ${reassignedLicense.idLicense}; update failed`);
+            if (!await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense))
+                return sendResult(false, `Unable to reassign license for idSystemObject ${idSystemObject} with id ${reassignedLicense.idLicense}; update failed`);
+        } else {
+            if (!await DBAPI.LicenseManager.clearAssignment(idSystemObject))
+                return sendResult(false, `Unable to clear license with for idSystemObject ${idSystemObject}; update failed`);
+        }
     }
 
     const metadataRes: H.IOResults = await handleMetadata(idSystemObject, data.Metadata, user);

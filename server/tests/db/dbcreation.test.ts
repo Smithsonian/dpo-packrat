@@ -2083,6 +2083,17 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetVersionFetch).toBeTruthy();
     });
 
+    test('DB Fetch AssetVersion: AssetVersion.fetchFirstFromAsset Not Ingested, Bulk Ingested', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFirstFromAsset(assetThumbnail.idAsset);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual(assetVersion);
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
     test('DB Creation: AssetVersion 2 & 3', async () => {
         if (assetThumbnail && userActive)
             assetVersion2 = await UTIL.createAssetVersionTest({
@@ -2127,6 +2138,17 @@ describe('DB Fetch By ID Test Suite', () => {
             assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(assetVersion3);
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchFirstFromAsset Ingested', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFirstFromAsset(assetThumbnail.idAsset);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual(assetVersion);
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -7586,6 +7608,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetVersion.fetchFromSystemObjectVersion(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchLatestFromSystemObject(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchLatestFromAsset(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFirstFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true, true)).toBeNull();
