@@ -94,7 +94,7 @@ interface ObjectDetailsProps {
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
     onLicenseUpdate?: (event) => void;
     path?: RepositoryPath[][] | null;
-    updateData?: () => Promise<void>;
+    updateData?: () => Promise<boolean>;
     idSystemObject: number;
     license?: number;
     licenseInheritance?: number | null;
@@ -187,8 +187,13 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         setLoading(true);
 
         // if we're attempting to publish a subject, call the passed in update method first to persist metadata edits
-        if (objectType === eSystemObjectType.eSubject && updateData !== undefined)
-            await updateData();
+        if (objectType === eSystemObjectType.eSubject && updateData !== undefined) {
+            if (!await updateData()) {
+                toast.error(`${action} failed while updating object`);
+                setLoading(false);
+                return;
+            }
+        }
 
         const { data } = await publish(idSystemObject, eState);
         if (data?.publish?.success)
