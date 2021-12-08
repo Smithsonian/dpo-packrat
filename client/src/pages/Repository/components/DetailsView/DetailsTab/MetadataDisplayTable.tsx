@@ -99,7 +99,7 @@ function MetadataDisplayTable(): React.ReactElement {
             headerName: 'Source',
             flex: 1.5,
             sortable: false,
-            renderCell: params => (
+            renderCell: params => params.row.VMetadataSource && params.row.VMetadataSource.idVocabulary && (
                 <Typography className={clsx(classes.textField, classes.text)}>{sourcesMap.get(params.row.VMetadataSource.idVocabulary)}</Typography>
             )
         },
