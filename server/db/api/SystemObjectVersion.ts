@@ -170,6 +170,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             else // unzipped assets -- don't use old asset versions; the unzipped assets will be our full set of assets
                 assetVersionMap = new Map<number, number>();
 
+            /* istanbul ignore next */
             if (!assetVersionMap) {
                 LOG.error(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans unable to fetch assetVersionMap from idSystemObject ${idSystemObject}, idSystemObjectVersion ${idSystemObjectVersion}`, LOG.LS.eDB);
                 return null;

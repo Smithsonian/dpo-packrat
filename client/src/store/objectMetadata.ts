@@ -183,7 +183,7 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
             const controlIndex = metadataControl.findIndex(metadata => metadata.idMetadata === id);
             const displayIndex = metadataDisplay.findIndex(metadata => metadata.idMetadata === id);
             const result = await deleteMetadata(id);
-            if (result.data.success) {
+            if (result.data.deleteMetadata.success) {
                 toast.success(`Metadata with id ${id} successfully deleted`);
                 if (controlIndex > -1)
                     set({ metadataControl: [...metadataControl.slice(0, controlIndex), ...metadataControl.slice(controlIndex + 1)] });
