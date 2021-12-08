@@ -16,7 +16,7 @@ import { clearLicenseAssignment, assignLicense, publish } from '../../hooks/useD
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import { LoadingButton } from '../../../../components';
 import { toast } from 'react-toastify';
-import { ePublishedState } from '../../../../types/server';
+import { eSystemObjectType, ePublishedState } from '../../../../types/server';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     detail: {
@@ -89,11 +89,12 @@ interface ObjectDetailsProps {
     publishable: boolean;
     retired: boolean;
     hideRetired?: boolean;
-    hidePublishState?: boolean;
+    objectType?: number;
     originalFields?: GetSystemObjectDetailsResult;
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
     onLicenseUpdate?: (event) => void;
     path?: RepositoryPath[][] | null;
+    updateData?: () => Promise<void>;
     idSystemObject: number;
     license?: number;
     licenseInheritance?: number | null;
@@ -110,7 +111,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         publishable,
         retired,
         hideRetired,
-        hidePublishState,
+        objectType,
         disabled,
         originalFields,
         onRetiredUpdate,
@@ -118,7 +119,8 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         idSystemObject,
         license,
         licenseInheritance,
-        path
+        path,
+        updateData
     } = props;
     const [licenseList, setLicenseList] = useState<License[]>([]);
     const [loading, setLoading] = useState(false);
@@ -179,9 +181,14 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     const onPublish = async () => { onPublishWorker(ePublishedState.ePublished, 'Publish'); };
     const onAPIOnly = async () => { onPublishWorker(ePublishedState.eAPIOnly, 'Publish for API Only'); };
     const onUnpublish = async () => { onPublishWorker(ePublishedState.eNotPublished, 'Unpublish'); };
+    const onSyncToEdan = async () => { onPublishWorker(ePublishedState.ePublished, 'Sync to Edan'); };
 
     const onPublishWorker = async (eState: number, action: string) => {
         setLoading(true);
+
+        // if we're attempting to publish a subject, call the passed in update method first to persist metadata edits
+        if (objectType === eSystemObjectType.eSubject && updateData !== undefined)
+            await updateData();
 
         const { data } = await publish(idSystemObject, eState);
         if (data?.publish?.success)
@@ -198,7 +205,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />
             <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />
             <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />
-            {!hidePublishState && (
+            {(objectType === eSystemObjectType.eScene) && (
                 <Detail
                     label='Publish State'
                     valueComponent={
@@ -207,6 +214,17 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Publish</LoadingButton>
                             &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>API Only</LoadingButton>
                             &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
+                        </Box>
+                    }
+                />
+            )}
+            {(objectType === eSystemObjectType.eSubject) && (
+                <Detail
+                    label='Edan Sync State'
+                    valueComponent={
+                        <Box className={classes.inheritedLicense}>
+                            <Typography>{publishedState}</Typography>
+                            &nbsp;<LoadingButton onClick={onSyncToEdan} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Sync to Edan</LoadingButton>
                         </Box>
                     }
                 />

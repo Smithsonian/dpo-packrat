@@ -1728,6 +1728,7 @@ export type PublishInput = {
 export type PublishResult = {
   __typename?: 'PublishResult';
   success: Scalars['Boolean'];
+  eState?: Maybe<Scalars['Int']>;
   message?: Maybe<Scalars['String']>;
 };
 
@@ -2879,7 +2880,7 @@ export type PublishMutation = (
   { __typename?: 'Mutation' }
   & { publish: (
     { __typename?: 'PublishResult' }
-    & Pick<PublishResult, 'success' | 'message'>
+    & Pick<PublishResult, 'success' | 'eState' | 'message'>
   ) }
 );
 
@@ -4602,6 +4603,7 @@ export const PublishDocument = gql`
     mutation publish($input: PublishInput!) {
   publish(input: $input) {
     success
+    eState
     message
   }
 }

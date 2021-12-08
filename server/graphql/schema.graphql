@@ -1276,6 +1276,7 @@ input PublishInput {
 
 type PublishResult {
   success: Boolean!
+  eState: Int
   message: String
 }
 

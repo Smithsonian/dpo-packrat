@@ -494,7 +494,7 @@ function DetailsView(): React.ReactElement {
                     publishedEnum={publishedEnum}
                     publishable={publishable}
                     retired={withDefaultValueBoolean(details.retired, false)}
-                    hidePublishState={objectType !== eSystemObjectType.eScene}
+                    objectType={objectType}
                     onRetiredUpdate={onRetiredUpdate}
                     onLicenseUpdate={onLicenseUpdate}
                     originalFields={data.getSystemObjectDetails}
@@ -502,6 +502,7 @@ function DetailsView(): React.ReactElement {
                     idSystemObject={idSystemObject}
                     licenseInheritance={licenseInheritance}
                     path={objectAncestors}
+                    updateData={updateData}
                 />
                 <Box display='flex' flex={2.2} flexDirection='column'>
                     <IdentifierList
