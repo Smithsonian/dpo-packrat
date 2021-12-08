@@ -379,7 +379,7 @@ INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'SAAM_PC');
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'SAAM_YT');
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'SAAMPHOTO');
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (26, 'Smithsonian Astrophysical Observatory', 'SAO');
-INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (26, 'Smithsonian Astrophysical Observatory', 'SAO_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (26, NULL, 'SAO_YT');
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, 'Smithsonian Center for Learning and Digital Access', 'SCLDA');
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (28, NULL, 'SERC_BL');
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (28, NULL, 'SERC_YT');
