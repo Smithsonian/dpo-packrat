@@ -40,9 +40,9 @@ type ObjectMetadataStore = {
     validateMetadataFields: (type?: eObjectMetadataType) => string[];
 };
 
-export const isUniqueSubjectFields = new Set(['Label', 'Title', 'Record ID', 'Access', 'License', 'License Text']);
-export const isRequired = new Set(['Label', 'Title', 'Record ID', 'Access', 'License']);
-export const noLabel = new Set(['Label', 'Title', 'Record ID', 'Access', 'License', 'License Text', 'Object Type', 'Date', 'Place', 'Topic']);
+export const isUniqueSubjectFields = new Set(['Label', 'Title', 'Record ID', 'Unit', 'License', 'License Text']);
+export const isRequired = new Set(['Label', 'Title', 'Record ID', 'Unit', 'License']);
+export const noLabel = new Set(['Label', 'Title', 'Record ID', 'Unit', 'License', 'License Text', 'Object Type', 'Date', 'Place', 'Topic']);
 
 export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState<ObjectMetadataStore>, get: GetState<ObjectMetadataStore>) => ({
     metadataControl: [],
@@ -57,7 +57,7 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
     },
     initializeMetadata: (type, metadata) => {
         const { mdmFields } = get();
-        const uniqueFieldSet = new Set(['Label', 'Title', 'Record ID', 'Access', 'License', 'License Text']);
+        const uniqueFieldSet = new Set(['Label', 'Title', 'Record ID', 'Unit', 'License', 'License Text']);
         // subject creation will default with a set array of fields
         if (type === eObjectMetadataType.eSubjectCreation) {
             const defaultMetadataFields: MetadataState[] = [];
