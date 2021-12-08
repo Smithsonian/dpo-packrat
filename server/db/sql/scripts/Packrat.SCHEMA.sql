@@ -543,6 +543,7 @@ CREATE TABLE IF NOT EXISTS `Unit` (
 CREATE TABLE IF NOT EXISTS `UnitEdan` (
   `idUnitEdan` int(11) NOT NULL AUTO_INCREMENT,
   `idUnit` int(11) DEFAULT NULL,
+  `Name` varchar(255) NULL,
   `Abbreviation` varchar(100) NOT NULL UNIQUE,
   PRIMARY KEY (`idUnitEdan`),
   KEY `UnitEdan_Abbreviation` (`Abbreviation`)

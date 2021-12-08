@@ -4,6 +4,7 @@ import ProjectDocumentation from './types/ProjectDocumentation';
 import Stakeholder from './types/Stakeholder';
 import Subject from './types/Subject';
 import Item from './types/Item';
+import UnitEdan from './types/UnitEdan';
 import getUnit from './queries/getUnit';
 import getProject from './queries/getProject';
 import getSubject from './queries/getSubject';
@@ -22,6 +23,7 @@ import getProjectDocumentation from './queries/getProjectDocumentation';
 import getUnitsFromNameSearch from './queries/getUnitsFromNameSearch';
 import getUnitsFromEdanAbbreviation from './queries/getUnitsFromEdanAbbreviation';
 import createGeoLocation from './mutations/createGeoLocation';
+import getEdanUnitsNamed from './queries/getEdanUnitsNamed';
 
 const resolvers = {
     Query: {
@@ -37,7 +39,8 @@ const resolvers = {
         getObjectsForItem,
         getProjectDocumentation,
         getUnitsFromNameSearch,
-        getUnitsFromEdanAbbreviation
+        getUnitsFromEdanAbbreviation,
+        getEdanUnitsNamed
     },
     Mutation: {
         createUnit,
@@ -51,7 +54,8 @@ const resolvers = {
     ProjectDocumentation,
     Stakeholder,
     Subject,
-    Item
+    Item,
+    UnitEdan
 };
 
 export default resolvers;

@@ -31,6 +31,7 @@ export type Query = {
   getContentsForAssetVersions: GetContentsForAssetVersionsResult;
   getCurrentUser: GetCurrentUserResult;
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
+  getEdanUnitsNamed: GetEdanUnitsNamedResult;
   getFilterViewData: GetFilterViewDataResult;
   getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
   getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
@@ -2280,6 +2281,11 @@ export type GetUnitsFromEdanAbbreviationInput = {
   abbreviation: Scalars['String'];
 };
 
+export type GetEdanUnitsNamedResult = {
+  __typename?: 'GetEdanUnitsNamedResult';
+  UnitEdan?: Maybe<Array<UnitEdan>>;
+};
+
 export type Unit = {
   __typename?: 'Unit';
   idUnit: Scalars['Int'];
@@ -2365,6 +2371,15 @@ export type Item = {
   GeoLocation?: Maybe<GeoLocation>;
   Subject?: Maybe<Subject>;
   SystemObject?: Maybe<SystemObject>;
+};
+
+export type UnitEdan = {
+  __typename?: 'UnitEdan';
+  idUnitEdan: Scalars['Int'];
+  idUnit?: Maybe<Scalars['Int']>;
+  Name?: Maybe<Scalars['String']>;
+  Abbreviation: Scalars['String'];
+  Unit?: Maybe<Unit>;
 };
 
 export type CreateUserInput = {
@@ -3722,6 +3737,20 @@ export type GetVersionsForAssetQuery = (
       { __typename?: 'DetailVersion' }
       & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested'>
     )> }
+  ) }
+);
+
+export type GetEdanUnitsNamedQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetEdanUnitsNamedQuery = (
+  { __typename?: 'Query' }
+  & { getEdanUnitsNamed: (
+    { __typename?: 'GetEdanUnitsNamedResult' }
+    & { UnitEdan?: Maybe<Array<(
+      { __typename?: 'UnitEdan' }
+      & Pick<UnitEdan, 'idUnitEdan' | 'Name' | 'Abbreviation' | 'idUnit'>
+    )>> }
   ) }
 );
 
@@ -6651,6 +6680,45 @@ export function useGetVersionsForAssetLazyQuery(baseOptions?: Apollo.LazyQueryHo
 export type GetVersionsForAssetQueryHookResult = ReturnType<typeof useGetVersionsForAssetQuery>;
 export type GetVersionsForAssetLazyQueryHookResult = ReturnType<typeof useGetVersionsForAssetLazyQuery>;
 export type GetVersionsForAssetQueryResult = Apollo.QueryResult<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>;
+export const GetEdanUnitsNamedDocument = gql`
+    query getEdanUnitsNamed {
+  getEdanUnitsNamed {
+    UnitEdan {
+      idUnitEdan
+      Name
+      Abbreviation
+      idUnit
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetEdanUnitsNamedQuery__
+ *
+ * To run a query within a React component, call `useGetEdanUnitsNamedQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetEdanUnitsNamedQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetEdanUnitsNamedQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetEdanUnitsNamedQuery(baseOptions?: Apollo.QueryHookOptions<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>(GetEdanUnitsNamedDocument, options);
+      }
+export function useGetEdanUnitsNamedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>(GetEdanUnitsNamedDocument, options);
+        }
+export type GetEdanUnitsNamedQueryHookResult = ReturnType<typeof useGetEdanUnitsNamedQuery>;
+export type GetEdanUnitsNamedLazyQueryHookResult = ReturnType<typeof useGetEdanUnitsNamedLazyQuery>;
+export type GetEdanUnitsNamedQueryResult = Apollo.QueryResult<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>;
 export const GetIngestionItemsForSubjectsDocument = gql`
     query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
   getIngestionItemsForSubjects(input: $input) {

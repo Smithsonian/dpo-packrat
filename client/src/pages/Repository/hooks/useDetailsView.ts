@@ -28,7 +28,9 @@ import {
     ExistingRelationship,
     DeleteMetadataDocument,
     GetUnitsFromNameSearchQueryResult,
-    GetUnitsFromNameSearchDocument
+    GetUnitsFromNameSearchDocument,
+    GetEdanUnitsNamedQueryResult,
+    GetEdanUnitsNamedDocument,
 } from '../../../types/graphql';
 import { eSystemObjectType, ePublishedState } from '../../../types/server';
 
@@ -250,6 +252,14 @@ export function useAllUnits(): GetUnitsFromNameSearchQueryResult {
             input: {
                 search: ''
             }
+        },
+        fetchPolicy: 'no-cache'
+    });
+}
+
+export function useEdanUnitsNamed(): GetEdanUnitsNamedQueryResult {
+    return useQuery(GetEdanUnitsNamedDocument, {
+        variables: {
         },
         fetchPolicy: 'no-cache'
     });

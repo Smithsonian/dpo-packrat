@@ -54,7 +54,7 @@ export type EdanMDMContent = {
         topic?: string[];
     }
 
-    freeText?: {
+    freetext?: {
         identifier?: EdanLabelContent[];
         dataSource?: EdanLabelContent[];
         date?: EdanLabelContent[];

@@ -10,6 +10,7 @@ type Query {
   getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
   getCurrentUser: GetCurrentUserResult!
   getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
+  getEdanUnitsNamed: GetEdanUnitsNamedResult!
   getFilterViewData: GetFilterViewDataResult!
   getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
@@ -1783,6 +1784,10 @@ input GetUnitsFromEdanAbbreviationInput {
   abbreviation: String!
 }
 
+type GetEdanUnitsNamedResult {
+  UnitEdan: [UnitEdan!]
+}
+
 type Unit {
   idUnit: Int!
   Abbreviation: String
@@ -1861,6 +1866,14 @@ type Item {
   GeoLocation: GeoLocation
   Subject: Subject
   SystemObject: SystemObject
+}
+
+type UnitEdan {
+  idUnitEdan: Int!
+  idUnit: Int
+  Name: String
+  Abbreviation: String!
+  Unit: Unit
 }
 
 input CreateUserInput {

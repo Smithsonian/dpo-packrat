@@ -12,7 +12,7 @@ import { useObjectMetadataStore, useLicenseStore, MetadataState, eObjectMetadata
 import { Metadata } from '../../../../../types/graphql';
 // import { eVocabularySetID } from '../../../../../types/server';
 import { MdRemoveCircleOutline } from 'react-icons/md';
-import { useAllUnits } from '../../../hooks/useDetailsView';
+import { useEdanUnitsNamed } from '../../../hooks/useDetailsView';
 import { makeStyles } from '@material-ui/core/styles';
 import { sharedButtonProps } from '../../../../../utils/shared';
 import clsx from 'clsx';
@@ -60,7 +60,7 @@ type MetadataControlRowProps = {
     deleteMetadata: (id: number, index: number) => Promise<void>;
     index: number;
     licenses: string[];
-    units: string[];
+    units: (string | null | undefined)[];
     options: string[];
     style: {[className: string]: string}
 };
@@ -73,10 +73,10 @@ type MetadataControlRowProps = {
 function MetadataControlTable(props: MetadataControlTableProps): React.ReactElement {
     const { type /* metadataData*/ } = props;
     const classes = useStyles();
-    const { data } = useAllUnits();
+    const { data } = useEdanUnitsNamed();
     const [getLicenses] = useLicenseStore(state => [state.getEntries]);
     const licenses = getLicenses().map(license => license.Name);
-    const units = data?.getUnitsFromNameSearch?.Units.map(unit => unit.Name) ?? [];
+    const units = (data?.getEdanUnitsNamed.UnitEdan?.map(unitEdan => unitEdan.Name)) ?? [];
     const [metadata, updateMetadata, createMetadata, deleteMetadata, getAllMdmFieldsArr] = useObjectMetadataStore(state => [state.metadataControl, state.updateMetadata, state.createMetadata, state.deleteMetadata, state.getAllMdmFieldsArr]);
     const mdmFields: string[] = getAllMdmFieldsArr();
 
@@ -163,7 +163,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
         valueInput = (
             <Select onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Value', e.target.value as string)} className={clsx(style.textField, style.text)} value={Value}>
                 {units.map(unit => (
-                    <MenuItem value={unit} key={unit}>
+                    <MenuItem value={unit ?? ''} key={unit ?? ''}>
                         {unit}
                     </MenuItem>
                 ))}

@@ -706,10 +706,11 @@ model Unit {
 }
 
 model UnitEdan {
-  idUnitEdan   Int    @id @default(autoincrement())
+  idUnitEdan   Int     @id @default(autoincrement())
   idUnit       Int?
-  Abbreviation String @unique(map: "Abbreviation") @mariasql.VarChar(100)
-  Unit         Unit?  @relation(fields: [idUnit], references: [idUnit], onDelete: NoAction, onUpdate: NoAction, map: "fk_unitedan_idunit")
+  Name         String? @mariasql.VarChar(255)
+  Abbreviation String  @unique(map: "Abbreviation") @mariasql.VarChar(100)
+  Unit         Unit?   @relation(fields: [idUnit], references: [idUnit], onDelete: NoAction, onUpdate: NoAction, map: "fk_unitedan_idunit")
 
   @@index([Abbreviation], map: "UnitEdan_Abbreviation")
   @@index([idUnit], map: "fk_unitedan_idunit")
