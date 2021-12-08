@@ -5,16 +5,17 @@ import * as LOG from '../../../../../utils/logger';
 
 export default async function deleteMetadata(_: Parent, args: MutationDeleteMetadataArgs): Promise<DeleteMetadataResult> {
     const { input: { idMetadata } } = args;
-    const Metadata = await DBAPI.Metadata.fetch(idMetadata);
-    if (!Metadata) {
-        LOG.error(`Unable to retrieve Metadata ${idMetadata}`, LOG.LS.eDB);
+    const metadata = await DBAPI.Metadata.fetch(idMetadata);
+    if (!metadata) {
+        LOG.error(`Unable to retrieve Metadata with idMetadata ${idMetadata}`, LOG.LS.eGQL);
         return { success: false };
     }
-    if (await Metadata?.delete()) {
-        LOG.info(`Metadata deleted ${idMetadata}`, LOG.LS.eDB);
+
+    if (await metadata.delete()) {
+        LOG.info(`Metadata deleted with idMetadata ${idMetadata}`, LOG.LS.eGQL);
         return { success: true };
     } else {
-        LOG.error(`Error deleting Metadata ${idMetadata}`, LOG.LS.eDB);
+        LOG.error(`Error deleting Metadata with idMetadata ${idMetadata}`, LOG.LS.eGQL);
         return { success: false };
     }
 }

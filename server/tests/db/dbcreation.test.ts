@@ -2988,6 +2988,16 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(systemObjectVersionFetch).toBeTruthy();
     });
 
+    test('DB Fetch SystemObjectVersion: SystemObjectVersion.clone specific, unzipped', async () => {
+        let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
+        if (systemObjectScene && systemObjectVersion && assetVersion) {
+            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(systemObjectScene.idSystemObject, null, 'Update Comment', new Map<number, number>([[assetVersion.idAsset, assetVersion.idAssetVersion]]), true);
+            if (systemObjectVersionFetch && systemObjectVersion)
+                expect(systemObjectVersionFetch.idSystemObjectVersion).toBeGreaterThan(systemObjectVersion.idSystemObjectVersion);
+        }
+        expect(systemObjectVersionFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: SystemObjectVersionAssetVersionXref', async () => {
         let systemObjectVersionAssetVersionXrefFetch: DBAPI.SystemObjectVersionAssetVersionXref | null = null;
         if (systemObjectVersionAssetVersionXref) {
@@ -7573,6 +7583,17 @@ describe('DB Delete Test', () => {
         }
         expect((await DBAPI.SystemObjectXref.deleteIfAllowed(1000000000)).success).toBeFalsy();
     });
+
+    test('DB Delete: Metadata.delete', async () => {
+        if (metadataNull) {
+            expect(await metadataNull.delete()).toBeTruthy();
+
+            // try to fetch; should not be found
+            const fetcher: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadataNull.idMetadata);
+            expect(fetcher).toBeFalsy();
+        }
+    });
+
 });
 // #endregion
 
