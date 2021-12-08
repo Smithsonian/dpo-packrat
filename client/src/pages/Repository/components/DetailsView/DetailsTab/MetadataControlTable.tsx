@@ -43,15 +43,15 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         fontFamily: typography.fontFamily,
         fontSize: '1em',
         '& .MuiInputBase-input': {
-            padding: 1
+            padding: '0.5px'
         }
     },
     autocompleteText: {
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         fontSize: '1em',
-        '& .MuiInputBase-input': {
-            padding: 0
+        '& .MuiAutocomplete-input:first-child': {
+            padding: '0 !important'
         }
     },
     row: {
@@ -75,11 +75,6 @@ type MetadataControlRowProps = {
     options: string[];
     style: {[className: string]: string}
 };
-
-/*
-    TODO Styling:
-        font and font size across both tables
-*/
 
 function MetadataControlTable(props: MetadataControlTableProps): React.ReactElement {
     const { type /* metadataData*/ } = props;
@@ -188,7 +183,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
                     <Typography className={clsx(style.textField, style.text)}>{Name}</Typography> :
                     <Autocomplete
                         value={Name}
-                        classes={{ inputRoot: clsx(style.autocompleteText, style.textField), input: style.autocompleteText }}
+                        classes={{ inputRoot: clsx(style.autocompleteText, style.textField) }}
                         freeSolo
                         renderInput={(params) => <TextField {...params} />}
                         options={options}
