@@ -159,7 +159,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
             </Select>
         );
     }
-    if (Name === 'Access') {
+    if (Name === 'Unit') {
         valueInput = (
             <Select onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Value', e.target.value as string)} className={clsx(style.textField, style.text)} value={Value}>
                 {units.map(unit => (
