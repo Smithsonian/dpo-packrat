@@ -39,7 +39,7 @@ export class PublishSubject {
 
         this.edanRecord = await ICol.createEdanMDM(this.edanMDM, 0, true);
         if (this.edanRecord)
-            LOG.info(`PublishSubject.publish ${this.edanRecord.url} succeeded with Edan status ${this.edanRecord.status}, publicSearch ${this.edanRecord.publicSearch}`, LOG.LS.eCOLL);
+            LOG.info(`PublishSubject.publish ${this.edanRecord.url} succeeded with Edan status ${this.edanRecord.status}, publicSearch ${this.edanRecord.publicSearch}`, LOG.LS.eCOLL); // : ${JSON.stringify(this.edanMDM, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
         else
             LOG.error(`PublishSubject.publish ${JSON.stringify(this.edanMDM, H.Helpers.saferStringify)} failed`, LOG.LS.eCOLL);
 
@@ -72,6 +72,7 @@ export class PublishSubject {
             }
             metadataList.push(metadata);
         }
+        // LOG.info(`PublishSubject.analyze() metadataMap: ${JSON.stringify(this.metadataMap, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
         return PublishSubject.returnResults(true);
     }
 
