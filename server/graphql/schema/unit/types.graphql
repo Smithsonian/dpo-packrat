@@ -77,3 +77,11 @@ type Item {
     Subject: Subject
     SystemObject: SystemObject
 }
+
+type UnitEdan {
+    idUnitEdan: Int!
+    idUnit: Int
+    Name: String
+    Abbreviation: String!
+    Unit: Unit
+}
