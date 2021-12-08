@@ -89,7 +89,7 @@ export class PublishSubject {
                 case 'title':                       this.edanMDM.descriptiveNonRepeating.title.content          = values[0];    nonRepeating = true; break;
                 case 'record id':                   this.edanMDM.descriptiveNonRepeating.record_ID              = values[0];    nonRepeating = true; break;
                 case 'unit':                        await this.handleUnit(values[0]);                                           nonRepeating = true; break;
-                case 'license':                     this.edanMDM.descriptiveNonRepeating.metadata_usage!.access = values[0];    nonRepeating = true; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'access':                      this.edanMDM.descriptiveNonRepeating.metadata_usage!.access = values[0];    nonRepeating = true; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 case 'license text':                this.edanMDM.descriptiveNonRepeating.metadata_usage!.text   = values[0];    nonRepeating = true; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
                 case 'object type':                 this.edanMDM.indexedStructured!.object_type                 = values; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion

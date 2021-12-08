@@ -209,7 +209,7 @@ function SubjectForm(): React.ReactElement {
                 invalidMetadata.forEach(message => toast.error(message, { autoClose: false }));
             }
 
-            return isValidName && isValidUnit && isValidIdentifiers && !invalidMetadata;
+            return isValidName && isValidUnit && isValidIdentifiers && invalidMetadata.length === 0;
         } catch (error) {
             if (error instanceof Error)
                 toast.error(error);
