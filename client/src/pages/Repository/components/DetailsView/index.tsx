@@ -197,7 +197,6 @@ function DetailsView(): React.ReactElement {
         state.getDetailsViewFieldErrors
     ]);
     const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields, initializeMetadata, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields, state.initializeMetadata, state.resetMetadata]);
-    // const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields]);
 
     const objectDetailsData = data;
 
@@ -238,10 +237,10 @@ function DetailsView(): React.ReactElement {
         setUpdatedIdentifiers(areIdentifiersUpdated());
     }, [stateIdentifiers]);
 
-    // TODO not working
+    // checks for updates to metadata
     useEffect(() => {
         setUpdatedMetadata(areMetadataUpdated());
-    }, [metadataControl, metadataDisplay, areMetadataUpdated]);
+    }, [metadataControl, metadataDisplay]);
 
     useEffect(() => {
         return () => {
@@ -427,6 +426,7 @@ function DetailsView(): React.ReactElement {
         const invalidMetadata = validateMetadataFields();
         if (invalidMetadata.length) {
             invalidMetadata.forEach(message => toast.error(message, { autoClose: false }));
+            return;
         }
 
         // Create another validation here to make sure that the appropriate SO types are being checked

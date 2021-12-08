@@ -40,9 +40,9 @@ type ObjectMetadataStore = {
     validateMetadataFields: (type?: eObjectMetadataType) => string[];
 };
 
-export const isUniqueSubjectFields = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License', 'License Text']);
-export const isRequired = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License']);
-export const noLabel = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License', 'License Text', 'Object Type', 'Date', 'Place', 'Topic']);
+export const isUniqueSubjectFields = new Set(['Label', 'Title', 'Record ID', 'Access', 'License', 'License Text']);
+export const isRequired = new Set(['Label', 'Title', 'Record ID', 'Access', 'License']);
+export const noLabel = new Set(['Label', 'Title', 'Record ID', 'Access', 'License', 'License Text', 'Object Type', 'Date', 'Place', 'Topic']);
 
 export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState<ObjectMetadataStore>, get: GetState<ObjectMetadataStore>) => ({
     metadataControl: [],
@@ -57,8 +57,7 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
     },
     initializeMetadata: (type, metadata) => {
         const { mdmFields } = get();
-        const uniqueFieldSet = new Set(['Label', 'Title', 'Record ID', 'Unit', 'Access', 'License', 'License Text']);
-        console.log('initializing this should only happen once');
+        const uniqueFieldSet = new Set(['Label', 'Title', 'Record ID', 'Access', 'License', 'License Text']);
         // subject creation will default with a set array of fields
         if (type === eObjectMetadataType.eSubjectCreation) {
             const defaultMetadataFields: MetadataState[] = [];
@@ -71,7 +70,6 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
         if (type === eObjectMetadataType.eSubjectView) {
             const metadataControl: MetadataState[] = [];
             const metadataDisplay: MetadataWithId[] = [];
-            console.log('mdmFields', mdmFields);
             metadata?.forEach((entry) => {
                 if (mdmFields.has(entry.Name)) {
                     metadataControl.push({
@@ -88,7 +86,6 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
                     });
                 }
             });
-            console.log('initializing subject view display', metadataDisplay, 'control', metadataControl);
             set({ metadataControl, metadataDisplay, initialDisplay: metadataDisplay, initialControl: metadataControl });
         }
         // detail view will render everything in the metadataDisplay array
@@ -99,46 +96,37 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
                     id: metadata.idMetadata
                 };
             }) ?? [];
-            console.log('initializing detail view display', metadataWithId);
             set({ metadataDisplay: metadataWithId, metadataControl: [], initialDisplay: metadataWithId, initialControl: [] });
         }
     },
     resetMetadata: () => {
-        set({ metadataControl: [], metadataDisplay: [], mdmFields: new Set() });
+        set({ metadataControl: [], metadataDisplay: [] });
     },
     updateMetadata: (id, index, field, value) => {
-        console.log('id', id, 'index', index, 'field', field, 'value', value);
         const { metadataControl, metadataDisplay } = get();
         if (id > 0) {
-            console.log('case 1');
             const controlIndex = metadataControl.findIndex(metadata => metadata.idMetadata === id);
             const displayIndex = metadataDisplay.findIndex(metadata => metadata.idMetadata === id);
-            console.log('controlIndex', controlIndex, 'displayIndex', displayIndex);
             if (controlIndex > -1) {
-                const controlCopy = [...metadataControl];
+                const controlCopy = lodash.cloneDeep(metadataControl);
                 controlCopy[controlIndex][field] = value;
-                console.log('controlCopy', controlCopy);
                 set({ metadataControl: controlCopy });
             } else if (displayIndex > -1) {
-                const displayCopy = [...metadataDisplay];
+                const displayCopy = lodash.cloneDeep(metadataDisplay);
                 displayCopy[displayIndex][field] = value;
-                console.log('displayCopy', displayCopy);
                 set({ metadataDisplay: displayCopy });
             } else {
                 toast.error(`Cannot update metadata row of id ${id}`);
                 return;
             }
         } else {
-            console.log('case 2');
             const controlCopy = [...metadataControl];
-            const target = controlCopy[index];
-            target[field] = value;
+            controlCopy[index][field] = value;
             set({ metadataControl: controlCopy });
         }
     },
     getAllMetadataEntries: () => {
         const { metadataControl, metadataDisplay } = get();
-        console.log('getAllMetadataEntries', metadataControl, metadataDisplay);
         const metadataInputControl = metadataControl.map(({ idMetadata, Label, Name, Value }) => {
             return {
                 idMetadata,
@@ -197,15 +185,10 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
         }
     },
     areMetadataUpdated: () => {
-        // TODO for some reason both controls and both displays update at the same time
-        // NOTE: update are still registered when adding a new row
         const { metadataControl, initialControl, metadataDisplay, initialDisplay } = get();
-        console.log('checking update');
         const controlChange = !lodash.isEqual(metadataControl, initialControl);
-        console.log('metadataControl', metadataControl, 'initial', initialControl);
         const displayChange = !lodash.isEqual(metadataDisplay, initialDisplay);
-        console.log('metadataDisplay', metadataDisplay, 'initial', initialDisplay);
-        console.log('controlChange', controlChange, 'displayChange', displayChange);
+
         return controlChange || displayChange;
     },
     validateMetadataFields: (type) => {

@@ -56,7 +56,7 @@ type MetadataControlTableProps = {
 type MetadataControlRowProps = {
     type: eObjectMetadataType;
     metadata: MetadataState;
-    updateMetadata: (id: number, index: number, field: string, value: string) => void;
+    updateMetadata: (id: number, index: number, field: string, value: string, source?: string) => void;
     deleteMetadata: (id: number, index: number) => Promise<void>;
     index: number;
     licenses: string[];
@@ -77,7 +77,7 @@ function MetadataControlTable(props: MetadataControlTableProps): React.ReactElem
     const [getLicenses] = useLicenseStore(state => [state.getEntries]);
     const licenses = getLicenses().map(license => license.Name);
     const units = data?.getUnitsFromNameSearch?.Units.map(unit => unit.Name) ?? [];
-    const [metadata, updateMetadata, createMetadata, deleteMetadata, getAllMdmFieldsArr /*, initializeMdm, resetMetadata*/, ] = useObjectMetadataStore(state => [state.metadataControl, state.updateMetadata, state.createMetadata, state.deleteMetadata, state.getAllMdmFieldsArr /*state.initializeMdmEntries, state.resetMetadata*/]);
+    const [metadata, updateMetadata, createMetadata, deleteMetadata, getAllMdmFieldsArr] = useObjectMetadataStore(state => [state.metadataControl, state.updateMetadata, state.createMetadata, state.deleteMetadata, state.getAllMdmFieldsArr]);
     const mdmFields: string[] = getAllMdmFieldsArr();
 
     const rows = metadata.map((row, index) => {
@@ -159,7 +159,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
             </Select>
         );
     }
-    if (Name === 'Unit') {
+    if (Name === 'Access') {
         valueInput = (
             <Select onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Value', e.target.value as string)} className={clsx(style.textField, style.text)} value={Value}>
                 {units.map(unit => (
@@ -181,7 +181,16 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
                         freeSolo
                         renderInput={(params) => <TextField {...params} />}
                         options={options}
-                        onInputChange={(_e, value) => { updateMetadata(idMetadata ?? 0, index, 'Name', value); updateMetadata(idMetadata ?? 0, index, 'Value', ''); updateMetadata(idMetadata ?? 0, index, 'Label', ''); }}
+                        onInputChange={(_e, value) => {
+                            if (value !== null) {
+                                updateMetadata(idMetadata ?? 0, index, 'Name', value);
+                            }
+                        }}
+                        onChange={(_e, value) => {
+                            if (value !== null) {
+                                updateMetadata(idMetadata ?? 0, index, 'Name', value); updateMetadata(idMetadata ?? 0, index, 'Value', ''); updateMetadata(idMetadata ?? 0, index, 'Label', '');
+                            }
+                        }}
                     />
                 }
             </TableCell>
