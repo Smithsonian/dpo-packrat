@@ -78,80 +78,6 @@ type DetailsFields = {
     idLicense?: number;
 };
 
-const mockData = [
-    {
-        id: 74,
-        idMetadata: 74,
-        Name: 'Test',
-        ValueShort: 'Test test testing',
-        Value: 'Test test testing',
-        Label: 'Haro',
-        VMetadataSource: {
-            idVocabulary: 84,
-            idVocabularySet: 1,
-            SortOrder: 1,
-            Term: 'Test'
-        }
-    },
-    {
-        id: 77,
-        idMetadata: 77,
-        Name: 'Test3',
-        Label: 'Haro',
-        idAssetVersionValue: 22,
-        VMetadataSource: {
-            idVocabulary: 120,
-            idVocabularySet: 1,
-            SortOrder: 1,
-            Term: 'Test'
-        }
-    },
-    {
-        id: 88,
-        idMetadata: 88,
-        Name: 'Test2',
-        ValueExtended: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
-        Value: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
-        Label: 'Haro',
-        idAssetVersionValue: 22,
-        VMetadataSource: {
-            idVocabulary: 120,
-            idVocabularySet: 1,
-            SortOrder: 1,
-            Term: 'Test'
-        }
-    },
-    {
-        id: 90,
-        idMetadata: 90,
-        Name: 'Label',
-        ValueExtended: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
-        Value: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
-        Label: 'Haro',
-        idAssetVersionValue: 22,
-        VMetadataSource: {
-            idVocabulary: 120,
-            idVocabularySet: 1,
-            SortOrder: 1,
-            Term: 'Test'
-        }
-    },
-    {
-        id: 99,
-        idMetadata: 99,
-        Name: 'Notes (FT)',
-        ValueExtended: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
-        Value: 'Test test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testingTest test testing',
-        Label: 'Haro',
-        idAssetVersionValue: 22,
-        VMetadataSource: {
-            idVocabulary: 120,
-            idVocabularySet: 1,
-            SortOrder: 1,
-            Term: 'Test'
-        }
-    }
-];
 
 function DetailsView(): React.ReactElement {
     const classes = useStyles();
@@ -223,11 +149,9 @@ function DetailsView(): React.ReactElement {
             setDetails({ name, retired, idLicense: license?.idLicense || 0 });
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
             if (objectType === eSystemObjectType.eSubject) {
-                initializeMetadata(eObjectMetadataType.eSubjectView, mockData); // comment me!
-                // initializeMetadata(eObjectMetadataType.eSubjectView, metadata); // comment me out!
+                initializeMetadata(eObjectMetadataType.eSubjectView, metadata); // comment me out!
             } else {
-                initializeMetadata(eObjectMetadataType.eDetailView, mockData); // comment me!
-                // initializeMetadata(eObjectMetadataType.eDetailView, metadata); // comment me out!
+                initializeMetadata(eObjectMetadataType.eDetailView, metadata); // comment me out!
             }
         }
     }, [data, loading, initializeIdentifierState]);
