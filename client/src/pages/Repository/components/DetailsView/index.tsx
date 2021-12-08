@@ -322,14 +322,14 @@ function DetailsView(): React.ReactElement {
         setUpdatedData(updatedDataFields);
     };
 
-    const updateData = async (): Promise<void> => {
+    const updateData = async (): Promise<boolean> => {
         toast.dismiss();
         setIsUpdatingData(true);
         const identifierCheck = checkIdentifiersBeforeUpdate();
         if (identifierCheck.length) {
             identifierCheck.forEach(error => toast.error(error));
             setIsUpdatingData(false);
-            return;
+            return false;
         }
 
         const stateIdentifiersWithIdSystemObject: UpdateIdentifier[] = stateIdentifiers.map(({ id, identifier, identifierType, idIdentifier, preferred }) => {
@@ -350,7 +350,7 @@ function DetailsView(): React.ReactElement {
         const invalidMetadata = validateMetadataFields();
         if (invalidMetadata.length) {
             invalidMetadata.forEach(message => toast.error(message, { autoClose: false }));
-            return;
+            return false;
         }
 
         // Create another validation here to make sure that the appropriate SO types are being checked
@@ -358,7 +358,7 @@ function DetailsView(): React.ReactElement {
         if (errors.length) {
             errors.forEach(error => toast.error(`${error}`, { autoClose: false }));
             setIsUpdatingData(false);
-            return;
+            return false;
         }
 
         try {
@@ -455,18 +455,19 @@ function DetailsView(): React.ReactElement {
             }
 
             const metadata = getAllMetadataEntries().filter(entry => entry.Name);
-            console.log('metadata', metadata);
+            // console.log('metadata', metadata);
             updatedData.Metadata = metadata;
 
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
-            } else {
+                return true;
+            } else
                 throw new Error(data?.updateObjectDetails?.message ?? '');
-            }
         } catch (error) {
             if (error instanceof Error)
                 toast.error(error.toString() || 'Failed to save updated data');
+            return false;
         } finally {
             setIsUpdatingData(false);
         }
