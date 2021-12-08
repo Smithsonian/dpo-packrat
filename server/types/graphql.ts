@@ -28,6 +28,7 @@ export type Query = {
   getContentsForAssetVersions: GetContentsForAssetVersionsResult;
   getCurrentUser: GetCurrentUserResult;
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
+  getEdanUnitsNamed: GetEdanUnitsNamedResult;
   getFilterViewData: GetFilterViewDataResult;
   getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
   getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
@@ -2277,6 +2278,11 @@ export type GetUnitsFromEdanAbbreviationInput = {
   abbreviation: Scalars['String'];
 };
 
+export type GetEdanUnitsNamedResult = {
+  __typename?: 'GetEdanUnitsNamedResult';
+  UnitEdan?: Maybe<Array<UnitEdan>>;
+};
+
 export type Unit = {
   __typename?: 'Unit';
   idUnit: Scalars['Int'];
@@ -2362,6 +2368,15 @@ export type Item = {
   GeoLocation?: Maybe<GeoLocation>;
   Subject?: Maybe<Subject>;
   SystemObject?: Maybe<SystemObject>;
+};
+
+export type UnitEdan = {
+  __typename?: 'UnitEdan';
+  idUnitEdan: Scalars['Int'];
+  idUnit?: Maybe<Scalars['Int']>;
+  Name?: Maybe<Scalars['String']>;
+  Abbreviation: Scalars['String'];
+  Unit?: Maybe<Unit>;
 };
 
 export type CreateUserInput = {

@@ -6,6 +6,7 @@ import * as LOG from '../../utils/logger';
 export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase {
     idUnitEdan!: number;
     idUnit!: number | null;
+    Name!: string | null;
     Abbreviation!: string;
 
     constructor(input: UnitEdanBase) {
@@ -17,11 +18,12 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idUnit, Abbreviation } = this;
-            ({ idUnitEdan: this.idUnitEdan, idUnit: this.idUnit, Abbreviation: this.Abbreviation } =
+            const { idUnit, Name, Abbreviation } = this;
+            ({ idUnitEdan: this.idUnitEdan, Name: this.Name, idUnit: this.idUnit, Abbreviation: this.Abbreviation } =
                 await DBC.DBConnection.prisma.unitEdan.create({
                     data: {
-                        Unit:          idUnit ? { connect: { idUnit }, } : undefined,
+                        Unit: idUnit ? { connect: { idUnit }, } : undefined,
+                        Name,
                         Abbreviation,
                     },
                 }));
@@ -34,11 +36,12 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idUnitEdan, idUnit, Abbreviation } = this;
+            const { idUnitEdan, idUnit, Name, Abbreviation } = this;
             return await DBC.DBConnection.prisma.unitEdan.update({
                 where: { idUnitEdan, },
                 data: {
-                    Unit:          idUnit ? { connect: { idUnit }, } : { disconnect: true, },
+                    Unit: idUnit ? { connect: { idUnit }, } : { disconnect: true, },
+                    Name,
                     Abbreviation,
                 },
             }) ? true : /* istanbul ignore next */ false;
@@ -85,4 +88,26 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
         }
     }
 
+    static async fetchFromName(Name: string): Promise<UnitEdan[] | null> {
+        if (!Name)
+            return null;
+        try {
+            return DBC.CopyArray<UnitEdanBase, UnitEdan>(
+                await DBC.DBConnection.prisma.unitEdan.findMany({ where: { Name }, }), UnitEdan);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Unit.fetchFromName', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** Computes the array of unitEdans that have a name */
+    static async fetchNamed(): Promise<UnitEdan[] | null> {
+        try {
+            return DBC.CopyArray<UnitEdanBase, UnitEdan>(
+                await DBC.DBConnection.prisma.unitEdan.findMany({ where: { Name: { not: null, } }, orderBy: { Abbreviation: 'asc', } }), UnitEdan);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.UnitEdan.fetchNamed', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }

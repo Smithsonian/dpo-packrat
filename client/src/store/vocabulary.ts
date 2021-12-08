@@ -64,6 +64,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eEdan3DResourceAttributeFileType,
                     eVocabularySetID.eEdan3DResourceType,
                     eVocabularySetID.eEdan3DResourceCategory,
+                    eVocabularySetID.eEdanMDMFields,
+                    eVocabularySetID.eMetadataMetadataSource
                 ]
             }
         };
