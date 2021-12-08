@@ -300,6 +300,7 @@ describe('DB Creation Test Suite', () => {
         if (unit)
             unitEdan = await UTIL.createUnitEdanTest({
                 idUnit: unit.idUnit,
+                Name: 'foobar1',
                 Abbreviation: UTIL.randomStorageKey(''),
                 idUnitEdan: 0
             });
@@ -307,6 +308,7 @@ describe('DB Creation Test Suite', () => {
 
         unitEdan2 = await UTIL.createUnitEdanTest({
             idUnit: null,
+            Name: 'foobar2',
             Abbreviation: UTIL.randomStorageKey(''),
             idUnitEdan: 0
         });
@@ -5579,6 +5581,25 @@ describe('DB Fetch Special Test Suite', () => {
         expect(unitEdanFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: UnitEdan.fetchFromName', async () => {
+        let unitEdanFetch: DBAPI.UnitEdan[] | null = null;
+        if (unitEdan) {
+            unitEdanFetch = await DBAPI.UnitEdan.fetchFromName(unitEdan.Name ?? '');
+            if (unitEdanFetch && unitEdan)
+                expect(unitEdanFetch).toEqual(expect.arrayContaining([unitEdan]));
+        }
+        expect(unitEdanFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: UnitEdan.fetchNamed', async () => {
+        const unitEdanFetch: DBAPI.UnitEdan[] | null = await DBAPI.UnitEdan.fetchNamed();
+        if (unitEdanFetch) {
+            expect(unitEdanFetch.length).toBeGreaterThan(0);
+            expect(unitEdanFetch.every(unitEdan => unitEdan.Name !== null)).toBeTruthy();
+        }
+        expect(unitEdanFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: User.fetchUserList', async () => {
         let userFetchArray: DBAPI.User[] | null = null;
         if (userActive && userInactive) {
@@ -7809,6 +7830,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.UnitEdan.fetch(0)).toBeNull();
         expect(await DBAPI.UnitEdan.fetchFromUnit(0)).toBeNull();
         expect(await DBAPI.UnitEdan.fetchFromAbbreviation('')).toBeNull();
+        expect(await DBAPI.UnitEdan.fetchFromName('')).toBeNull();
         expect(await DBAPI.User.fetch(0)).toBeNull();
         expect(await DBAPI.UserPersonalizationSystemObject.fetch(0)).toBeNull();
         expect(await DBAPI.UserPersonalizationSystemObject.fetchFromUser(0)).toBeNull();

@@ -19,7 +19,7 @@ export class PublishSubject {
             metadata_usage: { },
         },
         indexedStructured: { },
-        freeText: { },
+        freetext: { },
     };
 
     public edanRecord: COL.EdanRecord | null = null;
@@ -39,7 +39,7 @@ export class PublishSubject {
 
         this.edanRecord = await ICol.createEdanMDM(this.edanMDM, 0, true);
         if (this.edanRecord)
-            LOG.info(`PublishSubject.publish ${this.edanRecord.url} succeeded with Edan status ${this.edanRecord.status}, publicSearch ${this.edanRecord.publicSearch}`, LOG.LS.eCOLL); // : ${JSON.stringify(this.edanMDM, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+            LOG.info(`PublishSubject.publish ${this.edanRecord.url} succeeded with Edan status ${this.edanRecord.status}, publicSearch ${this.edanRecord.publicSearch}`, LOG.LS.eCOLL); // :\nEdanMDM=${JSON.stringify(this.edanMDM, H.Helpers.saferStringify)}\nEdan Record=${JSON.stringify(this.edanRecord, H.Helpers.saferStringify)}`, LOG.LS.eCOLL); // `, LOG.LS.eCOLL); //
         else
             LOG.error(`PublishSubject.publish ${JSON.stringify(this.edanMDM, H.Helpers.saferStringify)} failed`, LOG.LS.eCOLL);
 
@@ -90,7 +90,7 @@ export class PublishSubject {
                 case 'title':                       this.edanMDM.descriptiveNonRepeating.title.content          = values[0];    nonRepeating = true; break;
                 case 'record id':                   this.edanMDM.descriptiveNonRepeating.record_ID              = values[0];    nonRepeating = true; break;
                 case 'unit':                        await this.handleUnit(values[0]);                                           nonRepeating = true; break;
-                case 'access':                      this.edanMDM.descriptiveNonRepeating.metadata_usage!.access = values[0];    nonRepeating = true; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'license':                     await this.handleLicense(values[0]);                                        nonRepeating = true; break;
                 case 'license text':                this.edanMDM.descriptiveNonRepeating.metadata_usage!.text   = values[0];    nonRepeating = true; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
                 case 'object type':                 this.edanMDM.indexedStructured!.object_type                 = values; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
@@ -98,15 +98,15 @@ export class PublishSubject {
                 case 'place':                       this.edanMDM.indexedStructured!.place                       = values; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 case 'topic':                       this.edanMDM.indexedStructured!.topic                       = values; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
-                case 'identifier (ft)':             this.edanMDM.freeText!.identifier           = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                case 'data source (ft)':            this.edanMDM.freeText!.dataSource           = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                case 'date (ft)':                   this.edanMDM.freeText!.date                 = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                case 'name (ft)':                   this.edanMDM.freeText!.name                 = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                case 'object rights (ft)':          this.edanMDM.freeText!.objectRights         = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                case 'place (ft)':                  this.edanMDM.freeText!.place                = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                case 'taxonomic name (ft)':         this.edanMDM.freeText!.taxonomicName        = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                case 'notes (ft)':                  this.edanMDM.freeText!.notes                = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                case 'physical description (ft)':   this.edanMDM.freeText!.physicalDescription  = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'identifier (ft)':             this.edanMDM.freetext!.identifier           = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'data source (ft)':            this.edanMDM.freetext!.dataSource           = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'date (ft)':                   this.edanMDM.freetext!.date                 = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'name (ft)':                   this.edanMDM.freetext!.name                 = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'object rights (ft)':          this.edanMDM.freetext!.objectRights         = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'place (ft)':                  this.edanMDM.freetext!.place                = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'taxonomic name (ft)':         this.edanMDM.freetext!.taxonomicName        = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'notes (ft)':                  this.edanMDM.freetext!.notes                = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'physical description (ft)':   this.edanMDM.freetext!.physicalDescription  = PublishSubject.transformIntoLabelContent(values); break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
             }
 
             if (nonRepeating && values.length > 1)
@@ -138,22 +138,21 @@ export class PublishSubject {
 
     private async handleUnit(unitMetadata: string): Promise<H.IOResults> {
         // first search by unit name or abbreviation
-        let unitDB: DBAPI.Unit | null = null;
-        const unitDBs: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(unitMetadata);
+        let unitDB: DBAPI.UnitEdan | null = null;
+        const unitDBs: DBAPI.UnitEdan[] | null = await DBAPI.UnitEdan.fetchFromName(unitMetadata);
         if (unitDBs != null && unitDBs.length > 0)
             unitDB = unitDBs[0];
-        else {
-            // next, treat input as a numeric ID
-            const idUnit: number = parseInt(unitMetadata);
-            if (!isNaN(idUnit))
-                unitDB = await DBAPI.Unit.fetch(idUnit);
-        }
-
         if (!unitDB)
             return PublishSubject.returnResults(false, 'Unable to compute Unit');
 
-        this.edanMDM.descriptiveNonRepeating.data_source = unitDB.Name;
+        this.edanMDM.descriptiveNonRepeating.data_source = unitDB.Name ?? '';
         this.edanMDM.descriptiveNonRepeating.unit_code = unitDB.Abbreviation ?? '';
+        return PublishSubject.returnResults(true);
+    }
+
+    private async handleLicense(licenseText: string): Promise<H.IOResults> {
+        const access: string = (licenseText.toLowerCase() === 'view and download cc0') ? 'CC0' : 'Usage conditions apply';
+        this.edanMDM.descriptiveNonRepeating.metadata_usage!.access = access; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         return PublishSubject.returnResults(true);
     }
 

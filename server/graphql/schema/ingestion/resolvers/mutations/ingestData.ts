@@ -354,6 +354,7 @@ class IngestDataWorker extends ResolverBase {
         if (!units || units.length == 0) {
             const unitEdanDB = new DBAPI.UnitEdan({
                 idUnit: 1, // hard-coded for the 'Unknown Unit'
+                Name: null,
                 Abbreviation,
                 idUnitEdan: 0
             });
