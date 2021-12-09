@@ -370,3 +370,5 @@ export const workflowListSortEnumToString = (col: eWorkflowListSortColumns): str
 };
 
 export const repositoryRowCount = 300;
+
+export const authenticationFailureMessage: string = 'GraphQL user is not authenticated';

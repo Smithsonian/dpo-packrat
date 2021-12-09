@@ -64,12 +64,16 @@ const uploadFetch = (url: string, options: any): any =>
     });
 
 export const apolloFetch = (uri: any, options: any): any => {
-    if (options.useUpload) {
-        return uploadFetch(uri, options);
-    }
+    try {
+        if (options.useUpload)
+            return uploadFetch(uri, options);
 
-    return fetch(uri, {
-        ...options,
-        credentials: 'include'
-    });
+        return fetch(uri, {
+            ...options,
+            credentials: 'include'
+        });
+    } catch (error) {
+        const message: string = (error instanceof Error) ? `: ${error.message}` : '';
+        console.log(`apolloFetch failed${message}`);
+    }
 };
