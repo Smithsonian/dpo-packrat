@@ -118,13 +118,14 @@ function Login(): React.ReactElement {
 
             if (success) {
                 toast.success('Welcome to Packrat');
-                console.log(`*** src/pages/Login/index.tsx Login.onLogin history.push(${originalUrl ?? ROUTES.HOME})`);
+                // console.log(`*** src/pages/Login/index.tsx Login.onLogin history.push(${originalUrl ?? ROUTES.HOME})`);
                 history.push(originalUrl ?? ROUTES.HOME);
             } else {
                 toast.error(message);
             }
-        } catch ({ message }) {
-            toast.error(message);
+        } catch (error) {
+            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
+            toast.error(`Login failed${message}`);
         }
     };
 

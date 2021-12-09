@@ -211,8 +211,8 @@ function SubjectForm(): React.ReactElement {
 
             return isValidName && isValidUnit && isValidIdentifiers && invalidMetadata.length === 0;
         } catch (error) {
-            if (error instanceof Error)
-                toast.error(error);
+            const message: string = (error instanceof Error) ? error.message : 'Validation Failure';
+            toast.error(message);
         }
     };
 
@@ -278,11 +278,11 @@ function SubjectForm(): React.ReactElement {
                 resetMetadata();
                 history.push('/admin/subjects');
             } else {
-                toast.error(`Failure To Create Subject: ${message}`);
+                toast.error(`Failed To Create Subject: ${message}`);
             }
         } catch (error) {
-            if (error instanceof Error)
-                toast.error(error);
+            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
+            toast.error(`Failed To Create Subject${message}`);
         }
     };
 
