@@ -8,7 +8,6 @@ import * as LOG from '../../utils/logger';
 export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemObjectBased {
     idAsset!: number;
     FileName!: string;
-    FilePath!: string;
     idAssetGroup!: number | null;
     idVAssetType!: number;
     idSystemObject!: number | null;
@@ -25,7 +24,6 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
         return new Asset({
             idAsset: asset.idAsset,
             FileName: asset.FileName,
-            FilePath: asset.FilePath,
             idAssetGroup: asset.idAssetGroup,
             idVAssetType: asset.idVAssetType,
             idSystemObject: asset.idSystemObject,
@@ -35,13 +33,12 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, StorageKey } = this;
-            ({ idAsset: this.idAsset, FileName: this.FileName, FilePath: this.FilePath, idAssetGroup: this.idAssetGroup,
+            const { FileName, idAssetGroup, idVAssetType, idSystemObject, StorageKey } = this;
+            ({ idAsset: this.idAsset, FileName: this.FileName, idAssetGroup: this.idAssetGroup,
                 idVAssetType: this.idVAssetType, idSystemObject: this.idSystemObject, StorageKey: this.StorageKey } =
                 await DBC.DBConnection.prisma.asset.create({
                     data: {
                         FileName,
-                        FilePath,
                         AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : undefined,
                         Vocabulary:     { connect: { idVocabulary: idVAssetType }, },
                         SystemObject_Asset_idSystemObjectToSystemObject: idSystemObject ? { connect: { idSystemObject }, } : undefined,
@@ -58,12 +55,11 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAsset, FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, StorageKey, } = this;
+            const { idAsset, FileName, idAssetGroup, idVAssetType, idSystemObject, StorageKey, } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.asset.update({
                 where: { idAsset, },
                 data: {
                     FileName,
-                    FilePath,
                     AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : { disconnect: true, },
                     Vocabulary:     { connect: { idVocabulary: idVAssetType }, },
                     SystemObject_Asset_idSystemObjectToSystemObject: idSystemObject ? { connect: { idSystemObject }, } : { disconnect: true, },
@@ -148,8 +144,8 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
     }
 
     /** Fetches assets that are connected to the specified idSystemObject (via that object's last SystemObjectVersion,
-     * and that SystemObjectVersionAssetVersionXref's records). For those assets, we look for a match on FileName, FilePath */
-    static async fetchMatching(idSystemObject: number, FileName: string, FilePath: string, idVAssetType: number): Promise<Asset | null> {
+     * and that SystemObjectVersionAssetVersionXref's records). For those assets, we look for a match on FileName, idVAssetType */
+    static async fetchMatching(idSystemObject: number, FileName: string, idVAssetType: number): Promise<Asset | null> {
         if (!idSystemObject)
             return null;
         try {
@@ -165,7 +161,6 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                                                    FROM SystemObjectVersion
                                                    WHERE idSystemObject = ${idSystemObject})
                   AND A.FileName = ${FileName} 
-                  AND A.FilePath = ${FilePath}
                   AND A.idVAssetType = ${idVAssetType}
                 ORDER BY SOV.idSystemObjectVersion DESC
                 LIMIT 1;`; //, Asset);

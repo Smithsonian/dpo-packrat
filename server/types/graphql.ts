@@ -28,6 +28,7 @@ export type Query = {
   getContentsForAssetVersions: GetContentsForAssetVersionsResult;
   getCurrentUser: GetCurrentUserResult;
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
+  getEdanUnitsNamed: GetEdanUnitsNamedResult;
   getFilterViewData: GetFilterViewDataResult;
   getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
   getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
@@ -351,6 +352,7 @@ export type Mutation = {
   createVocabulary: CreateVocabularyResult;
   createVocabularySet: CreateVocabularySetResult;
   deleteIdentifier: DeleteIdentifierResult;
+  deleteMetadata: DeleteMetadataResult;
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
@@ -445,6 +447,11 @@ export type MutationDeleteIdentifierArgs = {
 };
 
 
+export type MutationDeleteMetadataArgs = {
+  input: DeleteMetadataInput;
+};
+
+
 export type MutationDeleteObjectConnectionArgs = {
   input: DeleteObjectConnectionInput;
 };
@@ -499,6 +506,7 @@ export type MutationUploadAssetArgs = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSOAttachment?: Maybe<Scalars['Int']>;
 };
 
 export type UploadAssetInput = {
@@ -506,6 +514,7 @@ export type UploadAssetInput = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSOAttachment?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -663,10 +672,57 @@ export type GetAssetResult = {
   Asset?: Maybe<Asset>;
 };
 
+export type UpdatePhotogrammetryMetadata = {
+  __typename?: 'UpdatePhotogrammetryMetadata';
+  name: Scalars['String'];
+  dateCaptured: Scalars['String'];
+  datasetType: Scalars['Int'];
+  description: Scalars['String'];
+  cameraSettingUniform: Scalars['Boolean'];
+  datasetFieldId?: Maybe<Scalars['Int']>;
+  itemPositionType?: Maybe<Scalars['Int']>;
+  itemPositionFieldId?: Maybe<Scalars['Int']>;
+  itemArrangementFieldId?: Maybe<Scalars['Int']>;
+  focusType?: Maybe<Scalars['Int']>;
+  lightsourceType?: Maybe<Scalars['Int']>;
+  backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+  clusterType?: Maybe<Scalars['Int']>;
+  clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+  folders: Array<IngestFolder>;
+};
+
+export type UpdateModelMetadata = {
+  __typename?: 'UpdateModelMetadata';
+  name: Scalars['String'];
+  creationMethod: Scalars['Int'];
+  modality: Scalars['Int'];
+  purpose: Scalars['Int'];
+  units: Scalars['Int'];
+  dateCaptured: Scalars['String'];
+  modelFileType: Scalars['Int'];
+};
+
+export type UpdateSceneMetadata = {
+  __typename?: 'UpdateSceneMetadata';
+  name: Scalars['String'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
+  referenceModels?: Maybe<Array<ReferenceModel>>;
+};
+
+export type UpdatedAssetVersionMetadata = {
+  __typename?: 'UpdatedAssetVersionMetadata';
+  idAssetVersion: Scalars['Int'];
+  CaptureDataPhoto?: Maybe<UpdatePhotogrammetryMetadata>;
+  Model?: Maybe<UpdateModelMetadata>;
+  Scene?: Maybe<UpdateSceneMetadata>;
+};
+
 export type GetUploadedAssetVersionResult = {
   __typename?: 'GetUploadedAssetVersionResult';
   AssetVersion: Array<AssetVersion>;
   idAssetVersionsUpdated: Array<Scalars['Int']>;
+  UpdatedAssetVersionMetadata: Array<UpdatedAssetVersionMetadata>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -711,7 +767,6 @@ export type Asset = {
   __typename?: 'Asset';
   idAsset: Scalars['Int'];
   FileName: Scalars['String'];
-  FilePath: Scalars['String'];
   idAssetGroup?: Maybe<Scalars['Int']>;
   idVAssetType?: Maybe<Scalars['Int']>;
   idSystemObject?: Maybe<Scalars['Int']>;
@@ -735,9 +790,13 @@ export type AssetVersion = {
   FileName: Scalars['String'];
   Ingested?: Maybe<Scalars['Boolean']>;
   Version: Scalars['Int'];
+  idSOAttachment?: Maybe<Scalars['Int']>;
+  FilePath: Scalars['String'];
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
+  SOAttachment?: Maybe<SystemObject>;
+  SOAttachmentObjectType?: Maybe<Scalars['Int']>;
 };
 
 export type AssetGroup = {
@@ -906,6 +965,7 @@ export type IngestPhotogrammetryInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type RelatedObjectInput = {
@@ -930,6 +990,7 @@ export type IngestModelInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type IngestSceneInput = {
@@ -943,11 +1004,27 @@ export type IngestSceneInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type IngestOtherInput = {
   idAssetVersion: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  systemCreated: Scalars['Boolean'];
+  identifiers: Array<IngestIdentifierInput>;
+  updateNotes?: Maybe<Scalars['String']>;
+};
+
+export type IngestSceneAttachmentInput = {
+  type?: Maybe<Scalars['Int']>;
+  category?: Maybe<Scalars['Int']>;
+  units?: Maybe<Scalars['Int']>;
+  modelType?: Maybe<Scalars['Int']>;
+  fileType?: Maybe<Scalars['Int']>;
+  gltfStandardized?: Maybe<Scalars['Boolean']>;
+  dracoCompressed?: Maybe<Scalars['Boolean']>;
+  title?: Maybe<Scalars['String']>;
+  idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
 };
@@ -960,6 +1037,7 @@ export type IngestDataInput = {
   model: Array<IngestModelInput>;
   scene: Array<IngestSceneInput>;
   other: Array<IngestOtherInput>;
+  sceneAttachment: Array<IngestSceneAttachmentInput>;
 };
 
 export type IngestDataResult = {
@@ -1003,7 +1081,7 @@ export type ClearLicenseAssignmentInput = {
 export type ClearLicenseAssignmentResult = {
   __typename?: 'ClearLicenseAssignmentResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type AssignLicenseInput = {
@@ -1014,7 +1092,7 @@ export type AssignLicenseInput = {
 export type AssignLicenseResult = {
   __typename?: 'AssignLicenseResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetLicenseInput = {
@@ -1294,7 +1372,7 @@ export type NavigationResultEntry = {
 export type GetObjectChildrenResult = {
   __typename?: 'GetObjectChildrenResult';
   success: Scalars['Boolean'];
-  error: Scalars['String'];
+  error?: Maybe<Scalars['String']>;
   entries: Array<NavigationResultEntry>;
   metadataColumns: Array<Scalars['Int']>;
   cursorMark?: Maybe<Scalars['String']>;
@@ -1478,11 +1556,11 @@ export type ProjectDocumentationDetailFieldsInput = {
 };
 
 export type AssetDetailFieldsInput = {
-  FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
 };
 
 export type AssetVersionDetailFieldsInput = {
+  FilePath?: Maybe<Scalars['String']>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
   Ingested?: Maybe<Scalars['Boolean']>;
@@ -1502,6 +1580,13 @@ export type StakeholderDetailFieldsInput = {
   PhoneNumberOffice?: Maybe<Scalars['String']>;
 };
 
+export type MetadataInput = {
+  idMetadata?: Maybe<Scalars['Int']>;
+  Name: Scalars['String'];
+  Label: Scalars['String'];
+  Value: Scalars['String'];
+};
+
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
@@ -1518,13 +1603,14 @@ export type UpdateObjectDetailsDataInput = {
   AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
   Actor?: Maybe<ActorDetailFieldsInput>;
   Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+  Metadata?: Maybe<Array<MetadataInput>>;
   Identifiers?: Maybe<Array<UpdateIdentifier>>;
 };
 
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type ExistingRelationship = {
@@ -1542,7 +1628,7 @@ export type UpdateDerivedObjectsInput = {
 export type UpdateDerivedObjectsResult = {
   __typename?: 'UpdateDerivedObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1556,7 +1642,7 @@ export type UpdateSourceObjectsInput = {
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1591,26 +1677,37 @@ export type DeleteIdentifierInput = {
   idIdentifier: Scalars['Int'];
 };
 
+export type DeleteMetadataResult = {
+  __typename?: 'DeleteMetadataResult';
+  success: Scalars['Boolean'];
+};
+
+export type DeleteMetadataInput = {
+  idMetadata: Scalars['Int'];
+};
+
 export type RollbackSystemObjectVersionResult = {
   __typename?: 'RollbackSystemObjectVersionResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type RollbackSystemObjectVersionInput = {
   idSystemObjectVersion: Scalars['Int'];
+  rollbackNotes: Scalars['String'];
 };
 
 export type CreateSubjectWithIdentifiersResult = {
   __typename?: 'CreateSubjectWithIdentifiersResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type CreateSubjectWithIdentifiersInput = {
   identifiers: Array<CreateIdentifierInput>;
   subject: CreateSubjectInput;
   systemCreated: Scalars['Boolean'];
+  metadata?: Maybe<Array<MetadataInput>>;
 };
 
 export type CreateIdentifierInput = {
@@ -1628,7 +1725,8 @@ export type PublishInput = {
 export type PublishResult = {
   __typename?: 'PublishResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  eState?: Maybe<Scalars['Int']>;
+  message?: Maybe<Scalars['String']>;
 };
 
 
@@ -1732,7 +1830,6 @@ export type ProjectDocumentationDetailFields = {
 
 export type AssetDetailFields = {
   __typename?: 'AssetDetailFields';
-  FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
   Asset?: Maybe<Asset>;
   idAsset?: Maybe<Scalars['Int']>;
@@ -1740,6 +1837,7 @@ export type AssetDetailFields = {
 
 export type AssetVersionDetailFields = {
   __typename?: 'AssetVersionDetailFields';
+  FilePath?: Maybe<Scalars['String']>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
   Ingested?: Maybe<Scalars['Boolean']>;
@@ -1809,12 +1907,14 @@ export type GetSystemObjectDetailsResult = {
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
   objectVersions: Array<SystemObjectVersion>;
+  metadata: Array<Metadata>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  assetOwner?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
-  licenseInherited?: Maybe<Scalars['Boolean']>;
+  licenseInheritance?: Maybe<Scalars['Int']>;
 };
 
 export type GetSourceObjectIdentiferInput = {
@@ -1946,7 +2046,9 @@ export type SystemObjectVersion = {
   idSystemObject: Scalars['Int'];
   PublishedState: Scalars['Int'];
   DateCreated: Scalars['DateTime'];
+  Comment?: Maybe<Scalars['String']>;
   SystemObject?: Maybe<SystemObject>;
+  CommentLink?: Maybe<Scalars['String']>;
 };
 
 export type Identifier = {
@@ -1963,16 +2065,20 @@ export type Metadata = {
   __typename?: 'Metadata';
   idMetadata: Scalars['Int'];
   Name: Scalars['String'];
-  idSystemObject?: Maybe<Scalars['Int']>;
+  ValueShort?: Maybe<Scalars['String']>;
+  ValueExtended?: Maybe<Scalars['String']>;
+  idAssetVersionValue?: Maybe<Scalars['Int']>;
   idUser?: Maybe<Scalars['Int']>;
   idVMetadataSource?: Maybe<Scalars['Int']>;
-  idAssetVersionValue?: Maybe<Scalars['Int']>;
-  ValueExtended?: Maybe<Scalars['String']>;
-  ValueShort?: Maybe<Scalars['String']>;
+  idSystemObject?: Maybe<Scalars['Int']>;
+  idSystemObjectParent?: Maybe<Scalars['Int']>;
   AssetVersionValue?: Maybe<AssetVersion>;
   SystemObject?: Maybe<SystemObject>;
+  SystemObjectParent?: Maybe<SystemObject>;
   User?: Maybe<User>;
   VMetadataSource?: Maybe<Vocabulary>;
+  Label?: Maybe<Scalars['String']>;
+  Value?: Maybe<Scalars['String']>;
 };
 
 export type CreateUnitInput = {
@@ -2173,6 +2279,11 @@ export type GetUnitsFromEdanAbbreviationInput = {
   abbreviation: Scalars['String'];
 };
 
+export type GetEdanUnitsNamedResult = {
+  __typename?: 'GetEdanUnitsNamedResult';
+  UnitEdan?: Maybe<Array<UnitEdan>>;
+};
+
 export type Unit = {
   __typename?: 'Unit';
   idUnit: Scalars['Int'];
@@ -2258,6 +2369,15 @@ export type Item = {
   GeoLocation?: Maybe<GeoLocation>;
   Subject?: Maybe<Subject>;
   SystemObject?: Maybe<SystemObject>;
+};
+
+export type UnitEdan = {
+  __typename?: 'UnitEdan';
+  idUnitEdan: Scalars['Int'];
+  idUnit?: Maybe<Scalars['Int']>;
+  Name?: Maybe<Scalars['String']>;
+  Abbreviation: Scalars['String'];
+  Unit?: Maybe<Unit>;
 };
 
 export type CreateUserInput = {

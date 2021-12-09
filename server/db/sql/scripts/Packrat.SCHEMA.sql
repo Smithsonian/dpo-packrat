@@ -64,7 +64,6 @@ CREATE TABLE IF NOT EXISTS `Actor` (
 CREATE TABLE IF NOT EXISTS `Asset` (
   `idAsset` int(11) NOT NULL AUTO_INCREMENT,
   `FileName` varchar(512) NOT NULL,
-  `FilePath` varchar(512) NOT NULL,
   `idAssetGroup` int(11) DEFAULT NULL,
   `idVAssetType` int(11) NOT NULL,
   `idSystemObject` int(11) DEFAULT NULL,
@@ -90,6 +89,8 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `StorageKeyStaging` varchar(512) CHARACTER SET 'LATIN1' NOT NULL,
   `Ingested` boolean DEFAULT NULL,
   `BulkIngest` boolean NOT NULL,
+  `idSOAttachment` int(11) NULL,
+  `FilePath` varchar(512) NULL,
   PRIMARY KEY (`idAssetVersion`),
   KEY `AssetVersion_idAsset_Version` (`idAsset`,`Version`),
   KEY `AssetVersion_StorageHash` (`StorageHash`),
@@ -510,6 +511,7 @@ CREATE TABLE IF NOT EXISTS `SystemObjectVersion` (
   `idSystemObject` int(11) NOT NULL,
   `PublishedState` int(11) NOT NULL,
   `DateCreated` datetime NOT NULL,
+  `Comment` text NULL,
   PRIMARY KEY (`idSystemObjectVersion`),
   KEY `ObjectVersion_idSystemObject_idObjectVersion` (`idSystemObject`,`idSystemObjectVersion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
@@ -541,6 +543,7 @@ CREATE TABLE IF NOT EXISTS `Unit` (
 CREATE TABLE IF NOT EXISTS `UnitEdan` (
   `idUnitEdan` int(11) NOT NULL AUTO_INCREMENT,
   `idUnit` int(11) DEFAULT NULL,
+  `Name` varchar(255) NULL,
   `Abbreviation` varchar(100) NOT NULL UNIQUE,
   PRIMARY KEY (`idUnitEdan`),
   KEY `UnitEdan_Abbreviation` (`Abbreviation`)
@@ -724,6 +727,11 @@ ADD CONSTRAINT `fk_assetversion_asset1`
 ADD CONSTRAINT `fk_assetversion_user1`
   FOREIGN KEY (`idUserCreator`)
   REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_assetversion_systemobject1`
+  FOREIGN KEY (`idSOAttachment`)
+  REFERENCES `SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

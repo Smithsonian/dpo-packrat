@@ -29,7 +29,7 @@ input ClearLicenseAssignmentInput {
 
 type ClearLicenseAssignmentResult {
     success: Boolean!
-    message: String!
+    message: String
 }
 
 input AssignLicenseInput {
@@ -39,5 +39,5 @@ input AssignLicenseInput {
 
 type AssignLicenseResult {
     success: Boolean!
-    message: String!
+    message: String
 }

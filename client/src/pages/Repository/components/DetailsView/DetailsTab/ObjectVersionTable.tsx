@@ -1,11 +1,11 @@
 /* eslint-disable react/jsx-max-props-per-line */
 
-import { Box, Typography, Button } from '@material-ui/core';
+import { Box, Typography, Button, Tooltip } from '@material-ui/core';
 import clsx from 'clsx';
-import React from 'react';
-import { EmptyTable } from '../../../../../components';
+import React, { useState }from 'react';
+import { EmptyTable, TextArea, ToolTip } from '../../../../../components';
 import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repository';
-import { extractISOMonthDateYear, updateSystemObjectUploadRedirect } from '../../../../../constants/helperfunctions';
+import { extractISOMonthDateYear, updateSystemObjectUploadRedirect, truncateWithEllipses } from '../../../../../constants/helperfunctions';
 import { rollbackSystemObjectVersion, useObjectAssets } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetGrid';
 import { PublishedStateEnumToString, eSystemObjectType } from '../../../../../types/server';
@@ -13,6 +13,7 @@ import GetAppIcon from '@material-ui/icons/GetApp';
 import { SystemObjectVersion } from '../../../../../types/graphql';
 import { toast } from 'react-toastify';
 import { useHistory } from 'react-router-dom';
+import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 
 interface ObjectVersionsTableProps {
     idSystemObject: number;
@@ -25,8 +26,10 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     const { objectVersions, idSystemObject, systemObjectType } = props;
     const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
     const history = useHistory();
+    const [expanded, setExpanded] = useState<number>(-1);
+    const [rollbackNotes, setRollbackNotes] = useState<string>('');
 
-    const headers: string[] = ['Link', 'Published State', 'Action', 'Timestamp'];
+    const headers: string[] = ['Link', 'Published State', 'Action', 'Timestamp', 'Notes'];
 
     const { data } = useObjectAssets(idSystemObject);
 
@@ -35,11 +38,16 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     }
 
     const onRollback = async (idSystemObjectVersion: number) => {
-        const confirm = window.confirm('Are you sure you wish to rollback?');
-        if (!confirm) return;
-        const { data } = await rollbackSystemObjectVersion(idSystemObjectVersion);
+        if (rollbackNotes.length < 1) {
+            toast.error('Please provide rollback notes');
+            return;
+        }
+        const { data } = await rollbackSystemObjectVersion(idSystemObjectVersion, rollbackNotes);
         if (data.rollbackSystemObjectVersion.success) {
             toast.success(`Successfully rolled back to to ${idSystemObjectVersion}!`);
+            setRollbackNotes('');
+            setExpanded(-1);
+            window.location.reload();
         } else {
             toast.error(`Error when attempting to rollback to ${idSystemObjectVersion}. Reason: ${data.message}`);
         }
@@ -54,9 +62,18 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
         };
     }
 
+    const onExpand = (row) => {
+        setRollbackNotes('');
+        if (row === expanded) {
+            setExpanded(-1);
+        } else {
+            setExpanded(row);
+        }
+    };
+
     return (
         <Box>
-            <table className={classes.container}>
+            <table className={classes.container} style={{ tableLayout: 'fixed' }}>
                 <thead>
                     <tr>
                         {headers.map((header, index: number) => (
@@ -73,34 +90,73 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                 </thead>
 
                 <tbody>
-                    {objectVersions.map((version, index) => (
-                        <tr key={index}>
-                            <td align='center'>
-                                <a
-                                    href={getDownloadObjectVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, version.idSystemObjectVersion)}
-                                    style={{ textDecoration: 'none', color: 'black' }}
-                                >
-                                    <GetAppIcon />
-                                </a>
-                            </td>
-                            <td align='center'>
-                                <Typography className={clsx(classes.value)}>{PublishedStateEnumToString(version.PublishedState)}</Typography>
-                            </td>
-                            <td align='center'>
-                                {index >= objectVersions.length - 1 ? null : (
-                                    <Typography
-                                        style={{ width: 'fit-content', whiteSpace: 'nowrap', color: 'rgb(0,121,196)', cursor: 'pointer' }}
-                                        onClick={() => onRollback(version.idSystemObjectVersion)}
-                                    >
-                                        Rollback
-                                    </Typography>
-                                )}
-                            </td>
-                            <td align='center'>
-                                <Typography>{extractISOMonthDateYear(version.DateCreated)}</Typography>
-                            </td>
-                        </tr>
-                    ))}
+                    {objectVersions.map((version, index) =>  {
+                        const rollback = () => onRollback(version.idSystemObjectVersion);
+                        const cancel = () => onExpand(index);
+                        const comment =
+                            version.Comment ? (
+                                <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(version.Comment, 1000)} /> }>
+                                    {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'center', color: 'black' }} target='_blank' rel='noreferrer noopener'>
+                                        <Typography className={clsx(classes.value)}>
+                                            {truncateWithEllipses(version.Comment, 30)}
+                                        </Typography>
+                                    </a> : <Typography className={clsx(classes.value)}>
+                                        {truncateWithEllipses(version.Comment, 30)}
+                                    </Typography>}
+                                </Tooltip>
+                            ) : null;
+
+                        return (
+                            <React.Fragment key={index}>
+                                <tr key={index}>
+                                    <td align='center'>
+                                        <a
+                                            href={getDownloadObjectVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, version.idSystemObjectVersion)}
+                                            style={{ textDecoration: 'none', color: 'black' }}
+                                        >
+                                            <GetAppIcon />
+                                        </a>
+                                    </td>
+                                    <td align='center'>
+                                        <Typography className={clsx(classes.value)}>{PublishedStateEnumToString(version.PublishedState)}</Typography>
+                                    </td>
+                                    <td align='center'>
+                                        {index >= objectVersions.length - 1 ? null : (
+                                            <Typography
+                                                style={{ width: 'fit-content', whiteSpace: 'nowrap', color: 'rgb(0,121,196)', cursor: 'pointer' }}
+                                                onClick={() => onExpand(index)}
+                                                className={clsx(classes.value)}
+                                            >
+                                                Rollback
+                                                {expanded === index ? <MdExpandLess /> : <MdExpandMore />}
+                                            </Typography>
+                                        )}
+                                    </td>
+                                    <td align='center'>
+                                        <Typography className={clsx(classes.value)}>{extractISOMonthDateYear(version.DateCreated)}</Typography>
+                                    </td>
+                                    <td>
+                                        {comment}
+                                    </td>
+                                </tr>
+                                {
+                                    expanded === index ? (
+                                        <tr>
+                                            <td colSpan={4} align='center'>
+                                                <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} placeholder='Please provide rollback notes...' rows='4' />
+                                            </td>
+                                            <td colSpan={1} align='left'>
+                                                <Box>
+                                                    <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5, marginRight: '4px' }} variant='contained' color='primary'>Rollback</Button>
+                                                    <Button onClick={cancel} className={classes.btn} style={{ padding: 0 }} variant='contained' color='primary'>Cancel</Button>
+                                                </Box>
+                                            </td>
+                                        </tr>
+                                    ) : null
+                                }
+                            </React.Fragment>
+                        );
+                    })}
                     <tr>
                         <td colSpan={headers.length}>
                             {!objectVersions.length && (

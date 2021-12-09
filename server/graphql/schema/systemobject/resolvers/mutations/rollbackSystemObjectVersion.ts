@@ -5,7 +5,7 @@ import * as LOG from '../../../../../utils/logger';
 
 export default async function rollbackSystemObjectVersion(_: Parent, args: MutationRollbackSystemObjectVersionArgs): Promise<RollbackSystemObjectVersionResult> {
     const { input } = args;
-    const { idSystemObjectVersion } = input;
+    const { idSystemObjectVersion, rollbackNotes } = input;
 
     const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(idSystemObjectVersion);
     if (!SOV) {
@@ -14,7 +14,7 @@ export default async function rollbackSystemObjectVersion(_: Parent, args: Mutat
         return { success: false, message };
     }
 
-    const SOVRollback: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(SOV.idSystemObject, SOV.idSystemObjectVersion);
+    const SOVRollback: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(SOV.idSystemObject, SOV.idSystemObjectVersion, rollbackNotes);
     if (!SOVRollback) {
         const message: string = 'rollbackSystemObjectVersion SystemObjectVersion.cloneObjectAndXrefs failed';
         LOG.error(message, LOG.LS.eGQL);

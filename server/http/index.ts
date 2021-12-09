@@ -7,7 +7,7 @@ import * as LOG from '../utils/logger';
 
 import { logtest } from './routes/logtest';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
-import { download } from './routes/download';
+import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 
@@ -44,7 +44,7 @@ export class HttpServer {
         return res;
     }
 
-    static bodyProcessorExclusions: RegExp = /^\/(?!download-wd).*$/;
+    static bodyProcessorExclusions: RegExp = /^\/(?!webdav).*$/;
     private async configureMiddlewareAndRoutes(): Promise<boolean> {
         this.app.use(HttpServer.idRequestMiddleware);
         this.app.use(cors(authCorsConfig));
@@ -67,14 +67,13 @@ export class HttpServer {
         this.app.get('/logtest', logtest);
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
-        this.app.get('/download', download);
-        this.app.get('/download/*', HttpServer.idRequestMiddleware2);
-        this.app.get('/download/*', download);
+        this.app.get(`${Downloader.httpRoute}*`, HttpServer.idRequestMiddleware2);
+        this.app.get(`${Downloader.httpRoute}*`, download);
 
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
         if (WDSV) {
-            this.app.use('/download-wd', HttpServer.idRequestMiddleware2);
-            this.app.use(webdav.extensions.express('/download-wd', WDSV.webdav()));
+            this.app.use(WebDAVServer.httpRoute, HttpServer.idRequestMiddleware2);
+            this.app.use(webdav.extensions.express(WebDAVServer.httpRoute, WDSV.webdav()));
         } else
             LOG.error('HttpServer.configureMiddlewareAndRoutes failed to initialize WebDAV server', LOG.LS.eHTTP);
 
@@ -92,8 +91,8 @@ export class HttpServer {
     private static idRequestMiddleware(req: Request, _res, next): void {
         if (!req.originalUrl.startsWith('/auth/') &&
             !req.originalUrl.startsWith('/graphql') &&
-            !req.originalUrl.startsWith('/download/') &&
-            !req.originalUrl.startsWith('/download-wd/')) {
+            !req.originalUrl.startsWith(Downloader.httpRoute) &&
+            !req.originalUrl.startsWith(WebDAVServer.httpRoute)) {
             const user = req['user'];
             const idUser = user ? user['idUser'] : undefined;
             ASL.run(new LocalStore(true, idUser), () => {

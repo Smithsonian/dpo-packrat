@@ -185,7 +185,8 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             photogrammetry: [photogrammetry],
                             model: [],
                             scene: [],
-                            other: []
+                            other: [],
+                            sceneAttachment: []
                         };
 
                         const result = await graphQLApi.ingestData(ingestDataInput, context);

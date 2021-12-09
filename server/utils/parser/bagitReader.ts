@@ -145,14 +145,14 @@ export class BagitReader implements IZip {
             return { success: false, error: `Unable to read ${directory}` };
         this._files = fileList;
 
-        return validate ? await this.validate() : { success: true, error: '' };
+        return validate ? await this.validate() : { success: true };
     }
 
     async close(): Promise<H.IOResults> {
         if (this._zip)
             return await this._zip.close();
         else
-            return { success: true, error: '' };
+            return { success: true };
     }
 
     private prefixedFilename(file: string): string {
@@ -225,7 +225,7 @@ export class BagitReader implements IZip {
 
     async validate(): Promise<H.IOResults> {
         if (this._validated)
-            return { success: this._valid, error: '' };
+            return { success: this._valid };
 
         this._validated = true;
         if (this._files.length == 0)
@@ -375,7 +375,7 @@ export class BagitReader implements IZip {
         }
 
         this._valid = true;
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private async validateManifest(manifestFile: string, algorithm: string, extractDataFiles: boolean): Promise<H.IOResults> {
@@ -455,7 +455,7 @@ export class BagitReader implements IZip {
             for (const file of fileSet)
                 this._dataFiles.push(file);
 
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private extractDirectoryAndBasename(fileName: string, removePrefix: boolean): { dirname: string | null, basename: string } {

@@ -35,7 +35,7 @@ type NavigationResultEntry {
 
 type GetObjectChildrenResult {
     success: Boolean!
-    error: String!
+    error: String
     entries: [NavigationResultEntry!]!
     metadataColumns: [Int!]!
     cursorMark: String

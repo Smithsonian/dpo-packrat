@@ -68,7 +68,7 @@ export abstract class JobPackrat implements JOB.IJob {
                 LOG.error('JobPackrat.updateEngines failed, no WorkflowFactory instance', LOG.LS.eJOB);
                 return false;
             }
-            res = workflowEngine.jobUpdated(this._dbJobRun.idJobRun) && res;
+            res = await workflowEngine.jobUpdated(this._dbJobRun.idJobRun) && res;
         }
 
         if (sendJobCompletion) {
@@ -129,7 +129,7 @@ export abstract class JobPackrat implements JOB.IJob {
         const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eWorkflowJobRunStatus.eDone);
         if (updated) {
             this.appendToReportAndLog(`JobPackrat [${this.name()}] Success`);
-            this._results = { success: true, error: '' };   // do this before we await this._dbJobRun.update()
+            this._results = { success: true };   // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = true;
             this._dbJobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eDone);
@@ -146,7 +146,7 @@ export abstract class JobPackrat implements JOB.IJob {
         }
     }
 
-    protected async recordFailure(errorMsg: string): Promise<void> {
+    protected async recordFailure(errorMsg?: string): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eWorkflowJobRunStatus.eError);
         if (updated) {
             this.appendToReportAndLog(`JobPackrat [${this.name()}] Failure: ${errorMsg}`, true);
@@ -154,13 +154,13 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = false;
             this._dbJobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eError);
-            this._dbJobRun.Error = errorMsg;
+            this._dbJobRun.Error = errorMsg ?? '';
             await this._dbJobRun.update();
             this.updateEngines(true, true); // don't block
         }
     }
 
-    protected async recordCancel(errorMsg: string): Promise<void> {
+    protected async recordCancel(errorMsg?: string): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eWorkflowJobRunStatus.eCancelled);
         if (!updated) {
             if (errorMsg) {
