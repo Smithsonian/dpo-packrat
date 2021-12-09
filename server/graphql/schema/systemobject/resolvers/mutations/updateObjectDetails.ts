@@ -444,12 +444,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             break;
     }
 
-    if (objectType === eSystemObjectType.eSubject) {
-        const publishRes: H.IOResults = await publishSubject(idSystemObject);
-        if (!publishRes.success)
-            return sendResult(false, publishRes.error);
-    }
-
     return { success: true, message: '' };
 }
 
@@ -502,10 +496,4 @@ export async function handleMetadata(idSystemObject: number, metadatas: Metadata
         }
     }
     return { success: true };
-}
-
-export async function publishSubject(idSystemObject: number): Promise<H.IOResults> {
-    const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
-    const success: boolean = await ICol.publish(idSystemObject, DBAPI.ePublishedState.ePublished);
-    return { success, error: success ? '' : 'Error encountered during publishing' };
 }

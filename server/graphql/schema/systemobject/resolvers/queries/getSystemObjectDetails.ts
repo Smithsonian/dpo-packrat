@@ -103,19 +103,26 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
     const publishedEnum: DBAPI.ePublishedState = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished;
     const publishedState: string = DBAPI.PublishedStateEnumToString(publishedEnum);
 
-    const mayBePublished: boolean = (LR != null) &&
-                                    (LR.License != null) &&
-                                    (DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) !== DBAPI.ePublishedState.eNotPublished);
-
     let publishable: boolean = false;
-    if (oID && oID.eObjectType == DBAPI.eSystemObjectType.eScene) {
-        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
-        if (scene)
-            publishable = scene.ApprovedForPublication && // Approved for Publication
-                          scene.PosedAndQCd &&            // Posed and QCd
-                          mayBePublished;                 // License defined and allows publishing
-        else
-            LOG.error(`Unable to compute scene for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+    if (oID) {
+        switch (oID.eObjectType) {
+            case DBAPI.eSystemObjectType.eScene: {
+                const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
+                if (scene) {
+                    const mayBePublished: boolean = (LR != null) &&
+                                                    (LR.License != null) &&
+                                                    (DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) !== DBAPI.ePublishedState.eNotPublished);
+                    publishable = scene.ApprovedForPublication && // Approved for Publication
+                                  scene.PosedAndQCd &&            // Posed and QCd
+                                  mayBePublished;                 // License defined and allows publishing
+                } else
+                    LOG.error(`Unable to compute scene for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+            } break;
+
+            case DBAPI.eSystemObjectType.eSubject:
+                publishable = true;
+                break;
+        }
     }
     return { publishedState, publishedEnum, publishable };
 }
