@@ -1725,6 +1725,7 @@ export type PublishInput = {
 export type PublishResult = {
   __typename?: 'PublishResult';
   success: Scalars['Boolean'];
+  eState?: Maybe<Scalars['Int']>;
   message?: Maybe<Scalars['String']>;
 };
 

@@ -38,12 +38,16 @@ export class PublishSubject {
             return res;
 
         this.edanRecord = await ICol.createEdanMDM(this.edanMDM, 0, true);
-        if (this.edanRecord)
-            LOG.info(`PublishSubject.publish ${this.edanRecord.url} succeeded with Edan status ${this.edanRecord.status}, publicSearch ${this.edanRecord.publicSearch}`, LOG.LS.eCOLL); // :\nEdanMDM=${JSON.stringify(this.edanMDM, H.Helpers.saferStringify)}\nEdan Record=${JSON.stringify(this.edanRecord, H.Helpers.saferStringify)}`, LOG.LS.eCOLL); // `, LOG.LS.eCOLL); //
-        else
+        if (!this.edanRecord) {
             LOG.error(`PublishSubject.publish ${JSON.stringify(this.edanMDM, H.Helpers.saferStringify)} failed`, LOG.LS.eCOLL);
+            return PublishSubject.returnResults(false, 'Edan publishing failed');
+        }
 
-        return PublishSubject.returnResults(this.edanRecord !== null, this.edanRecord !== null ? undefined : 'Edan publishing failed');
+        // update SystemObjectVersion.PublishedState
+        res = await this.updatePublishedState(DBAPI.ePublishedState.ePublished);
+        if (!res.success)
+            return res;
+        return PublishSubject.returnResults(true);
     }
 
     private async analyze(): Promise<H.IOResults> {
@@ -91,7 +95,7 @@ export class PublishSubject {
                 case 'record id':                   this.edanMDM.descriptiveNonRepeating.record_ID              = values[0];    nonRepeating = true; break;
                 case 'unit':                        await this.handleUnit(values[0]);                                           nonRepeating = true; break;
                 case 'license':                     await this.handleLicense(values[0]);                                        nonRepeating = true; break;
-                case 'license text':                this.edanMDM.descriptiveNonRepeating.metadata_usage!.text   = values[0];    nonRepeating = true; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                case 'license text':                this.edanMDM.descriptiveNonRepeating.metadata_usage!.content = values[0];   nonRepeating = true; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
                 case 'object type':                 this.edanMDM.indexedStructured!.object_type                 = values; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 case 'date':                        this.edanMDM.indexedStructured!.date                        = values; break; // eslint-disable-line @typescript-eslint/no-non-null-assertion
@@ -162,5 +166,37 @@ export class PublishSubject {
             retValue.push(COL.parseEdanMetadata(metadata));
         }
         return retValue;
+    }
+
+    private async updatePublishedState(ePublishedStateIntended: DBAPI.ePublishedState): Promise<H.IOResults> {
+        let systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(this.idSystemObject);
+        if (systemObjectVersion) {
+            if (systemObjectVersion.publishedStateEnum() !== ePublishedStateIntended) {
+                systemObjectVersion.setPublishedState(ePublishedStateIntended);
+                if (!await systemObjectVersion.update()) {
+                    const error: string = `PublishSubject.updatePublishedState unable to update published state for ${JSON.stringify(systemObjectVersion, H.Helpers.saferStringify)}`;
+                    LOG.error(error, LOG.LS.eCOLL);
+                    return { success: false, error };
+                }
+            }
+
+            return { success: true };
+        }
+
+        systemObjectVersion = new DBAPI.SystemObjectVersion({
+            idSystemObject: this.idSystemObject,
+            PublishedState: ePublishedStateIntended,
+            DateCreated: new Date(),
+            Comment: 'Created by Packrat',
+            idSystemObjectVersion: 0
+        });
+
+        if (!await systemObjectVersion.create()) {
+            const error: string = `PublishSubject.updatePublishedState could not create SystemObjectVersion for idSystemObject ${this.idSystemObject}`;
+            LOG.error(error, LOG.LS.eCOLL);
+            return { success: false, error };
+        }
+
+        return { success: true };
     }
 }

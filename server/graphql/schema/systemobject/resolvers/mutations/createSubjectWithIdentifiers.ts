@@ -1,6 +1,6 @@
 import { CreateSubjectWithIdentifiersResult, MutationCreateSubjectWithIdentifiersArgs } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
-import { handleMetadata, publishSubject } from './updateObjectDetails';
+import { handleMetadata } from './updateObjectDetails';
 import * as DBAPI from '../../../../../db';
 import * as COL from '../../../../../collections/interface';
 import * as LOG from '../../../../../utils/logger';
@@ -98,4 +98,10 @@ function sendResult(success: boolean, message?: string): CreateSubjectWithIdenti
     if (!success)
         LOG.error(`createSubjectWithIdentifier: ${message}`, LOG.LS.eGQL);
     return { success, message: message ?? '' };
+}
+
+async function publishSubject(idSystemObject: number): Promise<H.IOResults> {
+    const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
+    const success: boolean = await ICol.publish(idSystemObject, DBAPI.ePublishedState.ePublished);
+    return { success, error: success ? '' : 'Error encountered during publishing' };
 }
