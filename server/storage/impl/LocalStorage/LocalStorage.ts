@@ -27,8 +27,7 @@ export class LocalStorage implements STORE.IStorage {
             readStream: null,
             fileName: null,
             storageHash: null,
-            success: false,
-            error: ''
+            success: false
         };
 
         let filePath: string;
@@ -97,8 +96,7 @@ export class LocalStorage implements STORE.IStorage {
         const retValue: STORE.WriteStreamResult = {
             writeStream: null,
             storageKey: null,
-            success: false,
-            error: ''
+            success: false
         };
 
         // Compute random directory path and name in staging folder
@@ -130,8 +128,7 @@ export class LocalStorage implements STORE.IStorage {
         const retValue: STORE.CommitWriteStreamResult = {
             storageHash: null,
             storageSize: null,
-            success: false,
-            error: ''
+            success: false
         };
 
         if (CommitWriteStreamInput.storageKey.includes('..') || CommitWriteStreamInput.storageKey.includes(':')) {
@@ -171,16 +168,20 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async discardWriteStream(DiscardWriteStreamInput: STORE.DiscardWriteStreamInput): Promise<STORE.DiscardWriteStreamResult> {
-        LOG.info(`LocalStorage.discardWriteStream ${DiscardWriteStreamInput.storageKey}`, LOG.LS.eSTR);
-        if (DiscardWriteStreamInput.storageKey.includes('..') || DiscardWriteStreamInput.storageKey.includes(':'))
+        if (DiscardWriteStreamInput.storageKey.includes('..') || DiscardWriteStreamInput.storageKey.includes(':')) {
+            LOG.info(`LocalStorage.discardWriteStream ${DiscardWriteStreamInput.storageKey} called with invalid storagekey`, LOG.LS.eSTR);
             return { success: false, error: 'Invalid storagekey' };
+        }
+
         const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), DiscardWriteStreamInput.storageKey);
+        LOG.info(`LocalStorage.discardWriteStream ${DiscardWriteStreamInput.storageKey}: deleting ${filePath}`, LOG.LS.eSTR);
+
         const resRemove: H.IOResults = await H.Helpers.removeFile(filePath);
         if (!resRemove.success) { // perhaps the file has already been removed?  If so, log this but treat it as success
             const resExists: H.IOResults = await H.Helpers.fileOrDirExists(filePath);
             if (!resExists.success) {
                 LOG.info(`LocalStorage.discardWriteStream ${DiscardWriteStreamInput.storageKey} was already deleted`, LOG.LS.eSTR);
-                return { success: true, error: '' };
+                return { success: true };
             }
         }
         return resRemove;
@@ -276,8 +277,7 @@ export class LocalStorage implements STORE.IStorage {
     async validateAsset(storageKey: string): Promise<STORE.ValidateAssetResult> {
         LOG.info(`LocalStorage.validateAsset ${storageKey}`, LOG.LS.eSTR);
         const retValue: STORE.ValidateAssetResult = {
-            success: false,
-            error: ''
+            success: false
         };
 
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
@@ -305,14 +305,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async computeStorageKey(uniqueID: string): Promise<STORE.ComputeStorageKeyResult> {
-        const retValue: STORE.ComputeStorageKeyResult = {
-            storageKey: '',
-            success: true,
-            error: ''
-        };
-
-        retValue.storageKey     = H.Helpers.computeHashFromString(uniqueID, 'sha1');
-        return retValue;
+        return { success: true, storageKey: H.Helpers.computeHashFromString(uniqueID, 'sha1') };
     }
 }
 

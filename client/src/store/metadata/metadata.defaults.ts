@@ -4,7 +4,7 @@
  * Default field definitions for the metadata store.
  */
 import * as yup from 'yup';
-import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields } from './metadata.types';
+import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields, SceneAttachmentFields } from './metadata.types';
 
 const identifierWhenSelectedValidation = {
     is: true,
@@ -34,6 +34,11 @@ const identifiersWhenValidation = {
     then: yup.array().of(identifierSchema).test(identifierValidation)
 };
 
+const notesWhenUpdate = {
+    is: value => value > 0,
+    then: yup.string().required()
+};
+
 export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     systemCreated: true,
     identifiers: [],
@@ -54,14 +59,13 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     clusterType: null,
     clusterGeometryFieldId: null,
     cameraSettingUniform: false,
-    directory: ''
+    directory: '',
+    updateNotes: '',
+    idAsset: 0
 };
 
-export type PhotogrammetrySchemaType = typeof photogrammetryFieldsSchema;
-
-export const photogrammetryFieldsSchema = yup.object().shape({
+export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
     systemCreated: yup.boolean().required(),
-    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     folders: yup.array().of(folderSchema),
     name: yup.string().required('Name cannot be empty'),
     // description: yup.string().required('Description cannot be empty'),
@@ -97,7 +101,12 @@ export const photogrammetryFieldsSchema = yup.object().shape({
         .positive('Cluster Geometry Field ID must be a positive integer')
         .max(2147483647, 'Cluster Geometry Field ID is too large'),
     cameraSettingUniform: yup.boolean().required(),
-    directory: yup.string()
+    directory: yup.string(),
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
+});
+
+export const photogrammetryFieldsSchema = photogrammetryFieldsSchemaUpdate.shape({
+    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
 });
 
 const uvMapSchema = yup.object().shape({
@@ -125,15 +134,14 @@ export const defaultModelFields: ModelFields = {
     units: null,
     purpose: null,
     modelFileType: null,
-    directory: ''
+    directory: '',
+    updateNotes: '',
+    idAsset: 0
 };
 
-export type ModelSchemaType = typeof modelFieldsSchema;
-
-export const modelFieldsSchema = yup.object().shape({
+export const modelFieldsSchemaUpdate = yup.object().shape({
     name: yup.string().min(1, 'Name must have at least one character').required('Name is required'),
     systemCreated: yup.boolean().required(),
-    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     uvMaps: yup.array().of(uvMapSchema),
     sourceObjects: yup.array().of(sourceObjectSchema),
     dateCaptured: yup.date().typeError('Date Captured is required'),
@@ -159,7 +167,12 @@ export const modelFieldsSchema = yup.object().shape({
     boundingBoxP2X: yup.number().nullable(true),
     boundingBoxP2Y: yup.number().nullable(true),
     boundingBoxP2Z: yup.number().nullable(true),
-    directory: yup.string()
+    directory: yup.string(),
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
+});
+
+export const modelFieldsSchema = modelFieldsSchemaUpdate.shape({
+    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
 });
 
 export const defaultSceneFields: SceneFields = {
@@ -168,14 +181,14 @@ export const defaultSceneFields: SceneFields = {
     sourceObjects: [],
     derivedObjects: [],
     referenceModels: [],
-    hasBeenQCd: false,
-    isOriented: false,
     name: '',
     directory: '',
     EdanUUID: '',
+    approvedForPublication: false,
+    posedAndQCd: false,
+    updateNotes: '',
+    idAsset: 0
 };
-
-export type SceneSchemaType = typeof sceneFieldsSchema;
 
 export const referenceModelSchema = yup.object().shape({
     idSystemObject: yup.number().required(),
@@ -191,23 +204,68 @@ export const referenceModelSchema = yup.object().shape({
     action: yup.number().required()
 });
 
-export const sceneFieldsSchema = yup.object().shape({
+export const sceneFieldsSchemaUpdate = yup.object().shape({
     systemCreated: yup.boolean().required(),
-    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     referenceModels: yup.array().of(referenceModelSchema),
-    directory: yup.string()
+    directory: yup.string(),
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
 });
+
+export const sceneFieldsSchema = sceneFieldsSchemaUpdate.shape({
+    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
+});
+
 
 export const defaultOtherFields: OtherFields = {
     systemCreated: true,
-    identifiers: []
+    identifiers: [],
+    updateNotes: '',
+    idAsset: 0
 };
 
-export type OtherSchemaType = typeof otherFieldsSchema;
+export const otherFieldsSchemaUpdate = yup.object().shape({
+    systemCreated: yup.boolean().required(),
+});
 
-export const otherFieldsSchema = yup.object().shape({
+export const otherFieldsSchema = otherFieldsSchemaUpdate.shape({
+    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation)
+});
+
+export const defaultSceneAttachmentFields: SceneAttachmentFields = {
+    type: null,
+    category: null,
+    units: null,
+    modelType: null,
+    fileType: null,
+    gltfStandardized: false,
+    dracoCompressed: false,
+    title: '',
+    systemCreated: false,
+    identifiers: [],
+    idAssetVersion: 0
+};
+
+export const sceneAttachmentFieldsSchema = yup.object().shape({
+    type: yup.number().nullable(true),
+    category: yup.number().nullable(true),
+    units: yup.number().nullable(true),
+    modelType: yup.number().nullable(true),
+    fileType: yup.number().nullable(true),
+    gltfStandardized: yup.boolean().required(),
+    dracoCompressed: yup.boolean().required(),
+    title: yup.string().nullable(true),
+    idAssetVersion: yup.number().required(),
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation)
 });
 
-export type ValidateFieldsSchema = PhotogrammetrySchemaType | ModelSchemaType | SceneSchemaType | OtherSchemaType;
+export type PhotogrammetrySchemaType = typeof photogrammetryFieldsSchema;
+export type PhotogrammetrySchemaUpdateType = typeof photogrammetryFieldsSchemaUpdate;
+export type ModelSchemaType = typeof modelFieldsSchema;
+export type ModelSchemaUpdateType = typeof modelFieldsSchemaUpdate;
+export type SceneSchemaType = typeof sceneFieldsSchema;
+export type SceneSchemaUpdateType = typeof sceneFieldsSchemaUpdate;
+export type OtherSchemaType = typeof otherFieldsSchema;
+export type OtherSchemaUpdateType = typeof otherFieldsSchemaUpdate;
+
+export type ValidateFieldsSchema = PhotogrammetrySchemaType | PhotogrammetrySchemaUpdateType | ModelSchemaType | ModelSchemaUpdateType | SceneSchemaType | SceneSchemaUpdateType | OtherSchemaType | OtherSchemaUpdateType;

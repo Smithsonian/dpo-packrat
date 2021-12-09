@@ -31,6 +31,7 @@ export type Query = {
   getContentsForAssetVersions: GetContentsForAssetVersionsResult;
   getCurrentUser: GetCurrentUserResult;
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
+  getEdanUnitsNamed: GetEdanUnitsNamedResult;
   getFilterViewData: GetFilterViewDataResult;
   getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
   getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
@@ -354,6 +355,7 @@ export type Mutation = {
   createVocabulary: CreateVocabularyResult;
   createVocabularySet: CreateVocabularySetResult;
   deleteIdentifier: DeleteIdentifierResult;
+  deleteMetadata: DeleteMetadataResult;
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
@@ -448,6 +450,11 @@ export type MutationDeleteIdentifierArgs = {
 };
 
 
+export type MutationDeleteMetadataArgs = {
+  input: DeleteMetadataInput;
+};
+
+
 export type MutationDeleteObjectConnectionArgs = {
   input: DeleteObjectConnectionInput;
 };
@@ -502,6 +509,7 @@ export type MutationUploadAssetArgs = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSOAttachment?: Maybe<Scalars['Int']>;
 };
 
 export type UploadAssetInput = {
@@ -509,6 +517,7 @@ export type UploadAssetInput = {
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSOAttachment?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -631,8 +640,8 @@ export type IngestScene = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  hasBeenQCd: Scalars['Boolean'];
-  isOriented: Scalars['Boolean'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
   referenceModels: Array<ReferenceModel>;
@@ -666,10 +675,57 @@ export type GetAssetResult = {
   Asset?: Maybe<Asset>;
 };
 
+export type UpdatePhotogrammetryMetadata = {
+  __typename?: 'UpdatePhotogrammetryMetadata';
+  name: Scalars['String'];
+  dateCaptured: Scalars['String'];
+  datasetType: Scalars['Int'];
+  description: Scalars['String'];
+  cameraSettingUniform: Scalars['Boolean'];
+  datasetFieldId?: Maybe<Scalars['Int']>;
+  itemPositionType?: Maybe<Scalars['Int']>;
+  itemPositionFieldId?: Maybe<Scalars['Int']>;
+  itemArrangementFieldId?: Maybe<Scalars['Int']>;
+  focusType?: Maybe<Scalars['Int']>;
+  lightsourceType?: Maybe<Scalars['Int']>;
+  backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+  clusterType?: Maybe<Scalars['Int']>;
+  clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+  folders: Array<IngestFolder>;
+};
+
+export type UpdateModelMetadata = {
+  __typename?: 'UpdateModelMetadata';
+  name: Scalars['String'];
+  creationMethod: Scalars['Int'];
+  modality: Scalars['Int'];
+  purpose: Scalars['Int'];
+  units: Scalars['Int'];
+  dateCaptured: Scalars['String'];
+  modelFileType: Scalars['Int'];
+};
+
+export type UpdateSceneMetadata = {
+  __typename?: 'UpdateSceneMetadata';
+  name: Scalars['String'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
+  referenceModels?: Maybe<Array<ReferenceModel>>;
+};
+
+export type UpdatedAssetVersionMetadata = {
+  __typename?: 'UpdatedAssetVersionMetadata';
+  idAssetVersion: Scalars['Int'];
+  CaptureDataPhoto?: Maybe<UpdatePhotogrammetryMetadata>;
+  Model?: Maybe<UpdateModelMetadata>;
+  Scene?: Maybe<UpdateSceneMetadata>;
+};
+
 export type GetUploadedAssetVersionResult = {
   __typename?: 'GetUploadedAssetVersionResult';
   AssetVersion: Array<AssetVersion>;
   idAssetVersionsUpdated: Array<Scalars['Int']>;
+  UpdatedAssetVersionMetadata: Array<UpdatedAssetVersionMetadata>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -714,7 +770,6 @@ export type Asset = {
   __typename?: 'Asset';
   idAsset: Scalars['Int'];
   FileName: Scalars['String'];
-  FilePath: Scalars['String'];
   idAssetGroup?: Maybe<Scalars['Int']>;
   idVAssetType?: Maybe<Scalars['Int']>;
   idSystemObject?: Maybe<Scalars['Int']>;
@@ -738,9 +793,13 @@ export type AssetVersion = {
   FileName: Scalars['String'];
   Ingested?: Maybe<Scalars['Boolean']>;
   Version: Scalars['Int'];
+  idSOAttachment?: Maybe<Scalars['Int']>;
+  FilePath: Scalars['String'];
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
+  SOAttachment?: Maybe<SystemObject>;
+  SOAttachmentObjectType?: Maybe<Scalars['Int']>;
 };
 
 export type AssetGroup = {
@@ -909,6 +968,7 @@ export type IngestPhotogrammetryInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type RelatedObjectInput = {
@@ -933,6 +993,7 @@ export type IngestModelInput = {
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type IngestSceneInput = {
@@ -940,17 +1001,33 @@ export type IngestSceneInput = {
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
-  hasBeenQCd: Scalars['Boolean'];
-  isOriented: Scalars['Boolean'];
+  approvedForPublication: Scalars['Boolean'];
+  posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
+  updateNotes?: Maybe<Scalars['String']>;
 };
 
 export type IngestOtherInput = {
   idAssetVersion: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  systemCreated: Scalars['Boolean'];
+  identifiers: Array<IngestIdentifierInput>;
+  updateNotes?: Maybe<Scalars['String']>;
+};
+
+export type IngestSceneAttachmentInput = {
+  type?: Maybe<Scalars['Int']>;
+  category?: Maybe<Scalars['Int']>;
+  units?: Maybe<Scalars['Int']>;
+  modelType?: Maybe<Scalars['Int']>;
+  fileType?: Maybe<Scalars['Int']>;
+  gltfStandardized?: Maybe<Scalars['Boolean']>;
+  dracoCompressed?: Maybe<Scalars['Boolean']>;
+  title?: Maybe<Scalars['String']>;
+  idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
 };
@@ -963,6 +1040,7 @@ export type IngestDataInput = {
   model: Array<IngestModelInput>;
   scene: Array<IngestSceneInput>;
   other: Array<IngestOtherInput>;
+  sceneAttachment: Array<IngestSceneAttachmentInput>;
 };
 
 export type IngestDataResult = {
@@ -1006,7 +1084,7 @@ export type ClearLicenseAssignmentInput = {
 export type ClearLicenseAssignmentResult = {
   __typename?: 'ClearLicenseAssignmentResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type AssignLicenseInput = {
@@ -1017,7 +1095,7 @@ export type AssignLicenseInput = {
 export type AssignLicenseResult = {
   __typename?: 'AssignLicenseResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetLicenseInput = {
@@ -1297,7 +1375,7 @@ export type NavigationResultEntry = {
 export type GetObjectChildrenResult = {
   __typename?: 'GetObjectChildrenResult';
   success: Scalars['Boolean'];
-  error: Scalars['String'];
+  error?: Maybe<Scalars['String']>;
   entries: Array<NavigationResultEntry>;
   metadataColumns: Array<Scalars['Int']>;
   cursorMark?: Maybe<Scalars['String']>;
@@ -1311,8 +1389,6 @@ export type GetFilterViewDataResult = {
 
 export type CreateSceneInput = {
   Name: Scalars['String'];
-  HasBeenQCd: Scalars['Boolean'];
-  IsOriented: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -1323,6 +1399,8 @@ export type CreateSceneInput = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication: Scalars['Boolean'];
+  PosedAndQCd: Scalars['Boolean'];
 };
 
 export type CreateSceneResult = {
@@ -1351,9 +1429,7 @@ export type GetIntermediaryFileResult = {
 export type Scene = {
   __typename?: 'Scene';
   idScene: Scalars['Int'];
-  HasBeenQCd: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
-  IsOriented: Scalars['Boolean'];
   Name: Scalars['String'];
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -1364,6 +1440,8 @@ export type Scene = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication: Scalars['Boolean'];
+  PosedAndQCd: Scalars['Boolean'];
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1472,8 +1550,8 @@ export type SceneDetailFieldsInput = {
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
-  HasBeenQCd?: Maybe<Scalars['Boolean']>;
-  IsOriented?: Maybe<Scalars['Boolean']>;
+  ApprovedForPublication?: Maybe<Scalars['Boolean']>;
+  PosedAndQCd?: Maybe<Scalars['Boolean']>;
 };
 
 export type ProjectDocumentationDetailFieldsInput = {
@@ -1481,11 +1559,11 @@ export type ProjectDocumentationDetailFieldsInput = {
 };
 
 export type AssetDetailFieldsInput = {
-  FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
 };
 
 export type AssetVersionDetailFieldsInput = {
+  FilePath?: Maybe<Scalars['String']>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
   Ingested?: Maybe<Scalars['Boolean']>;
@@ -1505,6 +1583,13 @@ export type StakeholderDetailFieldsInput = {
   PhoneNumberOffice?: Maybe<Scalars['String']>;
 };
 
+export type MetadataInput = {
+  idMetadata?: Maybe<Scalars['Int']>;
+  Name: Scalars['String'];
+  Label: Scalars['String'];
+  Value: Scalars['String'];
+};
+
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
@@ -1521,13 +1606,14 @@ export type UpdateObjectDetailsDataInput = {
   AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
   Actor?: Maybe<ActorDetailFieldsInput>;
   Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+  Metadata?: Maybe<Array<MetadataInput>>;
   Identifiers?: Maybe<Array<UpdateIdentifier>>;
 };
 
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type ExistingRelationship = {
@@ -1545,7 +1631,7 @@ export type UpdateDerivedObjectsInput = {
 export type UpdateDerivedObjectsResult = {
   __typename?: 'UpdateDerivedObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1559,7 +1645,7 @@ export type UpdateSourceObjectsInput = {
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
   status: Scalars['String'];
 };
 
@@ -1594,26 +1680,37 @@ export type DeleteIdentifierInput = {
   idIdentifier: Scalars['Int'];
 };
 
+export type DeleteMetadataResult = {
+  __typename?: 'DeleteMetadataResult';
+  success: Scalars['Boolean'];
+};
+
+export type DeleteMetadataInput = {
+  idMetadata: Scalars['Int'];
+};
+
 export type RollbackSystemObjectVersionResult = {
   __typename?: 'RollbackSystemObjectVersionResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type RollbackSystemObjectVersionInput = {
   idSystemObjectVersion: Scalars['Int'];
+  rollbackNotes: Scalars['String'];
 };
 
 export type CreateSubjectWithIdentifiersResult = {
   __typename?: 'CreateSubjectWithIdentifiersResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type CreateSubjectWithIdentifiersInput = {
   identifiers: Array<CreateIdentifierInput>;
   subject: CreateSubjectInput;
   systemCreated: Scalars['Boolean'];
+  metadata?: Maybe<Array<MetadataInput>>;
 };
 
 export type CreateIdentifierInput = {
@@ -1631,7 +1728,8 @@ export type PublishInput = {
 export type PublishResult = {
   __typename?: 'PublishResult';
   success: Scalars['Boolean'];
-  message: Scalars['String'];
+  eState?: Maybe<Scalars['Int']>;
+  message?: Maybe<Scalars['String']>;
 };
 
 
@@ -1708,8 +1806,6 @@ export type SceneDetailFields = {
   AssetType?: Maybe<Scalars['Int']>;
   Tours?: Maybe<Scalars['Int']>;
   Annotation?: Maybe<Scalars['Int']>;
-  HasBeenQCd?: Maybe<Scalars['Boolean']>;
-  IsOriented?: Maybe<Scalars['Boolean']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
   CountCamera?: Maybe<Scalars['Int']>;
@@ -1719,6 +1815,9 @@ export type SceneDetailFields = {
   CountSetup?: Maybe<Scalars['Int']>;
   CountTour?: Maybe<Scalars['Int']>;
   EdanUUID?: Maybe<Scalars['String']>;
+  ApprovedForPublication?: Maybe<Scalars['Boolean']>;
+  PublicationApprover?: Maybe<Scalars['String']>;
+  PosedAndQCd?: Maybe<Scalars['Boolean']>;
   idScene?: Maybe<Scalars['Int']>;
 };
 
@@ -1734,7 +1833,6 @@ export type ProjectDocumentationDetailFields = {
 
 export type AssetDetailFields = {
   __typename?: 'AssetDetailFields';
-  FilePath?: Maybe<Scalars['String']>;
   AssetType?: Maybe<Scalars['Int']>;
   Asset?: Maybe<Asset>;
   idAsset?: Maybe<Scalars['Int']>;
@@ -1742,6 +1840,7 @@ export type AssetDetailFields = {
 
 export type AssetVersionDetailFields = {
   __typename?: 'AssetVersionDetailFields';
+  FilePath?: Maybe<Scalars['String']>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
   Ingested?: Maybe<Scalars['Boolean']>;
@@ -1811,12 +1910,14 @@ export type GetSystemObjectDetailsResult = {
   sourceObjects: Array<RelatedObject>;
   derivedObjects: Array<RelatedObject>;
   objectVersions: Array<SystemObjectVersion>;
+  metadata: Array<Metadata>;
   unit?: Maybe<RepositoryPath>;
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  assetOwner?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
-  licenseInherited?: Maybe<Scalars['Boolean']>;
+  licenseInheritance?: Maybe<Scalars['Int']>;
 };
 
 export type GetSourceObjectIdentiferInput = {
@@ -1948,7 +2049,9 @@ export type SystemObjectVersion = {
   idSystemObject: Scalars['Int'];
   PublishedState: Scalars['Int'];
   DateCreated: Scalars['DateTime'];
+  Comment?: Maybe<Scalars['String']>;
   SystemObject?: Maybe<SystemObject>;
+  CommentLink?: Maybe<Scalars['String']>;
 };
 
 export type Identifier = {
@@ -1965,16 +2068,20 @@ export type Metadata = {
   __typename?: 'Metadata';
   idMetadata: Scalars['Int'];
   Name: Scalars['String'];
-  idSystemObject?: Maybe<Scalars['Int']>;
+  ValueShort?: Maybe<Scalars['String']>;
+  ValueExtended?: Maybe<Scalars['String']>;
+  idAssetVersionValue?: Maybe<Scalars['Int']>;
   idUser?: Maybe<Scalars['Int']>;
   idVMetadataSource?: Maybe<Scalars['Int']>;
-  idAssetVersionValue?: Maybe<Scalars['Int']>;
-  ValueExtended?: Maybe<Scalars['String']>;
-  ValueShort?: Maybe<Scalars['String']>;
+  idSystemObject?: Maybe<Scalars['Int']>;
+  idSystemObjectParent?: Maybe<Scalars['Int']>;
   AssetVersionValue?: Maybe<AssetVersion>;
   SystemObject?: Maybe<SystemObject>;
+  SystemObjectParent?: Maybe<SystemObject>;
   User?: Maybe<User>;
   VMetadataSource?: Maybe<Vocabulary>;
+  Label?: Maybe<Scalars['String']>;
+  Value?: Maybe<Scalars['String']>;
 };
 
 export type CreateUnitInput = {
@@ -2175,6 +2282,11 @@ export type GetUnitsFromEdanAbbreviationInput = {
   abbreviation: Scalars['String'];
 };
 
+export type GetEdanUnitsNamedResult = {
+  __typename?: 'GetEdanUnitsNamedResult';
+  UnitEdan?: Maybe<Array<UnitEdan>>;
+};
+
 export type Unit = {
   __typename?: 'Unit';
   idUnit: Scalars['Int'];
@@ -2260,6 +2372,15 @@ export type Item = {
   GeoLocation?: Maybe<GeoLocation>;
   Subject?: Maybe<Subject>;
   SystemObject?: Maybe<SystemObject>;
+};
+
+export type UnitEdan = {
+  __typename?: 'UnitEdan';
+  idUnitEdan: Scalars['Int'];
+  idUnit?: Maybe<Scalars['Int']>;
+  Name?: Maybe<Scalars['String']>;
+  Abbreviation: Scalars['String'];
+  Unit?: Maybe<Unit>;
 };
 
 export type CreateUserInput = {
@@ -2567,6 +2688,7 @@ export type UploadAssetMutationVariables = Exact<{
   file: Scalars['Upload'];
   type: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
+  idSOAttachment?: Maybe<Scalars['Int']>;
 }>;
 
 
@@ -2723,6 +2845,19 @@ export type DeleteIdentifierMutation = (
   ) }
 );
 
+export type DeleteMetadataMutationVariables = Exact<{
+  input: DeleteMetadataInput;
+}>;
+
+
+export type DeleteMetadataMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteMetadata: (
+    { __typename?: 'DeleteMetadataResult' }
+    & Pick<DeleteMetadataResult, 'success'>
+  ) }
+);
+
 export type DeleteObjectConnectionMutationVariables = Exact<{
   input: DeleteObjectConnectionInput;
 }>;
@@ -2745,7 +2880,7 @@ export type PublishMutation = (
   { __typename?: 'Mutation' }
   & { publish: (
     { __typename?: 'PublishResult' }
-    & Pick<PublishResult, 'success' | 'message'>
+    & Pick<PublishResult, 'success' | 'eState' | 'message'>
   ) }
 );
 
@@ -3026,7 +3161,7 @@ export type GetAssetVersionsDetailsQuery = (
         )> }
       )>, Scene?: Maybe<(
         { __typename?: 'IngestScene' }
-        & Pick<IngestScene, 'idAssetVersion' | 'systemCreated' | 'name' | 'hasBeenQCd' | 'isOriented' | 'directory'>
+        & Pick<IngestScene, 'idAssetVersion' | 'systemCreated' | 'name' | 'directory' | 'approvedForPublication' | 'posedAndQCd'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
           & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3097,7 +3232,7 @@ export type GetUploadedAssetVersionQuery = (
     & Pick<GetUploadedAssetVersionResult, 'idAssetVersionsUpdated'>
     & { AssetVersion: Array<(
       { __typename?: 'AssetVersion' }
-      & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated'>
+      & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated' | 'idSOAttachment' | 'SOAttachmentObjectType'>
       & { Asset?: Maybe<(
         { __typename?: 'Asset' }
         & Pick<Asset, 'idAsset'>
@@ -3105,6 +3240,27 @@ export type GetUploadedAssetVersionQuery = (
           { __typename?: 'Vocabulary' }
           & Pick<Vocabulary, 'idVocabulary' | 'Term'>
         )> }
+      )> }
+    )>, UpdatedAssetVersionMetadata: Array<(
+      { __typename?: 'UpdatedAssetVersionMetadata' }
+      & Pick<UpdatedAssetVersionMetadata, 'idAssetVersion'>
+      & { CaptureDataPhoto?: Maybe<(
+        { __typename?: 'UpdatePhotogrammetryMetadata' }
+        & Pick<UpdatePhotogrammetryMetadata, 'name' | 'dateCaptured' | 'datasetType' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId'>
+        & { folders: Array<(
+          { __typename?: 'IngestFolder' }
+          & Pick<IngestFolder, 'name' | 'variantType'>
+        )> }
+      )>, Model?: Maybe<(
+        { __typename?: 'UpdateModelMetadata' }
+        & Pick<UpdateModelMetadata, 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType'>
+      )>, Scene?: Maybe<(
+        { __typename?: 'UpdateSceneMetadata' }
+        & Pick<UpdateSceneMetadata, 'name' | 'approvedForPublication' | 'posedAndQCd'>
+        & { referenceModels?: Maybe<Array<(
+          { __typename?: 'ReferenceModel' }
+          & Pick<ReferenceModel, 'idSystemObject' | 'name' | 'usage' | 'quality' | 'fileSize' | 'resolution' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z'>
+        )>> }
       )> }
     )> }
   ) }
@@ -3337,7 +3493,7 @@ export type GetSceneQuery = (
     { __typename?: 'GetSceneResult' }
     & { Scene?: Maybe<(
       { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'EdanUUID'>
+      & Pick<Scene, 'idScene' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'EdanUUID' | 'ApprovedForPublication' | 'PosedAndQCd'>
       & { ModelSceneXref?: Maybe<Array<Maybe<(
         { __typename?: 'ModelSceneXref' }
         & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
@@ -3360,7 +3516,7 @@ export type GetSceneForAssetVersionQuery = (
       { __typename?: 'SceneConstellation' }
       & { Scene?: Maybe<(
         { __typename?: 'Scene' }
-        & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'idAssetThumbnail' | 'IsOriented' | 'Name' | 'CountScene' | 'CountNode' | 'CountCamera' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour'>
+        & Pick<Scene, 'idScene' | 'idAssetThumbnail' | 'Name' | 'CountScene' | 'CountNode' | 'CountCamera' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'ApprovedForPublication' | 'PosedAndQCd'>
       )>, ModelSceneXref?: Maybe<Array<Maybe<(
         { __typename?: 'ModelSceneXref' }
         & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
@@ -3444,7 +3600,7 @@ export type GetDetailsTabDataForObjectQuery = (
       )>> }
     )>, Scene?: Maybe<(
       { __typename?: 'SceneDetailFields' }
-      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented' | 'EdanUUID' | 'idScene'>
+      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'EdanUUID' | 'ApprovedForPublication' | 'PublicationApprover' | 'PosedAndQCd' | 'idScene'>
     )>, IntermediaryFile?: Maybe<(
       { __typename?: 'IntermediaryFileDetailFields' }
       & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>
@@ -3453,10 +3609,10 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<ProjectDocumentationDetailFields, 'Description'>
     )>, Asset?: Maybe<(
       { __typename?: 'AssetDetailFields' }
-      & Pick<AssetDetailFields, 'FilePath' | 'AssetType' | 'idAsset'>
+      & Pick<AssetDetailFields, 'AssetType' | 'idAsset'>
     )>, AssetVersion?: Maybe<(
       { __typename?: 'AssetVersionDetailFields' }
-      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion'>
+      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion' | 'FilePath'>
     )>, Actor?: Maybe<(
       { __typename?: 'ActorDetailFields' }
       & Pick<ActorDetailFields, 'OrganizationName'>
@@ -3528,7 +3684,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInherited'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInheritance'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3544,6 +3700,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, item?: Maybe<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
+    )>, assetOwner?: Maybe<(
+      { __typename?: 'RepositoryPath' }
+      & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
     )>, objectAncestors: Array<Array<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
@@ -3555,7 +3714,10 @@ export type GetSystemObjectDetailsQuery = (
       & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
     )>, objectVersions: Array<(
       { __typename?: 'SystemObjectVersion' }
-      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated'>
+      & Pick<SystemObjectVersion, 'idSystemObjectVersion' | 'idSystemObject' | 'PublishedState' | 'DateCreated' | 'Comment' | 'CommentLink'>
+    )>, metadata: Array<(
+      { __typename?: 'Metadata' }
+      & Pick<Metadata, 'idMetadata' | 'Name' | 'ValueShort' | 'ValueExtended' | 'idAssetVersionValue' | 'idVMetadataSource' | 'Value' | 'Label'>
     )>, license?: Maybe<(
       { __typename?: 'License' }
       & Pick<License, 'idLicense' | 'Name' | 'Description' | 'RestrictLevel'>
@@ -3576,6 +3738,20 @@ export type GetVersionsForAssetQuery = (
       { __typename?: 'DetailVersion' }
       & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested'>
     )> }
+  ) }
+);
+
+export type GetEdanUnitsNamedQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetEdanUnitsNamedQuery = (
+  { __typename?: 'Query' }
+  & { getEdanUnitsNamed: (
+    { __typename?: 'GetEdanUnitsNamedResult' }
+    & { UnitEdan?: Maybe<Array<(
+      { __typename?: 'UnitEdan' }
+      & Pick<UnitEdan, 'idUnitEdan' | 'Name' | 'Abbreviation' | 'idUnit'>
+    )>> }
   ) }
 );
 
@@ -3660,7 +3836,7 @@ export type GetObjectsForItemQuery = (
       & Pick<Model, 'idModel' | 'DateCreated'>
     )>, Scene: Array<(
       { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name'>
+      & Pick<Scene, 'idScene' | 'Name' | 'ApprovedForPublication' | 'PosedAndQCd'>
     )>, IntermediaryFile: Array<(
       { __typename?: 'IntermediaryFile' }
       & Pick<IntermediaryFile, 'idIntermediaryFile' | 'DateCreated'>
@@ -3964,8 +4140,13 @@ export type DiscardUploadedAssetVersionsMutationHookResult = ReturnType<typeof u
 export type DiscardUploadedAssetVersionsMutationResult = Apollo.MutationResult<DiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
 export const UploadAssetDocument = gql`
-    mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int) {
-  uploadAsset(file: $file, type: $type, idAsset: $idAsset) {
+    mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int, $idSOAttachment: Int) {
+  uploadAsset(
+    file: $file
+    type: $type
+    idAsset: $idAsset
+    idSOAttachment: $idSOAttachment
+  ) {
     status
     idAssetVersions
     error
@@ -3990,6 +4171,7 @@ export type UploadAssetMutationFn = Apollo.MutationFunction<UploadAssetMutation,
  *      file: // value for 'file'
  *      type: // value for 'type'
  *      idAsset: // value for 'idAsset'
+ *      idSOAttachment: // value for 'idSOAttachment'
  *   },
  * });
  */
@@ -4350,6 +4532,39 @@ export function useDeleteIdentifierMutation(baseOptions?: Apollo.MutationHookOpt
 export type DeleteIdentifierMutationHookResult = ReturnType<typeof useDeleteIdentifierMutation>;
 export type DeleteIdentifierMutationResult = Apollo.MutationResult<DeleteIdentifierMutation>;
 export type DeleteIdentifierMutationOptions = Apollo.BaseMutationOptions<DeleteIdentifierMutation, DeleteIdentifierMutationVariables>;
+export const DeleteMetadataDocument = gql`
+    mutation deleteMetadata($input: DeleteMetadataInput!) {
+  deleteMetadata(input: $input) {
+    success
+  }
+}
+    `;
+export type DeleteMetadataMutationFn = Apollo.MutationFunction<DeleteMetadataMutation, DeleteMetadataMutationVariables>;
+
+/**
+ * __useDeleteMetadataMutation__
+ *
+ * To run a mutation, you first call `useDeleteMetadataMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteMetadataMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteMetadataMutation, { data, loading, error }] = useDeleteMetadataMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteMetadataMutation(baseOptions?: Apollo.MutationHookOptions<DeleteMetadataMutation, DeleteMetadataMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteMetadataMutation, DeleteMetadataMutationVariables>(DeleteMetadataDocument, options);
+      }
+export type DeleteMetadataMutationHookResult = ReturnType<typeof useDeleteMetadataMutation>;
+export type DeleteMetadataMutationResult = Apollo.MutationResult<DeleteMetadataMutation>;
+export type DeleteMetadataMutationOptions = Apollo.BaseMutationOptions<DeleteMetadataMutation, DeleteMetadataMutationVariables>;
 export const DeleteObjectConnectionDocument = gql`
     mutation deleteObjectConnection($input: DeleteObjectConnectionInput!) {
   deleteObjectConnection(input: $input) {
@@ -4388,6 +4603,7 @@ export const PublishDocument = gql`
     mutation publish($input: PublishInput!) {
   publish(input: $input) {
     success
+    eState
     message
   }
 }
@@ -5035,9 +5251,9 @@ export const GetAssetVersionsDetailsDocument = gql`
         idAssetVersion
         systemCreated
         name
-        hasBeenQCd
-        isOriented
         directory
+        approvedForPublication
+        posedAndQCd
         identifiers {
           identifier
           identifierType
@@ -5228,8 +5444,61 @@ export const GetUploadedAssetVersionDocument = gql`
           Term
         }
       }
+      idSOAttachment
+      SOAttachmentObjectType
     }
     idAssetVersionsUpdated
+    UpdatedAssetVersionMetadata {
+      idAssetVersion
+      CaptureDataPhoto {
+        name
+        dateCaptured
+        datasetType
+        description
+        cameraSettingUniform
+        datasetFieldId
+        itemPositionType
+        itemPositionFieldId
+        itemArrangementFieldId
+        focusType
+        lightsourceType
+        backgroundRemovalMethod
+        clusterType
+        clusterGeometryFieldId
+        folders {
+          name
+          variantType
+        }
+      }
+      Model {
+        name
+        creationMethod
+        modality
+        purpose
+        units
+        dateCaptured
+        modelFileType
+      }
+      Scene {
+        name
+        approvedForPublication
+        posedAndQCd
+        referenceModels {
+          idSystemObject
+          name
+          usage
+          quality
+          fileSize
+          resolution
+          boundingBoxP1X
+          boundingBoxP1Y
+          boundingBoxP1Z
+          boundingBoxP2X
+          boundingBoxP2Y
+          boundingBoxP2Z
+        }
+      }
+    }
   }
 }
     `;
@@ -5760,8 +6029,6 @@ export const GetSceneDocument = gql`
   getScene(input: $input) {
     Scene {
       idScene
-      HasBeenQCd
-      IsOriented
       Name
       CountCamera
       CountScene
@@ -5772,6 +6039,8 @@ export const GetSceneDocument = gql`
       CountSetup
       CountTour
       EdanUUID
+      ApprovedForPublication
+      PosedAndQCd
       ModelSceneXref {
         idModelSceneXref
         idModel
@@ -5827,9 +6096,7 @@ export const GetSceneForAssetVersionDocument = gql`
     SceneConstellation {
       Scene {
         idScene
-        HasBeenQCd
         idAssetThumbnail
-        IsOriented
         Name
         CountScene
         CountNode
@@ -5839,6 +6106,8 @@ export const GetSceneForAssetVersionDocument = gql`
         CountMeta
         CountSetup
         CountTour
+        ApprovedForPublication
+        PosedAndQCd
       }
       ModelSceneXref {
         idModelSceneXref
@@ -6066,9 +6335,10 @@ export const GetDetailsTabDataForObjectDocument = gql`
       AssetType
       Tours
       Annotation
-      HasBeenQCd
-      IsOriented
       EdanUUID
+      ApprovedForPublication
+      PublicationApprover
+      PosedAndQCd
       idScene
     }
     IntermediaryFile {
@@ -6078,7 +6348,6 @@ export const GetDetailsTabDataForObjectDocument = gql`
       Description
     }
     Asset {
-      FilePath
       AssetType
       idAsset
     }
@@ -6090,6 +6359,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       Version
       idAsset
       idAssetVersion
+      FilePath
     }
     Actor {
       OrganizationName
@@ -6290,6 +6560,11 @@ export const GetSystemObjectDetailsDocument = gql`
       name
       objectType
     }
+    assetOwner {
+      idSystemObject
+      name
+      objectType
+    }
     objectAncestors {
       idSystemObject
       name
@@ -6312,8 +6587,20 @@ export const GetSystemObjectDetailsDocument = gql`
       idSystemObject
       PublishedState
       DateCreated
+      Comment
+      CommentLink
     }
-    licenseInherited
+    metadata {
+      idMetadata
+      Name
+      ValueShort
+      ValueExtended
+      idAssetVersionValue
+      idVMetadataSource
+      Value
+      Label
+    }
+    licenseInheritance
     license {
       idLicense
       Name
@@ -6395,6 +6682,45 @@ export function useGetVersionsForAssetLazyQuery(baseOptions?: Apollo.LazyQueryHo
 export type GetVersionsForAssetQueryHookResult = ReturnType<typeof useGetVersionsForAssetQuery>;
 export type GetVersionsForAssetLazyQueryHookResult = ReturnType<typeof useGetVersionsForAssetLazyQuery>;
 export type GetVersionsForAssetQueryResult = Apollo.QueryResult<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>;
+export const GetEdanUnitsNamedDocument = gql`
+    query getEdanUnitsNamed {
+  getEdanUnitsNamed {
+    UnitEdan {
+      idUnitEdan
+      Name
+      Abbreviation
+      idUnit
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetEdanUnitsNamedQuery__
+ *
+ * To run a query within a React component, call `useGetEdanUnitsNamedQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetEdanUnitsNamedQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetEdanUnitsNamedQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetEdanUnitsNamedQuery(baseOptions?: Apollo.QueryHookOptions<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>(GetEdanUnitsNamedDocument, options);
+      }
+export function useGetEdanUnitsNamedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>(GetEdanUnitsNamedDocument, options);
+        }
+export type GetEdanUnitsNamedQueryHookResult = ReturnType<typeof useGetEdanUnitsNamedQuery>;
+export type GetEdanUnitsNamedLazyQueryHookResult = ReturnType<typeof useGetEdanUnitsNamedLazyQuery>;
+export type GetEdanUnitsNamedQueryResult = Apollo.QueryResult<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>;
 export const GetIngestionItemsForSubjectsDocument = gql`
     query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
   getIngestionItemsForSubjects(input: $input) {
@@ -6561,9 +6887,9 @@ export const GetObjectsForItemDocument = gql`
     }
     Scene {
       idScene
-      HasBeenQCd
-      IsOriented
       Name
+      ApprovedForPublication
+      PosedAndQCd
     }
     IntermediaryFile {
       idIntermediaryFile

@@ -214,11 +214,11 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
                     title='Date From'
                 />
                 <Typography className={classes.toText}>to</Typography>
-                <DatePicker 
-                    selected={dateTo} 
-                    onChange={date => onDate('dateTo', date)} 
-                    isClearable 
-                    title='Date To' 
+                <DatePicker
+                    selected={dateTo}
+                    onChange={date => onDate('dateTo', date)}
+                    isClearable
+                    title='Date To'
                 />
             </div>
         </Box>

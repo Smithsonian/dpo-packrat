@@ -52,7 +52,7 @@ export class SolrClient {
                         LOG.error(error, LOG.LS.eNAV);
                         resolve({ success: false, error });
                     } else
-                        resolve({ success: true, error: '' });
+                        resolve({ success: true });
                 });
             });
         } catch (err) /* istanbul ignore next */ {
@@ -71,7 +71,7 @@ export class SolrClient {
                         LOG.error(error, LOG.LS.eNAV);
                         resolve({ success: false, error });
                     } else
-                        resolve({ success: true, error: '' });
+                        resolve({ success: true });
                 });
             });
         } catch (err) /* istanbul ignore next */ {

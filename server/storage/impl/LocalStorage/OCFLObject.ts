@@ -11,7 +11,7 @@ import * as LOG from '../../../utils/logger';
 export type OCFLObjectInitResults = {
     ocflObject: OCFLObject | null,
     success: boolean,
-    error: string,
+    error?: string,
 };
 
 export type OCFLPathAndHash = {
@@ -42,8 +42,7 @@ export class OCFLObject {
 
         const retValue: OCFLObjectInitResults = {
             ocflObject: null,
-            success: false,
-            error: ''
+            success: false
         };
 
         // Verify structure / create structure
@@ -116,7 +115,7 @@ export class OCFLObject {
 
         if (fileName) {
             const destName = path.join(destFolder, fileName);
-            let hashResults: H.HashResults = { hash: '', dataLength: 0, success: false, error: '' }; /* istanbul ignore else */
+            let hashResults: H.HashResults = { hash: '', dataLength: 0, success: false }; /* istanbul ignore else */
             if (pathOnDisk) {
                 // Compute hash
                 hashResults = await H.Helpers.computeHashFromFile(pathOnDisk, ST.OCFLDigestAlgorithm);
@@ -623,10 +622,7 @@ export class OCFLObject {
                 this._ocflInventory.id = this._storageKey;
             }
         }
-        return {
-            success: true,
-            error: ''
-        };
+        return { success: true };
     }
 
     private async addVersion(opInfo: OperationInfo): Promise<H.IOResults> {
@@ -648,32 +644,22 @@ export class OCFLObject {
     }
 
     private async rollbackVersion(): Promise<H.IOResults> {
-        let retValue: H.IOResults = {
-            success: false,
-            error: ''
-        };
-
         /* istanbul ignore next */
-        if (!this._ocflInventory) {
-            retValue.success = false;
-            retValue.error = 'Unable to compute OCFL Inventory';
-            return retValue;
-        }
+        if (!this._ocflInventory)
+            return { success: false, error: 'Unable to compute OCFL Inventory' };
 
         const version: number = this._ocflInventory.headVersion;
         /* istanbul ignore else */
         if (version) {
             const destFolder: string = this.versionRoot(version);
-            retValue = await H.Helpers.removeDirectory(destFolder, true);
+            const retValue: H.IOResults = await H.Helpers.removeDirectory(destFolder, true);
+            if (!retValue.success)
+                LOG.error(`OCFLObject.rollbackVersion failed to remove directory ${destFolder}: ${retValue.error}`, LOG.LS.eSTR);
         }
         /* istanbul ignore next */
-        if (!this._ocflInventory.rollbackVersion()) {
-            retValue.success = false;
-            retValue.error = 'OCL Object Unable to roll back Inventory version';
-            return retValue;
-        }
-        retValue.success = true;
-        return retValue;
+        if (!this._ocflInventory.rollbackVersion())
+            return { success: false, error: 'OCL Object Unable to roll back Inventory version' };
+        return { success: true };
     }
 }
 

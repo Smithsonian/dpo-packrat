@@ -68,16 +68,16 @@ export class IndexSolr implements NAV.IIndexer {
             if (!await this.handleAncestors(docs, OGDE)) // updates docs, if there are ancestors and if OGDE has children data
                 return false;
 
-            // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(doc, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eNAV);
+            // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(doc, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
             const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackrat);
             try {
                 let res: H.IOResults = await solrClient.add(docs);
                 if (res.success)
                     res = await solrClient.commit();
                 if (!res.success)
-                    LOG.error(`IndexSolr.indexObject failed: ${res.error}`, LOG.LS.eNAV);
+                    LOG.error(`IndexSolr.indexObject failed: ${res.error}, docs=${JSON.stringify(docs, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
             } catch (error) {
-                LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed`, LOG.LS.eNAV, error);
+                LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed, docs=${JSON.stringify(docs, H.Helpers.saferStringify)}`, LOG.LS.eNAV, error);
                 return false;
             }
 
@@ -221,6 +221,7 @@ export class IndexSolr implements NAV.IIndexer {
         let result: boolean = true;
         let documentCount: number = 0;
         let idMetadataLast: number = 0;
+        const createdSystemObjectSet: Set<number> = new Set<number>(); // system object IDs that have been "created"
 
         while (true) { // eslint-disable-line no-constant-condition
             const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchAllByPage(idMetadataLast, 1000);
@@ -231,7 +232,7 @@ export class IndexSolr implements NAV.IIndexer {
             if (metadataList.length <= 0)
                 break;
 
-            documentCount = await this.indexMetadataWorker(solrClient, metadataList, true, documentCount);
+            documentCount = await this.indexMetadataWorker(solrClient, metadataList, true, createdSystemObjectSet, documentCount);
             if (documentCount === -1) {
                 documentCount = 0;
                 result = false;
@@ -243,7 +244,8 @@ export class IndexSolr implements NAV.IIndexer {
         return result;
     }
 
-    private async indexMetadataWorker(solrClient: SolrClient, metadataList: DBAPI.Metadata[], create: boolean, documentCount?: number | undefined): Promise<number> {
+    private async indexMetadataWorker(solrClient: SolrClient, metadataList: DBAPI.Metadata[], create: boolean,
+        createdSystemObjectSet?: Set<number> | undefined, documentCount?: number | undefined): Promise<number> {
         documentCount = documentCount ?? 0;
         if (metadataList.length <= 0)
             return documentCount;
@@ -266,6 +268,15 @@ export class IndexSolr implements NAV.IIndexer {
             const textGrabAll: string[] = [];
             let idSystemObjectParent: number = idSystemObject;
 
+            // determine if we're creating this doc or adding to an existing one (created in past iterations through this function)
+            let createDoc: boolean = create;
+            if (createdSystemObjectSet) {
+                if (createdSystemObjectSet.has(idSystemObject))
+                    createDoc = false;
+                else
+                    createdSystemObjectSet.add(idSystemObject);
+            }
+
             doc.id = idSystemObject;
             for (const metadata of metadataList) {
                 if (metadata.idSystemObjectParent)
@@ -273,26 +284,26 @@ export class IndexSolr implements NAV.IIndexer {
 
                 const key: string = `${metadata.Name.toLowerCase()}_v`;
                 if (metadata.ValueShort) {
-                    doc[key] = create ? metadata.ValueShort : { 'set': metadata.ValueShort };
+                    doc[key] = createDoc ? metadata.ValueShort : { 'set': metadata.ValueShort };
                     textGrabAll.push(metadata.ValueShort);
                 } else if (metadata.ValueExtended) {
                     const value: string = metadata.ValueExtended.substring(0, 4096);
-                    doc[key] = create ? value : { 'set': value };
+                    doc[key] = createDoc ? value : { 'set': value };
                     textGrabAll.push(value);
                 }
 
                 if (metadata.idVMetadataSource) {
                     const metadataSourceV: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(metadata.idVMetadataSource);
                     if (metadataSourceV)
-                        doc.MetadataSource = create ? metadataSourceV.Term : { 'set': metadataSourceV.Term };
+                        doc.MetadataSource = createDoc ? metadataSourceV.Term : { 'set': metadataSourceV.Term };
                     else
                         LOG.error(`IndexSolr.fullIndexWorkerMeta could not fetch metadata source ${metadata.idVMetadataSource}`, LOG.LS.eNAV);
                 }
             }
-            doc.idSystemObjectParent = create ? idSystemObjectParent : { 'set': idSystemObjectParent };
+            doc.idSystemObjectParent = createDoc ? idSystemObjectParent : { 'set': idSystemObjectParent };
             if (!textGrabAll.length)
                 textGrabAll.push('');
-            doc._text_ = create ? textGrabAll : { 'set': textGrabAll };
+            doc._text_ = createDoc ? textGrabAll : { 'set': textGrabAll };
 
             docs.push(doc);
             this.countMetadata++;
@@ -482,6 +493,8 @@ export class IndexSolr implements NAV.IIndexer {
 
         if (OGDEH.childrenDateCreated.length > 0)
             doc.ChildrenDateCreated = create ? OGDEH.childrenDateCreated : { 'add': OGDEH.childrenDateCreated };
+
+        // LOG.info(`IndexSolr.extractCommonChildrenFields doc=${JSON.stringify(doc, H.Helpers.saferStringify)}, OGDEH=${JSON.stringify(OGDEH, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
     }
 
     private async computeVocabulary(idVocabulary: number | null): Promise<string | undefined> {
@@ -757,8 +770,6 @@ export class IndexSolr implements NAV.IIndexer {
             return false;
         }
         doc.CommonName = scene.Name;
-        doc.SceneIsOriented = scene.IsOriented;
-        doc.SceneHasBeenQCd = scene.HasBeenQCd;
         doc.SceneCountScene = scene.CountScene;
         doc.SceneCountNode = scene.CountNode;
         doc.SceneCountCamera = scene.CountCamera;
@@ -767,6 +778,25 @@ export class IndexSolr implements NAV.IIndexer {
         doc.SceneCountMeta = scene.CountMeta;
         doc.SceneCountSetup = scene.CountSetup;
         doc.SceneCountTour = scene.CountTour;
+        doc.SceneEdanUUID = scene.EdanUUID;
+        doc.ScenePosedAndQCd = scene.PosedAndQCd;
+        doc.SceneApprovedForPublication = scene.ApprovedForPublication;
+
+        // fetch assets, find preferred asset (svx.json), if found, find first version, use that date
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(objectGraphDataEntry.systemObjectIDType.idSystemObject);
+        const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(objectGraphDataEntry.systemObjectIDType.idSystemObject);
+        if (SO && assets) {
+            for (const asset of assets) {
+                if (await CACHE.VocabularyCache.isPreferredAsset(asset.idVAssetType, SO)) {
+                    const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchFirstFromAsset(asset.idAsset);
+                    if (assetVersion) {
+                        doc.CommonDateCreated = assetVersion.DateCreated;
+                        doc.ChildrenDateCreated = [assetVersion.DateCreated];
+                    }
+                    break;
+                }
+            }
+        }
         this.countScene++;
         return true;
     }
@@ -802,10 +832,16 @@ export class IndexSolr implements NAV.IIndexer {
             LOG.error(`IndexSolr.handleAsset failed to compute asset from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
+
         doc.CommonName = asset.FileName;
-        doc.AssetFileName = asset.FileName;
-        doc.AssetFilePath = asset.FilePath;
         doc.AssetType = await this.lookupVocabulary(asset.idVAssetType);
+
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchFirstFromAsset(asset.idAsset);
+        if (assetVersion) {
+            doc.CommonDateCreated = assetVersion.DateCreated;
+            doc.ChildrenDateCreated = [assetVersion.DateCreated];
+        }
+
         this.countAsset++;
         return true;
     }
@@ -822,7 +858,11 @@ export class IndexSolr implements NAV.IIndexer {
             LOG.error(`IndexSolr.handleAssetVersion failed to compute idUserCreator from ${assetVersion.idUserCreator}`, LOG.LS.eNAV);
             return false;
         }
-        doc.CommonName = `Version ${assetVersion.Version}`;
+        doc.CommonName = `${assetVersion.FileName} v${assetVersion.Version}`;
+        doc.CommonDateCreated = assetVersion.DateCreated;
+        doc.ChildrenDateCreated = [assetVersion.DateCreated];
+        doc.AVFileName = assetVersion.FileName;
+        doc.AVFilePath = assetVersion.FilePath;
         doc.AVUserCreator = user.Name;
         doc.AVStorageHash = assetVersion.StorageHash;
         doc.AVStorageSize = Number(assetVersion.StorageSize);

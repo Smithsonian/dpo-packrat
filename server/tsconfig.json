@@ -5,6 +5,7 @@
     "module": "commonjs",
     "esModuleInterop": true,
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "rootDir": ".",
     "outDir": "build",
     "declaration": true,

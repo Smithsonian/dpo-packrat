@@ -55,7 +55,7 @@ export const useStyles = makeStyles(({ palette }) => ({
             justifyContent: 'center'
         }
     },
-    
+
     header: {
         fontSize: '0.9em',
         color: palette.primary.dark,
@@ -102,7 +102,7 @@ const getMuiTheme = () =>
             MuiIconButton: {
                 root: {
                     border: '0px',
-                    padding: '0px'                
+                    padding: '0px'
                 }
             },
             MuiTableHead: {
@@ -168,7 +168,7 @@ function WorkflowList(): React.ReactElement {
             );
         },
         setRowProps: () => {
-            return { role: 'row' }
+            return { role: 'row' };
         },
         // TODO: This may not be working as intended because we can't focus in on the table
         setTableProps: () => {
@@ -183,7 +183,7 @@ function WorkflowList(): React.ReactElement {
                         outline: '20px solid pink'
                     },
                 }
-            }
+            };
         }
     };
 
@@ -199,7 +199,7 @@ function WorkflowList(): React.ReactElement {
         return {
             className: clsx({
                 [classes.centeredTableHead]: true
-            })        
+            }),
         };
     };
 

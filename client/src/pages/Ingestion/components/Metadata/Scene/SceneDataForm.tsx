@@ -11,18 +11,16 @@ const useStyles = makeStyles(() => ({
         '& > *': {
             width: 'fit-content',
             minWidth: '300px',
-            height: '20px',
             '&:not(:last-child)': {
                 borderBottom: '1px solid #D8E5EE'
-            }
+            },
+            height: '20px'
         }
     }
 }));
 
 interface SceneData {
     Name: string;
-    HasBeenQCd: boolean;
-    IsOriented: boolean;
     CountScene: number;
     CountNode: number;
     CountCamera: number;
@@ -32,20 +30,23 @@ interface SceneData {
     CountSetup: number;
     CountTour: number;
     EdanUUID: string | null;
+    ApprovedForPublication: boolean;
+    PosedAndQCd: boolean;
 }
 
 interface SceneDataProps {
     sceneData: SceneData;
     name: string;
-    hasBeenQCd: boolean;
-    isOriented: boolean;
     EdanUUID: string;
+    approvedForPublication: boolean;
+    posedAndQCd: boolean;
+    idAssetVersion?: number;
     setNameField: ({ target }: { target: EventTarget }) => void;
     setCheckboxField: ({ target }: { target: EventTarget }) => void;
 }
 
-function SceneDataGrid(props: SceneDataProps): React.ReactElement {
-    const { sceneData, setCheckboxField, setNameField, name, hasBeenQCd, isOriented, EdanUUID } = props;
+function SceneDataForm(props: SceneDataProps): React.ReactElement {
+    const { sceneData, setCheckboxField, setNameField, name, approvedForPublication, posedAndQCd, EdanUUID } = props;
     const classes = useStyles();
     if (!sceneData)
         return <Box></Box>;
@@ -56,12 +57,12 @@ function SceneDataGrid(props: SceneDataProps): React.ReactElement {
         <Box display='flex' flexDirection='column' className={classes.container}>
             <InputField required type='string' label='Name' value={name} name='name' onChange={setNameField} />
 
-            <FieldType required label="Has been QC'd" direction='row' containerProps={rowFieldProps}>
-                <Checkbox name='hasBeenQCd' checked={hasBeenQCd} color='primary' onChange={setCheckboxField} />
+            <FieldType required label='Approved for Publication' direction='row' containerProps={rowFieldProps}>
+                <Checkbox name='approvedForPublication' checked={approvedForPublication} color='primary' onChange={setCheckboxField} />
             </FieldType>
 
-            <FieldType required label='Is Oriented' direction='row' containerProps={rowFieldProps}>
-                <Checkbox name='isOriented' checked={isOriented} color='primary' onChange={setCheckboxField} />
+            <FieldType required label="Posed and QC'd" direction='row' containerProps={rowFieldProps}>
+                <Checkbox name='posedAndQCd' checked={posedAndQCd} color='primary' onChange={setCheckboxField} />
             </FieldType>
 
             <ReadOnlyRow label='EDAN UUID' value={EdanUUID} />
@@ -77,4 +78,4 @@ function SceneDataGrid(props: SceneDataProps): React.ReactElement {
     );
 }
 
-export default SceneDataGrid;
+export default SceneDataForm;

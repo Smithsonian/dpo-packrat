@@ -117,7 +117,8 @@ function SubjectItem(): React.ReactElement {
             await updateMetadataFolders();
             setMetadataStepLoading(false);
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error);
             setMetadataStepLoading(false);
             return;
         }
@@ -138,7 +139,7 @@ function SubjectItem(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Helmet>
-                <title>Subect Ingestion</title>
+                <title>Subject Ingestion</title>
             </Helmet>
             <Box className={classes.content}>
                 <Box display='flex' flexDirection='row' alignItems='center' flexWrap='wrap'>

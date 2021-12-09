@@ -99,8 +99,8 @@ class TestSuiteUtils {
     createSceneInput = (): CreateSceneInput => {
         return {
             Name: 'Test Scene',
-            HasBeenQCd: true,
-            IsOriented: true
+            ApprovedForPublication: true,
+            PosedAndQCd: true
         };
     };
 
@@ -133,7 +133,6 @@ class TestSuiteUtils {
     createAssetInput = (idVAssetType: number): Asset => {
         return {
             FileName: 'Test Asset Thumbnail',
-            FilePath: '/test/asset/path',
             idSystemObject: null,
             idAssetGroup: null,
             idVAssetType,
@@ -154,6 +153,8 @@ class TestSuiteUtils {
             idAssetVersion: 0,
             Ingested: false,
             BulkIngest: false,
+            idSOAttachment: null,
+            FilePath: '/test/asset/path',
             Version: 0
         };
     };

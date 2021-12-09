@@ -37,7 +37,6 @@ export class NavigationSolr implements NAV.INavigation {
     async getMetadata(filter: NAV.MetadataFilter): Promise<NAV.MetadataResult> {
         const SQ: solr.Query = await this.computeSolrMetaQuery(filter);
         return await this.executeSolrMetaQuery(filter, SQ);
-        // return { success: false, error: 'Not Implemented', entries: [], metadataColumns: filter.metadataColumns };
     }
 
     async getIndexer(): Promise<NAV.IIndexer | null> {
@@ -258,7 +257,7 @@ export class NavigationSolr implements NAV.INavigation {
         if (cursorMark == filter.cursorMark)    // solr returns the same cursorMark as the initial query when there are no more results; if so, clear out cursorMark
             cursorMark = null;
         // LOG.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
-        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns, cursorMark };
+        return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
     private computeNavMetadata(doc: any, metadataColumns: NAV.eMetadata[]): string[] {
@@ -313,8 +312,9 @@ export class NavigationSolr implements NAV.INavigation {
                 case NAV.eMetadata.eModelChannelPosition:               metadata.push(this.computeMetadataFromNumberArray(doc.ModelChannelPosition)); break;
                 case NAV.eMetadata.eModelChannelWidth:                  metadata.push(this.computeMetadataFromNumberArray(doc.ModelChannelWidth)); break;
                 case NAV.eMetadata.eModelUVMapType:                     metadata.push(this.computeMetadataFromStringArray(doc.ModelUVMapType)); break;
-                case NAV.eMetadata.eSceneIsOriented:                    metadata.push(this.computeMetadataFromBoolean(doc.SceneIsOriented)); break;
-                case NAV.eMetadata.eSceneHasBeenQCd:                    metadata.push(this.computeMetadataFromBoolean(doc.SceneHasBeenQCd)); break;
+                case NAV.eMetadata.eSceneEdanUUID:                      metadata.push(this.computeMetadataFromBoolean(doc.SceneEdanUUID)); break;
+                case NAV.eMetadata.eScenePosedAndQCd:                   metadata.push(this.computeMetadataFromBoolean(doc.ScenePosedAndQCd)); break;
+                case NAV.eMetadata.eSceneApprovedForPublication:        metadata.push(this.computeMetadataFromBoolean(doc.SceneApprovedForPublication)); break;
                 case NAV.eMetadata.eSceneCountScene:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountScene)); break;
                 case NAV.eMetadata.eSceneCountNode:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountNode)); break;
                 case NAV.eMetadata.eSceneCountCamera:                   metadata.push(this.computeMetadataFromNumber(doc.SceneCountCamera)); break;
@@ -323,9 +323,9 @@ export class NavigationSolr implements NAV.INavigation {
                 case NAV.eMetadata.eSceneCountMeta:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountMeta)); break;
                 case NAV.eMetadata.eSceneCountSetup:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountSetup)); break;
                 case NAV.eMetadata.eSceneCountTour:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountTour)); break;
-                case NAV.eMetadata.eAssetFileName:                      metadata.push(this.computeMetadataFromStringArray(doc.AssetFileName)); break;
-                case NAV.eMetadata.eAssetFilePath:                      metadata.push(this.computeMetadataFromString(doc.AssetFilePath)); break;
                 case NAV.eMetadata.eAssetType:                          metadata.push(this.computeMetadataFromString(doc.AssetType)); break;
+                case NAV.eMetadata.eAVFileName:                         metadata.push(this.computeMetadataFromStringArray(doc.AVFileName)); break;
+                case NAV.eMetadata.eAVFilePath:                         metadata.push(this.computeMetadataFromString(doc.AVFilePath)); break;
                 case NAV.eMetadata.eAVUserCreator:                      metadata.push(this.computeMetadataFromString(doc.AVUserCreator)); break;
                 case NAV.eMetadata.eAVStorageHash:                      metadata.push(this.computeMetadataFromString(doc.AVStorageHash)); break;
                 case NAV.eMetadata.eAVStorageSize:                      metadata.push(this.computeMetadataFromNumber(doc.AVStorageSize)); break;
@@ -359,6 +359,12 @@ export class NavigationSolr implements NAV.INavigation {
         for (const metadataColumn of filter.metadataColumns)
             filterColumns.push(metadataColumn.toLowerCase() + '_v');
         SQ = SQ.fl(filterColumns);
+
+        // request up to filter.rows entries, sorted by id desc, and use the cursor mark, if any is provided
+        if (filter.rows > 0)
+            SQ = SQ.rows(filter.rows);
+        SQ = SQ.sort({ id: 'desc' }); // sort by id desc (idSystemObject)
+        SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
 
         LOG.info(`NavigationSolr.computeSolrMetaQuery ${JSON.stringify(filter)}:\n${this._solrClientMeta.solrUrl()}/select?${SQ.build()}`, LOG.LS.eNAV);
         return SQ;
@@ -401,9 +407,13 @@ export class NavigationSolr implements NAV.INavigation {
             entries.push(entry);
         }
 
+        let cursorMark: string | null = queryResult.result.nextCursorMark ? queryResult.result.nextCursorMark : null;
+        if (cursorMark == filter.cursorMark)    // solr returns the same cursorMark as the initial query when there are no more results; if so, clear out cursorMark
+            cursorMark = null;
+
         // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
         // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(entries)}`, LOG.LS.eNAV);
-        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns };
+        return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
     private computeMetaMetadata(doc: any, metadataColumns: string[]): string [] {
@@ -424,7 +434,7 @@ export class NavigationSolr implements NAV.INavigation {
                         LOG.error('NavigationSolr.executeSolrQueryWorker', LOG.LS.eNAV, err);
                         resolve({ result: null, error: err });
                     } else
-                        resolve({ result: obj, error: null });
+                        resolve({ result: obj });
                 });
             request;
         });
@@ -435,15 +445,18 @@ export class NavigationSolr implements NAV.INavigation {
     }
 
     private computeMetadataFromNumber(value: number | undefined): string {
-        return (value == undefined) ? '' : value.toString();
+        return (value === undefined) ? '' : value.toString();
     }
 
     private computeMetadataFromBoolean(value: boolean | undefined): string {
-        return (value == undefined) ? '' : value ? 'true' : 'false';
+        return (value === undefined) ? '' : value ? 'true' : 'false';
     }
 
-    private computeMetadataFromDate(value: Date | undefined): string {
-        return (value == undefined) ? '' : value.toISOString().substring(0, 10);
+    private computeMetadataFromDate(value: string | undefined): string {
+        if (value === undefined)
+            return '';
+        const date: Date | null = H.Helpers.safeDate(value);
+        return (!date) ? '' : date.toISOString().substring(0, 10);
     }
 
     private computeMetadataFromStringArray(values: string[] | undefined): string {

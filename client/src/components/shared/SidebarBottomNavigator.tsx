@@ -59,20 +59,21 @@ interface SidebarBottomNavigatorProps {
     rightRoute?: string;
     onClickRight?: () => void;
     invalidMetadataStep?: boolean;
+    disableNavigation?: boolean;
 }
 
 function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.ReactElement {
-    const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading, uploadVersion, invalidMetadataStep } = props;
+    const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading, uploadVersion, invalidMetadataStep, disableNavigation } = props;
     const classes = useStyles();
 
     let leftButton = (
-        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={leftLoading || false} onClick={onClickLeft}>
+        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={leftLoading || false} disabled={disableNavigation} onClick={onClickLeft}>
             {leftLabel}
         </LoadingButton>
     );
 
     let rightButton = (
-        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={rightLoading || false} onClick={onClickRight}>
+        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={rightLoading || false} disabled={disableNavigation} onClick={onClickRight}>
             {rightLabel}
         </LoadingButton>
     );

@@ -70,10 +70,8 @@ export class LicenseResolver {
         let LR: LicenseResolver | null = null;
 
         const OGDE: ObjectGraphDataEntry | undefined = OGD.objectMap.get(idSystemObject);
-        if (!OGDE) {
-            LOG.error(`LicenseResolver unable to fetch object graph data entry from ${idSystemObject}`, LOG.LS.eDB);
+        if (!OGDE)
             return null;
-        }
 
         for (const idSystemObjectParent of OGDE.parentMap.keys()) {
             // for each parent, get its specific LicenseResolver

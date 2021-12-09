@@ -26,11 +26,11 @@ export class WorkflowIngestion implements WF.IWorkflow {
             workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eRunning);
             await workflowStep.update();
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     async update(_workflowStep: DBAPI.WorkflowStep, _jobRun: DBAPI.JobRun): Promise<WF.WorkflowUpdateResults> {
-        return { success: true, workflowComplete: true, error: '' };
+        return { success: true, workflowComplete: true };
     }
 
     async updateStatus(eStatus: DBAPI.eWorkflowJobRunStatus): Promise<WF.WorkflowUpdateResults> {
@@ -49,7 +49,7 @@ export class WorkflowIngestion implements WF.IWorkflow {
     }
 
     async waitForCompletion(_timeout: number): Promise<H.IOResults> {
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     async workflowConstellation(): Promise<DBAPI.WorkflowConstellation | null> {

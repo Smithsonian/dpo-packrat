@@ -54,9 +54,10 @@ export type EdanMDMContent = {
         topic?: string[];
     }
 
-    freeText?: {
+    freetext?: {
         identifier?: EdanLabelContent[];
         dataSource?: EdanLabelContent[];
+        date?: EdanLabelContent[];
         name?: EdanLabelContent[];
         objectRights?: EdanLabelContent[];
         place?: EdanLabelContent[];
@@ -113,3 +114,14 @@ export type EdanRecord = {
     publicSearch: boolean;
     linkedContent: any;
 };
+
+export const EdanLabelContentDelimiter: string = '$PR$';
+
+export function parseEdanMetadata(metadata: string): { label: string, content: string } {
+    let [label, content] = metadata.split(EdanLabelContentDelimiter, 2);
+    if (content === undefined) {
+        content = label;
+        label = '';
+    }
+    return { label, content };
+}

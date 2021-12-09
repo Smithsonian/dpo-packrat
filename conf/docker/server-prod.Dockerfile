@@ -9,6 +9,9 @@ COPY . .
 FROM base AS server-builder
 # Remove client from server build
 RUN rm -rf client
+# Install git, needed to fetch npm-server-webdav
+RUN apk update
+RUN apk add git
 # Install dependencies (production mode) and build
 RUN yarn install --frozen-lockfile && yarn build:prod
 

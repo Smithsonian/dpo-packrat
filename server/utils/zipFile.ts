@@ -48,7 +48,7 @@ export class ZipFile implements IZip {
                                 else
                                     this._files.push(entry.name);
                             }
-                            resolve({ success: true, error: '' });
+                            resolve({ success: true });
                         } else
                             resolve({ success: false, error: 'Zip not initialized' });
                     });
@@ -69,14 +69,14 @@ export class ZipFile implements IZip {
     async close(): Promise<H.IOResults> {
         return new Promise<H.IOResults>((resolve) => {
             if (!this._zip)
-                resolve({ success: true, error: '' });
+                resolve({ success: true });
             else {
                 this._zip.close(err => {
                     this.clearState();
                     this._zip = null;
                     /* istanbul ignore else */
                     if (!err)
-                        resolve({ success: true, error: '' });
+                        resolve({ success: true });
                     else {
                         const error: string = `ZipFile.close ${err}`;
                         if (this._logErrors)

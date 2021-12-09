@@ -13,6 +13,10 @@ export class MetadataExtractor {
     eMetadataSource: CACHE.eVocabularyID | null = null;
     static extractorImage: IExtractor | null = null;
 
+    constructor(eMetadataSource?: CACHE.eVocabularyID | null) {
+        this.eMetadataSource = eMetadataSource ?? null;
+    }
+
     async extractMetadata(fileName: string, inputStream?: NodeJS.ReadableStream | undefined): Promise<H.IOResults> {
         try {
             if (!inputStream && !await pathExists(fileName))
@@ -63,7 +67,7 @@ export class MetadataExtractor {
     }
 
     private async initializeExtractorImage(): Promise<IExtractorResults> {
-        let results: IExtractorResults = { success: true, error: '' };
+        let results: IExtractorResults = { success: true };
         if (MetadataExtractor.extractorImage)
             return results;
 

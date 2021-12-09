@@ -23,6 +23,7 @@ import { updateSourceObjects, updateDerivedObjects } from '../../../../Repositor
 import RepositoryFilterView from '../../../../Repository/components/RepositoryFilterView';
 import RepositoryTreeView from '../../../../Repository/components/RepositoryTreeView';
 import { isValidParentChildRelationship } from '../../../../../utils/repository';
+import { useRepositoryStore } from '../../../../../store/repository';
 
 const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
     title: {
@@ -61,6 +62,7 @@ interface ObjectSelectModalProps {
 function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
     const { open, onSelectedObjects, selectedObjects, onModalClose, idSystemObject, objectType, relationship } = props;
     const classes = useStyles();
+    const [resetRepositoryBrowserRoot] = useRepositoryStore((state) => [state.resetRepositoryBrowserRoot]);
     const [selected, setSelected] = useState<StateRelatedObject[]>([]);
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [previouslySelectedObjects, setPreviouslySelectedObjects] = useState<ExistingRelationship[]>([]);
@@ -86,7 +88,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                 const { data } = await updateSourceObjects(idSystemObject, objectType, selectedRelationships, previouslySelectedObjects);
                 if (data.updateSourceObjects.success) {
                     if (data.updateSourceObjects.status === 'success') toast.success('Parent(s) successfully added');
-                    if (data.updateSourceObjects.status === 'warn') toast.warn(`The following parent(s) had mismatched relationship:${data.updateSourceObjects.message}`);
+                    if (data.updateSourceObjects.status === 'warn') toast.warn(`The following parent(s) had mismatched relationship: ${data.updateSourceObjects.message}`);
                 } else {
                     toast.error('Parent(s) could not be added. Please try again later');
                 }
@@ -94,38 +96,18 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                 const { data } = await updateDerivedObjects(idSystemObject, objectType, selectedRelationships, []);
                 if (data.updateDerivedObjects.success) {
                     if (data.updateDerivedObjects.status === 'success') toast.success('Child(ren) successfully added');
-                    if (data.updateDerivedObjects.status === 'warn') toast.warn(`The following child(ren) had mismatched relationship:${data.updateDerivedObjects.message}`);
+                    if (data.updateDerivedObjects.status === 'warn') toast.warn(`The following child(ren) had mismatched relationship: ${data.updateDerivedObjects.message}`);
                 } else {
                     toast.error('Child(ren) could not be added. Please try again later');
                 }
             }
-            // const input: GetSourceObjectIdentiferInput = {
-            //     idSystemObjects
-            // };
-
-            // const { data }: ApolloQueryResult<GetSourceObjectIdentiferQuery> = await apolloClient.query({
-            //     query: GetSourceObjectIdentiferDocument,
-            //     variables: {
-            //         input
-            //     }
-            // });
-
-            // if (data) {
-            //     const { getSourceObjectIdentifer } = data;
-            //     const { sourceObjectIdentifiers } = getSourceObjectIdentifer;
-
-            //     const selectedSourceObjects: StateRelatedObject[] = selected.map((selected: StateRelatedObject, index: number) => ({
-            //         ...selected,
-            //         identifier: sourceObjectIdentifiers[index]?.identifier
-            //     }));
-            //     onSelectedObjects(selectedSourceObjects);
-            // }
         } catch (error) {
             toast.error(`Error: ${error}`, { autoClose: false });
         }
         onModalClose();
         setSelected([]);
         setIsSaving(false);
+        resetRepositoryBrowserRoot();
     };
 
     // onSelect handles selecting of entry
@@ -167,7 +149,8 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
 
             setSelected([...selected, sourceObject]);
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error);
         }
     };
 

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export interface DataTableOptions {
     filter?: boolean;
     filterType?: string;
@@ -26,7 +28,6 @@ export interface DataTableOptions {
             displayRows?: string;
         };
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     customFooter?: () => any;
     customTableBodyFooterRender?: () => any;
     setRowProps?: (any) => any;

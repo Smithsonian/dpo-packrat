@@ -6,7 +6,7 @@ import * as LDAP from 'ldapjs';
 
 type UserSearchResult = {
     success: boolean;
-    error: string | null;
+    error?: string | null;
     DN: string | null;
 };
 
@@ -26,7 +26,6 @@ class LDAPAuth implements IAuth {
             if (!res.success)
                 return res;
 
-
             // Step 3: Search for passed user by email
             const resUserSearch: UserSearchResult = await this.searchForUser(this._ldapConfig, email);
             if (!resUserSearch.success|| !resUserSearch.DN)
@@ -42,7 +41,7 @@ class LDAPAuth implements IAuth {
 
     private async fetchClient(): Promise<VerifyUserResult> {
         if (this._client)
-            return { success: true, error: null };
+            return { success: true };
 
         // Step 1: Create a ldap client using server address
         this._client = LDAP.createClient({ url: this._ldapConfig.server });
@@ -55,7 +54,7 @@ class LDAPAuth implements IAuth {
                 this._client = null;
             }
         });
-        return { success: true, error: null };
+        return { success: true };
     }
 
     private async bindService(): Promise<VerifyUserResult> {
@@ -74,7 +73,7 @@ class LDAPAuth implements IAuth {
                     LOG.error(`LDAPAuth.bindService failed: ${JSON.stringify(err)}`, LOG.LS.eAUTH);
                     resolve({ success: false, error: 'Unable to connect to LDAP server' });
                 } else
-                    resolve({ success: true, error: '' });
+                    resolve({ success: true });
             });
         });
     }
@@ -106,7 +105,7 @@ class LDAPAuth implements IAuth {
                 res.on('searchEntry', (entry: any) => {
                     LOG.info(`LDAPAuth.searchForUser found ${email}: ${JSON.stringify(entry.objectName)}`, LOG.LS.eAUTH);
                     searchComplete = true;
-                    resolve({ success: true, error: '', DN: entry.objectName });
+                    resolve({ success: true, DN: entry.objectName });
                 });
 
                 res.on('error', (err: any) => {
@@ -139,7 +138,7 @@ class LDAPAuth implements IAuth {
                     LOG.error(`LDAPAuth.bindUser ${error}`, LOG.LS.eAUTH);
                     resolve({ success: false, error });
                 } else
-                    resolve({ success: true, error: '' });
+                    resolve({ success: true });
             });
         });
     }

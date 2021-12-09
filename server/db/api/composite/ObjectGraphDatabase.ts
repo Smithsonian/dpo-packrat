@@ -369,6 +369,7 @@ export class ObjectGraphDatabase {
             case eSystemObjectType.eProject:
             case eSystemObjectType.eSubject:
             case eSystemObjectType.eItem:
+            case eSystemObjectType.eAsset:
                 objectGraphState.ancestorObject = systemObjectIDType;
                 break;
 
@@ -402,6 +403,12 @@ export class ObjectGraphDatabase {
                 const intermediaryFile: IntermediaryFile | null = await IntermediaryFile.fetch(systemObjectIDType.idObject);
                 if (intermediaryFile)
                     objectGraphState.commonDateCreated = intermediaryFile.DateCreated;
+            } break;
+
+            case eSystemObjectType.eAssetVersion: {
+                const assetVersion: AssetVersion | null = await AssetVersion.fetch(systemObjectIDType.idObject);
+                if (assetVersion)
+                    objectGraphState.commonDateCreated = assetVersion.DateCreated;
             } break;
         }
 

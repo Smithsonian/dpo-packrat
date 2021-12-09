@@ -64,7 +64,6 @@ CREATE TABLE IF NOT EXISTS `Actor` (
 CREATE TABLE IF NOT EXISTS `Asset` (
   `idAsset` int(11) NOT NULL AUTO_INCREMENT,
   `FileName` varchar(512) NOT NULL,
-  `FilePath` varchar(512) NOT NULL,
   `idAssetGroup` int(11) DEFAULT NULL,
   `idVAssetType` int(11) NOT NULL,
   `idSystemObject` int(11) DEFAULT NULL,
@@ -90,6 +89,8 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `StorageKeyStaging` varchar(512) CHARACTER SET 'LATIN1' NOT NULL,
   `Ingested` boolean DEFAULT NULL,
   `BulkIngest` boolean NOT NULL,
+  `idSOAttachment` int(11) NULL,
+  `FilePath` varchar(512) NULL,
   PRIMARY KEY (`idAssetVersion`),
   KEY `AssetVersion_idAsset_Version` (`idAsset`,`Version`),
   KEY `AssetVersion_StorageHash` (`StorageHash`),
@@ -429,8 +430,6 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `idScene` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
-  `IsOriented` boolean NOT NULL,
-  `HasBeenQCd` boolean NOT NULL,
   `CountScene` int(11) DEFAULT NULL,
   `CountNode` int(11) DEFAULT NULL,
   `CountCamera` int(11) DEFAULT NULL,
@@ -440,7 +439,18 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `CountSetup` int(11) DEFAULT NULL,
   `CountTour` int(11) DEFAULT NULL,
   `EdanUUID` varchar(64) NULL,
+  `PosedAndQCd` boolean NOT NULL,
+  `ApprovedForPublication` boolean NOT NULL,
   PRIMARY KEY (`idScene`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `Sentinel` (
+  `idSentinel` int(11) NOT NULL AUTO_INCREMENT,
+  `URLBase` varchar(512) NOT NULL,
+  `ExpirationDate` datetime NOT NULL,
+  `idUser` int(11) NOT NULL,
+  PRIMARY KEY (`idSentinel`),
+  KEY `Sentinel_URLBase` (`URLBase`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `Stakeholder` (
@@ -501,6 +511,7 @@ CREATE TABLE IF NOT EXISTS `SystemObjectVersion` (
   `idSystemObject` int(11) NOT NULL,
   `PublishedState` int(11) NOT NULL,
   `DateCreated` datetime NOT NULL,
+  `Comment` text NULL,
   PRIMARY KEY (`idSystemObjectVersion`),
   KEY `ObjectVersion_idSystemObject_idObjectVersion` (`idSystemObject`,`idSystemObjectVersion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
@@ -532,6 +543,7 @@ CREATE TABLE IF NOT EXISTS `Unit` (
 CREATE TABLE IF NOT EXISTS `UnitEdan` (
   `idUnitEdan` int(11) NOT NULL AUTO_INCREMENT,
   `idUnit` int(11) DEFAULT NULL,
+  `Name` varchar(255) NULL,
   `Abbreviation` varchar(100) NOT NULL UNIQUE,
   PRIMARY KEY (`idUnitEdan`),
   KEY `UnitEdan_Abbreviation` (`Abbreviation`)
@@ -715,6 +727,11 @@ ADD CONSTRAINT `fk_assetversion_asset1`
 ADD CONSTRAINT `fk_assetversion_user1`
   FOREIGN KEY (`idUserCreator`)
   REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_assetversion_systemobject1`
+  FOREIGN KEY (`idSOAttachment`)
+  REFERENCES `SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
@@ -1024,6 +1041,13 @@ ALTER TABLE `Scene`
 ADD CONSTRAINT `fk_scene_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
   REFERENCES `Asset` (`idAsset`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `Sentinel` 
+ADD CONSTRAINT `fk_sentinel_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

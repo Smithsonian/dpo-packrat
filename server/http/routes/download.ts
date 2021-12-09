@@ -4,293 +4,121 @@ import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ZIP from '../../utils/zipStream';
 import * as STORE from '../../storage/interface';
+import { AuditFactory } from '../../audit/interface/AuditFactory';
+import { eEventKey } from '../../event/interface/EventEnums';
+import { DownloaderParser, DownloaderParserResults, eDownloadMode } from './DownloaderParser';
 import { isAuthenticated } from '../auth';
 
 import { Request, Response } from 'express';
-import { ParsedQs } from 'qs';
 import mime from 'mime'; // const mime = require('mime-types'); // can't seem to make this work using "import * as mime from 'mime'"; subsequent calls to mime.lookup freeze!
 import path from 'path';
 
 /** Used to provide download access to assets and reports. Access with one of the following URL patterns:
  * ASSETS:
- * /download?idAssetVersion=ID:         Downloads the specified version of the specified asset
- * /download?idAsset=ID:                Downloads the most recent asset version of the specified asset
- * /download?idSystemObject=ID:         Computes the assets attached to system object with idSystemObject = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
- * /download/idSystemObject-ID:         Computes the assets attached to system object with idSystemObject = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
- * /download/idSystemObject-ID/FOO/BAR: Computes the asset  attached to system object with idSystemObject = ID, found at the path /FOO/BAR.
- * /download?idSystemObjectVersion=ID:  Computes the assets attached to system object version with idSystemObjectVersion = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
+ * /download?idAssetVersion=ID:                 Downloads the specified version of the specified asset
+ * /download?idAsset=ID:                        Downloads the most recent asset version of the specified asset
+ * /download?idSystemObject=ID:                 Computes the assets attached to system object with idSystemObject = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
+ * /download/idSystemObject-ID:                 Computes the assets attached to system object with idSystemObject = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
+ * /download/idSystemObject-ID/FOO/BAR:         Computes the asset  attached to system object with idSystemObject = ID, found at the path /FOO/BAR.
+ * /download?idSystemObjectVersion=ID:          Computes the assets attached to system object version with idSystemObjectVersion = ID. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
+ *
+ * METADATA:
+ * /download?idMetadata=ID:                     Downloads the specified metadata, which may be text or an asset
  *
  * REPORTS:
- * /download?idWorkflow=ID:             Downloads the WorkflowReport(s) for the specified workflow ID
- * /download?idWorkflowReport=ID:       Downloads the specified WorkflowReport
- * /download?idWorkflowSet=ID:          Downloads the WorkflowReport(s) for workflows in the specified workflow set
- * /download?idJobRun=ID:               Downloads the JobRun output for idJobRun with the specified ID
+ * /download?idWorkflow=ID:                     Downloads the WorkflowReport(s) for the specified workflow ID
+ * /download?idWorkflowReport=ID:               Downloads the specified WorkflowReport
+ * /download?idWorkflowSet=ID:                  Downloads the WorkflowReport(s) for workflows in the specified workflow set
+ * /download?idJobRun=ID:                       Downloads the JobRun output for idJobRun with the specified ID
+ * /download?idSystemObjectVersionComment=ID    Downloads the SystemObjectVersion.Comment for the SystemObjectVersion with the specified ID
  */
 export async function download(request: Request, response: Response): Promise<boolean> {
     const DL: Downloader = new Downloader(request, response);
     try {
         return await DL.execute();
     } catch (error) {
-        LOG.error('/download', LOG.LS.eHTTP, error);
+        LOG.error(Downloader.httpRoute, LOG.LS.eHTTP, error);
         return false;
     }
 }
 
-enum eDownloadMode {
-    eAssetVersion,
-    eAsset,
-    eSystemObject,
-    eSystemObjectVersion,
-    eWorkflow,
-    eWorkflowReport,
-    eWorkflowSet,
-    eJobRun,
-    eUnknown
-}
-
-class Downloader {
+export class Downloader {
     private request: Request;
     private response: Response;
+    private downloaderParser: DownloaderParser;
 
-    private eMode: eDownloadMode = eDownloadMode.eUnknown;
-    private idAssetVersion: number | null = null;
-    private idAsset: number | null = null;
-    private idSystemObject: number | null = null;
-    private idSystemObjectVersion: number | null = null;
-
-    private idWorkflow: number | null = null;
-    private idWorkflowReport: number | null = null;
-    private idWorkflowSet: number | null = null;
-    private idJobRun: number | null = null;
-
-    private systemObjectPath: string | null = null;         // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
-
-    private static regexDownload: RegExp = new RegExp('/download/idSystemObject-(\\d*)(/.*)?', 'i');
+    static httpRoute: string = '/download';
 
     constructor(request: Request, response: Response) {
         this.request = request;
         this.response = response;
+        this.downloaderParser = new DownloaderParser(Downloader.httpRoute, this.request.path, this.request.query);
     }
 
     async execute(): Promise<boolean> {
         if (!isAuthenticated(this.request)) {
-            LOG.error('/download not authenticated', LOG.LS.eHTTP);
+            AuditFactory.audit({ url: this.request.path, auth: false }, { eObjectType: 0, idObject: 0 }, eEventKey.eHTTPDownload);
+            LOG.error(`${Downloader.httpRoute} not authenticated`, LOG.LS.eHTTP);
             return this.sendError(403);
         }
 
-        if (!this.parseArguments())
-            return false;
+        const DPResults: DownloaderParserResults = await this.downloaderParser.parseArguments();
+        if (!DPResults.success)
+            return this.sendError(DPResults.statusCode ?? 200, DPResults.message);
 
-        switch (this.eMode) {
-            case eDownloadMode.eAssetVersion: {
-                const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(this.idAssetVersion!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                if (!assetVersion) {
-                    LOG.error(`/download?idAssetVersion=${this.idAssetVersion} invalid parameter`, LOG.LS.eHTTP);
-                    return this.sendError(404);
-                }
-                return this.emitDownload(assetVersion);
-            }
+        // Audit download
+        const auditData = { url: this.downloaderParser.requestURLV, auth: true };
+        const auditOID: DBAPI.ObjectIDAndType = { eObjectType: this.downloaderParser.eObjectTypeV, idObject: this.downloaderParser.idObjectV };
+        AuditFactory.audit(auditData, auditOID, eEventKey.eHTTPDownload);
 
-            case eDownloadMode.eAsset: {
-                const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(this.idAsset!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                if (!assetVersion) {
-                    LOG.error(`/download?idAsset=${this.idAsset} unable to fetch asset version`, LOG.LS.eHTTP);
-                    return this.sendError(404);
-                }
-                return await this.emitDownload(assetVersion);
-            }
+        if (DPResults.message) {
+            this.response.send(DPResults.message);
+            return true;
+        }
 
-            case eDownloadMode.eSystemObject: {
-                const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(this.idSystemObject!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                if (!assetVersions) {
-                    LOG.error(`${this.reconstructSystemObjectLink()} unable to fetch asset versions`, LOG.LS.eHTTP);
-                    return this.sendError(404);
-                }
-                if (assetVersions.length == 0) {
-                    this.response.send(`No Assets are connected to idSystemObject ${this.idSystemObject}`);
+        switch (this.downloaderParser.eModeV) {
+            case eDownloadMode.eAssetVersion:
+                return (DPResults.assetVersion) ? await this.emitDownload(DPResults.assetVersion) : this.sendError(404);
+
+            case eDownloadMode.eAsset:
+                return (DPResults.assetVersion)
+                    ? await this.emitDownload(DPResults.assetVersion)
+                    : this.sendError(404, `${Downloader.httpRoute}?idAsset=${this.downloaderParser.idAssetV} unable to fetch asset version`);
+
+            case eDownloadMode.eSystemObject:
+                if (DPResults.assetVersions)
+                    return await this.emitDownloadZip(DPResults.assetVersions);
+                else if (DPResults.assetVersion)
+                    return await this.emitDownload(DPResults.assetVersion);
+                else
                     return true;
-                }
 
-                // if we don't have a system object path, return the zip of all assets
-                if (!this.systemObjectPath || this.systemObjectPath === '/')
-                    return await this.emitDownloadZip(assetVersions);
+            case eDownloadMode.eSystemObjectVersion:
+                if (DPResults.assetVersions)
+                    return await this.emitDownloadZip(DPResults.assetVersions);
+                return true;
 
-                // otherwise, find the specified asset by path
-                const pathToMatch: string = this.systemObjectPath.toLowerCase();
-                let pathsConsidered: string = '\n';
-                for (const assetVersion of assetVersions) {
-                    const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
-                    if (!asset) {
-                        LOG.error(`${this.reconstructSystemObjectLink()} unable to fetch asset from assetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eHTTP);
-                        return this.sendError(404);
-                    }
-                    const pathAssetVersion: string = (((asset.FilePath !== '' && asset.FilePath !== '.') ? `/${asset.FilePath}` : '')
-                        + `/${assetVersion.FileName}`).toLowerCase();
-                    if (pathToMatch === pathAssetVersion)
-                        return this.emitDownload(assetVersion);
-                    else
-                        pathsConsidered += `${pathAssetVersion}\n`;
-                }
-
-                LOG.error(`${this.reconstructSystemObjectLink()} unable to find assetVersion with path ${pathToMatch} from ${pathsConsidered}`, LOG.LS.eHTTP);
-                return this.sendError(404);
-            }
-
-            case eDownloadMode.eSystemObjectVersion: {
-                const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSystemObjectVersion(this.idSystemObjectVersion!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                if (!assetVersions) {
-                    LOG.error(`/download?idSystemObjectVersion=${this.idSystemObjectVersion} unable to fetch asset versions`, LOG.LS.eHTTP);
+            case eDownloadMode.eMetadata:
+                if (DPResults.content)
+                    return await this.emitDownloadContent(DPResults.content, `MetadataContent.${this.downloaderParser.idMetadataV}.htm`);
+                else if (DPResults.assetVersion)
+                    return await this.emitDownload(DPResults.assetVersion);
+                else
                     return this.sendError(404);
-                }
-                if (assetVersions.length == 0) {
-                    this.response.send(`No Assets are connected to idSystemObjectVersion ${this.idSystemObjectVersion}`);
-                    return true;
-                }
-                return await this.emitDownloadZip(assetVersions);
-            }
 
-            case eDownloadMode.eWorkflow: {
-                const WFReports: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(this.idWorkflow!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                if (!WFReports || WFReports.length === 0) {
-                    LOG.error(`/download?idWorkflow=${this.idWorkflow} invalid parameter`, LOG.LS.eHTTP);
-                    return this.sendError(404);
-                }
-                return this.emitDownloadReports(WFReports);
-            }
+            case eDownloadMode.eWorkflow:
+            case eDownloadMode.eWorkflowReport:
+            case eDownloadMode.eWorkflowSet:
+                return DPResults.WFReports ? await this.emitDownloadReports(DPResults.WFReports) : this.sendError(404);
 
-            case eDownloadMode.eWorkflowReport: {
-                const WFReport: DBAPI.WorkflowReport | null = await DBAPI.WorkflowReport.fetch(this.idWorkflowReport!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                if (!WFReport) {
-                    LOG.error(`/download?idWorkflowReport=${this.idWorkflowReport} invalid parameter`, LOG.LS.eHTTP);
-                    return this.sendError(404);
-                }
-                return this.emitDownloadReports([WFReport]);
-            }
+            case eDownloadMode.eJobRun:
+                return DPResults.jobRun ? await this.emitDownloadJobRun(DPResults.jobRun) : this.sendError(404);
 
-            case eDownloadMode.eWorkflowSet: {
-                const WFReports: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflowSet(this.idWorkflowSet!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                if (!WFReports || WFReports.length === 0) {
-                    LOG.error(`/download?idWorkflowSet=${this.idWorkflowSet} invalid parameter`, LOG.LS.eHTTP);
-                    return this.sendError(404);
-                }
-                return this.emitDownloadReports(WFReports);
-            }
+            case eDownloadMode.eSystemObjectVersionComment:
+                return DPResults.content ? await this.emitDownloadContent(DPResults.content, `VersionComment.${this.downloaderParser.idSystemObjectVersionCommentV}.htm`) : this.sendError(404);
 
-            case eDownloadMode.eJobRun: {
-                const jobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(this.idJobRun!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                if (!jobRun) {
-                    LOG.error(`/download?idJobRun=${this.idJobRun} invalid parameter`, LOG.LS.eHTTP);
-                    return this.sendError(404);
-                }
-                return this.emitDownloadJobRun(jobRun);
-            }
         }
         return this.sendError(404);
-    }
-
-    /** Returns false if arguments are invalid */
-    private parseArguments(): boolean {
-        // /download/idSystemObject-ID:         Computes the assets attached to this system object.  If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
-        // /download/idSystemObject-ID/FOO/BAR: Computes the asset attached to this system object, found at the path /FOO/BAR.
-        let idSystemObjectU: string | string[] | ParsedQs | ParsedQs[] | undefined = undefined;
-
-        const downloadMatch: RegExpMatchArray | null = this.request.path.match(Downloader.regexDownload);
-        if (downloadMatch && downloadMatch.length >= 2) {
-            idSystemObjectU = downloadMatch[1];
-            if (downloadMatch.length >= 3)
-                this.systemObjectPath = downloadMatch[2];
-        }
-
-        if (!idSystemObjectU)
-            idSystemObjectU = this.request.query.idSystemObject;
-        const idSystemObjectVersionU = this.request.query.idSystemObjectVersion;
-        const idAssetU = this.request.query.idAsset;
-        const idAssetVersionU = this.request.query.idAssetVersion;
-        const idWorkflowU = this.request.query.idWorkflow;
-        const idWorkflowReportU = this.request.query.idWorkflowReport;
-        const idWorkflowSetU = this.request.query.idWorkflowSet;
-        const idJobRunU = this.request.query.idJobRun;
-
-        const urlParamCount: number = (idSystemObjectU ? 1 : 0) + (idSystemObjectVersionU ? 1 : 0) + (idAssetU ? 1 : 0)
-            + (idAssetVersionU ? 1 : 0) + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0)
-            + (idJobRunU ? 1 : 0);
-        if (urlParamCount != 1) {
-            LOG.error(`/download called with ${urlParamCount} parameters, expected 1`, LOG.LS.eHTTP);
-            return this.sendError(404);
-        }
-
-        if (idAssetVersionU) {
-            this.idAssetVersion = H.Helpers.safeNumber(idAssetVersionU);
-            if (!this.idAssetVersion) {
-                LOG.error(`/download?idAssetVersion=${idAssetVersionU}, invalid parameter`, LOG.LS.eHTTP);
-                return this.sendError(404);
-            }
-            this.eMode = eDownloadMode.eAssetVersion;
-        }
-
-        if (idAssetU) {
-            this.idAsset = H.Helpers.safeNumber(idAssetU);
-            if (!this.idAsset) {
-                LOG.error(`/download?idAsset=${idAssetU}, invalid parameter`, LOG.LS.eHTTP);
-                return this.sendError(404);
-            }
-            this.eMode = eDownloadMode.eAsset;
-        }
-
-        if (idSystemObjectU) {
-            this.idSystemObject = H.Helpers.safeNumber(idSystemObjectU);
-            if (!this.idSystemObject) {
-                LOG.error(`/download?idSystemObject=${idSystemObjectU} invalid parameter`, LOG.LS.eHTTP);
-                return this.sendError(404);
-            }
-            this.eMode = eDownloadMode.eSystemObject;
-        }
-
-        if (idSystemObjectVersionU) {
-            this.idSystemObjectVersion = H.Helpers.safeNumber(idSystemObjectVersionU);
-            if (!this.idSystemObjectVersion) {
-                LOG.error(`/download?idSystemObjectVersion=${idSystemObjectVersionU} invalid parameter`, LOG.LS.eHTTP);
-                return this.sendError(404);
-            }
-            this.eMode = eDownloadMode.eSystemObjectVersion;
-        }
-
-        if (idWorkflowU) {
-            this.idWorkflow = H.Helpers.safeNumber(idWorkflowU);
-            if (!this.idWorkflow) {
-                LOG.error(`/download?idWorkflow=${idWorkflowU} invalid parameter`, LOG.LS.eHTTP);
-                return this.sendError(404);
-            }
-            this.eMode = eDownloadMode.eWorkflow;
-        }
-
-        if (idWorkflowReportU) {
-            this.idWorkflowReport = H.Helpers.safeNumber(idWorkflowReportU);
-            if (!this.idWorkflowReport) {
-                LOG.error(`/download?idWorkflowReport=${idWorkflowReportU} invalid parameter`, LOG.LS.eHTTP);
-                return this.sendError(404);
-            }
-            this.eMode = eDownloadMode.eWorkflowReport;
-        }
-
-        if (idWorkflowSetU) {
-            this.idWorkflowSet = H.Helpers.safeNumber(idWorkflowSetU);
-            if (!this.idWorkflowSet) {
-                LOG.error(`/download?idWorkflowSet=${idWorkflowSetU} invalid parameter`, LOG.LS.eHTTP);
-                return this.sendError(404);
-            }
-            this.eMode = eDownloadMode.eWorkflowSet;
-        }
-
-        if (idJobRunU) {
-            this.idJobRun = H.Helpers.safeNumber(idJobRunU);
-            if (!this.idJobRun) {
-                LOG.error(`/download?idJobRun=${idJobRunU} invalid parameter`, LOG.LS.eHTTP);
-                return this.sendError(404);
-            }
-            this.eMode = eDownloadMode.eJobRun;
-        }
-        return true;
     }
 
     private async emitDownload(assetVersion: DBAPI.AssetVersion): Promise<boolean> {
@@ -305,27 +133,20 @@ class Downloader {
         return this.emitDownloadFromStream(res.readStream, fileName, mimeType);
     }
 
-    private reconstructSystemObjectLink(): string {
-        return (this.systemObjectPath) ? `/download/idSystemObject-${this.idSystemObject}${this.systemObjectPath}` :`/download?idSystemObject=${this.idSystemObject}`;
-    }
-
     private async emitDownloadZip(assetVersions: DBAPI.AssetVersion[]): Promise<boolean> {
-        let errorMsgBase: string = '';
-        let idSystemObject: number = this.idSystemObject ?? 0;
+        const errorMsgBase: string = this.downloaderParser.requestURLV;
+        let idSystemObject: number = this.downloaderParser.idSystemObjectV ?? 0;
 
-        if (idSystemObject)
-            errorMsgBase = this.reconstructSystemObjectLink();
-        else if (this.idSystemObjectVersion) {
-            errorMsgBase = `/download?idSystemObjectVersion=${this.idSystemObjectVersion}`;
-            const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(this.idSystemObjectVersion);
+        if (this.downloaderParser.idSystemObjectVersionV) {
+            const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(this.downloaderParser.idSystemObjectVersionV);
             if (SOV)
                 idSystemObject = SOV.idSystemObject;
             else {
-                LOG.error(`${errorMsgBase} failed to laod SystemObjectVersion by id ${this.idSystemObjectVersion}`, LOG.LS.eHTTP);
+                LOG.error(`${errorMsgBase} failed to laod SystemObjectVersion by id ${this.downloaderParser.idSystemObjectVersionV}`, LOG.LS.eHTTP);
                 return false;
             }
-        } else {
-            LOG.error('/download emitDownloadZip called with unexpected parameters', LOG.LS.eHTTP);
+        } else if (!this.downloaderParser.idSystemObjectV) {
+            LOG.error(`${Downloader.httpRoute} emitDownloadZip called with unexpected parameters`, LOG.LS.eHTTP);
             return false;
         }
 
@@ -339,11 +160,11 @@ class Downloader {
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
             if (!RSR.success || !RSR.readStream) {
-                LOG.error(`${errorMsgBase} failed to extract stream for asset version ${assetVersion.idAssetVersion}`, LOG.LS.eHTTP);
+                LOG.error(`${errorMsgBase} failed to extract stream for asset version ${assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eHTTP);
                 return this.sendError(500);
             }
 
-            const fileNameAndPath: string = path.posix.join(asset.FilePath, assetVersion.FileName);
+            const fileNameAndPath: string = path.posix.join(assetVersion.FilePath, assetVersion.FileName);
             const res: H.IOResults = await zip.add(fileNameAndPath, RSR.readStream);
             if (!res.success) {
                 LOG.error(`${errorMsgBase} failed to add asset version ${assetVersion.idAssetVersion} to zip: ${res.error}`, LOG.LS.eHTTP);
@@ -391,11 +212,19 @@ class Downloader {
         return true;
     }
 
+    private async emitDownloadContent(content: string | null, filename: string | null): Promise<boolean> {
+        this.response.setHeader('Content-disposition', `inline; filename=${filename ?? 'content.txt'}`);
+        this.response.setHeader('Content-type', 'text/plain');
+        this.response.write(content ?? '');
+        this.response.end();
+        return true;
+    }
+
     private async emitDownloadFromStream(readStream: NodeJS.ReadableStream, fileNameIn: string, mimeType: string | undefined): Promise<boolean> {
         const fileName: string = fileNameIn.replace(/,/g, '_'); // replace commas with underscores to avoid ERR_RESPONSE_HEADERS_MULTIPLE_CONTENT_DISPOSITION browser error
         if (!mimeType)
             mimeType = mime.lookup(fileName) || 'application/octet-stream';
-        LOG.info(`/download emitDownloadFromStream filename=${fileName}, mimetype=${mimeType}`, LOG.LS.eHTTP);
+        LOG.info(`${Downloader.httpRoute} emitDownloadFromStream filename=${fileName}, mimetype=${mimeType}`, LOG.LS.eHTTP);
 
         this.response.setHeader('Content-disposition', 'attachment; filename=' + fileName);
         if (mimeType)

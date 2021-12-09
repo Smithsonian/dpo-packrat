@@ -8,7 +8,7 @@
  */
 import { Box, makeStyles, Typography } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
@@ -80,16 +80,18 @@ interface ModelProps {
     onClickRight: () => Promise<void>;
     isLast: boolean;
     rightLoading: boolean;
+    disableNavigation: boolean;
 }
 
 function Model(props: ModelProps): React.ReactElement {
-    const { metadataIndex, onPrevious, onClickRight, isLast, rightLoading } = props;
+    const { metadataIndex, onPrevious, onClickRight, isLast, rightLoading, disableNavigation } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
-    const { model } = metadata;
+    const { model, file } = metadata;
+    const { idAsset } = file;
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
-    const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
+    const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const [modalOpen, setModalOpen] = useState(false);
@@ -139,6 +141,11 @@ function Model(props: ModelProps): React.ReactElement {
     const idAssetVersion = urlParams.get('fileId');
 
     useEffect(() => {
+        if (idAsset)
+            updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.model);
+    }, [metadataIndex, idAsset, updateMetadataField]);
+
+    useEffect(() => {
         async function fetchModelConstellation() {
             const { data } = await apolloClient.query({
                 query: GetModelConstellationForAssetVersionDocument,
@@ -167,10 +174,11 @@ function Model(props: ModelProps): React.ReactElement {
     }, [idAssetVersion, metadataIndex, updateMetadataField]);
 
     // use subject's idSystemObject as the root to initialize the repository browser
+    const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
     const subjectIdSystemObject = useGetSubjectQuery({
         variables: {
             input: {
-                idSubject: subjects[0]?.id
+                idSubject: validSubjectId
             }
         }
     });
@@ -211,13 +219,13 @@ function Model(props: ModelProps): React.ReactElement {
     };
 
     const openSourceObjectModal = async () => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };
@@ -238,6 +246,7 @@ function Model(props: ModelProps): React.ReactElement {
         setModalOpen(false);
         setObjectRelationship(RelatedObjectType.Source);
         closeRepositoryBrowser();
+        resetRepositoryBrowserRoot();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
@@ -249,6 +258,12 @@ function Model(props: ModelProps): React.ReactElement {
     return (
         <React.Fragment>
             <Box className={classes.container}>
+                {idAsset && (
+                    <Box mb={2}>
+                        <TextArea label='Update Notes' value={model.updateNotes} name='updateNotes' onChange={setNameField} placeholder='Update notes...' />
+                    </Box>
+                )}
+
                 <Box mb={2}>
                     <AssetIdentifiers
                         systemCreated={model.systemCreated}
@@ -370,6 +385,7 @@ function Model(props: ModelProps): React.ReactElement {
                     onClickLeft={onPrevious}
                     rightLabel={isLast ? 'Finish' : 'Next'}
                     onClickRight={onClickRight}
+                    disableNavigation={disableNavigation}
                 />
                 <ObjectMeshTable modelObjects={modelObjects} />
             </Box>
@@ -386,18 +402,3 @@ function Model(props: ModelProps): React.ReactElement {
 }
 
 export default Model;
-
-// import UVContents from './UVContents';
-// const updateUVMapsVariant = (uvMapId: number, mapType: number) => {
-//     const { uvMaps } = model;
-//     const updatedUVMaps = uvMaps.map(uvMap => {
-//         if (uvMapId === uvMap.id) {
-//             return {
-//                 ...uvMap,
-//                 mapType
-//             };
-//         }
-//         return uvMap;
-//     });
-//     updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
-// };

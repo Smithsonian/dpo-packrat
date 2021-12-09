@@ -86,9 +86,12 @@ export function getSortedTreeEntries(entries: NavigationResultEntry[]): Navigati
 }
 
 export function trimmedMetadataField(value: string, start: number, end: number): string {
-    const { length } = value;
-    if (length < 30) return value;
-    return `${value.substring(0, start)}...${value.substring(length - end, length)}`;
+    if (!value)
+        return '';
+    const length = value.length;
+    if (length < (start + end))
+        return value;
+    return `${value.substring(0, start)} ... ${value.substring(length - end, length)}`;
 }
 
 export function parseRepositoryUrl(search: string): any {
@@ -179,10 +182,11 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
             metadataTitleMap.set(filterOption.value, filterOption.label);
     }
 
+    const valuesCount: number = values ? values.length : 0;
     metadataColumns.forEach((metadataColumn, index: number) => {
         const treeColumn: TreeViewColumn = {
             metadataColumn,
-            label: values ? values[index] : 'Unknown',
+            label: (values && valuesCount > index) ? values[index] : 'Unknown',
             size: MIN_SIZE
         };
 
@@ -264,9 +268,62 @@ export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | un
     return `${serverEndPoint}/download?idSystemObjectVersion=${idSystemObjectVersion}`;
 }
 
-export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number, path: string): string {
-    return `${serverEndPoint}/download/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
+export function getDownloadValueForMetadata(serverEndPoint: string | undefined, idMetadata): string {
+    return `${serverEndPoint}/download?idMetadata=${idMetadata}`;
 }
+
+export enum eVoyagerStoryMode {
+    eViewer,
+    eEdit,
+    eQC,
+    eAuthor,
+    eExpert,
+}
+
+export function getModeForVoyager(eMode?: eVoyagerStoryMode): string {
+    switch (eMode) {
+        default:
+        case eVoyagerStoryMode.eViewer: return '';
+        case eVoyagerStoryMode.eEdit:   return 'edit';
+        case eVoyagerStoryMode.eQC:     return 'qc';
+        case eVoyagerStoryMode.eAuthor: return 'author';
+        case eVoyagerStoryMode.eExpert: return 'expert';
+    }
+}
+
+export function getVoyagerModeFromParam(sMode: string): eVoyagerStoryMode {
+    switch (sMode) {
+        default:
+        case '':        return eVoyagerStoryMode.eViewer;
+        case 'edit':    return eVoyagerStoryMode.eEdit;
+        case 'qc':      return eVoyagerStoryMode.eQC;
+        case 'author':  return eVoyagerStoryMode.eAuthor;
+        case 'expert':  return eVoyagerStoryMode.eExpert;
+    }
+}
+
+export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number,
+    path: string, eMode?: eVoyagerStoryMode | undefined): string {
+    let dlPath: string = 'download';
+    switch (eMode) {
+        default:
+        case eVoyagerStoryMode.eViewer: dlPath='download'; break;
+        case eVoyagerStoryMode.eEdit:   dlPath='webdav'; break;
+        case eVoyagerStoryMode.eQC:     dlPath='webdav'; break;
+        case eVoyagerStoryMode.eAuthor: dlPath='webdav'; break;
+        case eVoyagerStoryMode.eExpert: dlPath='webdav'; break;
+    }
+    return `${serverEndPoint}/${dlPath}/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
+}
+
+export function getVoyagerStoryUrl(serverEndPoint: string | undefined, idSystemObject: number,
+    document: string, path: string, eMode?: eVoyagerStoryMode | undefined): string {
+
+    const mode: string = getModeForVoyager(eMode);
+    const root: string = getRootSceneDownloadUrlForVoyager(serverEndPoint, idSystemObject, path, eMode);
+    return `/repository/voyager/${idSystemObject}?mode=${mode}&root=${root}&document=${document}`;
+}
+
 
 // prettier-ignore
 export function getTreeViewStyleHeight(isExpanded: boolean, isModal: boolean, breakpoint: Breakpoint): string {
