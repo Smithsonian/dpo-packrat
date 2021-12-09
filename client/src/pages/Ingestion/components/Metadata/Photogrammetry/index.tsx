@@ -7,8 +7,8 @@
  */
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import React, { useState } from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField } from '../../../../../components';
+import React, { useState, useEffect } from 'react';
+import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, TextArea } from '../../../../../components';
 import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore, useRepositoryStore, useSubjectStore, StateRelatedObject } from '../../../../../store';
 import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
@@ -39,8 +39,14 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [modalOpen, setModalOpen] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
-    const { photogrammetry } = metadata;
+    const { photogrammetry, file } = metadata;
+    const { idAsset } = file;
     const errors = getFieldErrors(metadata);
+
+    useEffect(() => {
+        if (idAsset)
+            updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.photogrammetry);
+    }, [metadataIndex, idAsset, updateMetadataField]);
 
     const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
     const subjectIdSystemObject = useGetSubjectQuery({
@@ -139,9 +145,21 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         onModalClose();
     };
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
+    // console.log(`Photogrammetry.index.tsx photogrammetry=${JSON.stringify(photogrammetry)}`);
 
     return (
         <Box className={classes.container}>
+            {idAsset && (
+                <Box mb={2}>
+                    <TextArea
+                        label='Update Notes'
+                        value={photogrammetry.updateNotes}
+                        name='updateNotes'
+                        onChange={setNameField}
+                        placeholder='Update notes...'
+                    />
+                </Box>
+            )}
             <AssetIdentifiers
                 systemCreated={photogrammetry.systemCreated}
                 identifiers={photogrammetry.identifiers}

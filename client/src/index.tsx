@@ -19,15 +19,17 @@ import './global/root.css';
 import { apolloClient } from './graphql';
 import { Home, Login } from './pages';
 import * as serviceWorker from './serviceWorker';
-import { useUserStore, useVocabularyStore, useLicenseStore, useUsersStore } from './store';
+import { useUserStore, useVocabularyStore, useLicenseStore, useUsersStore, useObjectMetadataStore } from './store';
 import theme from './theme';
+import { eVocabularySetID } from './types/server';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
     const initialize = useUserStore(state => state.initialize);
-    const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
+    const [updateVocabularyEntries, getEntries] = useVocabularyStore(state => [state.updateVocabularyEntries, state.getEntries]);
     const updateLicenseEntries = useLicenseStore(state => state.updateLicenseEntries);
     const updateUsersEntries = useUsersStore(state => state.updateUsersEntries);
+    const initializeMdmEntries = useObjectMetadataStore(state => state.initializeMdmEntries);
 
     const initializeUser = useCallback(async () => {
         try {
@@ -35,11 +37,12 @@ function AppRouter(): React.ReactElement {
             await updateVocabularyEntries();
             await updateLicenseEntries();
             await updateUsersEntries();
+            await initializeMdmEntries(getEntries(eVocabularySetID.eEdanMDMFields).map(entry => entry.Term));
             setLoading(false);
         } catch {
             toast.error('Cannot connect to the server, please try again later');
         }
-    }, [initialize, updateVocabularyEntries, updateLicenseEntries, updateUsersEntries]);
+    }, [initialize, updateVocabularyEntries, updateLicenseEntries, updateUsersEntries, initializeMdmEntries, getEntries]);
 
     useEffect(() => {
         initializeUser();

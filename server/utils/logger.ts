@@ -28,16 +28,16 @@ export enum LS { // logger section
     eNONE,  // none specified ... don't use this!
 }
 
-export function info(message: string, eLogSection: LS): void {
-    logger.info(message, { eLS: eLogSection });
+export function info(message: string | undefined, eLogSection: LS): void {
+    logger.info(message ?? '', { eLS: eLogSection });
 }
 
-export function error(message: string, eLogSection: LS, obj: any | null = null): void {
+export function error(message: string | undefined, eLogSection: LS, obj: any | null = null): void {
     if (obj && typeof obj === 'object' && obj !== null) {
         obj.eLS = eLogSection;
-        logger.error(message, obj);
+        logger.error(message ?? '', obj);
     } else
-        logger.error(message, { eLS: eLogSection });
+        logger.error(message ?? '', { eLS: eLogSection });
 }
 
 function loggerSectionName(eLogSection: LS | undefined): string {

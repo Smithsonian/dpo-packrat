@@ -88,7 +88,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                 const { data } = await updateSourceObjects(idSystemObject, objectType, selectedRelationships, previouslySelectedObjects);
                 if (data.updateSourceObjects.success) {
                     if (data.updateSourceObjects.status === 'success') toast.success('Parent(s) successfully added');
-                    if (data.updateSourceObjects.status === 'warn') toast.warn(`The following parent(s) had mismatched relationship:${data.updateSourceObjects.message}`);
+                    if (data.updateSourceObjects.status === 'warn') toast.warn(`The following parent(s) had mismatched relationship: ${data.updateSourceObjects.message}`);
                 } else {
                     toast.error('Parent(s) could not be added. Please try again later');
                 }
@@ -96,7 +96,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                 const { data } = await updateDerivedObjects(idSystemObject, objectType, selectedRelationships, []);
                 if (data.updateDerivedObjects.success) {
                     if (data.updateDerivedObjects.status === 'success') toast.success('Child(ren) successfully added');
-                    if (data.updateDerivedObjects.status === 'warn') toast.warn(`The following child(ren) had mismatched relationship:${data.updateDerivedObjects.message}`);
+                    if (data.updateDerivedObjects.status === 'warn') toast.warn(`The following child(ren) had mismatched relationship: ${data.updateDerivedObjects.message}`);
                 } else {
                     toast.error('Child(ren) could not be added. Please try again later');
                 }
@@ -149,7 +149,8 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
 
             setSelected([...selected, sourceObject]);
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error);
         }
     };
 

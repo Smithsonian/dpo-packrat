@@ -190,8 +190,8 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
         const fileNameAsset: string = (fileName) ? path.basename(fileName) : H.Helpers.randomSlug();
         TestCase = { assets: [], assetVersions: [], SOBased };
 
-        TestCase.assets.push(new DBAPI.Asset({ idAsset: 0, FileName: fileNameAsset, FilePath: H.Helpers.randomSlug(), idAssetGroup: null, idVAssetType: vocabulary.idVocabulary, idSystemObject: null, StorageKey: '' }));
-        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, Version: 0 }));
+        TestCase.assets.push(new DBAPI.Asset({ idAsset: 0, FileName: fileNameAsset, idAssetGroup: null, idVAssetType: vocabulary.idVocabulary, idSystemObject: null, StorageKey: '' }));
+        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, idSOAttachment: null, FilePath: H.Helpers.randomSlug(), Version: 0 }));
         newAsset = true;
     } else {
         TestCase.SOBased = SOBased;
@@ -237,7 +237,7 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
             storageKey: TestCase.assetVersions[0].StorageKeyStaging,
             storageHash,
             FileName: TestCase.assets[0].FileName,
-            FilePath: TestCase.assets[0].FilePath,
+            FilePath: TestCase.assetVersions[0].FilePath,
             idAssetGroup: TestCase.assets[0].idAssetGroup,
             idVAssetType: TestCase.assets[0].idVAssetType,
             idUserCreator: TestCase.assetVersions[0].idUserCreator,
@@ -251,6 +251,7 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
             storageHash,
             asset: TestCase.assets[0],
             assetNameOverride: TestCase.assets[0].FileName,
+            FilePath: TestCase.assetVersions[0].FilePath,
             idUserCreator: TestCase.assetVersions[0].idUserCreator,
             DateCreated: TestCase.assetVersions[0].DateCreated
         };

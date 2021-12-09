@@ -63,7 +63,7 @@ export class ZipStream implements IZip {
     protected extractEntries(): H.IOResults {
         /* istanbul ignore next */
         if (!this._zip)
-            return { success: true, error: '' };
+            return { success: true };
         try {
             this.clearState();
             for (const entry in this._zip.files)
@@ -74,7 +74,7 @@ export class ZipStream implements IZip {
                 LOG.error(error, LOG.LS.eSYS,);
             return { success: false, error };
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     protected extractEntry(entry: string): void {
@@ -94,7 +94,7 @@ export class ZipStream implements IZip {
 
     async close(): Promise<H.IOResults> {
         this._zip = null;
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     async getAllEntries(filter: string | null): Promise<string[]> { return zipFilterResults(Array.from(this._entries.values()), filter); }

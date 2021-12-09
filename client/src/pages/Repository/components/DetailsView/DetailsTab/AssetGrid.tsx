@@ -17,17 +17,17 @@ import { getObjectAssets } from '../../../hooks/useDetailsView';
 import { getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { sharedButtonProps, formatDate } from '../../../../../utils/shared';
-import { updateSystemObjectUploadRedirect } from '../../../../../constants';
+import { updateSystemObjectUploadRedirect, attachSystemObjectUploadRedirect } from '../../../../../constants';
 import { useHistory } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import MUIDataTable from 'mui-datatables';
-import GetAppIcon from '@material-ui/icons/GetApp';
+import { CheckCircleOutline, GetApp } from '@material-ui/icons';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import { DataTableOptions } from '../../../../../types/component';
 
 export const useStyles = makeStyles(({ palette }) => ({
-    btn: sharedButtonProps,
+    btn: { ...sharedButtonProps, width: 'fit-content' },
     tableContainer: {
         height: 'fit-content',
         backgroundColor: palette.secondary.light,
@@ -173,8 +173,15 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
 
             switch (colType) {
                 case eAssetGridColumnType.eString:
-                case eAssetGridColumnType.eBoolean:
                 case eAssetGridColumnType.eNumber:
+                    break;
+                case eAssetGridColumnType.eBoolean:
+                    gridColumnObject.options = {
+                        ...gridColumnObject.options,
+                        customBodyRender(value) {
+                            return value ? <CheckCircleOutline /> : '';
+                        }
+                    };
                     break;
                 case eAssetGridColumnType.eDate:
                     gridColumnObject.options = {
@@ -250,7 +257,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
 
     const renderIcon = (type: eIcon) => {
         if (type === eIcon.eIconDownload) {
-            return <GetAppIcon />;
+            return <GetApp />;
         }
         return;
     };
@@ -277,6 +284,12 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         };
     }
 
+    const addAttachment = () => {
+        const { assetType } = assetRows[0];
+        const newEndpoint = attachSystemObjectUploadRedirect(idSystemObject, assetType);
+        history.push(newEndpoint);
+    };
+
     const options: DataTableOptions = {
         filter: false,
         filterType: 'dropdown',
@@ -299,17 +312,22 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                 </Box>
             </MuiThemeProvider>
 
-            <Box display='flex' flexDirection='row' alignItems='center' mt={1}>
-                {assetRows.length > 0 && (
-                    <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
-                        <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ width: 'fit-content', whiteSpace: 'nowrap' }}>
-                            Download All
-                        </Button>
-                    </a>
-                )}
-                <Button className={classes.btn} variant='contained' color='primary' style={{ width: 'fit-content', marginLeft: '2px' }} onClick={redirect}>
-                    Add Version
-                </Button>
+            <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' mt={1} width='100%'>
+                <Box display='flex' flexDirection='row' alignItems='center'>
+                    {assetRows.length > 0 && (
+                        <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
+                            <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ whiteSpace: 'nowrap' }}>
+                                Download All
+                            </Button>
+                        </a>
+                    )}
+                    <Button className={classes.btn} variant='contained' color='primary' style={{ marginLeft: '2px' }} onClick={redirect}>
+                        Add Version
+                    </Button>
+                </Box>
+                <Box display='flex' flexDirection='row' alignItems='center' style={{ alignSelf: 'flex-end' }}>
+                    { systemObjectType === eSystemObjectType.eScene && (<Button className={classes.btn} variant='contained' color='primary' onClick={addAttachment}>Add Attachment</Button>) }
+                </Box>
             </Box>
         </React.Fragment>
     );

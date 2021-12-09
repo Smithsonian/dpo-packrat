@@ -4,6 +4,8 @@ import * as STORE from '../../storage/interface';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as H from '../../utils/helpers';
+import { AuditFactory } from '../../audit/interface/AuditFactory';
+import { eEventKey } from '../../event/interface/EventEnums';
 import { ASL, LocalStore } from '../../utils/localStore';
 import { isAuthenticated } from '../auth';
 import { DownloaderParser, DownloaderParserResults } from './DownloaderParser';
@@ -22,6 +24,7 @@ export class WebDAVServer {
     protected WDFS: WebDAVFileSystem | null = null;
 
     private static _webDavServer: WebDAVServer | null = null;
+    static httpRoute: string = '/webdav';
 
     static async server(): Promise<WebDAVServer | null> {
         if (!WebDAVServer._webDavServer) {
@@ -95,6 +98,7 @@ class WebDAVAuthentication implements webdav.HTTPAuthentication {
         }
 
         LOG.error(`WEBDAV ${ctx.request.url} not authenticated`, LOG.LS.eHTTP);
+        AuditFactory.audit({ url: ctx.request.url, auth: false }, { eObjectType: 0, idObject: 0 }, eEventKey.eHTTPDownload);
         callback(new Error('Not Authenticated'), { uid: '', username: 'Default', isDefaultUser: true });
         return;
     }
@@ -340,6 +344,11 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 return;
             }
 
+            // Audit download
+            const auditData = { url: `${WebDAVServer.httpRoute}${DP.requestURLV}`, auth: true };
+            const auditOID: DBAPI.ObjectIDAndType = { eObjectType: DP.eObjectTypeV, idObject: DP.idObjectV };
+            AuditFactory.audit(auditData, auditOID, eEventKey.eHTTPDownload);
+
             if (!DPResults.assetVersion) {
                 const error: string = `WebDAVFileSystem._openReadStream(${pathS}) called without an assetVersion`;
                 LOG.error(error, LOG.LS.eHTTP);
@@ -378,6 +387,11 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 // await this.removeLock(pathWD, info.context, lockUUID);
                 return;
             }
+
+            // Audit upload
+            const auditData = { url: `${WebDAVServer.httpRoute}${DP.requestURLV}`, auth: true };
+            const auditOID: DBAPI.ObjectIDAndType = { eObjectType: DP.eObjectTypeV, idObject: DP.idObjectV };
+            AuditFactory.audit(auditData, auditOID, eEventKey.eHTTPUpload);
 
             const SOP: DBAPI.SystemObjectPairs | null = (DP.idSystemObjectV) ? await DBAPI.SystemObjectPairs.fetch(DP.idSystemObjectV) : null;
             const SOBased: DBAPI.SystemObjectBased | null = SOP ? SOP.SystemObjectBased : null;
@@ -432,6 +446,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                         allowZipCracking: false,
                         idUserCreator,
                         SOBased,
+                        Comment: 'Created by WebDAV Save'
                     };
                     const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
                     if (!ISR.success)

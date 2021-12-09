@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * UploadCompleteList
  *
@@ -45,7 +46,13 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
     }
 }));
 
-function UploadListComplete(): React.ReactElement {
+
+interface UploadListCompleteProps {
+    setUpdatedAssetVersionMetadata: (metadata: any) => void;
+}
+
+function UploadListComplete(props: UploadListCompleteProps): React.ReactElement {
+    const { setUpdatedAssetVersionMetadata } = props;
     const classes = useStyles();
 
     const { completed, loadCompleted } = useUploadStore();
@@ -53,10 +60,13 @@ function UploadListComplete(): React.ReactElement {
     useEffect(() => {
         if (!loading && !error) {
             const { getUploadedAssetVersion } = data;
-            const { AssetVersion, idAssetVersionsUpdated } = getUploadedAssetVersion;
+            const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
+
             const fileIds: string[] = completed.map(({ id }) => id);
             const idAssetVersionsUpdatedSet = new Set(idAssetVersionsUpdated);
 
+            if (UpdatedAssetVersionMetadata && idAssetVersionsUpdated)
+                setUpdatedAssetVersionMetadata({ UpdatedAssetVersionMetadata,  idAssetVersionsUpdatedSet });
             const sortedAssetVersion = lodash.orderBy(AssetVersion, ['DateCreated'], ['desc']);
 
             if (!sortedAssetVersion) {

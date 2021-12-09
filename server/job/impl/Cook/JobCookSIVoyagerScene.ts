@@ -64,7 +64,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     async cleanupJob(): Promise<H.IOResults> {
         try {
             if (!this._results.success)
-                return { success: true, error: '' };
+                return { success: true };
             if (this.cleanupCalled)
                 return { success: true, error: 'cleanupJob already called, exiting early' };
             this.cleanupCalled = true;
@@ -183,6 +183,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             allowZipCracking: false,
             idUserCreator,
             SOBased: scene,
+            Comment: 'Created by Cook si-voyager-scene'
         };
         let ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!ISR.success) {
@@ -284,6 +285,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                         allowZipCracking: false,
                         idUserCreator,
                         SOBased: model,
+                        Comment: 'Created by Cook si-voyager-scene'
                     };
                     ISR = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISIModel);
                     if (!ISR.success) {
@@ -313,7 +315,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             }
         }
 
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     protected async getParameters(): Promise<JobCookSIVoyagerSceneParameters> {

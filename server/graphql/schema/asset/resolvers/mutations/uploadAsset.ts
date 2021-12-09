@@ -11,6 +11,8 @@ import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { ASL, LocalStore } from '../../../../../utils/localStore';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { eEventKey } from '../../../../../event/interface/EventEnums';
 
 interface ApolloFile {
     filename: string;
@@ -21,7 +23,7 @@ interface ApolloFile {
 
 export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult> {
     const { user } = context;
-    const uploadAssetWorker: UploadAssetWorker = new UploadAssetWorker(user, await args.file, args.idAsset, args.type);
+    const uploadAssetWorker: UploadAssetWorker = new UploadAssetWorker(user, await args.file, args.idAsset, args.type, args.idSOAttachment);
     return await uploadAssetWorker.upload();
 }
 
@@ -31,13 +33,15 @@ class UploadAssetWorker extends ResolverBase {
     private idAsset: number | undefined | null;
     private type: number;
     private LS: LocalStore | null = null;
+    private idSOAttachment: number | undefined | null;
 
-    constructor(user: User | undefined, apolloFile: ApolloFile, idAsset: number | undefined | null, type: number) {
+    constructor(user: User | undefined, apolloFile: ApolloFile, idAsset: number | undefined | null, type: number, idSOAttachment: number | undefined | null) {
         super();
         this.user = user;
         this.apolloFile = apolloFile;
         this.idAsset = idAsset;
         this.type = type;
+        this.idSOAttachment = idSOAttachment;
     }
 
     async upload(): Promise<UploadAssetResult> {
@@ -57,15 +61,20 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     private async uploadWorker(): Promise<UploadAssetResult> {
+        const { filename, createReadStream } = this.apolloFile;
+        AuditFactory.audit({ url: `/ingestion/uploads/${filename}`, auth: (this.user !== undefined) }, { eObjectType: DBAPI.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 }, eEventKey.eHTTPUpload);
+
         if (!this.user) {
             LOG.error('uploadAsset unable to retrieve user context', LOG.LS.eGQL);
             return { status: UploadStatus.Failed, error: 'User not authenticated' };
         }
 
-        if (!this.idAsset)
-            await this.appendToWFReport(`<b>Upload starting</b>: ADD ${this.apolloFile.filename}`, true);
+        if (this.idSOAttachment)
+            await this.appendToWFReport(`<b>Upload starting</b>: ATTACH ${filename}`, true);
+        else if (!this.idAsset)
+            await this.appendToWFReport(`<b>Upload starting</b>: ADD ${filename}`, true);
         else
-            await this.appendToWFReport(`<b>Upload starting</b>: UPDATE ${this.apolloFile.filename}`, true);
+            await this.appendToWFReport(`<b>Upload starting</b>: UPDATE ${filename}`, true);
 
         const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
@@ -73,9 +82,8 @@ class UploadAssetWorker extends ResolverBase {
             return { status: UploadStatus.Failed, error: 'Storage unavailable' };
         }
 
-        const { filename, createReadStream } = this.apolloFile;
         const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
-        if (WSResult.error || !WSResult.writeStream || !WSResult.storageKey) {
+        if (!WSResult.success || !WSResult.writeStream || !WSResult.storageKey) {
             LOG.error(`uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`, LOG.LS.eGQL);
             return { status: UploadStatus.Failed, error: 'Storage unavailable' };
         }
@@ -138,6 +146,7 @@ class UploadAssetWorker extends ResolverBase {
                 FilePath: '',
                 idAssetGroup: 0,
                 idVAssetType: idVocabulary,
+                idSOAttachment: this.idSOAttachment,
                 idUserCreator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 DateCreated: new Date()
             };
@@ -150,11 +159,21 @@ class UploadAssetWorker extends ResolverBase {
                 LOG.error(error, LOG.LS.eGQL);
                 return { status: UploadStatus.Failed, error };
             }
+
+            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(this.idAsset);
+            if (!assetVersion) {
+                const error: string = `uploadAsset unable to fetch latest asset version from asset ${this.idAsset}`;
+                LOG.error(error, LOG.LS.eGQL);
+                return { status: UploadStatus.Failed, error };
+            }
+
             const ASCNAVI: STORE.AssetStorageCommitNewAssetVersionInput = {
                 storageKey,
                 storageHash: null,
                 asset,
+                idSOAttachment: this.idSOAttachment,
                 assetNameOverride: filename,
+                FilePath: assetVersion.FilePath,
                 idUserCreator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 DateCreated: new Date()
             };
@@ -200,13 +219,13 @@ class UploadAssetWorker extends ResolverBase {
                 };
 
                 const workflow: WF.IWorkflow | null = await this.workflowHelper.workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion, workflowParams);
-                const results = workflow ? await workflow.waitForCompletion(3600000) : { success: true, error: '' };
+                const results = workflow ? await workflow.waitForCompletion(3600000) : { success: true };
                 if (results.success) {
                     idAssetVersions.push(assetVersion.idAssetVersion);
                     if (assetVersion.Ingested === null) {
                         assetVersion.Ingested = false;
                         if (!await assetVersion.update())
-                            LOG.error('uploadAsset post-upload workflow suceeded, but unable to update asset version ingested flag', LOG.LS.eGQL);
+                            LOG.error('uploadAsset post-upload workflow succeeded, but unable to update asset version ingested flag', LOG.LS.eGQL);
                     }
                 } else {
                     await this.appendToWFReport(`uploadAsset post-upload workflow error: ${results.error}`, true, true);
@@ -265,7 +284,7 @@ class UploadAssetWorker extends ResolverBase {
         }
 
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
-        const results: H.IOResults = workflow ? await workflow.waitForCompletion(3600000) : { success: true, error: '' };
+        const results: H.IOResults = workflow ? await workflow.waitForCompletion(3600000) : { success: true };
         if (!results.success) {
             for (const assetVersion of assetVersions)
                 await this.retireFailedUpload(assetVersion);
@@ -273,14 +292,14 @@ class UploadAssetWorker extends ResolverBase {
             return results;
         }
 
-        return { success: true, error: '', workflowEngine, workflow, workflowReport };
+        return { success: true, workflowEngine, workflow, workflowReport };
     }
 
     private async retireFailedUpload(assetVersion: DBAPI.AssetVersion): Promise<H.IOResults> {
         const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
         if (SO) {
             if (await SO.retireObject())
-                return { success: true, error: '' };
+                return { success: true };
             const error: string = 'uploadAsset post-upload workflow error handler failed to retire uploaded asset';
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };

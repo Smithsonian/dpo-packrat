@@ -35,12 +35,12 @@ const ModelMaterialChannel = {
                 LOG.error(`ModelMaterialChannel.Source unable to load ModelMaterialUVMap from ${JSON.stringify(parent)}`, LOG.LS.eGQL);
                 return null;
             }
-            const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(uvMap.idAsset);
-            if (!asset) {
+            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(uvMap.idAsset);
+            if (!assetVersion) {
                 LOG.error(`ModelMaterialChannel.Source unable to load ModelMaterialUVMap's asset from ${JSON.stringify(parent)} -> ${JSON.stringify(uvMap)}`, LOG.LS.eGQL);
                 return null;
             }
-            return asset.FileName;
+            return assetVersion.FileName;
         }
         return parent.UVMapEmbedded ? '(embedded)' : '';
     },

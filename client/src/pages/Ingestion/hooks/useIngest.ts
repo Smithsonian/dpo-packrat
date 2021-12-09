@@ -35,6 +35,7 @@ import {
     IngestOtherInput,
     IngestPhotogrammetryInput,
     IngestProjectInput,
+    IngestSceneAttachmentInput,
     IngestSceneInput,
     IngestSubjectInput,
 } from '../../../types/graphql';
@@ -105,12 +106,13 @@ function useIngest(): UseIngest {
             const ingestModel: IngestModelInput[] = [];
             const ingestScene: IngestSceneInput[] = [];
             const ingestOther: IngestOtherInput[] = [];
+            const ingestSceneAttachment: IngestSceneAttachmentInput[] = [];
 
             const metadatasList = metadatas.length === 0 ? getMetadatas() : metadatas;
             lodash.forEach(metadatasList, metadata => {
                 console.log('ingestionStart metadata', metadata);
-                const { file, photogrammetry, model, scene, other } = metadata;
-                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, other: isOther } = getAssetType(file.type);
+                const { file, photogrammetry, model, scene, other, sceneAttachment } = metadata;
+                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, attachment: isAttachment, other: isOther } = getAssetType(file.type);
 
                 if (isPhotogrammetry) {
                     const {
@@ -133,7 +135,8 @@ function useIngest(): UseIngest {
                         identifiers,
                         folders,
                         sourceObjects,
-                        derivedObjects
+                        derivedObjects,
+                        updateNotes
                     } = photogrammetry;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
@@ -164,8 +167,10 @@ function useIngest(): UseIngest {
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);
-                    if (idAsset)
+                    if (idAsset) {
                         photogrammetryData.idAsset = idAsset;
+                        photogrammetryData.updateNotes = updateNotes;
+                    }
 
                     ingestPhotogrammetry.push(photogrammetryData);
                 }
@@ -182,7 +187,8 @@ function useIngest(): UseIngest {
                         modelFileType,
                         directory,
                         sourceObjects,
-                        derivedObjects
+                        derivedObjects,
+                        updateNotes
                     } = model;
 
                     let {
@@ -214,15 +220,17 @@ function useIngest(): UseIngest {
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);
-                    if (idAsset)
+                    if (idAsset) {
                         modelData.idAsset = idAsset;
+                        modelData.updateNotes = updateNotes;
+                    }
 
                     ingestModel.push(modelData);
                 }
 
                 if (isScene) {
                     const { identifiers, systemCreated, approvedForPublication, posedAndQCd, name, directory, sourceObjects,
-                        derivedObjects } = scene;
+                        derivedObjects, updateNotes } = scene;
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const sceneData: IngestSceneInput = {
@@ -238,14 +246,35 @@ function useIngest(): UseIngest {
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);
-                    if (idAsset)
+                    if (idAsset) {
                         sceneData.idAsset = idAsset;
+                        sceneData.updateNotes = updateNotes;
+                    }
 
                     ingestScene.push(sceneData);
                 }
 
+                if (isAttachment) {
+                    const { type, category, units, modelType, fileType, gltfStandardized, dracoCompressed, title, idAssetVersion, systemCreated, identifiers } = sceneAttachment;
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+                    const sceneAttachmentData: IngestSceneAttachmentInput = {
+                        type,
+                        category,
+                        units,
+                        modelType,
+                        fileType,
+                        gltfStandardized,
+                        dracoCompressed,
+                        title,
+                        idAssetVersion,
+                        systemCreated,
+                        identifiers: ingestIdentifiers
+                    };
+                    ingestSceneAttachment.push(sceneAttachmentData);
+                }
+
                 if (isOther) {
-                    const { identifiers, systemCreated } = other;
+                    const { identifiers, systemCreated, updateNotes } = other;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
                     const otherData: IngestOtherInput = {
@@ -258,7 +287,9 @@ function useIngest(): UseIngest {
                     if (idAsset) {
                         otherData.idAsset = idAsset;
                         otherData.systemCreated = false;
+                        otherData.updateNotes = updateNotes;
                     }
+
                     ingestOther.push(otherData);
                 }
             });
@@ -270,7 +301,8 @@ function useIngest(): UseIngest {
                 photogrammetry: ingestPhotogrammetry,
                 model: ingestModel,
                 scene: ingestScene,
-                other: ingestOther
+                other: ingestOther,
+                sceneAttachment: ingestSceneAttachment
             };
             console.log('** IngestDataInput', input);
 

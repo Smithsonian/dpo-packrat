@@ -25,7 +25,12 @@ import {
     ClearLicenseAssignmentMutation,
     AssignLicenseMutation,
     PublishMutation,
-    ExistingRelationship
+    ExistingRelationship,
+    DeleteMetadataDocument,
+    GetUnitsFromNameSearchQueryResult,
+    GetUnitsFromNameSearchDocument,
+    GetEdanUnitsNamedQueryResult,
+    GetEdanUnitsNamedDocument,
 } from '../../../types/graphql';
 import { eSystemObjectType, ePublishedState } from '../../../types/server';
 
@@ -164,12 +169,14 @@ export async function deleteIdentifier(idIdentifier: number) {
     });
 }
 
-export async function rollbackSystemObjectVersion(idSystemObjectVersion: number) {
+export async function rollbackSystemObjectVersion(idSystemObjectVersion: number, rollbackNotes: string) {
+    console.log('idSystemObjectVersion', idSystemObjectVersion, 'rollbackNotes', rollbackNotes);
     return await apolloClient.mutate({
         mutation: RollbackSystemObjectVersionDocument,
         variables: {
             input: {
-                idSystemObjectVersion
+                idSystemObjectVersion,
+                rollbackNotes
             }
         },
         refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
@@ -227,3 +234,33 @@ export async function publish(idSystemObject: number, eState: ePublishedState): 
     });
 }
 
+export async function deleteMetadata(idMetadata: number) {
+    return await apolloClient.mutate({
+        mutation: DeleteMetadataDocument,
+        variables: {
+            input: {
+                idMetadata
+            }
+        },
+        // refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+    });
+}
+
+export function useAllUnits(): GetUnitsFromNameSearchQueryResult {
+    return useQuery(GetUnitsFromNameSearchDocument, {
+        variables: {
+            input: {
+                search: ''
+            }
+        },
+        fetchPolicy: 'no-cache'
+    });
+}
+
+export function useEdanUnitsNamed(): GetEdanUnitsNamedQueryResult {
+    return useQuery(GetEdanUnitsNamedDocument, {
+        variables: {
+        },
+        fetchPolicy: 'no-cache'
+    });
+}

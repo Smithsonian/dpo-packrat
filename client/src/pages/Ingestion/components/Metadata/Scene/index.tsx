@@ -10,13 +10,14 @@ import { AssetIdentifiers } from '../../../../../components';
 import { StateIdentifier, useMetadataStore, StateRelatedObject, useRepositoryStore, useSubjectStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import ReferenceModels from './ReferenceModels';
-import SceneDataGrid from './SceneDataGrid';
+import SceneDataForm from './SceneDataForm';
 import { apolloClient } from '../../../../../graphql/index';
 import { GetSceneForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
 import { eSystemObjectType } from '../../../../../types/server';
 import { toast } from 'react-toastify';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
 import ObjectSelectModal from '../Model/ObjectSelectModal';
+import { TextArea } from '../../../../../components';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -33,10 +34,12 @@ function Scene(props: SceneProps): React.ReactElement {
     const { metadataIndex, setInvalidMetadataStep } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
-    const { scene } = metadata;
+    const { scene, file } = metadata;
+    const { idAsset } = file;
     const updateMetadataField = useMetadataStore(state => state.updateMetadataField);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
+
     // state responsible for ReferenceModels
     const [referenceModels, setReferenceModels] = useState([
         {
@@ -57,7 +60,7 @@ function Scene(props: SceneProps): React.ReactElement {
             idScene: 0
         }
     ]);
-    // state responsible for SceneDataGrid
+    // state responsible for SceneDataForm
     const [sceneData, setSceneData] = useState({
         idScene: 0,
         idAssetThumbnail: 0,
@@ -72,13 +75,19 @@ function Scene(props: SceneProps): React.ReactElement {
         CountTour: 0,
         EdanUUID: '',
         ApprovedForPublication: false,
-        PosedAndQCd: false
+        PosedAndQCd: false,
+        UpdateNotes: ''
     });
     const [modalOpen, setModalOpen] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
+
+    useEffect(() => {
+        if (idAsset)
+            updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.scene);
+    }, [metadataIndex, idAsset, updateMetadataField]);
 
     useEffect(() => {
         async function fetchSceneConstellation() {
@@ -163,6 +172,18 @@ function Scene(props: SceneProps): React.ReactElement {
 
     return (
         <Box className={classes.container}>
+            {idAsset && (
+                <Box mb={2}>
+                    <TextArea
+                        label='Update Notes'
+                        value={scene.updateNotes}
+                        name='updateNotes'
+                        onChange={setNameField}
+                        placeholder='Update notes...'
+                    />
+                </Box>
+            )}
+
             <AssetIdentifiers
                 systemCreated={scene.systemCreated}
                 identifiers={scene.identifiers}
@@ -190,7 +211,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 />
             </Box>
             <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
-            <SceneDataGrid
+            <SceneDataForm
                 sceneData={sceneData}
                 setCheckboxField={setCheckboxField}
                 setNameField={setNameField}
@@ -199,6 +220,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 posedAndQCd={scene.posedAndQCd}
                 EdanUUID={scene.EdanUUID}
             />
+
             <ObjectSelectModal
                 open={modalOpen}
                 onSelectedObjects={onSelectedObjects}

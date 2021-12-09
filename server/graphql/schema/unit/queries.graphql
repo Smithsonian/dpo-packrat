@@ -12,6 +12,7 @@ type Query {
     getItem(input: GetItemInput!): GetItemResult!
     getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput!): GetUnitsFromNameSearchResult!
     getUnitsFromEdanAbbreviation(input: GetUnitsFromEdanAbbreviationInput!): GetUnitsFromEdanAbbreviationResult!
+    getEdanUnitsNamed: GetEdanUnitsNamedResult!
 }
 
 input GetSubjectsForUnitInput {
@@ -132,4 +133,8 @@ type GetUnitsFromEdanAbbreviationResult {
 
 input GetUnitsFromEdanAbbreviationInput {
     abbreviation: String!
+}
+
+type GetEdanUnitsNamedResult {
+    UnitEdan: [UnitEdan!]
 }

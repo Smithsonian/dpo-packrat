@@ -18,14 +18,14 @@ export type ReadStreamResult = {
     fileName: string | null,
     storageHash: string | null,
     success: boolean,
-    error: string
+    error?: string
 };
 
 export type WriteStreamResult = {
     writeStream: NodeJS.WritableStream | null,
     storageKey: string | null,
     success: boolean,
-    error: string
+    error?: string
 };
 
 export type CommitWriteStreamInput = {
@@ -37,7 +37,7 @@ export type CommitWriteStreamResult = {
     storageHash: string | null,
     storageSize: number | null,
     success: boolean,
-    error: string
+    error?: string
 };
 
 export type DiscardWriteStreamInput = {
@@ -46,7 +46,7 @@ export type DiscardWriteStreamInput = {
 
 export type DiscardWriteStreamResult = {
     success: boolean,
-    error: string
+    error?: string
 };
 
 export type PromoteStagedAssetInput = {
@@ -60,7 +60,7 @@ export type PromoteStagedAssetInput = {
 
 export type PromoteStagedAssetResult = {
     success: boolean,
-    error: string
+    error?: string
 };
 
 export type RenameAssetInput = {
@@ -72,7 +72,7 @@ export type RenameAssetInput = {
 
 export type RenameAssetResult = {
     success: boolean,
-    error: string
+    error?: string
 };
 
 export type HideAssetInput = {
@@ -83,7 +83,7 @@ export type HideAssetInput = {
 
 export type HideAssetResult = {
     success: boolean,
-    error: string
+    error?: string
 };
 
 export type ReinstateAssetInput = {
@@ -95,7 +95,7 @@ export type ReinstateAssetInput = {
 
 export type ReinstateAssetResult = {
     success: boolean,
-    error: string
+    error?: string
 };
 
 export type UpdateMetadataInput = {
@@ -106,18 +106,18 @@ export type UpdateMetadataInput = {
 
 export type UpdateMetadataResult = {
     success: boolean,
-    error: string
+    error?: string
 };
 
 export type ComputeStorageKeyResult = {
     storageKey: string;
     success: boolean,
-    error: string
+    error?: string
 };
 
 export type ValidateAssetResult = {
     success: boolean,
-    error: string
+    error?: string
 };
 
 export interface IStorage {

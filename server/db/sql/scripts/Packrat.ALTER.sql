@@ -180,3 +180,242 @@ ADD CONSTRAINT `fk_sentinel_user1`
   ON UPDATE NO ACTION;
 
 -- 2021-11-04 Deployed to Staging
+
+-- 2021-11-17 Jon
+ALTER TABLE AssetVersion ADD COLUMN `idSOAttachment` int(11) NULL;
+ALTER TABLE AssetVersion
+ADD CONSTRAINT `fk_assetversion_systemobject1`
+  FOREIGN KEY (`idSOAttachment`)
+  REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+
+-- 2021-11-21 Jon
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (24, 'Edan3DResource.AttributeUnits', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (25, 'Edan3DResource.AttributeModelFileType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (26, 'Edan3DResource.AttributeFileType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (27, 'Edan3DResource.Type', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (28, 'Edan3DResource.Category', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 1, 'mm');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 2, 'cm');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 3, 'm');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 4, 'km');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 5, 'in');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 6, 'ft');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 7, 'yd');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 8, 'mi');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (25, 1, 'obj');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (25, 2, 'ply');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (25, 3, 'stl');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (25, 4, 'glb');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (25, 5, 'x3d');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (25, 6, 'gltf');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (25, 7, 'usdz');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (26, 1, 'zip');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (26, 2, 'glb');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (26, 3, 'usdz');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (27, 1, '3d mesh');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (27, 2, 'CAD model');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (28, 1, 'Full resolution');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (28, 2, 'Medium resolution');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (28, 3, 'Low resolution');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (28, 4, 'Watertight');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (28, 5, 'iOS AR model');
+
+UPDATE Vocabulary SET SortOrder = 17 WHERE idVocabularySet = 20 AND Term = 'Other';
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 16, 'Attachment');
+
+-- 2021-11-23 Jon
+ALTER TABLE SystemObjectVersion ADD COLUMN Comment text NULL;
+
+-- 2021-11-27 Jon
+UPDATE VocabularySet SET Name = 'Edan.3DResourceAttributeUnits' WHERE Name = 'Edan3DResource.AttributeUnits';
+UPDATE VocabularySet SET Name = 'Edan.3DResourceAttributeModelFileType' WHERE Name = 'Edan3DResource.AttributeModelFileType';
+UPDATE VocabularySet SET Name = 'Edan.3DResourceAttributeFileType' WHERE Name = 'Edan3DResource.AttributeFileType';
+UPDATE VocabularySet SET Name = 'Edan.3DResourceType' WHERE Name = 'Edan3DResource.Type';
+UPDATE VocabularySet SET Name = 'Edan.3DResourceCategory' WHERE Name = 'Edan3DResource.Category';
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (29, 'Edan.MDMFields', 1);
+
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 1, 'Label');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 2, 'Title');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 3, 'Record ID');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 4, 'Unit');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 5, 'License');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 6, 'License Text');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 7, 'Object Type');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 8, 'Date');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 9, 'Place');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 10, 'Topic');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 11, 'Identifier (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 12, 'Data Source (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 13, 'Date (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 14, 'Name (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 15, 'Object Rights (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 16, 'Place (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 17, 'Taxonomic Name (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 18, 'Notes (FT)');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 19, 'Physical Description (FT)');
+
+-- 2021-12-03 Jon
+ALTER TABLE AssetVersion ADD COLUMN FilePath varchar(512) NULL;
+
+UPDATE AssetVersion AS AV
+JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+SET AV.FilePath = A.FilePath;
+
+ALTER TABLE Asset DROP COLUMN `FilePath`;
+
+ALTER TABLE AssetVersion MODIFY COLUMN `FilePath` varchar(512) NOT NULL;
+
+-- 2021-12-08 Jon
+DROP TABLE UnitEdan;
+
+CREATE TABLE IF NOT EXISTS `UnitEdan` (
+  `idUnitEdan` int(11) NOT NULL AUTO_INCREMENT,
+  `idUnit` int(11) DEFAULT NULL,
+  `Name` varchar(255) NULL,
+  `Abbreviation` varchar(100) NOT NULL UNIQUE,
+  PRIMARY KEY (`idUnitEdan`),
+  KEY `UnitEdan_Abbreviation` (`Abbreviation`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+ALTER TABLE `UnitEdan` 
+ADD CONSTRAINT `fk_unitedan_idunit`
+  FOREIGN KEY (`idUnit`)
+  REFERENCES `Unit` (`idUnit`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, '3D_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (4, 'Archives of American Art', 'AAA');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (4, NULL, 'AAA TH');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (4, NULL, 'AAA_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (4, NULL, 'AAA_PC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (4, NULL, 'AAA_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (4, NULL, 'AAADCD');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (29, 'Archives of American Gardens', 'AAG');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (29, NULL, 'AAG_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (2, 'Anacostia Community Museum', 'ACM');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (2, NULL, 'ACM_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (2, NULL, 'ACMA_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'AECI');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (25, NULL, 'APAP_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'ARI');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'CEPH');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (5, 'Center for Folklife and Cultural Heritage', 'CFCHFOLKLIFE');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (5, NULL, 'CFCHFOLKLIFE_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (5, NULL, 'CFCHFOLKWAYS_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (6, 'Cooper Hewitt, Smithsonian Design Museum', 'CHNDM');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (6, NULL, 'CHNDM_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (6, NULL, 'CHNDM_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (23, '3D Smithsonian', 'DPO');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (15, NULL, 'EEPA');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (30, NULL, 'FBR');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (5, NULL, 'FLP_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (5, NULL, 'FLP_PC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'FONZ_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'FPMS_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'FSA_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (7, 'Freer Gallery of Art and Arthur M. Sackler Gallery', 'FSG');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (7, NULL, 'FSG_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (7, NULL, 'FSG_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'HAC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (8, 'Hirshhorn Museum and Sculpture Garden', 'HMSG');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (8, NULL, 'HMSG_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, NULL, 'HSFA');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, NULL, 'HSFA_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (25, NULL, 'IAHP_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (11, NULL, 'MCI_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'MMAM');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'MSB');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'National Anthropological Archives', 'NAA');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (12, 'National Air and Space Museum', 'NASM');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (12, NULL, 'NASM_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (12, NULL, 'NASM_PC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (12, NULL, 'NASM_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (14, 'National Museum of African American History and Culture', 'NMAAHC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (14, NULL, 'NMAAHC_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (15, 'National Museum of African Art', 'NMAfA');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (15, NULL, 'NMAfA_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (16, 'National Museum of American History', 'NMAH');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (16, NULL, 'NMAH_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (16, NULL, 'NMAH_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (16, NULL, 'NMAH-AF');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (16, NULL, 'NMAHLC_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (18, 'National Museum of the American Indian', 'NMAI');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (18, NULL, 'NMAI_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (18, NULL, 'NMAI_PC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (18, NULL, 'NMAI_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'NMAIA');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, NULL, 'NMNH_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, NULL, 'NMNH_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Anthropology Dept.', 'NMNHANTHRO');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Vertebrate Zoology - Birds Division', 'NMNHBIRDS');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Botany Dept.', 'NMNHBOTANY');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Education & Outreach', 'NMNHEDUCATION');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Entomology Dept.', 'NMNHENTO');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Vertebrate Zoology - Fishes Division', 'NMNHFISHES');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Vertebrate Zoology - Herpetology Division', 'NMNHHERPS');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Invertebrate Zoology Dept.', 'NMNHINV');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Vertebrate Zoology - Mammals Division', 'NMNHMAMMALS');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Mineral Sciences Dept.', 'NMNHMINSCI');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (17, 'NMNH - Paleobiology Dept.', 'NMNHPALEO');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (19, 'National Portrait Gallery', 'NPG');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (19, NULL, 'NPG_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (19, NULL, 'NPG_PC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (19, NULL, 'NPG_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (19, NULL, 'NPGCAP');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (20, 'National Postal Museum', 'NPM');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (20, NULL, 'NPM_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (20, NULL, 'NPM_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'NSRC_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (21, 'National Zoo', 'NZP');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (21, NULL, 'NZP_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (29, 'Smithsonian Gardens', 'OFEO-SG');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, 'Smithsonian American Art Museum', 'SAAM');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'SAAM_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'SAAM_PC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'SAAM_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'SAAMPHOTO');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (26, 'Smithsonian Astrophysical Observatory', 'SAO');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (26, NULL, 'SAO_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, 'Smithsonian Center for Learning and Digital Access', 'SCLDA');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (28, NULL, 'SERC_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (28, NULL, 'SERC_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (29, NULL, 'SG_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SI');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SI_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SI20_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (30, 'Smithsonian Institution Archives', 'SIA');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (30, NULL, 'SIA_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (30, NULL, 'SIA_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (30, NULL, 'SIAFFIL_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (30, 'Smithsonian Archives - History Div', 'SIA-HIS');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (30, NULL, 'SIAPA_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SICHANNEL_PC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SICHANNEL_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SIEDU_PC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SIEDUC_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (31, 'Smithsonian Libraries', 'SIL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (31, NULL, 'SIL_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (31, NULL, 'SIL_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (31, NULL, 'SILAF');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (31, NULL, 'SILDF');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (31, NULL, 'SILNMAHTL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (31, NULL, 'SILSRO');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SIMAG_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SIMAG_PC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SIMAG_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SIMBC_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (23, NULL, 'SIOCIO_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SIOPA_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SISCIEDU_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SITES_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SITES_PC');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SITES_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SJ_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SLC_YT');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SS_BL');
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (32, NULL, 'STRI_YT');
+

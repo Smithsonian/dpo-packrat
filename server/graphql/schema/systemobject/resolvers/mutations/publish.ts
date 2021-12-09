@@ -9,5 +9,7 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
 
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
     const success: boolean = await ICol.publish(idSystemObject, eState);
-    return { success, message: success ? '' : 'Error encountered during publishing' };
+    if (success)
+        return { success, eState };
+    return { success, message: 'Error encountered during publishing' };
 }

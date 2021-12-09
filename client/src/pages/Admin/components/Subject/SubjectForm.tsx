@@ -1,10 +1,10 @@
-/* eslint-disable react/jsx-max-props-per-line, @typescript-eslint/no-explicit-any */
+/* eslint-disable react/jsx-max-props-per-line, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps*/
 
 import { Box, Button, Select, MenuItem } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { FieldType, InputField } from '../../../../components';
-import { useSubjectStore, StateIdentifier, useVocabularyStore } from '../../../../store';
+import { useSubjectStore, StateIdentifier, useVocabularyStore, eObjectMetadataType, useObjectMetadataStore } from '../../../../store';
 import SearchList from '../../../Ingestion/components/SubjectItem/SearchList';
 import { RotationOriginInput, RotationQuaternionInput } from '../../../Repository/components/DetailsView/DetailsTab/SubjectDetails';
 import { getUnitsList, getUnitFromEdanAbbreviation, createLocation, createSubjectWithIdentifiers } from '../../hooks/useAdminview';
@@ -15,6 +15,7 @@ import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
 import { useHistory } from 'react-router-dom';
 import { CreateSubjectWithIdentifiersInput } from '../../../../types/graphql';
 import { Helmet } from 'react-helmet';
+import MetadataControlTable from '../../../Repository/components/DetailsView/DetailsTab/MetadataControlTable';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -90,10 +91,9 @@ function SubjectForm(): React.ReactElement {
     const [systemCreated, setSystemCreated] = useState(false);
     const [validName, setValidName] = useState(true);
     const [validUnit, setValidUnit] = useState(true);
-
     const [subjects, reset] = useSubjectStore(state => [state.subjects, state.reset]);
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
-
+    const [getAllMetadataEntries, resetMetadata, validateMetadataFields, initializeMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.resetMetadata, state.validateMetadataFields, state.initializeMetadata]);
     const schema = yup.object().shape({
         subjectName: yup.string().min(1),
         subjectUnit: yup.number().positive(),
@@ -159,6 +159,17 @@ function SubjectForm(): React.ReactElement {
         extractSubjectData();
     }, [subjects, getEntries]);
 
+    useEffect(() => {
+        initializeMetadata(eObjectMetadataType.eSubjectCreation);
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            reset();
+            resetMetadata();
+        };
+    }, []);
+
     const onIdentifierChange = (identifiers: StateIdentifier[]) => {
         setSubjectIdentifiers(identifiers);
     };
@@ -193,9 +204,15 @@ function SubjectForm(): React.ReactElement {
             const isValidIdentifiers = (await schema.isValid({ subjectIdentifiers })) || systemCreated;
             if (!isValidIdentifiers) toast.error('Creation Failed: Must Either Include Identifier Or Have System Create One', { autoClose: false });
 
-            return isValidName && isValidUnit && isValidIdentifiers;
+            const invalidMetadata = validateMetadataFields(eObjectMetadataType.eSubjectCreation);
+            if (invalidMetadata.length) {
+                invalidMetadata.forEach(message => toast.error(message, { autoClose: false }));
+            }
+
+            return isValidName && isValidUnit && isValidIdentifiers && invalidMetadata.length === 0;
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error);
         }
     };
 
@@ -241,13 +258,14 @@ function SubjectForm(): React.ReactElement {
             const identifierList = subjectIdentifiers.map(({ identifier, identifierType, preferred }) => {
                 return { identifierValue: identifier, identifierType: identifierType || getEntries(eVocabularySetID.eIdentifierIdentifierType)[0].idVocabulary, preferred };
             });
-
+            const metadata = getAllMetadataEntries();
             const createSubjectWithIdentifiersInput: CreateSubjectWithIdentifiersInput = {
                 identifiers: identifierList,
                 subject: { idUnit: subjectUnit, Name: subjectName, idGeoLocation },
-                systemCreated
+                systemCreated,
+                metadata
             };
-            console.log('createSubjectsWithIdentifiersInput', createSubjectWithIdentifiersInput);
+            // console.log('createSubjectsWithIdentifiersInput', createSubjectWithIdentifiersInput);
 
             const {
                 data: {
@@ -257,12 +275,14 @@ function SubjectForm(): React.ReactElement {
             if (success) {
                 toast.success('Subject Successfully Created!');
                 reset();
+                resetMetadata();
                 history.push('/admin/subjects');
             } else {
-                toast.error(`Error: Failure To Create Subject - ${message}`);
+                toast.error(`Failure To Create Subject: ${message}`);
             }
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error);
         }
     };
 
@@ -310,6 +330,9 @@ function SubjectForm(): React.ReactElement {
                     onUpdateIdIdentifierPreferred={onIdentifierPreferredChange}
                     subjectView
                 />
+                <Box mb={3}>
+                    <MetadataControlTable type={eObjectMetadataType.eSubjectCreation} metadataData={[]} />
+                </Box>
                 <Button className={classes.btn} onClick={onCreateSubject}>
                     Create
                 </Button>

@@ -17,6 +17,7 @@ type AssetType = {
     scene: boolean;
     model: boolean;
     other: boolean;
+    attachment: boolean;
 };
 
 type VocabularyStore = {
@@ -26,10 +27,12 @@ type VocabularyStore = {
     getEntries: (eVocabularySetID: eVocabularySetID) => VocabularyOption[];
     getInitialEntry: (eVocabularySetID: eVocabularySetID) => number | null;
     getVocabularyTerm: (eVocabularySetID: eVocabularySetID, idVocabulary: number) => string | null;
+    getVocabularyId: (eVocabularyID: eVocabularyID) => number | null;
     getAssetType: (idVocabulary: number) => AssetType;
     getAssetTypeForExtension: (extension: string) => number | null;
 };
 
+// FIXME: read all vocabulary set IDs from enum
 export const useVocabularyStore = create<VocabularyStore>((set: SetState<VocabularyStore>, get: GetState<VocabularyStore>) => ({
     vocabularies: new Map<eVocabularySetID, VocabularyOption[]>(),
     vocabularyMap: new Map<eVocabularyID, Vocabulary>(),
@@ -54,7 +57,15 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eModelMaterialChannelMaterialType,
                     eVocabularySetID.eCaptureDataCaptureMethod,
                     eVocabularySetID.eJobJobType,
-                    eVocabularySetID.eWorkflowType
+                    eVocabularySetID.eWorkflowType,
+                    eVocabularySetID.eWorkflowEvent,
+                    eVocabularySetID.eEdan3DResourceAttributeUnits,
+                    eVocabularySetID.eEdan3DResourceAttributeModelFileType,
+                    eVocabularySetID.eEdan3DResourceAttributeFileType,
+                    eVocabularySetID.eEdan3DResourceType,
+                    eVocabularySetID.eEdan3DResourceCategory,
+                    eVocabularySetID.eEdanMDMFields,
+                    eVocabularySetID.eMetadataMetadataSource
                 ]
             }
         };
@@ -115,6 +126,11 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
 
         return null;
     },
+    getVocabularyId: (eVocabularyID: eVocabularyID): number | null => {
+        const { vocabularyMap } = get();
+        const vocabulary = vocabularyMap.get(eVocabularyID);
+        return vocabulary ? vocabulary.idVocabulary : null;
+    },
     getAssetType: (idVocabulary: number): AssetType => {
         const { vocabularies } = get();
         const vocabularyEntry = vocabularies.get(eVocabularySetID.eAssetAssetType);
@@ -123,7 +139,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             photogrammetry: false,
             scene: false,
             model: false,
-            other: false
+            other: false,
+            attachment: false
         };
 
         if (vocabularyEntry) {
@@ -135,7 +152,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                 assetType.photogrammetry = (Term === 'Capture Data Set: Photogrammetry');
                 assetType.scene = (Term === 'Scene');
                 assetType.model = (Term === 'Model');
-                assetType.other = !assetType.photogrammetry && !assetType.scene && !assetType.model;
+                assetType.attachment = (Term === 'Attachment');
+                assetType.other = !assetType.photogrammetry && !assetType.scene && !assetType.model && !assetType.attachment;
             }
         }
 

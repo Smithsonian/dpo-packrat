@@ -5,7 +5,7 @@ import * as H from '../../utils/helpers';
 export interface WorkflowUpdateResults {
     success: boolean;
     workflowComplete: boolean;
-    error: string;
+    error?: string;
 }
 
 export interface IWorkflow {

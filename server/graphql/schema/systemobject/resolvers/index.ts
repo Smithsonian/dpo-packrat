@@ -14,6 +14,7 @@ import updateSourceObjects from './mutations/updateSourceObjects';
 import updateDerivedObjects from './mutations/updateDerivedObjects';
 import deleteObjectConnection from './mutations/deleteObjectConnection';
 import deleteIdentifier from './mutations/deleteIdentifier';
+import deleteMetadata from './mutations/deleteMetadata';
 import rollbackSystemObjectVersion from './mutations/rollbackSystemObjectVersion';
 import createSubjectWithIdentifiers from './mutations/createSubjectWithIdentifiers';
 import publish from './mutations/publish';
@@ -34,6 +35,7 @@ const resolvers = {
         updateDerivedObjects,
         deleteObjectConnection,
         deleteIdentifier,
+        deleteMetadata,
         rollbackSystemObjectVersion,
         createSubjectWithIdentifiers,
         publish
