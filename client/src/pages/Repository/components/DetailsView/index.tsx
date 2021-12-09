@@ -13,7 +13,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType } from '../../../../store';
+import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -78,6 +78,7 @@ type DetailsFields = {
     idLicense?: number;
 };
 
+
 function DetailsView(): React.ReactElement {
     const classes = useStyles();
     const params = useParams<DetailsParams>();
@@ -92,6 +93,7 @@ function DetailsView(): React.ReactElement {
     const { data, loading } = useObjectDetails(idSystemObject);
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
+    const [updatedMetadata, setUpdatedMetadata] = useState(false);
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [
         stateIdentifiers,
@@ -120,6 +122,8 @@ function DetailsView(): React.ReactElement {
         state.getDetail,
         state.getDetailsViewFieldErrors
     ]);
+    const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields, initializeMetadata, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields, state.initializeMetadata, state.resetMetadata]);
+
     const objectDetailsData = data;
 
     useEffect(() => {
@@ -140,9 +144,15 @@ function DetailsView(): React.ReactElement {
 
     useEffect(() => {
         if (data && !loading) {
-            const { name, retired, license } = data.getSystemObjectDetails;
+            const { name, retired, license, metadata } = data.getSystemObjectDetails;
+            console.log('metadata', metadata);
             setDetails({ name, retired, idLicense: license?.idLicense || 0 });
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
+            if (objectType === eSystemObjectType.eSubject) {
+                initializeMetadata(eObjectMetadataType.eSubjectView, metadata); // comment me out!
+            } else {
+                initializeMetadata(eObjectMetadataType.eDetailView, metadata); // comment me out!
+            }
         }
     }, [data, loading, initializeIdentifierState]);
 
@@ -150,6 +160,17 @@ function DetailsView(): React.ReactElement {
     useEffect(() => {
         setUpdatedIdentifiers(areIdentifiersUpdated());
     }, [stateIdentifiers]);
+
+    // checks for updates to metadata
+    useEffect(() => {
+        setUpdatedMetadata(areMetadataUpdated());
+    }, [metadataControl, metadataDisplay]);
+
+    useEffect(() => {
+        return () => {
+            resetMetadata();
+        };
+    }, []);
 
     if (!data || !params.idSystemObject) {
         return <ObjectNotFoundView loading={loading} />;
@@ -167,11 +188,13 @@ function DetailsView(): React.ReactElement {
         project,
         subject,
         item,
+        assetOwner,
         objectAncestors,
         sourceObjects,
         derivedObjects,
         objectVersions,
-        licenseInherited = null
+        metadata,
+        licenseInheritance = null
     } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
@@ -299,14 +322,14 @@ function DetailsView(): React.ReactElement {
         setUpdatedData(updatedDataFields);
     };
 
-    const updateData = async (): Promise<void> => {
+    const updateData = async (): Promise<boolean> => {
         toast.dismiss();
         setIsUpdatingData(true);
         const identifierCheck = checkIdentifiersBeforeUpdate();
         if (identifierCheck.length) {
             identifierCheck.forEach(error => toast.error(error));
             setIsUpdatingData(false);
-            return;
+            return false;
         }
 
         const stateIdentifiersWithIdSystemObject: UpdateIdentifier[] = stateIdentifiers.map(({ id, identifier, identifierType, idIdentifier, preferred }) => {
@@ -324,12 +347,18 @@ function DetailsView(): React.ReactElement {
         updatedData.Name = updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name;
         updatedData.Identifiers = stateIdentifiersWithIdSystemObject || [];
 
+        const invalidMetadata = validateMetadataFields();
+        if (invalidMetadata.length) {
+            invalidMetadata.forEach(message => toast.error(message, { autoClose: false }));
+            return false;
+        }
+
         // Create another validation here to make sure that the appropriate SO types are being checked
         const errors = await getDetailsViewFieldErrors(updatedData, objectType);
         if (errors.length) {
             errors.forEach(error => toast.error(`${error}`, { autoClose: false }));
             setIsUpdatingData(false);
-            return;
+            return false;
         }
 
         try {
@@ -352,36 +381,36 @@ function DetailsView(): React.ReactElement {
 
             if (objectType === eSystemObjectType.eScene && updatedData.Scene) {
                 const SceneDetails = getDetail(objectType) as SceneDetailsType;
-                const { HasBeenQCd, IsOriented } = SceneDetails;
-                updatedData.Scene = { IsOriented, HasBeenQCd };
+                const { ApprovedForPublication, PosedAndQCd } = SceneDetails;
+                updatedData.Scene = { PosedAndQCd, ApprovedForPublication };
             }
             // convert subject and item inputs to numbers to handle scientific notation
             if (objectType === eSystemObjectType.eSubject && updatedData.Subject) {
                 const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Subject;
-                if (Latitude) updatedData.Subject.Latitude = Number(Latitude);
-                if (Longitude) updatedData.Subject.Longitude = Number(Longitude);
-                if (Altitude) updatedData.Subject.Altitude = Number(Altitude);
-                if (TS0) updatedData.Subject.TS0 = Number(TS0);
-                if (TS1) updatedData.Subject.TS1 = Number(TS1);
-                if (TS2) updatedData.Subject.TS2 = Number(TS2);
-                if (R0) updatedData.Subject.R0 = Number(R0);
-                if (R1) updatedData.Subject.R1 = Number(R1);
-                if (R2) updatedData.Subject.R2 = Number(R2);
-                if (R3) updatedData.Subject.R3 = Number(R3);
+                updatedData.Subject.Latitude = Latitude ? Number(Latitude) : null;
+                updatedData.Subject.Longitude = Longitude ? Number(Longitude) : null;
+                updatedData.Subject.Altitude = Altitude ? Number(Altitude) : null;
+                updatedData.Subject.TS0 = TS0 ? Number(TS0) : null;
+                updatedData.Subject.TS1 = TS1 ? Number(TS1) : null;
+                updatedData.Subject.TS2 = TS2 ? Number(TS2) : null;
+                updatedData.Subject.R0 = R0 ? Number(R0) : null;
+                updatedData.Subject.R1 = R1 ? Number(R1) : null;
+                updatedData.Subject.R2 = R2 ? Number(R2) : null;
+                updatedData.Subject.R3 = R3 ? Number(R3) : null;
             }
 
             if (objectType === eSystemObjectType.eItem && updatedData.Item) {
                 const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Item;
-                if (Latitude) updatedData.Item.Latitude = Number(Latitude);
-                if (Longitude) updatedData.Item.Longitude = Number(Longitude);
-                if (Altitude) updatedData.Item.Altitude = Number(Altitude);
-                if (TS0) updatedData.Item.TS0 = Number(TS0);
-                if (TS1) updatedData.Item.TS1 = Number(TS1);
-                if (TS2) updatedData.Item.TS2 = Number(TS2);
-                if (R0) updatedData.Item.R0 = Number(R0);
-                if (R1) updatedData.Item.R1 = Number(R1);
-                if (R2) updatedData.Item.R2 = Number(R2);
-                if (R3) updatedData.Item.R3 = Number(R3);
+                updatedData.Item.Latitude = Latitude ? Number(Latitude) : null;
+                updatedData.Item.Longitude = Longitude ? Number(Longitude) : null;
+                updatedData.Item.Altitude = Altitude ? Number(Altitude) : null;
+                updatedData.Item.TS0 = TS0 ? Number(TS0) : null;
+                updatedData.Item.TS1 = TS1 ? Number(TS1) : null;
+                updatedData.Item.TS2 = TS2 ? Number(TS2) : null;
+                updatedData.Item.R0 = R0 ? Number(R0) : null;
+                updatedData.Item.R1 = R1 ? Number(R1) : null;
+                updatedData.Item.R2 = R2 ? Number(R2) : null;
+                updatedData.Item.R3 = R3 ? Number(R3) : null;
             }
 
             if (objectType === eSystemObjectType.eCaptureData) {
@@ -425,14 +454,20 @@ function DetailsView(): React.ReactElement {
                 };
             }
 
+            const metadata = getAllMetadataEntries().filter(entry => entry.Name);
+            // console.log('metadata', metadata);
+            updatedData.Metadata = metadata;
+
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
-            } else {
-                throw new Error(data?.updateObjectDetails?.message);
-            }
+                return true;
+            } else
+                throw new Error(data?.updateObjectDetails?.message ?? '');
         } catch (error) {
-            toast.error(error.toString() || 'Failed to save updated data');
+            if (error instanceof Error)
+                toast.error(error.toString() || 'Failed to save updated data');
+            return false;
         } finally {
             setIsUpdatingData(false);
         }
@@ -460,14 +495,15 @@ function DetailsView(): React.ReactElement {
                     publishedEnum={publishedEnum}
                     publishable={publishable}
                     retired={withDefaultValueBoolean(details.retired, false)}
-                    hidePublishState={objectType !== eSystemObjectType.eScene}
+                    objectType={objectType}
                     onRetiredUpdate={onRetiredUpdate}
                     onLicenseUpdate={onLicenseUpdate}
                     originalFields={data.getSystemObjectDetails}
                     license={withDefaultValueNumber(details.idLicense, 0)}
                     idSystemObject={idSystemObject}
-                    licenseInherited={licenseInherited}
+                    licenseInheritance={licenseInheritance}
                     path={objectAncestors}
+                    updateData={updateData}
                 />
                 <Box display='flex' flex={2.2} flexDirection='column'>
                     <IdentifierList
@@ -489,7 +525,7 @@ function DetailsView(): React.ReactElement {
                 <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
                     Update
                 </LoadingButton>
-                {updatedIdentifiers && <div style={{ fontStyle: 'italic', marginLeft: '5px' }}>Update needed to save your identifier data entry</div>}
+                {(updatedIdentifiers || updatedMetadata) && <div style={{ fontStyle: 'italic', marginLeft: '5px' }}>Update needed to save your data</div>}
             </Box>
 
             <Box display='flex'>
@@ -497,6 +533,7 @@ function DetailsView(): React.ReactElement {
                     disabled={disabled}
                     idSystemObject={idSystemObject}
                     objectType={objectType}
+                    assetOwner={assetOwner}
                     sourceObjects={sourceObjects}
                     derivedObjects={derivedObjects}
                     onAddSourceObject={onAddSourceObject}
@@ -504,6 +541,7 @@ function DetailsView(): React.ReactElement {
                     onUpdateDetail={onUpdateDetail}
                     objectVersions={objectVersions}
                     detailQuery={detailQuery}
+                    metadata={metadata}
                 />
                 <Box display='flex' flex={1} padding={2}>
                     <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />

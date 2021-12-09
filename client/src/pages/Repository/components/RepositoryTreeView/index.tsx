@@ -83,6 +83,8 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         }
     },
     labelText: {
+        color: 'rgb(44,64,90)',
+        fontWeight: 400,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -104,6 +106,8 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         textOverflow: 'ellipsis'
     },
     text: {
+        color: 'rgb(44,64,90)',
+        fontWeight: 400,
         fontSize: '0.8em',
         [breakpoints.down('lg')]: {
             fontSize: '0.9em',

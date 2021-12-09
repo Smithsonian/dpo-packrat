@@ -18,3 +18,4 @@ export * from './license';
 export * from './detailTab';
 export * from './workflow';
 export * from './users';
+export * from './objectMetadata';

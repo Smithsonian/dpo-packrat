@@ -1,6 +1,7 @@
 // import {  Unit, Project, Subject, Item, Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Model, ProjectDocumentation, Scene, Stakeholder, SystemObject } from '../..';
 import { SystemObjectIDType, eSystemObjectType } from '../..';
 // import * as LOG from '../../../utils/logger';
+// import * as H from '../../../utils/helpers';
 // import * as CACHE from '../../../cache';
 
 export enum eApplyGraphStateDirection {
@@ -66,7 +67,7 @@ export class ObjectGraphDataEntry {
     // Derived data
     childMap: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map of child idSystemObject -> child objects
     parentMap: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map of parent idSystemObject -> parent objects
-    ancestorObjectMap: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map of ancestor objects of significance (unit, project, subject, item), idSystemObject -> object info
+    ancestorObjectMap: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map of ancestor objects of significance (unit, project, subject, item, asset), idSystemObject -> object info
 
     // Child data types
     childrenObjectTypes: Set<eSystemObjectType> = new Set<eSystemObjectType>();
@@ -105,17 +106,15 @@ export class ObjectGraphDataEntry {
             }
         }
 
-        if (eDirection == eApplyGraphStateDirection.eParent) {
+        if (eDirection == eApplyGraphStateDirection.eSelf ||
+            eDirection == eApplyGraphStateDirection.eParent) {
             if (objectGraphState.eType) {
                 if (!this.childrenObjectTypes.has(objectGraphState.eType)) {
                     this.childrenObjectTypes.add(objectGraphState.eType);
                     retValue = true;
                 }
             }
-        }
 
-        if (eDirection == eApplyGraphStateDirection.eSelf ||
-            eDirection == eApplyGraphStateDirection.eParent) {
             if (objectGraphState.captureMethod) {
                 if (!this.childrenCaptureMethods.has(objectGraphState.captureMethod)) {
                     this.childrenCaptureMethods.add(objectGraphState.captureMethod);
@@ -154,6 +153,7 @@ export class ObjectGraphDataEntry {
                 }
             }
         }
+        // LOG.info(`ObjectGraphDataEntry.applyGraphState OGDE=${JSON.stringify(this, H.Helpers.saferStringify)}`, LOG.LS.eDB);
         return retValue;
     }
 

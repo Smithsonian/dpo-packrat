@@ -12,13 +12,15 @@ export type StateMetadata = {
     scene: SceneFields;
     other: OtherFields;
     file: IngestionFile;
+    sceneAttachment: SceneAttachmentFields;
 };
 
 export enum MetadataType {
     photogrammetry = 'photogrammetry',
     model = 'model',
     scene = 'scene',
-    other = 'other'
+    other = 'other',
+    sceneAttachment = 'sceneAttachment'
 }
 
 export type MetadataInfo = {
@@ -87,6 +89,7 @@ export type PhotogrammetryFields = {
     cameraSettingUniform: boolean;
     directory: string;
     idAsset?: number;
+    updateNotes?: string;
 };
 
 export type ModelFields = {
@@ -103,6 +106,7 @@ export type ModelFields = {
     modelFileType: number | null;
     directory: string;
     idAsset?: number;
+    updateNotes?: string;
 };
 
 export type SceneFields = {
@@ -111,18 +115,34 @@ export type SceneFields = {
     sourceObjects: StateRelatedObject[];
     derivedObjects: StateRelatedObject[];
     referenceModels: StateReferenceModel[];
-    hasBeenQCd: boolean;
-    isOriented: boolean;
     name: string;
     directory: string;
     EdanUUID: string;
+    approvedForPublication: boolean;
+    posedAndQCd: boolean;
     idAsset?: number;
+    updateNotes?: string;
 };
 
 export type OtherFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     idAsset?: number;
+    updateNotes?: string;
+};
+
+export type SceneAttachmentFields = {
+    type: number | null;
+    category: number | null;
+    units: number | null;
+    modelType: number | null;
+    fileType: number | null;
+    gltfStandardized: boolean;
+    dracoCompressed: boolean;
+    title: string;
+    idAssetVersion: number;
+    systemCreated: boolean;
+    identifiers: StateIdentifier[];
 };
 
 export type StateRelatedObject = RelatedObject;
@@ -131,6 +151,6 @@ export type StateReferenceModel = ReferenceModel;
 
 export type StateDetailVersion = DetailVersion;
 
-export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields;
+export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields | SceneAttachmentFields;
 
 export { ReferenceModelAction };

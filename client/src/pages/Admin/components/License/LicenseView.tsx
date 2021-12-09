@@ -132,7 +132,7 @@ function LicenseList({ licenses }): React.ReactElement {
 
     // TODO: can't seem to inject aria-controls or retrieve the id properly
     function accessibleColumnMenuIcon() {
-        return <GridTripleDotsVerticalIcon aria-controls='poo'/>
+        return <GridTripleDotsVerticalIcon aria-controls='poo' />;
     }
 
     return (

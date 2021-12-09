@@ -1,7 +1,8 @@
 import {
     IngestDataInput, IngestDataResult, MutationIngestDataArgs,
     IngestSubjectInput, IngestItemInput, IngestIdentifierInput, User,
-    IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput, ExistingRelationship, RelatedObjectType
+    IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput, ExistingRelationship, RelatedObjectType,
+    IngestSceneAttachmentInput
 } from '../../../../../types/graphql';
 import { ResolverBase, IWorkflowHelper } from '../../../ResolverBase';
 import { Parent, Context } from '../../../../../types/resolvers';
@@ -19,6 +20,7 @@ import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
+import { PublishScene } from '../../../../../collections/impl/PublishScene';
 
 type AssetPair = {
     asset: DBAPI.Asset;
@@ -29,6 +31,18 @@ type ModelInfo = {
     model: IngestModelInput;
     idModel: number;
     JCOutput: JobCookSIPackratInspectOutput;
+};
+
+type AssetVersionInfo = {
+    SOOwner: DBAPI.SystemObjectBased;
+    isAttachment: boolean;
+    Comment: string | null;
+};
+
+type IdentifierResults = {
+    success: boolean;
+    identifierValue?: string;
+    error?: string;
 };
 
 export default async function ingestData(_: Parent, args: MutationIngestDataArgs, context: Context): Promise<IngestDataResult> {
@@ -42,18 +56,22 @@ class IngestDataWorker extends ResolverBase {
     private input: IngestDataInput;
     private user: User | undefined;
     private vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
+    private ICOL: COL.ICollection | undefined = undefined;
 
     private ingestPhotogrammetry: boolean = false;
     private ingestModel: boolean = false;
     private ingestScene: boolean = false;
     private ingestOther: boolean = false;
+    private ingestAttachmentScene: boolean = false;
+
     private ingestNew: boolean = false;
     private ingestUpdate: boolean = false;
+    private ingestAttachment: boolean = false;
     private assetVersionSet: Set<number> = new Set<number>(); // set of idAssetVersions
 
-    private assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>();     // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
+    private assetVersionMap: Map<number, AssetVersionInfo> = new Map<number, AssetVersionInfo>();                   // map from idAssetVersion -> ssytem object that "owns" the asset, plus details for ingestion -- populated during creation of asset-owning objects below
     private ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>();  // map from idAssetVersion -> photogrammetry input
-    private ingestModelMap: Map<number, ModelInfo> = new Map<number, ModelInfo>();      // map from idAssetVersion -> model input, JCOutput, idModel
+    private ingestModelMap: Map<number, ModelInfo> = new Map<number, ModelInfo>();                                  // map from idAssetVersion -> model input, JCOutput, idModel
 
     constructor(input: IngestDataInput, user: User | undefined) {
         super();
@@ -136,8 +154,10 @@ class IngestDataWorker extends ResolverBase {
             // wire subjects to item
             if (!await this.wireSubjectsToItem(subjectsDB, itemDB))
                 return { success: false, message: 'failure to wire subjects to item' };
-        } else
+        } else if (this.ingestUpdate)
             await this.appendToWFReport('Ingesting content for updated object');
+        else if (this.ingestAttachment)
+            await this.appendToWFReport('Ingesting content for attachment');
 
         if (this.ingestPhotogrammetry) {
             for (const photogrammetry of this.input.photogrammetry) {
@@ -171,6 +191,13 @@ class IngestDataWorker extends ResolverBase {
             }
         }
 
+        if (this.ingestAttachmentScene) {
+            for (const sceneAttachment of this.input.sceneAttachment) {
+                if (!await this.createSceneAttachment(sceneAttachment))
+                    return { success: false, message: 'failure to create scene attachment' };
+            }
+        }
+
         // next, promote asset into repository storage
         const { ingestResMap, transformUpdated } = await this.promoteAssetsIntoRepository();
         if (transformUpdated)
@@ -182,6 +209,9 @@ class IngestDataWorker extends ResolverBase {
 
         if (this.ingestModel)
             await this.createModelDerivedObjects(ingestResMap);
+
+        if (this.ingestOther)
+            await this.createOtherDerivedObjects(ingestResMap);
 
         // wire item to asset-owning objects; do this *after* createModelDerivedObjects
         if (itemDB) {
@@ -195,6 +225,12 @@ class IngestDataWorker extends ResolverBase {
         return { success: true };
     }
 
+    private getICollection(): COL.ICollection {
+        if (!this.ICOL)
+            this.ICOL = COL.CollectionFactory.getInstance();
+        return this.ICOL;
+    }
+
     private async getVocabularyARK(): Promise<DBAPI.Vocabulary | undefined> {
         if (!this.vocabularyARK) {
             this.vocabularyARK = await VocabularyCache.vocabularyByEnum(eVocabularyID.eIdentifierIdentifierTypeARK);
@@ -206,19 +242,49 @@ class IngestDataWorker extends ResolverBase {
         return this.vocabularyARK;
     }
 
-    private async handleIdentifiers(soBased: DBAPI.SystemObjectBased, systemCreated: boolean,
+    private async validateIdentifiers(identifiers: IngestIdentifierInput[] | undefined): Promise<H.IOResults> {
+        if (identifiers) {
+            for (const identifier of identifiers) {
+                const results: IdentifierResults = await this.validateIdentifier(identifier);
+                if (!results.success) {
+                    LOG.error(`ingestData failed to validate identifier ${JSON.stringify(identifier)}: ${results.error}`, LOG.LS.eGQL);
+                    return { success: false, error: results.error ?? '' };
+                }
+            }
+        }
+        return { success: true };
+    }
+
+    private async validateIdentifier(identifier: IngestIdentifierInput): Promise<IdentifierResults> {
+        // compute identifier; for ARKs, extract the ID from a URL that may be housing the ARK ID
+        const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
+        if (!vocabularyARK)
+            return { success: false, error: 'Unable to compute ARK Vocabulary ID' };
+        let identifierValue: string;
+        if (identifier.identifierType == vocabularyARK.idVocabulary) {
+            const arkId: string | null = this.getICollection().extractArkFromUrl(identifier.identifier);
+            if (!arkId)
+                return { success: false, error: `Invalid ark ${identifier.identifier}` };
+            else
+                identifierValue = arkId;
+        } else
+            identifierValue = identifier.identifier;
+        return { success: true, identifierValue };
+    }
+
+    private async handleIdentifiers(SOBased: DBAPI.SystemObjectBased, systemCreated: boolean,
         identifiers: IngestIdentifierInput[] | undefined): Promise<boolean> {
         if (systemCreated) {
-            if (!await this.createIdentifierForObject(null, soBased)) {
-                LOG.error(`ingestData unable to create identifier for ${JSON.stringify(soBased)}`, LOG.LS.eGQL);
+            if (!await this.createIdentifierForObject(null, SOBased)) {
+                LOG.error(`ingestData unable to create system identifier for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
                 return false;
             }
         }
 
         if (identifiers && identifiers.length > 0) {
             for (const identifier of identifiers) {
-                if (!await this.createIdentifierForObject(identifier, soBased)) {
-                    LOG.error(`ingestData unable to create identifier for ${JSON.stringify(soBased)}`, LOG.LS.eGQL);
+                if (!await this.createIdentifierForObject(identifier, SOBased)) {
+                    LOG.error(`ingestData unable to create identifier ${JSON.stringify(identifier)} for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
                     return false;
                 }
             }
@@ -234,11 +300,9 @@ class IngestDataWorker extends ResolverBase {
             return false;
         }
 
-        const ICOL: COL.ICollection = COL.CollectionFactory.getInstance();
-
         if (!identifier) {
             // create system identifier when needed
-            const arkId: string = ICOL.generateArk(null, false);
+            const arkId: string = this.getICollection().generateArk(null, false);
             const identifierSystemDB: DBAPI.Identifier | null = await this.createIdentifier(arkId, SO, null, true);
             if (!identifierSystemDB) {
                 LOG.error(`ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
@@ -247,26 +311,13 @@ class IngestDataWorker extends ResolverBase {
                 return true;
         } else { // use identifier provided by user
             // compute identifier; for ARKs, extract the ID from a URL that may be housing the ARK ID
-            const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
-            if (!vocabularyARK)
-                return false;
-            let IdentifierValue: string;
-            if (identifier.identifierType == vocabularyARK.idVocabulary) {
-                const arkId: string | null = ICOL.extractArkFromUrl(identifier.identifier);
-                if (!arkId) {
-                    LOG.error(`ingestData asked to create an ark indentifier with invalid ark ${identifier.identifier} no value for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
-                    return false;
-                } else
-                    IdentifierValue = arkId;
-            } else
-                IdentifierValue = identifier.identifier;
-
-            if (!IdentifierValue) {
-                LOG.error(`ingestData asked to create an indentifier with no value for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+            const identiferResults: IdentifierResults = await this.validateIdentifier(identifier);
+            if (!identiferResults.success || !identiferResults.identifierValue) {
+                LOG.error(`ingestData failed to create an indentifier ${JSON.stringify(identifier)} for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
                 return false;
             }
 
-            const identifierDB: DBAPI.Identifier | null = await this.createIdentifier(IdentifierValue, SO, identifier.identifierType, false);
+            const identifierDB: DBAPI.Identifier | null = await this.createIdentifier(identiferResults.identifierValue, SO, identifier.identifierType, false);
             if (!identifierDB)
                 return false;
         }
@@ -303,6 +354,7 @@ class IngestDataWorker extends ResolverBase {
         if (!units || units.length == 0) {
             const unitEdanDB = new DBAPI.UnitEdan({
                 idUnit: 1, // hard-coded for the 'Unknown Unit'
+                Name: null,
                 Abbreviation,
                 idUnitEdan: 0
             });
@@ -516,7 +568,7 @@ class IngestDataWorker extends ResolverBase {
         }
 
         if (photogrammetry.idAssetVersion) {
-            this.assetVersionMap.set(photogrammetry.idAssetVersion, captureDataDB);
+            this.assetVersionMap.set(photogrammetry.idAssetVersion, { SOOwner: captureDataDB, isAttachment: false, Comment: photogrammetry.updateNotes ?? null });
             this.ingestPhotoMap.set(photogrammetry.idAssetVersion, photogrammetry);
         }
 
@@ -526,8 +578,9 @@ class IngestDataWorker extends ResolverBase {
     private async createPhotogrammetryDerivedObjects(ingestResMap: Map<number, IngestAssetResult | null>): Promise<boolean> {
         // create CaptureDataFile
         let res: boolean = true;
-        for (const [idAssetVersion, SOBased] of this.assetVersionMap) {
-            if (!(SOBased instanceof DBAPI.CaptureData))
+        for (const [idAssetVersion, AVInfo] of this.assetVersionMap) {
+            const SOOwner: DBAPI.SystemObjectBased = AVInfo.SOOwner;
+            if (!(SOOwner instanceof DBAPI.CaptureData))
                 continue;
             const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
             if (!ingestAssetRes) {
@@ -554,7 +607,7 @@ class IngestDataWorker extends ResolverBase {
                 // LOG.info(`ingestData mapping ${folder.name.toLowerCase()} -> ${folder.variantType}`, LOG.LS.eGQL);
             }
 
-            const SOParent: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
+            const SOParent: DBAPI.SystemObject | null = await SOOwner.fetchSystemObject();
 
             // build mapping of idAsset -> assetVersion
             const assetToVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>(); // map of idAsset -> AssetVersion
@@ -562,20 +615,26 @@ class IngestDataWorker extends ResolverBase {
                 assetToVersionMap.set(assetVersion.idAsset, assetVersion);
 
             for (const asset of ingestAssetRes.assets || []) {
-                // map asset's file path to variant type
-                let idVVariantType: number = folderVariantMap.get(asset.FilePath.toLowerCase()) || 0;
-                if (!idVVariantType) {  // if that failed, try again with the last part of the path
-                    let lastSlash: number = asset.FilePath.lastIndexOf('/');
-                    if (lastSlash === -1)
-                        lastSlash = asset.FilePath.lastIndexOf('\\');
-                    const variantPath = asset.FilePath.substring(lastSlash + 1).toLowerCase();
+                const assetVersion: DBAPI.AssetVersion | undefined = assetToVersionMap.get(asset.idAsset);
 
-                    idVVariantType = folderVariantMap.get(variantPath) || 0;
+                // map asset's file path to variant type
+                let idVVariantType: number = 0;
+
+                if (assetVersion) {
+                    idVVariantType = folderVariantMap.get(assetVersion.FilePath.toLowerCase()) ?? 0;
+                    if (!idVVariantType) {  // if that failed, try again with the last part of the path
+                        let lastSlash: number = assetVersion.FilePath.lastIndexOf('/');
+                        if (lastSlash === -1)
+                            lastSlash = assetVersion.FilePath.lastIndexOf('\\');
+                        const variantPath = assetVersion.FilePath.substring(lastSlash + 1).toLowerCase();
+
+                        idVVariantType = folderVariantMap.get(variantPath) ?? 0;
+                    }
+                    // LOG.info(`ingestData mapped ${assetVersion.FilePath} to variant ${idVVariantType}`, LOG.LS.eGQL);
                 }
-                // LOG.info(`ingestData mapped ${asset.FilePath} to variant ${idVVariantType}`, LOG.LS.eGQL);
 
                 const CDF: DBAPI.CaptureDataFile = new DBAPI.CaptureDataFile({
-                    idCaptureData: SOBased.idCaptureData,
+                    idCaptureData: SOOwner.idCaptureData,
                     idAsset: asset.idAsset,
                     idVVariantType,
                     CompressedMultipleFiles: false,
@@ -589,7 +648,6 @@ class IngestDataWorker extends ResolverBase {
 
                 // look up asset.idAsset -> assetVersion -> SO
                 if (SOParent) {
-                    const assetVersion: DBAPI.AssetVersion | undefined = assetToVersionMap.get(asset.idAsset);
                     const SOAssetVersion: DBAPI.SystemObject | null = assetVersion ? await assetVersion.fetchSystemObject() : null;
 
                     // gather metadata in extractor
@@ -669,7 +727,7 @@ class IngestDataWorker extends ResolverBase {
 
         // LOG.info(`ingestData createModelObjects model=${JSON.stringify(model, H.Helpers.saferStringify)} vs asset=${JSON.stringify(asset, H.Helpers.saferStringify)}vs assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         if (model.idAssetVersion) {
-            this.assetVersionMap.set(model.idAssetVersion, modelDB);
+            this.assetVersionMap.set(model.idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: model.updateNotes ?? null });
             const MI: ModelInfo = { model, idModel: modelDB.idModel, JCOutput };
             this.ingestModelMap.set(model.idAssetVersion, MI);
             LOG.info(`ingestData createModelObjects computed ${JSON.stringify(MI, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
@@ -684,9 +742,10 @@ class IngestDataWorker extends ResolverBase {
         const assetMap: Map<string, number> = new Map<string, number>(); // Map of asset filename -> idAsset
         let ret: boolean = true;
 
-        for (const [idAssetVersion, SOBased] of this.assetVersionMap) {
-            LOG.info(`ingestData createModelDerivedObjects considering idAssetVersion ${idAssetVersion}: ${JSON.stringify(SOBased, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-            if (!(SOBased instanceof DBAPI.Model))
+        for (const [idAssetVersion, AVInfo] of this.assetVersionMap) {
+            const SOOwner: DBAPI.SystemObjectBased = AVInfo.SOOwner;
+            LOG.info(`ingestData createModelDerivedObjects considering idAssetVersion ${idAssetVersion}: ${JSON.stringify(SOOwner, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            if (!(SOOwner instanceof DBAPI.Model))
                 continue;
             const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
             if (!ingestAssetRes) {
@@ -727,7 +786,7 @@ class IngestDataWorker extends ResolverBase {
                 continue;
             }
             const modelDB: DBAPI.Model = JCOutput.modelConstellation.Model; // retrieve again, as we may have swapped the object above, in JCOutput.persist
-            this.assetVersionMap.set(idAssetVersion, modelDB);
+            this.assetVersionMap.set(idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: AVInfo.Comment });
 
             const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(modelDB);
             const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
@@ -794,8 +853,8 @@ class IngestDataWorker extends ResolverBase {
         }
 
         sceneDB.Name = scene.name;
-        sceneDB.HasBeenQCd = scene.hasBeenQCd;
-        sceneDB.IsOriented = scene.isOriented;
+        sceneDB.ApprovedForPublication = scene.approvedForPublication;
+        sceneDB.PosedAndQCd = scene.posedAndQCd;
         LOG.info(`ingestData createSceneObjects, updateMode=${updateMode}, sceneDB=${JSON.stringify(sceneDB, H.Helpers.saferStringify)}, sceneConstellation=${JSON.stringify(sceneConstellation, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         let success: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
 
@@ -866,9 +925,14 @@ class IngestDataWorker extends ResolverBase {
             }
         }
 
+        if (SOI) {
+            const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(SOI.idSystemObject, this.user?.idUser ?? null);
+            if (!metadataResult.success)
+                LOG.error(`ingestData unable to persist scene attachment metadata: ${metadataResult.error}`, LOG.LS.eGQL);
+        }
 
         if (scene.idAssetVersion)
-            this.assetVersionMap.set(scene.idAssetVersion, sceneDB);
+            this.assetVersionMap.set(scene.idAssetVersion, { SOOwner: sceneDB, isAttachment: false, Comment: scene.updateNotes ?? null });
         return { success, transformUpdated };
     }
 
@@ -876,15 +940,12 @@ class IngestDataWorker extends ResolverBase {
         // "other" means we're simply creating an asset version (and associated asset)
         // fetch the associated asset and use that for identifiers
         // BUT ... populate this.assetVersionMap with the system object that owns the specified asset ... or if none, the asset itself.
-        let idAsset: number | null | undefined = other.idAsset;
-        if (!idAsset) {
-            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(other.idAssetVersion);
-            if (!assetVersion) {
-                LOG.error(`ingestData could not fetch asset version for ${other.idAssetVersion}`, LOG.LS.eGQL);
-                return false;
-            }
-            idAsset = assetVersion.idAsset;
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(other.idAssetVersion);
+        if (!assetVersion) {
+            LOG.error(`ingestData could not fetch asset version for ${other.idAssetVersion}`, LOG.LS.eGQL);
+            return false;
         }
+        const idAsset: number = other.idAsset ?? assetVersion.idAsset;
 
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
         if (!asset) {
@@ -909,16 +970,176 @@ class IngestDataWorker extends ResolverBase {
             if (!SOOwner)
                 SOOwner = asset;
 
-            this.assetVersionMap.set(other.idAssetVersion, SOOwner);
+            this.assetVersionMap.set(other.idAssetVersion, { SOOwner, isAttachment: false, Comment: other.updateNotes ?? null });
+        }
+
+        return true;
+    }
+
+    private async createOtherDerivedObjects(ingestResMap: Map<number, IngestAssetResult | null>): Promise<boolean> {
+        let res: boolean = true;
+        for (const idAssetVersion of this.assetVersionMap.keys()) {
+            // LOG.info(`ingestData createOtherDerivedObjects idAssetVersion=${idAssetVersion}`, LOG.LS.eGQL);
+            const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
+            if (!ingestAssetRes) {
+                LOG.error(`ingestData createOtherDerivedObjects unable to locate ingest results for idAssetVersion ${idAssetVersion}`, LOG.LS.eGQL);
+                res = false;
+                continue;
+            }
+            if (!ingestAssetRes.success) {
+                LOG.error(`ingestData createOtherDerivedObjects failed for idAssetVersion ${idAssetVersion}: ${ingestAssetRes.error}`, LOG.LS.eGQL);
+                res = false;
+                continue;
+            }
+
+            const assetToVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>(); // map of idAsset -> AssetVersion
+            for (const assetVersion of ingestAssetRes.assetVersions || [])
+                assetToVersionMap.set(assetVersion.idAsset, assetVersion);
+
+            for (const asset of ingestAssetRes.assets || []) {
+                const assetVersion: DBAPI.AssetVersion | undefined = assetToVersionMap.get(asset.idAsset);
+                if (!assetVersion) {
+                    LOG.error(`ingestData createOtherDerivedObjects could not fetch asset version for ${asset.idAsset}`, LOG.LS.eGQL);
+                    res = false;
+                    continue;
+                }
+
+                // if we're updating an existing asset, fetch variant metadata from the second-to-last version
+                await this.extractAndReuseMetadata(assetVersion.idAsset, asset, assetVersion);
+            }
+        }
+        return res;
+    }
+
+    private async extractAndReuseMetadata(idAsset: number | null | undefined, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<boolean> {
+        // LOG.info(`ingestData.extractAndReuseMetadata idAsset=${idAsset}, asset=${JSON.stringify(asset, H.Helpers.saferStringify)}, assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+        if (!idAsset)
+            return true; // nothing to do
+
+        // we have already created a new asset version for idAsset; find the next to last, if any, and use that to extract variant metadata
+        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromAsset(idAsset);
+        if (!assetVersions) {
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch asset versions from asset ${idAsset}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        if (assetVersions.length < 2)
+            return true;
+
+        const assetVesionPenultimate: DBAPI.AssetVersion = assetVersions[assetVersions.length - 2];
+        const SOAssetVersionPenultimate: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVesionPenultimate);
+        if (!SOAssetVersionPenultimate) {
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch system object from asset version ${assetVesionPenultimate.idAssetVersion}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        const SOAssetVersionCurrent: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+        if (!SOAssetVersionCurrent) {
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch system object from ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchFromSystemObject(SOAssetVersionPenultimate.idSystemObject);
+        if (!metadataList) {
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch metadata for system object ${SOAssetVersionPenultimate.idSystemObject}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        for (const metadata of metadataList) {
+            if (metadata.Name.toLowerCase() === 'variant') {
+                // record metadata
+                const extractor: META.MetadataExtractor = new META.MetadataExtractor();
+                extractor.metadata.set('variant', metadata.ValueShort ?? metadata.ValueExtended ?? '');
+
+                const results: H.IOResults = await META.MetadataManager.persistExtractor(SOAssetVersionCurrent.idSystemObject, asset.idSystemObject ?? SOAssetVersionPenultimate.idSystemObject,
+                    extractor, this.user?.idUser ?? null);
+                if (!results.success) {
+                    LOG.error(`ingestData could not persist variant metadata for ${SOAssetVersionPenultimate.idSystemObject}: ${results.error}`, LOG.LS.eGQL);
+                    return false;
+                }
+
+                return true;
+            }
         }
         return true;
     }
 
+    private async createSceneAttachment(sceneAttachment: IngestSceneAttachmentInput): Promise<boolean> {
+        LOG.info(`ingestData.createSceneAttachment(${JSON.stringify(sceneAttachment)})`, LOG.LS.eGQL);
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(sceneAttachment.idAssetVersion);
+        if (!assetVersion) {
+            LOG.error(`ingestData could not fetch asset version for ${sceneAttachment.idAssetVersion}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        const idAsset: number = assetVersion.idAsset;
+        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
+        if (!asset) {
+            LOG.error(`ingestData could not fetch asset for ${idAsset}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        if (!await this.handleIdentifiers(asset, sceneAttachment.systemCreated, sceneAttachment.identifiers))
+            return false;
+
+        // if the asset version is an attachment to a specific system object, use that system object as the owner of the new asset version
+        let SOOwner: DBAPI.SystemObjectBased | null = null;
+        if (assetVersion.idSOAttachment) {
+            const SOP: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(assetVersion.idSOAttachment);
+            if (!SOP) {
+                LOG.error(`ingestData could not fetch system object pairs from ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                return false;
+            }
+            SOOwner = SOP.SystemObjectBased;
+        }
+        if (!SOOwner)
+            SOOwner = asset;
+
+        const SOAssetVersion: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+        if (!SOAssetVersion) {
+            LOG.error(`ingestData could not fetch system object from ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            return false;
+        }
+
+        // record metadata
+        const extractor: META.MetadataExtractor = new META.MetadataExtractor();
+        extractor.metadata.set('isAttachment', '1');
+        if (sceneAttachment.type)
+            extractor.metadata.set('type', await IngestDataWorker.convertVocabToString(sceneAttachment.type));
+        if (sceneAttachment.category)
+            extractor.metadata.set('category', await IngestDataWorker.convertVocabToString(sceneAttachment.category));
+        if (sceneAttachment.units)
+            extractor.metadata.set('units', await IngestDataWorker.convertVocabToString(sceneAttachment.units));
+        if (sceneAttachment.modelType)
+            extractor.metadata.set('modelType', await IngestDataWorker.convertVocabToString(sceneAttachment.modelType));
+        if (sceneAttachment.fileType)
+            extractor.metadata.set('fileType', await IngestDataWorker.convertVocabToString(sceneAttachment.fileType));
+        if (sceneAttachment.gltfStandardized)
+            extractor.metadata.set('gltfStandardized', sceneAttachment.gltfStandardized ? '1' : '0');
+        if (sceneAttachment.dracoCompressed)
+            extractor.metadata.set('dracoCompressed', sceneAttachment.dracoCompressed ? '1' : '0');
+        if (sceneAttachment.title)
+            extractor.metadata.set('title', sceneAttachment.title);
+        const idSOParent: number = assetVersion.idSOAttachment ? assetVersion.idSOAttachment : SOAssetVersion.idSystemObject;
+        const results: H.IOResults = await META.MetadataManager.persistExtractor(SOAssetVersion.idSystemObject, idSOParent, extractor, this.user?.idUser ?? null);
+        if (!results.success)
+            LOG.error('ingestData could not persist attachment metadata', LOG.LS.eGQL);
+
+        this.assetVersionMap.set(sceneAttachment.idAssetVersion, { SOOwner, isAttachment: true, Comment: null }); // store attachment without unzipping
+        return true;
+    }
+
+    private static async convertVocabToString(idVocabulary: number): Promise<string> {
+        const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabulary);
+        return vocab ? vocab.Term : '';
+    }
+
     private async wireItemToAssetOwners(itemDB: DBAPI.Item): Promise<boolean> {
-        for (const SOBased of this.assetVersionMap.values()) {
-            const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, SOBased);
+        for (const AVInfo of this.assetVersionMap.values()) {
+            const SOOwner: DBAPI.SystemObjectBased = AVInfo.SOOwner;
+            const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, SOOwner);
             if (!xref) {
-                LOG.error(`ingestData unable to wire item ${JSON.stringify(itemDB)} to asset owner ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData unable to wire item ${JSON.stringify(itemDB)} to asset owner ${JSON.stringify(SOOwner)}`, LOG.LS.eGQL);
                 return false;
             }
         }
@@ -931,8 +1152,10 @@ class IngestDataWorker extends ResolverBase {
         // map from idAssetVersion -> object that "owns" the asset
         const ingestResMap: Map<number, IngestAssetResult | null> = new Map<number, IngestAssetResult | null>();
         let transformUpdated: boolean = false;
-        for (const [idAssetVersion, SOBased] of this.assetVersionMap) {
-            // LOG.info(`ingestData.promoteAssetsIntoRepository ${idAssetVersion} -> ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+        for (const [idAssetVersion, AVInfo] of this.assetVersionMap) {
+            const SOBased: DBAPI.SystemObjectBased = AVInfo.SOOwner;
+
+            // LOG.info(`ingestData.promoteAssetsIntoRepository ${idAssetVersion} -> ${JSON.stringify(SOOwner)}`, LOG.LS.eGQL);
             const assetVersionDB: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
             if (!assetVersionDB) {
                 LOG.error(`ingestData unable to load assetVersion for ${idAssetVersion}`, LOG.LS.eGQL);
@@ -957,10 +1180,11 @@ class IngestDataWorker extends ResolverBase {
             const ingestAssetInput: IngestAssetInput = {
                 asset: assetDB,
                 assetVersion: assetVersionDB,
-                allowZipCracking: true,
+                allowZipCracking: !AVInfo.isAttachment, // don't unzip attachments
                 SOBased,
                 idSystemObject: null,
                 opInfo,
+                Comment: AVInfo.Comment
             };
 
             const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
@@ -982,7 +1206,7 @@ class IngestDataWorker extends ResolverBase {
                     // Handle complex ingestion, such as ingestion of a scene package as a zip file.
                     // In this case, we will receive the scene .svx.json file, supporting HTML, images, CSS, as well as models.
                     // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
-                    if (SOBased instanceof DBAPI.Scene) {
+                    if (!AVInfo.isAttachment && SOBased instanceof DBAPI.Scene) {
                         const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, ISR);
                         if (success && modelTransformUpdated)
                             transformUpdated = true;
@@ -1052,12 +1276,17 @@ class IngestDataWorker extends ResolverBase {
             }
             await this.appendToWFReport(message);
 
+            const parameters = {
+                modelTransformUpdated,
+                assetsIngested: IAR.assetsIngested
+            };
+
             const workflowParams: WF.WorkflowParameters = {
                 eWorkflowType: null,
                 idSystemObject,
                 idProject: null, // TODO: update with project ID
                 idUserInitiator: user.idUser,
-                parameters: modelTransformUpdated ? { modelTransformUpdated } : null
+                parameters
             };
 
             // send workflow engine event, but don't wait for results
@@ -1068,12 +1297,13 @@ class IngestDataWorker extends ResolverBase {
     }
 
     async validateInput(): Promise<H.IOResults> {
-        this.ingestPhotogrammetry = this.input.photogrammetry && this.input.photogrammetry.length > 0;
-        this.ingestModel = this.input.model && this.input.model.length > 0;
-        this.ingestScene = this.input.scene && this.input.scene.length > 0;
-        this.ingestOther = this.input.other && this.input.other.length > 0;
-        this.ingestNew = false;
-        this.ingestUpdate = false;
+        this.ingestPhotogrammetry   = this.input.photogrammetry && this.input.photogrammetry.length > 0;
+        this.ingestModel            = this.input.model && this.input.model.length > 0;
+        this.ingestScene            = this.input.scene && this.input.scene.length > 0;
+        this.ingestOther            = this.input.other && this.input.other.length > 0;
+        this.ingestAttachmentScene  = this.input.sceneAttachment && this.input.sceneAttachment.length > 0;
+        this.ingestNew              = false;
+        this.ingestUpdate           = false;
 
         if (this.ingestPhotogrammetry) {
             for (const photogrammetry of this.input.photogrammetry) {
@@ -1096,6 +1326,10 @@ class IngestDataWorker extends ResolverBase {
                         }
                     }
                 }
+
+                const identiferResults: H.IOResults = await this.validateIdentifiers(photogrammetry.identifiers);
+                if (!identiferResults.success)
+                    return identiferResults;
 
                 if (photogrammetry.idAssetVersion)
                     this.assetVersionSet.add(photogrammetry.idAssetVersion);
@@ -1128,6 +1362,10 @@ class IngestDataWorker extends ResolverBase {
                     }
                 }
 
+                const identiferResults: H.IOResults = await this.validateIdentifiers(model.identifiers);
+                if (!identiferResults.success)
+                    return identiferResults;
+
                 if (model.idAssetVersion)
                     this.assetVersionSet.add(model.idAssetVersion);
                 if (model.idAsset)
@@ -1159,6 +1397,10 @@ class IngestDataWorker extends ResolverBase {
                     }
                 }
 
+                const identiferResults: H.IOResults = await this.validateIdentifiers(scene.identifiers);
+                if (!identiferResults.success)
+                    return identiferResults;
+
                 if (scene.idAssetVersion)
                     this.assetVersionSet.add(scene.idAssetVersion);
                 if (scene.idAsset)
@@ -1170,6 +1412,10 @@ class IngestDataWorker extends ResolverBase {
 
         if (this.ingestOther) {
             for (const other of this.input.other) {
+                const identiferResults: H.IOResults = await this.validateIdentifiers(other.identifiers);
+                if (!identiferResults.success)
+                    return identiferResults;
+
                 if (other.idAssetVersion)
                     this.assetVersionSet.add(other.idAssetVersion);
                 if (other.idAsset)
@@ -1179,15 +1425,28 @@ class IngestDataWorker extends ResolverBase {
             }
         }
 
+        if (this.ingestAttachmentScene) {
+            this.ingestAttachment = true;
+            for (const sceneAttachment of this.input.sceneAttachment) {
+                const identiferResults: H.IOResults = await this.validateIdentifiers(sceneAttachment.identifiers);
+                if (!identiferResults.success)
+                    return identiferResults;
+
+                if (sceneAttachment.idAssetVersion)
+                    this.assetVersionSet.add(sceneAttachment.idAssetVersion);
+            }
+        }
+
         // data validation; FYI ... this.input.project is allowed to be unspecified
-        if (this.ingestNew && this.ingestUpdate) {
-            const error: string = 'ingestData called with an unsupported mix of additions and updates';
+        const flavors: number = (this.ingestNew ? 1 : 0) + (this.ingestUpdate ? 1 : 0) + (this.ingestAttachment ? 1 : 0);
+        if (flavors > 1) {
+            const error: string = 'ingestData called with an unsupported mix of additions, updates, and attachments';
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
 
-        if (!this.ingestNew && !this.ingestUpdate) {
-            const error: string = 'ingestData called without both additions and updates';
+        if (flavors === 0) {
+            const error: string = 'ingestData called without one of additions, updates, or attachments';
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
@@ -1211,7 +1470,7 @@ class IngestDataWorker extends ResolverBase {
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private async handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetResult): Promise<{ success: boolean, transformUpdated: boolean }> {
@@ -1358,6 +1617,7 @@ class IngestDataWorker extends ResolverBase {
                     idSystemObject: SO.idSystemObject,
                     PublishedState: DBAPI.ePublishedState.eNotPublished,
                     DateCreated: new Date(),
+                    Comment: null,
                     idSystemObjectVersion: 0
                 });
                 if (!await SOV.create()) {
@@ -1451,7 +1711,7 @@ class IngestDataWorker extends ResolverBase {
         }
 
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
-        return { success: true, error: '', workflowEngine, workflow, workflowReport };
+        return { success: true, workflowEngine, workflow, workflowReport };
     }
 }
 

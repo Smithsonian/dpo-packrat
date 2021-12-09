@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Uploads
  *
@@ -11,7 +12,7 @@ import KeepAlive from 'react-activation';
 import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
-import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute, eIngestionMode } from '../../../../constants';
 import { useMetadataStore, useUploadStore, useVocabularyStore } from '../../../../store';
 import { Colors } from '../../../../theme';
 import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
@@ -68,6 +69,8 @@ function Uploads(): React.ReactElement {
     const history = useHistory();
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
+    // this state will be responsible for feeding metadata the info it needs for update
+    const [updatedAssetVersionMetadata, setUpdatedAssetVersionMetadata] = useState();
 
     const [updateVocabularyEntries, getEntries] = useVocabularyStore(state => [state.updateVocabularyEntries, state.getEntries]);
     const [completed, discardFiles, setUpdateMode, setUpdateWorkflowFileType, getSelectedFiles, selectFile] = useUploadStore(state => [
@@ -85,13 +88,24 @@ function Uploads(): React.ReactElement {
         state.getMetadatas
     ]);
     const { ingestionStart, ingestionComplete } = useIngest();
-
+    const assetTypes = getEntries(eVocabularySetID.eAssetAssetType);
+    let idVAssetType: number;
     const urlParams = new URLSearchParams(window.location.search);
 
     // Responsible for setting UpdateMode state and file type so that it files to be updated will have the appropriate file type
     useEffect(() => {
-        setUpdateMode(urlParams.get('mode') === '1');
-        if (urlParams.has('fileType')) setUpdateWorkflowFileType(Number(urlParams.get('fileType')));
+        setUpdateMode(Number(urlParams.get('mode')) === eIngestionMode.eIngest);
+        const fileType = urlParams.get('fileType');
+        if (fileType && typeof fileType === 'string') {
+            for (let i = 0; i < assetTypes.length; i++) {
+                if (assetTypes[i].Term === fileType) {
+                    idVAssetType = assetTypes[i].idVocabulary;
+                    break;
+                }
+            }
+            // setting update workflow file type here allows the FileListItem to automatically select the correct asset type
+            setUpdateWorkflowFileType(idVAssetType);
+        }
     }, [setUpdateMode, window.location.search]);
 
     // Responsible for checking if there's an uploaded model with the same name as the one intended to be ingested. If there is, automatically select it and start the ingestion workflow
@@ -119,15 +133,21 @@ function Uploads(): React.ReactElement {
             await updateMetadataFolders();
 
             const queuedUploadedFiles = getSelectedFiles(completed, true);
-            const assetTypes = getEntries(eVocabularySetID.eAssetAssetType);
             const metadataStepRequiredAssetTypesSet = new Set();
             assetTypes.forEach(assetType => {
-                if (assetType.Term === 'Capture Data Set: Photogrammetry' || assetType.Term === 'Model' || assetType.Term === 'Scene')
-                    metadataStepRequiredAssetTypesSet.add(assetType.idVocabulary);
+                switch (assetType.Term) {
+                    case 'Capture Data Set: Photogrammetry':
+                    case 'Capture Data File':
+                    case 'Model':
+                    case 'Scene':
+                    case 'Attachment':
+                        metadataStepRequiredAssetTypesSet.add(assetType.idVocabulary);
+                        break;
+                }
             });
 
-            // Change this line to read the file types
-            if (queuedUploadedFiles.every(file => !metadataStepRequiredAssetTypesSet.has(file.type))) {
+            // Start ingestion if every file is not an update and does not require metadata
+            if (queuedUploadedFiles.every(file => !file.idAsset && !metadataStepRequiredAssetTypesSet.has(file.type))) {
                 const { success, message } = await ingestionStart();
                 if (success) {
                     toast.success('Ingestion complete');
@@ -148,7 +168,8 @@ function Uploads(): React.ReactElement {
                 await history.push(nextRoute);
             }
         } catch (error) {
-            toast.error(error);
+            if (error instanceof Error)
+                toast.error(error.toString());
             return;
         }
     };
@@ -157,7 +178,7 @@ function Uploads(): React.ReactElement {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
         try {
             setGettingAssetDetails(true);
-            const data = await updateMetadataSteps();
+            const data = await updateMetadataSteps(updatedAssetVersionMetadata);
             const { valid, selectedFiles, error } = data;
             setGettingAssetDetails(false);
 
@@ -176,8 +197,12 @@ function Uploads(): React.ReactElement {
             toast.dismiss();
             const toBeIngested = getSelectedFiles(completed, true);
 
-            // if every selected file is for update, skip the subject/items step
-            toBeIngested.every(file => file.idAsset) ? onNext() : await history.push(nextStep);
+            // if every selected file is for update OR attach, skip the subject/items step
+            if (toBeIngested.every(file => file.idAsset ||  file.idSOAttachment)) {
+                onNext();
+            } else {
+                await history.push(nextStep);
+            }
         } catch {
             setGettingAssetDetails(false);
         }
@@ -202,7 +227,13 @@ function Uploads(): React.ReactElement {
             </Helmet>
             <Box className={classes.content}>
                 <KeepAlive>
-                    <AliveUploadComponents onDiscard={onDiscard} onIngest={onIngest} discardingFiles={discardingFiles} gettingAssetDetails={gettingAssetDetails} />
+                    <AliveUploadComponents
+                        onDiscard={onDiscard}
+                        onIngest={onIngest}
+                        discardingFiles={discardingFiles}
+                        gettingAssetDetails={gettingAssetDetails}
+                        setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata}
+                    />
                 </KeepAlive>
             </Box>
         </Box>
@@ -214,10 +245,11 @@ type AliveUploadComponentsProps = {
     gettingAssetDetails: boolean;
     onDiscard: () => Promise<void>;
     onIngest: () => Promise<void>;
+    setUpdatedAssetVersionMetadata: (metadata: any) => void;
 };
 
 function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactElement {
-    const { discardingFiles, gettingAssetDetails, onDiscard, onIngest } = props;
+    const { discardingFiles, gettingAssetDetails, onDiscard, onIngest, setUpdatedAssetVersionMetadata } = props;
     const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [
         state.onProgressEvent,
         state.onSetCancelledEvent,
@@ -271,7 +303,7 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
                 onClickRight={onIngest}
                 uploadVersion
             />
-            <UploadCompleteList />
+            <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
         </React.Fragment>
     );
 }

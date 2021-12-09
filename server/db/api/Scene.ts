@@ -9,8 +9,6 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
     idScene!: number;
     Name!: string;
     idAssetThumbnail!: number | null;
-    IsOriented!: boolean;
-    HasBeenQCd!: boolean;
     CountScene!: number | null;
     CountNode!: number | null;
     CountCamera!: number | null;
@@ -20,15 +18,17 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
     CountSetup!: number | null;
     CountTour!: number | null;
     EdanUUID!: string | null;
+    PosedAndQCd!: boolean;
+    ApprovedForPublication!: boolean;
 
-    HasBeenQCdOrig!: boolean;
+    ApprovedForPublicationOrig!: boolean;
 
     constructor(input: SceneBase) {
         super(input);
     }
 
     protected updateCachedValues(): void {
-        this.HasBeenQCdOrig = this.HasBeenQCd;
+        this.ApprovedForPublicationOrig = this.ApprovedForPublication;
     }
 
     public fetchTableName(): string { return 'Scene'; }
@@ -36,10 +36,10 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, idAssetThumbnail, IsOriented, HasBeenQCd, CountScene, CountNode, CountCamera,
+            const { Name, idAssetThumbnail, PosedAndQCd, ApprovedForPublication, CountScene, CountNode, CountCamera,
                 CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID } = this;
             ({ idScene: this.idScene, Name: this.Name, idAssetThumbnail: this.idAssetThumbnail,
-                IsOriented: this.IsOriented, HasBeenQCd: this.HasBeenQCd, CountScene: this.CountScene,
+                PosedAndQCd: this.PosedAndQCd, ApprovedForPublication: this.ApprovedForPublication, CountScene: this.CountScene,
                 CountNode: this.CountNode, CountCamera: this.CountCamera, CountLight: this.CountLight,
                 CountModel: this.CountModel, CountMeta: this.CountMeta, CountSetup: this.CountSetup,
                 CountTour: this.CountTour, EdanUUID: this.EdanUUID } =
@@ -47,15 +47,15 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                     data: {
                         Name,
                         Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                        IsOriented,
-                        HasBeenQCd,
+                        PosedAndQCd,
+                        ApprovedForPublication,
                         SystemObject:       { create: { Retired: false }, },
                         CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID
                     },
                 }));
 
             // Audit if someone marks this scene as QC'd
-            if (HasBeenQCd)
+            if (ApprovedForPublication)
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return true;
         } catch (error) /* istanbul ignore next */ {
@@ -66,21 +66,21 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd,
-                CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID, HasBeenQCdOrig } = this;
+            const { idScene, Name, idAssetThumbnail, PosedAndQCd, ApprovedForPublication,
+                CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID, ApprovedForPublicationOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.scene.update({
                 where: { idScene, },
                 data: {
                     Name,
                     Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
-                    IsOriented,
-                    HasBeenQCd,
+                    PosedAndQCd,
+                    ApprovedForPublication,
                     CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID
                 },
             }) ? true : /* istanbul ignore next */ false;
 
             // Audit if someone marks this scene as QC'd
-            if (HasBeenQCd && !HasBeenQCdOrig)
+            if (ApprovedForPublication && !ApprovedForPublicationOrig)
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return retValue;
         } catch (error) /* istanbul ignore next */ {

@@ -100,8 +100,6 @@
     <field name="ModelObjectSelfIntersecting" type="booleans" indexed="true" stored="true"/>
     
     <!-- Scene fields -->
-    <field name="SceneIsOriented" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="SceneHasBeenQCd" type="boolean" indexed="true" stored="true" multiValued="false" />
     <field name="SceneCountScene" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="SceneCountNode" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="SceneCountCamera" type="pint" indexed="true" stored="true" multiValued="false" />
@@ -110,13 +108,16 @@
     <field name="SceneCountMeta" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="SceneCountSetup" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="SceneCountTour" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneEdanUUID" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="ScenePosedAndQCd" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneApprovedForPublication" type="boolean" indexed="true" stored="true" multiValued="false" />
 
     <!-- Asset fields -->
-    <field name="AssetFileName" type="strings" indexed="true" stored="true" />
-    <field name="AssetFilePath" type="strings" indexed="true" stored="true" />
     <field name="AssetType" type="string" indexed="true" stored="true" multiValued="false" />
 
     <!-- AssetVersion fields -->
+    <field name="AVFileName" type="strings" indexed="true" stored="true" />
+    <field name="AVFilePath" type="string" indexed="true" stored="true" />
     <field name="AVUserCreator" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="AVStorageHash" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="AVStorageSize" type="plong" indexed="true" stored="true" multiValued="false" />
@@ -167,7 +168,7 @@
     <copyField source="CommonDescription" dest="_text_"/>
     <copyField source="CommonIdentifier" dest="_text_"/>
     <copyField source="CommonOrganizationName" dest="_text_"/>
-    <copyField source="AssetFileName" dest="_text_"/>
+    <copyField source="AVFileName" dest="_text_"/>
 
     <!-- Field to use to determine and enforce document uniqueness.
       Unless this field is marked with required="false", it will be a required field

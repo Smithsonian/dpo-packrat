@@ -3,7 +3,7 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as LOG from '../../../../../utils/logger';
 
-export default async function deleteObjectConnection(_: Parent, args: MutationDeleteIdentifierArgs): Promise<DeleteIdentifierResult> {
+export default async function deleteIdentifier(_: Parent, args: MutationDeleteIdentifierArgs): Promise<DeleteIdentifierResult> {
     const { input: { idIdentifier } } = args;
     const identifier = await DBAPI.Identifier.fetch(idIdentifier);
     if (!identifier) {
@@ -14,7 +14,7 @@ export default async function deleteObjectConnection(_: Parent, args: MutationDe
         LOG.info(`Identifier deleted ${idIdentifier}`, LOG.LS.eDB);
         return { success: true };
     } else {
-        LOG.error(`Error in deleting identifier ${idIdentifier}`, LOG.LS.eDB);
+        LOG.error(`Error deleting identifier ${idIdentifier}`, LOG.LS.eDB);
         return { success: false };
     }
 }

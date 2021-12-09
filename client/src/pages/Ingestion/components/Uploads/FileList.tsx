@@ -33,7 +33,7 @@ function FileList(props: FileListProps): React.ReactElement {
 
     const onSelect = (id: FileId, selected: boolean): void => selectFile(id, selected);
 
-    const getFileList = ({ id, name, size, status, selected, progress, type, idAsset }: IngestionFile, index: number) => {
+    const getFileList = ({ id, name, size, status, selected, progress, type, idAsset, idSOAttachment }: IngestionFile, index: number) => {
         const uploading = (status === FileUploadStatus.UPLOADING || status === FileUploadStatus.PROCESSING);
         const complete = status === FileUploadStatus.COMPLETE;
         const failed = status === FileUploadStatus.FAILED;
@@ -63,6 +63,7 @@ function FileList(props: FileListProps): React.ReactElement {
                     onRetry={onRetry}
                     onRemove={onRemove}
                     idAsset={idAsset}
+                    idSOAttachment={idSOAttachment}
                     uploadPendingList={uploadPendingList}
                 />
             </AnimatePresence>

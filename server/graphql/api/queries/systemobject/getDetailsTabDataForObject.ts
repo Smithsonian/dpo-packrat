@@ -130,9 +130,10 @@ const getDetailsTabDataForObject = gql`
                 AssetType
                 Tours
                 Annotation
-                HasBeenQCd
-                IsOriented
                 EdanUUID
+                ApprovedForPublication
+                PublicationApprover
+                PosedAndQCd
                 idScene
             }
             IntermediaryFile {
@@ -142,7 +143,6 @@ const getDetailsTabDataForObject = gql`
                 Description
             }
             Asset {
-                FilePath
                 AssetType
                 idAsset
             }
@@ -154,6 +154,7 @@ const getDetailsTabDataForObject = gql`
                 Version
                 idAsset
                 idAssetVersion
+                FilePath
             }
             Actor {
                 OrganizationName

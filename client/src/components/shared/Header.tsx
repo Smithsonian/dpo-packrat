@@ -216,12 +216,12 @@ function Header(): React.ReactElement {
             {isRepository ? (
                 <React.Fragment>
                     <NavOption onClick={updateRepositorySearch}>
-                    <Button variant='outlined' className={classes.headerButton}>
+                        <Button variant='outlined' className={classes.headerButton}>
                             Search
                         </Button>
                     </NavOption>
                     <NavOption onClick={clearSearchAndUpdateRepositorySearch}>
-                    <Button variant='outlined' className={classes.headerButton}>
+                        <Button variant='outlined' className={classes.headerButton}>
                             Clear
                         </Button>
                     </NavOption>
@@ -229,12 +229,12 @@ function Header(): React.ReactElement {
             ) : (
                 <React.Fragment>
                     <NavOption onClick={onSearch}>
-                    <Button variant='outlined' className={classes.headerButton}>
+                        <Button variant='outlined' className={classes.headerButton}>
                             Search
                         </Button>
                     </NavOption>
                     <NavOption onClick={resetKeywordSearch}>
-                    <Button variant='outlined' className={classes.headerButton}>
+                        <Button variant='outlined' className={classes.headerButton}>
                             Clear
                         </Button>
                     </NavOption>

@@ -21,7 +21,7 @@ type StateIdentifier = {
 
 type IdentifierStore = {
     stateIdentifiers: StateIdentifier[];
-    originalIdentifiers: StateIdentifier[];
+    initialIdentifiers: StateIdentifier[];
     areIdentifiersUpdated: () => boolean;
     getIdentifierState: () => StateIdentifier[];
     addNewIdentifier: () => void;
@@ -36,10 +36,10 @@ type IdentifierStore = {
 
 export const useIdentifierStore = create<IdentifierStore>((set: SetState<IdentifierStore>, get: GetState<IdentifierStore>) => ({
     stateIdentifiers: [],
-    originalIdentifiers: [],
+    initialIdentifiers: [],
     areIdentifiersUpdated: () => {
-        const { stateIdentifiers, originalIdentifiers } = get();
-        return !lodash.isEqual(stateIdentifiers, originalIdentifiers);
+        const { stateIdentifiers, initialIdentifiers } = get();
+        return !lodash.isEqual(stateIdentifiers, initialIdentifiers);
     },
     getIdentifierState: () => {
         const { stateIdentifiers } = get();
@@ -66,7 +66,7 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
                 idIdentifier: identifier.idIdentifier
             };
         });
-        set({ stateIdentifiers: initialIdentifiers, originalIdentifiers: initialIdentifiers });
+        set({ stateIdentifiers: initialIdentifiers, initialIdentifiers });
     },
     initializeIdentifierPreferred: () => {},
     removeTargetIdentifier: (id: number, idInd = false) => {

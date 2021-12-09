@@ -11,6 +11,7 @@ import {
     SceneDetailFields
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
+import * as LOG from '../../../../../utils/logger';
 
 export default async function getDetailsTabDataForObject(_: Parent, args: QueryGetDetailsTabDataForObjectArgs): Promise<GetDetailsTabDataForObjectResult> {
     const { input } = args;
@@ -85,15 +86,16 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
             break;
         case eSystemObjectType.eScene:
             if (systemObject?.idScene) {
-                // TODO: KARAN: resolve Links, AssetType, Tours, Annotation when SceneDetailFields is finalized?
                 let fields: SceneDetailFields = {
                     Links: []
                 };
-                const Scene = await DBAPI.Scene.fetch(systemObject.idScene);
+                const Scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(systemObject.idScene);
+                if (!Scene)
+                    LOG.error(`getDetailsTabForObject(${systemObject.idSystemObject}) unable to compute Scene details`, LOG.LS.eGQL);
+                const User: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eSceneQCd);
+
                 fields = {
                     ...fields,
-                    HasBeenQCd: Scene?.HasBeenQCd,
-                    IsOriented: Scene?.IsOriented,
                     CountScene: Scene?.CountScene,
                     CountNode: Scene?.CountNode,
                     CountCamera: Scene?.CountCamera,
@@ -103,6 +105,9 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                     CountSetup: Scene?.CountSetup,
                     CountTour: Scene?.CountTour,
                     EdanUUID: Scene?.EdanUUID,
+                    ApprovedForPublication: Scene?.ApprovedForPublication,
+                    PublicationApprover: User?.Name ?? null,
+                    PosedAndQCd: Scene?.PosedAndQCd,
                     idScene: systemObject.idScene,
                 };
                 result.Scene = fields;
@@ -163,24 +168,13 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
         folders: []
     };
 
-    // creates a unique map of asset.filePath and file.idVVariantType
-    const foldersMap = new Map<string, number>();
-
-    const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(idCaptureData);
-    if (CDFiles) {
-        for (const file of CDFiles) {
-            const asset = await DBAPI.Asset.fetch(file.idAsset);
-            if (asset) {
-                if (!foldersMap.has(asset.FilePath) && file.idVVariantType) {
-                    foldersMap.set(asset.FilePath, file.idVVariantType);
-                }
-            }
-        }
+    // creates a unique map of AssetVersion.filePath and file.idVVariantType
+    const foldersMap: Map<string, number> | null = await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(idCaptureData);
+    if (foldersMap) {
+        foldersMap.forEach((value, key) => {
+            fields.folders.push({ name: key, variantType: value });
+        });
     }
-
-    foldersMap.forEach((value, key) => {
-        fields.folders.push({ name: key, variantType: value });
-    });
 
     const CaptureData = await DBAPI.CaptureData.fetch(idCaptureData);
     fields = {
@@ -220,67 +214,3 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
 
     return fields;
 }
-
-// async function getModelDetailFields(idModel: number): Promise<ModelDetailFields> {
-//     let fields: ModelDetailFields = { };
-
-//     // TODO: KARAN resolve uvMaps, systemCreated?
-//     const modelConstellation = await DBAPI.ModelConstellation.fetch(idModel);
-//     if (!modelConstellation)
-//         return fields;
-
-//     const model = modelConstellation.Model;
-//     fields = {
-//         ...fields,
-//         name: model?.Name,
-//         creationMethod: model?.idVCreationMethod,
-//         modality: model?.idVModality,
-//         purpose: model?.idVPurpose,
-//         units: model?.idVUnits,
-//         dateCaptured: model?.DateCreated.toISOString(),
-//         modelFileType: model?.idVFileType,
-//     };
-
-//     // TODO: fetch all assets associated with Model and ModelMaterialUVMap's; add up storage size
-//     if (model?.idAssetThumbnail) {
-//         const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(model.idAssetThumbnail);
-//         if (AssetVersion && AssetVersion[0]) {
-//             const [AV] = AssetVersion;
-//             fields = {
-//                 ...fields,
-//                 size: AV.StorageSize
-//             };
-//         }
-//     }
-
-//     // TODO: fetch Material Channels, etc.
-//     /*
-//     const ModelObject = (modelConstellation.ModelObjects && modelConstellation.ModelObjects.length > 0) ? modelConstellation.ModelObjects[0] : null;
-//     if (ModelObject) {
-//         fields = {
-//             ...fields,
-//             boundingBoxP1X: ModelObject.BoundingBoxP1X,
-//             boundingBoxP1Y: ModelObject.BoundingBoxP1Y,
-//             boundingBoxP1Z: ModelObject.BoundingBoxP1Z,
-//             boundingBoxP2X: ModelObject.BoundingBoxP2X,
-//             boundingBoxP2Y: ModelObject.BoundingBoxP2Y,
-//             boundingBoxP2Z: ModelObject.BoundingBoxP2Z,
-//             countPoint: ModelObject.CountVertices,
-//             countFace: ModelObject.CountFaces,
-//             countColorChannel: ModelObject.CountColorChannels,
-//             countTextureCoordinateChannel: ModelObject.CountTextureCoordinateChannels,
-//             hasBones: ModelObject.HasBones,
-//             hasFaceNormals: ModelObject.HasFaceNormals,
-//             hasTangents: ModelObject.HasTangents,
-//             hasTextureCoordinates: ModelObject.HasTextureCoordinates,
-//             hasVertexNormals: ModelObject.HasVertexNormals,
-//             hasVertexColor: ModelObject.HasVertexColor,
-//             isTwoManifoldUnbounded: ModelObject.IsTwoManifoldUnbounded,
-//             isTwoManifoldBounded: ModelObject.IsTwoManifoldBounded,
-//             isWatertight: ModelObject.IsWatertight,
-//             selfIntersecting: ModelObject.SelfIntersecting,
-//         };
-//     }
-//     */
-//     return fields;
-// }

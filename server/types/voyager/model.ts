@@ -23,10 +23,9 @@
  * limitations under the License.
  */
 
-// import { Index, Dictionary } from "@ff/core/types";
-type Dictionary<T> = Record<string, T>;
-
+// import { Dictionary } from "@ff/core/types";
 // import { ColorRGB, ColorRGBA, EUnitType, TUnitType, Vector3, Vector4 } from "./common";
+type Dictionary<T> = Record<string, T>;
 import { ColorRGBA, TUnitType, Vector3, Vector4 } from "./common";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +146,6 @@ export interface IPBRMaterialSettings
     //emissiveFactor?: ColorRGB;
     //alphaMode?: any; // TODO
     //alphaCutoff?: number;
-    //doubleSided?: boolean;
+    doubleSided?: boolean;
     normalSpace?: TNormalSpaceType;
 }

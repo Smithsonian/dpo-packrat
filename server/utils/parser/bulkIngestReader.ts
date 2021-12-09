@@ -94,7 +94,7 @@ export class BulkIngestReader {
         }
 
         if (this._ingestedMetadata.length > 0)
-            return { success: true, error: '' };
+            return { success: true };
         else
             return { success: false, error: 'BulkIngestReader.extractMetadataWorker() found no metadata' };
     }
@@ -102,7 +102,7 @@ export class BulkIngestReader {
     async close(): Promise<H.IOResults> {
         /* istanbul ignore next */
         if (!this._zip)
-            return { success: true, error: '' };
+            return { success: true };
 
         const res = await this._zip.close();
         this._zip = null;
@@ -120,7 +120,7 @@ export class BulkIngestReader {
         return (obj as IngestModel).modality !== undefined;
     }
     static ingestedObjectIsScene(obj: (IngestPhotogrammetry | IngestModel | IngestScene)): obj is IngestScene {
-        return (obj as IngestScene).hasBeenQCd !== undefined;
+        return (obj as IngestScene).approvedForPublication !== undefined;
     }
 
     static async computeProjects(ingestMetadata: IngestMetadata): Promise<DBAPI.Project[] | null> {
@@ -137,7 +137,7 @@ export class BulkIngestReader {
             bagitCDPs = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & CaptureDataPhotoCSVFields>(fileStream, CSVTypes.captureDataPhoto);
         } catch (error) {
             LOG.info('BulkIngestReader.computeCaptureDataPhotos capture_data_photos.csv not found', LOG.LS.eSYS);
-            return { success: true, error: '' };
+            return { success: true };
         }
 
         for (const bagitCDP of bagitCDPs) {
@@ -159,7 +159,7 @@ export class BulkIngestReader {
 
             this._ingestedMetadata.push({ ...subject, ...item, ...photo });
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private async computeModels(fileStream: NodeJS.ReadableStream): Promise<H.IOResults> {
@@ -168,7 +168,7 @@ export class BulkIngestReader {
             bagitModels = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & ModelsCSVFields>(fileStream, CSVTypes.models);
         } catch (error) {
             LOG.info('BulkIngestReader.computeModels models.csv not found', LOG.LS.eSYS);
-            return { success: true, error: '' };
+            return { success: true };
         }
 
         for (const bagitModel of bagitModels) {
@@ -190,7 +190,7 @@ export class BulkIngestReader {
 
             this._ingestedMetadata.push({ ...subject, ...item, ...model });
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private async computeScenes(fileStream: NodeJS.ReadableStream): Promise<H.IOResults> {
@@ -199,7 +199,7 @@ export class BulkIngestReader {
             bagitScenes = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & ScenesCSVFields>(fileStream, CSVTypes.scenes);
         } catch (error) {
             LOG.error('BulkIngestReader.computeScenes scenes.csv not found', LOG.LS.eSYS, error);
-            return { success: true, error: '' };
+            return { success: true };
         }
 
         for (const bagitScene of bagitScenes) {
@@ -221,7 +221,7 @@ export class BulkIngestReader {
 
             this._ingestedMetadata.push({ ...subject, ...item, ...scene });
         }
-        return { success: true, error: '' };
+        return { success: true };
     }
 
     private static isEmptyRow(row: any): boolean {
@@ -436,8 +436,8 @@ export class BulkIngestReader {
             idAssetVersion: 0,
             systemCreated: true,
             name: bagitScene.name,
-            hasBeenQCd: bagitScene.has_been_qcd !== 'false' && bagitScene.has_been_qcd !== '0',
-            isOriented: bagitScene.is_oriented !== 'false' && bagitScene.is_oriented !== '0',
+            approvedForPublication: bagitScene.approved_for_publication !== 'false' && bagitScene.approved_for_publication !== '0',
+            posedAndQCd: bagitScene.posed_and_qcd !== 'false' && bagitScene.posed_and_qcd !== '0',
             directory: bagitScene.directory_path,
             identifiers: [],
             referenceModels: [],

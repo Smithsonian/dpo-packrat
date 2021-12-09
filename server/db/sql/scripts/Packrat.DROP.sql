@@ -36,6 +36,7 @@ DROP TABLE IF EXISTS `ModelSceneXref`;
 DROP TABLE IF EXISTS `Project`;
 DROP TABLE IF EXISTS `ProjectDocumentation`;
 DROP TABLE IF EXISTS `Scene`;
+DROP TABLE IF EXISTS `Sentinel`;
 DROP TABLE IF EXISTS `Stakeholder`;
 DROP TABLE IF EXISTS `Subject`;
 DROP TABLE IF EXISTS `SystemObject`;

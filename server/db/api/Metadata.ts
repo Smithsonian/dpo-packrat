@@ -68,6 +68,19 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return false;
         }
     }
+    /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
+    protected async deleteWorker(): Promise<boolean> {
+        try {
+            // LOG.info(`SystemObjectXref.deleteWorker ${JSON.stringify(this)}`, LOG.LS.eDB);
+            const { idMetadata } = this;
+            return await DBC.DBConnection.prisma.metadata.delete({
+                where: { idMetadata, },
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.idMetadata.delete', LOG.LS.eDB, error);
+            return false;
+        }
+    }
 
     protected static async createManyWorker(data: Metadata[]): Promise<boolean> {
         try {

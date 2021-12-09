@@ -89,7 +89,7 @@ function AddUnitForm(): React.ReactElement {
     // schema for validating the appropriate form fields
     const schema = yup.object().shape({
         name: yup.string().min(1),
-        abbreviation: yup.string().min(1)
+        abbreviation: yup.string().min(1).max(20)
     });
 
     const onNameUpdate = ({ target }) => {
@@ -111,12 +111,14 @@ function AddUnitForm(): React.ReactElement {
             setValidName(isValidName);
             const isValidAbbreviation = await schema.isValid({ abbreviation });
             setValidAbbreviation(isValidAbbreviation);
-            if (!isValidName || !isValidAbbreviation) {
+            if (abbreviation.length > 20)
+                toast.warn('Creation Failed: Unit Abbreviation must be 20 characters or less in length');
+            else if (!isValidName || !isValidAbbreviation)
                 toast.warn('Creation Failed: Please Address The Errors Above');
-            }
             return isValidName && isValidAbbreviation;
         } catch (error) {
-            toast.warn(error);
+            if (error instanceof Error)
+                toast.warn(error);
         } finally {
             setIsUpdatingData(false);
         }

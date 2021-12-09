@@ -78,8 +78,6 @@ type SceneDetailFields {
     AssetType: Int
     Tours: Int
     Annotation: Int
-    HasBeenQCd: Boolean
-    IsOriented: Boolean
     CountScene: Int
     CountNode: Int
     CountCamera: Int
@@ -89,6 +87,9 @@ type SceneDetailFields {
     CountSetup: Int
     CountTour: Int
     EdanUUID: String
+    ApprovedForPublication: Boolean
+    PublicationApprover: String
+    PosedAndQCd: Boolean
     idScene: Int
 }
 
@@ -100,13 +101,13 @@ type ProjectDocumentationDetailFields {
     Description: String
 }
 type AssetDetailFields {
-    FilePath: String
     AssetType: Int
     Asset: Asset
     idAsset: Int
 }
 
 type AssetVersionDetailFields {
+    FilePath: String
     Creator: String
     DateCreated: DateTime
     Ingested: Boolean
@@ -171,12 +172,14 @@ type GetSystemObjectDetailsResult {
     sourceObjects: [RelatedObject!]!
     derivedObjects: [RelatedObject!]!
     objectVersions: [SystemObjectVersion!]!
+    metadata: [Metadata!]!
     unit: RepositoryPath
     project: RepositoryPath
     subject: RepositoryPath
     item: RepositoryPath
+    assetOwner: RepositoryPath
     license: License
-    licenseInherited: Boolean
+    licenseInheritance: Int
 }
 
 input GetSourceObjectIdentiferInput {

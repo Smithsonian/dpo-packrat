@@ -16,7 +16,7 @@ import { clearLicenseAssignment, assignLicense, publish } from '../../hooks/useD
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import { LoadingButton } from '../../../../components';
 import { toast } from 'react-toastify';
-import { ePublishedState } from '../../../../types/server';
+import { eSystemObjectType, ePublishedState } from '../../../../types/server';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     detail: {
@@ -89,14 +89,15 @@ interface ObjectDetailsProps {
     publishable: boolean;
     retired: boolean;
     hideRetired?: boolean;
-    hidePublishState?: boolean;
+    objectType?: number;
     originalFields?: GetSystemObjectDetailsResult;
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
     onLicenseUpdate?: (event) => void;
     path?: RepositoryPath[][] | null;
+    updateData?: () => Promise<boolean>;
     idSystemObject: number;
     license?: number;
-    licenseInherited?: boolean | null;
+    licenseInheritance?: number | null;
 }
 
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
@@ -110,15 +111,16 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         publishable,
         retired,
         hideRetired,
-        hidePublishState,
+        objectType,
         disabled,
         originalFields,
         onRetiredUpdate,
         onLicenseUpdate,
         idSystemObject,
         license,
-        licenseInherited,
-        path
+        licenseInheritance,
+        path,
+        updateData
     } = props;
     const [licenseList, setLicenseList] = useState<License[]>([]);
     const [loading, setLoading] = useState(false);
@@ -134,12 +136,19 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         setLicenseList(licenses);
     }, [getEntries]);
 
-    const calculateAncestorDetails = ancestorPath => {
-        if (ancestorPath.length < 2) return ancestorPath[0][0];
-        return ancestorPath[ancestorPath.length - 2][0];
-    };
-
-    const ancestor = calculateAncestorDetails(path);
+    let licenseSource: RepositoryPath | null = null;
+    if (licenseInheritance && path) {
+        for (const objectAncestorList of path) {
+            for (const objectAncestor of objectAncestorList) {
+                if (objectAncestor.idSystemObject === licenseInheritance) {
+                    licenseSource = objectAncestor;
+                    break;
+                }
+            }
+            if (licenseSource)
+                break;
+        }
+    }
 
     const onClearLicenseAssignment = async () => {
         setLoading(true);
@@ -172,9 +181,19 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     const onPublish = async () => { onPublishWorker(ePublishedState.ePublished, 'Publish'); };
     const onAPIOnly = async () => { onPublishWorker(ePublishedState.eAPIOnly, 'Publish for API Only'); };
     const onUnpublish = async () => { onPublishWorker(ePublishedState.eNotPublished, 'Unpublish'); };
+    const onSyncToEdan = async () => { onPublishWorker(ePublishedState.ePublished, 'Sync to Edan'); };
 
     const onPublishWorker = async (eState: number, action: string) => {
         setLoading(true);
+
+        // if we're attempting to publish a subject, call the passed in update method first to persist metadata edits
+        if (objectType === eSystemObjectType.eSubject && updateData !== undefined) {
+            if (!await updateData()) {
+                toast.error(`${action} failed while updating object`);
+                setLoading(false);
+                return;
+            }
+        }
 
         const { data } = await publish(idSystemObject, eState);
         if (data?.publish?.success)
@@ -191,7 +210,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />
             <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />
             <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />
-            {!hidePublishState && (
+            {(objectType === eSystemObjectType.eScene) && (
                 <Detail
                     label='Publish State'
                     valueComponent={
@@ -199,7 +218,18 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             <Typography>{publishedState}</Typography>
                             &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Publish</LoadingButton>
                             &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>API Only</LoadingButton>
-                            &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Unpublish</LoadingButton>)}
+                            &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
+                        </Box>
+                    }
+                />
+            )}
+            {(objectType === eSystemObjectType.eSubject) && (
+                <Detail
+                    label='Edan Sync State'
+                    valueComponent={
+                        <Box className={classes.inheritedLicense}>
+                            <Typography>{publishedState}</Typography>
+                            &nbsp;<LoadingButton onClick={onSyncToEdan} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Sync to Edan</LoadingButton>
                         </Box>
                     }
                 />
@@ -218,7 +248,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     }
                 />
             )}
-            {licenseInherited ? (
+            {licenseSource ? (
                 <Detail
                     label='License'
                     valueComponent={
@@ -226,9 +256,9 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             <Box fontStyle='italic'>
                                 <Typography>{licenseList.find(lic => lic.idLicense === license)?.Name}</Typography>
                             </Box>
-                            <Typography>{' Inherited from '}</Typography>
-                            <NewTabLink className={classes.link} to={`/repository/details/${ancestor?.idSystemObject}`} target='_blank'>
-                                <Typography>{`${getTermForSystemObjectType(ancestor?.objectType)} ${ancestor?.name}`}</Typography>
+                            <Typography>{' inherited from '}</Typography>
+                            <NewTabLink className={classes.link} to={`/repository/details/${licenseSource.idSystemObject}`} target='_blank'>
+                                <Typography>{`${getTermForSystemObjectType(licenseSource.objectType)} ${licenseSource.name}`}</Typography>
                             </NewTabLink>
                             <LoadingButton onClick={onAssignInheritedLicense} className={classes.loadingBtn} loading={loading}>
                                 Assign License

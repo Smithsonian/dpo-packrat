@@ -1,6 +1,6 @@
 {
   "name": "dpo-packrat",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "license": "Apache-2.0",
   "description": "Data Repository and Workflow Management for 3D data captures, models, and scenes",
@@ -37,6 +37,10 @@
     "devbox:down": "docker container rm packrat-devbox --force",
     "dev": "docker-compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d",
     "dev:solr": "docker-compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d packrat-solr",
+    "dev:proxy": "docker-compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d packrat-proxy",
+    "dev:db": "docker-compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d db",
+    "dev:server": "docker-compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d packrat-server",
+    "dev:client": "docker-compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d packrat-client",
     "prod": "docker-compose --env-file .env.prod -p dpo-packrat -f ./conf/docker/docker-compose.prod.yml up -d",
     "deploy:dev": "sh ./scripts/deploy.sh dev",
     "deploy:prod": "sh ./scripts/deploy.sh prod",

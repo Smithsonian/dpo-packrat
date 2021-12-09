@@ -38,6 +38,7 @@ type ComputeSceneInfoResult = {
     assetVersionGeometry?: DBAPI.AssetVersion | undefined;
     assetVersionDiffuse?: DBAPI.AssetVersion | undefined;
     assetVersionMTL?: DBAPI.AssetVersion | undefined;
+    scene?: DBAPI.Scene | undefined;
 };
 
 export class WorkflowEngine implements WF.IWorkflowEngine {
@@ -169,6 +170,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         const modelTransformUpdated: boolean = workflowParams.parameters?.modelTransformUpdated !== undefined
             ? workflowParams.parameters.modelTransformUpdated : false;
+        const assetsIngested: boolean = workflowParams.parameters?.assetsIngested !== undefined
+            ?  workflowParams.parameters.assetsIngested : false;
+
         let workflow: WF.IWorkflow | null = null;
         let CMIR: ComputeModelInfoResult | undefined = undefined;
         let CSIR: ComputeSceneInfoResult | undefined = undefined;
@@ -207,7 +211,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     break;
 
                 case DBAPI.eSystemObjectType.eScene:
-                    if (modelTransformUpdated) { // only progress through scene ingestion workflows if our model transform was ingested
+                    if (modelTransformUpdated) { // only progress through scene ingestion workflows if our model transform was updated
                         if (!CSIR) {
                             CSIR = await this.computeSceneInfo(oID.idObject, asset.idSystemObject);
                             if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
@@ -217,6 +221,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         } else if (CSIR.idScene !== oID.idObject) {
                             LOG.error(`WorkflowEngine.eventIngestionIngestObject encountered multiple scenes ([${CSIR.idScene}, ${oID.idObject}])`, LOG.LS.eWF);
                             return null;
+                        } else if (CSIR.scene !== undefined && !CSIR.scene.PosedAndQCd) { // we have scene info, and that scene has not been posed and QCd
+                            LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)} which has not been PosedAndQCd`, LOG.LS.eWF);
+                            return null;
                         }
                     }
                     break;
@@ -224,19 +231,43 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
 
         if (CMIR)
-            workflow = await this.eventIngestionIngestObjectModel(CMIR, workflowParams);
+            workflow = await this.eventIngestionIngestObjectModel(CMIR, workflowParams, assetsIngested);
 
         if (CSIR)
-            workflow = await this.eventIngestionIngestObjectScene(CSIR, workflowParams);
+            workflow = await this.eventIngestionIngestObjectScene(CSIR, workflowParams, assetsIngested);
 
         return workflow;
     }
 
-    private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
+    private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean): Promise<WF.IWorkflow | null> {
+        if (!assetsIngested) {
+            LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            return null;
+        }
+
         if (CMIR.assetVersionGeometry === undefined) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry and/or diffuse texture from model ${CMIR.idModel}`, LOG.LS.eWF);
             return null;
         }
+
+        const eModelType: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.mapModelFileByExtensionID(CMIR.assetVersionGeometry.FileName);
+        switch (eModelType) {
+            // Allowable types!
+            case CACHE.eVocabularyID.eModelFileTypestl:
+            case CACHE.eVocabularyID.eModelFileTypeply:
+            case CACHE.eVocabularyID.eModelFileTypeobj:
+            case CACHE.eVocabularyID.eModelFileTypefbx:
+            case CACHE.eVocabularyID.eModelFileTypewrl:
+            case CACHE.eVocabularyID.eModelFileTypex3d:
+            case CACHE.eVocabularyID.eModelFileTypedae:
+                break;
+
+            // All others will not result in scene or download generation
+            default:
+                LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping unsupported model type ${eModelType ? CACHE.eVocabularyID[eModelType] : 'unknown'} for ${JSON.stringify(CMIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+                return null;
+        }
+
 
         const SOGeometry: DBAPI.SystemObject| null = await CMIR.assetVersionGeometry.fetchSystemObject();
         if (!SOGeometry) {
@@ -328,7 +359,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return workflow;
     }
 
-    private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
+    private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean): Promise<WF.IWorkflow | null> {
+        if (!assetsIngested) {
+            LOG.info(`WorkflowEngine.eventIngestionIngestObjectScene skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CSIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            return null;
+        }
+
         if (CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute geometry and/or scene asset version from scene ${CSIR.idScene}`, LOG.LS.eWF);
             return null;
@@ -656,12 +692,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 CMIR = undefined;
         }
         if (!CMIR) {
-            LOG.error(`WorkflowEngine.computeSceneInfo unable to compute scene's master model source for ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
+            LOG.info(`WorkflowEngine.computeSceneInfo unable to compute scene's master model source for ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
             return { exitEarly: true };
         }
 
         const retValue = { exitEarly: false, idScene, idModel: CMIR.idModel, idSystemObjectScene, assetSVX, assetVersionGeometry: CMIR.assetVersionGeometry,
-            assetVersionDiffuse: CMIR.assetVersionDiffuse, assetVersionMTL: CMIR.assetVersionMTL };
+            assetVersionDiffuse: CMIR.assetVersionDiffuse, assetVersionMTL: CMIR.assetVersionMTL, scene: sceneConstellation && sceneConstellation.Scene ? sceneConstellation.Scene : undefined };
         LOG.info(`WorkflowEngine.computeSceneInfo returning ${JSON.stringify(retValue, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         return retValue;
     }
