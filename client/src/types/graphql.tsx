@@ -2218,6 +2218,7 @@ export type GetIngestionProjectsForSubjectsInput = {
 export type GetIngestionProjectsForSubjectsResult = {
   __typename?: 'GetIngestionProjectsForSubjectsResult';
   Project: Array<Project>;
+  Default: Scalars['Boolean'];
 };
 
 export type GetUnitInput = {
@@ -3781,6 +3782,7 @@ export type GetIngestionProjectsForSubjectsQuery = (
   { __typename?: 'Query' }
   & { getIngestionProjectsForSubjects: (
     { __typename?: 'GetIngestionProjectsForSubjectsResult' }
+    & Pick<GetIngestionProjectsForSubjectsResult, 'Default'>
     & { Project: Array<(
       { __typename?: 'Project' }
       & Pick<Project, 'idProject' | 'Name'>
@@ -6768,6 +6770,7 @@ export const GetIngestionProjectsForSubjectsDocument = gql`
       idProject
       Name
     }
+    Default
   }
 }
     `;
