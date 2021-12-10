@@ -168,8 +168,8 @@ function Uploads(): React.ReactElement {
                 await history.push(nextRoute);
             }
         } catch (error) {
-            if (error instanceof Error)
-                toast.error(error.toString());
+            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
+            toast.error(`Ingestion failed${message}`);
             return;
         }
     };

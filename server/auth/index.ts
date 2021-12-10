@@ -32,6 +32,7 @@ const sessionConfig = {
     cookie: { maxAge },
     secret: PACKRAT_SESSION_SECRET,
     resave: true,
+    rolling: true,
     saveUninitialized: true,
     store: new Store({ checkPeriod })
 };

@@ -143,6 +143,7 @@ type UploadAssetInput {
 enum UploadStatus {
   COMPLETE
   FAILED
+  NOAUTH
 }
 
 type UploadAssetResult {

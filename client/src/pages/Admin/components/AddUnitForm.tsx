@@ -117,8 +117,8 @@ function AddUnitForm(): React.ReactElement {
                 toast.warn('Creation Failed: Please Address The Errors Above');
             return isValidName && isValidAbbreviation;
         } catch (error) {
-            if (error instanceof Error)
-                toast.warn(error);
+            const message: string = (error instanceof Error) ? error.message : 'Validation Failure';
+            toast.warn(message);
         } finally {
             setIsUpdatingData(false);
         }
@@ -148,7 +148,8 @@ function AddUnitForm(): React.ReactElement {
                 throw new Error('Create request returned success: false');
             }
         } catch (error) {
-            toast.error('Failed to create object');
+            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
+            toast.error(`Failed to create object${message}`);
         } finally {
             setIsUpdatingData(false);
             if (newUnitSystemObjectId) {

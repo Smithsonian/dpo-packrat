@@ -86,8 +86,8 @@ export async function createSubjectWithIdentifiers(input: CreateSubjectWithIdent
     });
 }
 
-export function updateLicense(idLicense: number, Name: string, Description: string, RestrictLevel: number): Promise<FetchResult<UpdateLicenseMutation>> {
-    return apolloClient.mutate({
+export async function updateLicense(idLicense: number, Name: string, Description: string, RestrictLevel: number): Promise<FetchResult<UpdateLicenseMutation>> {
+    return await apolloClient.mutate({
         mutation: UpdateLicenseDocument,
         variables: {
             input: {
@@ -102,8 +102,8 @@ export function updateLicense(idLicense: number, Name: string, Description: stri
     });
 }
 
-export function createLicense(Name: string, Description: string, RestrictLevel: number): Promise<FetchResult<CreateLicenseMutation>> {
-    return apolloClient.mutate({
+export async function createLicense(Name: string, Description: string, RestrictLevel: number): Promise<FetchResult<CreateLicenseMutation>> {
+    return await apolloClient.mutate({
         mutation: CreateLicenseDocument,
         variables: {
             input: {
