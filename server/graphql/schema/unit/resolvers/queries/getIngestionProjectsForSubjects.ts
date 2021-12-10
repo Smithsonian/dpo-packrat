@@ -11,7 +11,8 @@ export default async function getIngestionProjectsForSubjects(_: Parent, args: Q
     if (Project) {
         if (Project.length) {
             return {
-                Project
+                Project,
+                Default: false
             };
         }
     }
@@ -20,11 +21,13 @@ export default async function getIngestionProjectsForSubjects(_: Parent, args: Q
 
     if (AllProjects) {
         return {
-            Project: AllProjects
+            Project: AllProjects,
+            Default: true
         };
     }
 
     return {
-        Project: []
+        Project: [],
+        Default: true
     };
 }

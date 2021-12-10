@@ -1728,6 +1728,7 @@ input GetIngestionProjectsForSubjectsInput {
 
 type GetIngestionProjectsForSubjectsResult {
   Project: [Project!]!
+  Default: Boolean!
 }
 
 input GetUnitInput {

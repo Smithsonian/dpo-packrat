@@ -227,7 +227,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 uploadAssetInputs.type = getVocabularyId(eVocabularyID.eAssetAssetTypeAttachment) ?? 0;
             }
 
-            console.log('uploadassetinputs', uploadAssetInputs);
+            // console.log('uploadassetinputs', uploadAssetInputs);
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
                 variables: uploadAssetInputs,
