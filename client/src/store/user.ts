@@ -29,12 +29,12 @@ export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: Ge
         // extract ou query parameter, if any
         const ouIndex: number = (window.location.href) ? window.location.href.indexOf('?ou=') : -1;
         const originalUrl: string | null = (ouIndex !== -1) ? window.location.href.substring(ouIndex + 4) : null;
-        console.log(`*** login originalUrl=${originalUrl}`);
+        // console.log(`*** login originalUrl=${originalUrl}`);
 
         const authResponse = await API.login(email, password);
 
         if (!authResponse.success) {
-            console.log(`Attempted login for ${email} failed`);
+            // console.log(`Attempted login for ${email} failed`);
             return {
                 ...authResponse,
                 success: false
@@ -44,7 +44,7 @@ export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: Ge
         if (originalUrl)
             authResponse.originalUrl = originalUrl;
 
-        console.log(`Attempted login for ${email} retrieving authenticated user`);
+        // console.log(`Attempted login for ${email} retrieving authenticated user`);
         const user: User | null = await getAuthenticatedUser();
 
         if (!user) {

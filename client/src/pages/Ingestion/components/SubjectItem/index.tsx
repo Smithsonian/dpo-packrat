@@ -117,8 +117,8 @@ function SubjectItem(): React.ReactElement {
             await updateMetadataFolders();
             setMetadataStepLoading(false);
         } catch (error) {
-            if (error instanceof Error)
-                toast.error(error);
+            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
+            toast.error(`Failure handling input${message}`);
             setMetadataStepLoading(false);
             return;
         }

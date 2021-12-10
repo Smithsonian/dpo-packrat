@@ -161,8 +161,8 @@ function LicenseForm(): React.ReactElement {
             }
             return isValidName && isUniqueName;
         } catch (error) {
-            if (error instanceof Error)
-                toast.warn(error);
+            const message: string = (error instanceof Error) ? error.message : 'Validation Failure';
+            toast.warn(message);
         }
     };
 

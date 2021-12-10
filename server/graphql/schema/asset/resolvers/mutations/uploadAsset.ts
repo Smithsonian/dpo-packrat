@@ -66,7 +66,7 @@ class UploadAssetWorker extends ResolverBase {
 
         if (!this.user) {
             LOG.error('uploadAsset unable to retrieve user context', LOG.LS.eGQL);
-            return { status: UploadStatus.Failed, error: 'User not authenticated' };
+            return { status: UploadStatus.Noauth, error: 'User not authenticated' };
         }
 
         if (this.idSOAttachment)
