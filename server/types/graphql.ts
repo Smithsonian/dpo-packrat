@@ -2215,6 +2215,7 @@ export type GetIngestionProjectsForSubjectsInput = {
 export type GetIngestionProjectsForSubjectsResult = {
   __typename?: 'GetIngestionProjectsForSubjectsResult';
   Project: Array<Project>;
+  Default: Scalars['Boolean'];
 };
 
 export type GetUnitInput = {
