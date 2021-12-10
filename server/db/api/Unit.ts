@@ -79,7 +79,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
     static async fetchAll(): Promise<Unit[] | null> {
         try {
             return DBC.CopyArray<UnitBase, Unit>(
-                await DBC.DBConnection.prisma.unit.findMany(), Unit);
+                await DBC.DBConnection.prisma.unit.findMany({ orderBy: { Name: 'asc' } }), Unit);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Unit.fetchAll', LOG.LS.eDB, error);
             return null;
@@ -140,11 +140,13 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return this.fetchAll();
         try {
             return DBC.CopyArray<UnitBase, Unit>(
-                await DBC.DBConnection.prisma.unit.findMany({ where: { OR: [
-                    { UnitEdan: { some: { Abbreviation: { contains: search }, }, }, },
-                    { Abbreviation: { contains: search }, },
-                    { Name: { contains: search }, },
-                ] }, }), Unit);
+                await DBC.DBConnection.prisma.unit.findMany({
+                    orderBy: { Name: 'asc' },
+                    where: { OR: [
+                        { UnitEdan: { some: { Abbreviation: { contains: search }, }, }, },
+                        { Abbreviation: { contains: search }, },
+                        { Name: { contains: search }, },
+                    ] }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Unit.fetchFromNameSearch', LOG.LS.eDB, error);
             return null;
