@@ -519,7 +519,8 @@ export type UploadAssetInput = {
 
 export enum UploadStatus {
   Complete = 'COMPLETE',
-  Failed = 'FAILED'
+  Failed = 'FAILED',
+  Noauth = 'NOAUTH'
 }
 
 export type UploadAssetResult = {

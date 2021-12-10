@@ -28,6 +28,7 @@ class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
     }
 
     async mutate<T = any, TVariables = OperationVariables>(options: MutationOptions<T, TVariables>): Promise<FetchResult<T>> {
+        // console.log('PRApolloClient.mutate');
         let retValue: any;
         try {
             retValue = await super.mutate(options);
@@ -48,8 +49,10 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (graphQLErrors) {
         graphQLErrors.forEach(({ message, locations, path }) => {
             console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`);
-            if (message.includes(authenticationFailureMessage))
+            if (message.includes(authenticationFailureMessage)) {
+                global.alert('The Packrat user is no longer authenticated. Please login.');
                 window.location.href = ROUTES.LOGIN;
+            }
         });
     }
 
@@ -93,6 +96,7 @@ interface IApolloUploader {
 async function apolloUploader(options: IApolloUploader): Promise<any> {
     const { mutation, variables, useUpload, refetchQueries, onProgress, onCancel } = options;
 
+    // console.log('apolloUploader apolloClient.mutate');
     return await apolloClient.mutate({
         mutation,
         variables,
