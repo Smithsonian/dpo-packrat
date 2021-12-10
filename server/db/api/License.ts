@@ -56,7 +56,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
     static async fetchAll(): Promise<License[] | null> {
         try {
             return DBC.CopyArray<LicenseBase, License>(
-                await DBC.DBConnection.prisma.license.findMany(), License);
+                await DBC.DBConnection.prisma.license.findMany({ orderBy: { Name: 'asc' } }), License);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.License.fetchAll', LOG.LS.eDB, error);
             return null;
@@ -68,6 +68,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
             return this.fetchAll();
         try {
             return DBC.CopyArray<LicenseBase, License>(await DBC.DBConnection.prisma.license.findMany({
+                orderBy: { Name: 'asc' },
                 where: { Name: { contains: search }, },
             }), License);
         } catch (error) /* istanbul ignore next */ {
