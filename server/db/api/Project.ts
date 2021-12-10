@@ -73,7 +73,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
     static async fetchAll(): Promise<Project[] | null> {
         try {
             return DBC.CopyArray<ProjectBase, Project>(
-                await DBC.DBConnection.prisma.project.findMany(), Project);
+                await DBC.DBConnection.prisma.project.findMany({ orderBy: { Name: 'asc' } }), Project);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Project.fetchAll', LOG.LS.eDB, error);
             return null;
@@ -202,6 +202,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return this.fetchAll();
         try {
             return DBC.CopyArray<ProjectBase, Project>(await DBC.DBConnection.prisma.project.findMany({
+                orderBy: { Name: 'asc' },
                 where: { Name: { contains: search }, },
             }), Project);
         } catch (error) /* istanbul ignore next */ {
