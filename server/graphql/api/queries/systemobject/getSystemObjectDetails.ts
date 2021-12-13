@@ -38,6 +38,11 @@ const getSystemObjectDetails = gql`
                 name
                 objectType
             }
+            asset {
+                idSystemObject
+                name
+                objectType
+            }
             assetOwner {
                 idSystemObject
                 name

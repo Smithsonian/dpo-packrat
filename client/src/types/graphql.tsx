@@ -1916,6 +1916,7 @@ export type GetSystemObjectDetailsResult = {
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
   licenseInheritance?: Maybe<Scalars['Int']>;
@@ -3700,6 +3701,9 @@ export type GetSystemObjectDetailsQuery = (
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
     )>, item?: Maybe<(
+      { __typename?: 'RepositoryPath' }
+      & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
+    )>, asset?: Maybe<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
     )>, assetOwner?: Maybe<(
@@ -6559,6 +6563,11 @@ export const GetSystemObjectDetailsDocument = gql`
       objectType
     }
     item {
+      idSystemObject
+      name
+      objectType
+    }
+    asset {
       idSystemObject
       name
       objectType
