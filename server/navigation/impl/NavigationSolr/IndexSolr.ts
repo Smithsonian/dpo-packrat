@@ -151,7 +151,17 @@ export class IndexSolr implements NAV.IIndexer {
 
         for (const idSystemObject of OGDE.ancestorObjectMap.keys()) {
             const doc: any = {};
-            doc.id = idSystemObject;
+            // supply all required fields
+            const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+            if (!oID) {
+                LOG.error(`IndexSolr.handleAncestors unable to extract system object info for ${idSystemObject}`, LOG.LS.eNAV);
+                continue;
+            }
+
+            doc.id                  = idSystemObject;
+            doc.CommonObjectType    = DBAPI.SystemObjectTypeToName(oID.eObjectType as number);
+            doc.CommonOTNumber      = oID.eObjectType;
+            doc.CommonidObject      = oID.idObject;
             await this.extractCommonChildrenFields(doc, OGDEHChildrenInfo, false); // false means we're updating
             docs.push(doc);
             // LOG.info(`IndexSolr.handleAncestors prepping to update ${JSON.stringify(doc)}`, LOG.LS.eNAV);
