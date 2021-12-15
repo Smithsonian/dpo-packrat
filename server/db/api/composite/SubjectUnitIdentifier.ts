@@ -80,6 +80,7 @@ export class SubjectUnitIdentifier {
             JOIN _IDMatches AS IDM ON (SO.idSystemObject = IDM.idSystemObject)
             LEFT JOIN _ARKIDs AS IDA ON (SO.idSystemObject = IDA.idSystemObject)
             LEFT JOIN _UnitCMSIDs AS IDU ON (SO.idSystemObject = IDU.idSystemObject)
+            ORDER BY S.Name
             LIMIT ${maxResults};`;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SubjectUnitIdentifier.fetch', LOG.LS.eDB, error);

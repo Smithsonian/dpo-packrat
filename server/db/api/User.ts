@@ -141,6 +141,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
             switch (eStatus) {
                 case eUserStatus.eAll:
                     return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({
+                        orderBy: { Name: 'asc' },
                         where: {
                             OR: [
                                 { EmailAddress: { contains: search }, },
@@ -151,6 +152,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
 
                 default:
                     return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({
+                        orderBy: { Name: 'asc' },
                         where: {
                             AND: [
                                 {

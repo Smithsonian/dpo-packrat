@@ -15,6 +15,7 @@ import { DiscardUploadedAssetVersionsDocument, DiscardUploadedAssetVersionsMutat
 import { FetchResult } from '@apollo/client';
 import { parseFileId } from './utils';
 import { UploadEvents, UploadEventType, UploadCompleteEvent, UploadProgressEvent, UploadSetCancelEvent, UploadFailedEvent } from '../utils/events';
+import { ROUTES } from '../constants';
 
 export type FileId = string;
 
@@ -226,7 +227,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 uploadAssetInputs.type = getVocabularyId(eVocabularyID.eAssetAssetTypeAttachment) ?? 0;
             }
 
-            console.log('uploadassetinputs', uploadAssetInputs);
+            // console.log('uploadassetinputs', uploadAssetInputs);
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
                 variables: uploadAssetInputs,
@@ -246,12 +247,19 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (status === UploadStatus.Failed) {
-                    console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}`);
+                    console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, error = ${error}`);
                     const failedEvent: UploadFailedEvent = { id };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
 
                     const errorMessage = error || `Upload failed for ${file.name}`;
                     toast.error(errorMessage);
+                } else if (status === UploadStatus.Noauth) {
+                    console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, user not authenticated`);
+                    const failedEvent: UploadFailedEvent = { id };
+                    UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
+
+                    global.alert('The Packrat user is no longer authenticated. Please login.');
+                    window.location.href = ROUTES.LOGIN;
                 }
             }
         } catch (error) {
@@ -261,7 +269,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 
             if (file) {
                 if (file.status !== FileUploadStatus.CANCELLED) {
-                    console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, Exception ${message}`);
+                    console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, exception ${message}`);
                     const failedEvent: UploadFailedEvent = { id };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
                 }

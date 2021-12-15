@@ -99,7 +99,9 @@ export type ConfigType = {
     },
 };
 
-const oneDayInSeconds = 24 * 60 * 60; // 24hrs in seconds
+const oneDay            = 24 * 60 * 60;
+const fifteenMinutes    =  1 * 15 * 60;
+const debugSessionTimeout = false;
 
 export const Config: ConfigType = {
     audit: {
@@ -108,8 +110,8 @@ export const Config: ConfigType = {
     auth: {
         type: process.env.PACKRAT_AUTH_TYPE == 'LDAP' ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
         session: {
-            maxAge: oneDayInSeconds * 1000, // expiration time = 24 hours, in milliseconds
-            checkPeriod: oneDayInSeconds    // prune expired entries every 24 hours
+            maxAge: !debugSessionTimeout ? (((process.env.NODE_ENV === 'production') ? fifteenMinutes : oneDay) * 1000) : 8000, // expiration time 15 minutes, in milliseconds
+            checkPeriod: oneDay                                                                                                 // prune expired entries every 24 hours
         },
         ldap: {
             server: process.env.PACKRAT_LDAP_SERVER ? process.env.PACKRAT_LDAP_SERVER : 'ldap://160.111.103.197:389',
@@ -145,7 +147,7 @@ export const Config: ConfigType = {
         cookClientId: '5b258c8e-108c-4990-a088-17ffd6e22852', // Concierge's client ID; taken from C:\Tools\CookDev\server\clients.json on Cook server
     },
     log: {
-        root: './var/logs'
+        root: process.env.PACKRAT_LOG_ROOT ? process.env.PACKRAT_LOG_ROOT : /* istanbul ignore next */ './var/logs'
     },
     navigation: {
         type: NAVIGATION_TYPE.SOLR,

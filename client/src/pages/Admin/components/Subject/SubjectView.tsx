@@ -122,7 +122,7 @@ function SubjectView(): React.ReactElement {
 
     const fetchSubjectList = async () => {
         setLoading(true);
-        // console.log('sortBy', subjectUnitIdentifierStringToEnum(sortState?.sortModel[0]?.field), 'sortOrder', sortState.sortModel[0]?.sort === 'asc');
+        // console.log(`SubjectView.fetchSubjectList ${JSON.stringify(sortState)}`);
         try {
             const getSubjectListInput = {
                 search: searchState.text,
@@ -131,7 +131,7 @@ function SubjectView(): React.ReactElement {
                 pageNumber: paginationState.pageNumber + 1,
                 rowCount: paginationState.rowCount,
                 sortBy: subjectUnitIdentifierStringToEnum(sortState?.sortModel[0]?.field),
-                sortOrder: sortState.sortModel[0]?.sort === 'asc'
+                sortOrder: sortState.sortModel.length > 0 ? (sortState.sortModel[0].sort === 'asc') : true,
             };
             const { data } = await getSubjectList(getSubjectListInput);
             if (data?.getSubjectList.subjects && data?.getSubjectList.subjects.length) {
