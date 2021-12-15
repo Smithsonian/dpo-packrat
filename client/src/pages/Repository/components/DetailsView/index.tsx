@@ -188,6 +188,7 @@ function DetailsView(): React.ReactElement {
         project,
         subject,
         item,
+        asset,
         assetOwner,
         objectAncestors,
         sourceObjects,
@@ -465,8 +466,8 @@ function DetailsView(): React.ReactElement {
             } else
                 throw new Error(data?.updateObjectDetails?.message ?? '');
         } catch (error) {
-            if (error instanceof Error)
-                toast.error(error.toString() || 'Failed to save updated data');
+            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
+            toast.error(`Failed to save updated data${message}`);
             return false;
         } finally {
             setIsUpdatingData(false);
@@ -490,6 +491,7 @@ function DetailsView(): React.ReactElement {
                     project={project}
                     subject={subject}
                     item={item}
+                    asset={asset}
                     disabled={disabled}
                     publishedState={publishedState}
                     publishedEnum={publishedEnum}

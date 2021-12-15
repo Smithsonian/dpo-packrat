@@ -112,10 +112,10 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
             const projectQueryResultMap = new Map();
             const { data } = projectsQueryResult;
             if (data) {
-                const { Project: foundProjects } = data.getIngestionProjectsForSubjects;
+                const { Project: foundProjects, Default } = data.getIngestionProjectsForSubjects;
                 foundProjects.forEach((project) => projectQueryResultMap.set(project.idProject, project));
 
-                const projects: StateProject[] = foundProjects.map((project: Project, index: number) => parseProjectToState(project, !index));
+                const projects: StateProject[] = foundProjects.map((project: Project, index: number) => parseProjectToState(project, Default ? false : !index));
 
                 for (let i = 0; i < defaultProjectsList.length; i++) {
                     if (projectQueryResultMap.has(defaultProjectsList[i].idProject)) continue;

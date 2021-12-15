@@ -110,7 +110,7 @@ function useIngest(): UseIngest {
 
             const metadatasList = metadatas.length === 0 ? getMetadatas() : metadatas;
             lodash.forEach(metadatasList, metadata => {
-                console.log('ingestionStart metadata', metadata);
+                // console.log('ingestionStart metadata', metadata);
                 const { file, photogrammetry, model, scene, other, sceneAttachment } = metadata;
                 const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, attachment: isAttachment, other: isOther } = getAssetType(file.type);
 
@@ -304,7 +304,7 @@ function useIngest(): UseIngest {
                 other: ingestOther,
                 sceneAttachment: ingestSceneAttachment
             };
-            console.log('** IngestDataInput', input);
+            // console.log('** IngestDataInput', input);
 
             const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
                 mutation: IngestDataDocument,
@@ -321,8 +321,8 @@ function useIngest(): UseIngest {
             }
 
         } catch (error) {
-            if (error instanceof Error)
-                toast.error(error.toString());
+            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
+            toast.error(`Ingestion failed${message}`);
         }
 
         return { success: false, message: 'unable to start ingestion process' };

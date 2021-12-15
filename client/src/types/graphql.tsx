@@ -522,7 +522,8 @@ export type UploadAssetInput = {
 
 export enum UploadStatus {
   Complete = 'COMPLETE',
-  Failed = 'FAILED'
+  Failed = 'FAILED',
+  Noauth = 'NOAUTH'
 }
 
 export type UploadAssetResult = {
@@ -1915,6 +1916,7 @@ export type GetSystemObjectDetailsResult = {
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
   licenseInheritance?: Maybe<Scalars['Int']>;
@@ -2217,6 +2219,7 @@ export type GetIngestionProjectsForSubjectsInput = {
 export type GetIngestionProjectsForSubjectsResult = {
   __typename?: 'GetIngestionProjectsForSubjectsResult';
   Project: Array<Project>;
+  Default: Scalars['Boolean'];
 };
 
 export type GetUnitInput = {
@@ -3700,6 +3703,9 @@ export type GetSystemObjectDetailsQuery = (
     )>, item?: Maybe<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
+    )>, asset?: Maybe<(
+      { __typename?: 'RepositoryPath' }
+      & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
     )>, assetOwner?: Maybe<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
@@ -3780,6 +3786,7 @@ export type GetIngestionProjectsForSubjectsQuery = (
   { __typename?: 'Query' }
   & { getIngestionProjectsForSubjects: (
     { __typename?: 'GetIngestionProjectsForSubjectsResult' }
+    & Pick<GetIngestionProjectsForSubjectsResult, 'Default'>
     & { Project: Array<(
       { __typename?: 'Project' }
       & Pick<Project, 'idProject' | 'Name'>
@@ -6560,6 +6567,11 @@ export const GetSystemObjectDetailsDocument = gql`
       name
       objectType
     }
+    asset {
+      idSystemObject
+      name
+      objectType
+    }
     assetOwner {
       idSystemObject
       name
@@ -6767,6 +6779,7 @@ export const GetIngestionProjectsForSubjectsDocument = gql`
       idProject
       Name
     }
+    Default
   }
 }
     `;
