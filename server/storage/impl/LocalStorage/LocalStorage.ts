@@ -184,7 +184,34 @@ export class LocalStorage implements STORE.IStorage {
                 return { success: true };
             }
         }
+
+        // Attempt to remove directory, which may not be empty... so allow failures.  Attempt up to 3 times, with sleeps in between, in case the OS is slow to release locks on an empty folder
+        const fileDir: string = path.dirname(filePath);
+        const maxTries: number = 3;
+        this.removeStagedFolder(fileDir, DiscardWriteStreamInput.storageKey, maxTries); // DO NOT AWAIT, so our main thread does not block
+
         return resRemove;
+    }
+
+    async removeStagedFolder(fileDir: string, storageKey: string, maxTries: number): Promise<H.IOResults> {
+        let resDirRemove: H.IOResults = { success: true };
+        for (let tryCount: number = 1; tryCount <= maxTries; tryCount++) {
+            resDirRemove = await H.Helpers.removeDirectory(fileDir, false, false);
+            if (resDirRemove.success) {
+                LOG.info(`LocalStorage.removeStagedFolder ${storageKey} deleted folder ${fileDir}`, LOG.LS.eSTR);
+                return resDirRemove;
+            }
+
+            const dirNotEmpty: boolean = (resDirRemove.error ?? '').includes('ENOTEMPTY');
+            if (tryCount >= maxTries || !dirNotEmpty) // final try or not a dir not empty error? log result
+                LOG.info(`LocalStorage.removeStagedFolder ${storageKey} could not delete folder ${fileDir}: ${resDirRemove.error}`, LOG.LS.eSTR);
+
+            if (dirNotEmpty) // not empty? sleep && try again
+                await H.Helpers.sleep(5000);
+            else
+                break;
+        }
+        return resDirRemove;
     }
 
     async promoteStagedAsset(promoteStagedAssetInput: STORE.PromoteStagedAssetInput): Promise<STORE.PromoteStagedAssetResult> {
