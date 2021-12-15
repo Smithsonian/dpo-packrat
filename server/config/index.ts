@@ -147,7 +147,7 @@ export const Config: ConfigType = {
         cookClientId: '5b258c8e-108c-4990-a088-17ffd6e22852', // Concierge's client ID; taken from C:\Tools\CookDev\server\clients.json on Cook server
     },
     log: {
-        root: './var/logs'
+        root: process.env.PACKRAT_LOG_ROOT ? process.env.PACKRAT_LOG_ROOT : /* istanbul ignore next */ './var/logs'
     },
     navigation: {
         type: NAVIGATION_TYPE.SOLR,
