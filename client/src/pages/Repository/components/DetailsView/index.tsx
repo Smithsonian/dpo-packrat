@@ -188,6 +188,7 @@ function DetailsView(): React.ReactElement {
         project,
         subject,
         item,
+        asset,
         assetOwner,
         objectAncestors,
         sourceObjects,
@@ -490,6 +491,7 @@ function DetailsView(): React.ReactElement {
                     project={project}
                     subject={subject}
                     item={item}
+                    asset={asset}
                     disabled={disabled}
                     publishedState={publishedState}
                     publishedEnum={publishedEnum}

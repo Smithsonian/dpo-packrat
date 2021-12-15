@@ -177,6 +177,7 @@ type GetSystemObjectDetailsResult {
     project: RepositoryPath
     subject: RepositoryPath
     item: RepositoryPath
+    asset: RepositoryPath
     assetOwner: RepositoryPath
     license: License
     licenseInheritance: Int
