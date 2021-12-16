@@ -57,6 +57,13 @@ function createTypographyOverrides(breakpoints: Breakpoints): Overrides {
                     fontSize: pxToRem(12)
                 }
             }
+        },
+        MuiInputBase: {
+            input: {
+                '&:-webkit-autofill': {
+                    animationDuration: '4s'
+                }
+            }
         }
     };
 }

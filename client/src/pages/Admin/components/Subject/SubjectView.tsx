@@ -186,6 +186,7 @@ function SubjectView(): React.ReactElement {
                 handleSortChange={handleSortChange}
                 handleSearchKeywordChange={handleSearchKeywordChange}
                 handleSearch={fetchSubjectList}
+                searchType='Subject'
             />
         </Box>
     );

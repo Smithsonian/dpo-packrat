@@ -79,7 +79,14 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
             <FieldType required label='Asset Identifier(s)'>
                 <Box display='flex' justifyContent='space-between'>
                     <Box className={classes.assetIdentifier}>
-                        <Checkbox name='systemCreated' checked={systemCreated} color='primary' onChange={onSystemCreatedChange} />
+                        <label htmlFor='systemCreated' style={{ display: 'none' }}>System Created Identifier</label>
+                        <Checkbox
+                            id='systemCreated'
+                            name='systemCreated'
+                            checked={systemCreated}
+                            color='primary'
+                            onChange={onSystemCreatedChange}
+                        />
                         <Typography className={classes.systemCreatedText} variant='body1'>
                             System will create an identifier
                         </Typography>

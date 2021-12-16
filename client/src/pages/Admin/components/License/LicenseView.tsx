@@ -8,13 +8,14 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Tooltip, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { DataGrid, GridColumns, /*GridArrowDownwardIcon,*/ GridTripleDotsVerticalIcon } from '@material-ui/data-grid';
+import { DataGrid, GridColumns /*, GridTripleDotsVerticalIcon*/ } from '@material-ui/data-grid';
 import { useLocation } from 'react-router';
 import { GetLicenseListDocument, License } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { useLicenseStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -130,11 +131,6 @@ function LicenseList({ licenses }): React.ReactElement {
         }
     ];
 
-    // TODO: can't seem to inject aria-controls or retrieve the id properly
-    function accessibleColumnMenuIcon() {
-        return <GridTripleDotsVerticalIcon aria-controls='poo' />;
-    }
-
     return (
         <Box className={classes.AdminListContainer}>
             <DataGrid
@@ -146,9 +142,6 @@ function LicenseList({ licenses }): React.ReactElement {
                 density='compact'
                 disableSelectionOnClick
                 hideFooter
-                components={{
-                    ColumnMenuIcon: accessibleColumnMenuIcon
-                }}
             />
         </Box>
     );
@@ -156,6 +149,7 @@ function LicenseList({ licenses }): React.ReactElement {
 
 function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string) => Promise<void> }): React.ReactElement {
     const [searchFilter, setSearchFilter] = useState('');
+    const history = useHistory();
     const classes = useStyles();
 
     const handleSearchFilterChange = e => {
@@ -164,16 +158,14 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
 
     const search = () => queryByFilter(searchFilter);
 
-    const createLicense = () => window.open('/admin/licenses/create', '_blank');
-
     return (
         <Box className={classes.AdminSearchFilterContainer}>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
-                <TextField className={classes.searchFilter} placeholder='Search License' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
+                <TextField className={classes.searchFilter} placeholder='Search License' type='search' value={searchFilter} id='searchFilter' label='Search Filter' onChange={handleSearchFilterChange} />
                 <Button className={classes.styledButton} style={{ right: '25px' }} onClick={search}>Search</Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Button className={classes.styledButton} onClick={createLicense}>Create</Button>
+                <Button className={classes.styledButton} onClick={() => history.push('/admin/licenses/create')}>Create</Button>
             </Box>
         </Box>
     );

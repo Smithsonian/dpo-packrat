@@ -41,10 +41,10 @@ export const useStyles = makeStyles(({ palette }) => ({
             border: '20px solid black',
             outline: '20px solid black'
         },
-        '&:not(:focus)': {
-            border: '20px solid pink',
-            outline: '20px solid pink'
-        }
+        // '&:not(:focus)': {
+        //     border: '20px solid pink',
+        //     outline: '20px solid pink'
+        // }
     },
     centeredTableHead: {
         '& > span': {
@@ -108,6 +108,13 @@ const getMuiTheme = () =>
             MuiTableHead: {
                 root: {
                     borderBottom: '1.2px solid rgb(128,128,128)'
+                }
+            },
+            MuiInputBase: {
+                input: {
+                    '&:-webkit-autofill': {
+                        animationDuration: '4s'
+                    }
                 }
             }
         }
@@ -178,10 +185,10 @@ function WorkflowList(): React.ReactElement {
                         border: '20px solid black',
                         outline: '20px solid black'
                     },
-                    '&:not(:focus)': {
-                        border: '20px solid pink',
-                        outline: '20px solid pink'
-                    },
+                    // '&:not(:focus)': {
+                    //     border: '20px solid pink',
+                    //     outline: '20px solid pink'
+                    // },
                 }
             };
         }

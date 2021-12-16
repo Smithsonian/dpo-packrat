@@ -139,12 +139,29 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
     const { metadata, updateMetadata, deleteMetadata, index, licenses, units, options, style, type } = props;
     const { Name, Label, Value, idMetadata, isImmutable } = metadata;
 
-    let valueInput = <TextField onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Value', e.target.value)} value={Value} InputProps={{ className: style.text }} style={{ width: '95%' }} />;
+    let valueInput = (
+        <React.Fragment>
+            <label htmlFor={`${index + Name}-value`} style={{ display: 'none' }}>Value</label>
+            <TextField id={`${index + Name}-value`}
+                onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Value', e.target.value)}
+                value={Value}
+                InputProps={{ className: style.text }}
+                style={{ width: '95%' }}
+            />;
+        </React.Fragment>
+    );
     if (type === eObjectMetadataType.eDetailView) {
         return (
             <TableRow className={style.row}>
                 <TableCell padding='none'>
-                    <TextField onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Name', e.target.value)} value={Name} InputProps={{ className: style.text }} style={{ width: '95%' }} />
+                    <label htmlFor={`${index + Name}-name`} style={{ display: 'none' }}>Value</label>
+                    <TextField
+                        id={`${index + Name}-name`}
+                        onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Name', e.target.value)}
+                        value={Name}
+                        InputProps={{ className: style.text }}
+                        style={{ width: '95%' }}
+                    />
                 </TableCell>
                 <TableCell padding='none'></TableCell>
                 <TableCell padding='none'>{valueInput}</TableCell>
@@ -200,7 +217,19 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
                     />
                 }
             </TableCell>
-            <TableCell padding='none'>{noLabel.has(Name) ? null : <TextField onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Label', e.target.value)} value={Label} InputProps={{ className: style.text }} style={{ width: '95%' }} />}</TableCell>
+            <TableCell padding='none'>{noLabel.has(Name) ? null : (
+                <React.Fragment>
+                    <label htmlFor={`${index + Name}-label`} style={{ display: 'none' }}>Label</label>
+                    <TextField
+                        id={`${index + Name}-label`}
+                        onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Label', e.target.value)}
+                        value={Label}
+                        InputProps={{ className: style.text }}
+                        style={{ width: '95%' }}
+                    />
+                </React.Fragment>
+            )}
+            </TableCell>
             <TableCell padding='none'>{valueInput}</TableCell>
             <TableCell padding='none'>{isRequired.has(Name) ? '*' : null}</TableCell>
             <TableCell padding='none'><MdRemoveCircleOutline onClick={() => deleteMetadata(idMetadata ?? 0, index)} style={{ cursor: 'pointer' }} /></TableCell>

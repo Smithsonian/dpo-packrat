@@ -29,6 +29,11 @@ const breakpoints = createBreakpoints({});
 
 const overrides = createTypographyOverrides(breakpoints);
 
+console.log('overrides', overrides);
+// overrides['MuiInputBase-input:-webkit-autofill'] = {
+//     'animationDuration': '4999s'
+// };
+
 const theme: Theme = createMuiTheme({ palette, overrides });
 
 export { theme as default, Colors };

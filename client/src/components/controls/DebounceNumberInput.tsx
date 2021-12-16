@@ -47,6 +47,7 @@ function DebounceNumberInput(props: DebounceNumberInputProps): React.ReactElemen
             disabled={disabled}
             onChange={onChange}
             debounceTimeout={400}
+            title={name}
         />
     );
 }

@@ -53,6 +53,7 @@ function InputField(props: InputFieldProps): React.ReactElement {
         >
             <DebounceInput
                 element='input'
+                title={name}
                 disabled={disabled}
                 value={value || ''}
                 className={classes.input}
