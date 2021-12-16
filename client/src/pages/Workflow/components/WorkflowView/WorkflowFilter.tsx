@@ -163,8 +163,8 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
 
     return (
         <Box display='flex' alignItems='center' justifyContent='space-between' mb={1}>
-            <InputLabel id={name}>
-                <Typography className={classes.label}>{label}</Typography>
+            <InputLabel id={name} className={classes.label} htmlFor={name}>
+                {label}
             </InputLabel>
             <Select
                 value={value || []}

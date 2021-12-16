@@ -14,6 +14,7 @@ import { GetUnitsFromNameSearchDocument, GetUnitsFromNameSearchResult } from '..
 import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -155,6 +156,7 @@ function AdminUnitsList({ units }): React.ReactElement {
 
 function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSearchText: string) => Promise<void> }): React.ReactElement {
     const [searchFilter, setSearchFilter] = useState('');
+    const history = useHistory();
     const classes = useStyles();
 
     const handleSearchFilterChange = e => {
@@ -168,15 +170,14 @@ function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSear
     return (
         <Box className={classes.AdminSearchFilterContainer}>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
+                <label htmlFor='searchFilter' style={{ display: 'none' }}>Search Unit</label>
                 <TextField className={classes.searchFilter} placeholder='Search Unit' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
                 <Button className={classes.styledButton} style={{ right: '25px' }} onClick={searchUnits}>
                     Search
                 </Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/units/create' target='_blank'>
-                    <Button className={classes.styledButton}>Create</Button>
-                </Link>
+                <Button className={classes.styledButton} onClick={() => history.push('/admin/units/create')}>Create</Button>
             </Box>
         </Box>
     );

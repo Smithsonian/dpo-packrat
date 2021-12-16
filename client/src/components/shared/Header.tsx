@@ -181,6 +181,7 @@ function Header(): React.ReactElement {
                 in repository view, the search needs to reconstruct the URL based on the state of the search and then re-initialize the tree */}
                 {isRepository ? (
                     <DebounceInput
+                        title='Search Repository'
                         element='input'
                         className={classes.search}
                         name='search'
@@ -197,6 +198,7 @@ function Header(): React.ReactElement {
                     />
                 ) : (
                     <DebounceInput
+                        title='Search Repository'
                         element='input'
                         className={classes.search}
                         name='search'

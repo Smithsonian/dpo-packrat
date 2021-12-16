@@ -11,10 +11,9 @@
 import Checkbox from '@material-ui/core/Checkbox';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, FormControl, Select, MenuItem } from '@material-ui/core';
+import { Box, TextField, Button, Select, MenuItem, InputLabel } from '@material-ui/core';
 import { extractISOMonthDateYear, formatISOToHoursMinutes } from '../../../constants/index';
 import { useParams, useLocation, useHistory } from 'react-router';
-import { Link } from 'react-router-dom';
 import { useGetUserQuery, CreateUserDocument, UpdateUserDocument, GetAllUsersDocument, User_Status } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
 import { makeStyles } from '@material-ui/core/styles';
@@ -23,8 +22,9 @@ import { toast } from 'react-toastify';
 import * as yup from 'yup';
 import { useUsersStore } from '../../../store';
 import { Helmet } from 'react-helmet';
+import { DebounceInput } from 'react-debounce-input';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(({ typography }) => ({
     AdminUsersViewContainer: {
         display: 'flex',
         flex: 1,
@@ -54,12 +54,15 @@ const useStyles = makeStyles({
         marginLeft: '1%'
     },
     AdminUserFormRowLabel: {
-        gridColumnStart: '1'
+        gridColumnStart: '1',
+        fontSize: '0.875rem',
+        color: 'inherit'
     },
     AdminUserFormRowInput: {
         gridColumnStart: '2'
     },
     AdminUserFormRow: {
+        height: 45,
         display: 'grid',
         gridTemplateColumns: '40% 60%',
         gridGap: '10px',
@@ -76,7 +79,13 @@ const useStyles = makeStyles({
     },
     formField: {
         backgroundColor: 'white',
-        borderRadius: '4px'
+        borderRadius: '4px',
+        border: '1px solid rgb(118,118,118)',
+        width: '80%',
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily,
+        fontSize: 'inherit',
+        height: '30px'
     },
     AdminBreadCrumbsContainer: {
         display: 'flex',
@@ -94,8 +103,21 @@ const useStyles = makeStyles({
         color: 'white',
         width: '90px',
         height: '30px'
+    },
+    select: {
+        width: '60%',
+        minWidth: 'fit-content',
+        height: '32px',
+        padding: '0px 5px',
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily,
+        fontSize: 'inherit',
+        color: 'black',
+        borderRadius: 5,
+        border: '1px solid rgb(118,118,118)',
+        backgroundColor: 'white'
     }
-});
+}));
 
 function AdminUserForm(): React.ReactElement {
     const classes = useStyles();
@@ -132,11 +154,6 @@ function AdminUserForm(): React.ReactElement {
 
     const fetchedUser = request.data?.getUser.User;
 
-    // Performs graphql query to retrieve user information
-    // if query returns user info,
-    // redirect to adminuserform
-    // else
-    // redirect to users
     useEffect(() => {
         if (fetchedUser) {
             setName(fetchedUser?.Name);
@@ -226,192 +243,119 @@ function AdminUserForm(): React.ReactElement {
             </Box>
             <Box className={classes.AdminUserFormContainer}>
                 <Box className={classes.AdminUserFormRow}>
-                    <p className={classes.AdminUserFormRowLabel}>Name</p>
-                    <FormControl variant='outlined'>
-                        {validNameInput !== false ? (
-                            <TextField
-                                className={classes.formField}
-                                style={{ width: '270px' }}
-                                variant='outlined'
-                                size='small'
-                                value={name}
-                                onChange={e => {
-                                    setName(e.target.value);
-                                }}
-                                InputLabelProps={{
-                                    shrink: true
-                                }}
-                            />
-                        ) : (
-                            <React.Fragment>
-                                <TextField
-                                    error
-                                    className={classes.formField}
-                                    style={{ width: '270px' }}
-                                    variant='outlined'
-                                    size='small'
-                                    value={name}
-                                    onChange={e => {
-                                        setName(e.target.value);
-                                    }}
-                                    InputLabelProps={{
-                                        shrink: true
-                                    }}
-                                />
-                                <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>
-                            </React.Fragment>
-                        )}
-                    </FormControl>
+                    <InputLabel htmlFor='userName' className={classes.AdminUserFormRowLabel}>Name</InputLabel>
+                    <DebounceInput
+                        id='userName'
+                        className={classes.formField}
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                    />
+                    {validNameInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p className={classes.AdminUserFormRowLabel}>Email Address</p>
-                    <FormControl variant='outlined'>
-                        {validEmailInput !== false ? (
-                            <TextField
-                                className={classes.formField}
-                                style={{ width: '270px' }}
-                                variant='outlined'
-                                size='small'
-                                value={email}
-                                onChange={e => {
-                                    setEmail(e.target.value);
-                                }}
-                            />
-                        ) : (
-                            <React.Fragment>
-                                <TextField
-                                    error
-                                    className={classes.formField}
-                                    style={{ width: '270px' }}
-                                    variant='outlined'
-                                    size='small'
-                                    value={email}
-                                    onChange={e => {
-                                        setEmail(e.target.value);
-                                    }}
-                                />
-                                <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>
-                            </React.Fragment>
-                        )}
-                    </FormControl>
+                    <InputLabel htmlFor='userEmail' className={classes.AdminUserFormRowLabel}>Email Address</InputLabel>
+                    <DebounceInput
+                        id='userEmail'
+                        className={classes.formField}
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                    />
+                    {validEmailInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p className={classes.AdminUserFormRowLabel}>Active</p>
+                    <InputLabel htmlFor='userActive' className={classes.AdminUserFormRowLabel}>Active</InputLabel>
                     <Checkbox
+                        id='userActive'
                         style={{ width: '10px', height: '10px' }}
                         color='primary'
                         checked={active}
-                        onChange={() => {
-                            setActive(!active);
-                        }}
+                        onChange={() => setActive(!active)}
                     />
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p className={classes.AdminUserFormRowLabel}>Date Activated</p>
-                    <FormControl variant='outlined'>
-                        {!dateActivated ? (
-                            <TextField style={{ maxWidth: '180px' }} variant='outlined' size='small' disabled />
-                        ) : (
-                            <TextField
-                                style={{ maxWidth: '180px' }}
-                                variant='outlined'
-                                type='date'
-                                size='small'
-                                disabled
-                                onChange={e => {
-                                    setDateActivated(e.target.value);
-                                }}
-                                value={extractISOMonthDateYear(dateActivated, true)}
-                            />
-                        )}
-                    </FormControl>
+                    <InputLabel htmlFor='dateActivated' className={classes.AdminUserFormRowLabel}>Date Activated</InputLabel>
+                    {!dateActivated ? (
+                        <TextField
+                            id='dateActivated'
+                            style={{ maxWidth: '50%', alignSelf: 'flex-end', paddingBottom: 4 }}
+                            size='small'
+                            disabled
+                        />
+                    ) : (
+                        <TextField
+                            id='dateActivated'
+                            style={{ maxWidth: '50%', alignSelf: 'flex-end', paddingBottom: 4 }}
+                            type='date'
+                            size='small'
+                            disabled
+                            onChange={e => {
+                                setDateActivated(e.target.value);
+                            }}
+                            value={extractISOMonthDateYear(dateActivated, true)}
+                        />
+                    )}
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p className={classes.AdminUserFormRowLabel}>Date Disabled</p>
-                    <FormControl variant='outlined'>
-                        {!dateDisabled ? (
-                            <TextField style={{ maxWidth: '180px' }} variant='outlined' size='small' disabled />
-                        ) : (
-                            <TextField
-                                style={{ maxWidth: '180px' }}
-                                variant='outlined'
-                                type='date'
-                                size='small'
-                                disabled
-                                onChange={e => {
-                                    setDateDisabled(e.target.value);
-                                }}
-                                value={extractISOMonthDateYear(dateDisabled, true)}
-                            />
-                        )}
-                    </FormControl>
+                    <InputLabel htmlFor='dateDisabled' className={classes.AdminUserFormRowLabel}>Date Disabled</InputLabel>
+                    {!dateDisabled ? (
+                        <TextField
+                            id='dateDisabled'
+                            style={{ maxWidth: '50%', alignSelf: 'flex-end', paddingBottom: 4 }}
+                            size='small'
+                            disabled
+                        />
+                    ) : (
+                        <TextField
+                            id='dateDisabled'
+                            style={{ maxWidth: '50%', alignSelf: 'flex-end', paddingBottom: 4 }}
+                            type='date'
+                            size='small'
+                            disabled
+                            onChange={e => {
+                                setDateDisabled(e.target.value);
+                            }}
+                            value={extractISOMonthDateYear(dateDisabled, true)}
+                        />
+                    )}
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p className={classes.AdminUserFormRowLabel}>Workflow Notification Type</p>
-
+                    <InputLabel htmlFor='notificationType' className={classes.AdminUserFormRowLabel}>Workflow Notification Type</InputLabel>
                     <Select
+                        id='notificationType'
                         value={typeof workflowNotificationType === 'number' ? workflowNotificationType : ''}
-                        className={classes.formField}
-                        variant='outlined'
+                        className={classes.select}
+                        disableUnderline
                         onChange={e => {
                             if (typeof e.target.value === 'number') {
                                 setWorkflowNotificationType(e.target.value);
                             }
                         }}
-                        style={{ width: '160px', height: '40px' }}
                     >
                         <MenuItem value={0}>Daily Digest</MenuItem>
                         <MenuItem value={1}>Immediately</MenuItem>
                     </Select>
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p className={classes.AdminUserFormRowLabel}>Workflow Notification Time</p>
-                    {workflowNotificationType === 0 ? (
-                        <FormControl variant='outlined'>
-                            <TextField
-                                className={classes.formField}
-                                style={{ width: '160px' }}
-                                type='time'
-                                size='small'
-                                variant='outlined'
-                                value={workflowNotificationTime}
-                                inputProps={{
-                                    step: 300
-                                }}
-                                InputLabelProps={{
-                                    shrink: true
-                                }}
-                                onChange={e => {
-                                    if (e.target.value) {
-                                        setWorkflowNotificationTime(e.target.value);
-                                    }
-                                }}
-                            />
-                        </FormControl>
-                    ) : (
-                        <FormControl variant='outlined'>
-                            <TextField
-                                disabled
-                                className={classes.formField}
-                                style={{ width: '160px' }}
-                                type='time'
-                                size='small'
-                                variant='outlined'
-                                value={workflowNotificationTime}
-                                inputProps={{
-                                    step: 300
-                                }}
-                                InputLabelProps={{
-                                    shrink: true
-                                }}
-                                onChange={e => {
-                                    if (e.target.value) {
-                                        setWorkflowNotificationTime(e.target.value);
-                                    }
-                                }}
-                            />
-                        </FormControl>
-                    )}
+                    <InputLabel htmlFor='notificationTime' className={classes.AdminUserFormRowLabel}>Workflow Notification Time</InputLabel>
+                    <TextField
+                        id='notificationTime'
+                        disabled={workflowNotificationType === 0 ? false : true}
+                        type='time'
+                        size='small'
+                        style={{ width: '50%', alignSelf: 'flex-end', paddingBottom: 4 }}
+                        value={workflowNotificationTime}
+                        inputProps={{
+                            step: 300
+                        }}
+                        InputLabelProps={{
+                            shrink: true,
+                        }}
+                        onChange={e => {
+                            if (e.target.value) {
+                                setWorkflowNotificationTime(e.target.value);
+                            }
+                        }}
+                    />
                 </Box>
             </Box>
             <Box className={classes.AdminUserFormButtonGroup}>
@@ -424,12 +368,9 @@ function AdminUserForm(): React.ReactElement {
                         Update
                     </Button>
                 )}
-
-                <Link to='/admin/users' style={{ textDecoration: 'none' }}>
-                    <Button variant='contained' className={classes.searchUsersFilterButton}>
-                        Cancel
-                    </Button>
-                </Link>
+                <Button variant='contained' className={classes.searchUsersFilterButton} onClick={() => history.push('/admin/users')}>
+                    Cancel
+                </Button>
             </Box>
         </Box>
     );

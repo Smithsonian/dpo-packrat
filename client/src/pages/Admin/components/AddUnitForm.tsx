@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-max-props-per-line */
 /* eslint-disable react/jsx-boolean-value */
 
-import { Box, Typography, FormControl, TextField, FormHelperText } from '@material-ui/core';
+import { Box, FormControl, FormHelperText, InputLabel } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
@@ -12,8 +12,9 @@ import { apolloClient } from '../../../graphql/index';
 import { toTitleCase } from '../../../constants/helperfunctions';
 import * as yup from 'yup';
 import { Helmet } from 'react-helmet';
+import { DebounceInput } from 'react-debounce-input';
 
-const useStyles = makeStyles(({ palette, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -61,14 +62,22 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         }
     },
     formRowLabel: {
-        gridColumnStart: '1'
+        gridColumnStart: '1',
+        fontSize: '0.875rem',
+        color: 'inherit'
     },
     formRowInput: {
         gridColumnStart: '2'
     },
     formField: {
         backgroundColor: 'white',
-        borderRadius: '4px'
+        borderRadius: '4px',
+        border: '1px solid rgb(118,118,118)',
+        width: '60%',
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily,
+        fontSize: 'inherit',
+        height: '30px'
     }
 }));
 
@@ -166,86 +175,37 @@ function AddUnitForm(): React.ReactElement {
             </Helmet>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
-                    <Typography className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</Typography>
+                    <InputLabel htmlFor='unitName' className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</InputLabel>
                     <FormControl variant='outlined'>
-                        {validName !== false ? (
-                            <TextField
-                                className={classes.formField}
-                                style={{ width: '270px' }}
-                                variant='outlined'
-                                size='small'
-                                value={name}
-                                onChange={onNameUpdate}
-                                InputLabelProps={{
-                                    shrink: true
-                                }}
-                            />
-                        ) : (
-                            <React.Fragment>
-                                <TextField
-                                    error
-                                    className={classes.formField}
-                                    style={{ width: '270px' }}
-                                    variant='outlined'
-                                    size='small'
-                                    value={name}
-                                    onChange={onNameUpdate}
-                                    InputLabelProps={{
-                                        shrink: true
-                                    }}
-                                />
-                                <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>
-                            </React.Fragment>
-                        )}
-                    </FormControl>
-                </Box>
-                <Box className={classes.formRow}>
-                    <Typography className={classes.formRowLabel}>Abbreviation</Typography>
-                    <FormControl variant='outlined'>
-                        {validAbbreviation !== false ? (
-                            <TextField
-                                className={classes.formField}
-                                style={{ width: '270px' }}
-                                variant='outlined'
-                                size='small'
-                                value={abbreviation}
-                                onChange={onAbbreviationUpdate}
-                                InputLabelProps={{
-                                    shrink: true
-                                }}
-                            />
-                        ) : (
-                            <React.Fragment>
-                                <TextField
-                                    error
-                                    className={classes.formField}
-                                    style={{ width: '270px' }}
-                                    variant='outlined'
-                                    size='small'
-                                    value={abbreviation}
-                                    onChange={onAbbreviationUpdate}
-                                    InputLabelProps={{
-                                        shrink: true
-                                    }}
-                                />
-                                <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>
-                            </React.Fragment>
-                        )}
-                    </FormControl>
-                </Box>
-                <Box className={classes.formRow}>
-                    <Typography className={classes.formRowLabel}>ARKPrefix</Typography>
-                    <FormControl variant='outlined'>
-                        <TextField
+                        <DebounceInput
+                            id='unitName'
                             className={classes.formField}
-                            style={{ width: '270px' }}
-                            variant='outlined'
-                            size='small'
+                            value={name}
+                            onChange={onNameUpdate}
+                        />
+                        {validName === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+                    </FormControl>
+                </Box>
+                <Box className={classes.formRow}>
+                    <InputLabel htmlFor='unitAbbreviation' className={classes.formRowLabel}>Abbreviation</InputLabel>
+                    <FormControl variant='outlined'>
+                        <DebounceInput
+                            id='unitAbbreviation'
+                            className={classes.formField}
+                            value={abbreviation}
+                            onChange={onAbbreviationUpdate}
+                        />
+                        {validAbbreviation === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+                    </FormControl>
+                </Box>
+                <Box className={classes.formRow}>
+                    <InputLabel htmlFor='unitARKPrefix' className={classes.formRowLabel}>ARKPrefix</InputLabel>
+                    <FormControl variant='outlined'>
+                        <DebounceInput
+                            id='unitARKPrefix'
+                            className={classes.formField}
                             value={ARKPrefix}
                             onChange={onARKPrefixUpdate}
-                            InputLabelProps={{
-                                shrink: true
-                            }}
                         />
                     </FormControl>
                 </Box>

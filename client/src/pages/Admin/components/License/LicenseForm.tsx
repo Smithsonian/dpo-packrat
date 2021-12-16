@@ -1,10 +1,10 @@
 /* eslint-disable react/jsx-max-props-per-line */
 /* eslint-disable react/jsx-boolean-value */
 
-import { Box, Typography, FormControl, TextField, FormHelperText, Button } from '@material-ui/core';
+import { Box, FormControl, FormHelperText, Button, InputLabel } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
-import { useHistory, Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { DebounceInput } from 'react-debounce-input';
@@ -15,6 +15,7 @@ import { toTitleCase } from '../../../../constants/helperfunctions';
 import * as yup from 'yup';
 import { useLicenseStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
+import clsx from 'clsx';
 
 const useStyles = makeStyles(({ breakpoints, typography }) => ({
     container: {
@@ -55,23 +56,23 @@ const useStyles = makeStyles(({ breakpoints, typography }) => ({
         }
     },
     formRowLabel: {
-        gridColumnStart: '1'
-    },
-    formRowInput: {
-        gridColumnStart: '2'
+        gridColumnStart: '1',
+        fontSize: '0.875rem',
+        color: 'inherit'
     },
     formField: {
         backgroundColor: 'white',
-        borderRadius: '4px'
-    },
-    descriptionInput: {
-        backgroundColor: 'white',
         borderRadius: '4px',
-        width: '80%',
-        minHeight: '100px',
+        border: '1px solid rgb(118,118,118)',
+        width: '55%',
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
-        fontSize: 'inherit'
+        fontSize: 'inherit',
+        height: '30px'
+    },
+    descriptionInput: {
+        width: '80%',
+        minHeight: '100px'
     },
     btn: {
         backgroundColor: '#687DDB',
@@ -214,60 +215,35 @@ function LicenseForm(): React.ReactElement {
             </Helmet>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
-                    <Typography className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</Typography>
+                    <InputLabel className={classes.formRowLabel} htmlFor='licenseNameInput'>{toTitleCase(singularSystemObjectType)} Name</InputLabel>
                     <FormControl variant='outlined'>
-                        {validName !== false ? (
-                            <TextField
-                                className={classes.formField}
-                                style={{ width: '270px' }}
-                                variant='outlined'
-                                size='small'
-                                value={name}
-                                onChange={onNameUpdate}
-                                InputLabelProps={{
-                                    shrink: true
-                                }}
-                            />
-                        ) : (
-                            <React.Fragment>
-                                <TextField
-                                    error
-                                    className={classes.formField}
-                                    style={{ width: '270px' }}
-                                    variant='outlined'
-                                    size='small'
-                                    value={name}
-                                    onChange={onNameUpdate}
-                                    InputLabelProps={{
-                                        shrink: true
-                                    }}
-                                />
-                                <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required or already in system</FormHelperText>
-                            </React.Fragment>
-                        )}
+                        <DebounceInput
+                            id='licenseNameInput'
+                            className={classes.formField}
+                            value={name}
+                            onChange={onNameUpdate}
+                        />
+                        {validName === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required or already in system</FormHelperText>}
                     </FormControl>
                 </Box>
                 <Box className={classes.formRow}>
-                    <Typography className={classes.formRowLabel}>Restriction Level</Typography>
-                    <TextField
+                    <InputLabel className={classes.formRowLabel} htmlFor='licenseRestrictionLevelInput'>Restriction Level</InputLabel>
+                    <DebounceInput
+                        element='input'
                         className={classes.formField}
-                        style={{ width: '270px' }}
-                        variant='outlined'
-                        size='small'
+                        id='licenseRestrictionLevelInput'
                         value={restrictLevel || ''}
                         onChange={onRestrictLevelUpdate}
-                        InputLabelProps={{
-                            shrink: true
-                        }}
                     />
                 </Box>
                 <Box className={classes.formRow}>
-                    <Typography className={classes.formRowLabel}>Description</Typography>
+                    <InputLabel className={classes.formRowLabel} htmlFor='licenseTextarea'>Description</InputLabel>
                     <FormControl variant='outlined'>
                         <DebounceInput
+                            id='licenseTextarea'
                             element='textarea'
                             value={description || ''}
-                            className={classes.descriptionInput}
+                            className={clsx(classes.descriptionInput, classes.formField)}
                             name='description'
                             onChange={onDescriptionUpdate}
                             debounceTimeout={400}
@@ -285,11 +261,9 @@ function LicenseForm(): React.ReactElement {
                         Update
                     </Button>
                 )}
-                <Link to='/admin/licenses' style={{ textDecoration: 'none' }}>
-                    <Button variant='contained' className={classes.btn}>
-                        Cancel
-                    </Button>
-                </Link>
+                <Button variant='contained' className={classes.btn} onClick={() => history.push('/admin/licenses')}>
+                    Cancel
+                </Button>
             </Box>
         </Box>
     );

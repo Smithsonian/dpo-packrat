@@ -4,7 +4,7 @@
  *
  * This component renders select input fields used in RepositoryFilterView component.
  */
-import { Box, MenuItem, Select, Typography, InputLabel } from '@material-ui/core';
+import { Box, MenuItem, Select, InputLabel } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { useRepositoryStore } from '../../../../store';
@@ -65,11 +65,12 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
 
     return (
         <Box display='flex' alignItems='center' justifyContent='space-between' mb={1}>
-            <InputLabel id={name}>
-                <Typography className={classes.label}>{label}</Typography>
+            <InputLabel id={name} className={classes.label} htmlFor={name}>
+                {label}
             </InputLabel>
             {(name === 'has' || name === 'missing') && value.length < 1 ? (
                 <Select
+                    id={name}
                     value={value || []}
                     multiple={multiple || false}
                     className={classes.select}
@@ -85,7 +86,6 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
                         return (selected as string[]).join(', ');
                     }}
                     displayEmpty
-                    id={name}
                 >
                     {options.map(({ label, value }: FilterOption, index) => {
                         return (
@@ -96,7 +96,16 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
                     })}
                 </Select>
             ) : (
-                <Select id={name} value={value || []} multiple={multiple || false} className={classes.select} name={name} onChange={onChange} disableUnderline inputProps={inputProps}>
+                <Select
+                    id={name}
+                    value={value || []}
+                    multiple={multiple || false}
+                    className={classes.select}
+                    name={name}
+                    onChange={onChange}
+                    disableUnderline
+                    inputProps={inputProps}
+                >
                     {options.map(({ label, value }: FilterOption, index) => (
                         <MenuItem key={index} value={value}>
                             {label}

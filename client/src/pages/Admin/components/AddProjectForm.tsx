@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-max-props-per-line */
 /* eslint-disable react/jsx-boolean-value */
 
-import { Box, Typography, FormControl, TextField, FormHelperText } from '@material-ui/core';
+import { Box, InputLabel, FormControl, FormHelperText } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
@@ -13,8 +13,9 @@ import { apolloClient } from '../../../graphql/index';
 import { toTitleCase } from '../../../constants/helperfunctions';
 import * as yup from 'yup';
 import { Helmet } from 'react-helmet';
+import clsx from 'clsx';
 
-const useStyles = makeStyles(({ palette, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -62,14 +63,19 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         }
     },
     formRowLabel: {
-        gridColumnStart: '1'
-    },
-    formRowInput: {
-        gridColumnStart: '2'
+        gridColumnStart: '1',
+        fontSize: '0.875rem',
+        color: 'inherit'
     },
     formField: {
         backgroundColor: 'white',
-        borderRadius: '4px'
+        borderRadius: '4px',
+        border: '1px solid rgb(118,118,118)',
+        width: '55%',
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily,
+        fontSize: 'inherit',
+        height: '30px'
     },
     descriptionInput: {
         backgroundColor: 'white',
@@ -163,46 +169,25 @@ function AddProjectForm(): React.ReactElement {
             </Helmet>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
-                    <Typography className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</Typography>
+                    <InputLabel className={classes.formRowLabel} htmlFor='projectName'>{toTitleCase(singularSystemObjectType)} Name</InputLabel>
                     <FormControl variant='outlined'>
-                        {validName !== false ? (
-                            <TextField
-                                className={classes.formField}
-                                style={{ width: '270px' }}
-                                variant='outlined'
-                                size='small'
-                                value={name}
-                                onChange={onNameUpdate}
-                                InputLabelProps={{
-                                    shrink: true
-                                }}
-                            />
-                        ) : (
-                            <React.Fragment>
-                                <TextField
-                                    error
-                                    className={classes.formField}
-                                    style={{ width: '270px' }}
-                                    variant='outlined'
-                                    size='small'
-                                    value={name}
-                                    onChange={onNameUpdate}
-                                    InputLabelProps={{
-                                        shrink: true
-                                    }}
-                                />
-                                <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>
-                            </React.Fragment>
-                        )}
+                        <DebounceInput
+                            id='projectName'
+                            className={classes.formField}
+                            value={name}
+                            onChange={onNameUpdate}
+                        />
+                        {validName === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
                     </FormControl>
                 </Box>
                 <Box className={classes.formRow}>
-                    <Typography className={classes.formRowLabel}>Description</Typography>
+                    <InputLabel className={classes.formRowLabel} htmlFor='projectDescription'>Description</InputLabel>
                     <FormControl variant='outlined'>
                         <DebounceInput
+                            id='projectDescription'
                             element='textarea'
                             value={description || ''}
-                            className={classes.descriptionInput}
+                            className={clsx(classes.descriptionInput, classes.formField)}
                             name='description'
                             onChange={onDescriptionUpdate}
                             debounceTimeout={400}

@@ -90,7 +90,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
                 align='center'
                 label='Upload Files'
                 // TODO: this label props will help with testing
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'maroon' } }}
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px' } }}
                 width={'calc(100% - 20px)'}
             >
                 <UploadListHeader />
@@ -119,7 +119,7 @@ function UploadFilesPicker(): React.ReactElement {
             {({ getRootProps, getInputProps, open }) => (
                 <div {...getRootProps()}>
                     <UploadList loading={loading} open={open} />
-                    <input {...getInputProps()} />
+                    <input title='File Uploader' {...getInputProps()} />
                 </div>
             )}
         </Dropzone>

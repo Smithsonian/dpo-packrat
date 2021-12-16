@@ -237,8 +237,10 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             {!hideRetired && (
                 <Detail
                     label='Retired'
+                    name='retired'
                     valueComponent={
                         <CheckboxNoPadding
+                            id='retired'
                             name='retired'
                             disabled={disabled}
                             checked={withDefaultValueBoolean(retired, false)}
@@ -296,10 +298,11 @@ interface DetailProps {
     value?: string;
     valueComponent?: React.ReactNode;
     clickable?: boolean;
+    name?: string;
 }
 
 function Detail(props: DetailProps): React.ReactElement {
-    const { idSystemObject, label, value, valueComponent, clickable = true } = props;
+    const { idSystemObject, label, value, valueComponent, clickable = true, name } = props;
     const classes = useStyles(props);
 
     let content: React.ReactNode = <Typography className={classes.value}>{value || '-'}</Typography>;
@@ -314,6 +317,7 @@ function Detail(props: DetailProps): React.ReactElement {
                 <Typography className={classes.label}>{label}</Typography>
             </Box>
             <Box display='flex' flex={3.5}>
+                <label htmlFor={name} style={{ display: 'none' }}>{name}</label>
                 {valueComponent || content}
             </Box>
         </Box>
