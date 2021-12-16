@@ -15,12 +15,11 @@ export class SolrClient {
     private _core: string;
 
     private static defaultSolrHost: string | undefined = undefined;
-    private static defaultSolrPort: number | undefined = undefined;
+    private static defaultSolrPort: number = 8983;
 
     private static initDefaults(): void {
-        const { PACKRAT_SOLR_HOST, PACKRAT_SOLR_PORT } = process.env;
+        const { PACKRAT_SOLR_HOST } = process.env;
         SolrClient.defaultSolrHost = PACKRAT_SOLR_HOST ?? 'packrat-solr';
-        SolrClient.defaultSolrPort = H.Helpers.safeNumber(PACKRAT_SOLR_PORT) ?? 8983;
     }
 
     constructor(host: string | null, port: number | null, eCore: eSolrCore | null) {
@@ -30,7 +29,7 @@ export class SolrClient {
         if (!host)
             host = SolrClient.defaultSolrHost!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         if (!port)
-            port = SolrClient.defaultSolrPort!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            port = SolrClient.defaultSolrPort;
 
         let core: string | null = null;
         switch (eCore) {
