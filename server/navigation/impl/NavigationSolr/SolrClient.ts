@@ -14,13 +14,22 @@ export class SolrClient {
     private _port: number;
     private _core: string;
 
+    private static defaultSolrHost: string | undefined = undefined;
+    private static defaultSolrPort: number = 8983;
+
+    private static initDefaults(): void {
+        const { PACKRAT_SOLR_HOST } = process.env;
+        SolrClient.defaultSolrHost = PACKRAT_SOLR_HOST ?? 'packrat-solr';
+    }
+
     constructor(host: string | null, port: number | null, eCore: eSolrCore | null) {
-        if (!host) {
-            const { PACKRAT_SOLR_HOST } = process.env;
-            host = PACKRAT_SOLR_HOST || 'packrat-solr';
-        }
+        if (!SolrClient.defaultSolrHost)
+            SolrClient.initDefaults();
+
+        if (!host)
+            host = SolrClient.defaultSolrHost!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         if (!port)
-            port = 8983;
+            port = SolrClient.defaultSolrPort;
 
         let core: string | null = null;
         switch (eCore) {
