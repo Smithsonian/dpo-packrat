@@ -12,8 +12,8 @@ import { SvxReader } from '../../../utils/parser';
 import sharp from 'sharp';
 import * as path from 'path';
 
-// This Workflow represents an ingestion action, typically initiated by a user.
-// The workflow itself performs no work (ingestion is performed in the graphQl ingestData routine)
+// This Workflow represents an upload action, typically initiated by a user.
+// The workflow itself performs no actual upload work (upload is performed in the graphQl uploadData routine)
 // Instead, this workflow provide a means for gathering ingestion report output
 export class WorkflowUpload implements WF.IWorkflow {
     private workflowParams: WF.WorkflowParameters;
