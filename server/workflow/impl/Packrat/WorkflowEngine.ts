@@ -50,7 +50,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return null;
         }
 
-        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}] ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
+        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}] ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
         if (!WFC)
             return null;
@@ -116,51 +116,11 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
 
         switch (eWorkflowEvent) {
-            case CACHE.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion: return this.eventIngestionUploadAssetVersion(workflowParams);
             case CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject: return this.eventIngestionIngestObject(workflowParams);
             default:
                 LOG.info(`WorkflowEngine.event called with unhandled workflow event type ${CACHE.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
                 return null;
         }
-    }
-
-    private async eventIngestionUploadAssetVersion(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow | null> {
-        if (!workflowParams || !workflowParams.idSystemObject)
-            return null;
-
-        let workflow: WF.IWorkflow | null = null;
-        for (const idSystemObject of workflowParams.idSystemObject) {
-            const { success, asset, assetVersion } = await this.computeAssetAndVersion(idSystemObject);
-            if (!success || !asset || !assetVersion)
-                continue;
-
-            // take appropriate workflow actions based on asset version type
-            const eAssetType: CACHE.eVocabularyID | undefined = await asset.assetType();
-            switch (eAssetType) {
-                case CACHE.eVocabularyID.eAssetAssetTypeModel:
-                case CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile: {
-                    // initiate WorkflowJob for cook si-packrat-inspect
-                    const parameters: WFP.WorkflowJobParameters =
-                        new WFP.WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect,
-                            new COOK.JobCookSIPackratInspectParameters(assetVersion.FileName));
-
-                    const wfParams: WF.WorkflowParameters = {
-                        eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
-                        idSystemObject: [idSystemObject],
-                        idProject: workflowParams.idProject,
-                        idUserInitiator: workflowParams.idUserInitiator,
-                        parameters,
-                    };
-
-                    workflow = await this.create(wfParams);
-                    if (!workflow) {
-                        LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}`, LOG.LS.eWF);
-                        continue;
-                    }
-                } break;
-            }
-        }
-        return workflow;
     }
 
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow | null> {
@@ -458,7 +418,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idUserInitiator: workflowParams.idUserInitiator,
             DateInitiated: dtNow,
             DateUpdated: dtNow,
-            Parameters: workflowParams.parameters ? JSON.stringify(workflowParams.parameters) : null,
+            Parameters: workflowParams.parameters ? JSON.stringify(workflowParams.parameters, H.Helpers.saferStringify) : null,
             idWorkflowSet: WFC.workflowSet ? WFC.workflowSet.idWorkflowSet : null,
             idWorkflow: 0
         });
