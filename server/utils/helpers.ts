@@ -456,10 +456,14 @@ export class Helpers {
     /** Stringifies Maps and BigInts */
     static saferStringify(key: any, value: any): any {
         key;
+        if (value == null)
+            return value;
         if (typeof value === 'bigint')
             return value.toString();
         if (value instanceof Map)
             return [...value];
+        if (value.pipe && typeof (value.pipe) === 'function')
+            return 'stream';
         return value;
     }
 
