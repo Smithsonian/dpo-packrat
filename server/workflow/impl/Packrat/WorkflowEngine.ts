@@ -162,6 +162,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         CMIR = await this.computeModelInfo(oID.idObject, asset.idSystemObject);
                         if (CMIR.exitEarly || CMIR.assetVersionGeometry === undefined) {
                             LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping model ${JSON.stringify(oID)}`, LOG.LS.eWF);
+                            CMIR = undefined;
                             continue;
                         }
                     } else if (CMIR.idModel !== oID.idObject) { // make sure we're processing the same model
