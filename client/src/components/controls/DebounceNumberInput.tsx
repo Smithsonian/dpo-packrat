@@ -11,7 +11,6 @@ import { ViewableProps } from '../../types/repository';
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     input: {
         width: '16%',
-        outline: 'none',
         border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
         backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         padding: 8,

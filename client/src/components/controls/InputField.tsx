@@ -13,7 +13,6 @@ import FieldType from '../shared/FieldType';
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     input: {
         width: '50%',
-        outline: 'none',
         border: ({ updated }: InputFieldProps) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
         backgroundColor: ({ updated, error }: InputFieldProps) => error ? fade(palette.error.light, 0.3) : updated ? palette.secondary.light : palette.background.paper,
         padding: 8,

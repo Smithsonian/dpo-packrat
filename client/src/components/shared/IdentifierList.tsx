@@ -21,7 +21,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     identifierInput: {
         width: '75%',
         border: 'none',
-        outline: 'none',
+        // outline: 'none',
         padding: '0px 2px',
         paddingBottom: 5,
         backgroundColor: 'transparent',
@@ -30,7 +30,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontFamily: typography.fontFamily,
         borderBottom: `1px solid ${palette.grey[300]}`,
         '&:focus': {
-            outline: 'none'
+            // outline: 'none'
         },
         '&::placeholder': {
             fontStyle: 'italic'
@@ -64,6 +64,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     addIdentifierButton: {
         height: 35,
         width: 80,
+        outline: '0.5px hidden rgba(141, 171, 196, 0.4)',
         fontSize: typography.caption.fontSize,
         color: Colors.defaults.white,
         [breakpoints.down('lg')]: {
@@ -115,8 +116,9 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                     };
                     return (
                         <Box key={index} display='flex' flexDirection='row' alignItems='center' paddingBottom='10px'>
-                            {subjectView && <Radio checked={preferred === true} name='selected' color='primary' disabled={disabled} onClick={check} size='small' />}
+                            {subjectView && <Radio inputProps={{ 'title': `radio${identifier}${idIdentifier}preferred`, 'aria-label': `radio${identifier}${idIdentifier}preferred` }} checked={preferred === true} name='selected' color='primary' disabled={disabled} onClick={check} size='small' />}
                             <DebounceInput
+                                title={identifier}
                                 value={identifier}
                                 name='identifier'
                                 className={classes.identifierInput}

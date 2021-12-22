@@ -37,10 +37,6 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing /*
         'overflow-x': 'hidden',
         width: '100%',
         ...scrollBarProperties(true, false, palette.text.disabled)
-        // [breakpoints.down('lg')]: {
-        //     minHeight: '20vh',
-        //     maxHeight: '20vh'
-        // }
     },
     listDetail: {
         textAlign: 'center',
@@ -57,9 +53,9 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing /*
         marginTop: spacing(1),
         color: Colors.defaults.white,
         '&:focus': {
-            // TODO: discuss with Jon
-            border: '1px solid silver',
-        }
+            outline: '2px solid #8DABC4',
+        },
+        outline: '2px hidden #8DABC4'
     },
     title: {
         margin: '1% 0px',
@@ -89,8 +85,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
                 required
                 align='center'
                 label='Upload Files'
-                // TODO: this label props will help with testing
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px' } }}
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
                 width={'calc(100% - 20px)'}
             >
                 <UploadListHeader />

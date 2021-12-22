@@ -21,7 +21,6 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         justifyContent: 'center',
         height: '20vh',
         width: '52vw',
-        // border: `1px dashed ${palette.primary.main}`,
         borderRadius: 10,
         padding: 10,
         backgroundColor: palette.primary.light
@@ -38,7 +37,11 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         width: 120,
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
-        color: Colors.defaults.white
+        color: Colors.defaults.white,
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     }
 }));
 

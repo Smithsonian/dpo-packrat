@@ -56,7 +56,10 @@ const useStyles = makeStyles(({ palette }) => ({
         width: 'fit-content',
         color: Colors.defaults.white,
         height: 30,
-        marginRight: 2
+        marginRight: 2,
+        '&:focus': {
+            outline: '2px solid #8DABC4'
+        }
     },
     link: {
         textDecoration: 'none'
@@ -94,7 +97,7 @@ function WorkflowFilter(): React.ReactElement {
     const classes = useStyles(false);
     const getEntries = useVocabularyStore(state => state.getEntries);
     const getUsersFilterOptions = useUsersStore(state => state.getUsersFilterOptions);
-    const [/*loading,*/ resetWorkflowFilters, fetchWorkflowList] = useWorkflowStore(state => [/*state.loading,*/ state.resetWorkflowFilters, state.fetchWorkflowList]);
+    const [resetWorkflowFilters, fetchWorkflowList] = useWorkflowStore(state => [state.resetWorkflowFilters, state.fetchWorkflowList]);
     const { workflowTypeOptions, jobTypeOptions, stateOptions, initiatorOptions, ownerOptions } = getWorkflowFilterOptions(getUsersFilterOptions(), getEntries);
 
     return (

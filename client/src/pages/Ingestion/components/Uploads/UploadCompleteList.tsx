@@ -16,6 +16,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { scrollBarProperties } from '../../../../utils/shared';
 import UploadListHeader from './UploadListHeader';
 import lodash from 'lodash';
+import { Colors } from '../../../../theme';
 
 const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
     container: {
@@ -33,10 +34,6 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
         'overflow-x': 'hidden',
         width: '100%',
         ...scrollBarProperties(true, false, palette.text.disabled)
-        // [breakpoints.down('lg')]: {
-        //     minHeight: '20vh',
-        //     maxHeight: '20vh'
-        // }
     },
     listDetail: {
         textAlign: 'center',
@@ -119,7 +116,7 @@ function UploadListComplete(props: UploadListCompleteProps): React.ReactElement 
                 align='center'
                 label='Uploaded Files'
                 labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'black' } }}
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
                 width={'calc(100% - 20px)'}
             >
                 <UploadListHeader />

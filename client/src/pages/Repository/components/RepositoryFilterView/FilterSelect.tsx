@@ -19,7 +19,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         width: 160,
         height: 30,
         marginLeft: 10,
-        padding: '0px 5px',
+        padding: '0px 1.5px',
         fontSize: '0.8em',
         color: palette.primary.dark,
         borderRadius: 5,

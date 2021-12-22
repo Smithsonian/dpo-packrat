@@ -40,7 +40,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
             height: 30
         },
         '&:focus': {
-            border: '4px solid silver',
+            outline: '2px solid #8DABC4'
         }
     },
     link: {

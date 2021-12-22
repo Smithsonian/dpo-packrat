@@ -35,22 +35,16 @@ export const useStyles = makeStyles(({ palette }) => ({
         // need to specify top radius in table container AND MuiToolbar override
         borderTopRightRadius: '5px',
         borderTopLeftRadius: '5px',
-        width: '80%',
-        // TODO: Need to figure out why table won't come into focus
-        '&:focus': {
-            border: '20px solid black',
-            outline: '20px solid black'
-        },
-        // '&:not(:focus)': {
-        //     border: '20px solid pink',
-        //     outline: '20px solid pink'
-        // }
+        width: '80%'
     },
     centeredTableHead: {
         '& > span': {
             '& > button': {
                 marginRight: 0,
-                marginLeft: '0px'
+                marginLeft: '0px',
+                '&:focus': {
+                    outline: '0.5px solid #8DABC4'
+                }
             },
             justifyContent: 'center'
         }
@@ -71,6 +65,11 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     link: {
         textDecoration: 'underline'
+    },
+    footerBtn: {
+        '&:focus': {
+            outline: '0.5px solid #8DABC4'
+        }
     }
 }));
 
@@ -114,7 +113,15 @@ const getMuiTheme = () =>
                 input: {
                     '&:-webkit-autofill': {
                         animationDuration: '4s'
+                    },
+                    '&:focus': {
+                        outline: '0.5px solid #8DABC4',
                     }
+                }
+            },
+            MuiButtonBase: {
+                root: {
+                    outline: '0.5px solid rgb(255, 252, 209)'
                 }
             }
         }
@@ -169,6 +176,8 @@ function WorkflowList(): React.ReactElement {
                             count={count}
                             onChangeRowsPerPage={({ target: { value } }) => paginationUpdateAndRefetchList(ePaginationChange.eRowCount, Number(value), null, null)}
                             onChangePage={(_e, currentPage) => paginationUpdateAndRefetchList(ePaginationChange.ePage, currentPage, null, null)}
+                            backIconButtonProps={{ className: classes.footerBtn }}
+                            nextIconButtonProps={{ className: classes.footerBtn }}
                         />
                     </tr>
                 </tfoot>
@@ -177,21 +186,7 @@ function WorkflowList(): React.ReactElement {
         setRowProps: () => {
             return { role: 'row' };
         },
-        // TODO: This may not be working as intended because we can't focus in on the table
-        setTableProps: () => {
-            return {
-                style: {
-                    '& :focus': {
-                        border: '20px solid black',
-                        outline: '20px solid black'
-                    },
-                    // '&:not(:focus)': {
-                    //     border: '20px solid pink',
-                    //     outline: '20px solid pink'
-                    // },
-                }
-            };
-        }
+        // setTableProps: () => {}
     };
 
     if (loading) {

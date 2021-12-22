@@ -27,7 +27,11 @@ import clsx from 'clsx';
 import { DataTableOptions } from '../../../../../types/component';
 
 export const useStyles = makeStyles(({ palette }) => ({
-    btn: { ...sharedButtonProps, width: 'fit-content' },
+    btn: {
+        ...sharedButtonProps,
+        width: 'fit-content',
+        outline: '0.1px hidden #FFFCD1'
+    },
     tableContainer: {
         height: 'fit-content',
         backgroundColor: palette.secondary.light,
@@ -113,6 +117,19 @@ const getMuiTheme = () =>
             MuiTableHead: {
                 root: {
                     borderBottom: '1.2px solid rgb(128,128,128)'
+                }
+            },
+            MuiButtonBase: {
+                root: {
+                    '&:focus': {
+                        outline: '0.5px hidden rgba(141, 171, 196, 0.4)'
+                    },
+                    outline: '0.1px hidden #FFFCD1'
+                }
+            },
+            MuiTypography: {
+                h6: {
+                    display: 'none'
                 }
             }
         }
@@ -235,6 +252,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                                             href={REACT_APP_PACKRAT_SERVER_ENDPOINT + value.path}
                                             style={{ textDecoration: 'underline', color: '#2C405A', display: 'flex' }}
                                         >
+                                            <span style={{ display: 'none' }}>Download Icon</span>
                                             {renderIcon(value.icon)}
                                         </a>
                                     );
@@ -308,18 +326,16 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         <React.Fragment>
             <MuiThemeProvider theme={getMuiTheme()}>
                 <Box className={classes.tableContainer}>
-                    <MUIDataTable title='' data={assetRows} columns={assetColumns} options={options} />
+                    <MUIDataTable title='Assets' data={assetRows} columns={assetColumns} options={options} />
                 </Box>
             </MuiThemeProvider>
 
             <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' mt={1} width='100%'>
                 <Box display='flex' flexDirection='row' alignItems='center'>
                     {assetRows.length > 0 && (
-                        <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
-                            <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ whiteSpace: 'nowrap' }}>
-                                Download All
-                            </Button>
-                        </a>
+                        <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ whiteSpace: 'nowrap' }} href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)}>
+                            Download All
+                        </Button>
                     )}
                     <Button className={classes.btn} variant='contained' color='primary' style={{ marginLeft: '2px' }} onClick={redirect}>
                         Add Version

@@ -18,7 +18,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         backgroundColor: ({ required, error }: FieldTypeProps) => (error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light)
     },
     label: {
-        color: palette.primary.dark
+        color: 'black'
     },
     loading: {
         position: 'absolute',
