@@ -18,7 +18,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         backgroundColor: palette.background.default
     },
     menuLabel: {
-        color: palette.primary.contrastText,
+        color: palette.primary.dark,
         fontWeight: typography.fontWeightMedium,
         marginLeft: spacing(2),
         marginBottom: spacing(2)

@@ -147,7 +147,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
                 value={Value}
                 InputProps={{ className: style.text }}
                 style={{ width: '95%' }}
-            />;
+            />
         </React.Fragment>
     );
     if (type === eObjectMetadataType.eDetailView) {

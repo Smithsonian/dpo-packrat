@@ -28,7 +28,8 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         color: palette.background.paper,
         [breakpoints.down('lg')]: {
             height: 30
-        }
+        },
+        outline: '0.5px hidden rgba(141, 171, 196, 0.4)'
     }
 }));
 
@@ -83,9 +84,15 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                 <React.Fragment>
                     <VoyagerExplorer root={rootLink} document={documentLink} height='500px' width='100%' />
                     <br />
-                    <a href={getVoyagerStoryUrl(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eEdit)} rel='noopener noreferrer' target='_blank' style={{ textDecoration: 'none' }}>
-                        <Button className={classes.editButton} variant='contained' color='primary'>Edit</Button>
-                    </a>
+                    <Button
+                        className={classes.editButton}
+                        variant='contained'
+                        color='primary'
+                        href={getVoyagerStoryUrl(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eEdit)}
+                        target='_blank' rel='noopener noreferrer'
+                    >
+                        Edit
+                    </Button>
                 </React.Fragment>
             )}
             {objectType === eSystemObjectType.eScene && rootLink.length > 0 && documentLink.length > 0 && eMode !== eVoyagerStoryMode.eViewer && (

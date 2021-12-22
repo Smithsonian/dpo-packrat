@@ -43,7 +43,9 @@ function Description(props: DescriptionProps): React.ReactElement {
             containerProps={rowFieldProps}
             width={viewMode ? 'auto' : undefined}
         >
+            <label htmlFor='description' style={{ display: 'none' }}>Description</label>
             <DebounceInput
+                id='description'
                 element='textarea'
                 className={classes.description}
                 name='description'

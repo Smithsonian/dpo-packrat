@@ -7,7 +7,7 @@
 import { createMuiTheme, Theme } from '@material-ui/core/styles';
 import createBreakpoints from '@material-ui/core/styles/createBreakpoints';
 import Colors from './colors';
-import { createTypographyOverrides } from './typography';
+import { createOverrides } from './typography';
 
 export const palette = {
     primary: {
@@ -27,12 +27,7 @@ export const palette = {
 
 const breakpoints = createBreakpoints({});
 
-const overrides = createTypographyOverrides(breakpoints);
-
-console.log('overrides', overrides);
-// overrides['MuiInputBase-input:-webkit-autofill'] = {
-//     'animationDuration': '4999s'
-// };
+const overrides = createOverrides(breakpoints);
 
 const theme: Theme = createMuiTheme({ palette, overrides });
 

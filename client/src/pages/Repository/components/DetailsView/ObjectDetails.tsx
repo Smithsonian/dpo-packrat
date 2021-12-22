@@ -18,7 +18,7 @@ import { LoadingButton } from '../../../../components';
 import { toast } from 'react-toastify';
 import { eSystemObjectType, ePublishedState } from '../../../../types/server';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ typography, palette }) => ({
     detail: {
         display: 'flex',
         minHeight: 20,
@@ -27,10 +27,11 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     },
     label: {
         fontWeight: typography.fontWeightMedium,
-        alignSelf: 'center'
+        alignSelf: 'center',
+        color: palette.primary.dark
     },
     value: {
-        color: ({ clickable = true }: DetailProps) => (clickable ? palette.primary.main : palette.primary.dark),
+        color: palette.primary.dark,
         textDecoration: ({ clickable = true, value }: DetailProps) => (clickable && value ? 'underline' : undefined)
     }
 }));
@@ -68,6 +69,9 @@ const useObjectDetailsStyles = makeStyles(({ breakpoints, palette }) => ({
         color: 'rgb(0, 121, 196)',
         marginRight: '5px',
         textDecoration: 'underline'
+    },
+    value: {
+        color: palette.primary.dark
     }
 }));
 
@@ -215,7 +219,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     label='Publish State'
                     valueComponent={
                         <Box className={classes.inheritedLicense}>
-                            <Typography>{publishedState}</Typography>
+                            <Typography className={classes.value}>{publishedState}</Typography>
                             &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Publish</LoadingButton>
                             &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>API Only</LoadingButton>
                             &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
@@ -228,7 +232,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     label='Edan Sync State'
                     valueComponent={
                         <Box className={classes.inheritedLicense}>
-                            <Typography>{publishedState}</Typography>
+                            <Typography className={classes.value}>{publishedState}</Typography>
                             &nbsp;<LoadingButton onClick={onSyncToEdan} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Sync to Edan</LoadingButton>
                         </Box>
                     }
@@ -256,9 +260,9 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     valueComponent={
                         <Box className={classes.inheritedLicense}>
                             <Box fontStyle='italic'>
-                                <Typography>{licenseList.find(lic => lic.idLicense === license)?.Name}</Typography>
+                                <Typography className={classes.value}>{licenseList.find(lic => lic.idLicense === license)?.Name}</Typography>
                             </Box>
-                            <Typography>{' inherited from '}</Typography>
+                            <Typography className={classes.value}>{' inherited from '}</Typography>
                             <NewTabLink className={classes.link} to={`/repository/details/${licenseSource.idSystemObject}`} target='_blank'>
                                 <Typography>{`${getTermForSystemObjectType(licenseSource.objectType)} ${licenseSource.name}`}</Typography>
                             </NewTabLink>
