@@ -67,6 +67,8 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     iconInitial: {
         fontSize: 10,
         fontWeight: typography.fontWeightMedium,
+        alignSelf: 'center',
+        justifySelf: 'center'
     },
     // TreeLabel
     treeLabelContainer: {

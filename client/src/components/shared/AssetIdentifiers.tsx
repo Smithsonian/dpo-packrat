@@ -16,14 +16,19 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     systemCreatedText: {
         marginLeft: spacing(2),
         fontStyle: 'italic',
-        color: palette.primary.contrastText
+        color: palette.primary.dark,
+        backgroundColor: 'rgb(236, 245, 253)'
     },
     addIdentifierButton: {
         height: 30,
         width: 80,
         fontSize: '0.8em',
         color: '#FFFFFF',
-        backgroundColor: '#0079C4'
+        backgroundColor: '#0079C4',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     }
 }));
 

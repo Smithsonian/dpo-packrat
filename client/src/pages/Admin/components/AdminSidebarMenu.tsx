@@ -20,7 +20,15 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         borderRadius: 5,
         marginTop: 2,
         '&.Mui-selected': {
-            background: '#ECF5FD 0% 0% no-repeat padding-box'
+            background: '#EBF5FD 0% 0% no-repeat padding-box'
+        },
+        '&:hover': {
+            cursor: 'pointer',
+            color: palette.primary.main,
+            backgroundColor: palette.primary.light,
+            '&.Mui-selected': {
+                background: '#EBF5FD 0% 0% no-repeat padding-box'
+            }
         }
     },
     AdminSidebarMenuContainer: {
@@ -43,7 +51,7 @@ function AdminSidebarMenuRow({ path, selected }: { path: string; selected: boole
 
     return (
         <MenuItem className={classes.AdminSidebarMenuRow} selected={selected}>
-            <Link style={{ textDecoration: 'none', color: '#0093EE', width: '100%', height: '100%' }} to={`/admin/${path}`}>
+            <Link style={{ textDecoration: 'none', color: 'rgb(0, 110, 190)', width: '100%', height: '100%', fontSize: '0.875rem' }} to={`/admin/${path}`}>
                 <Typography variant='inherit' noWrap>
                     {toTitleCase(path)}
                 </Typography>

@@ -52,16 +52,20 @@ const useStyles = makeStyles({
         minHeight: '46px',
         paddingLeft: '20px',
         paddingRight: '20px',
-        background: '#0079C482',
+        background: '#ECF5FD',
         color: '#3F536E',
         marginBottom: '2%',
         width: 'fit-content'
     },
     styledButton: {
-        backgroundColor: '#687DDB',
+        backgroundColor: '#3854d0',
         color: 'white',
         width: '90px',
-        height: '30px'
+        height: '30px',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     },
     AdminSearchFilterContainer: {
         display: 'flex',

@@ -21,7 +21,6 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     identifierInput: {
         width: '75%',
         border: 'none',
-        // outline: 'none',
         padding: '0px 2px',
         paddingBottom: 5,
         backgroundColor: 'transparent',
@@ -29,9 +28,6 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         borderBottom: `1px solid ${palette.grey[300]}`,
-        '&:focus': {
-            // outline: 'none'
-        },
         '&::placeholder': {
             fontStyle: 'italic'
         },

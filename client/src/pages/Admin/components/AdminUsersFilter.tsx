@@ -8,10 +8,14 @@ import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles(({ typography, palette, breakpoints }) => ({
     searchUsersFilterButton: {
-        backgroundColor: '#687DDB',
+        backgroundColor: '#3854d0',
         color: 'white',
         width: '90px',
-        height: '30px'
+        height: '30px',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     },
     AdminUsersSearchFilterContainer: {
         display: 'flex',

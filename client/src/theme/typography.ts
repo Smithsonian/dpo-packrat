@@ -83,6 +83,14 @@ function createOverrides(breakpoints: Breakpoints): Overrides {
                 }
             }
         },
+        MuiIconButton: {
+            root: {
+                outline: '0.5px none rgba(141, 171, 196, 0.4)',
+                '&:focus': {
+                    outline: '0.5px solid rgba(141, 171, 196, 0.4)'
+                }
+            }
+        },
         MuiTab: {
             root: {
                 outline: '0.5px hidden rgba(141, 171, 196, 0.4)'

@@ -64,7 +64,7 @@ const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
     formRowLabel: {
         gridColumnStart: '1',
         fontSize: '0.875rem',
-        color: 'inherit'
+        color: 'auto'
     },
     formRowInput: {
         gridColumnStart: '2'
