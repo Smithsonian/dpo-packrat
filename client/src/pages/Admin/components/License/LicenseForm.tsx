@@ -58,7 +58,7 @@ const useStyles = makeStyles(({ breakpoints, typography }) => ({
     formRowLabel: {
         gridColumnStart: '1',
         fontSize: '0.875rem',
-        color: 'inherit'
+        color: 'auto'
     },
     formField: {
         backgroundColor: 'white',
@@ -75,10 +75,14 @@ const useStyles = makeStyles(({ breakpoints, typography }) => ({
         minHeight: '100px'
     },
     btn: {
-        backgroundColor: '#687DDB',
+        backgroundColor: '#3854d0',
         color: 'white',
         width: '90px',
-        height: '30px'
+        height: '30px',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     },
     ButtonGroup: {
         marginTop: '30px',

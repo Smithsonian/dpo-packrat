@@ -22,7 +22,11 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     btn: {
         ...sharedButtonProps,
         width: 'fit-content',
-        marginBottom: '5px'
+        marginBottom: '5px',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     },
     container: {
         backgroundColor: palette.secondary.light
@@ -33,7 +37,8 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     tableBanner: {
         width: '100%',
         display: 'flex',
-        justifyContent: 'flex-end'
+        justifyContent: 'flex-end',
+        color: palette.primary.dark
     },
     textField: {
         width: '95%'
@@ -111,7 +116,7 @@ function MetadataControlTable(props: MetadataControlTableProps): React.ReactElem
                     <Box className={classes.container}>
                         { type !== eObjectMetadataType.eDetailView && (
                             <Box className={classes.tableBanner}>
-                                <Typography>Fields marked with * are required</Typography>
+                                <Typography >Fields marked with * are required</Typography>
                             </Box>
                         )}
                         <Table>
@@ -141,7 +146,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
 
     let valueInput = (
         <React.Fragment>
-            <label htmlFor={`${index + Name}-value`} style={{ display: 'none' }}>Value</label>
+            <label htmlFor={`${index + Name}-value`} style={{ display: 'none' }}>Value for {Name}</label>
             <TextField id={`${index + Name}-value`}
                 onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Value', e.target.value)}
                 value={Value}
@@ -154,7 +159,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
         return (
             <TableRow className={style.row}>
                 <TableCell padding='none'>
-                    <label htmlFor={`${index + Name}-name`} style={{ display: 'none' }}>Value</label>
+                    <label htmlFor={`${index + Name}-name`} style={{ display: 'none' }}>Value for {Name}</label>
                     <TextField
                         id={`${index + Name}-name`}
                         onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Name', e.target.value)}

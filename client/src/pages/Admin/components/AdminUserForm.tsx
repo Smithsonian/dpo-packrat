@@ -56,7 +56,7 @@ const useStyles = makeStyles(({ typography }) => ({
     AdminUserFormRowLabel: {
         gridColumnStart: '1',
         fontSize: '0.875rem',
-        color: 'inherit'
+        color: 'auto'
     },
     AdminUserFormRowInput: {
         gridColumnStart: '2'
@@ -93,16 +93,20 @@ const useStyles = makeStyles(({ typography }) => ({
         minHeight: '46px',
         paddingLeft: '20px',
         paddingRight: '20px',
-        background: '#0079C482',
+        background: '#ECF5FD',
         color: '#3F536E',
         marginBottom: '2%',
         width: 'fit-content'
     },
     searchUsersFilterButton: {
-        backgroundColor: '#687DDB',
+        backgroundColor: '#3854d0',
         color: 'white',
         width: '90px',
-        height: '30px'
+        height: '30px',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     },
     select: {
         width: '60%',
@@ -325,6 +329,7 @@ function AdminUserForm(): React.ReactElement {
                         value={typeof workflowNotificationType === 'number' ? workflowNotificationType : ''}
                         className={classes.select}
                         disableUnderline
+                        inputProps={{ 'aria-label': 'notificationTypeSelect' }}
                         onChange={e => {
                             if (typeof e.target.value === 'number') {
                                 setWorkflowNotificationType(e.target.value);

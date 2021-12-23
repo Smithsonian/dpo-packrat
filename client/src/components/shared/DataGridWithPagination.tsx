@@ -37,10 +37,14 @@ const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
         backgroundColor: 'white'
     },
     FilterBtn: {
-        backgroundColor: '#687DDB',
+        backgroundColor: '#3854d0',
         color: 'white',
         width: '90px',
-        height: '30px'
+        height: '30px',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     },
     searchFilterContainer: {
         display: 'flex',
