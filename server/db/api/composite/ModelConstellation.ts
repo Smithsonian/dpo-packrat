@@ -72,20 +72,20 @@ export class ModelConstellation {
     async deleteSupportObjects(): Promise<boolean> {
         let retValue: boolean = true;
 
-        if (this.ModelObjectModelMaterialXref) {
+        if (this.ModelObjectModelMaterialXref) { // ModelObjectModelMaterialXref references ModelMaterial and ModelObject; delete these before those
             for (const modelObjectModelMaterialXref of this.ModelObjectModelMaterialXref)
                 retValue = await modelObjectModelMaterialXref.delete() && retValue;
             this.ModelObjectModelMaterialXref = null;
+        }
+        if (this.ModelMaterialChannels) { // ModelMaterialChannel references ModelMaterialUVMap and ModelMaterial; delete these before those
+            for (const modelMaterialChannel of this.ModelMaterialChannels)
+                retValue = await modelMaterialChannel.delete() && retValue;
+            this.ModelMaterialChannels = null;
         }
         if (this.ModelMaterialUVMaps) {
             for (const modelMaterialUVMap of this.ModelMaterialUVMaps)
                 retValue = await modelMaterialUVMap.delete() && retValue;
             this.ModelMaterialUVMaps = null;
-        }
-        if (this.ModelMaterialChannels) {
-            for (const modelMaterialChannel of this.ModelMaterialChannels)
-                retValue = await modelMaterialChannel.delete() && retValue;
-            this.ModelMaterialChannels = null;
         }
         if (this.ModelMaterials) {
             for (const modelMaterial of this.ModelMaterials)

@@ -15,6 +15,7 @@ import * as H from '../../../../../utils/helpers';
 import { SvxReader, SvxExtraction } from '../../../../../utils/parser';
 import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
+import * as NAV from '../../../../../navigation/interface';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
@@ -1016,6 +1017,30 @@ class IngestDataWorker extends ResolverBase {
                 LOG.error(`ingestData unable to persist scene attachment metadata: ${metadataResult.error}`, LOG.LS.eGQL);
                 return false;
             }
+        }
+
+        // explicitly reindex all owning system objects
+        const nav: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
+        if (!nav) {
+            LOG.error('ingestData unable to fetch navigation interface', LOG.LS.eGQL);
+            return false;
+        }
+
+        for (const AVInfo of this.assetVersionMap.values()) {
+            const SO: DBAPI.SystemObject | null = await AVInfo.SOOwner.fetchSystemObject();
+            if (!SO) {
+                LOG.error(`ingestData unable to fetch system object for ${JSON.stringify(AVInfo.SOOwner, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                continue;
+            }
+
+            // index directly instead of scheduling indexing, so that we get an initial SOLR entry right away
+            // NAV.NavigationFactory.scheduleObjectIndexing(SO.idSystemObject);
+            const indexer: NAV.IIndexer | null = await nav.getIndexer();
+            if (!indexer) {
+                LOG.error(`ingestData unable to fetch navigation indexer for ${JSON.stringify(AVInfo.SOOwner, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                continue;
+            }
+            indexer.indexObject(SO.idSystemObject);
         }
         return true;
     }
