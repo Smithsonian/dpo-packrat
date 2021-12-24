@@ -190,6 +190,16 @@ export class WorkflowUpload implements WF.IWorkflow {
 
     private async validateFileModel(fileName: string, readStream: NodeJS.ReadableStream, fromZip: boolean,
         idSystemObject: number, assetVersion: DBAPI.AssetVersion): Promise<H.IOResults> {
+
+        switch (path.extname(fileName).toLowerCase()) {
+            case '.usda':
+            case '.usdc':
+            case '.usdz':
+            case '.wrl':
+                this.appendToWFReport(`Upload validation skipped for model ${fileName} (not yet supported by Cook's si-packrat-inspect recipe)`);
+                return { success: true };
+        }
+
         // initiate WorkflowJob for cook si-packrat-inspect
         const parameters: WorkflowJobParameters =
             new WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect,

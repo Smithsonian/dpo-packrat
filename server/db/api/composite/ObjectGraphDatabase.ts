@@ -4,6 +4,7 @@ import { ObjectGraphDataEntry, eApplyGraphStateDirection, ObjectGraphState } fro
 import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
+// import * as H from '../../../utils/helpers';
 
 export class ObjectGraphDatabase {
     objectMap: Map<number, ObjectGraphDataEntry> = new Map<number, ObjectGraphDataEntry>(); // map from SystemObject.idSystemObject to graph entry details
@@ -103,6 +104,7 @@ export class ObjectGraphDatabase {
             LOG.error(`ObjectGraphDatabase.${functionName} unable to compute ObjectGraph for ${JSON.stringify(oIDsID)}`, LOG.LS.eDB);
             return false;
         }
+        // LOG.info(`ObjectGraphDatabase.${functionName} (${JSON.stringify(oIDsID)}) fetched OG ${JSON.stringify(OG, H.Helpers.saferStringify)}`, LOG.LS.eDB);
 
         if (!this.objectMap.has(oIDsID.sID.idSystemObject)) {
             // LOG.info(`this.objectmap.set object(${sID.idSystemObject}, ${JSON.stringify(oIDsID)})`, LOG.LS.eDB);
@@ -325,7 +327,7 @@ export class ObjectGraphDatabase {
 
     private async applyGraphState(objectGraphDataEntry: ObjectGraphDataEntry, objectGraphState: ObjectGraphState,
         entry: number, entries: number): Promise<boolean> {
-        // LOG.info(`ObjectGraphDatabase.applyGraphState     ---> [0] ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eDB);
+        // LOG.info(`ObjectGraphDatabase.applyGraphState     ---> [0] ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}: OGS ${JSON.stringify(objectGraphState, H.Helpers.saferStringify)}`, LOG.LS.eDB);
         // Apply extracted state to the current object.
         objectGraphDataEntry.applyGraphState(objectGraphState, eApplyGraphStateDirection.eSelf);
         let retValue: boolean = true;

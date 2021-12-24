@@ -51,6 +51,7 @@ export class IndexSolr implements NAV.IIndexer {
 
     async indexObject(idSystemObject: number): Promise<boolean> {
         // Compute full object graph for object
+        // LOG.info(`IndexSolr.indexObject(${idSystemObject}) START`, LOG.LS.eNAV);
         if (!await this.objectGraphDatabase.fetchFromSystemObject(idSystemObject))
             LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed computing ObjectGraph`, LOG.LS.eNAV);
 
@@ -60,18 +61,20 @@ export class IndexSolr implements NAV.IIndexer {
             return false;
         }
 
-        const docs: any[] = [];
+        const docs: Map<number, any> = new Map<number, any>();
         const doc: any = {};
+
+        // LOG.info(`IndexSolr.indexObject(${idSystemObject}) OGDE ${JSON.stringify(OGDE, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
         if (await this.handleObject(doc, OGDE)) {
-            docs.push(doc);
+            docs.set(doc.id, doc);
 
             if (!await this.handleAncestors(docs, OGDE)) // updates docs, if there are ancestors and if OGDE has children data
                 return false;
 
-            // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(doc, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
+            // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(docs, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
             const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackrat);
             try {
-                let res: H.IOResults = await solrClient.add(docs);
+                let res: H.IOResults = await solrClient.add(Array.from(docs.values()));
                 if (res.success)
                     res = await solrClient.commit();
                 if (!res.success)
@@ -81,7 +84,7 @@ export class IndexSolr implements NAV.IIndexer {
                 return false;
             }
 
-            LOG.info(`IndexSolr.indexObject(${idSystemObject}) succeeded, updating ${docs.length} documents`, LOG.LS.eNAV);
+            LOG.info(`IndexSolr.indexObject(${idSystemObject}) succeeded, updating ${docs.size} documents`, LOG.LS.eNAV);
         } else
             LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed in handleObject`, LOG.LS.eNAV);
 
@@ -144,13 +147,17 @@ export class IndexSolr implements NAV.IIndexer {
         });
     }
 
-    private async handleAncestors(docs: any[], OGDE: ObjectGraphDataEntry): Promise<boolean> {
+    private async handleAncestors(docs: Map<number, any>, OGDE: ObjectGraphDataEntry): Promise<boolean> {
         const OGDEHChildrenInfo: DBAPI.ObjectGraphDataEntryHierarchy = OGDE.extractChildrenHierarchy(null);
         if (OGDEHChildrenInfo.childrenInfoEmpty())
             return true;
 
         for (const idSystemObject of OGDE.ancestorObjectMap.keys()) {
-            const doc: any = {};
+            let doc: any | undefined = docs.get(idSystemObject);
+            if (doc === undefined) {
+                doc = {};
+                docs.set(idSystemObject, doc);
+            }
             // supply all required fields
             const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
             if (!oID) {
@@ -163,7 +170,6 @@ export class IndexSolr implements NAV.IIndexer {
             doc.CommonOTNumber      = oID.eObjectType;
             doc.CommonidObject      = oID.idObject;
             await this.extractCommonChildrenFields(doc, OGDEHChildrenInfo, false); // false means we're updating
-            docs.push(doc);
             // LOG.info(`IndexSolr.handleAncestors prepping to update ${JSON.stringify(doc)}`, LOG.LS.eNAV);
         }
         return true;
