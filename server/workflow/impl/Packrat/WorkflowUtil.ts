@@ -7,6 +7,7 @@ export type WorkflowUtilExtractAssetVersions = {
     success: boolean;
     error?: string;
     idAssetVersions: number[] | null;
+    systemObjectAssetVersionMap?: Map<number, number>;
 };
 
 export class WorkflowUtil {
@@ -16,6 +17,7 @@ export class WorkflowUtil {
             return { success: true, idAssetVersions: null }; // OK to call without objects to act on, at least at this point -- the job itself may complain once started
 
         const idAssetVersions: number[] | null = [];
+        const systemObjectAssetVersionMap: Map<number, number> = new Map<number, number>();
         for (const idSystemObject of idSOs) {
             const OID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
             if (!OID) {
@@ -28,7 +30,8 @@ export class WorkflowUtil {
                 return { success: false, error, idAssetVersions: null };
             }
             idAssetVersions.push(OID.idObject);
+            systemObjectAssetVersionMap.set(idSystemObject, OID.idObject);
         }
-        return { success: true, idAssetVersions };
+        return { success: true, idAssetVersions, systemObjectAssetVersionMap };
     }
 }

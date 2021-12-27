@@ -24,9 +24,10 @@ class JobData {
     }
 }
 
+const IGNORE_FAILURES: boolean = false;
 const testTimeout: number = 12000000;
 const jobSets: number = 1;
-const workflowSets: number = 1;
+const workflowSets: number = IGNORE_FAILURES ? 0 : 1;
 const normalizedCreationDate: Date = new Date('2021-04-01T00:00:00.000Z'); // 4/1/2021 Keep this date in sync with Model.setup.ts modelTestCaseInspectJSONMap
 
 let jobEngine: JOB.IJobEngine | null = null;
@@ -74,11 +75,17 @@ describe('JobNS Cook Test Setup', () => {
         testCookImplicit('obj', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookExplicit('ply', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('stl', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookImplicit('x3d', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // Not yet supported by cook's si-packrat-inspect, as of 2021-05-07
-        // testCookExplicit('usd', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // testCookImplicit('usdz', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // testCookExplicit('wrl', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('x3d', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('gltf-stand-alone', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('gltf-with-support', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+
+        // Not yet supported by cook's si-packrat-inspect, as of 2021-12-21
+        if (IGNORE_FAILURES) {
+            testCookImplicit('usd', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+            testCookExplicit('usdz', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+            testCookImplicit('wrl', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+            testCookExplicit('dae', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        }
     }
     // TODO: test job cancellation
     test('IJob.Cook invalid job IDs', async () => {
@@ -98,10 +105,15 @@ describe('JobNS IWorkflow Test Setup', () => {
         testWorkflow('ply', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('stl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('x3d', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // Not yet supported by cook's si-packrat-inspect, as of 2021-05-07
-        // testWorkflow('usd', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // testWorkflow('usdz', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // testWorkflow('wrl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('gltf-stand-alone', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('gltf-with-support', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // Not yet supported by cook's si-packrat-inspect, as of 2021-12-21
+        if (IGNORE_FAILURES) {
+            testWorkflow('usd', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+            testWorkflow('usdz', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+            testWorkflow('wrl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+            testWorkflow('dae', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        }
     }
 });
 
@@ -304,7 +316,14 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
     expect(dbJobRun).toBeTruthy();
     if (!dbJobRun)
         return false;
-    expect(dbJobRun.Result).toBeTruthy();
+    if (!IGNORE_FAILURES)
+        expect(dbJobRun.Result).toBeTruthy();
+    else {
+        if (!dbJobRun.Result) {
+            LOG.error(`JonNS Test validateJobOutput failed: ${dbJobRun.idJobRun}`, LOG.LS.eTEST);
+            return true;
+        }
+    }
 
     const jobData: JobData | undefined = JobDataMap.get(dbJobRun.idJobRun);
     expect(jobData).toBeTruthy();
@@ -326,7 +345,12 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
             expect(JCOutput).toBeTruthy();
             if (!JCOutput)
                 return false;
-            expect(JCOutput.success).toBeTruthy();
+            if (!IGNORE_FAILURES)
+                expect(JCOutput.success).toBeTruthy();
+            else {
+                if (!JCOutput.success)
+                    LOG.error(`JonNS Test validateJobOutput ${CACHE.eVocabularyID[jobData.eJobType]}: ${output} FAILED`, LOG.LS.eTEST);
+            }
 
             normalizeOutput(JCOutput);
 
@@ -343,7 +367,8 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
             expect(inspectJSON).toBeTruthy();
             if (JCOutputStr !== inspectJSON)
                 LOG.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`, LOG.LS.eTEST);
-            expect(JCOutputStr).toEqual(inspectJSON);
+            if (!IGNORE_FAILURES)
+                expect(JCOutputStr).toEqual(inspectJSON);
 
             // Test persistence of data
             const assetFileNameMap: Map<string, number> = MTC.assetFileNameMap();
@@ -357,7 +382,7 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
                 expect(JCOutput.modelConstellation?.Model?.idModel).toBeTruthy();
                 LOG.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
             }
-            return JCOutputStr === inspectJSON;
+            return (!IGNORE_FAILURES) ? (JCOutputStr === inspectJSON) : true;
         }
 
         default:

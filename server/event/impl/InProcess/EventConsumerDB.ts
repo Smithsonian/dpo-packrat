@@ -43,20 +43,18 @@ export class EventConsumerDB extends EventConsumer {
                     // index modified system objects
                     // in the event that the audit event is for a SystemObjectXref record, we reindex the "derived" object
                     if (idSystemObject) {
-                        CACHE.SystemObjectCache.flushObject(idSystemObject);        // don't use await so this happens asynchronously
-
-                        const indexer: NAV.IIndexer | null = await EventConsumerDB.fetchIndexer();
-                        if (indexer)
-                            indexer.indexObject(idSystemObject);                    // don't use await so this happens asynchronously
-                    } else if (audit.idDBObject && audit.getDBObjectType() === DBAPI.eNonSystemObjectType.eSystemObjectXref) {
-                        const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.fetch(audit.idDBObject);
-                        if (xref) {
-                            const indexer: NAV.IIndexer | null = await EventConsumerDB.fetchIndexer();
-                            if (indexer)
-                                indexer.indexObject(xref.idSystemObjectDerived);    // don't use await so this happens asynchronously
+                        await CACHE.SystemObjectCache.flushObject(idSystemObject);        // don't use await so this happens asynchronously
+                        NAV.NavigationFactory.scheduleObjectIndexing(idSystemObject);
+                    } else if (audit.idDBObject) {
+                        switch (audit.getDBObjectType()) {
+                            case DBAPI.eNonSystemObjectType.eSystemObjectXref: {
+                                const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.fetch(audit.idDBObject);
+                                // LOG.info(`EventConsumerDB.eventWorker (${JSON.stringify(dataItem)}) updating xref ${JSON.stringify(xref, H.Helpers.saferStringify)}`, LOG.LS.eEVENT);
+                                if (xref)
+                                    NAV.NavigationFactory.scheduleObjectIndexing(xref.idSystemObjectDerived);
+                            }
                         }
                     }
-
                     if (audit.idAudit === 0)
                         audit.create();                                             // don't use await so this happens asynchronously
                 } break;
@@ -68,6 +66,7 @@ export class EventConsumerDB extends EventConsumer {
         }
     }
 
+    /*
     private static async fetchIndexer(): Promise<NAV.IIndexer | null> {
         const nav: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
         if (!nav) {
@@ -77,6 +76,7 @@ export class EventConsumerDB extends EventConsumer {
 
         return await nav.getIndexer();
     }
+    */
 
     static convertDataToAudit(data: any): DBAPI.Audit {
         const idUser: number | null = H.Helpers.safeNumber(data.idUser);
