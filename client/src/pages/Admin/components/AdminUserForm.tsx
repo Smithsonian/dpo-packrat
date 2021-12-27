@@ -178,8 +178,8 @@ function AdminUserForm(): React.ReactElement {
             setValidEmailInput(validEmailResponse);
             return validNameResponse && validEmailResponse;
         } catch (error) {
-            if (error instanceof Error)
-                toast.warn(error);
+            const message: string = (error instanceof Error) ? error.message : 'Validation Failure';
+            toast.warn(message);
         }
     };
 

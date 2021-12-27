@@ -69,7 +69,7 @@ export class RouteBuilder {
         return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idSystemObjectVersionComment=${idSystemObjectVersion}`, eMode);
     }
 
-    private static ApplyPrefix(path: string, eMode?: eHrefMode | undefined): string {
+    static ApplyPrefix(path: string, eMode?: eHrefMode | undefined): string {
         let prefix: string = '';
         switch (eMode) {
             case undefined: break;

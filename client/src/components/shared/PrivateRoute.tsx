@@ -19,7 +19,7 @@ function PrivateRoute({ component: Component, children, ...rest }: PrivateRouteP
 
     const render = props => {
         if (!user) {
-            console.log(`*** window.location=${window.location}, ou=${originalURL}`);
+            // console.log(`*** window.location=${window.location}, ou=${originalURL}`);
             if (originalURL !== '/')
                 return <Redirect to={`${ROUTES.LOGIN}?ou=${originalURL}`} />;
             else

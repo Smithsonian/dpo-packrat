@@ -21,3 +21,5 @@ if (!process.env.PACKRAT_OCFL_STAGING_ROOT)
     process.env.PACKRAT_OCFL_STAGING_ROOT = './var/Storage/Staging';
 if (!process.env.PACKRAT_COOK_SERVER_URL)
     process.env.PACKRAT_COOK_SERVER_URL = 'http://si-3ddigip01.si.edu:8011/';
+if (!process.env.PACKRAT_LOG_ROOT)
+    process.env.PACKRAT_LOG_ROOT = './var/logs';

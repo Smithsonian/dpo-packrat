@@ -34,6 +34,7 @@ class UploadAssetWorker extends ResolverBase {
     private type: number;
     private LS: LocalStore | null = null;
     private idSOAttachment: number | undefined | null;
+    private idAssetVersions: number[] | null = null;
 
     constructor(user: User | undefined, apolloFile: ApolloFile, idAsset: number | undefined | null, type: number, idSOAttachment: number | undefined | null) {
         super();
@@ -66,7 +67,7 @@ class UploadAssetWorker extends ResolverBase {
 
         if (!this.user) {
             LOG.error('uploadAsset unable to retrieve user context', LOG.LS.eGQL);
-            return { status: UploadStatus.Failed, error: 'User not authenticated' };
+            return { status: UploadStatus.Noauth, error: 'User not authenticated' };
         }
 
         if (this.idSOAttachment)
@@ -190,56 +191,10 @@ class UploadAssetWorker extends ResolverBase {
             return { status: UploadStatus.Failed, error: 'No Asset Versions created' };
 
         this.workflowHelper = await this.createUploadWorkflow(assetVersions);
-        if (!this.workflowHelper.success)
-            return { status: UploadStatus.Failed, error: this.workflowHelper.error };
-
-        let success: boolean = true;
-        let error: string = '';
-        const idAssetVersions: number[] = [];
-        if (this.workflowHelper.workflowEngine) {
-            for (const assetVersion of assetVersions) {
-                // At this point, we've created the assets
-                // Now, we want to perform ingestion object-type specific automations ... i.e. based on vocabulary
-                // If we're ingesting a model, we want to initiate two separate workflows:
-                // (1) WorkflowJob, for the Cook si-packrat-inspect recipe
-                // (2) if this is a master model, WorkflowJob, for Cook scene creation & derivative generation
-                //
-                // Our aim is to be able to update the apolloUpload control, changing status, and perhaps showing progress
-                // We could make the upload 80% of the total, and then workflow step (1) the remaining 20%
-                // Workflow (1) has create job, transfer files, start job, await results
-                // Workflow (2) should run asynchronously and independently
-                // assetVersion.fetchSystemObject()
-                const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
-                const workflowParams: WF.WorkflowParameters = {
-                    eWorkflowType: null,
-                    idSystemObject: sysInfo ? [sysInfo.idSystemObject] : null,
-                    idProject: null, // TODO: update with project ID
-                    idUserInitiator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                    parameters: null
-                };
-
-                const workflow: WF.IWorkflow | null = await this.workflowHelper.workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion, workflowParams);
-                const results = workflow ? await workflow.waitForCompletion(3600000) : { success: true };
-                if (results.success) {
-                    idAssetVersions.push(assetVersion.idAssetVersion);
-                    if (assetVersion.Ingested === null) {
-                        assetVersion.Ingested = false;
-                        if (!await assetVersion.update())
-                            LOG.error('uploadAsset post-upload workflow succeeded, but unable to update asset version ingested flag', LOG.LS.eGQL);
-                    }
-                } else {
-                    await this.appendToWFReport(`uploadAsset post-upload workflow error: ${results.error}`, true, true);
-                    await this.retireFailedUpload(assetVersion);
-                    success = false;
-                    error = 'Post-upload Workflow Failed';
-                }
-            }
-        }
-
-        if (success)
-            return { status: UploadStatus.Complete, idAssetVersions };
+        if (this.workflowHelper.success)
+            return { status: UploadStatus.Complete, idAssetVersions: this.idAssetVersions };
         else
-            return { status: UploadStatus.Failed, error, idAssetVersions };
+            return { status: UploadStatus.Failed, error: this.workflowHelper.error, idAssetVersions: this.idAssetVersions };
     }
 
     async createUploadWorkflow(assetVersions: DBAPI.AssetVersion[]): Promise<IWorkflowHelper> {
@@ -287,15 +242,19 @@ class UploadAssetWorker extends ResolverBase {
         const results: H.IOResults = workflow ? await workflow.waitForCompletion(3600000) : { success: true };
         if (!results.success) {
             for (const assetVersion of assetVersions)
-                await this.retireFailedUpload(assetVersion);
+                await UploadAssetWorker.retireFailedUpload(assetVersion);
             LOG.error(`uploadAsset createWorkflow Upload workflow failed: ${results.error}`, LOG.LS.eGQL);
             return results;
         }
 
+        this.idAssetVersions = [];
+        for (const assetVersion of assetVersions)
+            this.idAssetVersions.push(assetVersion.idAssetVersion);
+
         return { success: true, workflowEngine, workflow, workflowReport };
     }
 
-    private async retireFailedUpload(assetVersion: DBAPI.AssetVersion): Promise<H.IOResults> {
+    private static async retireFailedUpload(assetVersion: DBAPI.AssetVersion): Promise<H.IOResults> {
         const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
         if (SO) {
             if (await SO.retireObject())
