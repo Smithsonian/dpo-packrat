@@ -87,6 +87,7 @@ interface ObjectDetailsProps {
     project?: RepositoryPath | null;
     subject?: RepositoryPath | null;
     item?: RepositoryPath | null;
+    asset?: RepositoryPath | null;
     disabled: boolean;
     publishedState: string;
     publishedEnum: number;
@@ -110,6 +111,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         project,
         subject,
         item,
+        asset,
         publishedState,
         publishedEnum,
         publishable,
@@ -210,10 +212,11 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
 
     return (
         <Box display='flex' flex={2} flexDirection='column'>
-            <Detail idSystemObject={unit?.idSystemObject} label='Unit' value={unit?.name} />
-            <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />
-            <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />
-            <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />
+            {(unit && <Detail idSystemObject={unit?.idSystemObject} label='Unit' value={unit?.name} />)}
+            {(project && <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />)}
+            {(subject && <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />)}
+            {(item && <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />)}
+            {(asset && <Detail idSystemObject={asset?.idSystemObject} label='Asset' value={asset?.name} />)}
             {(objectType === eSystemObjectType.eScene) && (
                 <Detail
                     label='Publish State'

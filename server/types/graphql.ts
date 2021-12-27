@@ -519,7 +519,8 @@ export type UploadAssetInput = {
 
 export enum UploadStatus {
   Complete = 'COMPLETE',
-  Failed = 'FAILED'
+  Failed = 'FAILED',
+  Noauth = 'NOAUTH'
 }
 
 export type UploadAssetResult = {
@@ -1912,6 +1913,7 @@ export type GetSystemObjectDetailsResult = {
   project?: Maybe<RepositoryPath>;
   subject?: Maybe<RepositoryPath>;
   item?: Maybe<RepositoryPath>;
+  asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
   licenseInheritance?: Maybe<Scalars['Int']>;
@@ -2214,6 +2216,7 @@ export type GetIngestionProjectsForSubjectsInput = {
 export type GetIngestionProjectsForSubjectsResult = {
   __typename?: 'GetIngestionProjectsForSubjectsResult';
   Project: Array<Project>;
+  Default: Scalars['Boolean'];
 };
 
 export type GetUnitInput = {

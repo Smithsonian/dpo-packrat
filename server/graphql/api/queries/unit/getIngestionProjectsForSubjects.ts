@@ -7,6 +7,7 @@ const getIngestionProjectsForSubjects = gql`
                 idProject
                 Name
             }
+            Default
         }
     }
 `;

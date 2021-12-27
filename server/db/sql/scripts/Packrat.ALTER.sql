@@ -419,3 +419,4 @@ INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SLC_YT');
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SS_BL');
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (32, NULL, 'STRI_YT');
 
+-- 2021-12-08 Deployed to Staging

@@ -12999,10 +12999,10 @@ memory-fs@^0.5.0:
     errno "^0.1.3"
     readable-stream "^2.0.1"
 
-memorystore@1.6.5:
-  version "1.6.5"
-  resolved "https://registry.yarnpkg.com/memorystore/-/memorystore-1.6.5.tgz#069eedf58970a2ad145aedd6c98af66ba735e89c"
-  integrity sha512-2RD1kTZhF0nywVtps2NoQgbMiPO6o1+dIRUAi2cRQDxMyCKwOZdBrC/Lk9/ttlF6lHn3T6uCPwSbgWxEef9djQ==
+memorystore@1.6.6:
+  version "1.6.6"
+  resolved "https://registry.yarnpkg.com/memorystore/-/memorystore-1.6.6.tgz#8ecb5bbda1d7b2c0587f04c570030c1644ef4d76"
+  integrity sha512-EbLl1xg9+DlnjXkZK/eMUoWyhZ1IxcWMpSuFyqyA/Z4BNuH7BR+E0yC40WbLZZ6G8LxHiUZ2DPhqV8DR8+9UQQ==
   dependencies:
     debug "^4.3.0"
     lru-cache "^4.0.3"
@@ -13134,10 +13134,10 @@ mime-db@1.47.0:
   resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.47.0.tgz#8cb313e59965d3c05cfbf898915a267af46a335c"
   integrity sha512-QBmA/G2y+IfeS4oktet3qRZ+P5kPhCKRXxXnQEudYqUaEioAU1/Lq2us3D/t1Jfo4hE9REQPrbB7K5sOczJVIw==
 
-mime-db@1.50.0:
-  version "1.50.0"
-  resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.50.0.tgz#abd4ac94e98d3c0e185016c67ab45d5fde40c11f"
-  integrity sha512-9tMZCDlYHqeERXEHO9f/hKfNXhre5dK2eE/krIvUjZbS2KPcqGDfNShIWS1uW9XOTKQKqK6qbeOci18rbfW77A==
+mime-db@1.51.0:
+  version "1.51.0"
+  resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.51.0.tgz#d9ff62451859b18342d960850dc3cfb77e63fb0c"
+  integrity sha512-5y8A56jg7XVQx2mbv1lu49NR4dokRnhZYTtL+KGfaa27uq4pSTXkwQkFJl4pkRMyNFz/EtYDSkiiEHx3F7UN6g==
 
 mime-types@2.1.30:
   version "2.1.30"
@@ -13153,12 +13153,12 @@ mime-types@^2.1.12, mime-types@~2.1.17, mime-types@~2.1.19, mime-types@~2.1.24:
   dependencies:
     mime-db "1.46.0"
 
-mime-types@^2.1.18:
-  version "2.1.33"
-  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.33.tgz#1fa12a904472fafd068e48d9e8401f74d3f70edb"
-  integrity sha512-plLElXp7pRDd0bNZHw+nMd52vRYjLwQjygaNg7ddJ2uJtTlmnTCjWuPKxVu6//AdaRuME84SvLW91sIkBqGT0g==
+mime-types@^2.1.34:
+  version "2.1.34"
+  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.34.tgz#5a712f9ec1503511a945803640fafe09d3793c24"
+  integrity sha512-6cP692WwGIs9XXdOO4++N+7qjqv0rqxxVvJ3VHPh/Sc9mVZcQP+ZGhkKiTvWMQRr2tbHkJP/Yn7Y0npb3ZBs4A==
   dependencies:
-    mime-db "1.50.0"
+    mime-db "1.51.0"
 
 mime@1.6.0, mime@^1.4.1:
   version "1.6.0"
@@ -18289,6 +18289,13 @@ tmp-promise@3.0.2:
   dependencies:
     tmp "^0.2.0"
 
+tmp-promise@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/tmp-promise/-/tmp-promise-3.0.3.tgz#60a1a1cc98c988674fcbfd23b6e3367bdeac4ce7"
+  integrity sha512-RwM7MoPojPxsOBYnyd2hy0bxtIlVrihNs9pj5SUvY8Zz1sQcQG2tG1hSr8PDxfgEB8RNKDhqbIlroIarSNDNsQ==
+  dependencies:
+    tmp "^0.2.0"
+
 tmp@^0.0.33:
   version "0.0.33"
   resolved "https://registry.yarnpkg.com/tmp/-/tmp-0.0.33.tgz#6d34335889768d21b2bcda0aa277ced3b1bfadf9"
@@ -19111,10 +19118,11 @@ wcwidth@^1.0.0:
     defaults "^1.0.3"
 
 "webdav-server@https://github.com/Smithsonian/npm-WebDAV-Server.git":
-  version "2.6.2"
-  resolved "https://github.com/Smithsonian/npm-WebDAV-Server.git#35c998f79cc40b005381f165c4b2fa74b948ca09"
+  version "2.7.0"
+  resolved "https://github.com/Smithsonian/npm-WebDAV-Server.git#dd47642c2dcdce8d0b8738e3a86440b497e6ff38"
   dependencies:
-    mime-types "^2.1.18"
+    mime-types "^2.1.34"
+    tmp-promise "^3.0.3"
     winston "^3.3.3"
     xml-js-builder "^1.0.3"
 

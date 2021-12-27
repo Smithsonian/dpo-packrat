@@ -4906,11 +4906,11 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
     test('DB Fetch Special: JobRun.fetchMatching', async () => {
-        const jobRuns1: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eWorkflowJobRunStatus.eDone, true, [0]);
+        const jobRuns1: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eWorkflowJobRunStatus.eDone, true, [0], undefined);
         expect(jobRuns1).toBeTruthy();
         if (jobRuns1)
             expect(jobRuns1.length).toBeFalsy();
-        const jobRuns2: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eWorkflowJobRunStatus.eDone, true, null);
+        const jobRuns2: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eWorkflowJobRunStatus.eDone, true, null, undefined);
         expect(jobRuns2).toBeTruthy();
         if (jobRuns2)
             expect(jobRuns2.length).toBeFalsy();
@@ -4920,7 +4920,10 @@ describe('DB Fetch Special Test Suite', () => {
         if (vocabJobSIPackratInspect) {
             // The following will return a row if the JobNS test has run and successfully completed testing of packrat-cook integration.
             // We cannot rely on this test having been run, so for now, we don't validate the result
-            await DBAPI.JobRun.fetchMatching(1, vocabJobSIPackratInspect.idVocabulary, DBAPI.eWorkflowJobRunStatus.eDone, true, null);
+            await DBAPI.JobRun.fetchMatching(1, vocabJobSIPackratInspect.idVocabulary, DBAPI.eWorkflowJobRunStatus.eDone, true, null, undefined);
+
+            if (assetVersion)
+                await DBAPI.JobRun.fetchMatching(1, vocabJobSIPackratInspect.idVocabulary, DBAPI.eWorkflowJobRunStatus.eDone, true, [assetVersion.idAssetVersion], 'unmatched');
         }
     });
 
@@ -7690,7 +7693,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Job.fetch(0)).toBeNull();
         expect(await DBAPI.Job.fetchByType(0)).toBeNull();
         expect(await DBAPI.JobRun.fetch(0)).toBeNull();
-        expect(await DBAPI.JobRun.fetchMatching(0, 0, 0, true, null)).toBeNull();
+        expect(await DBAPI.JobRun.fetchMatching(0, 0, 0, true, null, undefined)).toBeNull();
         expect(await DBAPI.License.fetch(0)).toBeNull();
         expect(await DBAPI.LicenseAssignment.fetch(0)).toBeNull();
         expect(await DBAPI.LicenseAssignment.fetchFromLicense(0)).toBeNull();

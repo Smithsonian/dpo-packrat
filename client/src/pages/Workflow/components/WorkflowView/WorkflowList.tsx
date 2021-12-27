@@ -220,7 +220,7 @@ function WorkflowList(): React.ReactElement {
             name: 'Type',
             label: 'Type',
             options: {
-                setCellProps: setCenterCell,
+                // setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
             }
         },
@@ -316,7 +316,7 @@ function WorkflowList(): React.ReactElement {
                         </Tooltip>
                     );
                 },
-                setCellProps: setCenterCell,
+                // setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
             }
         }

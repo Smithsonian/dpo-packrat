@@ -3,6 +3,7 @@ import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as STORE from '../../../../../storage/interface';
 import * as LOG from '../../../../../utils/logger';
+import * as H from '../../../../../utils/helpers';
 
 export default async function discardUploadedAssetVersions(
     _: Parent,
@@ -22,7 +23,7 @@ export default async function discardUploadedAssetVersions(
 
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
         if (!ASR.success) {
-            LOG.error(`discardUploadedAssetVersions failed to discard asset version ${JSON.stringify(assetVersion)}: ${ASR.error}`, LOG.LS.eGQL);
+            LOG.error(`discardUploadedAssetVersions failed to discard asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}: ${ASR.error}`, LOG.LS.eGQL);
             success = false;
             continue;
         }

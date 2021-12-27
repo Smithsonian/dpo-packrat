@@ -15,6 +15,7 @@ import * as H from '../../../../../utils/helpers';
 import { SvxReader, SvxExtraction } from '../../../../../utils/parser';
 import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
+import * as NAV from '../../../../../navigation/interface';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
@@ -69,9 +70,11 @@ class IngestDataWorker extends ResolverBase {
     private ingestAttachment: boolean = false;
     private assetVersionSet: Set<number> = new Set<number>(); // set of idAssetVersions
 
-    private assetVersionMap: Map<number, AssetVersionInfo> = new Map<number, AssetVersionInfo>();                   // map from idAssetVersion -> ssytem object that "owns" the asset, plus details for ingestion -- populated during creation of asset-owning objects below
+    private assetVersionMap: Map<number, AssetVersionInfo> = new Map<number, AssetVersionInfo>();                   // map from idAssetVersion -> system object that "owns" the asset, plus details for ingestion -- populated during creation of asset-owning objects below
     private ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>();  // map from idAssetVersion -> photogrammetry input
     private ingestModelMap: Map<number, ModelInfo> = new Map<number, ModelInfo>();                                  // map from idAssetVersion -> model input, JCOutput, idModel
+
+    private sceneSOI: DBAPI.SystemObjectInfo | undefined = undefined;
 
     constructor(input: IngestDataInput, user: User | undefined) {
         super();
@@ -217,6 +220,8 @@ class IngestDataWorker extends ResolverBase {
         if (itemDB) {
             if (!await this.wireItemToAssetOwners(itemDB))
                 return { success: false, message: 'failure to wire item to asset owner' };
+
+            await this.postItemWiring();
         }
 
         // notify workflow engine about this ingestion:
@@ -858,8 +863,8 @@ class IngestDataWorker extends ResolverBase {
         LOG.info(`ingestData createSceneObjects, updateMode=${updateMode}, sceneDB=${JSON.stringify(sceneDB, H.Helpers.saferStringify)}, sceneConstellation=${JSON.stringify(sceneConstellation, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         let success: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
 
-        const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(sceneDB);
-        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+        this.sceneSOI = await CACHE.SystemObjectCache.getSystemFromScene(sceneDB);
+        const path: string = this.sceneSOI ? RouteBuilder.RepositoryDetails(this.sceneSOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
         const href: string = H.Helpers.computeHref(path, sceneDB.Name);
         await this.appendToWFReport(`Scene: ${href}`);
 
@@ -878,7 +883,7 @@ class IngestDataWorker extends ResolverBase {
                     continue;
                 }
                 if (MSX.idModel <= 0) {
-                    LOG.error(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                    LOG.info(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                     continue;
                 }
 
@@ -923,12 +928,6 @@ class IngestDataWorker extends ResolverBase {
                     continue;
                 }
             }
-        }
-
-        if (SOI) {
-            const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(SOI.idSystemObject, this.user?.idUser ?? null);
-            if (!metadataResult.success)
-                LOG.error(`ingestData unable to persist scene attachment metadata: ${metadataResult.error}`, LOG.LS.eGQL);
         }
 
         if (scene.idAssetVersion)
@@ -1009,6 +1008,41 @@ class IngestDataWorker extends ResolverBase {
             }
         }
         return res;
+    }
+
+    private async postItemWiring(): Promise<boolean> {
+        if (this.sceneSOI) {
+            const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(this.sceneSOI.idSystemObject, this.user?.idUser ?? null);
+            if (!metadataResult.success) {
+                LOG.error(`ingestData unable to persist scene attachment metadata: ${metadataResult.error}`, LOG.LS.eGQL);
+                return false;
+            }
+        }
+
+        // explicitly reindex all owning system objects
+        const nav: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
+        if (!nav) {
+            LOG.error('ingestData unable to fetch navigation interface', LOG.LS.eGQL);
+            return false;
+        }
+
+        for (const AVInfo of this.assetVersionMap.values()) {
+            const SO: DBAPI.SystemObject | null = await AVInfo.SOOwner.fetchSystemObject();
+            if (!SO) {
+                LOG.error(`ingestData unable to fetch system object for ${JSON.stringify(AVInfo.SOOwner, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                continue;
+            }
+
+            // index directly instead of scheduling indexing, so that we get an initial SOLR entry right away
+            // NAV.NavigationFactory.scheduleObjectIndexing(SO.idSystemObject);
+            const indexer: NAV.IIndexer | null = await nav.getIndexer();
+            if (!indexer) {
+                LOG.error(`ingestData unable to fetch navigation indexer for ${JSON.stringify(AVInfo.SOOwner, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                continue;
+            }
+            indexer.indexObject(SO.idSystemObject);
+        }
+        return true;
     }
 
     private async extractAndReuseMetadata(idAsset: number | null | undefined, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<boolean> {
@@ -1207,7 +1241,7 @@ class IngestDataWorker extends ResolverBase {
                     // In this case, we will receive the scene .svx.json file, supporting HTML, images, CSS, as well as models.
                     // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
                     if (!AVInfo.isAttachment && SOBased instanceof DBAPI.Scene) {
-                        const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, ISR);
+                        const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, ISR, idAssetVersion);
                         if (success && modelTransformUpdated)
                             transformUpdated = true;
                     }
@@ -1473,7 +1507,7 @@ class IngestDataWorker extends ResolverBase {
         return { success: true };
     }
 
-    private async handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetResult): Promise<{ success: boolean, transformUpdated: boolean }> {
+    private async handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetResult, idAssetVersion: number): Promise<{ success: boolean, transformUpdated: boolean }> {
         if (!ISR.assets || !ISR.assetVersions)
             return { success: false, transformUpdated: false };
 
@@ -1543,6 +1577,10 @@ class IngestDataWorker extends ResolverBase {
                 // scene.idScene, MSX.Name, .Usage, .Quality, .UVResolution
                 // if not found, create model and MSX
                 // if found, determine if MSX transform has changed; if so, update MSX, and return a status that can be used to kick off download generation workflow
+                const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion, MSX.Name);
+                if (JCOutput && !JCOutput.success)
+                    LOG.error(`ingestData handleComplexIngestionScene failed to extract JobCookSIPackratInspectOutput from idAssetVersion ${idAssetVersion}, model ${MSX.Name}`, LOG.LS.eGQL);
+
                 const MSXSources: DBAPI.ModelSceneXref[] | null =
                     await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(scene.idScene, MSX.Name, MSX.Usage, MSX.Quality, MSX.UVResolution);
                 const MSXSource: DBAPI.ModelSceneXref | null = (MSXSources && MSXSources.length > 0) ? MSXSources[0] : null;
@@ -1562,8 +1600,18 @@ class IngestDataWorker extends ResolverBase {
                         continue;
                     }
                     LOG.info(`ingestData handleComplexIngestionScene found existing ModelSceneXref=${JSON.stringify(MSXSource, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+
+                    if (JCOutput && JCOutput.success && JCOutput.modelConstellation && JCOutput.modelConstellation.Model) {
+                        this.extractModelMetrics(model, JCOutput.modelConstellation.Model);
+                        if (!await model.update())
+                            LOG.error(`ingestData handleComplexIngestionScene unable to update model ${MSXSource.idModel} with metrics`, LOG.LS.eGQL);
+                    }
+
                 } else {
                     model = await this.transformModelSceneXrefIntoModel(MSX);
+                    if (JCOutput && JCOutput.success && JCOutput.modelConstellation && JCOutput.modelConstellation.Model)
+                        this.extractModelMetrics(model, JCOutput.modelConstellation.Model);
+
                     if (!await model.create()) {
                         LOG.error(`ingestData handleComplexIngestionScene unable to create Model from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                         success = false;
@@ -1642,7 +1690,7 @@ class IngestDataWorker extends ResolverBase {
         return { success, transformUpdated };
     }
 
-    extractSceneMetrics(scene: DBAPI.Scene, svxExtraction: SvxExtraction): void {
+    private extractSceneMetrics(scene: DBAPI.Scene, svxExtraction: SvxExtraction): void {
         const sceneExtract: DBAPI.Scene = svxExtraction.extractScene();
         scene.CountScene = sceneExtract.CountScene;
         scene.CountNode = sceneExtract.CountNode;
@@ -1671,6 +1719,20 @@ class IngestDataWorker extends ResolverBase {
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
             AutomationTag: MSX.computeModelAutomationTag()
         });
+    }
+
+    private extractModelMetrics(model: DBAPI.Model, modelMetrics: DBAPI.Model): void {
+        model.CountAnimations = modelMetrics.CountAnimations;
+        model.CountCameras = modelMetrics.CountCameras;
+        model.CountFaces = modelMetrics.CountFaces;
+        model.CountLights = modelMetrics.CountLights;
+        model.CountMaterials = modelMetrics.CountMaterials;
+        model.CountMeshes = modelMetrics.CountMeshes;
+        model.CountVertices = modelMetrics.CountVertices;
+        model.CountEmbeddedTextures = modelMetrics.CountEmbeddedTextures;
+        model.CountLinkedTextures = modelMetrics.CountLinkedTextures;
+        model.FileEncoding = modelMetrics.FileEncoding;
+        model.IsDracoCompressed = modelMetrics.IsDracoCompressed;
     }
 
     private async createWorkflow(): Promise<IWorkflowHelper> {

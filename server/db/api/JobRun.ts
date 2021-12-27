@@ -111,12 +111,12 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
      * @param result job result
      */
     static async fetchMatching(limitRows: number, idVJobType: number, eStatus: eWorkflowJobRunStatus, result: boolean,
-        assetVersionIDs: number[] | null): Promise<JobRun[] | null> {
+        assetVersionIDs: number[] | null, parameterMatch?: string | undefined): Promise<JobRun[] | null> {
         if (limitRows <= 0)
             return null;
         try {
             let jobRunBaseList: JobRunBase[] | null = null;
-            if (assetVersionIDs)
+            if (assetVersionIDs && !parameterMatch)
                 jobRunBaseList = // return DBC.CopyArray<JobRunBase, JobRun>(
                 await DBC.DBConnection.prisma.$queryRaw<JobRun[]>`
                 SELECT JR.*
@@ -131,7 +131,24 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                   AND JR.Result = ${result}
                 ORDER BY JR.DateEnd DESC
                 LIMIT ${limitRows}`; // , JobRun);
-            else
+            else if (assetVersionIDs && parameterMatch) {
+                parameterMatch = `%${parameterMatch}%`;
+                jobRunBaseList = // return DBC.CopyArray<JobRunBase, JobRun>(
+                await DBC.DBConnection.prisma.$queryRaw<JobRun[]>`
+                SELECT JR.*
+                FROM JobRun AS JR
+                JOIN Job AS J ON (JR.idJob = J.idJob)
+                JOIN WorkflowStep AS WS ON (JR.idJobRun = WS.idJobRun)
+                JOIN WorkflowStepSystemObjectXref AS WSOX ON (WS.idWorkflowStep = WSOX.idWorkflowStep)
+                JOIN SystemObject AS SO ON (WSOX.idSystemObject = SO.idSystemObject)
+                WHERE SO.idAssetVersion IN (${Prisma.join(assetVersionIDs)})
+                  AND J.idVJobType = ${idVJobType}
+                  AND JR.Status = ${eStatus}
+                  AND JR.Result = ${result}
+                  AND JR.Parameters LIKE ${parameterMatch}
+                ORDER BY JR.DateEnd DESC
+                LIMIT ${limitRows}`; // , JobRun);
+            } else
                 jobRunBaseList =
                 await DBC.DBConnection.prisma.$queryRaw<JobRun[]>`
                 SELECT JR.*

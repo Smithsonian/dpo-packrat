@@ -89,13 +89,13 @@ export async function getDetailsTabDataForObject(idSystemObject: number, objectT
     });
 }
 
-export function updateDetailsTabData(
+export async function updateDetailsTabData(
     idSystemObject: number,
     idObject: number,
     objectType: eSystemObjectType,
     data: UpdateObjectDetailsDataInput
 ): Promise<FetchResult<UpdateObjectDetailsMutation>> {
-    return apolloClient.mutate({
+    return await apolloClient.mutate({
         mutation: UpdateObjectDetailsDocument,
         variables: {
             input: {
@@ -109,8 +109,8 @@ export function updateDetailsTabData(
     });
 }
 
-export function updateSourceObjects(idSystemObject: number, objectType: number, sources: ExistingRelationship[], PreviouslySelected: ExistingRelationship[]) {
-    return apolloClient.mutate({
+export async function updateSourceObjects(idSystemObject: number, objectType: number, sources: ExistingRelationship[], PreviouslySelected: ExistingRelationship[]) {
+    return await apolloClient.mutate({
         mutation: UpdateSourceObjectsDocument,
         variables: {
             input: {
@@ -125,8 +125,8 @@ export function updateSourceObjects(idSystemObject: number, objectType: number, 
     });
 }
 
-export function updateDerivedObjects(idSystemObject: number, objectType: number, derivatives: ExistingRelationship[], PreviouslySelected: ExistingRelationship[]) {
-    return apolloClient.mutate({
+export async function updateDerivedObjects(idSystemObject: number, objectType: number, derivatives: ExistingRelationship[], PreviouslySelected: ExistingRelationship[]) {
+    return await apolloClient.mutate({
         mutation: UpdateDerivedObjectsDocument,
         variables: {
             input: {

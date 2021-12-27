@@ -149,8 +149,8 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
 
             setSelected([...selected, sourceObject]);
         } catch (error) {
-            if (error instanceof Error)
-                toast.error(error);
+            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
+            toast.error(`Failed to select object${message}`);
         }
     };
 
