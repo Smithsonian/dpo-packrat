@@ -17,6 +17,7 @@ export enum eDownloadMode {
     eJobRun,
     eSystemObjectVersionComment,
     eMetadata,
+    eSitemap,
     eUnknown
 }
 
@@ -89,6 +90,11 @@ export class DownloaderParser {
 
     /** Returns success: false if arguments are invalid */
     async parseArguments(allowUnmatchedPaths?: boolean, collectPaths?: boolean): Promise<DownloaderParserResults> {
+        if (this.requestPath === '/download/sitemap.xml') {
+            this.eMode = eDownloadMode.eSitemap;
+            return { success: true };
+        }
+
         // /download/idSystemObject-ID:         Computes the assets attached to this system object.  If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
         // /download/idSystemObject-ID/FOO/BAR: Computes the asset attached to this system object, found at the path /FOO/BAR.
         let idSystemObjectU: string | string[] | ParsedQs | ParsedQs[] | undefined = undefined;
