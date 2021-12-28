@@ -1,3 +1,4 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-# remove any Disallow to allow SortSite or crawler services to work
+# remove Disallows to allow SortSite or crawler services to work
+Disallow: /
