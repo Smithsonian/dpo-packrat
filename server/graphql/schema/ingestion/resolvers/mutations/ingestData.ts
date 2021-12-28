@@ -879,11 +879,11 @@ class IngestDataWorker extends ResolverBase {
 
             for (const MSX of sceneConstellation.ModelSceneXref) {
                 if (MSX.idModelSceneXref || MSX.idScene) {
-                    LOG.error(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as record already was populated: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData could not create ModelSceneXref for scene ${sceneDB.idScene}, as record already was populated: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                     continue;
                 }
                 if (MSX.idModel <= 0) {
-                    LOG.info(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                    LOG.info(`ingestData could not create ModelSceneXref for scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                     continue;
                 }
 
@@ -903,7 +903,7 @@ class IngestDataWorker extends ResolverBase {
 
                 const modelDB: DBAPI.Model | null = await DBAPI.Model.fetch(MSXUpdate.idModel);
                 if (!modelDB || !await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneDB, modelDB)) {
-                    LOG.error(`ingestData could not create SystemObjectXref for Scene ${sceneDB.idScene} using: ${JSON.stringify(MSXUpdate)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData could not create SystemObjectXref for scene ${sceneDB.idScene} using: ${JSON.stringify(MSXUpdate)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -1613,7 +1613,7 @@ class IngestDataWorker extends ResolverBase {
                         this.extractModelMetrics(model, JCOutput.modelConstellation.Model);
 
                     if (!await model.create()) {
-                        LOG.error(`ingestData handleComplexIngestionScene unable to create Model from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                        LOG.error(`ingestData handleComplexIngestionScene unable to create model from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                         success = false;
                         continue;
                     }
@@ -1634,7 +1634,7 @@ class IngestDataWorker extends ResolverBase {
 
                     const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
                     if (!SOX) {
-                        LOG.error(`ingestData handleComplexIngestionScene unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together`, LOG.LS.eGQL);
+                        LOG.error(`ingestData handleComplexIngestionScene unable to wire scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and model ${JSON.stringify(model, H.Helpers.saferStringify)} together`, LOG.LS.eGQL);
                         success = false;
                         continue;
                     }
@@ -1649,14 +1649,14 @@ class IngestDataWorker extends ResolverBase {
                 // reassign asset to model; create SystemObjectVersion and SystemObjectVersionAssetVersionXref
                 const SO: DBAPI.SystemObject | null = await model.fetchSystemObject();
                 if (!SO) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to fetch SystemObject for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to fetch SystemObject for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
 
                 assetPair.asset.idSystemObject = SO.idSystemObject;
                 if (!await assetPair.asset.update()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.saferStringify)} to model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -1669,7 +1669,7 @@ class IngestDataWorker extends ResolverBase {
                     idSystemObjectVersion: 0
                 });
                 if (!await SOV.create()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersion ${JSON.stringify(SOV, H.Helpers.saferStringify)} for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersion ${JSON.stringify(SOV, H.Helpers.saferStringify)} for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -1680,7 +1680,7 @@ class IngestDataWorker extends ResolverBase {
                     idSystemObjectVersionAssetVersionXref: 0,
                 });
                 if (!await SOVAVX.create()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)} for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)} for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
