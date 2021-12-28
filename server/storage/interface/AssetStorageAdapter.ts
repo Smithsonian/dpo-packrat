@@ -226,13 +226,17 @@ export class AssetStorageAdapter {
         resStorage: STORE.CommitWriteStreamResult):
         Promise<AssetStorageResultCommit> {
 
-        let ingested: boolean | null = false;
+        // set model and scene package Ingested to null, which means uploaded but not yet processed; WorkflowUpload will set this to false once validation is complete
+        let Ingested: boolean | null = false;
         switch (await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType)) {
-            case eVocabularyID.eAssetAssetTypeModel: ingested = null; break;
+            case eVocabularyID.eAssetAssetTypeModel:
+            case eVocabularyID.eAssetAssetTypeScene:
+                Ingested = null;
+                break;
         }
 
         const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(asset, FilePath, idUserCreator,
-            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, idSOAttachment, null, assetNameOverride, ingested);
+            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, idSOAttachment, null, assetNameOverride, Ingested);
         /* istanbul ignore else */
         if (assetVersion)
             return { assets: [ asset ], assetVersions: [ assetVersion ], success: true };
