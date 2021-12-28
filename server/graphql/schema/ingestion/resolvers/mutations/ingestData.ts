@@ -1345,8 +1345,9 @@ class IngestDataWorker extends ResolverBase {
                 if (photogrammetry.sourceObjects && photogrammetry.sourceObjects.length) {
                     for (const sourceObject of photogrammetry.sourceObjects) {
                         if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, photogrammetry.sourceObjects, [], true)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and photogrammetry`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and photogrammetry` };
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and capture data`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1355,8 +1356,9 @@ class IngestDataWorker extends ResolverBase {
                     for (const derivedObject of photogrammetry.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
                         if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between photogrammetry and ${derivedObject.objectType}`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between photogrammetry and ${derivedObject.objectType}` };
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between capture data and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1379,9 +1381,10 @@ class IngestDataWorker extends ResolverBase {
                 // add validation in this area while we iterate through the objects
                 if (model.sourceObjects && model.sourceObjects.length) {
                     for (const sourceObject of model.sourceObjects) {
-                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, model.sourceObjects, [], true)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and model`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and model` };
+                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eModel, model.sourceObjects, [], true)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and model`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1389,9 +1392,10 @@ class IngestDataWorker extends ResolverBase {
                 if (model.derivedObjects && model.derivedObjects.length) {
                     for (const derivedObject of model.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between model and ${derivedObject.objectType}`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between model and ${derivedObject.objectType}` };
+                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eModel, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between model and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1414,9 +1418,10 @@ class IngestDataWorker extends ResolverBase {
                 // add validation in this area while we iterate through the objects
                 if (scene.sourceObjects && scene.sourceObjects.length) {
                     for (const sourceObject of scene.sourceObjects) {
-                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, scene.sourceObjects, [], true)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and scene`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and scene` };
+                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eScene, scene.sourceObjects, [], true)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and scene`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1424,9 +1429,10 @@ class IngestDataWorker extends ResolverBase {
                 if (scene.derivedObjects && scene.derivedObjects.length) {
                     for (const derivedObject of scene.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between scene and ${derivedObject.objectType}`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between scene and ${derivedObject.objectType}` };
+                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eScene, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between scene and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
