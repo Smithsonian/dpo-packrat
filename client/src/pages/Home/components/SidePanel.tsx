@@ -18,7 +18,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: palette.primary.dark,
-        maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '15vw' : '8vw')
+        maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '13vw' : '8vw')
     },
     menuOptions: {
         display: 'flex',
