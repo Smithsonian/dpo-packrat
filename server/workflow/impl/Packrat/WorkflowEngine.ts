@@ -62,6 +62,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
         if (WFC.workflow)
             this.workflowMap.set(WFC.workflow.idWorkflow, workflow);
+
         const startResults: H.IOResults = await workflow.start();
         if (!startResults) {
             LOG.error(`WorkflowEngine.create failed to start workflow ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
@@ -168,7 +169,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         }
                     } else if (CMIR.idModel !== oID.idObject) { // make sure we're processing the same model
                         LOG.error(`WorkflowEngine.eventIngestionIngestObject encountered multiple models ([${CMIR.idModel}, ${oID.idObject}])`, LOG.LS.eWF);
-                        return null;
+                        continue;
                     }
                     break;
 
@@ -178,14 +179,18 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                             CSIR = await this.computeSceneInfo(oID.idObject, asset.idSystemObject);
                             if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
                                 LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)}`, LOG.LS.eWF);
-                                return null;
+                                CSIR = undefined;
+                                continue;
                             }
                         } else if (CSIR.idScene !== oID.idObject) {
                             LOG.error(`WorkflowEngine.eventIngestionIngestObject encountered multiple scenes ([${CSIR.idScene}, ${oID.idObject}])`, LOG.LS.eWF);
-                            return null;
-                        } else if (CSIR.scene !== undefined && !CSIR.scene.PosedAndQCd) { // we have scene info, and that scene has not been posed and QCd
+                            continue;
+                        }
+
+                        if (CSIR.scene !== undefined && !CSIR.scene.PosedAndQCd) { // we have scene info, and that scene has not been posed and QCd
                             LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)} which has not been PosedAndQCd`, LOG.LS.eWF);
-                            return null;
+                            CSIR = undefined;
+                            continue;
                         }
                     }
                     break;
