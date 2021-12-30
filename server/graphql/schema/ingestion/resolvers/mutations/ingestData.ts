@@ -1218,16 +1218,17 @@ class IngestDataWorker extends ResolverBase {
                 SOBased,
                 idSystemObject: null,
                 opInfo,
-                Comment: AVInfo.Comment
+                Comment: AVInfo.Comment,
+                doNotSendIngestionEvent: true
             };
 
-            const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
-            if (!ISR.success) {
-                LOG.error(`ingestData unable to ingest assetVersion ${idAssetVersion}: ${ISR.error}`, LOG.LS.eGQL);
-                await this.appendToWFReport(`<b>Asset Ingestion Failed</b>: ${ISR.error}`);
+            const IAR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
+            if (!IAR.success) {
+                LOG.error(`ingestData unable to ingest assetVersion ${idAssetVersion}: ${IAR.error}`, LOG.LS.eGQL);
+                await this.appendToWFReport(`<b>Asset Ingestion Failed</b>: ${IAR.error}`);
             } else {
-                if (ISR.assetVersions) {
-                    for (const assetVersion of ISR.assetVersions) {
+                if (IAR.assetVersions) {
+                    for (const assetVersion of IAR.assetVersions) {
                         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
                         const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
                         const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName);
@@ -1236,18 +1237,18 @@ class IngestDataWorker extends ResolverBase {
                         await this.appendToWFReport(`Ingested ${hrefObject}: ${hrefDownload}, size ${assetVersion.StorageSize}, hash ${assetVersion.StorageHash}`);
                     }
                 }
-                if (ISR.assets) {
+                if (IAR.assets) {
                     // Handle complex ingestion, such as ingestion of a scene package as a zip file.
                     // In this case, we will receive the scene .svx.json file, supporting HTML, images, CSS, as well as models.
                     // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
                     if (!AVInfo.isAttachment && SOBased instanceof DBAPI.Scene) {
-                        const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, ISR, idAssetVersion);
+                        const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, IAR, idAssetVersion);
                         if (success && modelTransformUpdated)
                             transformUpdated = true;
                     }
                 }
             }
-            ingestResMap.set(idAssetVersion, ISR);
+            ingestResMap.set(idAssetVersion, IAR);
         }
         if (transformUpdated)
             await this.appendToWFReport('Scene ingested with Model Transform(s) Updated');
@@ -1513,8 +1514,8 @@ class IngestDataWorker extends ResolverBase {
         return { success: true };
     }
 
-    private async handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetResult, idAssetVersion: number): Promise<{ success: boolean, transformUpdated: boolean }> {
-        if (!ISR.assets || !ISR.assetVersions)
+    private async handleComplexIngestionScene(scene: DBAPI.Scene, IAR: IngestAssetResult, idAssetVersion: number): Promise<{ success: boolean, transformUpdated: boolean }> {
+        if (!IAR.assets || !IAR.assetVersions)
             return { success: false, transformUpdated: false };
 
         // first, identify assets and asset versions for the scene and models
@@ -1523,10 +1524,10 @@ class IngestDataWorker extends ResolverBase {
         const modelAssetMap: Map<string, AssetPair> = new Map<string, AssetPair>(); // map of asset name -> { asset, asset version }
 
         const assetVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>(); // map of *asset* id -> asset version
-        for (const assetVersion of ISR.assetVersions)
+        for (const assetVersion of IAR.assetVersions)
             assetVersionMap.set(assetVersion.idAsset, assetVersion); // idAsset is correct here!
 
-        for (const asset of ISR.assets) {
+        for (const asset of IAR.assets) {
             switch (await asset.assetType()) {
                 case eVocabularyID.eAssetAssetTypeScene:
                     if (!sceneAsset) {
