@@ -92,6 +92,7 @@ class TestSuiteUtils {
     createProjectInput = (): CreateProjectInput => {
         return {
             Name: 'Test Name',
+            Unit: 1,
             Description: 'Test Description'
         };
     };
