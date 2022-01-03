@@ -13,6 +13,8 @@ import { ePaginationChange } from '../../../../store';
 import { EmptyTable } from '../../../../components';
 import { truncateWithEllipses } from '../../../../constants/helperfunctions';
 import { DataTableOptions } from '../../../../types/component';
+import { getDownloadValueForWorkflowReport, getDownloadValueForWorkflowSet, getDownloadValueForJob } from '../../../../utils/repository';
+import API from '../../../../api';
 import clsx from 'clsx';
 
 interface WorkflowIconProps {
@@ -189,6 +191,8 @@ function WorkflowList(): React.ReactElement {
         // setTableProps: () => {}
     };
 
+    const serverEndpoint = API.serverEndpoint();
+
     if (loading) {
         return (
             <Box className={classes.empty}>
@@ -269,36 +273,36 @@ function WorkflowList(): React.ReactElement {
             }
         },
         {
-            name: 'HyperlinkReport',
+            name: 'idWorkflowReport',
             label: 'Report',
             options: {
                 customBodyRender(value) {
                     if (!value) return '';
-                    return <WorkflowIcon reportType={eWorkflowLinkType.eReport} path={value} />;
+                    return <WorkflowIcon reportType={eWorkflowLinkType.eReport} path={getDownloadValueForWorkflowReport(serverEndpoint, value)} />;
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
             }
         },
         {
-            name: 'HyperlinkSet',
+            name: 'idWorkflowSet',
             label: 'Set',
             options: {
                 customBodyRender(value) {
                     if (!value) return '';
-                    return <WorkflowIcon reportType={eWorkflowLinkType.eSet} path={value} />;
+                    return <WorkflowIcon reportType={eWorkflowLinkType.eSet} path={getDownloadValueForWorkflowSet(serverEndpoint, value)} />;
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
             }
         },
         {
-            name: 'HyperlinkJob',
+            name: 'idJobRun',
             label: 'Job',
             options: {
                 customBodyRender(value) {
                     if (!value) return '';
-                    return <WorkflowIcon reportType={eWorkflowLinkType.eJob} path={value} />;
+                    return <WorkflowIcon reportType={eWorkflowLinkType.eJob} path={getDownloadValueForJob(serverEndpoint, value)} />;
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
