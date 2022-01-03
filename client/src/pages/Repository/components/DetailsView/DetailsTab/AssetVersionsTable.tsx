@@ -15,6 +15,7 @@ import { formatBytes } from '../../../../../utils/upload';
 import { useObjectVersions } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetGrid';
 import GetAppIcon from '@material-ui/icons/GetApp';
+import API from '../../../../../api';
 
 interface AssetVersionsTableProps {
     idSystemObject: number;
@@ -30,7 +31,7 @@ const CheckboxNoPadding = withStyles({
 function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement {
     const classes = useStyles();
     const { idSystemObject } = props;
-    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
+    const serverEndpoint = API.serverEndpoint();
     const { data, loading } = useObjectVersions(idSystemObject);
 
     const headers: string[] = ['Link', 'Version', 'Name', 'Creator', 'Date Created', 'Size', 'Ingested'];
@@ -63,7 +64,7 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                     <tr key={index}>
                         <td>
                             <a
-                                href={getDownloadAssetVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, version.idAssetVersion)}
+                                href={getDownloadAssetVersionUrlForObject(serverEndpoint, version.idAssetVersion)}
                                 style={{ textDecoration: 'none', color: 'black' }}
                             >
                                 <GetAppIcon />
