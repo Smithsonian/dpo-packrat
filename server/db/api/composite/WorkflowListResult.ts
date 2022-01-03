@@ -9,7 +9,9 @@ export enum eWorkflowListSortColumns {
     eOwner = 4,
     eStart = 5,
     eLast = 6,
-    eError = 7,
+    eReport = 7,
+    eJobRun = 8,
+    eError = 9,
     eDefault = 0
 }
 
@@ -94,6 +96,14 @@ export class WorkflowListResult {
 
                 case eWorkflowListSortColumns.eLast:
                     orderBy = 'ORDER BY WF.DateUpdated' + ((sortOrder === false) ? ' DESC' : '');
+                    break;
+
+                case eWorkflowListSortColumns.eReport:
+                    orderBy = 'ORDER BY WR.idWorkflowReport' + ((sortOrder === false) ? ' DESC' : '') + ', WF.idWorkflow';
+                    break;
+
+                case eWorkflowListSortColumns.eJobRun:
+                    orderBy = 'ORDER BY CASE WHEN JOB.JobOutputPresent = 1 THEN JOB.idJobRun ELSE 0 END' + ((sortOrder === false) ? ' DESC' : '') + ', WF.idWorkflow';
                     break;
 
                 case eWorkflowListSortColumns.eError:
