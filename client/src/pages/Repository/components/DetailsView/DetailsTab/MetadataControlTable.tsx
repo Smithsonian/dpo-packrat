@@ -116,7 +116,7 @@ function MetadataControlTable(props: MetadataControlTableProps): React.ReactElem
                     <Box className={classes.container}>
                         { type !== eObjectMetadataType.eDetailView && (
                             <Box className={classes.tableBanner}>
-                                <Typography >Fields marked with * are required</Typography>
+                                <Typography>Fields marked with * are required</Typography>
                             </Box>
                         )}
                         <Table>
