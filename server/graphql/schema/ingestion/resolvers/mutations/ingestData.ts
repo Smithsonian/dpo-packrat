@@ -879,11 +879,11 @@ class IngestDataWorker extends ResolverBase {
 
             for (const MSX of sceneConstellation.ModelSceneXref) {
                 if (MSX.idModelSceneXref || MSX.idScene) {
-                    LOG.error(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as record already was populated: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData could not create ModelSceneXref for scene ${sceneDB.idScene}, as record already was populated: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                     continue;
                 }
                 if (MSX.idModel <= 0) {
-                    LOG.info(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                    LOG.info(`ingestData could not create ModelSceneXref for scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                     continue;
                 }
 
@@ -903,7 +903,7 @@ class IngestDataWorker extends ResolverBase {
 
                 const modelDB: DBAPI.Model | null = await DBAPI.Model.fetch(MSXUpdate.idModel);
                 if (!modelDB || !await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneDB, modelDB)) {
-                    LOG.error(`ingestData could not create SystemObjectXref for Scene ${sceneDB.idScene} using: ${JSON.stringify(MSXUpdate)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData could not create SystemObjectXref for scene ${sceneDB.idScene} using: ${JSON.stringify(MSXUpdate)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -1218,16 +1218,17 @@ class IngestDataWorker extends ResolverBase {
                 SOBased,
                 idSystemObject: null,
                 opInfo,
-                Comment: AVInfo.Comment
+                Comment: AVInfo.Comment,
+                doNotSendIngestionEvent: true
             };
 
-            const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
-            if (!ISR.success) {
-                LOG.error(`ingestData unable to ingest assetVersion ${idAssetVersion}: ${ISR.error}`, LOG.LS.eGQL);
-                await this.appendToWFReport(`<b>Asset Ingestion Failed</b>: ${ISR.error}`);
+            const IAR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
+            if (!IAR.success) {
+                LOG.error(`ingestData unable to ingest assetVersion ${idAssetVersion}: ${IAR.error}`, LOG.LS.eGQL);
+                await this.appendToWFReport(`<b>Asset Ingestion Failed</b>: ${IAR.error}`);
             } else {
-                if (ISR.assetVersions) {
-                    for (const assetVersion of ISR.assetVersions) {
+                if (IAR.assetVersions) {
+                    for (const assetVersion of IAR.assetVersions) {
                         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
                         const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
                         const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName);
@@ -1236,18 +1237,18 @@ class IngestDataWorker extends ResolverBase {
                         await this.appendToWFReport(`Ingested ${hrefObject}: ${hrefDownload}, size ${assetVersion.StorageSize}, hash ${assetVersion.StorageHash}`);
                     }
                 }
-                if (ISR.assets) {
+                if (IAR.assets) {
                     // Handle complex ingestion, such as ingestion of a scene package as a zip file.
                     // In this case, we will receive the scene .svx.json file, supporting HTML, images, CSS, as well as models.
                     // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
                     if (!AVInfo.isAttachment && SOBased instanceof DBAPI.Scene) {
-                        const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, ISR, idAssetVersion);
+                        const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, IAR, idAssetVersion);
                         if (success && modelTransformUpdated)
                             transformUpdated = true;
                     }
                 }
             }
-            ingestResMap.set(idAssetVersion, ISR);
+            ingestResMap.set(idAssetVersion, IAR);
         }
         if (transformUpdated)
             await this.appendToWFReport('Scene ingested with Model Transform(s) Updated');
@@ -1345,8 +1346,9 @@ class IngestDataWorker extends ResolverBase {
                 if (photogrammetry.sourceObjects && photogrammetry.sourceObjects.length) {
                     for (const sourceObject of photogrammetry.sourceObjects) {
                         if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, photogrammetry.sourceObjects, [], true)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and photogrammetry`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and photogrammetry` };
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and capture data`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1355,8 +1357,9 @@ class IngestDataWorker extends ResolverBase {
                     for (const derivedObject of photogrammetry.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
                         if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between photogrammetry and ${derivedObject.objectType}`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between photogrammetry and ${derivedObject.objectType}` };
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between capture data and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1379,9 +1382,10 @@ class IngestDataWorker extends ResolverBase {
                 // add validation in this area while we iterate through the objects
                 if (model.sourceObjects && model.sourceObjects.length) {
                     for (const sourceObject of model.sourceObjects) {
-                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, model.sourceObjects, [], true)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and model`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and model` };
+                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eModel, model.sourceObjects, [], true)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and model`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1389,9 +1393,10 @@ class IngestDataWorker extends ResolverBase {
                 if (model.derivedObjects && model.derivedObjects.length) {
                     for (const derivedObject of model.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between model and ${derivedObject.objectType}`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between model and ${derivedObject.objectType}` };
+                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eModel, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between model and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1414,9 +1419,10 @@ class IngestDataWorker extends ResolverBase {
                 // add validation in this area while we iterate through the objects
                 if (scene.sourceObjects && scene.sourceObjects.length) {
                     for (const sourceObject of scene.sourceObjects) {
-                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, scene.sourceObjects, [], true)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and scene`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and scene` };
+                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eScene, scene.sourceObjects, [], true)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and scene`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1424,9 +1430,10 @@ class IngestDataWorker extends ResolverBase {
                 if (scene.derivedObjects && scene.derivedObjects.length) {
                     for (const derivedObject of scene.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between scene and ${derivedObject.objectType}`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between scene and ${derivedObject.objectType}` };
+                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eScene, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between scene and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1507,8 +1514,8 @@ class IngestDataWorker extends ResolverBase {
         return { success: true };
     }
 
-    private async handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetResult, idAssetVersion: number): Promise<{ success: boolean, transformUpdated: boolean }> {
-        if (!ISR.assets || !ISR.assetVersions)
+    private async handleComplexIngestionScene(scene: DBAPI.Scene, IAR: IngestAssetResult, idAssetVersion: number): Promise<{ success: boolean, transformUpdated: boolean }> {
+        if (!IAR.assets || !IAR.assetVersions)
             return { success: false, transformUpdated: false };
 
         // first, identify assets and asset versions for the scene and models
@@ -1517,10 +1524,10 @@ class IngestDataWorker extends ResolverBase {
         const modelAssetMap: Map<string, AssetPair> = new Map<string, AssetPair>(); // map of asset name -> { asset, asset version }
 
         const assetVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>(); // map of *asset* id -> asset version
-        for (const assetVersion of ISR.assetVersions)
+        for (const assetVersion of IAR.assetVersions)
             assetVersionMap.set(assetVersion.idAsset, assetVersion); // idAsset is correct here!
 
-        for (const asset of ISR.assets) {
+        for (const asset of IAR.assets) {
             switch (await asset.assetType()) {
                 case eVocabularyID.eAssetAssetTypeScene:
                     if (!sceneAsset) {
@@ -1613,7 +1620,7 @@ class IngestDataWorker extends ResolverBase {
                         this.extractModelMetrics(model, JCOutput.modelConstellation.Model);
 
                     if (!await model.create()) {
-                        LOG.error(`ingestData handleComplexIngestionScene unable to create Model from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                        LOG.error(`ingestData handleComplexIngestionScene unable to create model from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                         success = false;
                         continue;
                     }
@@ -1634,7 +1641,7 @@ class IngestDataWorker extends ResolverBase {
 
                     const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
                     if (!SOX) {
-                        LOG.error(`ingestData handleComplexIngestionScene unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together`, LOG.LS.eGQL);
+                        LOG.error(`ingestData handleComplexIngestionScene unable to wire scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and model ${JSON.stringify(model, H.Helpers.saferStringify)} together`, LOG.LS.eGQL);
                         success = false;
                         continue;
                     }
@@ -1649,14 +1656,14 @@ class IngestDataWorker extends ResolverBase {
                 // reassign asset to model; create SystemObjectVersion and SystemObjectVersionAssetVersionXref
                 const SO: DBAPI.SystemObject | null = await model.fetchSystemObject();
                 if (!SO) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to fetch SystemObject for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to fetch SystemObject for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
 
                 assetPair.asset.idSystemObject = SO.idSystemObject;
                 if (!await assetPair.asset.update()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.saferStringify)} to model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -1669,7 +1676,7 @@ class IngestDataWorker extends ResolverBase {
                     idSystemObjectVersion: 0
                 });
                 if (!await SOV.create()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersion ${JSON.stringify(SOV, H.Helpers.saferStringify)} for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersion ${JSON.stringify(SOV, H.Helpers.saferStringify)} for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -1680,7 +1687,7 @@ class IngestDataWorker extends ResolverBase {
                     idSystemObjectVersionAssetVersionXref: 0,
                 });
                 if (!await SOVAVX.create()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)} for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)} for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
