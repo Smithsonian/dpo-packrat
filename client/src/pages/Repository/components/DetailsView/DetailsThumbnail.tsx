@@ -13,6 +13,7 @@ import VoyagerStory from './DetailsTab/VoyagerStory';
 import { eSystemObjectType } from '../../../../types/server';
 import { getObjectAssets } from '../../hooks/useDetailsView';
 import { eVoyagerStoryMode, getRootSceneDownloadUrlForVoyager, getModeForVoyager, getVoyagerStoryUrl } from '../../../../utils/repository';
+import API from '../../../../api';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     thumbnail: {
@@ -39,7 +40,7 @@ interface DetailsThumbnailProps {
 }
 
 function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
-    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
+    const serverEndpoint = API.serverEndpoint();
     const { thumbnail, objectType, idSystemObject } = props;
     const classes = useStyles();
     const [pathLink, setPathLink] = useState('');
@@ -62,7 +63,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
 
             if (assetDetailRows && assetDetailRows.length > 0) {
                 const path: string = assetDetailRows[0].filePath;
-                const root: string = getRootSceneDownloadUrlForVoyager(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject, path, eMode);
+                const root: string = getRootSceneDownloadUrlForVoyager(serverEndpoint, idSystemObject, path, eMode);
                 const document: string = assetDetailRows[0].name.label;
                 // console.log(`Voyager root: ${root}, document: ${document}, mode: ${eVoyagerStoryMode[eMode]}`);
 
@@ -83,7 +84,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                 <React.Fragment>
                     <VoyagerExplorer root={rootLink} document={documentLink} height='500px' width='100%' />
                     <br />
-                    <a href={getVoyagerStoryUrl(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eEdit)} rel='noopener noreferrer' target='_blank' style={{ textDecoration: 'none' }}>
+                    <a href={getVoyagerStoryUrl(serverEndpoint, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eEdit)} rel='noopener noreferrer' target='_blank' style={{ textDecoration: 'none' }}>
                         <Button className={classes.editButton} variant='contained' color='primary'>Edit</Button>
                     </a>
                 </React.Fragment>
