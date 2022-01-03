@@ -57,8 +57,11 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         });
     }
 
-    if (networkError)
+    if (networkError) {
         console.log(`[Network error]: ${networkError}`);
+        global.alert('The Packrat user is no longer authenticated. Please login.');
+        window.location.href = ROUTES.LOGIN;
+    }
 });
 
 function configureApolloClient(): ApolloClient<NormalizedCacheObject> {
