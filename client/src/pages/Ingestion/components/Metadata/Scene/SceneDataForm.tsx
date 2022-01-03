@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-max-props-per-line */
 
 import React from 'react';
-import { Box, Checkbox } from '@material-ui/core';
+import { Box, Checkbox, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { InputField, FieldType, ReadOnlyRow } from '../../../../../components';
 
@@ -62,9 +62,10 @@ function SceneDataForm(props: SceneDataProps): React.ReactElement {
             </FieldType>
 
             <FieldType required label="Posed and QC'd" direction='row' containerProps={rowFieldProps}>
-                <Checkbox name='posedAndQCd' checked={posedAndQCd} color='primary' onChange={setCheckboxField} />
+                <Tooltip placement='left' title='If checked, downloads will be generated if this scene has a master model as a parent.' arrow>
+                    <Checkbox name='posedAndQCd' checked={posedAndQCd} color='primary' onChange={setCheckboxField} />
+                </Tooltip>
             </FieldType>
-
             <ReadOnlyRow label='EDAN UUID' value={EdanUUID} />
             <ReadOnlyRow label='Scene Count' value={CountScene} padding={15} />
             <ReadOnlyRow label='Node Count' value={CountNode} padding={15} />

@@ -4,7 +4,7 @@
  *
  * This component renders details tab for Scene specific details used in DetailsTab component.
  */
-import { Box, makeStyles, Checkbox } from '@material-ui/core';
+import { Box, makeStyles, Checkbox, Tooltip } from '@material-ui/core';
 import React, { useEffect, useRef } from 'react';
 import { Loader } from '../../../../../components';
 import { GetSceneDocument } from '../../../../../types/graphql';
@@ -113,9 +113,11 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     width='100%'
                     containerProps={rowFieldProps}
                 >
-                    <Box width='fit-content' textAlign='right'>
-                        <Checkbox name='PosedAndQCd' checked={SceneDetails.PosedAndQCd} color='primary' onChange={setCheckboxField} />
-                    </Box>
+                    <Tooltip placement='left' title='When checked, downloads will be generated if this scene has a master model as a parent, as well as every time the scene is re-posed.' arrow>
+                        <Box width='fit-content' textAlign='right'>
+                            <Checkbox name='PosedAndQCd' checked={SceneDetails.PosedAndQCd} color='primary' onChange={setCheckboxField} />
+                        </Box>
+                    </Tooltip>
                 </FieldType>
                 <ReadOnlyRow label='Publication Approver' value={SceneDetails.PublicationApprover} padding={15} gridTemplate={gridTemplateColumns} />
                 <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} padding={15} gridTemplate={gridTemplateColumns} />

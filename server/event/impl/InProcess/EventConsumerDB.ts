@@ -43,7 +43,7 @@ export class EventConsumerDB extends EventConsumer {
                     // index modified system objects
                     // in the event that the audit event is for a SystemObjectXref record, we reindex the "derived" object
                     if (idSystemObject) {
-                        await CACHE.SystemObjectCache.flushObject(idSystemObject);        // don't use await so this happens asynchronously
+                        await CACHE.SystemObjectCache.flushObject(idSystemObject);
                         NAV.NavigationFactory.scheduleObjectIndexing(idSystemObject);
                     } else if (audit.idDBObject) {
                         switch (audit.getDBObjectType()) {

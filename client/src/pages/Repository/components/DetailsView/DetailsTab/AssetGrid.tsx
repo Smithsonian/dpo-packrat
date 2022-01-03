@@ -25,6 +25,7 @@ import { CheckCircleOutline, GetApp } from '@material-ui/icons';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import { DataTableOptions } from '../../../../../types/component';
+import API from '../../../../../api';
 
 export const useStyles = makeStyles(({ palette }) => ({
     btn: {
@@ -138,7 +139,7 @@ const getMuiTheme = () =>
 function AssetGrid(props: AssetGridProps): React.ReactElement {
     const classes = useStyles();
     const { idSystemObject, systemObjectType } = props;
-    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
+    const serverEndpoint = API.serverEndpoint();
     const history = useHistory();
     const [assetColumns, setAssetColumns] = useState<any>([]);
     const [assetRows, setAssetRows] = useState<any[]>([]);
@@ -230,7 +231,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                                 } else if (value.origin === eLinkOrigin.eServer) {
                                     return (
                                         <a
-                                            href={REACT_APP_PACKRAT_SERVER_ENDPOINT + value.path}
+                                            href={serverEndpoint + value.path}
                                             style={{ textDecoration: 'underline', color: '#2C405A' }}
                                         >
                                             {value.label}
@@ -249,7 +250,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                                 } else if (value.origin === eLinkOrigin.eServer) {
                                     return (
                                         <a
-                                            href={REACT_APP_PACKRAT_SERVER_ENDPOINT + value.path}
+                                            href={serverEndpoint + value.path}
                                             style={{ textDecoration: 'underline', color: '#2C405A', display: 'flex' }}
                                         >
                                             <span style={{ display: 'none' }}>Download Icon</span>
@@ -333,7 +334,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
             <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' mt={1} width='100%'>
                 <Box display='flex' flexDirection='row' alignItems='center'>
                     {assetRows.length > 0 && (
-                        <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ whiteSpace: 'nowrap' }} href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)}>
+                        <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ whiteSpace: 'nowrap' }} href={getDownloadAllAssetsUrlForObject(serverEndpoint, idSystemObject)}>
                             Download All
                         </Button>
                     )}

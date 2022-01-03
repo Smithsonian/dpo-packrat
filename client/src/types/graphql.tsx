@@ -2099,6 +2099,7 @@ export type CreateUnitResult = {
 
 export type CreateProjectInput = {
   Name: Scalars['String'];
+  Unit: Scalars['Int'];
   Description: Scalars['String'];
 };
 
@@ -4103,7 +4104,7 @@ export type GetWorkflowListQuery = (
     { __typename?: 'GetWorkflowListResult' }
     & { WorkflowList?: Maybe<Array<Maybe<(
       { __typename?: 'WorkflowListResult' }
-      & Pick<WorkflowListResult, 'idWorkflow' | 'idWorkflowSet' | 'idWorkflowReport' | 'idJobRun' | 'Type' | 'State' | 'DateStart' | 'DateLast' | 'HyperlinkReport' | 'HyperlinkSet' | 'HyperlinkJob' | 'Error'>
+      & Pick<WorkflowListResult, 'idWorkflow' | 'idWorkflowSet' | 'idWorkflowReport' | 'idJobRun' | 'Type' | 'State' | 'DateStart' | 'DateLast' | 'Error'>
       & { Owner?: Maybe<(
         { __typename?: 'User' }
         & Pick<User, 'Name'>
@@ -7522,9 +7523,6 @@ export const GetWorkflowListDocument = gql`
       }
       DateStart
       DateLast
-      HyperlinkReport
-      HyperlinkSet
-      HyperlinkJob
       Error
     }
   }
