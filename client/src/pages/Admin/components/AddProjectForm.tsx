@@ -1,18 +1,19 @@
-/* eslint-disable react/jsx-max-props-per-line */
-/* eslint-disable react/jsx-boolean-value */
+/* eslint-disable react/jsx-max-props-per-line, react/jsx-boolean-value, @typescript-eslint/no-explicit-any */
 
-import { Box, Typography, FormControl, TextField, FormHelperText } from '@material-ui/core';
+import { Box, Typography, FormControl, TextField, FormHelperText, Select, MenuItem } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { LoadingButton } from '../../../components';
 import { DebounceInput } from 'react-debounce-input';
+import { Helmet } from 'react-helmet';
+import * as yup from 'yup';
+
+import { LoadingButton } from '../../../components';
 import { CreateProjectDocument } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
+import { getUnitsList } from '../hooks/useAdminview';
 import { toTitleCase } from '../../../constants/helperfunctions';
-import * as yup from 'yup';
-import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -76,7 +77,10 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         borderRadius: '4px',
         width: '80%',
         minHeight: '100px'
-    }
+    },
+    unitInput: {
+        width: '80%'
+    },
 }));
 
 function AddProjectForm(): React.ReactElement {
@@ -85,16 +89,33 @@ function AddProjectForm(): React.ReactElement {
     const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [unit, setUnit] = useState(0);
+    const [unitList, setUnitList] = useState<any>([]);
 
     // these are the states referenced when rendering error inputs after failed validation
+    const [validUnit, setValidUnit] = useState(true);
     const [validName, setValidName] = useState<boolean | null>(null);
 
     const singularSystemObjectType = 'project';
 
     // schema for validating the appropriate form fields
     const schema = yup.object().shape({
-        name: yup.string().min(1)
+        name: yup.string().min(1),
+        unit: yup.number().positive(),
     });
+
+    // Fetches initial unit list for drop down
+    useEffect(() => {
+        const fetchUnitList = async () => {
+            const { data } = await getUnitsList();
+            if (data?.getUnitsFromNameSearch.Units && data?.getUnitsFromNameSearch.Units.length) {
+                const fetchedUnitList = data?.getUnitsFromNameSearch.Units.slice();
+                if (fetchedUnitList && fetchedUnitList.length) fetchedUnitList.sort((a, b) => a.Name.localeCompare(b.Name));
+                setUnitList(fetchedUnitList);
+            }
+        };
+        fetchUnitList();
+    }, []);
 
     const onNameUpdate = ({ target }) => {
         setName(target.value);
@@ -109,10 +130,15 @@ function AddProjectForm(): React.ReactElement {
         try {
             const isValidName = await schema.isValid({ name });
             setValidName(isValidName);
-            if (!isValidName) {
-                toast.warn('Creation Failed: Please Address The Errors Above');
-            }
-            return isValidName;
+            if (!isValidName)
+                toast.error('Creation Failed: Project Name is invalid');
+
+            const isValidUnit = await schema.isValid({ unit });
+            setValidUnit(isValidUnit);
+            if (!isValidUnit)
+                toast.error('Creation Failed: Must Select A Unit', { autoClose: false });
+
+            return isValidName && isValidUnit;
         } catch (error) {
             const message: string = (error instanceof Error) ? error.message : 'Validation Failure';
             toast.warn(message);
@@ -134,6 +160,7 @@ function AddProjectForm(): React.ReactElement {
                 variables: {
                     input: {
                         Name: name,
+                        Unit: unit,
                         Description: description
                     }
                 }
@@ -155,6 +182,10 @@ function AddProjectForm(): React.ReactElement {
                 toast.error('Unable to retrieve new System Object Id');
             }
         }
+    };
+
+    const handleUnitSelectChange = ({ target }) => {
+        setUnit(target.value);
     };
 
     return (
@@ -196,6 +227,19 @@ function AddProjectForm(): React.ReactElement {
                             </React.Fragment>
                         )}
                     </FormControl>
+                </Box>
+                <Box className={classes.formRow}>
+                    <Typography className={classes.formRowLabel}>Unit</Typography>
+                    <Select value={unit} onChange={handleUnitSelectChange} error={!validUnit} className={classes.unitInput}>
+                        <MenuItem value={0} key={0}>
+                            None
+                        </MenuItem>
+                        {unitList.map(unit => (
+                            <MenuItem value={unit.idUnit} key={unit.idUnit}>
+                                {unit.Name}
+                            </MenuItem>
+                        ))}
+                    </Select>
                 </Box>
                 <Box className={classes.formRow}>
                     <Typography className={classes.formRowLabel}>Description</Typography>

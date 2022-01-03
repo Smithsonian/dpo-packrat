@@ -2099,6 +2099,7 @@ export type CreateUnitResult = {
 
 export type CreateProjectInput = {
   Name: Scalars['String'];
+  Unit: Scalars['Int'];
   Description: Scalars['String'];
 };
 
