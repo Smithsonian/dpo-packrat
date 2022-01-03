@@ -255,17 +255,12 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     private static async retireFailedUpload(assetVersion: DBAPI.AssetVersion): Promise<H.IOResults> {
-        const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
-        if (SO) {
-            if (await SO.retireObject())
-                return { success: true };
-            const error: string = 'uploadAsset post-upload workflow error handler failed to retire uploaded asset';
-            LOG.error(error, LOG.LS.eGQL);
-            return { success: false, error };
-        } else {
-            const error: string = 'uploadAsset post-upload workflow error handler failed to fetch system object for uploaded asset';
+        const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
+        if (!ASR.success) {
+            const error: string = `uploadAsset post-upload workflow error handler failed to discard uploaded asset: ${ASR.error}`;
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
+        return { success: true };
     }
 }

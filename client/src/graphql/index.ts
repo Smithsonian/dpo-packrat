@@ -48,7 +48,7 @@ class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
 const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (graphQLErrors) {
         graphQLErrors.forEach(({ message, locations, path }) => {
-            console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`);
+            console.log(`[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}`);
             if (message.includes(authenticationFailureMessage)) {
                 global.alert('The Packrat user is no longer authenticated. Please login.');
                 window.location.href = ROUTES.LOGIN;

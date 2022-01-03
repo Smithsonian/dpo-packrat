@@ -2,6 +2,8 @@ import * as STORE from '../interface';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as META from '../../metadata';
+import * as WF from '../../workflow/interface';
+import * as REP from '../../report/interface';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ST from '../impl/LocalStorage/SharedTypes';
@@ -11,6 +13,9 @@ import { StorageFactory } from './StorageFactory';
 import { IStorage } from './IStorage';
 import { AssetVersionContent } from '../../types/graphql';
 import { eVocabularyID, VocabularyCache } from '../../cache';
+import { ASL, LocalStore } from '../../utils/localStore';
+import { SvxReader } from '../../utils/parser';
+import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
@@ -30,7 +35,8 @@ export type IngestAssetInput = {
     SOBased: DBAPI.SystemObjectBased | null;    // supply either SOBased or idSystemObject
     idSystemObject: number | null;              // supply either SOBased or idSystemObject
     opInfo: STORE.OperationInfo;
-    Comment: string | null;                    // Optional comment used to create new system object version
+    Comment: string | null;                     // Optional comment used to create new system object version
+    doNotSendIngestionEvent?: boolean | undefined;
 };
 
 export type IngestAssetResult = {
@@ -135,7 +141,7 @@ export class AssetStorageAdapter {
             return { readStream: null, fileName: null, storageHash: null, success: false, error };
         }
 
-        const { storageKey, ingested, error } = AssetStorageAdapter.computeStorageKeyAndIngested(asset, assetVersion); ingested; /* istanbul ignore next */
+        const { storageKey, error } = AssetStorageAdapter.computeStorageKeyAndIngested(asset, assetVersion); /* istanbul ignore next */
         if (!storageKey) {
             LOG.error(error, LOG.LS.eSTR);
             return { readStream: null, fileName: null, storageHash: null, success: false, error };
@@ -226,13 +232,17 @@ export class AssetStorageAdapter {
         resStorage: STORE.CommitWriteStreamResult):
         Promise<AssetStorageResultCommit> {
 
-        let ingested: boolean | null = false;
+        // set model and scene package Ingested to null, which means uploaded but not yet processed; WorkflowUpload will set this to false once validation is complete
+        let Ingested: boolean | null = false;
         switch (await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType)) {
-            case eVocabularyID.eAssetAssetTypeModel: ingested = null; break;
+            case eVocabularyID.eAssetAssetTypeModel:
+            case eVocabularyID.eAssetAssetTypeScene:
+                Ingested = null;
+                break;
         }
 
         const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(asset, FilePath, idUserCreator,
-            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, idSOAttachment, null, assetNameOverride, ingested);
+            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, idSOAttachment, null, assetNameOverride, Ingested);
         /* istanbul ignore else */
         if (assetVersion)
             return { assets: [ asset ], assetVersions: [ assetVersion ], success: true };
@@ -466,6 +476,7 @@ export class AssetStorageAdapter {
             return { success: false, error };
         }
 
+        let IAR: IngestAssetResult;
         const isZipFilename: boolean = (path.extname(assetVersion.FileName).toLowerCase() === '.zip');
         const eAssetType: CACHE.eVocabularyID | undefined = await asset.assetType();
         const unzipAssets: boolean = allowZipCracking && isZipFilename &&
@@ -479,16 +490,191 @@ export class AssetStorageAdapter {
             const CAR: CrackAssetResult = await AssetStorageAdapter.crackAssetWorker(storage, asset, assetVersion); /* istanbul ignore next */
             if (!CAR.success || !CAR.zip)
                 return { success: false, error: CAR.error };
-            const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAssetBulkZipWorker(storage, asset, assetVersion, metadata, opInfo, CAR.zip, assetVersion.BulkIngest);
+            IAR = await AssetStorageAdapter.ingestAssetBulkZipWorker(storage, asset, assetVersion, metadata, opInfo, CAR.zip, assetVersion.BulkIngest);
             await CAR.zip.close();
-            return ISR;
         } else {
             const ASR: AssetStorageResult = await AssetStorageAdapter.promoteAssetWorker(storage, asset, assetVersion, metadata, opInfo, null);
             if (!ASR.success || !ASR.asset || !ASR.assetVersion)
-                return { success: false, error: ASR.error };
+                IAR = { success: false, error: ASR.error };
             else
-                return { success: true, assets: [ASR.asset], assetVersions: [ASR.assetVersion], systemObjectVersion: null, assetsIngested: true };
+                IAR = { success: true, assets: [ASR.asset], assetVersions: [ASR.assetVersion], systemObjectVersion: null, assetsIngested: true };
         }
+
+        // Send Workflow Ingestion event
+        if (ingestAssetInput.doNotSendIngestionEvent === undefined || ingestAssetInput.doNotSendIngestionEvent === false)
+            AssetStorageAdapter.sendWorkflowIngestionEvent(IAR, opInfo.idUser);
+        return IAR;
+    }
+
+    private static async sendWorkflowIngestionEvent(IAR: IngestAssetResult, idUser: number): Promise<H.IOResults> {
+        if (!IAR.assetVersions)
+            return { success: true };
+
+        let error: string | undefined = undefined;
+        const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+        if (!workflowEngine) {
+            error = 'ingestData createWorkflow could not load WorkflowEngine';
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+
+        const { transformUpdated } = await AssetStorageAdapter.detectAndHandleSceneIngest(IAR);
+
+        // prepare to wire together ingestion workflow step with output asset versions (in systemObjectSet)
+        const LS: LocalStore | undefined = await ASL.getStore();
+        const idWorkflow: number | undefined = (LS) ? LS.getWorkflowID() : undefined;
+        const workflowSteps: DBAPI.WorkflowStep[] | null = idWorkflow ? await DBAPI.WorkflowStep.fetchFromWorkflow(idWorkflow) : null;
+        const workflowStep: DBAPI.WorkflowStep | null = (workflowSteps && workflowSteps.length > 0) ? workflowSteps[workflowSteps.length - 1] : null;
+
+        const systemObjectSet: Set<number> = new Set<number>();
+        for (const assetVersion of IAR.assetVersions) {
+            const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion };
+            const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
+            if (!sysInfo) {
+                error = `ingestData sendWorkflowIngestionEvent could not find system object for ${JSON.stringify(oID)}`;
+                LOG.error(error, LOG.LS.eSTR);
+                continue;
+            }
+            systemObjectSet.add(sysInfo.idSystemObject);
+        }
+
+        const idSystemObject: number[] = [];
+        for (const idSystemObjectDistinct of systemObjectSet.values()) {
+            idSystemObject.push(idSystemObjectDistinct);
+            if (workflowStep) {
+                const WSSOX: DBAPI.WorkflowStepSystemObjectXref = new DBAPI.WorkflowStepSystemObjectXref({
+                    idWorkflowStep: workflowStep.idWorkflowStep,
+                    idSystemObject: idSystemObjectDistinct,
+                    Input: false,
+                    idWorkflowStepSystemObjectXref: 0
+                });
+                if (!await WSSOX.create()) {
+                    error = `ingestData sendWorkflowIngestionEvent failed to create WorkflowStepSystemObjectXref ${JSON.stringify(WSSOX, H.Helpers.saferStringify)}`;
+                    LOG.error(error, LOG.LS.eSTR);
+                }
+            }
+        }
+
+        const wfReport: REP.IReport | null = await REP.ReportFactory.getReport();
+        if (wfReport) {
+            let message: string = 'Sending WorkflowEngine IngestObject event';
+            if (IAR.systemObjectVersion?.idSystemObject) {
+                const pathObject: string = RouteBuilder.RepositoryDetails(IAR.systemObjectVersion.idSystemObject, eHrefMode.ePrependClientURL);
+                const hrefObject: string = H.Helpers.computeHref(pathObject, `System Object ${IAR.systemObjectVersion.idSystemObject}`);
+                message += ` for ${hrefObject}`;
+            }
+            const ret: H.IOResults = await wfReport.append(message);
+            if (!ret.success)
+                LOG.error(`Unable to append ${message} to workflow report`, LOG.LS.eSTR);
+        }
+
+        const parameters = {
+            modelTransformUpdated: transformUpdated,
+            assetsIngested: IAR.assetsIngested
+        };
+
+        const workflowParams: WF.WorkflowParameters = {
+            eWorkflowType: null,
+            idSystemObject,
+            idProject: null, // TODO: update with project ID
+            idUserInitiator: idUser,
+            parameters
+        };
+
+        // send workflow engine event, but don't wait for results
+        workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);
+        return { success: error === undefined ? true : false, error };
+    }
+
+    private static async detectAndHandleSceneIngest(IAR: IngestAssetResult): Promise<{ success: boolean, transformUpdated: boolean }> {
+        LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest called with IngestAssetResult of ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+        if (!IAR.assets || !IAR.assetVersions)
+            return { success: false, transformUpdated: false };
+
+        // first, identify assets and asset versions for the scene and models
+        let sceneAsset: DBAPI.Asset | null = null;
+        let sceneAssetVersion: DBAPI.AssetVersion | undefined = undefined;
+
+        const assetVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>(); // map of *asset* id -> asset version
+        for (const assetVersion of IAR.assetVersions)
+            assetVersionMap.set(assetVersion.idAsset, assetVersion); // idAsset is correct here!
+
+        for (const asset of IAR.assets) {
+            switch (await asset.assetType()) {
+                case eVocabularyID.eAssetAssetTypeScene:
+                    if (!sceneAsset) {
+                        sceneAsset = asset;
+                        sceneAssetVersion = assetVersionMap.get(asset.idAsset);
+                    } else
+                        LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest skipping unexpected scene ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    break;
+
+                case undefined:
+                    LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to detect asset type for ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    break;
+            }
+        }
+
+        if (!sceneAsset || !sceneAssetVersion) {
+            LOG.info('AssetStorageAdapter.detectAndHandleSceneIngest did not locate scene info', LOG.LS.eSTR);
+            return { success: true, transformUpdated: false };
+        }
+
+        const SOScene: DBAPI.SystemObject | null = sceneAsset.idSystemObject ? await DBAPI.SystemObject.fetch(sceneAsset.idSystemObject) : null;
+        if (!SOScene || !SOScene.idScene) {
+            LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to identify scene system object for the ingested asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+            return { success: false, transformUpdated: false };
+        }
+
+        // next, retrieve & parse the scene, extracting model references and transforms
+        const RSR: STORE.ReadStreamResult = await AssetStorageAdapter.readAsset(sceneAsset, sceneAssetVersion);
+        if (!RSR.success || !RSR.readStream) {
+            LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to fetch stream for scene asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}: ${RSR.error}`, LOG.LS.eSTR);
+            return { success: false, transformUpdated: false };
+        }
+
+        const svx: SvxReader = new SvxReader();
+        const res: H.IOResults = await svx.loadFromStream(RSR.readStream);
+        if (!res.success || !svx.SvxExtraction) {
+            LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to parse scene asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
+            return { success: false, transformUpdated: false };
+        }
+
+        LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest extracted SVX ModelDetails=\n${JSON.stringify(svx.SvxExtraction.modelDetails, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+
+        // finally, update ModelSceneXref for each model reference:
+        let success: boolean = true;
+        let transformUpdated: boolean = false;
+        if (svx.SvxExtraction.modelDetails) {
+            for (const MSX of svx.SvxExtraction.modelDetails) {
+                if (!MSX.Name)
+                    continue;
+
+                // look for matching ModelSceneXref from SOScene.idScene, MSX.Name, .Usage, .Quality, .UVResolution
+                // if not found, indicate that transform has been updated
+                // if found, determine if MSX transform has changed; if so, update MSX, and return a status that can be used to kick off download generation workflow
+                const MSXSources: DBAPI.ModelSceneXref[] | null =
+                    await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(SOScene.idScene, MSX.Name, MSX.Usage, MSX.Quality, MSX.UVResolution);
+                const MSXSource: DBAPI.ModelSceneXref | null = (MSXSources && MSXSources.length > 0) ? MSXSources[0] : null;
+                if (MSXSource) {
+                    LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest found existing ModelSceneXref=${JSON.stringify(MSXSource, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    if (MSXSource.updateTransformIfNeeded(MSX)) {
+                        if (!await MSXSource.update()) {
+                            LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to update ModelSceneXref ${JSON.stringify(MSXSource, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                            success = false;
+                        }
+                        transformUpdated = true;
+                    }
+                } else {
+                    // Could not find the ModelSceneXref
+                    transformUpdated = true;
+                    LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest did not find existing ModelSceneXref from referenced model ${JSON.stringify(MSX, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    continue;
+                }
+            }
+        }
+
+        return { success, transformUpdated };
     }
 
     private static async ingestAssetBulkZipWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
