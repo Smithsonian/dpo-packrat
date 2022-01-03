@@ -1620,6 +1620,7 @@ type CreateUnitResult {
 
 input CreateProjectInput {
   Name: String!
+  Unit: Int!
   Description: String!
 }
 
