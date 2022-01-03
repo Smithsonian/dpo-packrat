@@ -264,12 +264,24 @@ export function getDownloadAssetVersionUrlForObject(serverEndPoint: string | und
     return `${serverEndPoint}/download?idAssetVersion=${idAssetVersion}`;
 }
 
-export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | undefined, idSystemObjectVersion): string {
+export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | undefined, idSystemObjectVersion: number): string {
     return `${serverEndPoint}/download?idSystemObjectVersion=${idSystemObjectVersion}`;
 }
 
-export function getDownloadValueForMetadata(serverEndPoint: string | undefined, idMetadata): string {
+export function getDownloadValueForMetadata(serverEndPoint: string | undefined, idMetadata: number): string {
     return `${serverEndPoint}/download?idMetadata=${idMetadata}`;
+}
+
+export function getDownloadValueForWorkflowReport(serverEndPoint: string | undefined, WorkflowReport: number): string {
+    return `${serverEndPoint}/download?idWorkflowReport=${WorkflowReport}`;
+}
+
+export function getDownloadValueForWorkflowSet(serverEndPoint: string | undefined, idWorkflowSet: number): string {
+    return `${serverEndPoint}/download?idWorkflowSet=${idWorkflowSet}`;
+}
+
+export function getDownloadValueForJob(serverEndPoint: string | undefined, idJob: number): string {
+    return `${serverEndPoint}/download?idJobRun=${idJob}`;
 }
 
 export enum eVoyagerStoryMode {
