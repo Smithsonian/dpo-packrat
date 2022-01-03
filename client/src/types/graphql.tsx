@@ -4104,7 +4104,7 @@ export type GetWorkflowListQuery = (
     { __typename?: 'GetWorkflowListResult' }
     & { WorkflowList?: Maybe<Array<Maybe<(
       { __typename?: 'WorkflowListResult' }
-      & Pick<WorkflowListResult, 'idWorkflow' | 'idWorkflowSet' | 'idWorkflowReport' | 'idJobRun' | 'Type' | 'State' | 'DateStart' | 'DateLast' | 'HyperlinkReport' | 'HyperlinkSet' | 'HyperlinkJob' | 'Error'>
+      & Pick<WorkflowListResult, 'idWorkflow' | 'idWorkflowSet' | 'idWorkflowReport' | 'idJobRun' | 'Type' | 'State' | 'DateStart' | 'DateLast' | 'Error'>
       & { Owner?: Maybe<(
         { __typename?: 'User' }
         & Pick<User, 'Name'>
@@ -7523,9 +7523,6 @@ export const GetWorkflowListDocument = gql`
       }
       DateStart
       DateLast
-      HyperlinkReport
-      HyperlinkSet
-      HyperlinkJob
       Error
     }
   }

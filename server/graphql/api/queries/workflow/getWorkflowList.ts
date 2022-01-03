@@ -15,9 +15,6 @@ const getWorkflowList = gql`
                 }
                 DateStart
                 DateLast
-                HyperlinkReport
-                HyperlinkSet
-                HyperlinkJob
                 Error
             }
         }
