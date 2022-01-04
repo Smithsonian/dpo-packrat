@@ -96,7 +96,7 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
 
         if (changeType === ePaginationChange.eRowCount && value !== null) set({ rowCount: value });
 
-        if (changeType === ePaginationChange.eSort && column) set({ sortBy: workflowListSortStringToEnum(column), sortOrder: direction === 'asc' ? true : false });
+        if (changeType === ePaginationChange.eSort && column) set({ sortBy: workflowListSortStringToEnum(column), sortOrder: direction === 'asc' ? true : false, pageNumber: 0 });
 
         await fetchWorkflowList();
     }
