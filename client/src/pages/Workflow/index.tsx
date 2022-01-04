@@ -4,6 +4,7 @@ import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, resolveRoute } from '../../constants';
 import { makeStyles } from '@material-ui/core/styles';
 import WorkflowView from './components/WorkflowView/index';
+import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -25,11 +26,17 @@ function Workflow(): React.ReactElement {
     const classes = useStyles();
 
     return (
-        <Box className={classes.container}>
-            <PrivateRoute path={resolveRoute(HOME_ROUTES.WORKFLOW)}>
-                <PrivateRoute exact path={resolveRoute(HOME_ROUTES.WORKFLOW)} component={WorkflowView} />
-            </PrivateRoute>
-        </Box>
+        <React.Fragment>
+            <Helmet>
+                <title>Workflow</title>
+            </Helmet>
+            <Box className={classes.container}>
+                <PrivateRoute path={resolveRoute(HOME_ROUTES.WORKFLOW)}>
+                    <PrivateRoute exact path={resolveRoute(HOME_ROUTES.WORKFLOW)} component={WorkflowView} />
+                </PrivateRoute>
+            </Box>
+        </React.Fragment>
+
     );
 }
 

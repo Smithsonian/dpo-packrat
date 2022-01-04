@@ -64,9 +64,11 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
             width: 15,
         },
     },
-    initial: {
+    iconInitial: {
         fontSize: 10,
         fontWeight: typography.fontWeightMedium,
+        alignSelf: 'center',
+        justifySelf: 'center'
     },
     // TreeLabel
     treeLabelContainer: {
@@ -194,7 +196,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             }
 
             const variant = getTreeColorVariant(index);
-            const { icon, color } = getObjectInterfaceDetails(objectType, variant, { container: classes.iconContainer, initial: classes.initial });
+            const { icon, color } = getObjectInterfaceDetails(objectType, variant, { container: classes.iconContainer, initial: classes.iconInitial });
 
             const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
 

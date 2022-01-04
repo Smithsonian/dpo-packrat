@@ -45,6 +45,7 @@ function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
                 checked={withDefaultValueBoolean(value, false)}
                 onChange={onChange}
                 {...getUpdatedCheckboxProps(updated)}
+                inputProps={{ 'title': name }}
             />
         </FieldType>
     );

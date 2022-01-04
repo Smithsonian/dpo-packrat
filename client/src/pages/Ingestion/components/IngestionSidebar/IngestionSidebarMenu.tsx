@@ -14,10 +14,11 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         display: 'flex',
         flexDirection: 'column',
         padding: '2em 1em',
-        borderRight: `1px solid ${palette.primary.light}`
+        borderRight: `1px solid ${palette.primary.light}`,
+        backgroundColor: palette.background.default
     },
     menuLabel: {
-        color: palette.primary.contrastText,
+        color: palette.primary.dark,
         fontWeight: typography.fontWeightMedium,
         marginLeft: spacing(2),
         marginBottom: spacing(2)

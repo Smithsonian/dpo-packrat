@@ -38,6 +38,9 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         color: Colors.defaults.white,
         [breakpoints.down('lg')]: {
             height: 30
+        },
+        '&:focus': {
+            outline: '2px solid #8DABC4'
         }
     },
     link: {

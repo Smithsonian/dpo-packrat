@@ -73,7 +73,7 @@ function GenericBreadcrumbsView(props: BreadcrumbsViewProps): React.ReactElement
                     return <div key={index}>{toTitleCase(item.subPath)}</div>;
                 }
                 return (
-                    <Link style={{ textDecoration: 'none' }} to={`/${item.fullPath}`} key={index}>
+                    <Link style={{ textDecoration: 'none', color: 'rgb(0,0,150)' }} to={`/${item.fullPath}`} key={index}>
                         {toTitleCase(item.subPath)}
                     </Link>
                 );

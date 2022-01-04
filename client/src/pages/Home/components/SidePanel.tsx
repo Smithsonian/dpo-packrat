@@ -3,7 +3,7 @@
  *
  * This component renders the collapsable left side panel in homepage UI.
  */
-import { Box, Grid } from '@material-ui/core';
+import { Box, Grid, Typography } from '@material-ui/core';
 import { makeStyles, fade } from '@material-ui/core/styles';
 import React, { memo, useState, useEffect } from 'react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
@@ -11,12 +11,14 @@ import { useParams } from 'react-router';
 import { HOME_ROUTES } from '../../../constants';
 import { Colors } from '../../../theme';
 import SidePanelOption, { SidePanelOptionProps } from './SidePanelOption';
+import { getDownloadSiteMapXMLLink } from '../../../constants';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: palette.primary.dark
+        backgroundColor: palette.primary.dark,
+        maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '13vw' : '8vw')
     },
     menuOptions: {
         display: 'flex',
@@ -24,7 +26,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     },
     bottomOptions: {
         display: 'flex',
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
         padding: spacing(2)
     },
     anchor: {
@@ -38,6 +40,13 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
             cursor: 'pointer',
             backgroundColor: fade(palette.primary.light, 0.2)
         }
+    },
+    footer: {
+        display: 'flex',
+        flexDirection: 'column'
+    },
+    footerRow: {
+        color: 'white'
     }
 }));
 
@@ -53,6 +62,7 @@ type SidePanelParams = {
 function SidePanel(props: SidePanelProps): React.ReactElement {
     const { isExpanded, onToggle } = props;
     const { type }: SidePanelParams = useParams();
+    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
 
     const [selectedOption, setSelectedOption] = useState(type || HOME_ROUTES.INGESTION);
 
@@ -60,7 +70,7 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
         setSelectedOption(type);
     }, [type]);
 
-    const classes = useStyles();
+    const classes = useStyles(isExpanded);
 
     const Options: SidePanelOptionProps[] = [
         // {
@@ -118,7 +128,16 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
             <Box display='flex' flex={1} />
             <Box className={classes.bottomOptions}>
                 {isExpanded ? (
-                    <FaChevronLeft className={classes.anchor} size={20} color={Colors.defaults.white} onClick={onToggle} />
+                    <Box className={classes.footer}>
+                        <Typography><a className={classes.footerRow} href={getDownloadSiteMapXMLLink(REACT_APP_PACKRAT_SERVER_ENDPOINT)} target='_blank' rel='noopener noreferrer'>Site Map</a></Typography>
+                        <Typography className={classes.footerRow}>{`(C) 2020 - ${(new Date().getFullYear())} by Smithsonian Institution`}</Typography>
+                    </Box>
+                ): null}
+
+                {isExpanded ? (
+                    <Box alignSelf={'flex-end'}>
+                        <FaChevronLeft className={classes.anchor} size={20} color={Colors.defaults.white} onClick={onToggle} />
+                    </Box>
                 ) : (
                     <FaChevronRight className={classes.anchor} size={20} color={Colors.defaults.white} onClick={onToggle} />
                 )}
