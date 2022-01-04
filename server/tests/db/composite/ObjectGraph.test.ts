@@ -1,9 +1,17 @@
 import * as DBAPI from '../../../db';
 import * as UTIL from '../api';
 import * as LOG from '../../../utils/logger';
+// import * as H from '../../../utils/helpers';
 import { ObjectGraphTestSetup } from './ObjectGraph.setup';
 
 const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
+
+/*
+afterAll(async done => {
+    await H.Helpers.sleep(2000);
+    done();
+});
+*/
 
 // *******************************************************************
 // DB Composite ObjectGraph
@@ -20,12 +28,9 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.projectDocumentation1, DBAPI.eObjectGraphMode.eAncestors);
         if (!OA)
             return;
-        expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1, OHTS.unit2]));
+        expect(OA.unit).toBeFalsy();
         expect(OA.project).toBeTruthy();
-        if (OA.project)
-            expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeFalsy();
         expect(OA.item).toBeFalsy();
         expect(OA.captureData).toBeFalsy();
@@ -33,8 +38,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         expect(OA.scene).toBeFalsy();
         expect(OA.intermediaryFile).toBeFalsy();
         expect(OA.projectDocumentation).toBeTruthy();
-        if (OA.projectDocumentation)
-            expect(OA.projectDocumentation).toEqual(expect.arrayContaining([OHTS.projectDocumentation1]));
+        expect(OA.projectDocumentation).toEqual(expect.arrayContaining([OHTS.projectDocumentation1]));
         expect(OA.asset).toBeFalsy();
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
@@ -46,18 +50,15 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeFalsy();
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeTruthy();
-        if (OA.subject)
-            expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
         expect(OA.item).toBeTruthy();
-        if (OA.item)
-            expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
         expect(OA.captureData).toBeTruthy();
-        if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
+        expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
         expect(OA.model).toBeFalsy();
         expect(OA.scene).toBeFalsy();
         expect(OA.intermediaryFile).toBeFalsy();
@@ -73,21 +74,17 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeFalsy();
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeTruthy();
-        if (OA.subject)
-            expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
         expect(OA.item).toBeTruthy();
-        if (OA.item)
-            expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
         expect(OA.captureData).toBeTruthy();
-        if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1, OHTS.captureData2]));
+        expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1, OHTS.captureData2]));
         expect(OA.model).toBeTruthy();
-        if (OA.model)
-            expect(OA.model).toEqual(expect.arrayContaining([OHTS.model1]));
+        expect(OA.model).toEqual(expect.arrayContaining([OHTS.model1]));
         expect(OA.scene).toBeFalsy();
         expect(OA.intermediaryFile).toBeFalsy();
         expect(OA.projectDocumentation).toBeFalsy();
@@ -102,24 +99,19 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeFalsy();
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeTruthy();
-        if (OA.subject)
-            expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
         expect(OA.item).toBeTruthy();
-        if (OA.item)
-            expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
         expect(OA.captureData).toBeTruthy();
-        if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1, OHTS.captureData2]));
+        expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1, OHTS.captureData2]));
         expect(OA.model).toBeTruthy();
-        if (OA.model)
-            expect(OA.model).toEqual(expect.arrayContaining([OHTS.model1]));
+        expect(OA.model).toEqual(expect.arrayContaining([OHTS.model1]));
         expect(OA.scene).toBeTruthy();
-        if (OA.scene)
-            expect(OA.scene).toEqual(expect.arrayContaining([OHTS.scene1]));
+        expect(OA.scene).toEqual(expect.arrayContaining([OHTS.scene1]));
         expect(OA.intermediaryFile).toBeFalsy();
         expect(OA.projectDocumentation).toBeFalsy();
         expect(OA.asset).toBeFalsy();
@@ -133,24 +125,19 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeFalsy();
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeTruthy();
-        if (OA.subject)
-            expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
         expect(OA.item).toBeTruthy();
-        if (OA.item)
-            expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
         expect(OA.captureData).toBeTruthy();
-        if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1, OHTS.captureData2]));
+        expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1, OHTS.captureData2]));
         expect(OA.model).toBeTruthy();
-        if (OA.model)
-            expect(OA.model).toEqual(expect.arrayContaining([OHTS.model1, OHTS.model2]));
+        expect(OA.model).toEqual(expect.arrayContaining([OHTS.model1, OHTS.model2]));
         expect(OA.scene).toBeTruthy();
-        if (OA.scene)
-            expect(OA.scene).toEqual(expect.arrayContaining([OHTS.scene1]));
+        expect(OA.scene).toEqual(expect.arrayContaining([OHTS.scene1]));
         expect(OA.intermediaryFile).toBeFalsy();
         expect(OA.projectDocumentation).toBeFalsy();
         expect(OA.asset).toBeFalsy();
@@ -164,23 +151,18 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1, OHTS.unit2]));
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
         expect(OA.project).toBeTruthy();
-        if (OA.project)
-            expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project2]));
         expect(OA.subject).toBeTruthy();
-        if (OA.subject)
-            expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject2]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
         expect(OA.item).toBeTruthy();
-        if (OA.item)
-            expect(OA.item).toEqual(expect.arrayContaining([OHTS.item3]));
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item2]));
         expect(OA.captureData).toBeFalsy();
         expect(OA.model).toBeFalsy();
         expect(OA.scene).toBeFalsy();
         expect(OA.intermediaryFile).toBeTruthy();
-        if (OA.intermediaryFile)
-            expect(OA.intermediaryFile).toEqual(expect.arrayContaining([OHTS.intermediaryFile1]));
+        expect(OA.intermediaryFile).toEqual(expect.arrayContaining([OHTS.intermediaryFile1]));
         expect(OA.projectDocumentation).toBeFalsy();
         expect(OA.asset).toBeFalsy();
         expect(OA.assetVersion).toBeFalsy();
@@ -193,25 +175,21 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeFalsy();
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeTruthy();
-        if (OA.subject)
-            expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
         expect(OA.item).toBeTruthy();
-        if (OA.item)
-            expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
         expect(OA.captureData).toBeTruthy();
-        if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
+        expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
         expect(OA.model).toBeFalsy();
         expect(OA.scene).toBeFalsy();
         expect(OA.intermediaryFile).toBeFalsy();
         expect(OA.projectDocumentation).toBeFalsy();
         expect(OA.asset).toBeTruthy();
-        if (OA.asset)
-            testAssetIDs(OA.asset, [OHTS.asset1]);
+        testAssetIDs(OA.asset, [OHTS.asset1]);
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
@@ -222,28 +200,23 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeFalsy();
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeTruthy();
-        if (OA.subject)
-            expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
         expect(OA.item).toBeTruthy();
-        if (OA.item)
-            expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
         expect(OA.captureData).toBeTruthy();
-        if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
+        expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
         expect(OA.model).toBeFalsy();
         expect(OA.scene).toBeFalsy();
         expect(OA.intermediaryFile).toBeFalsy();
         expect(OA.projectDocumentation).toBeFalsy();
         expect(OA.asset).toBeTruthy();
-        if (OA.asset)
-            testAssetIDs(OA.asset, [OHTS.asset1]);
+        testAssetIDs(OA.asset, [OHTS.asset1]);
         expect(OA.assetVersion).toBeTruthy();
-        if (OA.assetVersion)
-            expect(OA.assetVersion).toEqual(expect.arrayContaining([OHTS.assetVersion1c]));
+        expect(OA.assetVersion).toEqual(expect.arrayContaining([OHTS.assetVersion1c]));
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
     });
@@ -253,18 +226,15 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeFalsy();
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeTruthy();
-        if (OA.subject)
-            expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
         expect(OA.item).toBeTruthy();
-        if (OA.item)
-            expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
         expect(OA.captureData).toBeTruthy();
-        if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
+        expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
         expect(OA.model).toBeFalsy();
         expect(OA.scene).toBeFalsy();
         expect(OA.intermediaryFile).toBeFalsy();
@@ -272,8 +242,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         expect(OA.asset).toBeFalsy();
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeTruthy();
-        if (OA.actor)
-            expect(OA.actor).toEqual(expect.arrayContaining([OHTS.actor1]));
+        expect(OA.actor).toEqual(expect.arrayContaining([OHTS.actor1]));
         expect(OA.stakeholder).toBeFalsy();
     });
 
@@ -282,18 +251,15 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeFalsy();
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeTruthy();
-        if (OA.subject)
-            expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
         expect(OA.item).toBeTruthy();
-        if (OA.item)
-            expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
         expect(OA.captureData).toBeTruthy();
-        if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
+        expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
         expect(OA.model).toBeFalsy();
         expect(OA.scene).toBeFalsy();
         expect(OA.intermediaryFile).toBeFalsy();
@@ -301,8 +267,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         expect(OA.asset).toBeFalsy();
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeTruthy();
-        if (OA.actor)
-            expect(OA.actor).toEqual(expect.arrayContaining([OHTS.actor2]));
+        expect(OA.actor).toEqual(expect.arrayContaining([OHTS.actor2]));
         expect(OA.stakeholder).toBeFalsy();
     });
 
@@ -311,11 +276,9 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1, OHTS.unit2]));
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
         expect(OA.project).toBeTruthy();
-        if (OA.project)
-            expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeFalsy();
         expect(OA.item).toBeFalsy();
         expect(OA.captureData).toBeFalsy();
@@ -327,8 +290,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeTruthy();
-        if (OA.stakeholder)
-            expect(OA.stakeholder).toEqual(expect.arrayContaining([OHTS.stakeholder1]));
+        expect(OA.stakeholder).toEqual(expect.arrayContaining([OHTS.stakeholder1]));
     });
 
     test('DB Composite ObjectGraph Ancestor Subject', async () => {
@@ -336,14 +298,10 @@ describe('DB Composite ObjectGraph Ancestor', () => {
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
-        if (OA.unit)
-            expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit2]));
-        expect(OA.project).toBeTruthy();
-        if (OA.project)
-            expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1, OHTS.project2]));
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit2]));
+        expect(OA.project).toBeFalsy();
         expect(OA.subject).toBeTruthy();
-        if (OA.subject)
-            expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject4]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject4]));
         expect(OA.item).toBeFalsy();
         expect(OA.captureData).toBeFalsy();
         expect(OA.model).toBeFalsy();
@@ -364,10 +322,9 @@ describe('DB Composite ObjectGraph Descendent', () => {
             return;
         expect(OA.unit).toBeTruthy();
         expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeTruthy();
-        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
+        expect(OA.project).toBeFalsy();
         expect(OA.subject).toBeTruthy();
-        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1, OHTS.subject2, OHTS.subject3, OHTS.subject4]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1, OHTS.subject2]));
         expect(OA.item).toBeTruthy();
         expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1, OHTS.item2, OHTS.item3, OHTS.item4]));
         expect(OA.captureData).toBeTruthy();
@@ -378,12 +335,11 @@ describe('DB Composite ObjectGraph Descendent', () => {
         expect(OA.scene).toEqual(expect.arrayContaining([OHTS.scene1]));
         expect(OA.intermediaryFile).toBeTruthy();
         expect(OA.intermediaryFile).toEqual(expect.arrayContaining([OHTS.intermediaryFile1]));
-        expect(OA.projectDocumentation).toBeTruthy();
-        expect(OA.projectDocumentation).toEqual(expect.arrayContaining([OHTS.projectDocumentation1]));
+        expect(OA.projectDocumentation).toBeFalsy();
         expect(OA.asset).toBeTruthy();
-        testAssetIDs(OA.asset, [OHTS.asset1, OHTS.asset2, OHTS.asset3, OHTS.asset4, OHTS.asset5, OHTS.asset6, OHTS.asset7, OHTS.asset8, OHTS.asset9, OHTS.asset10, OHTS.assetT1, OHTS.assetT2, OHTS.assetT3, OHTS.assetT4, OHTS.assetT5]);
+        testAssetIDs(OA.asset, [OHTS.asset1, OHTS.asset2, OHTS.asset3, OHTS.asset4, OHTS.asset5, OHTS.asset6, OHTS.asset7, OHTS.asset8, OHTS.asset10, OHTS.assetT1, OHTS.assetT2, OHTS.assetT3, OHTS.assetT4, OHTS.assetT5]);
         expect(OA.assetVersion).toBeTruthy();
-        expect(OA.assetVersion).toEqual(expect.arrayContaining([OHTS.assetVersion1a, OHTS.assetVersion1b, OHTS.assetVersion1c, OHTS.assetVersion2, OHTS.assetVersion3, OHTS.assetVersion4, OHTS.assetVersion5, OHTS.assetVersion6, OHTS.assetVersion7, OHTS.assetVersion8a, OHTS.assetVersion8b, OHTS.assetVersion8c, OHTS.assetVersion9, OHTS.assetVersion10, OHTS.assetVersionT1, OHTS.assetVersionT2, OHTS.assetVersionT3, OHTS.assetVersionT4, OHTS.assetVersionT5]));
+        expect(OA.assetVersion).toEqual(expect.arrayContaining([OHTS.assetVersion1a, OHTS.assetVersion1b, OHTS.assetVersion1c, OHTS.assetVersion2, OHTS.assetVersion3, OHTS.assetVersion4, OHTS.assetVersion5, OHTS.assetVersion6, OHTS.assetVersion7, OHTS.assetVersion8a, OHTS.assetVersion8b, OHTS.assetVersion8c, OHTS.assetVersion10, OHTS.assetVersionT1, OHTS.assetVersionT2, OHTS.assetVersionT3, OHTS.assetVersionT4, OHTS.assetVersionT5]));
         expect(OA.actor).toBeTruthy();
         expect(OA.actor).toEqual(expect.arrayContaining([OHTS.actor1, OHTS.actor2]));
         expect(OA.stakeholder).toBeTruthy();
@@ -391,30 +347,28 @@ describe('DB Composite ObjectGraph Descendent', () => {
     });
 
     test('DB Composite ObjectGraph Descendent Project', async () => {
-        const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.project1, DBAPI.eObjectGraphMode.eDescendents);
+        const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.project2, DBAPI.eObjectGraphMode.eDescendents);
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
         expect(OA.project).toBeTruthy();
-        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
-        expect(OA.subject).toBeTruthy();
-        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject2, OHTS.subject3, OHTS.subject4]));
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project2]));
+        expect(OA.subject).toBeFalsy();
         expect(OA.item).toBeTruthy();
-        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item3, OHTS.item4]));
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item2, OHTS.item3, OHTS.item4]));
         expect(OA.captureData).toBeFalsy();
         expect(OA.model).toBeFalsy();
         expect(OA.scene).toBeFalsy();
         expect(OA.intermediaryFile).toBeTruthy();
         expect(OA.intermediaryFile).toEqual(expect.arrayContaining([OHTS.intermediaryFile1]));
-        expect(OA.projectDocumentation).toBeTruthy();
-        expect(OA.projectDocumentation).toEqual(expect.arrayContaining([OHTS.projectDocumentation1]));
+        expect(OA.projectDocumentation).toBeFalsy();
         expect(OA.asset).toBeTruthy();
-        testAssetIDs(OA.asset, [OHTS.asset9, OHTS.asset10]);
+        testAssetIDs(OA.asset, [OHTS.asset10]);
         expect(OA.assetVersion).toBeTruthy();
-        expect(OA.assetVersion).toEqual(expect.arrayContaining([OHTS.assetVersion9, OHTS.assetVersion10]));
+        expect(OA.assetVersion).toEqual(expect.arrayContaining([OHTS.assetVersion10]));
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeTruthy();
-        expect(OA.stakeholder).toEqual(expect.arrayContaining([OHTS.stakeholder1, OHTS.stakeholder2]));
+        expect(OA.stakeholder).toEqual(expect.arrayContaining([OHTS.stakeholder2]));
     });
 
     test('DB Composite ObjectGraph Descendent Subject', async () => {
@@ -433,10 +387,13 @@ describe('DB Composite ObjectGraph Descendent', () => {
         expect(OA.model).toEqual(expect.arrayContaining([OHTS.model1, OHTS.model2, OHTS.model3, OHTS.model4]));
         expect(OA.scene).toBeTruthy();
         expect(OA.scene).toEqual(expect.arrayContaining([OHTS.scene1]));
-        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.intermediaryFile).toBeTruthy();
+        expect(OA.intermediaryFile).toEqual(expect.arrayContaining([OHTS.intermediaryFile1]));
         expect(OA.projectDocumentation).toBeFalsy();
         expect(OA.asset).toBeTruthy();
-        testAssetIDs(OA.asset, [OHTS.asset1, OHTS.asset2, OHTS.asset3, OHTS.asset4, OHTS.asset5, OHTS.asset6, OHTS.asset7, OHTS.asset8, OHTS.assetT1, OHTS.assetT2, OHTS.assetT3, OHTS.assetT4, OHTS.assetT5]);
+        // LOG.info(`Observed Assets: ${JSON.stringify(OA.asset, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+        // LOG.info(`Expected Assets: ${JSON.stringify([OHTS.asset1, OHTS.asset2, OHTS.asset3, OHTS.asset4, OHTS.asset5, OHTS.asset6, OHTS.asset7, OHTS.asset8, OHTS.assetT1, OHTS.assetT2, OHTS.assetT3, OHTS.assetT4, OHTS.assetT5], H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+        testAssetIDs(OA.asset, [OHTS.asset1, OHTS.asset2, OHTS.asset3, OHTS.asset4, OHTS.asset5, OHTS.asset6, OHTS.asset7, OHTS.asset8, OHTS.asset10, OHTS.assetT1, OHTS.assetT2, OHTS.assetT3, OHTS.assetT4, OHTS.assetT5]);
         expect(OA.assetVersion).toBeTruthy();
         expect(OA.assetVersion).toEqual(expect.arrayContaining([OHTS.assetVersion1a, OHTS.assetVersion1b, OHTS.assetVersion1c, OHTS.assetVersion2, OHTS.assetVersion3, OHTS.assetVersion4, OHTS.assetVersion5, OHTS.assetVersion6, OHTS.assetVersion7, OHTS.assetVersion8a, OHTS.assetVersion8b, OHTS.assetVersion8c, OHTS.assetVersionT1, OHTS.assetVersionT2, OHTS.assetVersionT3, OHTS.assetVersionT4, OHTS.assetVersionT5]));
         expect(OA.actor).toBeTruthy();
@@ -571,8 +528,7 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
             return;
         expect(OA.unit).toBeTruthy();
         expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeTruthy();
-        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
+        expect(OA.project).toBeFalsy();
         expect(OA.subject).toBeTruthy();
         expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1, OHTS.subject2]));
         expect(OA.item).toBeFalsy();
@@ -596,9 +552,9 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
         expect(OA.unit).toBeFalsy();
         expect(OA.project).toBeTruthy();
         expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
-        expect(OA.subject).toBeTruthy();
-        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject2, OHTS.subject3, OHTS.subject4]));
-        expect(OA.item).toBeFalsy();
+        expect(OA.subject).toBeFalsy();
+        expect(OA.item).toBeTruthy();
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
         expect(OA.captureData).toBeFalsy();
         expect(OA.model).toBeFalsy();
         expect(OA.scene).toBeFalsy();
@@ -609,7 +565,7 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeTruthy();
-        expect(OA.stakeholder).toEqual(expect.arrayContaining([OHTS.stakeholder1, OHTS.stakeholder2]));
+        expect(OA.stakeholder).toEqual(expect.arrayContaining([OHTS.stakeholder1]));
     });
 
     test('DB Composite ObjectGraph Descendent Subject Depth 1', async () => {
@@ -754,10 +710,9 @@ describe('DB Composite ObjectGraph All', () => {
             return;
         expect(OA.unit).toBeTruthy();
         expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeTruthy();
-        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
+        expect(OA.project).toBeFalsy();
         expect(OA.subject).toBeTruthy();
-        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1, OHTS.subject2, OHTS.subject3, OHTS.subject4]));
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1, OHTS.subject2]));
         expect(OA.item).toBeTruthy();
         expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1, OHTS.item2, OHTS.item3, OHTS.item4]));
         expect(OA.captureData).toBeTruthy();
@@ -768,12 +723,11 @@ describe('DB Composite ObjectGraph All', () => {
         expect(OA.scene).toEqual(expect.arrayContaining([OHTS.scene1]));
         expect(OA.intermediaryFile).toBeTruthy();
         expect(OA.intermediaryFile).toEqual(expect.arrayContaining([OHTS.intermediaryFile1]));
-        expect(OA.projectDocumentation).toBeTruthy();
-        expect(OA.projectDocumentation).toEqual(expect.arrayContaining([OHTS.projectDocumentation1]));
+        expect(OA.projectDocumentation).toBeFalsy();
         expect(OA.asset).toBeTruthy();
-        testAssetIDs(OA.asset, [OHTS.asset1, OHTS.asset2, OHTS.asset3, OHTS.asset4, OHTS.asset5, OHTS.asset6, OHTS.asset7, OHTS.asset8, OHTS.asset9, OHTS.asset10, OHTS.assetT1, OHTS.assetT2, OHTS.assetT3, OHTS.assetT4, OHTS.assetT5]);
+        testAssetIDs(OA.asset, [OHTS.asset1, OHTS.asset2, OHTS.asset3, OHTS.asset4, OHTS.asset5, OHTS.asset6, OHTS.asset7, OHTS.asset8, OHTS.asset10, OHTS.assetT1, OHTS.assetT2, OHTS.assetT3, OHTS.assetT4, OHTS.assetT5]);
         expect(OA.assetVersion).toBeTruthy();
-        expect(OA.assetVersion).toEqual(expect.arrayContaining([OHTS.assetVersion1a, OHTS.assetVersion1b, OHTS.assetVersion1c, OHTS.assetVersion2, OHTS.assetVersion3, OHTS.assetVersion4, OHTS.assetVersion5, OHTS.assetVersion6, OHTS.assetVersion7, OHTS.assetVersion8a, OHTS.assetVersion8b, OHTS.assetVersion8c, OHTS.assetVersion9, OHTS.assetVersion10, OHTS.assetVersionT1, OHTS.assetVersionT2, OHTS.assetVersionT3, OHTS.assetVersionT4, OHTS.assetVersionT5]));
+        expect(OA.assetVersion).toEqual(expect.arrayContaining([OHTS.assetVersion1a, OHTS.assetVersion1b, OHTS.assetVersion1c, OHTS.assetVersion2, OHTS.assetVersion3, OHTS.assetVersion4, OHTS.assetVersion5, OHTS.assetVersion6, OHTS.assetVersion7, OHTS.assetVersion8a, OHTS.assetVersion8b, OHTS.assetVersion8c, OHTS.assetVersion10, OHTS.assetVersionT1, OHTS.assetVersionT2, OHTS.assetVersionT3, OHTS.assetVersionT4, OHTS.assetVersionT5]));
         expect(OA.actor).toBeTruthy();
         expect(OA.actor).toEqual(expect.arrayContaining([OHTS.actor1, OHTS.actor2]));
         expect(OA.stakeholder).toBeTruthy();
@@ -786,7 +740,8 @@ describe('DB Composite ObjectGraph All', () => {
             return;
         expect(OA.unit).toBeTruthy();
         expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
-        expect(OA.project).toBeFalsy();
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
         expect(OA.subject).toBeTruthy();
         expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
         expect(OA.item).toBeTruthy();
@@ -820,6 +775,7 @@ describe('DB Composite ObjectGraph All', () => {
 // ************************************************************
 // Keep these last, as these mess up the hierarchy!
 // ************************************************************
+
 describe('DB Composite ObjectGraph.fetch Invalid', () => {
     test('DB Composite ObjectGraph Invalid Object Wiring Ascending 1', async () => {
         LOG.info('NOTICE: Errors that follow are due to invalid wiring and are expected!', LOG.LS.eTEST);
@@ -907,5 +863,5 @@ function testAssetIDs(assetReceived: DBAPI.Asset[] | null, assetExpected: (DBAPI
             expectedIDs.push(asset.idAsset);
     for (const asset of assetReceived)
         receivedIDs.push(asset.idAsset);
-    expect(expectedIDs).toEqual(expect.arrayContaining(receivedIDs));
+    expect(receivedIDs).toEqual(expect.arrayContaining(expectedIDs));
 }

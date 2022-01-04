@@ -1,16 +1,16 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
-import * as LOG from '../../../utils/logger';
-import * as H from '../../../utils/helpers';
+// import * as LOG from '../../../utils/logger';
+// import * as H from '../../../utils/helpers';
 import { ObjectGraphTestSetup } from './ObjectGraph.setup';
 
 const OGTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
-
+/*
 afterAll(async done => {
     await H.Helpers.sleep(4000);
     done();
 });
-
+*/
 // *******************************************************************
 // DB Composite LicenseResolver
 // *******************************************************************
@@ -22,16 +22,16 @@ describe('DB Composite LicenseResolver', () => {
 
     test('LicenseResolver', async () => {
         expect(await OGTS.assignLicenses()).toBeTruthy();
-        expect(await fetchLicenseResolver(OGTS.idSOUnit1, false, OGTS.licenseCC0)).toBeTruthy();
-        expect(await fetchLicenseResolver(OGTS.idSOUnit2, false, OGTS.licenseCC0)).toBeTruthy();
-        expect(await fetchLicenseResolver(OGTS.idSOProject1, false, OGTS.licenseRestricted)).toBeTruthy();
-        expect(await fetchLicenseResolver(OGTS.idSOSubject1, false, OGTS.licenseDownload)).toBeTruthy();
-        expect(await fetchLicenseResolver(OGTS.idSOSubject2, false, OGTS.licenseView)).toBeTruthy();
-        expect(await fetchLicenseResolver(OGTS.idSOSubject4, true, OGTS.licenseRestricted)).toBeTruthy();
-        expect(await fetchLicenseResolver(OGTS.idSOItem1, true, OGTS.licenseDownload)).toBeTruthy();
-        expect(await fetchLicenseResolver(OGTS.idSOItem2, true, OGTS.licenseDownload)).toBeTruthy();
-        expect(await fetchLicenseResolver(OGTS.idSOCaptureData1, false, OGTS.licenseCC0)).toBeTruthy();
-        expect(await fetchLicenseResolver(OGTS.idSOCaptureData2, true, OGTS.licenseDownload)).toBeTruthy();
+        expect(await fetchLicenseResolver(OGTS.idSOUnit1, false, OGTS.licenseCC0, 'unit1')).toBeTruthy();
+        expect(await fetchLicenseResolver(OGTS.idSOUnit2, false, OGTS.licenseCC0, 'unit2')).toBeTruthy();
+        expect(await fetchLicenseResolver(OGTS.idSOProject1, false, OGTS.licenseRestricted, 'project1')).toBeTruthy();
+        expect(await fetchLicenseResolver(OGTS.idSOSubject1, false, OGTS.licenseDownload, 'subject1')).toBeTruthy();
+        expect(await fetchLicenseResolver(OGTS.idSOSubject2, false, OGTS.licenseView, 'subject2')).toBeTruthy();
+        expect(await fetchLicenseResolver(OGTS.idSOSubject4, true, OGTS.licenseCC0, 'subject4')).toBeTruthy();
+        expect(await fetchLicenseResolver(OGTS.idSOItem1, true, OGTS.licenseRestricted, 'item1')).toBeTruthy();
+        expect(await fetchLicenseResolver(OGTS.idSOItem2, true, OGTS.licenseDownload, 'item2')).toBeTruthy();
+        expect(await fetchLicenseResolver(OGTS.idSOCaptureData1, false, OGTS.licenseCC0, 'captureData1')).toBeTruthy();
+        expect(await fetchLicenseResolver(OGTS.idSOCaptureData2, true, OGTS.licenseRestricted, 'captureData2')).toBeTruthy();
     });
 
     test('LicenseCache', async () => {
@@ -43,8 +43,8 @@ describe('DB Composite LicenseResolver', () => {
 });
 
 async function fetchLicenseResolver(idSystemObject: number, expectInherited: boolean,
-    expectedLicense: DBAPI.License | null): Promise<DBAPI.LicenseResolver | null> {
-    LOG.info(`fetchLicenseResolver(${idSystemObject}, ${expectInherited}, ${JSON.stringify(expectedLicense)})`, LOG.LS.eTEST);
+    expectedLicense: DBAPI.License | null, _testCase: string): Promise<DBAPI.LicenseResolver | null> {
+    // LOG.info(`fetchLicenseResolver(${testCase} ${idSystemObject}, ${expectInherited}, ${JSON.stringify(expectedLicense)})`, LOG.LS.eTEST);
     const LR1: DBAPI.LicenseResolver | null = await DBAPI.LicenseResolver.fetch(idSystemObject);
     expect(LR1).toBeTruthy();
     if (LR1) {
