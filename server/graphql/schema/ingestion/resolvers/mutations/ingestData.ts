@@ -1789,66 +1789,68 @@ export function isValidParentChildRelationship(parent: DBAPI.eSystemObjectType, 
     /*
         *NOTE: when updating this relationship validation function,
         make sure to also apply changes to the client-side version located at
-        client/src/util/repository.tsx to maintain consistency
+        ingestData.ts to maintain consistency; ObjectGraph.ts also has it's own version of this logic,
+        in a different form.
         **NOTE: this server-side validation function will be validating a selected item AFTER adding it,
         which means the maximum connection count will be different from those seen in repository.tsx
-
-        xproject child to 1 - many unit parent
-        -skip on stakeholders for now
-        -skip on stakeholders for now
-        xitem child to only 1 parent project parent
-        xitem child to multiple subject parent
-        xCD child to 1 - many item parent
-        xmodel child to 1 - many parent Item
-        xscene child to 1 or more item parent
-        xmodel child to 0 - many CD parent
-        xCD child to 0 - many CD parent
-        -skip on actor for now
-        xmodel child to 0 to many model parent
-        xscene child to 1 to many model parent
-        -skip on actor for now
-        xmodel child to only 1 scene parent
-        -skip on IF for now
-        -skip on PD for now
     */
 
     const existingAndNewRelationships = [...existingParentRelationships, ...selected];
     switch (child) {
+        case DBAPI.eSystemObjectType.eUnit:
         case DBAPI.eSystemObjectType.eProject:
-            result = parent === DBAPI.eSystemObjectType.eUnit;
+        case DBAPI.eSystemObjectType.eSubject:
+        case DBAPI.eSystemObjectType.eAsset:
+        case DBAPI.eSystemObjectType.eAssetVersion:
             break;
-        case DBAPI.eSystemObjectType.eItem: {
-            if (parent === DBAPI.eSystemObjectType.eSubject) result = true;
 
-            if (parent === DBAPI.eSystemObjectType.eProject) {
-                if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eProject, 2);
-                } else {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eProject, 1);
-                }
-            }
+        case DBAPI.eSystemObjectType.eItem:
+            if (parent === DBAPI.eSystemObjectType.eSubject)
+                result = true;
+            else if (parent === DBAPI.eSystemObjectType.eProject)
+                result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eProject, isAddingSource ? 2 : 1);
             break;
-        }
-        case DBAPI.eSystemObjectType.eCaptureData: {
-            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eItem) result = true;
-            break;
-        }
-        case DBAPI.eSystemObjectType.eModel: {
-            if (parent === DBAPI.eSystemObjectType.eScene) {
-                if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eScene, 2);
-                } else {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eScene, 1);
-                }
-            }
 
-            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eModel || parent === DBAPI.eSystemObjectType.eItem) result = true;
+        case DBAPI.eSystemObjectType.eCaptureData:
+            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eItem)
+                result = true;
             break;
-        }
-        case DBAPI.eSystemObjectType.eScene: {
-            if (parent === DBAPI.eSystemObjectType.eItem || parent === DBAPI.eSystemObjectType.eModel) result = true;
+
+        case DBAPI.eSystemObjectType.eModel:
+            if (parent === DBAPI.eSystemObjectType.eScene)
+                result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eScene, isAddingSource ? 2 : 1);
+            else if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eModel || parent === DBAPI.eSystemObjectType.eItem)
+                result = true;
             break;
-        }
+
+        case DBAPI.eSystemObjectType.eScene:
+            if (parent === DBAPI.eSystemObjectType.eItem || parent === DBAPI.eSystemObjectType.eModel)
+                result = true;
+            break;
+
+        case DBAPI.eSystemObjectType.eIntermediaryFile:
+            if (parent === DBAPI.eSystemObjectType.eItem)
+                result = true;
+            break;
+
+        case DBAPI.eSystemObjectType.eProjectDocumentation:
+            if (parent === DBAPI.eSystemObjectType.eProject)
+                result = true;
+            break;
+
+        case DBAPI.eSystemObjectType.eActor:
+            if (parent === DBAPI.eSystemObjectType.eCaptureData ||
+                parent === DBAPI.eSystemObjectType.eModel ||
+                parent === DBAPI.eSystemObjectType.eScene ||
+                parent === DBAPI.eSystemObjectType.eIntermediaryFile ||
+                parent === DBAPI.eSystemObjectType.eUnit)
+                result = true;
+            break;
+
+        case DBAPI.eSystemObjectType.eStakeholder:
+            if (parent === DBAPI.eSystemObjectType.eUnit || parent === DBAPI.eSystemObjectType.eProject)
+                result = true;
+            break;
     }
 
     return result;

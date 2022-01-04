@@ -431,10 +431,13 @@ export class ObjectGraph {
             if (relatedType &&
                 (relatedType.eObjectType != eSystemObjectType.eAsset &&
                 relatedType.eObjectType != eSystemObjectType.eModel &&
-                relatedType.eObjectType != eSystemObjectType.eActor))
+                relatedType.eObjectType != eSystemObjectType.eActor &&
+                relatedType.eObjectType != eSystemObjectType.eCaptureData))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
-            if (relatedType && relatedType.eObjectType != eSystemObjectType.eItem)
+            if (relatedType &&
+                relatedType.eObjectType != eSystemObjectType.eItem &&
+                relatedType.eObjectType != eSystemObjectType.eCaptureData)
                 this.validHierarchy = false;
         }
 
@@ -506,7 +509,8 @@ export class ObjectGraph {
                 relatedType.eObjectType != eSystemObjectType.eIntermediaryFile))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
-            if (relatedType && relatedType.eObjectType != eSystemObjectType.eSubject)
+            if (relatedType && relatedType.eObjectType != eSystemObjectType.eProject &&
+                relatedType && relatedType.eObjectType != eSystemObjectType.eSubject)
                 this.validHierarchy = false;
         }
 
@@ -589,12 +593,12 @@ export class ObjectGraph {
         sourceType.eObjectType = eSystemObjectType.eProject;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eSubject &&
+                (relatedType.eObjectType != eSystemObjectType.eItem &&
                 relatedType.eObjectType != eSystemObjectType.eProjectDocumentation &&
                 relatedType.eObjectType != eSystemObjectType.eStakeholder))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
-            if (relatedType && relatedType.eObjectType != eSystemObjectType.eUnit)
+            if (relatedType)
                 this.validHierarchy = false;
         }
 
@@ -750,8 +754,7 @@ export class ObjectGraph {
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eUnit &&
-                relatedType.eObjectType != eSystemObjectType.eProject))
+                (relatedType.eObjectType != eSystemObjectType.eUnit))
                 this.validHierarchy = false;
         }
 
@@ -793,7 +796,6 @@ export class ObjectGraph {
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType &&
                 (relatedType.eObjectType != eSystemObjectType.eSubject &&
-                relatedType.eObjectType != eSystemObjectType.eProject &&
                 relatedType.eObjectType != eSystemObjectType.eActor &&
                 relatedType.eObjectType != eSystemObjectType.eStakeholder))
                 this.validHierarchy = false;

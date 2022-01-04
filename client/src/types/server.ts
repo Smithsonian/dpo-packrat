@@ -339,7 +339,9 @@ export enum eWorkflowListSortColumns {
     eOwner = 4,
     eStart = 5,
     eLast = 6,
-    eError = 7,
+    eReport = 7,
+    eJobRun = 8,
+    eError = 9,
     eDefault = 0
 }
 
@@ -351,6 +353,8 @@ export const workflowListSortStringToEnum = (col: string): eWorkflowListSortColu
         case 'Owner': return eWorkflowListSortColumns.eOwner;
         case 'DateStart': return eWorkflowListSortColumns.eStart;
         case 'DateLast': return eWorkflowListSortColumns.eLast;
+        case 'idWorkflowReport': return eWorkflowListSortColumns.eReport;
+        case 'idJobRun': return eWorkflowListSortColumns.eJobRun;
         case 'Error': return eWorkflowListSortColumns.eError;
         default: return eWorkflowListSortColumns.eDefault;
     }
@@ -363,6 +367,8 @@ export const workflowListSortEnumToString = (col: eWorkflowListSortColumns): str
         case eWorkflowListSortColumns.eOwner: return 'Owner';
         case eWorkflowListSortColumns.eStart: return 'DateStart';
         case eWorkflowListSortColumns.eLast: return 'DateLast';
+        case eWorkflowListSortColumns.eReport: return 'idWorkflowReport';
+        case eWorkflowListSortColumns.eJobRun: return 'idJobRun';
         case eWorkflowListSortColumns.eError: return 'Error';
         case eWorkflowListSortColumns.eSet: return 'idWorkflowSet';
         default: return 'idWorkflowSet';

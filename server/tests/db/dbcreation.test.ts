@@ -5323,9 +5323,9 @@ describe('DB Fetch Special Test Suite', () => {
     test('DB Fetch Special: Project.fetchMasterFromSubjects', async () => {
         let projectFetch: DBAPI.Project[] | null = null;
         if (subject && subjectNulls) {
-            projectFetch = await DBAPI.Project.fetchMasterFromSubjects([subject.idSubject, subjectNulls.idSubject]);
-            if (projectFetch && project && project2)
-                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+            projectFetch = await DBAPI.Project.fetchRelatedToSubjects([subject.idSubject, subjectNulls.idSubject]);
+            if (projectFetch && project)
+                expect(projectFetch).toEqual(expect.arrayContaining([project]));
         }
         expect(projectFetch).toBeTruthy();
     });
@@ -5346,26 +5346,6 @@ describe('DB Fetch Special Test Suite', () => {
             projectFetch = await DBAPI.Project.fetchMasterFromProjectDocumentations([projectDocumentation.idProjectDocumentation]);
             if (projectFetch && project && project2)
                 expect(projectFetch).toEqual(expect.arrayContaining([project]));
-        }
-        expect(projectFetch).toBeTruthy();
-    });
-
-    test('DB Fetch Special: Project.fetchDerivedFromUnits', async () => {
-        let projectFetch: DBAPI.Project[] | null = null;
-        if (unit && unit2) {
-            projectFetch = await DBAPI.Project.fetchDerivedFromUnits([unit.idUnit, unit2.idUnit]);
-            if (projectFetch && project && project2)
-                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
-        }
-        expect(projectFetch).toBeTruthy();
-    });
-
-    test('DB Fetch Special: Project.fetchFromSubjectsUnits', async () => {
-        let projectFetch: DBAPI.Project[] | null = null;
-        if (subject && subjectNulls) {
-            projectFetch = await DBAPI.Project.fetchDerivedFromSubjectsUnits([subject.idSubject, subjectNulls.idSubject]);
-            if (projectFetch && project && project2)
-                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
         }
         expect(projectFetch).toBeTruthy();
     });
@@ -5498,6 +5478,26 @@ describe('DB Fetch Special Test Suite', () => {
         let xrefFetch: DBAPI.SystemObjectXref[] | null = null;
         if (systemObjectSubject && systemObjectScene) {
             xrefFetch = await DBAPI.SystemObjectXref.fetchXref(systemObjectSubject.idSystemObject, systemObjectScene.idSystemObject);
+            if (xrefFetch && systemObjectXref)
+                expect(xrefFetch).toEqual(expect.arrayContaining([systemObjectXref]));
+        }
+        expect(xrefFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: SystemObjectXref.fetchMasters', async () => {
+        let xrefFetch: DBAPI.SystemObjectXref[] | null = null;
+        if (systemObjectScene) {
+            xrefFetch = await DBAPI.SystemObjectXref.fetchMasters(systemObjectScene.idSystemObject);
+            if (xrefFetch && systemObjectXref)
+                expect(xrefFetch).toEqual(expect.arrayContaining([systemObjectXref]));
+        }
+        expect(xrefFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: SystemObjectXref.fetchDerived', async () => {
+        let xrefFetch: DBAPI.SystemObjectXref[] | null = null;
+        if (systemObjectSubject) {
+            xrefFetch = await DBAPI.SystemObjectXref.fetchDerived(systemObjectSubject.idSystemObject);
             if (xrefFetch && systemObjectXref)
                 expect(xrefFetch).toEqual(expect.arrayContaining([systemObjectXref]));
         }
@@ -7741,11 +7741,9 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', 'foo', null, -1)).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', 'foo', 'foo', null)).toBeNull();
         expect(await DBAPI.Project.fetch(0)).toBeNull();
-        expect(await DBAPI.Project.fetchDerivedFromUnits([])).toBeNull();
-        expect(await DBAPI.Project.fetchMasterFromSubjects([])).toBeNull();
+        expect(await DBAPI.Project.fetchRelatedToSubjects([])).toBeNull();
         expect(await DBAPI.Project.fetchMasterFromStakeholders([])).toBeNull();
         expect(await DBAPI.Project.fetchMasterFromProjectDocumentations([])).toBeNull();
-        expect(await DBAPI.Project.fetchDerivedFromSubjectsUnits([])).toBeNull();
         expect(await DBAPI.Project.fetchMasterFromStakeholders([])).toBeNull();
         expect(await DBAPI.Project.fetchMasterFromProjectDocumentations([])).toBeNull();
         expect(await DBAPI.ProjectDocumentation.fetch(0)).toBeNull();
@@ -7827,6 +7825,8 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObjectXref.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectXref.fetchXref(0, 1)).toBeNull();
         expect(await DBAPI.SystemObjectXref.fetchXref(1, 0)).toBeNull();
+        expect(await DBAPI.SystemObjectXref.fetchMasters(0)).toBeNull();
+        expect(await DBAPI.SystemObjectXref.fetchDerived(0)).toBeNull();
         expect(await DBAPI.Unit.fetch(0)).toBeNull();
         expect(await DBAPI.Unit.fetchMasterFromProjects([])).toBeNull();
         expect(await DBAPI.Unit.fetchFromUnitEdanAbbreviation('')).toBeNull();
