@@ -6,7 +6,7 @@ export default async function getIngestionProjectsForSubjects(_: Parent, args: Q
     const { input } = args;
     const { idSubjects } = input;
 
-    const Project = await DBAPI.Project.fetchMasterFromSubjects(idSubjects);
+    const Project = await DBAPI.Project.fetchRelatedToSubjects(idSubjects);
 
     if (Project) {
         if (Project.length) {

@@ -39,12 +39,12 @@ const WorkflowSet: Set<WF.IWorkflow> = new Set<WF.IWorkflow>();
 
 let modelTestAvailable: boolean | null = null;
 const MTS: TESTMODEL.ModelTestSetup = new TESTMODEL.ModelTestSetup();
-
+/*
 afterAll(async done => {
     await H.Helpers.sleep(10000);
     done();
 });
-
+*/
 describe('JobNS Init', () => {
     test('JobFactory.getInstance', async () => {
         jest.setTimeout(testTimeout);

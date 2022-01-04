@@ -29,6 +29,8 @@ module.exports = {
         // '**/tests/auth/local/logout.test.ts',
         // '**/tests/collections/EdanCollection.test.ts',
         // '**/tests/db/dbcreation.test.ts',
+        // '**/tests/db/composite/IngestionSubjectProjectAlgo.test.ts',
+        // '**/tests/db/composite/LicenseResolver.test.ts',
         // '**/tests/db/composite/ObjectGraph.test.ts',
         // '**/tests/db/composite/SubjectUnitIdentifier.test.ts',
         // '**/tests/job/impl/JobNS.test.ts',

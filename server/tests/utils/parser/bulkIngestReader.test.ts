@@ -156,21 +156,21 @@ async function testLoad(fileName: string | null, assetVersion: DBAPI.AssetVersio
         return !expectSuccess;
 
     const ingestedMetadata: IngestMetadata[] = BIR.ingestedObjects;
-    // LOG.info(`ingestedMetadata: ${JSON.stringify(ingestedMetadata)}`, LOG.LS.eTEST);
+    // LOG.info(`testLoad(${fileName}) ingestedMetadata: ${JSON.stringify(ingestedMetadata)}`, LOG.LS.eTEST);
     expect(ingestedMetadata.length).toBeGreaterThan(0);
 
     // Doctor ingestedMetadata when requested
     if (subject)
         ingestedMetadata[0].idSubject = subject.idSubject;
-    const projectsExpected: boolean = (ingestedMetadata[0].idSubject != 0);
 
-    const projects: DBAPI.Project[] | null = await BulkIngestReader.computeProjects(ingestedMetadata[0]);
-    // LOG.info(`projects: ${JSON.stringify(projects)}`, LOG.LS.eTEST);
-    if (projectsExpected) {
-        expect(projects).toBeTruthy();
-        if (projects)
-            expect(projects.length).toBeGreaterThan(0);
-    }
+    // const projectsExpected: boolean = (ingestedMetadata[0].idSubject != 0);
+    // const projects: DBAPI.Project[] | null = await BulkIngestReader.computeProjects(ingestedMetadata[0]);
+    // LOG.info(`testLoad(${fileName}) projectsExpected ${projectsExpected} projects: ${JSON.stringify(projects)}`, LOG.LS.eTEST);
+    // if (projectsExpected) {
+    //     expect(projects).toBeTruthy();
+    //     if (projects)
+    //         expect(projects.length).toBeGreaterThan(0);
+    // }
 
     if (!autoClose) {
         ioResults = await BIR.close();
