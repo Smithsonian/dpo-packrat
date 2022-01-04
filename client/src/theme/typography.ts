@@ -12,7 +12,7 @@ function pxToRem(value: number): string {
     return `${value / 16}rem`;
 }
 
-function createTypographyOverrides(breakpoints: Breakpoints): Overrides {
+function createOverrides(breakpoints: Breakpoints): Overrides {
     return {
         MuiTableCell: {
             root: {
@@ -57,8 +57,46 @@ function createTypographyOverrides(breakpoints: Breakpoints): Overrides {
                     fontSize: pxToRem(12)
                 }
             }
+        },
+        MuiInputBase: {
+            input: {
+                '&:-webkit-autofill': {
+                    animationDuration: '4s'
+                },
+                '&:focus': {
+                    outline: '0.5px solid rgba(141, 171, 196, 0.4)',
+                }
+            }
+        },
+        MuiButtonBase: {
+            root: {
+                '&:focus': {
+                    outline: '0.5px solid rgba(141, 171, 196, 0.4)'
+                }
+            }
+        },
+        MuiButton: {
+            contained: {
+                '&.Mui-disabled': {
+                    color: '#37474f',
+                    backgroundColor: '#d3d3d3'
+                }
+            }
+        },
+        MuiIconButton: {
+            root: {
+                outline: '0.5px none rgba(141, 171, 196, 0.4)',
+                '&:focus': {
+                    outline: '0.5px solid rgba(141, 171, 196, 0.4)'
+                }
+            }
+        },
+        MuiTab: {
+            root: {
+                outline: '0.5px hidden rgba(141, 171, 196, 0.4)'
+            }
         }
     };
 }
 
-export { createTypographyOverrides };
+export { createOverrides };

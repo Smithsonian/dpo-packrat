@@ -23,7 +23,6 @@ const useStyles = makeStyles(({ palette }) => ({
         overflow: 'hidden',
         borderRadius: 5,
         marginTop: 2,
-        color: ({ isSelected }: IngestionSidebarMenuOptionProps) => (isSelected ? palette.primary.main : palette.primary.dark),
         backgroundColor: ({ isSelected }: IngestionSidebarMenuOptionProps) => (isSelected ? palette.primary.light : Colors.defaults.white),
         '&:hover': {
             cursor: ({ enabled }: IngestionSidebarMenuOptionProps) => (enabled ? 'pointer' : undefined),
@@ -44,13 +43,13 @@ export interface IngestionSidebarMenuOptionProps {
 }
 
 function IngestionSidebarMenuOption(props: IngestionSidebarMenuOptionProps): React.ReactElement {
-    const { title, subtitle, enabled, route } = props;
+    const { title, subtitle, enabled, route, isSelected } = props;
 
     const classes = useStyles(props);
 
     const subContent: React.ReactNode = (
         <React.Fragment>
-            <Typography color='inherit' variant='body1'>
+            <Typography style={{ color: isSelected ? '#0079C4' : '#2C405A' }} variant='body1'>
                 {title}
             </Typography>
             <Typography color='textSecondary' variant='caption'>

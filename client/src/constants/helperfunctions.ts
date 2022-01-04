@@ -133,3 +133,7 @@ export const attachSystemObjectUploadRedirect = (idSystemObject: number, ObjectT
 };
 
 export const truncateWithEllipses = (text: string, max: number) => text.substr(0, max - 1) + (text.length > max ? ' ...' : '');
+
+export function getDownloadSiteMapXMLLink(serverEndPoint: string | undefined): string {
+    return `${serverEndPoint}/download/sitemap.xml`;
+}

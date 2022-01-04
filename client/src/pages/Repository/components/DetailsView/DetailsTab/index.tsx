@@ -128,7 +128,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     let tabPanels: React.ReactNode = null;
     const RelatedTab = (index: number) => (
-        <TabPanel value={tab} index={index}>
+        <TabPanel value={tab} index={index} id={`tab-${index}`}>
             <Box>
                 {assetOwner &&
                 (
@@ -167,19 +167,19 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     );
 
     const ObjectVersionTableTab = (index: number, systemObjectType?: eSystemObjectType) => (
-        <TabPanel value={tab} index={index}>
+        <TabPanel value={tab} index={index} id={`tab-${index}`}>
             <ObjectVersionTable idSystemObject={idSystemObject} objectVersions={objectVersions} systemObjectType={systemObjectType} />
         </TabPanel>
     );
 
     const AssetDetailsTableTab = (index: number, idSystemObject: number, systemObjectType?: eSystemObjectType) => (
-        <TabPanel value={tab} index={index}>
+        <TabPanel value={tab} index={index} id={`tab-${index}`}>
             <AssetGrid idSystemObject={idSystemObject} systemObjectType={systemObjectType} />
         </TabPanel>
     );
 
     const MetadataTab = (index: number, type: eObjectMetadataType, metadata: Metadata[]) => (
-        <TabPanel value={tab} index={index}>
+        <TabPanel value={tab} index={index} id={`tab-${index}`}>
             <Box mb={3}>
                 <MetadataDisplayTable />
             </Box>
@@ -218,7 +218,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Details', 'Related', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
+                    <TabPanel value={tab} index={0} id='tab-0'>
                         <UnitDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
@@ -230,7 +230,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Details', 'Related', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
+                    <TabPanel value={tab} index={0} id='tab-0'>
                         <ProjectDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
@@ -242,7 +242,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Details', 'Related', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
+                    <TabPanel value={tab} index={0} id='tab-0'>
                         <SubjectDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
@@ -254,7 +254,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Details', 'Related', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
+                    <TabPanel value={tab} index={0} id='tab-0'>
                         <ItemDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
@@ -267,7 +267,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eCaptureData)}
-                    <TabPanel value={tab} index={1}>
+                    <TabPanel value={tab} index={1} id='tab-0'>
                         <CaptureDataDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
@@ -281,7 +281,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eModel)}
-                    <TabPanel value={tab} index={1}>
+                    <TabPanel value={tab} index={1} id='tab-1'>
                         <ModelDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
@@ -295,7 +295,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eScene)}
-                    <TabPanel value={tab} index={1}>
+                    <TabPanel value={tab} index={1} id='tab-1'>
                         <SceneDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
@@ -309,7 +309,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eIntermediaryFile)}
-                    <TabPanel value={tab} index={1}>
+                    <TabPanel value={tab} index={1} id='tab-1'>
                         <IntermediaryFileDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
@@ -323,7 +323,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eProjectDocumentation)}
-                    <TabPanel value={tab} index={1}>
+                    <TabPanel value={tab} index={1} id='tab-1'>
                         <ProjectDocumentationDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
@@ -336,7 +336,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Versions', 'Details', 'Related', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
+                    <TabPanel value={tab} index={0} id='tab-0'>
                         <AssetVersionsTable idSystemObject={idSystemObject} />
                         <Button className={classes.updateButton} variant='contained' color='primary' style={{ width: 'fit-content' }} onClick={redirect}>
                             Add Version
@@ -354,7 +354,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Details', 'Related', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
+                    <TabPanel value={tab} index={0} id='tab-0'>
                         <AssetVersionDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
@@ -366,7 +366,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Details', 'Related', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
+                    <TabPanel value={tab} index={0} id='tab-0'>
                         <ActorDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
@@ -378,7 +378,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Details', 'Related', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
-                    <TabPanel value={tab} index={0}>
+                    <TabPanel value={tab} index={0} id='tab-0'>
                         <StakeholderDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
@@ -393,9 +393,9 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     return (
         <Box display='flex' flex={1} flexDirection='column' mt={2}>
-            <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='primary' onChange={handleTabChange}>
+            <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='primary' onChange={handleTabChange} aria-label='detailsTab'>
                 {tabs.map((tab: string, index: number) => (
-                    <StyledTab key={index} label={tab} />
+                    <StyledTab key={index} label={tab} aria-label={tab} />
                 ))}
             </Tabs>
             {tabPanels}
@@ -408,7 +408,7 @@ function TabPanel(props: any): React.ReactElement {
     const classes = useStyles();
 
     return (
-        <div role='tabpanel' hidden={value !== index} aria-labelledby={`tab-${index}`} {...rest}>
+        <div role='tabpanel' hidden={value !== index} aria-label='repository detail tabs' aria-labelledby={`tab-${index}`} {...rest}>
             {value === index && (
                 <Box p={1} className={classes.tabpanel} minHeight='fit-content' minWidth='50vw' width='auto'>
                     {children}

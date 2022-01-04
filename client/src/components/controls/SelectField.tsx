@@ -55,7 +55,7 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
             containerProps={rowFieldProps}
             width={width || viewMode ? 'auto' : undefined}
         >
-            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline>
+            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline inputProps={{ 'title': `${name} select` }}>
                 {options.map(({ idVocabulary, Term }, index) => (
                     <MenuItem key={index} value={idVocabulary}>
                         {Term}

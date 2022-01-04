@@ -48,8 +48,6 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         width: '100%',
         fontSize: 18,
         marginLeft: 5,
-        outline: 'none',
-        border: 'none',
         color: fade(Colors.defaults.white, 0.65),
         background: 'transparent',
         fontWeight: typography.fontWeightRegular,
@@ -64,6 +62,12 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         },
         '&::-moz-placeholder': {
             fontStyle: 'italic'
+        },
+        '&:focus': {
+            border: '2px solid silver',
+        },
+        '&:not(:focus)': {
+            borderStyle: 'none'
         }
     },
     navOptionsContainer: {
@@ -80,10 +84,14 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         cursor: 'pointer'
     },
     headerButton: {
+        outline: '1px solid white',
         color: 'white',
         width: '90px',
         height: '30px',
-        border: 'solid 1px white'
+        // border: '1px solid white',
+        '&:focus': {
+            border: '2px solid silver',
+        }
     }
 }));
 
@@ -131,7 +139,6 @@ function Header(): React.ReactElement {
         updateRepositoryFilter(filterState);
         const repositoryURL = generateRepositoryUrl(filterState);
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
-        // console.log(`*** src/components/shared/Header.tsx Header updateRepositorySearch history.push(${route + repositoryURL}`);
         history.push(route + repositoryURL);
     };
 
@@ -142,7 +149,6 @@ function Header(): React.ReactElement {
         const filterState = getFilterState();
         filterState.search = filterState.keyword;
         updateRepositoryFilter(filterState);
-        // console.log(`*** src/components/shared/Header.tsx Header onSearch history.push(${route}`);
         history.push(route);
     };
 
@@ -169,68 +175,37 @@ function Header(): React.ReactElement {
                 The way the search in repository view is slightly different from other views. In other views, search simply
                 pushes history to the repository view and lets react hooks handle the search with the filters held in state. While
                 in repository view, the search needs to reconstruct the URL based on the state of the search and then re-initialize the tree */}
-                {isRepository ? (
-                    <DebounceInput
-                        element='input'
-                        className={classes.search}
-                        name='search'
-                        value={keyword}
-                        onChange={({ target }) => updateSearch(target.value)}
-                        onKeyPress={e => {
-                            if (e.key === 'Enter') {
-                                updateRepositorySearch();
-                            }
-                        }}
-                        forceNotifyByEnter
-                        debounceTimeout={400}
-                        placeholder='Search Repository'
-                    />
-                ) : (
-                    <DebounceInput
-                        element='input'
-                        className={classes.search}
-                        name='search'
-                        value={keyword}
-                        onChange={({ target }) => updateSearch(target.value)}
-                        onKeyPress={e => {
-                            if (e.key === 'Enter') {
-                                onSearch();
-                            }
-                        }}
-                        forceNotifyByEnter
-                        debounceTimeout={400}
-                        placeholder='Search Repository'
-                    />
-                )}
+                <DebounceInput
+                    title='Search Repository'
+                    element='input'
+                    className={classes.search}
+                    name='search'
+                    value={keyword}
+                    onChange={({ target }) => updateSearch(target.value)}
+                    onKeyPress={e => {
+                        if (e.key === 'Enter' && isRepository) {
+                            updateRepositorySearch();
+                        } else if (e.key === 'Enter' && !isRepository) {
+                            onSearch();
+                        }
+                    }}
+                    forceNotifyByEnter
+                    debounceTimeout={400}
+                    placeholder='Search Repository'
+                />
             </Box>
-            {isRepository ? (
-                <React.Fragment>
-                    <NavOption onClick={updateRepositorySearch}>
-                        <Button variant='outlined' className={classes.headerButton}>
-                            Search
-                        </Button>
-                    </NavOption>
-                    <NavOption onClick={clearSearchAndUpdateRepositorySearch}>
-                        <Button variant='outlined' className={classes.headerButton}>
-                            Clear
-                        </Button>
-                    </NavOption>
-                </React.Fragment>
-            ) : (
-                <React.Fragment>
-                    <NavOption onClick={onSearch}>
-                        <Button variant='outlined' className={classes.headerButton}>
-                            Search
-                        </Button>
-                    </NavOption>
-                    <NavOption onClick={resetKeywordSearch}>
-                        <Button variant='outlined' className={classes.headerButton}>
-                            Clear
-                        </Button>
-                    </NavOption>
-                </React.Fragment>
-            )}
-
+            <React.Fragment>
+                <NavOption onClick={isRepository ? updateRepositorySearch : onSearch}>
+                    <Button variant='outlined' className={classes.headerButton}>
+                        Search
+                    </Button>
+                </NavOption>
+                <NavOption onClick={isRepository ? clearSearchAndUpdateRepositorySearch : resetKeywordSearch}>
+                    <Button variant='outlined' className={classes.headerButton}>
+                        Clear
+                    </Button>
+                </NavOption>
+            </React.Fragment>
             <Box className={classes.navOptionsContainer}>
                 <NavOption>
                     <IoIosNotifications size={25} color={Colors.defaults.white} />

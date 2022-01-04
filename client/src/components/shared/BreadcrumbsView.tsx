@@ -28,7 +28,8 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     label: {
         [breakpoints.down('lg')]: {
             fontSize: '0.8em'
-        }
+        },
+        color: 'white'
     },
     selectIcon: {
         color: Colors.defaults.white,
