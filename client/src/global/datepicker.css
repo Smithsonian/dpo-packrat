@@ -23,7 +23,6 @@
 .react-datepicker__input-container input:focus,
 .react-datepicker-ignore-onclickoutside {
     border: 0px;
-    outline: none;
 }
 .react-datepicker__close-icon::after {
     height: 12px;

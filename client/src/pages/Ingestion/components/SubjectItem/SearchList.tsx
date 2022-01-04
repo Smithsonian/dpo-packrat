@@ -83,11 +83,13 @@ function SearchList(props: SearchListProps): React.ReactElement {
     return (
         <FieldType required={false} label='Search for Subject' marginTop={2}>
             <Box className={classes.container}>
+                <label htmlFor='searchSubjectFilter' style={{ display: 'none' }}>Search Subject</label>
                 <TextField
                     className={classes.searchField}
                     InputLabelProps={{ shrink: false }}
                     onKeyDown={({ key }) => actionOnKeyPress(key, 'Enter', onSearch)}
                     onChange={({ target }) => setQuery(target.value)}
+                    id='searchSubjectFilter'
                 />
                 <LoadingButton
                     className={classes.searchButton}
@@ -95,6 +97,7 @@ function SearchList(props: SearchListProps): React.ReactElement {
                     loaderSize={12}
                     loading={loading}
                     onClick={onSearch}
+                    title='searchSubject'
                 >
                     <IoIosSearch color='inherit' size={20} />
                 </LoadingButton>

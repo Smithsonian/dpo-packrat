@@ -16,7 +16,9 @@ type ColorType = {
 
 const Colors: ColorType = {
     defaults: {
-        white: '#FFFFFF'
+        white: '#FFFFFF',
+        contrast: 'rgb(110, 110, 170)',
+        dark: '#000000'
     },
     sidebarOptions: {
         dashboard: '#EEAF00',

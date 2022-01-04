@@ -37,6 +37,7 @@ import LicenseView from './components/License/LicenseView';
 import LicenseForm from './components/License/LicenseForm';
 import SubjectForm from './components/Subject/SubjectForm';
 import SubjectView from './components/Subject/SubjectView';
+import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles({
     AdminPageContainer: {
@@ -51,6 +52,9 @@ function Admin(): React.ReactElement {
     return (
         <React.Fragment>
             <Box className={classes.AdminPageContainer}>
+                <Helmet>
+                    <title>Admin</title>
+                </Helmet>
                 <AdminSidebarMenu />
                 <PrivateRoute path={resolveRoute(HOME_ROUTES.ADMIN)}>
                     {/* Default route when hitting admin */}
