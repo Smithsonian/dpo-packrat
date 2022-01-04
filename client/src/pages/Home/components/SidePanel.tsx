@@ -13,12 +13,11 @@ import { Colors } from '../../../theme';
 import SidePanelOption, { SidePanelOptionProps } from './SidePanelOption';
 import { getDownloadSiteMapXMLLink } from '../../../constants';
 
-const useStyles = makeStyles(({ palette, spacing }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: palette.primary.dark,
-        maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '13vw' : '8vw')
     },
     menuOptions: {
         display: 'flex',
@@ -27,7 +26,11 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     bottomOptions: {
         display: 'flex',
         justifyContent: 'space-between',
-        padding: spacing(2)
+        padding: '0.8rem 1.25rem',
+        width: (isExpanded) => isExpanded ? 200 : 50,
+        [breakpoints.down('lg')]: {
+            width: (isExpanded) => isExpanded ? 180 : 50,
+        }
     },
     anchor: {
         display: 'flex',
@@ -46,7 +49,8 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         flexDirection: 'column'
     },
     footerRow: {
-        color: 'white'
+        color: 'white',
+        fontWeight: 200
     }
 }));
 
@@ -130,7 +134,7 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
                 {isExpanded ? (
                     <Box className={classes.footer}>
                         <Typography><a className={classes.footerRow} href={getDownloadSiteMapXMLLink(REACT_APP_PACKRAT_SERVER_ENDPOINT)} target='_blank' rel='noopener noreferrer'>Site Map</a></Typography>
-                        <Typography className={classes.footerRow}>{`(C) 2020 - ${(new Date().getFullYear())} by Smithsonian Institution`}</Typography>
+                        <Typography className={classes.footerRow}>&#169;{` 2020 - ${(new Date().getFullYear())} by Smithsonian Institution`}</Typography>
                     </Box>
                 ): null}
 
