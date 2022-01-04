@@ -57,6 +57,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     name: {
         fontWeight: typography.fontWeightMedium,
+        color: 'black',
         zIndex: 'inherit',
         wordBreak: 'break-all'
     },
@@ -91,7 +92,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     typeSelect: {
         maxWidth: 250,
         minWidth: 250,
-        padding: '0px 10px',
+        padding: '0px 4px',
         borderRadius: 5,
         fontSize: '0.8rem',
         border: `1px solid ${fade(palette.primary.main, 0.3)}`,

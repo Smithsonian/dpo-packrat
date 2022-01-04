@@ -18,10 +18,9 @@ export interface RepositoryIconProps {
 export function RepositoryIcon(props: RepositoryIconProps): React.ReactElement {
     const { objectType, overrideText, makeStyles } = props;
     const initial = !overrideText ? getTermForSystemObjectType(objectType).toUpperCase().slice(0, 1) : overrideText;
-
     return (
         <div className={makeStyles?.container} style={{ backgroundColor: makeStyles?.backgroundColor }}>
-            <p className={makeStyles?.initial} style={{ color: makeStyles?.color }}>{initial}</p>
+            <p className={makeStyles?.initial} style={{ color: '#232023' }}>{initial}</p>
         </div>
     );
 }

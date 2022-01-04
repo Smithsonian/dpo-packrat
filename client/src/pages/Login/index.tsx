@@ -57,7 +57,7 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
         marginBottom: 5
     },
     subtitle: {
-        color: palette.primary.contrastText,
+        color: palette.primary.dark,
         fontWeight: typography.fontWeightRegular,
         textAlign: 'center'
     },
@@ -85,7 +85,8 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
     },
     contactUs: {
         cursor: 'pointer',
-        marginLeft: 5
+        marginLeft: 5,
+        color: 'rgb(0, 110, 190)'
     },
     loginBackground: {
         position: 'absolute',
@@ -118,7 +119,6 @@ function Login(): React.ReactElement {
 
             if (success) {
                 toast.success('Welcome to Packrat');
-                // console.log(`*** src/pages/Login/index.tsx Login.onLogin history.push(${originalUrl ?? ROUTES.HOME})`);
                 history.push(originalUrl ?? ROUTES.HOME);
             } else {
                 toast.error(message);

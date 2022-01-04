@@ -37,10 +37,6 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing /*
         'overflow-x': 'hidden',
         width: '100%',
         ...scrollBarProperties(true, false, palette.text.disabled)
-        // [breakpoints.down('lg')]: {
-        //     minHeight: '20vh',
-        //     maxHeight: '20vh'
-        // }
     },
     listDetail: {
         textAlign: 'center',
@@ -55,7 +51,11 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing /*
         width: 120,
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
-        color: Colors.defaults.white
+        color: Colors.defaults.white,
+        '&:focus': {
+            outline: '2px solid #8DABC4',
+        },
+        outline: '2px hidden #8DABC4'
     },
     title: {
         margin: '1% 0px',
@@ -85,7 +85,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
                 required
                 align='center'
                 label='Upload Files'
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'black' } }}
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
                 width={'calc(100% - 20px)'}
             >
                 <UploadListHeader />
@@ -114,7 +114,7 @@ function UploadFilesPicker(): React.ReactElement {
             {({ getRootProps, getInputProps, open }) => (
                 <div {...getRootProps()}>
                     <UploadList loading={loading} open={open} />
-                    <input {...getInputProps()} />
+                    <input title='File Uploader' {...getInputProps()} />
                 </div>
             )}
         </Dropzone>
