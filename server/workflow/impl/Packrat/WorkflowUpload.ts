@@ -103,14 +103,12 @@ export class WorkflowUpload implements WF.IWorkflow {
                 return this.handleError(`WorkflowUpload.validateFiles unable to read asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}: ${RSR.error}`);
             this.appendToWFReport(`Upload validation of ${RSR.fileName}`);
 
-            let fromZip: boolean = false;
             let fileRes: H.IOResults = { success: true };
             if (isModel) // if we're a model, zipped or not, validate the entire file/collection as is:
                 fileRes = await this.validateFileModel(RSR.fileName, RSR.readStream, false, idSystemObject);
             else if (path.extname(RSR.fileName).toLowerCase() !== '.zip') // not a zip
                 fileRes = await this.validateFile(RSR.fileName, RSR.readStream, false, idSystemObject, asset);
             else {
-                fromZip = true;
                 const ZS: ZipStream = new ZipStream(RSR.readStream);
                 const zipRes: H.IOResults = await ZS.load();
                 if (!zipRes.success)
@@ -125,18 +123,16 @@ export class WorkflowUpload implements WF.IWorkflow {
                 }
             }
 
-            if (!fromZip) {
-                if (fileRes.success) {
-                    if (assetVersion.Ingested === null) {
-                        assetVersion.Ingested = false;
-                        if (!await assetVersion.update())
-                            this.handleError(`WorkflowUpload.validateFile ${RSR.fileName} post-upload workflow succeeded, but unable to update asset version ingested flag`);
-                    }
-                } else { // fileRes.success === false
-                    const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
-                    if (!ASR.success)
-                        this.handleError(`WorkflowUpload.validateFile ${RSR.fileName} failed to discard failed upload: ${ASR.error}`);
+            if (fileRes.success) {
+                if (assetVersion.Ingested === null) {
+                    assetVersion.Ingested = false;
+                    if (!await assetVersion.update())
+                        this.handleError(`WorkflowUpload.validateFile ${RSR.fileName} post-upload workflow succeeded, but unable to update asset version ingested flag`);
                 }
+            } else { // fileRes.success === false
+                const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
+                if (!ASR.success)
+                    this.handleError(`WorkflowUpload.validateFile ${RSR.fileName} failed to discard failed upload: ${ASR.error}`);
             }
         }
 
