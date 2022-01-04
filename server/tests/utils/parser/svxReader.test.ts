@@ -6,12 +6,12 @@ import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 
 const mockScene = (folder: string, fileName: string) => join(__dirname, `../../mock/scenes/${folder}/${fileName}`);
-
+/*
 afterAll(async done => {
     await H.Helpers.sleep(2000);
     done();
 });
-
+*/
 describe('SvxReader', () => {
     test('SvxReader.loadFromStream', async () => {
         const svxReader: SvxReader | null = await validateLoadFromStream('nmnh_sea_turtle-scene', 'scene.svx.json', true);
