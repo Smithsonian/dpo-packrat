@@ -7,7 +7,7 @@
  * This component renders the metadata fields specific to model asset.
  */
 import { Box, makeStyles, Typography } from '@material-ui/core';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
@@ -275,27 +275,31 @@ function Model(props: ModelProps): React.ReactElement {
                     />
                 </Box>
 
-                <Box mb={2}>
-                    <RelatedObjectsList
-                        type={RelatedObjectType.Source}
-                        relatedObjects={model.sourceObjects}
-                        onAdd={openSourceObjectModal}
-                        onRemove={onRemoveSourceObject}
-                        relationshipLanguage='Parent(s)'
-                    />
-                </Box>
-                <Box mb={2}>
-                    <RelatedObjectsList
-                        type={RelatedObjectType.Derived}
-                        relatedObjects={model.derivedObjects}
-                        onAdd={openDerivedObjectModal}
-                        onRemove={onRemoveDerivedObject}
-                        relationshipLanguage='Child(ren)'
-                    />
-                </Box>
-                <Box mb={2}>
-                    <AssetFilesTable files={assetFiles} />
-                </Box>
+                {!idAsset && (
+                    <Fragment>
+                        <Box mb={2}>
+                            <RelatedObjectsList
+                                type={RelatedObjectType.Source}
+                                relatedObjects={model.sourceObjects}
+                                onAdd={openSourceObjectModal}
+                                onRemove={onRemoveSourceObject}
+                                relationshipLanguage='Parent(s)'
+                            />
+                        </Box>
+                        <Box mb={2}>
+                            <RelatedObjectsList
+                                type={RelatedObjectType.Derived}
+                                relatedObjects={model.derivedObjects}
+                                onAdd={openDerivedObjectModal}
+                                onRemove={onRemoveDerivedObject}
+                                relationshipLanguage='Child(ren)'
+                            />
+                        </Box>
+                        <Box mb={2}>
+                            <AssetFilesTable files={assetFiles} />
+                        </Box>
+                    </Fragment>
+                )}
                 {/* Start of data-entry form */}
                 <Box className={classes.ModelMetricsAndFormContainer}>
                     <Box className={classes.captionContainer}>

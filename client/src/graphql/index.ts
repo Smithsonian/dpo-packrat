@@ -59,8 +59,10 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
     if (networkError) {
         console.log(`[Network error]: ${networkError}`);
-        global.alert('The Packrat user is no longer authenticated. Please login.');
-        window.location.href = ROUTES.LOGIN;
+        if (networkError.toString() !== 'TypeError: Failed to fetch') {
+            global.alert('The Packrat user is no longer authenticated. Please login.');
+            window.location.href = ROUTES.LOGIN;
+        }
     }
 });
 
