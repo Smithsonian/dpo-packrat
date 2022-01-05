@@ -51,6 +51,11 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     footerRow: {
         color: 'white',
         fontWeight: 200
+    },
+    copyRight: {
+        color: 'white',
+        fontWeight: 200,
+        fontSize: '0.7em'
     }
 }));
 
@@ -134,7 +139,8 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
                 {isExpanded ? (
                     <Box className={classes.footer}>
                         <Typography><a className={classes.footerRow} href={getDownloadSiteMapXMLLink(REACT_APP_PACKRAT_SERVER_ENDPOINT)} target='_blank' rel='noopener noreferrer'>Site Map</a></Typography>
-                        <Typography className={classes.footerRow}>&#169;{` 2020 - ${(new Date().getFullYear())} by Smithsonian Institution`}</Typography>
+                        <Typography className={classes.copyRight}>&#169;{` 2020 - ${(new Date().getFullYear())} by Smithsonian Institution`}</Typography>
+                        <br />
                     </Box>
                 ): null}
 

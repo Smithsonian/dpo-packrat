@@ -2470,11 +2470,8 @@ describe('DB Fetch By ID Test Suite', () => {
         if (subject && subjectNulls) {
             itemFetch = await DBAPI.Item.fetchDerivedFromSubjects([subject.idSubject, subjectNulls.idSubject]);
             if (itemFetch) {
-                const itemIDs: number[] = [];
-                for (const item of itemFetch)
-                    itemIDs.push(item.idItem);
                 if (item && itemNulls)
-                    expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
+                    expect(itemFetch).toEqual(expect.arrayContaining([item, itemNulls]));
             }
         }
         expect(itemFetch).toBeTruthy();
@@ -4807,12 +4804,8 @@ describe('DB Fetch Special Test Suite', () => {
         let itemFetch: DBAPI.Item[] | null = null;
         if (captureData && captureDataNulls) {
             itemFetch = await DBAPI.Item.fetchMasterFromCaptureDatas([captureData.idCaptureData, captureDataNulls.idCaptureData]);
-            if (itemFetch && item && itemNulls) {
-                const itemIDs: number[] = [];
-                for (const item of itemFetch)
-                    itemIDs.push(item.idItem);
-                expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
-            }
+            if (itemFetch && item && itemNulls)
+                expect(itemFetch).toEqual(expect.arrayContaining([item, itemNulls]));
         }
         expect(itemFetch).toBeTruthy();
     });
@@ -4821,12 +4814,8 @@ describe('DB Fetch Special Test Suite', () => {
         let itemFetch: DBAPI.Item[] | null = null;
         if (model && modelNulls) {
             itemFetch = await DBAPI.Item.fetchMasterFromModels([model.idModel, modelNulls.idModel]);
-            if (itemFetch && item && itemNulls) {
-                const itemIDs: number[] = [];
-                for (const item of itemFetch)
-                    itemIDs.push(item.idItem);
-                expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
-            }
+            if (itemFetch && item && itemNulls)
+                expect(itemFetch).toEqual(expect.arrayContaining([item, itemNulls]));
         }
         expect(itemFetch).toBeTruthy();
     });
@@ -4835,12 +4824,8 @@ describe('DB Fetch Special Test Suite', () => {
         let itemFetch: DBAPI.Item[] | null = null;
         if (intermediaryFile) {
             itemFetch = await DBAPI.Item.fetchMasterFromIntermediaryFiles([intermediaryFile.idIntermediaryFile]);
-            if (itemFetch && item && itemNulls) {
-                const itemIDs: number[] = [];
-                for (const item of itemFetch)
-                    itemIDs.push(item.idItem);
-                expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
-            }
+            if (itemFetch && item && itemNulls)
+                expect(itemFetch).toEqual(expect.arrayContaining([item, itemNulls]));
         }
         expect(itemFetch).toBeTruthy();
     });
@@ -4849,12 +4834,8 @@ describe('DB Fetch Special Test Suite', () => {
         let itemFetch: DBAPI.Item[] | null = null;
         if (scene && sceneNulls) {
             itemFetch = await DBAPI.Item.fetchMasterFromScenes([scene.idScene, sceneNulls.idScene]);
-            if (itemFetch && item && itemNulls) {
-                const itemIDs: number[] = [];
-                for (const item of itemFetch)
-                    itemIDs.push(item.idItem);
-                expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
-            }
+            if (itemFetch && item && itemNulls)
+                expect(itemFetch).toEqual(expect.arrayContaining([item, itemNulls]));
         }
         expect(itemFetch).toBeTruthy();
     });
