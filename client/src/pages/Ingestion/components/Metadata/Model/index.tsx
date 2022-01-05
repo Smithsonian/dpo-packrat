@@ -158,12 +158,14 @@ function Model(props: ModelProps): React.ReactElement {
             if (data.getModelConstellationForAssetVersion.ModelConstellation) {
                 const modelConstellation = data.getModelConstellationForAssetVersion.ModelConstellation;
                 const { ingestionModel, modelObjects, assets } = extractModelConstellation(modelConstellation);
-                updateMetadataField(metadataIndex, 'name', modelConstellation.Model.Name, MetadataType.model);
+                // if we're not in update mode, set the name:
+                if (!idAsset)
+                    updateMetadataField(metadataIndex, 'name', modelConstellation.Model.Name, MetadataType.model);
 
                 // handles 0 and non-numeric idVFileTypes
-                if (modelConstellation.Model.idVFileType) {
+                if (modelConstellation.Model.idVFileType)
                     updateMetadataField(metadataIndex, 'modelFileType', Number(modelConstellation.Model.idVFileType), MetadataType.model);
-                }
+
                 setIngestionModel(ingestionModel);
                 setModelObjects(modelObjects);
                 setAssetFiles(assets);
@@ -171,7 +173,7 @@ function Model(props: ModelProps): React.ReactElement {
         }
 
         fetchModelConstellation();
-    }, [idAssetVersion, metadataIndex, updateMetadataField]);
+    }, [idAssetVersion, idAsset, metadataIndex, updateMetadataField]);
 
     // use subject's idSystemObject as the root to initialize the repository browser
     const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
