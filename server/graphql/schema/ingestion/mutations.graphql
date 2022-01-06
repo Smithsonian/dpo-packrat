@@ -73,7 +73,7 @@ input IngestModelInput {
     modality: Int!
     purpose: Int!
     units: Int!
-    dateCaptured: String!
+    dateCreated: String!
     modelFileType: Int!
     directory: String!
     identifiers: [IngestIdentifierInput!]!
