@@ -49,7 +49,7 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
     },
     addSubject: async (subject: StateSubject): Promise<void> => {
         const { subjects, addSubjects, updateProjectsAndItemsForSubjects } = get();
-        const alreadyExists = !!lodash.find(subjects, { arkId: subject.arkId });
+        const alreadyExists = subject.arkId ? !!lodash.find(subjects, { arkId: subject.arkId }) : false;
 
         if (!alreadyExists) {
             addSubjects([subject]);

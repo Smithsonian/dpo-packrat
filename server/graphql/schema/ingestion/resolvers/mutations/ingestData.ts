@@ -133,18 +133,6 @@ class IngestDataWorker extends ResolverBase {
                 subjectsDB.push(subjectDB);
             }
 
-            // wire projects to subjects
-            if (this.input.project.id) {
-                const projectDB: DBAPI.Project | null = await this.wireProjectToSubjects(this.input.project.id, subjectsDB);
-                if (!projectDB)
-                    return { success: false, message: 'failure to wire project to subjects' };
-
-                SOI = await CACHE.SystemObjectCache.getSystemFromProject(projectDB);
-                path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-                href = H.Helpers.computeHref(path, this.input.project.name);
-                await this.appendToWFReport(`Packrat Project: ${href}`);
-            }
-
             itemDB = await this.fetchOrCreateItem(this.input.item);
             if (!itemDB)
                 return { success: false, message: 'failure to retrieve or create item' };
@@ -153,6 +141,18 @@ class IngestDataWorker extends ResolverBase {
             path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
             href = H.Helpers.computeHref(path, itemDB.Name);
             await this.appendToWFReport(`Packrat Item${!this.input.item.id ? ' (created)' : ''}: ${href}`);
+
+            // wire projects to item
+            if (this.input.project.id) {
+                const projectDB: DBAPI.Project | null = await this.wireProjectToItem(this.input.project.id, itemDB);
+                if (!projectDB)
+                    return { success: false, message: 'failure to wire project to item' };
+
+                SOI = await CACHE.SystemObjectCache.getSystemFromProject(projectDB);
+                path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+                href = H.Helpers.computeHref(path, this.input.project.name);
+                await this.appendToWFReport(`Packrat Project: ${href}`);
+            }
 
             // wire subjects to item
             if (!await this.wireSubjectsToItem(subjectsDB, itemDB))
@@ -451,19 +451,17 @@ class IngestDataWorker extends ResolverBase {
         return subjectDB;
     }
 
-    private async wireProjectToSubjects(idProject: number, subjectsDB: DBAPI.Subject[]): Promise<DBAPI.Project | null> {
+    private async wireProjectToItem(idProject: number, itemDB: DBAPI.Item): Promise<DBAPI.Project | null> {
         const projectDB: DBAPI.Project | null = await DBAPI.Project.fetch(idProject);
         if (!projectDB) {
             LOG.error(`ingestData unable to fetch project ${idProject}`, LOG.LS.eGQL);
             return null;
         }
 
-        for (const subjectDB of subjectsDB) {
-            const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(projectDB, subjectDB);
-            if (!xref) {
-                LOG.error(`ingestData unable to wire project ${JSON.stringify(projectDB)} to subject ${JSON.stringify(subjectDB)}`, LOG.LS.eGQL);
-                return null;
-            }
+        const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(projectDB, itemDB);
+        if (!xref) {
+            LOG.error(`ingestData unable to wire project ${JSON.stringify(projectDB)} to item ${JSON.stringify(itemDB)}`, LOG.LS.eGQL);
+            return null;
         }
         return projectDB;
     }
