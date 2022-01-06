@@ -192,13 +192,13 @@ function useIngest(): UseIngest {
                     } = model;
 
                     let {
-                        dateCaptured
+                        dateCreated
                     } = model;
 
-                    if (!dateCaptured) {
-                        dateCaptured = '';
-                    } else if (typeof dateCaptured === 'object') {
-                        dateCaptured = nonNullValue<string>('datecaptured', dateCaptured.toISOString());
+                    if (!dateCreated) {
+                        dateCreated = '';
+                    } else if (typeof dateCreated === 'object') {
+                        dateCreated = nonNullValue<string>('dateCreated', dateCreated.toISOString());
                     }
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
@@ -206,7 +206,7 @@ function useIngest(): UseIngest {
                     const modelData: IngestModelInput = {
                         name,
                         idAssetVersion: parseFileId(file.id),
-                        dateCaptured,
+                        dateCreated,
                         identifiers: ingestIdentifiers,
                         creationMethod: nonNullValue<number>('creationMethod', creationMethod),
                         modality: nonNullValue<number>('modality', modality),
