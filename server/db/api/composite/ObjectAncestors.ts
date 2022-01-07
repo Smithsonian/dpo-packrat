@@ -96,7 +96,7 @@ export class ObjectAncestors {
         if (this.objectPath)
             this.ancestorStack.push([this.objectPath]);
 
-        LOG.info(`ObjectAncestors.compute this.ancestorStack=${JSON.stringify(this.ancestorStack, H.Helpers.saferStringify)}`, LOG.LS.eDB);
+        // LOG.info(`ObjectAncestors.compute this.ancestorStack=${JSON.stringify(this.ancestorStack, H.Helpers.saferStringify)}`, LOG.LS.eDB);
         return true;
     }
 
