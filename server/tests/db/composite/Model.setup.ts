@@ -109,87 +109,90 @@ const modelTestCaseInspectJSONMap: Map<string, string> = new Map<string, string>
     ['ply',                 '{"success":true,"error":"","modelConstellation":{"Model":{"Name":"eremotherium_laurillardi-150k.ply","DateCreated":"2021-04-01T00:00:00.000Z","idVCreationMethod":0,"idVModality":0,"idVUnits":0,"idVPurpose":0,"idVFileType":50,"idAssetThumbnail":null,"CountAnimations":0,"CountCameras":0,"CountFaces":149999,"CountLights":0,"CountMaterials":1,"CountMeshes":1,"CountVertices":74796,"CountEmbeddedTextures":0,"CountLinkedTextures":1,"FileEncoding":"BINARY","IsDracoCompressed":false,"AutomationTag":null,"idModel":1},"ModelObjects":[{"idModelObject":1,"idModel":1,"BoundingBoxP1X":-892.2620849609375,"BoundingBoxP1Y":-971.3921508789062,"BoundingBoxP1Z":-2167.86767578125,"BoundingBoxP2X":892.2653198242188,"BoundingBoxP2Y":971.3909301757812,"BoundingBoxP2Z":2167.867431640625,"CountVertices":74796,"CountFaces":149999,"CountColorChannels":1,"CountTextureCoordinateChannels":0,"HasBones":false,"HasFaceNormals":false,"HasTangents":null,"HasTextureCoordinates":false,"HasVertexNormals":null,"HasVertexColor":true,"IsTwoManifoldUnbounded":false,"IsTwoManifoldBounded":false,"IsWatertight":false,"SelfIntersecting":true}],"ModelMaterials":[{"idModelMaterial":1,"Name":""}],"ModelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"UVMapEmbedded":false,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":1,"Scalar2":1,"Scalar3":1,"Scalar4":1,"AdditionalAttributes":null,"Source":"eremotherium_laurillardi-150k-4096-diffuse.jpg"}],"ModelMaterialUVMaps":[{"idModel":1,"idAsset":2,"UVMapEdgeLength":0,"idModelMaterialUVMap":1}],"ModelObjectModelMaterialXref":[{"idModelObjectModelMaterialXref":1,"idModelObject":1,"idModelMaterial":1}],"ModelAssets":[{"Asset":{"FileName":"eremotherium_laurillardi-150k.ply","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":1},"AssetVersion":{"idAsset":1,"Version":0,"FileName":"eremotherium_laurillardi-150k.ply","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":1,"IngestedOrig":null},"AssetName":"eremotherium_laurillardi-150k.ply","AssetType":"Model"},{"Asset":{"FileName":"eremotherium_laurillardi-150k-4096-diffuse.jpg","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":2},"AssetVersion":{"idAsset":2,"Version":0,"FileName":"eremotherium_laurillardi-150k-4096-diffuse.jpg","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":2,"IngestedOrig":null},"AssetName":"eremotherium_laurillardi-150k-4096-diffuse.jpg","AssetType":"Texture Map diffuse"}]}}'],
     ['stl',                 '{"success":true,"error":"","modelConstellation":{"Model":{"Name":"eremotherium_laurillardi-150k.stl","DateCreated":"2021-04-01T00:00:00.000Z","idVCreationMethod":0,"idVModality":0,"idVUnits":0,"idVPurpose":0,"idVFileType":51,"idAssetThumbnail":null,"CountAnimations":0,"CountCameras":0,"CountFaces":149999,"CountLights":0,"CountMaterials":0,"CountMeshes":1,"CountVertices":74796,"CountEmbeddedTextures":0,"CountLinkedTextures":0,"FileEncoding":"BINARY","IsDracoCompressed":false,"AutomationTag":null,"idModel":1},"ModelObjects":[{"idModelObject":1,"idModel":1,"BoundingBoxP1X":-892.2620849609375,"BoundingBoxP1Y":-971.3921508789062,"BoundingBoxP1Z":-2167.86767578125,"BoundingBoxP2X":892.2653198242188,"BoundingBoxP2Y":971.3909301757812,"BoundingBoxP2Z":2167.867431640625,"CountVertices":74796,"CountFaces":149999,"CountColorChannels":0,"CountTextureCoordinateChannels":0,"HasBones":false,"HasFaceNormals":false,"HasTangents":null,"HasTextureCoordinates":false,"HasVertexNormals":null,"HasVertexColor":false,"IsTwoManifoldUnbounded":false,"IsTwoManifoldBounded":false,"IsWatertight":false,"SelfIntersecting":true}],"ModelMaterials":null,"ModelMaterialChannels":null,"ModelMaterialUVMaps":null,"ModelObjectModelMaterialXref":null,"ModelAssets":[{"Asset":{"FileName":"eremotherium_laurillardi-150k.stl","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":1},"AssetVersion":{"idAsset":1,"Version":0,"FileName":"eremotherium_laurillardi-150k.stl","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":1,"IngestedOrig":null},"AssetName":"eremotherium_laurillardi-150k.stl","AssetType":"Model"}]}}'],
     ['x3d',                 '{"success":true,"error":"","modelConstellation":{"Model":{"Name":"eremotherium_laurillardi-150k-4096.x3d","DateCreated":"2021-04-01T00:00:00.000Z","idVCreationMethod":0,"idVModality":0,"idVUnits":0,"idVPurpose":0,"idVFileType":56,"idAssetThumbnail":null,"CountAnimations":0,"CountCameras":0,"CountFaces":149999,"CountLights":0,"CountMaterials":1,"CountMeshes":1,"CountVertices":74796,"CountEmbeddedTextures":0,"CountLinkedTextures":1,"FileEncoding":"ASCII","IsDracoCompressed":false,"AutomationTag":null,"idModel":1},"ModelObjects":[{"idModelObject":1,"idModel":1,"BoundingBoxP1X":-892.2651977539062,"BoundingBoxP1Y":-2167.870361328125,"BoundingBoxP1Z":-971.3923950195312,"BoundingBoxP2X":892.26220703125,"BoundingBoxP2Y":2167.870361328125,"BoundingBoxP2Z":971.391357421875,"CountVertices":74796,"CountFaces":149999,"CountColorChannels":1,"CountTextureCoordinateChannels":1,"HasBones":false,"HasFaceNormals":false,"HasTangents":null,"HasTextureCoordinates":true,"HasVertexNormals":null,"HasVertexColor":true,"IsTwoManifoldUnbounded":false,"IsTwoManifoldBounded":false,"IsWatertight":false,"SelfIntersecting":true}],"ModelMaterials":[{"idModelMaterial":1,"Name":""}],"ModelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"UVMapEmbedded":false,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":null,"Scalar2":null,"Scalar3":null,"Scalar4":null,"AdditionalAttributes":null,"Source":"eremotherium_laurillardi-150k-4096-diffuse.jpg"}],"ModelMaterialUVMaps":[{"idModel":1,"idAsset":2,"UVMapEdgeLength":0,"idModelMaterialUVMap":1}],"ModelObjectModelMaterialXref":null,"ModelAssets":[{"Asset":{"FileName":"eremotherium_laurillardi-150k-4096.x3d","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":1},"AssetVersion":{"idAsset":1,"Version":0,"FileName":"eremotherium_laurillardi-150k-4096.x3d","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":1,"IngestedOrig":null},"AssetName":"eremotherium_laurillardi-150k-4096.x3d","AssetType":"Model"},{"Asset":{"FileName":"eremotherium_laurillardi-150k-4096-diffuse.jpg","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":2},"AssetVersion":{"idAsset":2,"Version":0,"FileName":"eremotherium_laurillardi-150k-4096-diffuse.jpg","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":2,"IngestedOrig":null},"AssetName":"eremotherium_laurillardi-150k-4096-diffuse.jpg","AssetType":"Texture Map diffuse"}]}}'],
-    ['dae',                 '{"success":true,"error":"","modelConstellation":{"Model":{"Name":"eremotherium_laurillardi-150k-4096.x3d","DateCreated":"2021-04-01T00:00:00.000Z","idVCreationMethod":0,"idVModality":0,"idVUnits":0,"idVPurpose":0,"idVFileType":56,"idAssetThumbnail":null,"CountAnimations":0,"CountCameras":0,"CountFaces":149999,"CountLights":0,"CountMaterials":1,"CountMeshes":1,"CountVertices":74796,"CountEmbeddedTextures":0,"CountLinkedTextures":1,"FileEncoding":"ASCII","IsDracoCompressed":false,"AutomationTag":null,"idModel":1},"ModelObjects":[{"idModelObject":1,"idModel":1,"BoundingBoxP1X":-892.2651977539062,"BoundingBoxP1Y":-2167.870361328125,"BoundingBoxP1Z":-971.3923950195312,"BoundingBoxP2X":892.26220703125,"BoundingBoxP2Y":2167.870361328125,"BoundingBoxP2Z":971.391357421875,"CountVertices":74796,"CountFaces":149999,"CountColorChannels":1,"CountTextureCoordinateChannels":1,"HasBones":false,"HasFaceNormals":false,"HasTangents":null,"HasTextureCoordinates":true,"HasVertexNormals":null,"HasVertexColor":true,"IsTwoManifoldUnbounded":false,"IsTwoManifoldBounded":false,"IsWatertight":false,"SelfIntersecting":true}],"ModelMaterials":[{"idModelMaterial":1,"Name":""}],"ModelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"UVMapEmbedded":false,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":null,"Scalar2":null,"Scalar3":null,"Scalar4":null,"AdditionalAttributes":null,"Source":"eremotherium_laurillardi-150k-4096-diffuse.jpg"}],"ModelMaterialUVMaps":[{"idModel":1,"idAsset":2,"UVMapEdgeLength":0,"idModelMaterialUVMap":1}],"ModelObjectModelMaterialXref":null,"ModelAssets":[{"Asset":{"FileName":"eremotherium_laurillardi-150k-4096.x3d","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":1},"AssetVersion":{"idAsset":1,"Version":0,"FileName":"eremotherium_laurillardi-150k-4096.x3d","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":1,"IngestedOrig":null},"AssetName":"eremotherium_laurillardi-150k-4096.x3d","AssetType":"Model"},{"Asset":{"FileName":"eremotherium_laurillardi-150k-4096-diffuse.jpg","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":2},"AssetVersion":{"idAsset":2,"Version":0,"FileName":"eremotherium_laurillardi-150k-4096-diffuse.jpg","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":2,"IngestedOrig":null},"AssetName":"eremotherium_laurillardi-150k-4096-diffuse.jpg","AssetType":"Texture Map diffuse"}]}}'],
+    ['dae',                 '{"success":true,"error":"","modelConstellation":{"Model":{"Name":"clemente_helmet.dae","DateCreated":"2021-04-01T00:00:00.000Z","idVCreationMethod":0,"idVModality":0,"idVUnits":0,"idVPurpose":0,"idVFileType":58,"idAssetThumbnail":null,"CountAnimations":0,"CountCameras":0,"CountFaces":148260,"CountLights":0,"CountMaterials":1,"CountMeshes":1,"CountVertices":80417,"CountEmbeddedTextures":0,"CountLinkedTextures":1,"FileEncoding":"ASCII","IsDracoCompressed":false,"AutomationTag":null,"idModel":1},"ModelObjects":[{"idModelObject":1,"idModel":1,"BoundingBoxP1X":-0.09380000084638596,"BoundingBoxP1Y":-0.13996900618076324,"BoundingBoxP1Z":-0.06898897141218185,"BoundingBoxP2X":0.09380996227264404,"BoundingBoxP2Y":0.139957994222641,"BoundingBoxP2Z":0.0689619705080986,"CountVertices":80417,"CountFaces":148260,"CountColorChannels":0,"CountTextureCoordinateChannels":1,"HasBones":false,"HasFaceNormals":false,"HasTangents":null,"HasTextureCoordinates":true,"HasVertexNormals":null,"HasVertexColor":false,"IsTwoManifoldUnbounded":false,"IsTwoManifoldBounded":true,"IsWatertight":false,"SelfIntersecting":true}],"ModelMaterials":[{"idModelMaterial":1,"Name":"default"}],"ModelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"UVMapEmbedded":false,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":1,"Scalar2":1,"Scalar3":1,"Scalar4":null,"AdditionalAttributes":null,"Source":"Image_0.jpg"}],"ModelMaterialUVMaps":[{"idModel":1,"idAsset":2,"UVMapEdgeLength":0,"idModelMaterialUVMap":1}],"ModelObjectModelMaterialXref":[{"idModelObjectModelMaterialXref":1,"idModelObject":1,"idModelMaterial":1}],"ModelAssets":[{"Asset":{"FileName":"clemente_helmet.dae","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":1},"AssetVersion":{"idAsset":1,"Version":0,"FileName":"clemente_helmet.dae","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":1,"IngestedOrig":null},"AssetName":"clemente_helmet.dae","AssetType":"Model"},{"Asset":{"FileName":"Image_0.jpg","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":2},"AssetVersion":{"idAsset":2,"Version":0,"FileName":"Image_0.jpg","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":2,"IngestedOrig":null},"AssetName":"Image_0.jpg","AssetType":"Texture Map diffuse"}]}}'],
     ['gltf-stand-alone',    '{"success":true,"error":"","modelConstellation":{"Model":{"Name":"clemente_helmet.gltf","DateCreated":"2021-04-01T00:00:00.000Z","idVCreationMethod":0,"idVModality":0,"idVUnits":0,"idVPurpose":0,"idVFileType":53,"idAssetThumbnail":null,"CountAnimations":0,"CountCameras":0,"CountFaces":148260,"CountLights":0,"CountMaterials":1,"CountMeshes":1,"CountVertices":80417,"CountEmbeddedTextures":3,"CountLinkedTextures":0,"FileEncoding":"ASCII","IsDracoCompressed":false,"AutomationTag":null,"idModel":1},"ModelObjects":[{"idModelObject":1,"idModel":1,"BoundingBoxP1X":-0.09380000084638596,"BoundingBoxP1Y":-0.13996900618076324,"BoundingBoxP1Z":-0.06898900121450424,"BoundingBoxP2X":0.09380999952554703,"BoundingBoxP2Y":0.139957994222641,"BoundingBoxP2Z":0.06896200031042099,"CountVertices":80417,"CountFaces":148260,"CountColorChannels":0,"CountTextureCoordinateChannels":1,"HasBones":false,"HasFaceNormals":true,"HasTangents":null,"HasTextureCoordinates":true,"HasVertexNormals":null,"HasVertexColor":false,"IsTwoManifoldUnbounded":false,"IsTwoManifoldBounded":true,"IsWatertight":false,"SelfIntersecting":true}],"ModelMaterials":[{"idModelMaterial":1,"Name":"default"}],"ModelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"UVMapEmbedded":true,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":1,"Scalar2":1,"Scalar3":1,"Scalar4":1,"AdditionalAttributes":null},{"idModelMaterialChannel":2,"idModelMaterial":1,"idVMaterialType":69,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"UVMapEmbedded":true,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":null,"Scalar2":null,"Scalar3":null,"Scalar4":null,"AdditionalAttributes":null},{"idModelMaterialChannel":3,"idModelMaterial":1,"idVMaterialType":73,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"UVMapEmbedded":true,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":null,"Scalar2":null,"Scalar3":null,"Scalar4":null,"AdditionalAttributes":null}],"ModelMaterialUVMaps":null,"ModelObjectModelMaterialXref":[{"idModelObjectModelMaterialXref":1,"idModelObject":1,"idModelMaterial":1}],"ModelAssets":[{"Asset":{"FileName":"clemente_helmet.gltf","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":1},"AssetVersion":{"idAsset":1,"Version":0,"FileName":"clemente_helmet.gltf","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":1,"IngestedOrig":null},"AssetName":"clemente_helmet.gltf","AssetType":"Model"}]}}'],
     ['gltf-with-support',   '{"success":true,"error":"","modelConstellation":{"Model":{"Name":"nmah-1981_0706_06-clemente_helmet-150k-4096.gltf","DateCreated":"2021-04-01T00:00:00.000Z","idVCreationMethod":0,"idVModality":0,"idVUnits":0,"idVPurpose":0,"idVFileType":53,"idAssetThumbnail":null,"CountAnimations":0,"CountCameras":0,"CountFaces":148260,"CountLights":0,"CountMaterials":1,"CountMeshes":1,"CountVertices":80417,"CountEmbeddedTextures":0,"CountLinkedTextures":3,"FileEncoding":"ASCII","IsDracoCompressed":false,"AutomationTag":null,"idModel":1},"ModelObjects":[{"idModelObject":1,"idModel":1,"BoundingBoxP1X":-0.09380000084638596,"BoundingBoxP1Y":-0.13996900618076324,"BoundingBoxP1Z":-0.06898900121450424,"BoundingBoxP2X":0.09380999952554703,"BoundingBoxP2Y":0.139957994222641,"BoundingBoxP2Z":0.06896200031042099,"CountVertices":80417,"CountFaces":148260,"CountColorChannels":0,"CountTextureCoordinateChannels":1,"HasBones":false,"HasFaceNormals":true,"HasTangents":null,"HasTextureCoordinates":true,"HasVertexNormals":null,"HasVertexColor":false,"IsTwoManifoldUnbounded":false,"IsTwoManifoldBounded":true,"IsWatertight":false,"SelfIntersecting":true}],"ModelMaterials":[{"idModelMaterial":1,"Name":"default"}],"ModelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"UVMapEmbedded":false,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":1,"Scalar2":1,"Scalar3":1,"Scalar4":1,"AdditionalAttributes":null,"Source":"nmah-1981_0706_06-clemente_helmet-150k-4096-diffuse.jpg"},{"idModelMaterialChannel":2,"idModelMaterial":1,"idVMaterialType":69,"MaterialTypeOther":null,"idModelMaterialUVMap":2,"UVMapEmbedded":false,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":null,"Scalar2":null,"Scalar3":null,"Scalar4":null,"AdditionalAttributes":null,"Source":"nmah-1981_0706_06-clemente_helmet-150k-4096-normals.jpg"},{"idModelMaterialChannel":3,"idModelMaterial":1,"idVMaterialType":73,"MaterialTypeOther":null,"idModelMaterialUVMap":3,"UVMapEmbedded":false,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":null,"Scalar2":null,"Scalar3":null,"Scalar4":null,"AdditionalAttributes":null,"Source":"nmah-1981_0706_06-clemente_helmet-150k-4096-occlusion.jpg"}],"ModelMaterialUVMaps":[{"idModel":1,"idAsset":2,"UVMapEdgeLength":0,"idModelMaterialUVMap":1},{"idModel":1,"idAsset":3,"UVMapEdgeLength":0,"idModelMaterialUVMap":2},{"idModel":1,"idAsset":4,"UVMapEdgeLength":0,"idModelMaterialUVMap":3}],"ModelObjectModelMaterialXref":[{"idModelObjectModelMaterialXref":1,"idModelObject":1,"idModelMaterial":1}],"ModelAssets":[{"Asset":{"FileName":"nmah-1981_0706_06-clemente_helmet-150k-4096.gltf","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":1},"AssetVersion":{"idAsset":1,"Version":0,"FileName":"nmah-1981_0706_06-clemente_helmet-150k-4096.gltf","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":1,"IngestedOrig":null},"AssetName":"nmah-1981_0706_06-clemente_helmet-150k-4096.gltf","AssetType":"Model"},{"Asset":{"FileName":"nmah-1981_0706_06-clemente_helmet-150k-4096-diffuse.jpg","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":2},"AssetVersion":{"idAsset":2,"Version":0,"FileName":"nmah-1981_0706_06-clemente_helmet-150k-4096-diffuse.jpg","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":2,"IngestedOrig":null},"AssetName":"nmah-1981_0706_06-clemente_helmet-150k-4096-diffuse.jpg","AssetType":"Texture Map diffuse"},{"Asset":{"FileName":"nmah-1981_0706_06-clemente_helmet-150k-4096-normals.jpg","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":3},"AssetVersion":{"idAsset":3,"Version":0,"FileName":"nmah-1981_0706_06-clemente_helmet-150k-4096-normals.jpg","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":3,"IngestedOrig":null},"AssetName":"nmah-1981_0706_06-clemente_helmet-150k-4096-normals.jpg","AssetType":"Texture Map normal"},{"Asset":{"FileName":"nmah-1981_0706_06-clemente_helmet-150k-4096-occlusion.jpg","idAssetGroup":null,"idVAssetType":0,"idSystemObject":null,"StorageKey":null,"idAsset":4},"AssetVersion":{"idAsset":4,"Version":0,"FileName":"nmah-1981_0706_06-clemente_helmet-150k-4096-occlusion.jpg","idUserCreator":0,"DateCreated":"2021-04-01T00:00:00.000Z","StorageHash":"","StorageSize":"0","StorageKeyStaging":"","Ingested":null,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","idAssetVersion":4,"IngestedOrig":null},"AssetName":"nmah-1981_0706_06-clemente_helmet-150k-4096-occlusion.jpg","AssetType":"Texture Map occlusion"}]}}'],
 ]);
 
 export class ModelTestSetup {
     /* #region Variable Declarations */
-    modelFbx1:          DBAPI.Model | null = null;
-    modelFbx2:          DBAPI.Model | null = null;
-    modelGlb:           DBAPI.Model | null = null;
-    modelObj:           DBAPI.Model | null = null;
-    modelPly:           DBAPI.Model | null = null;
-    modelStl:           DBAPI.Model | null = null;
-    modelUsd:           DBAPI.Model | null = null;
-    modelUsdz:          DBAPI.Model | null = null;
-    modelWrl:           DBAPI.Model | null = null;
-    modelX3d:           DBAPI.Model | null = null;
-    modelDae:           DBAPI.Model | null = null;
-    modelGltf1:         DBAPI.Model | null = null;
-    modelGltf2:         DBAPI.Model | null = null;
+    modelFbx1:                  DBAPI.Model | null = null;
+    modelFbx2:                  DBAPI.Model | null = null;
+    modelGlb:                   DBAPI.Model | null = null;
+    modelObj:                   DBAPI.Model | null = null;
+    modelPly:                   DBAPI.Model | null = null;
+    modelStl:                   DBAPI.Model | null = null;
+    modelUsd:                   DBAPI.Model | null = null;
+    modelUsdz:                  DBAPI.Model | null = null;
+    modelWrl:                   DBAPI.Model | null = null;
+    modelX3d:                   DBAPI.Model | null = null;
+    modelDae:                   DBAPI.Model | null = null;
+    modelGltf1:                 DBAPI.Model | null = null;
+    modelGltf2:                 DBAPI.Model | null = null;
 
-    assetFbxA:          DBAPI.Asset | null | undefined = null;
-    assetFbxB1:         DBAPI.Asset | null | undefined = null;
-    assetFbxB2:         DBAPI.Asset | null | undefined = null;
-    assetGlb:           DBAPI.Asset | null | undefined = null;
-    assetObj1:          DBAPI.Asset | null | undefined = null;
-    assetObj2:          DBAPI.Asset | null | undefined = null;
-    assetObj3:          DBAPI.Asset | null | undefined = null;
-    assetPly:           DBAPI.Asset | null | undefined = null;
-    assetStl:           DBAPI.Asset | null | undefined = null;
-    assetUsd1:          DBAPI.Asset | null | undefined = null;
-    assetUsd2:          DBAPI.Asset | null | undefined = null;
-    assetUsdz:          DBAPI.Asset | null | undefined = null;
-    assetWrl1:          DBAPI.Asset | null | undefined = null;
-    assetWrl2:          DBAPI.Asset | null | undefined = null;
-    assetX3d1:          DBAPI.Asset | null | undefined = null;
-    assetX3d2:          DBAPI.Asset | null | undefined = null;
-    assetDae1:          DBAPI.Asset | null | undefined = null;
-    assetDae2:          DBAPI.Asset | null | undefined = null;
-    assetGltfA:         DBAPI.Asset | null | undefined = null;
-    assetGltfB1:        DBAPI.Asset | null | undefined = null;
-    assetGltfB2:        DBAPI.Asset | null | undefined = null;
-    assetGltfB3:        DBAPI.Asset | null | undefined = null;
-    assetGltfB4:        DBAPI.Asset | null | undefined = null;
-    assetGltfB5:        DBAPI.Asset | null | undefined = null;
+    assetFbxA:                  DBAPI.Asset | null | undefined = null;
+    assetFbxB1:                 DBAPI.Asset | null | undefined = null;
+    assetFbxB2:                 DBAPI.Asset | null | undefined = null;
+    assetGlb:                   DBAPI.Asset | null | undefined = null;
+    assetObj1:                  DBAPI.Asset | null | undefined = null;
+    assetObj2:                  DBAPI.Asset | null | undefined = null;
+    assetObj3:                  DBAPI.Asset | null | undefined = null;
+    assetPly:                   DBAPI.Asset | null | undefined = null;
+    assetStl:                   DBAPI.Asset | null | undefined = null;
+    assetUsd1:                  DBAPI.Asset | null | undefined = null;
+    assetUsd2:                  DBAPI.Asset | null | undefined = null;
+    assetUsdz:                  DBAPI.Asset | null | undefined = null;
+    assetWrl1:                  DBAPI.Asset | null | undefined = null;
+    assetWrl2:                  DBAPI.Asset | null | undefined = null;
+    assetX3d1:                  DBAPI.Asset | null | undefined = null;
+    assetX3d2:                  DBAPI.Asset | null | undefined = null;
+    assetDae1:                  DBAPI.Asset | null | undefined = null;
+    assetDae2:                  DBAPI.Asset | null | undefined = null;
+    assetGltfA:                 DBAPI.Asset | null | undefined = null;
+    assetGltfB1:                DBAPI.Asset | null | undefined = null;
+    assetGltfB2:                DBAPI.Asset | null | undefined = null;
+    assetGltfB3:                DBAPI.Asset | null | undefined = null;
+    assetGltfB4:                DBAPI.Asset | null | undefined = null;
+    assetGltfB5:                DBAPI.Asset | null | undefined = null;
 
-    assetVersionFbxA:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionFbxB1:  DBAPI.AssetVersion | null | undefined = null;
-    assetVersionFbxB2:  DBAPI.AssetVersion | null | undefined = null;
-    assetVersionGlb:    DBAPI.AssetVersion | null | undefined = null;
-    assetVersionObj1:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionObj2:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionObj3:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionPly:    DBAPI.AssetVersion | null | undefined = null;
-    assetVersionStl:    DBAPI.AssetVersion | null | undefined = null;
-    assetVersionUsd1:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionUsd2:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionUsdz:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionWrl1:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionWrl2:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionX3d1:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionX3d2:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionDae1:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionDae2:   DBAPI.AssetVersion | null | undefined = null;
-    assetVersionGltfA:  DBAPI.AssetVersion | null | undefined = null;
-    assetVersionGltfB1: DBAPI.AssetVersion | null | undefined = null;
-    assetVersionGltfB2: DBAPI.AssetVersion | null | undefined = null;
-    assetVersionGltfB3: DBAPI.AssetVersion | null | undefined = null;
-    assetVersionGltfB4: DBAPI.AssetVersion | null | undefined = null;
-    assetVersionGltfB5: DBAPI.AssetVersion | null | undefined = null;
+    assetVersionFbxA:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionFbxB1:          DBAPI.AssetVersion | null | undefined = null;
+    assetVersionFbxB2:          DBAPI.AssetVersion | null | undefined = null;
+    assetVersionGlb:            DBAPI.AssetVersion | null | undefined = null;
+    assetVersionObj1:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionObj2:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionObj3:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionPly:            DBAPI.AssetVersion | null | undefined = null;
+    assetVersionStl:            DBAPI.AssetVersion | null | undefined = null;
+    assetVersionUsd1:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionUsd2:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionUsdz:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionWrl1:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionWrl2:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionX3d1:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionX3d2:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionDae1:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionDae2:           DBAPI.AssetVersion | null | undefined = null;
+    assetVersionGltfA:          DBAPI.AssetVersion | null | undefined = null;
+    assetVersionGltfB1:         DBAPI.AssetVersion | null | undefined = null;
+    assetVersionGltfB2:         DBAPI.AssetVersion | null | undefined = null;
+    assetVersionGltfB3:         DBAPI.AssetVersion | null | undefined = null;
+    assetVersionGltfB4:         DBAPI.AssetVersion | null | undefined = null;
+    assetVersionGltfB5:         DBAPI.AssetVersion | null | undefined = null;
 
-    userOwner:          DBAPI.User | null = null;
-    vocabModel:         DBAPI.Vocabulary | undefined = undefined;
-    vocabMCreation:     DBAPI.Vocabulary | undefined = undefined;
-    vocabMModality:     DBAPI.Vocabulary | undefined = undefined;
-    vocabMUnits:        DBAPI.Vocabulary | undefined = undefined;
-    vocabMPurpose:      DBAPI.Vocabulary | undefined = undefined;
+    userOwner:                  DBAPI.User | null = null;
+    vocabModel:                 DBAPI.Vocabulary | undefined = undefined;
+    vocabModelUVMapFile:        DBAPI.Vocabulary | undefined = undefined;
+    vocabMCreation:             DBAPI.Vocabulary | undefined = undefined;
+    vocabMModality:             DBAPI.Vocabulary | undefined = undefined;
+    vocabMUnits:                DBAPI.Vocabulary | undefined = undefined;
+    vocabMPurposeMaster:        DBAPI.Vocabulary | undefined = undefined;
+    vocabMPurposeDownload:      DBAPI.Vocabulary | undefined = undefined;
 
-    storage:            STORE.IStorage | null = null;
+    storage:                    STORE.IStorage | null = null;
+    testCaseMap:                Map<string, ModelTestCase> = new Map<string, ModelTestCase>(); // map of testcase name to ModelTestCase structure
+    masterCreated:              boolean = false;
     /* #endregion */
-    testCaseMap: Map<string, ModelTestCase> = new Map<string, ModelTestCase>(); // map of testcase name to ModelTestCase structure
 
     //** Returns null if initialize cannot locate test files.  Do not treat this as an error */
     async initialize(testCase?: undefined): Promise<boolean | null>;
@@ -203,20 +206,15 @@ export class ModelTestSetup {
             return false;
         }
 
-        this.vocabModel     = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeModel);
-        this.vocabMCreation = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelCreationMethodCAD);
-        this.vocabMModality = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelModalityMesh);
-        this.vocabMUnits    = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelUnitsMillimeter);
-        this.vocabMPurpose  = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeMaster);
+        this.vocabModel             = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeModel);
+        this.vocabModelUVMapFile    = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeModelUVMapFile);
+        this.vocabMCreation         = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelCreationMethodCAD);
+        this.vocabMModality         = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelModalityMesh);
+        this.vocabMUnits            = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelUnitsMillimeter);
+        this.vocabMPurposeMaster    = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeMaster);
+        this.vocabMPurposeDownload  = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeDownload);
 
-        /*
-        eModelPurposeMaster,
-        eModelPurposeWebDelivery,
-        eModelPurposeDownload,
-        eModelPurposeIntermediateProcessingStep,
-        */
-
-        if (!this.vocabModel || !this.vocabMCreation || !this.vocabMModality || !this.vocabMUnits || !this.vocabMPurpose) {
+        if (!this.vocabModel || !this.vocabModelUVMapFile || !this.vocabMCreation || !this.vocabMModality || !this.vocabMUnits || !this.vocabMPurposeMaster || !this.vocabMPurposeDownload) {
             LOG.error('ModelTestSetup failed to fetch Model-related Vocabulary', LOG.LS.eTEST);
             return false;
         }
@@ -258,13 +256,21 @@ export class ModelTestSetup {
                     return false;
                 }
 
+                // // create one master model
+                // let idVPurpose: number = this.vocabMPurposeDownload.idVocabulary;
+                // if (!this.masterCreated) {
+                //     this.masterCreated = true;
+                //     idVPurpose = this.vocabMPurposeMaster.idVocabulary;
+                // }
+                const idVPurpose = this.vocabMPurposeMaster.idVocabulary;
+
                 model = await UTIL.createModelTest({
                     Name: MTD.fileName,
                     DateCreated: UTIL.nowCleansed(),
                     idVCreationMethod: this.vocabMCreation.idVocabulary,
                     idVModality: this.vocabMModality.idVocabulary,
                     idVUnits: this.vocabMUnits.idVocabulary,
-                    idVPurpose: this.vocabMPurpose.idVocabulary,
+                    idVPurpose,
                     idVFileType: vocabMFileType.idVocabulary,
                     idAssetThumbnail: null,
                     CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
@@ -421,7 +427,7 @@ export class ModelTestSetup {
     }
 
     private async ingestFile(MTD: ModelTestFile, model: DBAPI.Model): Promise<{ success: boolean, asset?: DBAPI.Asset | null | undefined, assetVersion?: DBAPI.AssetVersion | null | undefined}> {
-        if (!this.userOwner || !this.vocabModel || !this.storage)
+        if (!this.userOwner || !this.vocabModel || !this.vocabModelUVMapFile || !this.storage)
             return { success: false };
 
         const LocalFilePath: string = this.computeFilePath(MTD);
@@ -432,7 +438,7 @@ export class ModelTestSetup {
             FileName: MTD.fileName,
             FilePath: MTD.directory,
             idAssetGroup: 0,
-            idVAssetType: this.vocabModel.idVocabulary,
+            idVAssetType: MTD.geometry ? this.vocabModel.idVocabulary : this.vocabModelUVMapFile.idVocabulary,
             allowZipCracking: true,
             idUserCreator: this.userOwner.idUser,
             SOBased: model,
