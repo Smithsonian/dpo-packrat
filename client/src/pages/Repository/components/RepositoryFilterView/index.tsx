@@ -77,7 +77,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         backgroundColor: Colors.defaults.white,
         border: `0.5px solid ${palette.primary.contrastText}`,
         fontSize: '0.8em',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        gridColumn: '1 / 2'
     },
     chip: {
         marginLeft: 10,
@@ -91,7 +92,22 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     options: {
         display: 'flex',
         alignItems: (isExpanded: boolean) => (isExpanded ? 'flex-end' : 'center'),
-        justifyContent: 'center'
+        justifyContent: 'center',
+        paddingBottom: 10
+    },
+    chipsContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        height: 30,
+        padding: 1.5,
+        overflow: 'hidden',
+        width: '100%'
+    },
+    filterTypeAndChipsContainer: {
+        display: 'grid',
+        gridTemplateColumns: '300px 1fr',
+        width: '100%',
+        alignItems: 'center'
     }
 }));
 
@@ -143,12 +159,12 @@ function RepositoryFilterView(): React.ReactElement {
     const typeName = repositoryBrowserRootObjectType ? `${repositoryBrowserRootObjectType}: ${repositoryBrowserRootName}` : `${unrootedRepositoryType}: All`;
 
     let content: React.ReactNode = (
-        <Box display='flex' alignItems='center'>
+        <Box className={classes.filterTypeAndChipsContainer}>
             <Box className={classes.textArea}>
                 <Typography variant='body1'>{typeName}</Typography>
             </Box>
 
-            <Box display='flex' alignItems='center' height='40px' width='64vw' overflow='hidden'>
+            <Box className={classes.chipsContainer}>
                 {chipsOptions.map((chip: ChipOption, index: number) => {
                     const { id, type, name } = chip;
                     const label: string = `${getTermForSystemObjectType(type)}: ${name}`;
@@ -180,30 +196,41 @@ function RepositoryFilterView(): React.ReactElement {
         content = (
             <React.Fragment>
                 {content}
-                <Box display='flex' flex={1} mt={2}>
-                    <Box className={classes.selectContainer} width={300}>
-                        <FilterSelect multiple label='Top-Level Objects' name='repositoryRootType' options={repositoryRootTypesOptions} />
-                        <FilterSelect multiple label='Children Objects' name='objectsToDisplay' options={objectToDisplayOptions} />
-                        <FilterSelect multiple label='Metadata To Display' name='metadataToDisplay' options={metadataToDisplayOptions} />
-                    </Box>
-
-                    <Box className={classes.selectContainer} width={225}>
-                        <FilterSelect multiple label='Units' name='units' options={unitsOptions} />
-                        <FilterSelect multiple label='Projects' name='projects' options={projectsOptions} />
-                        <FilterSelect multiple label='Has' name='has' options={hasOptions} />
-                        <FilterSelect multiple label='Missing' name='missing' options={missingOptions} />
-                    </Box>
-
-                    <Box>
-                        <Box className={classes.selectContainer} width={280}>
-                            <FilterSelect multiple label='Capture Method' name='captureMethod' options={captureMethodOptions} />
-                            <FilterSelect multiple label='Variant Type' name='variantType' options={variantTypeOptions} />
-                            <FilterSelect multiple label='Model Purpose' name='modelPurpose' options={modelPurposeOptions} />
-                            <FilterSelect multiple label='Model File Type' name='modelFileType' options={fileTypeOptions} />
+                <Box display='flex' flexDirection='row' justifyContent='space-between'>
+                    <Box display='flex' flex={1} mt={2}>
+                        <Box className={classes.selectContainer} width={300}>
+                            <FilterSelect multiple label='Top-Level Objects' name='repositoryRootType' options={repositoryRootTypesOptions} />
+                            <FilterSelect multiple label='Children Objects' name='objectsToDisplay' options={objectToDisplayOptions} />
+                            <FilterSelect multiple label='Metadata To Display' name='metadataToDisplay' options={metadataToDisplayOptions} />
                         </Box>
-                        <FilterDate label='Date Created' name='dateCreated' />
+
+                        <Box className={classes.selectContainer} width={225}>
+                            <FilterSelect multiple label='Units' name='units' options={unitsOptions} />
+                            <FilterSelect multiple label='Projects' name='projects' options={projectsOptions} />
+                            <FilterSelect multiple label='Has' name='has' options={hasOptions} />
+                            <FilterSelect multiple label='Missing' name='missing' options={missingOptions} />
+                        </Box>
+
+                        <Box>
+                            <Box className={classes.selectContainer} width={280}>
+                                <FilterSelect multiple label='Capture Method' name='captureMethod' options={captureMethodOptions} />
+                                <FilterSelect multiple label='Variant Type' name='variantType' options={variantTypeOptions} />
+                                <FilterSelect multiple label='Model Purpose' name='modelPurpose' options={modelPurposeOptions} />
+                                <FilterSelect multiple label='Model File Type' name='modelFileType' options={fileTypeOptions} />
+                            </Box>
+                            <FilterDate label='Date Created' name='dateCreated' />
+                        </Box>
+                    </Box>
+                    <Box className={classes.selectContainer} style={{ alignSelf: 'end' }}>
+                        <Box className={classes.options}>
+                            <Box display='flex'>
+                                <FiLink2 className={classes.anchor} color={palette.primary.main} size={20} onClick={onCopyLink} />
+                                {expandIcon}
+                            </Box>
+                        </Box>
                     </Box>
                 </Box>
+
             </React.Fragment>
         );
 
@@ -217,12 +244,6 @@ function RepositoryFilterView(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>{content}</Box>
-            <Box className={classes.options}>
-                <Box display='flex'>
-                    <FiLink2 className={classes.anchor} color={palette.primary.main} size={20} onClick={onCopyLink} />
-                    {expandIcon}
-                </Box>
-            </Box>
         </Box>
     );
 }
