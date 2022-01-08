@@ -56,14 +56,6 @@ function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
                     {checkbox}
                 </Tooltip>
             ) : checkbox}
-            {/* <CheckboxNoPadding
-                name={name}
-                disabled={disabled}
-                checked={withDefaultValueBoolean(value, false)}
-                onChange={onChange}
-                {...getUpdatedCheckboxProps(updated)}
-                inputProps={{ 'title': name }}
-            /> */}
         </FieldType>
     );
 }
