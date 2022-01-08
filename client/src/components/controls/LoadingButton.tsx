@@ -24,6 +24,7 @@ const useStyles = makeStyles(({ typography }) => ({
 function LoadingButton(props: LoadingButtonProps): React.ReactElement {
     const { loading, loaderSize, className, ...rest } = props;
     const classes = useStyles();
+    // console.log(`LoadingButton className=${className}, loading=${loading}`);
 
     return (
         <Button className={clsx(classes.button, className)} variant='contained' color='primary' disabled={loading}

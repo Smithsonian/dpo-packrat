@@ -147,7 +147,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         const { addSubjects } = useSubjectStore.getState();
         const { addProjects } = useProjectStore.getState();
         const { addItems } = useItemStore.getState();
-        const { UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet } = existingMetadata;
+        const { UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet } = (existingMetadata ? existingMetadata : { UpdatedAssetVersionMetadata: [], idAssetVersionsUpdatedSet: new Set<number>() });
         const selectedFiles = getSelectedFiles(completed, true);
 
         if (!selectedFiles.length) {
@@ -360,7 +360,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (referenceModels) metadataStep.scene.referenceModels = referenceModels;
                         }
                         metadatas.push(metadataStep);
-                        console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
+                        // console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
                     }
                 }
 
