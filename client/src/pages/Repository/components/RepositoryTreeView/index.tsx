@@ -37,7 +37,7 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         maxHeight: ({ isExpanded, isModal }: StyleProps) => getTreeViewStyleHeight(isExpanded, isModal, 'xl'),
         maxWidth: ({ sideBarExpanded }: StyleProps) => getTreeViewStyleWidth(sideBarExpanded, 'xl'),
         flexDirection: 'column',
-        overflow: 'auto',
+        overflow: 'hidden',
         transition: '250ms height, width ease',
         [breakpoints.down('lg')]: {
             maxHeight: ({ isExpanded, isModal }: StyleProps) => getTreeViewStyleHeight(isExpanded, isModal, 'lg'),
