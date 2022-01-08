@@ -603,7 +603,7 @@ export type IngestModel = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
@@ -699,7 +699,7 @@ export type UpdateModelMetadata = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
 };
 
@@ -1540,7 +1540,7 @@ export type ModelDetailFieldsInput = {
   Modality?: Maybe<Scalars['Int']>;
   Purpose?: Maybe<Scalars['Int']>;
   Units?: Maybe<Scalars['Int']>;
-  DateCaptured?: Maybe<Scalars['DateTime']>;
+  DateCreated?: Maybe<Scalars['DateTime']>;
   ModelFileType?: Maybe<Scalars['Int']>;
 };
 

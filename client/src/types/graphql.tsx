@@ -606,7 +606,7 @@ export type IngestModel = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
@@ -702,7 +702,7 @@ export type UpdateModelMetadata = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
 };
 
@@ -1543,7 +1543,7 @@ export type ModelDetailFieldsInput = {
   Modality?: Maybe<Scalars['Int']>;
   Purpose?: Maybe<Scalars['Int']>;
   Units?: Maybe<Scalars['Int']>;
-  DateCaptured?: Maybe<Scalars['DateTime']>;
+  DateCreated?: Maybe<Scalars['DateTime']>;
   ModelFileType?: Maybe<Scalars['Int']>;
 };
 
@@ -3158,7 +3158,7 @@ export type GetAssetVersionsDetailsQuery = (
         )> }
       )>, Model?: Maybe<(
         { __typename?: 'IngestModel' }
-        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory'>
+        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCreated' | 'modelFileType' | 'directory'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
           & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3257,7 +3257,7 @@ export type GetUploadedAssetVersionQuery = (
         )> }
       )>, Model?: Maybe<(
         { __typename?: 'UpdateModelMetadata' }
-        & Pick<UpdateModelMetadata, 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType'>
+        & Pick<UpdateModelMetadata, 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCreated' | 'modelFileType'>
       )>, Scene?: Maybe<(
         { __typename?: 'UpdateSceneMetadata' }
         & Pick<UpdateSceneMetadata, 'name' | 'approvedForPublication' | 'posedAndQCd'>
@@ -5246,7 +5246,7 @@ export const GetAssetVersionsDetailsDocument = gql`
         modality
         purpose
         units
-        dateCaptured
+        dateCreated
         modelFileType
         directory
         identifiers {
@@ -5484,7 +5484,7 @@ export const GetUploadedAssetVersionDocument = gql`
         modality
         purpose
         units
-        dateCaptured
+        dateCreated
         modelFileType
       }
       Scene {

@@ -115,7 +115,7 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
             modality: SOP.Model.idVModality ?? 0,
             purpose: SOP.Model.idVPurpose ?? 0,
             units: SOP.Model.idVUnits ?? 0,
-            dateCaptured: (SOP.Model.DateCreated ?? new Date()).toISOString(),
+            dateCreated: (SOP.Model.DateCreated ?? new Date()).toISOString(),
             modelFileType: SOP.Model.idVFileType ?? 0
         };
     } else if (SOP.Scene) {

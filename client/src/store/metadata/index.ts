@@ -295,7 +295,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                                 ...metadataStep.model,
                                 ...(Model && {
                                     ...Model,
-                                    dateCaptured: new Date(Model.dateCaptured),
+                                    dateCreated: new Date(Model.dateCreated),
                                     identifiers: stateIdentifiers,
                                 })
                             }
@@ -343,14 +343,14 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (folders) metadataStep.photogrammetry.folders = folders;
                         }
                         if (existingIdAssetVersion && updateModel) {
-                            const { creationMethod, modality, units, purpose, modelFileType, name, dateCaptured } = updateModel;
+                            const { creationMethod, modality, units, purpose, modelFileType, name, dateCreated } = updateModel;
                             if (creationMethod) metadataStep.model.creationMethod = creationMethod;
                             if (modality) metadataStep.model.modality = modality;
                             if (units) metadataStep.model.units = units;
                             if (purpose) metadataStep.model.purpose = purpose;
                             if (modelFileType) metadataStep.model.creationMethod = creationMethod;
                             if (name) metadataStep.model.name = name;
-                            if (dateCaptured) metadataStep.model.dateCaptured = dateCaptured;
+                            if (dateCreated) metadataStep.model.dateCreated = dateCreated;
                         }
                         if (existingIdAssetVersion && updateScene) {
                             const { name, posedAndQCd, referenceModels, approvedForPublication } = updateScene;
