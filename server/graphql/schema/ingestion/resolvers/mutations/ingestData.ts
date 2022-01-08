@@ -715,7 +715,7 @@ class IngestDataWorker extends ResolverBase {
             modelDB.cloneData(JCOutput.modelConstellation.Model);
 
         modelDB.Name = model.name;
-        modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCaptured) || new Date();
+        modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCreated) || new Date();
         modelDB.idVCreationMethod = model.creationMethod;
         modelDB.idVModality = model.modality;
         modelDB.idVPurpose = model.purpose;

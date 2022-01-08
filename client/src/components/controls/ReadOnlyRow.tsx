@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/jsx-max-props-per-line */
 
 /**
@@ -16,10 +16,11 @@ interface ReadOnlyRowProps extends ViewableProps {
     padding?: number;
     gridTemplate?: string;
     width?: string;
+    labelProps?: any;
 }
 
 function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
-    const { label, value, padding, gridTemplate, width } = props;
+    const { label, value, padding, gridTemplate, width, labelProps } = props;
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
     if (width) {
@@ -31,7 +32,7 @@ function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
     }
 
     return (
-        <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps}>
+        <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps} labelProps={labelProps}>
             <Box width='fit-content' textAlign='right'>
                 <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A', overflowWrap: 'break-word', padding }}>
                     {value}
