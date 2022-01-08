@@ -25,6 +25,7 @@ import CheckboxField from './controls/CheckboxField';
 import ReadOnlyRow from './controls/ReadOnlyRow';
 import TextArea from './controls/TextArea';
 import { ToolTip } from './controls/ToolTip';
+import IndentedReadOnlyRow from './controls/IndentedReadOnlyRow';
 
 export {
     Header,
@@ -49,7 +50,8 @@ export {
     CheckboxField,
     ReadOnlyRow,
     TextArea,
-    ToolTip
+    ToolTip,
+    IndentedReadOnlyRow
 };
 
 export type { RepositoryIconProps };
