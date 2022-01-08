@@ -415,7 +415,7 @@ export class BulkIngestReader {
         return {
             idAssetVersion: 0,
             name: bagitModel.name,
-            dateCaptured: bagitModel.date_created,
+            dateCreated: bagitModel.date_created,
             creationMethod,
             modality,
             units,

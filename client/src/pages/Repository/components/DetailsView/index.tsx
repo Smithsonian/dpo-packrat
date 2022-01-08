@@ -376,7 +376,7 @@ function DetailsView(): React.ReactElement {
                     Purpose: idVPurpose,
                     Units: idVUnits,
                     ModelFileType: idVFileType,
-                    DateCaptured: DateCreated
+                    DateCreated
                 };
             }
 
