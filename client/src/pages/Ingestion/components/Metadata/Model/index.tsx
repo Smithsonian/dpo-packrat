@@ -61,7 +61,8 @@ const useStyles = makeStyles(theme => ({
         flexDirection: 'row',
         borderRadius: 5,
         backgroundColor: theme.palette.primary.light,
-        width: 'auto',
+        width: 'fit-content',
+        paddingRight: 20,
         justifyContent: 'space-around'
     },
     captionContainer: {
