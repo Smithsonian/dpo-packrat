@@ -988,7 +988,7 @@ export type IngestModelInput = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;

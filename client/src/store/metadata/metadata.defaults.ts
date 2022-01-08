@@ -128,7 +128,7 @@ export const defaultModelFields: ModelFields = {
     identifiers: [],
     sourceObjects: [],
     derivedObjects: [],
-    dateCaptured: null,
+    dateCreated: null,
     creationMethod: null,
     modality: null,
     units: null,
