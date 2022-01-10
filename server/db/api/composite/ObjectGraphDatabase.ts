@@ -366,7 +366,9 @@ export class ObjectGraphDatabase {
         const objectGraphState = new ObjectGraphState();
 
         objectGraphState.eType = systemObjectIDType.eObjectType;
+        objectGraphState.ancestorObject = systemObjectIDType;
         switch (systemObjectIDType.eObjectType) {
+            /*
             case eSystemObjectType.eUnit:
             case eSystemObjectType.eProject:
             case eSystemObjectType.eSubject:
@@ -374,7 +376,7 @@ export class ObjectGraphDatabase {
             case eSystemObjectType.eAsset:
                 objectGraphState.ancestorObject = systemObjectIDType;
                 break;
-
+            */
             case eSystemObjectType.eCaptureData:{
                 const captureData: CaptureData | null = await CaptureData.fetch(systemObjectIDType.idObject);
                 if (captureData) {

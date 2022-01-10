@@ -32,7 +32,7 @@ export interface ItemDetailsType extends SubjectDetailFields {
 export type DetailsViewFieldErrors = {
     model: {
         name: boolean;
-        dateCaptured: boolean;
+        dateCreated: boolean;
     };
     captureData: {
         name: boolean;
@@ -535,7 +535,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         // const errors: DetailsViewFieldErrors = {
         //     model: {
         //         name: false,
-        //         dateCaptured: false
+        //         dateCreated: false
         //     },
         //     captureData: {
         //         name: false,
@@ -557,7 +557,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             try {
                 schemaModel.validateSync(
                     {
-                        dateCaptured: Model?.DateCaptured
+                        dateCreated: Model?.DateCreated
                     },
                     option
                 );
@@ -623,7 +623,7 @@ const schemaCD = yup.object().shape({
 });
 
 const schemaModel = yup.object().shape({
-    dateCaptured: yup.date().max(Date(), 'Date Created cannot be set in the future')
+    dateCreated: yup.date().max(Date(), 'Date Created cannot be set in the future')
 });
 
 const schemaItemAndSubject = yup.object().shape({

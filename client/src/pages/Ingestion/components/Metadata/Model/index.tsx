@@ -7,7 +7,7 @@
  * This component renders the metadata fields specific to model asset.
  */
 import { Box, makeStyles, Typography } from '@material-ui/core';
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
@@ -279,7 +279,7 @@ function Model(props: ModelProps): React.ReactElement {
                 </Box>
 
                 {!idAsset && (
-                    <Fragment>
+                    <React.Fragment>
                         <Box mb={2}>
                             <RelatedObjectsList
                                 type={RelatedObjectType.Source}
@@ -301,7 +301,7 @@ function Model(props: ModelProps): React.ReactElement {
                         <Box mb={2}>
                             <AssetFilesTable files={assetFiles} />
                         </Box>
-                    </Fragment>
+                    </React.Fragment>
                 )}
                 {/* Start of data-entry form */}
                 <Box className={classes.ModelMetricsAndFormContainer}>

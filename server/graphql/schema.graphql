@@ -219,7 +219,7 @@ type IngestModel {
   modality: Int!
   purpose: Int!
   units: Int!
-  dateCaptured: String!
+  dateCreated: String!
   modelFileType: Int!
   directory: String!
   identifiers: [IngestIdentifier!]!
@@ -308,7 +308,7 @@ type UpdateModelMetadata {
   modality: Int!
   purpose: Int!
   units: Int!
-  dateCaptured: String!
+  dateCreated: String!
   modelFileType: Int!
 }
 
@@ -1100,7 +1100,7 @@ input ModelDetailFieldsInput {
   Modality: Int
   Purpose: Int
   Units: Int
-  DateCaptured: DateTime
+  DateCreated: DateTime
   ModelFileType: Int
 }
 
