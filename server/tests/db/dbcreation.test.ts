@@ -27,6 +27,7 @@ let actorWithOutUnit: DBAPI.Actor | null;
 let assetGroup: DBAPI.AssetGroup | null;
 let assetGroup2: DBAPI.AssetGroup | null;
 let assetModel: DBAPI.Asset | null;
+let assetScene: DBAPI.Asset | null;
 let assetThumbnail: DBAPI.Asset | null;
 let assetWithoutAG: DBAPI.Asset | null;
 let assetBulkIngest: DBAPI.Asset | null;
@@ -34,6 +35,7 @@ let assetVersion: DBAPI.AssetVersion | null;
 let assetVersion2: DBAPI.AssetVersion | null;
 let assetVersion3: DBAPI.AssetVersion | null;
 let assetVersionModel: DBAPI.AssetVersion | null;
+let assetVersionScene: DBAPI.AssetVersion | null;
 let assetVersionNotIngested: DBAPI.AssetVersion | null;
 let assetVersionNotIngested2: DBAPI.AssetVersion | null;
 let assetVersionNotProcessed: DBAPI.AssetVersion | null;
@@ -926,7 +928,7 @@ describe('DB Creation Test Suite', () => {
             idAssetThumbnail: null,
             idGeoLocation: null,
             Name: 'Test Item Nulls',
-            EntireSubject: true,
+            EntireSubject: false,
             idItem: 0
         });
     });
@@ -1107,6 +1109,39 @@ describe('DB Creation Test Suite', () => {
         systemObjectModel = model ? await model.fetchSystemObject() : null;
         expect(systemObjectModel).toBeTruthy();
         expect(systemObjectModel ? systemObjectModel.idModel : -1).toBe(model ? model.idModel : -2);
+    });
+
+    test('DB Creation: Asset For Scene', async () => {
+        if (vocabulary&& systemObjectScene)
+            assetScene = await UTIL.createAssetTest({
+                FileName: 'Test Asset Scene',
+                idAssetGroup: null,
+                idVAssetType: vocabulary.idVocabulary,
+                idSystemObject: systemObjectScene.idSystemObject,
+                StorageKey: UTIL.randomStorageKey('/test/asset/path/'),
+                idAsset: 0
+            });
+        expect(assetScene).toBeTruthy();
+    });
+
+    test('DB Creation: AssetVersion For Scene', async () => {
+        if (assetScene && userActive)
+            assetVersionScene = await UTIL.createAssetVersionTest({
+                idAsset: assetScene.idAsset,
+                Version: 0,
+                FileName: assetScene.FileName,
+                idUserCreator: userActive.idUser,
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum',
+                StorageSize: BigInt(50),
+                StorageKeyStaging: UTIL.randomStorageKey('/test/asset/path/'),
+                Ingested: true,
+                BulkIngest: false,
+                idSOAttachment: null,
+                FilePath: '/test/asset/path/scene',
+                idAssetVersion: 0
+            });
+        expect(assetVersionScene).toBeTruthy();
     });
 
     test('DB Creation: Asset For Model', async () => {
@@ -1360,10 +1395,10 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: SystemObjectVersionAssetVersionXref', async () => {
-        if (systemObjectVersion && assetVersion) {
+        if (systemObjectVersion && assetVersionScene) {
             systemObjectVersionAssetVersionXref = new DBAPI.SystemObjectVersionAssetVersionXref({
                 idSystemObjectVersion: systemObjectVersion.idSystemObjectVersion,
-                idAssetVersion: assetVersion.idAssetVersion,
+                idAssetVersion: assetVersionScene.idAssetVersion,
                 idSystemObjectVersionAssetVersionXref: 0
             });
         }
@@ -2049,7 +2084,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (systemObjectVersion) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromSystemObjectVersion(systemObjectVersion.idSystemObjectVersion);
             if (assetVersionFetch)
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionScene]));
         }
         expect(assetVersionFetch).toBeTruthy();
     });
@@ -2059,7 +2094,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (systemObjectScene) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromSystemObject(systemObjectScene.idSystemObject);
             if (assetVersionFetch)
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionScene]));
         }
         expect(assetVersionFetch).toBeTruthy();
     });
@@ -2967,6 +3002,16 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(systemObjectVersionFetch).toBeTruthy();
     });
 
+    test('DB Fetch SystemObject: SystemObject.computeAffectedByUpdate', async () => {
+        let affectedSystemObjectIds: Set<number> | null = null;
+        if (assetThumbnail && assetModel && assetScene && systemObjectScene) {
+            affectedSystemObjectIds = await DBAPI.SystemObject.computeAffectedByUpdate([assetThumbnail.idAsset, assetModel.idAsset, assetScene.idAsset]);
+            if (affectedSystemObjectIds)
+                expect([...affectedSystemObjectIds]).toEqual([systemObjectScene.idSystemObject]);
+        }
+        expect(affectedSystemObjectIds).toBeTruthy();
+    });
+
     test('DB Fetch SystemObjectVersion: SystemObjectVersion.clone latest', async () => {
         let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
         if (systemObjectScene) {
@@ -3013,31 +3058,28 @@ describe('DB Fetch By ID Test Suite', () => {
         let systemObjectVersionAssetVersionXrefFetch: DBAPI.SystemObjectVersionAssetVersionXref[] | null = null;
         if (systemObjectVersion) {
             systemObjectVersionAssetVersionXrefFetch = await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromSystemObjectVersion(systemObjectVersion.idSystemObjectVersion);
-            if (systemObjectVersionAssetVersionXrefFetch) {
+            if (systemObjectVersionAssetVersionXrefFetch)
                 expect(systemObjectVersionAssetVersionXrefFetch).toEqual(expect.arrayContaining([systemObjectVersionAssetVersionXref]));
-            }
         }
         expect(systemObjectVersionAssetVersionXrefFetch).toBeTruthy();
     });
 
     test('DB Fetch SystemObjectVersionAssetVersionXref: SystemObjectVersionAssetVersionXref.fetchFromAssetVersion', async () => {
         let systemObjectVersionAssetVersionXrefFetch: DBAPI.SystemObjectVersionAssetVersionXref[] | null = null;
-        if (assetVersion) {
-            systemObjectVersionAssetVersionXrefFetch = await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromAssetVersion(assetVersion.idAssetVersion);
-            if (systemObjectVersionAssetVersionXrefFetch) {
+        if (assetVersionScene) {
+            systemObjectVersionAssetVersionXrefFetch = await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromAssetVersion(assetVersionScene.idAssetVersion);
+            if (systemObjectVersionAssetVersionXrefFetch)
                 expect(systemObjectVersionAssetVersionXrefFetch).toEqual(expect.arrayContaining([systemObjectVersionAssetVersionXref]));
-            }
         }
         expect(systemObjectVersionAssetVersionXrefFetch).toBeTruthy();
     });
 
     test('DB Fetch SystemObjectVersionAssetVersionXref: SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset', async () => {
         let systemObjectVersionAssetVersionXrefFetch: DBAPI.SystemObjectVersionAssetVersionXref | null = null;
-        if (systemObjectVersion && assetVersion) {
-            systemObjectVersionAssetVersionXrefFetch = await DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset(systemObjectVersion.idSystemObjectVersion, assetVersion.idAsset);
-            if (systemObjectVersionAssetVersionXrefFetch) {
+        if (systemObjectVersion && assetVersionScene) {
+            systemObjectVersionAssetVersionXrefFetch = await DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset(systemObjectVersion.idSystemObjectVersion, assetVersionScene.idAsset);
+            if (systemObjectVersionAssetVersionXrefFetch)
                 expect(systemObjectVersionAssetVersionXrefFetch).toEqual(systemObjectVersionAssetVersionXref);
-            }
         }
         expect(systemObjectVersionAssetVersionXrefFetch).toBeTruthy();
     });

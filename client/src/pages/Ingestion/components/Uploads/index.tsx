@@ -163,7 +163,9 @@ function Uploads(): React.ReactElement {
                     file: { id, type }
                 } = metadatas[0];
                 const { isLast } = getMetadataInfo(id);
+
                 const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
+                // console.log(`Uploads onNext() nextRoute=${nextRoute}, metadatas=${JSON.stringify(metadatas)}`);
                 toast.dismiss();
                 await history.push(nextRoute);
             }

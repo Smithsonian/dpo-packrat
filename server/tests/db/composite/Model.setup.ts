@@ -192,7 +192,10 @@ export class ModelTestSetup {
     testCaseMap: Map<string, ModelTestCase> = new Map<string, ModelTestCase>(); // map of testcase name to ModelTestCase structure
 
     //** Returns null if initialize cannot locate test files.  Do not treat this as an error */
-    async initialize(testCase: string | null = null): Promise<boolean | null> {
+    async initialize(testCase?: undefined): Promise<boolean | null>;
+    async initialize(testCase: string): Promise<boolean | null>;
+    async initialize(testCase: string[]): Promise<boolean | null>;
+    async initialize(testCase: string | string[] | undefined): Promise<boolean | null> {
         // let assigned: boolean = true;
         this.userOwner = await UTIL.createUserTest({ Name: 'Model Test', EmailAddress: 'modeltest@si.edu', SecurityID: 'Model Test', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0 });
         if (!this.userOwner) {
@@ -200,11 +203,19 @@ export class ModelTestSetup {
             return false;
         }
 
-        this.vocabModel = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeModel);
+        this.vocabModel     = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeModel);
         this.vocabMCreation = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelCreationMethodCAD);
         this.vocabMModality = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelModalityMesh);
-        this.vocabMUnits = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelUnitsMillimeter);
-        this.vocabMPurpose = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeMaster);
+        this.vocabMUnits    = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelUnitsMillimeter);
+        this.vocabMPurpose  = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeMaster);
+
+        /*
+        eModelPurposeMaster,
+        eModelPurposeWebDelivery,
+        eModelPurposeDownload,
+        eModelPurposeIntermediateProcessingStep,
+        */
+
         if (!this.vocabModel || !this.vocabMCreation || !this.vocabMModality || !this.vocabMUnits || !this.vocabMPurpose) {
             LOG.error('ModelTestSetup failed to fetch Model-related Vocabulary', LOG.LS.eTEST);
             return false;
@@ -216,8 +227,21 @@ export class ModelTestSetup {
             return false;
         }
 
+        // normalize parameters used to select test case
+        const testCaseSet: Set<string> | null = testCase ? new Set<string>() : null;
+        if (testCase) {
+            if (typeof(testCase) === 'string')
+                testCaseSet!.add(testCase); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            else if (Array.isArray(testCase)) {
+                for (const testCaseEntry of testCase) {
+                    if (typeof(testCaseEntry) === 'string')
+                        testCaseSet!.add(testCaseEntry); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                }
+            }
+        }
+
         for (const MTD of modelTestFiles) {
-            if (testCase && MTD.testCase != testCase)
+            if (testCaseSet && !testCaseSet.has(MTD.testCase))
                 continue;
             const fileExists: boolean = await this.testFileExistence(MTD);
             if (!fileExists) {
