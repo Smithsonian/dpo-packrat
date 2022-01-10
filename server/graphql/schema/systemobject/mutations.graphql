@@ -82,7 +82,7 @@ input ModelDetailFieldsInput {
     Modality: Int
     Purpose: Int
     Units: Int
-    DateCaptured: DateTime
+    DateCreated: DateTime
     ModelFileType: Int
 }
 

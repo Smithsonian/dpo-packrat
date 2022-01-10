@@ -1112,7 +1112,7 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Asset For Scene', async () => {
-        if (vocabulary&& systemObjectScene)
+        if (vocabulary && systemObjectScene)
             assetScene = await UTIL.createAssetTest({
                 FileName: 'Test Asset Scene',
                 idAssetGroup: null,

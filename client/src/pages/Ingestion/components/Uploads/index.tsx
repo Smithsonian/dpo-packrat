@@ -180,8 +180,10 @@ function Uploads(): React.ReactElement {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
         try {
             setGettingAssetDetails(true);
+            // console.log(`Uploads.onIngest updatedAssetVersionMetadata=${JSON.stringify(updatedAssetVersionMetadata)}`);
             const data = await updateMetadataSteps(updatedAssetVersionMetadata);
             const { valid, selectedFiles, error } = data;
+            // console.log(`Uploads.onIngest ${JSON.stringify(data)}`);
             setGettingAssetDetails(false);
 
             if (error) return;
@@ -201,11 +203,14 @@ function Uploads(): React.ReactElement {
 
             // if every selected file is for update OR attach, skip the subject/items step
             if (toBeIngested.every(file => file.idAsset ||  file.idSOAttachment)) {
+                // console.log('Uploads.onIngest onNext');
                 onNext();
             } else {
+                // console.log(`Uploads.onIngest history.push(${nextStep})`);
                 await history.push(nextStep);
             }
-        } catch {
+        } catch (error) {
+            // console.log(`Uploads.onIngest Exception: ${JSON.stringify(error)}`);
             setGettingAssetDetails(false);
         }
     };
@@ -251,6 +256,7 @@ type AliveUploadComponentsProps = {
 };
 
 function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactElement {
+    // console.log(`AliveUploadComponents ${JSON.stringify(props)}`);
     const { discardingFiles, gettingAssetDetails, onDiscard, onIngest, setUpdatedAssetVersionMetadata } = props;
     const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [
         state.onProgressEvent,
