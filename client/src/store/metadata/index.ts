@@ -360,7 +360,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (referenceModels) metadataStep.scene.referenceModels = referenceModels;
                         }
                         metadatas.push(metadataStep);
-                        // console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
+                        console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
                     }
                 }
 
