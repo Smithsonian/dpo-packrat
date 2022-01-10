@@ -709,10 +709,13 @@ class IngestDataWorker extends ResolverBase {
         }
 
         let modelDB: DBAPI.Model | null = idModel ? await DBAPI.Model.fetch(idModel) : null;
+        let cloned: boolean = false;
         if (!modelDB)
             modelDB = JCOutput.modelConstellation.Model;
-        else
+        else {
             modelDB.cloneData(JCOutput.modelConstellation.Model);
+            cloned = true;
+        }
 
         modelDB.Name = model.name;
         modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCreated) || new Date();
@@ -721,6 +724,10 @@ class IngestDataWorker extends ResolverBase {
         modelDB.idVPurpose = model.purpose;
         modelDB.idVUnits = model.units;
         modelDB.idVFileType = model.modelFileType;
+
+        // if we cloned, put our updates back into the modelConstellation ... as this may get used later
+        if (cloned)
+            JCOutput.modelConstellation.Model.cloneData(modelDB);
 
         const updateRes: boolean = idModel ? await modelDB.update() : await modelDB.create();
         if (!updateRes) {

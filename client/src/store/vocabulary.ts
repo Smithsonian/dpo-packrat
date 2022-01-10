@@ -151,7 +151,7 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
 
                 assetType.photogrammetry = (Term === 'Capture Data Set: Photogrammetry');
                 assetType.scene = (Term === 'Scene');
-                assetType.model = (Term === 'Model');
+                assetType.model = (Term === 'Model' || Term === 'Model Geometry File');
                 assetType.attachment = (Term === 'Attachment');
                 assetType.other = !assetType.photogrammetry && !assetType.scene && !assetType.model && !assetType.attachment;
             }

@@ -7,7 +7,7 @@
  */
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, TextArea } from '../../../../../components';
 import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore, useRepositoryStore, useSubjectStore, StateRelatedObject } from '../../../../../store';
 import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
@@ -168,24 +168,28 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                 onUpdateIdentifer={onIdentifersChange}
                 onRemoveIdentifer={onIdentifersChange}
             />
-            <Box mb={2}>
-                <RelatedObjectsList
-                    type={RelatedObjectType.Source}
-                    relatedObjects={photogrammetry.sourceObjects}
-                    onAdd={openSourceObjectModal}
-                    onRemove={onRemoveSourceObject}
-                    relationshipLanguage='Parent(s)'
-                />
-            </Box>
-            <Box mb={2}>
-                <RelatedObjectsList
-                    type={RelatedObjectType.Derived}
-                    relatedObjects={photogrammetry.derivedObjects}
-                    onAdd={openDerivedObjectModal}
-                    onRemove={onRemoveDerivedObject}
-                    relationshipLanguage='Child(ren)'
-                />
-            </Box>
+            {!idAsset && (
+                <Fragment>
+                    <Box mb={2}>
+                        <RelatedObjectsList
+                            type={RelatedObjectType.Source}
+                            relatedObjects={photogrammetry.sourceObjects}
+                            onAdd={openSourceObjectModal}
+                            onRemove={onRemoveSourceObject}
+                            relationshipLanguage='Parent(s)'
+                        />
+                    </Box>
+                    <Box mb={2}>
+                        <RelatedObjectsList
+                            type={RelatedObjectType.Derived}
+                            relatedObjects={photogrammetry.derivedObjects}
+                            onAdd={openDerivedObjectModal}
+                            onRemove={onRemoveDerivedObject}
+                            relationshipLanguage='Child(ren)'
+                        />
+                    </Box>
+                </Fragment>
+            )}
             <Description value={photogrammetry.description} onChange={setField} />
 
             <Box display='flex' flexDirection='row' mt={1}>

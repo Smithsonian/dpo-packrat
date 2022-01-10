@@ -121,36 +121,36 @@ function Metadata(): React.ReactElement {
     const item = getSelectedItem();
     const assetType = getAssetType(Number.parseInt(type, 10));
 
-
     const onPrevious = async () => {
         toast.dismiss();
         await history.goBack();
     };
 
     const onNext = async (): Promise<void> => {
+        const updateMode: boolean = !!(metadata.file.idAsset);
         if (assetType.photogrammetry) {
-            const hasError: boolean = metadata.file.idAsset
+            const hasError: boolean = updateMode
                 ? validateFields(metadata.photogrammetry, photogrammetryFieldsSchemaUpdate)
                 : validateFields(metadata.photogrammetry, photogrammetryFieldsSchema);
             if (hasError) return;
         }
 
         if (assetType.model) {
-            const hasError: boolean = metadata.file.idAsset
+            const hasError: boolean = updateMode
                 ? validateFields(metadata.model, modelFieldsSchemaUpdate)
                 : validateFields(metadata.model, modelFieldsSchema);
             if (hasError) return;
         }
 
         if (assetType.scene) {
-            const hasError: boolean = metadata.file.idAsset
+            const hasError: boolean = updateMode
                 ? validateFields(metadata.scene, sceneFieldsSchemaUpdate)
                 : validateFields(metadata.scene, sceneFieldsSchema);
             if (hasError) return;
         }
 
         if (assetType.other) {
-            const hasError: boolean = metadata.file.idAsset
+            const hasError: boolean = updateMode
                 ? validateFields(metadata.other, otherFieldsSchemaUpdate)
                 : validateFields(metadata.other, otherFieldsSchema);
             if (hasError) return;
@@ -177,6 +177,7 @@ function Metadata(): React.ReactElement {
             } = nextMetadata;
             const { isLast } = getMetadataInfo(id);
             const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
+            // console.log(`Metadata onNext() nextRoute=${nextRoute}, assetType=${JSON.stringify(assetType)}, metadataIndex=${metadataIndex}, metadatas=${JSON.stringify(metadatas)}`);
             history.push(nextRoute);
         }
     };

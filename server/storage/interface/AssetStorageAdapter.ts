@@ -47,6 +47,7 @@ export type IngestAssetResult = {
     systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined;
     assetsUnzipped?: boolean | undefined;
     assetsIngested?: boolean | undefined;
+    affectedSystemObjectIds?: Set<number> | null | undefined;
 };
 
 export type AssetStorageResultCommit = {
@@ -444,10 +445,26 @@ export class AssetStorageAdapter {
         if (!SOV) {
             IAR.success = false;
             IAR.error = 'DB Failure creating SystemObjectVersion';
-            LOG.error(`AssetStorageAdapter.ingestAssetWrapper failed to create new SystemObjectVersion for ${ingestAssetInput.idSystemObject}`, LOG.LS.eSTR);
+            LOG.error(`AssetStorageAdapter.ingestAsset failed to create new SystemObjectVersion for ${ingestAssetInput.idSystemObject}`, LOG.LS.eSTR);
             return IAR;
         }
         IAR.systemObjectVersion = SOV;
+
+        // Complex system object version patch up step here
+        // Scenes own Models, Models own Assets; those assets are *also* part of the scene's system object version
+        // So, when we update a model-owned asset, we also need to add a new system object version for that scene!
+        if (IAR.affectedSystemObjectIds && IAR.affectedSystemObjectIds.size > 0) {
+            LOG.info(`AssetStorageAdapter.ingestAsset found affectedSystemObjectIds for ${ingestAssetInput.idSystemObject}: ${JSON.stringify(IAR.affectedSystemObjectIds, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+            for (const idSystemObject of IAR.affectedSystemObjectIds) {
+                if (idSystemObject !== ingestAssetInput.idSystemObject) { // we've already updated ingestAssetInput.idSystemObject above
+                    const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, Comment, assetVersionOverrideMap, IAR.assetsUnzipped);
+                    if (!SOV)
+                        LOG.error(`AssetStorageAdapter.ingestAsset failed to create new SystemObjectVersion for ${idSystemObject}`, LOG.LS.eSTR);
+                }
+            }
+        } else
+            LOG.info(`AssetStorageAdapter.ingestAsset found no affectedSystemObjectIds for ${ingestAssetInput.idSystemObject}`, LOG.LS.eSTR);
+
         return IAR;
     }
 
@@ -493,11 +510,12 @@ export class AssetStorageAdapter {
             IAR = await AssetStorageAdapter.ingestAssetBulkZipWorker(storage, asset, assetVersion, metadata, opInfo, CAR.zip, assetVersion.BulkIngest);
             await CAR.zip.close();
         } else {
+            const affectedSystemObjectIds: Set<number> | null = await DBAPI.SystemObject.computeAffectedByUpdate([asset.idAsset]);
             const ASR: AssetStorageResult = await AssetStorageAdapter.promoteAssetWorker(storage, asset, assetVersion, metadata, opInfo, null);
             if (!ASR.success || !ASR.asset || !ASR.assetVersion)
                 IAR = { success: false, error: ASR.error };
             else
-                IAR = { success: true, assets: [ASR.asset], assetVersions: [ASR.assetVersion], systemObjectVersion: null, assetsIngested: true };
+                IAR = { success: true, assets: [ASR.asset], assetVersions: [ASR.assetVersion], systemObjectVersion: null, assetsIngested: true, affectedSystemObjectIds };
         }
 
         // Send Workflow Ingestion event
@@ -684,6 +702,7 @@ export class AssetStorageAdapter {
         const eAssetTypeMaster: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType);
         let IAR: IngestAssetResult = { success: true };
         let assetsIngested: boolean = false;
+        let affectedSystemObjectIds: Set<number> | null = null;
 
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${assetVersion.FilePath}/` : '';
@@ -798,7 +817,12 @@ export class AssetStorageAdapter {
                 assetComponent = new DBAPI.Asset({ FileName, idAssetGroup: 0, idVAssetType, idSystemObject: asset.idSystemObject, StorageKey: null, idAsset: 0 });
             }
 
+            // create asset version here; gather affected
             if (!assetVersionComponent) {
+                const affectedSOs: Set<number> | null = await DBAPI.SystemObject.computeAffectedByUpdate([assetComponent.idAsset]);
+                if (affectedSOs)
+                    affectedSystemObjectIds = affectedSystemObjectIds ? new Set([...affectedSystemObjectIds, ...affectedSOs]) : affectedSOs;
+
                 const CWSR: STORE.CommitWriteStreamResult = { storageHash: hashResults.hash, storageSize: hashResults.dataLength, success: true };
                 assetVersionComponent = await AssetStorageAdapter.createAssetConstellation(assetComponent, FilePath, assetVersion.idUserCreator,
                     assetVersion.DateCreated, CWSR, '', false, null, null, null, ingested); /* istanbul ignore next */
@@ -842,7 +866,7 @@ export class AssetStorageAdapter {
             return { success: false, error, assets, assetVersions, systemObjectVersion: null };
         }
 
-        return { success: true, assets, assetVersions, systemObjectVersion: null, assetsUnzipped: true, assetsIngested };
+        return { success: true, assets, assetVersions, systemObjectVersion: null, assetsUnzipped: true, assetsIngested, affectedSystemObjectIds };
     }
 
     private static async retireAssetIfAllVersionsAreRetired(asset: DBAPI.Asset): Promise<H.IOResults> {

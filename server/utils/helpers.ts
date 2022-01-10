@@ -462,6 +462,8 @@ export class Helpers {
             return value.toString();
         if (value instanceof Map)
             return [...value];
+        if (value instanceof Set)
+            return [...value];
         if (value.pipe && typeof (value.pipe) === 'function')
             return 'stream';
         return value;

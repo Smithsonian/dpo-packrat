@@ -179,6 +179,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             // LOG.info(`Item.fetchDerivedFromSubjects(${JSON.stringify(idSubjects)}), idItems2 = ${JSON.stringify(idItems2)}`, LOG.LS.eDB);
             if (!idItems2)
                 return null;
+            /* istanbul ignore if */
             if (idItems2.length === 0)
                 return [];
 
