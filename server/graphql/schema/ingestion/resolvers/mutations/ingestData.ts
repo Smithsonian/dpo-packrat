@@ -1211,7 +1211,7 @@ class IngestDataWorker extends ResolverBase {
 
             // LOG.info(`ingestData.promoteAssetsIntoRepository AssetVersion=${JSON.stringify(assetVersionDB, H.Helpers.saferStringify)}; Asset=${JSON.stringify(assetDB, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
             const opInfo: OperationInfo = {
-                message: 'Ingesting asset',
+                message: AVInfo.Comment ? AVInfo.Comment : 'Ingesting asset',
                 idUser: user.idUser,
                 userEmailAddress: user.EmailAddress,
                 userName: user.Name

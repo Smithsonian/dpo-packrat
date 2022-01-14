@@ -357,6 +357,7 @@ export type Mutation = {
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
   publish: PublishResult;
+  rollbackAssetVersion: RollbackAssetVersionResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateLicense: CreateLicenseResult;
@@ -472,6 +473,11 @@ export type MutationPublishArgs = {
 };
 
 
+export type MutationRollbackAssetVersionArgs = {
+  input: RollbackAssetVersionInput;
+};
+
+
 export type MutationRollbackSystemObjectVersionArgs = {
   input: RollbackSystemObjectVersionInput;
 };
@@ -537,6 +543,17 @@ export type DiscardUploadedAssetVersionsInput = {
 export type DiscardUploadedAssetVersionsResult = {
   __typename?: 'DiscardUploadedAssetVersionsResult';
   success: Scalars['Boolean'];
+};
+
+export type RollbackAssetVersionResult = {
+  __typename?: 'RollbackAssetVersionResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+};
+
+export type RollbackAssetVersionInput = {
+  idAssetVersion: Scalars['Int'];
+  rollbackNotes: Scalars['String'];
 };
 
 export type GetAssetVersionsDetailsInput = {
@@ -793,6 +810,7 @@ export type AssetVersion = {
   Version: Scalars['Int'];
   idSOAttachment?: Maybe<Scalars['Int']>;
   FilePath: Scalars['String'];
+  Comment?: Maybe<Scalars['String']>;
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
@@ -1963,6 +1981,8 @@ export type DetailVersion = {
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
   ingested: Scalars['Boolean'];
+  Comment?: Maybe<Scalars['String']>;
+  CommentLink?: Maybe<Scalars['String']>;
 };
 
 export type GetVersionsForAssetInput = {

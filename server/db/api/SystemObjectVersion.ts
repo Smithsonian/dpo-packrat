@@ -115,7 +115,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                                                FROM SystemObjectVersion
                                                WHERE idSystemObject = ${idSystemObject});`; //, SystemObjectVersion);
             /* istanbul ignore if */
-            if (!systemObjectVersions || systemObjectVersions.length == 0)
+            if (!systemObjectVersions || systemObjectVersions.length === 0)
                 return null;
             const systemObjectVersion: SystemObjectVersionBase = systemObjectVersions[0];
             // Manually construct SystemObjectVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean

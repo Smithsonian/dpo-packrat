@@ -156,6 +156,7 @@ class TestSuiteUtils {
             BulkIngest: false,
             idSOAttachment: null,
             FilePath: '/test/asset/path',
+            Comment: 'Test file',
             Version: 0
         };
     };

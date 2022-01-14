@@ -661,6 +661,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             BulkIngest: false,
             idSOAttachment: null,
             FilePath: '',
+            Comment: 'Created by Cook si-packrat-inspect',
             idAssetVersion
         });
         return new DBAPI.ModelAsset(asset, assetVersion, isModel, channelList);
