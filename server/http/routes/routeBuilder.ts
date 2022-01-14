@@ -69,6 +69,11 @@ export class RouteBuilder {
         return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idSystemObjectVersionComment=${idSystemObjectVersion}`, eMode);
     }
 
+    /** Downloads the comment for the asset version with idAssetVersion */
+    static DownloadAssetVersionComment(idAssetVersion: number, eMode?: eHrefMode | undefined): string {
+        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idAssetVersionComment=${idAssetVersion}`, eMode);
+    }
+
     static ApplyPrefix(path: string, eMode?: eHrefMode | undefined): string {
         let prefix: string = '';
         switch (eMode) {

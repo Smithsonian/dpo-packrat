@@ -18,6 +18,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     BulkIngest!: boolean;
     idSOAttachment!: number | null;
     FilePath!: string;
+    Comment!: string | null;
 
     IngestedOrig: boolean | null;
 
@@ -48,7 +49,8 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             Ingested: (assetVersion.Ingested === null) ? null : (assetVersion.Ingested ? true : false), // we're expecting Prisma to send values like null, 0, and 1
             BulkIngest: assetVersion.BulkIngest ? true : false,
             idSOAttachment: assetVersion.idSOAttachment,
-            FilePath: assetVersion.FilePath
+            FilePath: assetVersion.FilePath,
+            Comment: assetVersion.Comment
         });
     }
 
@@ -57,14 +59,14 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     // until Prisma has fixed this issue.  https://mariadb.com/kb/en/getting-started-with-the-nodejs-connector/
     protected async createWorker(): Promise<boolean> {
         try {
-            const { DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest, idSOAttachment, FilePath } = this;
+            const { DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest, idSOAttachment, FilePath, Comment } = this;
             const Version: number = (Ingested) ? (await AssetVersion.computeNextVersionNumber(idAsset) || /* istanbul ignore next */ 1) : 0;   // only bump version number for Ingested asset versions
             this.Version = Version;
 
             ({ idAssetVersion: this.idAssetVersion, DateCreated: this.DateCreated, idAsset: this.idAsset,
                 FileName: this.FileName, idUserCreator: this.idUserCreator, StorageHash: this.StorageHash, StorageSize: this.StorageSize,
                 StorageKeyStaging: this.StorageKeyStaging, Ingested: this.Ingested, BulkIngest: this.BulkIngest, Version: this.Version,
-                idSOAttachment: this.idSOAttachment, FilePath: this.FilePath } =
+                idSOAttachment: this.idSOAttachment, FilePath: this.FilePath, Comment: this.Comment } =
                 await DBC.DBConnection.prisma.assetVersion.create({
                     data: {
                         Asset:              { connect: { idAsset }, },
@@ -79,6 +81,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                         Version,
                         SystemObject_AssetVersion_idSOAttachmentToSystemObject: idSOAttachment ? { connect: { idSystemObject: idSOAttachment }, } : undefined,
                         FilePath,
+                        Comment,
                         SystemObject:       { create: { Retired: false }, },
                     },
                 }));
@@ -126,7 +129,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAssetVersion, DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging,
-                Ingested, BulkIngest, idSOAttachment, FilePath, IngestedOrig } = this;
+                Ingested, BulkIngest, idSOAttachment, FilePath, Comment, IngestedOrig } = this;
             let { Version } = this; // may be updated!
 
             // if we're updating from not ingested to ingested, and if we don't have a version number, compute and use the next version number:
@@ -154,6 +157,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                     BulkIngest,
                     Version,
                     FilePath,
+                    Comment,
                     SystemObject_AssetVersion_idSOAttachmentToSystemObject: idSOAttachment ? { connect: { idSystemObject: idSOAttachment }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
