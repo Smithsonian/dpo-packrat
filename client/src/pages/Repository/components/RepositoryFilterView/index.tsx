@@ -1,4 +1,5 @@
 /* eslint-disable react/jsx-max-props-per-line */
+/* eslint-disable no-case-declarations */
 
 /**
  * RepositoryFilterView
@@ -16,23 +17,24 @@ import { Loader } from '../../../../components';
 import { useRepositoryStore, useVocabularyStore } from '../../../../store';
 import { Colors, palette } from '../../../../theme';
 import { useGetFilterViewDataQuery } from '../../../../types/graphql';
+import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
 import FilterDate from './FilterDate';
 import FilterSelect from './FilterSelect';
-import { ChipOption, getRepositoryFilterOptions } from './RepositoryFilterOptions';
+import { ChipOption, getRepositoryFilterOptions, eRepositoryChipFilterType, getTermForRepositoryFilterType } from './RepositoryFilterOptions';
+import { extractISOMonthDateYear } from '../../../../constants';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
         display: 'flex',
-        height: (isExpanded: boolean) => (isExpanded ? 235 : 35),
         background: palette.primary.light,
         borderRadius: 5,
         padding: 10,
         marginBottom: 10,
         transition: '250ms height ease',
-        [breakpoints.down('lg')]: {
-            height: (isExpanded: boolean) => (isExpanded ? 215 : 30)
-        }
+        height: 'fit-content',
+        maxWidth: 'fit-content',
+        minWidth: 900
     },
     content: {
         display: 'flex',
@@ -77,8 +79,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         backgroundColor: Colors.defaults.white,
         border: `0.5px solid ${palette.primary.contrastText}`,
         fontSize: '0.8em',
-        cursor: 'pointer',
-        gridColumn: '1 / 2'
+        cursor: 'pointer'
     },
     chip: {
         marginLeft: 10,
@@ -93,21 +94,13 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         display: 'flex',
         alignItems: (isExpanded: boolean) => (isExpanded ? 'flex-end' : 'center'),
         justifyContent: 'center',
-        paddingBottom: 10
+        paddingBottom: (isExpanded: boolean) => (isExpanded ? 10 : 0),
     },
     chipsContainer: {
         display: 'flex',
         alignItems: 'center',
-        height: 30,
-        padding: 1.5,
-        overflow: 'hidden',
-        width: '100%'
-    },
-    filterTypeAndChipsContainer: {
-        display: 'grid',
-        gridTemplateColumns: '300px 1fr',
-        width: '100%',
-        alignItems: 'center'
+        height: 'fit-content',
+        flexWrap: 'wrap'
     }
 }));
 
@@ -121,10 +114,45 @@ const StyledChip = withStyles(({ palette }) => ({
 
 function RepositoryFilterView(): React.ReactElement {
     const { data, loading } = useGetFilterViewDataQuery();
-    const [units, projects, isExpanded, repositoryBrowserRootObjectType, repositoryBrowserRootName, repositoryRootType] = useRepositoryStore(state => [state.units, state.projects, state.isExpanded, state.repositoryBrowserRootObjectType, state.repositoryBrowserRootName, state.repositoryRootType]);
-    const [toggleFilter, removeUnitsOrProjects] = useRepositoryStore(state => [state.toggleFilter, state.removeUnitsOrProjects]);
-    const getEntries = useVocabularyStore(state => state.getEntries);
+    const [units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType, dateCreatedFrom, dateCreatedTo, isExpanded, repositoryBrowserRootObjectType, repositoryBrowserRootName, repositoryRootType] = useRepositoryStore(state => [state.units, state.projects, state.has, state.missing, state.captureMethod, state.variantType, state.modelPurpose, state.modelFileType, state.dateCreatedFrom, state.dateCreatedTo, state.isExpanded, state.repositoryBrowserRootObjectType, state.repositoryBrowserRootName, state.repositoryRootType]);
+    const [toggleFilter, removeChipOption] = useRepositoryStore(state => [state.toggleFilter, state.removeChipOption]);
+    const [getEntries, getVocabularyTerm] = useVocabularyStore(state => [state.getEntries, state.getVocabularyTerm]);
     const classes = useStyles(isExpanded);
+
+    const convertToChipState = (filterName: eRepositoryChipFilterType, selected: eSystemObjectType[] | number[]): ChipOption[] => {
+        switch (filterName) {
+            case eRepositoryChipFilterType.eHas:
+                const selectedHas = selected as eSystemObjectType[];
+                return selectedHas.map((option: eSystemObjectType) => ({ name: getTermForSystemObjectType(option), id: option, type: eRepositoryChipFilterType.eHas }));
+            case eRepositoryChipFilterType.eMissing:
+                const selectedMissing = selected as eSystemObjectType[];
+                return selectedMissing.map((option: eSystemObjectType) => ({ name: getTermForSystemObjectType(option), id: option, type: eRepositoryChipFilterType.eMissing }));
+            case eRepositoryChipFilterType.eCaptureMethod:
+                const selectedCaptureMethod = selected as number[];
+                return selectedCaptureMethod.map((option: number) => ({ name: getVocabularyTerm(eVocabularySetID.eCaptureDataCaptureMethod, option) as string, id: option, type: eRepositoryChipFilterType.eCaptureMethod }));
+            case eRepositoryChipFilterType.eVariantType:
+                const selectedVariantType = selected as number[];
+                return selectedVariantType.map((option: number) => ({ name: getVocabularyTerm(eVocabularySetID.eCaptureDataFileVariantType, option) as string, id: option, type: eRepositoryChipFilterType.eVariantType }));
+            case eRepositoryChipFilterType.eModelPurpose:
+                const selectedModelPurpose = selected as number[];
+                return selectedModelPurpose.map((option: number) => ({ name: getVocabularyTerm(eVocabularySetID.eModelPurpose, option) as string, id: option, type: eRepositoryChipFilterType.eModelPurpose }));
+            case eRepositoryChipFilterType.eModelFileType:
+                const selectedModelFileType = selected as number[];
+                return selectedModelFileType.map((option: number) => ({ name: getVocabularyTerm(eVocabularySetID.eModelFileType, option) as string, id: option, type: eRepositoryChipFilterType.eModelFileType }));
+            default:
+                return [];
+        }
+    };
+
+    const hasChips = convertToChipState(eRepositoryChipFilterType.eHas, has);
+    const missingChips = convertToChipState(eRepositoryChipFilterType.eMissing, missing);
+    const captureMethodChips = convertToChipState(eRepositoryChipFilterType.eCaptureMethod, captureMethod);
+    const variantTypeChips = convertToChipState(eRepositoryChipFilterType.eVariantType, variantType);
+    const modelPurposeChips = convertToChipState(eRepositoryChipFilterType.eModelPurpose, modelPurpose);
+    const modelFileTypeChips = convertToChipState(eRepositoryChipFilterType.eModelFileType, modelFileType);
+    const dateFromChip = { name: extractISOMonthDateYear(dateCreatedFrom) as string, id: 0, type: eRepositoryChipFilterType.eDateCreatedFrom };
+    const dateToChip = { name: extractISOMonthDateYear(dateCreatedTo) as string, id: 0, type: eRepositoryChipFilterType.eDateCreatedTo };
+
 
     const {
         chipsOptions,
@@ -158,22 +186,29 @@ function RepositoryFilterView(): React.ReactElement {
     }
     const typeName = repositoryBrowserRootObjectType ? `${repositoryBrowserRootObjectType}: ${repositoryBrowserRootName}` : `${unrootedRepositoryType}: All`;
 
+    const activeChips = [...chipsOptions, ...hasChips, ...missingChips, ...captureMethodChips, ...variantTypeChips, ...modelPurposeChips, ...modelFileTypeChips];
+    if (dateCreatedFrom)
+        activeChips.push(dateFromChip);
+    if (dateCreatedTo)
+        activeChips.push(dateToChip);
+
     let content: React.ReactNode = (
-        <Box className={classes.filterTypeAndChipsContainer}>
+        <Box display='flex' alignItems='center'>
             <Box className={classes.textArea}>
                 <Typography variant='body1'>{typeName}</Typography>
             </Box>
 
             <Box className={classes.chipsContainer}>
-                {chipsOptions.map((chip: ChipOption, index: number) => {
+                {activeChips.map((chip: ChipOption, index: number) => {
                     const { id, type, name } = chip;
-                    const label: string = `${getTermForSystemObjectType(type)}: ${name}`;
+                    const label: string = `${getTermForRepositoryFilterType(type)}: ${name}`;
 
                     const onClick = () => {
                         window.open(getDetailsUrlForObject(id), '_blank');
                     };
 
-                    return (
+                    // if it's not a project or unit (i.e. no idSystemObject), we don't want the link to work
+                    return (type === eRepositoryChipFilterType.eProject || type === eRepositoryChipFilterType.eUnit) ? (
                         <StyledChip
                             key={index}
                             label={label}
@@ -181,7 +216,17 @@ function RepositoryFilterView(): React.ReactElement {
                             deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
                             className={classes.chip}
                             onClick={onClick}
-                            onDelete={() => removeUnitsOrProjects(id, type)}
+                            onDelete={() => removeChipOption(id, type)}
+                            variant='outlined'
+                        />
+                    ) : (
+                        <StyledChip
+                            key={index}
+                            label={label}
+                            size='small'
+                            deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
+                            className={classes.chip}
+                            onDelete={() => removeChipOption(id, type)}
                             variant='outlined'
                         />
                     );
@@ -196,41 +241,30 @@ function RepositoryFilterView(): React.ReactElement {
         content = (
             <React.Fragment>
                 {content}
-                <Box display='flex' flexDirection='row' justifyContent='space-between'>
-                    <Box display='flex' flex={1} mt={2}>
-                        <Box className={classes.selectContainer} width={300}>
-                            <FilterSelect multiple label='Top-Level Objects' name='repositoryRootType' options={repositoryRootTypesOptions} />
-                            <FilterSelect multiple label='Children Objects' name='objectsToDisplay' options={objectToDisplayOptions} />
-                            <FilterSelect multiple label='Metadata To Display' name='metadataToDisplay' options={metadataToDisplayOptions} />
-                        </Box>
-
-                        <Box className={classes.selectContainer} width={225}>
-                            <FilterSelect multiple label='Units' name='units' options={unitsOptions} />
-                            <FilterSelect multiple label='Projects' name='projects' options={projectsOptions} />
-                            <FilterSelect multiple label='Has' name='has' options={hasOptions} />
-                            <FilterSelect multiple label='Missing' name='missing' options={missingOptions} />
-                        </Box>
-
-                        <Box>
-                            <Box className={classes.selectContainer} width={280}>
-                                <FilterSelect multiple label='Capture Method' name='captureMethod' options={captureMethodOptions} />
-                                <FilterSelect multiple label='Variant Type' name='variantType' options={variantTypeOptions} />
-                                <FilterSelect multiple label='Model Purpose' name='modelPurpose' options={modelPurposeOptions} />
-                                <FilterSelect multiple label='Model File Type' name='modelFileType' options={fileTypeOptions} />
-                            </Box>
-                            <FilterDate label='Date Created' name='dateCreated' />
-                        </Box>
+                <Box display='flex' flex={1} mt={2}>
+                    <Box className={classes.selectContainer} width={300}>
+                        <FilterSelect multiple label='Top-Level Objects' name='repositoryRootType' options={repositoryRootTypesOptions} />
+                        <FilterSelect multiple label='Children Objects' name='objectsToDisplay' options={objectToDisplayOptions} />
+                        <FilterSelect multiple label='Metadata To Display' name='metadataToDisplay' options={metadataToDisplayOptions} />
                     </Box>
-                    <Box className={classes.selectContainer} style={{ alignSelf: 'end' }}>
-                        <Box className={classes.options}>
-                            <Box display='flex'>
-                                <FiLink2 className={classes.anchor} color={palette.primary.main} size={20} onClick={onCopyLink} />
-                                {expandIcon}
-                            </Box>
+
+                    <Box className={classes.selectContainer} width={225}>
+                        <FilterSelect multiple label='Units' name='units' options={unitsOptions} />
+                        <FilterSelect multiple label='Projects' name='projects' options={projectsOptions} />
+                        <FilterSelect multiple label='Has' name='has' options={hasOptions} />
+                        <FilterSelect multiple label='Missing' name='missing' options={missingOptions} />
+                    </Box>
+
+                    <Box width={345}>
+                        <Box className={classes.selectContainer} width={280}>
+                            <FilterSelect multiple label='Capture Method' name='captureMethod' options={captureMethodOptions} />
+                            <FilterSelect multiple label='Variant Type' name='variantType' options={variantTypeOptions} />
+                            <FilterSelect multiple label='Model Purpose' name='modelPurpose' options={modelPurposeOptions} />
+                            <FilterSelect multiple label='Model File Type' name='modelFileType' options={fileTypeOptions} />
                         </Box>
+                        <FilterDate label='Date Created' name='dateCreated' />
                     </Box>
                 </Box>
-
             </React.Fragment>
         );
 
@@ -244,6 +278,12 @@ function RepositoryFilterView(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>{content}</Box>
+            <Box className={classes.options}>
+                <Box display='flex'>
+                    <FiLink2 className={classes.anchor} color={palette.primary.main} size={20} onClick={onCopyLink} />
+                    {expandIcon}
+                </Box>
+            </Box>
         </Box>
     );
 }

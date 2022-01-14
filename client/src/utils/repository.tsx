@@ -148,7 +148,7 @@ export function getTreeWidth(columnSize: number, sideBarExpanded: boolean, fullW
     const isXLScreen = window.innerWidth >= 1600;
 
     if (fullWidth) {
-        return '98vw';
+        return '90vw';
     }
 
     if (computedWidth <= 80) {
@@ -174,6 +174,7 @@ let metadataTitleMap: Map<eMetadata, string> | null = null;
 // prettier-ignore
 export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boolean, values?: string[]): TreeViewColumn[] {
     const treeColumns: TreeViewColumn[] = [];
+    // width of each column
     const MIN_SIZE = 5;
 
     if (!metadataTitleMap) {
@@ -215,12 +216,12 @@ type ObjectInterfaceDetails = {
 };
 
 // prettier-ignore
-export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant: RepositoryColorVariant, makeStyles: any): ObjectInterfaceDetails {
+export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant: RepositoryColorVariant, makeStyles: any, idSystemObject: number): ObjectInterfaceDetails {
     const color: string = Colors.repository[objectType][variant];
     const textColor: string = Colors.defaults.white;
     const backgroundColor: string = Colors.repository[objectType][RepositoryColorVariant.dark] || Colors.repository.default[RepositoryColorVariant.dark];
 
-    const iconProps: RepositoryIconProps = { objectType, backgroundColor, textColor, overrideText: undefined };
+    const iconProps: RepositoryIconProps = { objectType, backgroundColor, textColor, overrideText: undefined, idSystemObject };
 
     switch (objectType) {
         default:                                        break;
