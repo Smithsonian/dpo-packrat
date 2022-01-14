@@ -11,10 +11,11 @@ interface InViewTreeItemProps {
     color: string;
     label: React.ReactNode;
     onView: () => Promise<void>;
+    id: string;
 }
 
 function InViewTreeItem(props: InViewTreeItemProps): React.ReactElement {
-    const { nodeId, triggerOnce, childNodesContent, icon, color, label, onView } = props;
+    const { nodeId, triggerOnce, childNodesContent, icon, color, label, onView, id } = props;
     const [loading, setLoading] = useState(false);
     return (
         <InView
@@ -30,7 +31,13 @@ function InViewTreeItem(props: InViewTreeItemProps): React.ReactElement {
             {({ ref }) => {
                 return (
                     <div ref={ref}>
-                        <StyledTreeItem nodeId={nodeId} color={color} label={label} icon={icon}>
+                        <StyledTreeItem
+                            id={id}
+                            nodeId={nodeId}
+                            color={color}
+                            label={label}
+                            icon={icon}
+                        >
                             {childNodesContent}
                         </StyledTreeItem>
                         {loading ? <TreeLabelLoading /> : <TreeLabelEllipsis />}

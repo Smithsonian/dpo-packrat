@@ -25,7 +25,7 @@ import RepositoryTreeView from '../../../../Repository/components/RepositoryTree
 import { isValidParentChildRelationship } from '../../../../../utils/repository';
 import { useRepositoryStore } from '../../../../../store/repository';
 
-const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, spacing }) => ({
     title: {
         marginLeft: spacing(2),
         textAlign: 'center',
@@ -33,16 +33,14 @@ const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
     },
     appBar: {
         position: 'relative',
-        color: palette.background.paper
+        color: palette.background.paper,
+        width: '100%'
     },
     repositoryContainer: {
         display: 'flex',
         flexDirection: 'column',
         padding: 20,
-        paddingBottom: 0,
-        [breakpoints.down('lg')]: {
-            padding: 10
-        }
+        paddingBottom: 0
     },
     loader: {
         color: palette.background.paper
@@ -181,23 +179,26 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
             }}
             maxWidth='xl'
         >
-            <AppBar className={classes.appBar}>
-                <Toolbar>
-                    <Button autoFocus color='inherit' onClick={onModalClose}>
-                        Close
-                    </Button>
-                    <Typography variant='h6' className={classes.title}>
-                        Select {props?.relationship === 'Source' ? 'Parent(s)' : 'Child(ren)'}
-                    </Typography>
-                    <Button autoFocus color='inherit' onClick={onClick}>
-                        {isSaving ? 'Saving...' : 'Save'}
-                    </Button>
-                </Toolbar>
-            </AppBar>
-            <Box className={classes.repositoryContainer}>
-                <RepositoryFilterView />
-                <RepositoryTreeView isModal selectedItems={selected} onSelect={onSelect} onUnSelect={onUnSelect} />
+            <Box width='fit-content'>
+                <AppBar className={classes.appBar}>
+                    <Toolbar>
+                        <Button autoFocus color='inherit' onClick={onModalClose}>
+                            Close
+                        </Button>
+                        <Typography variant='h6' className={classes.title}>
+                            Select {props?.relationship === 'Source' ? 'Parent(s)' : 'Child(ren)'}
+                        </Typography>
+                        <Button autoFocus color='inherit' onClick={onClick}>
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </Button>
+                    </Toolbar>
+                </AppBar>
+                <Box className={classes.repositoryContainer}>
+                    <RepositoryFilterView />
+                    <RepositoryTreeView isModal selectedItems={selected} onSelect={onSelect} onUnSelect={onUnSelect} />
+                </Box>
             </Box>
+
         </Dialog>
     );
 }

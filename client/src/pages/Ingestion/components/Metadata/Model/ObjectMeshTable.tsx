@@ -30,6 +30,7 @@ const useStyles = makeStyles(theme => ({
     unindentedFields: {
         '& > :first-child': {
             minHeight: '20px',
+            height: 'fit-content',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
         },
@@ -69,9 +70,11 @@ const useStyles = makeStyles(theme => ({
         borderRadius: 5,
         padding: 10,
         backgroundColor: theme.palette.primary.light,
-        width: 'fit-content',
+        minWidth: '750px',
+        maxWidth: '40vw',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        wordBreak: 'break-word'
     },
     captionContainer: {
         flex: '1 1 0%',
