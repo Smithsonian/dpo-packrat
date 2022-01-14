@@ -8,6 +8,19 @@ import { eMetadata, eSystemObjectType, eVocabularySetID } from '../../../../type
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import lodash from 'lodash';
 
+export enum eRepositoryChipFilterType {
+    eProject,
+    eUnit,
+    eHas,
+    eMissing,
+    eCaptureMethod,
+    eVariantType,
+    eModelPurpose,
+    eModelFileType,
+    eDateCreatedFrom,
+    eDateCreatedTo
+}
+
 export type FilterOption = {
     label: string;
     value: number;
@@ -15,7 +28,7 @@ export type FilterOption = {
 
 export type ChipOption = {
     id: number;
-    type: eSystemObjectType;
+    type: eRepositoryChipFilterType;
     name: string;
 };
 
@@ -140,12 +153,12 @@ export function getRepositoryFilterOptions({ units, projects, data, getEntries }
 
     if (getFilterViewData?.units && getFilterViewData.units.length) {
         unitsOptions = sortOptionsAlphabetically(getFilterViewData?.units.map(({ Name, SystemObject }) => ({ label: Name, value: SystemObject?.idSystemObject ?? 0 })));
-        chipsOptions.push(...filterOptionToChipOption(units, unitsOptions, eSystemObjectType.eUnit));
+        chipsOptions.push(...filterOptionToChipOption(units, unitsOptions, eRepositoryChipFilterType.eUnit));
     }
 
     if (getFilterViewData?.projects && getFilterViewData.projects.length) {
         projectsOptions = sortOptionsAlphabetically(getFilterViewData?.projects.map(({ Name, SystemObject }) => ({ label: Name, value: SystemObject?.idSystemObject ?? 0 })));
-        chipsOptions.push(...filterOptionToChipOption(projects, projectsOptions, eSystemObjectType.eProject));
+        chipsOptions.push(...filterOptionToChipOption(projects, projectsOptions, eRepositoryChipFilterType.eProject));
     }
 
     const repositoryRootTypesOptions: FilterOption[] = systemObjectTypes;
@@ -177,11 +190,26 @@ function vocabulariesToFilterOption(vocabularies: Pick<Vocabulary, 'idVocabulary
     return vocabularies.map(({ idVocabulary, Term }) => ({ label: Term, value: idVocabulary }));
 }
 
-function filterOptionToChipOption(selectedIds: number[], options: FilterOption[], type: eSystemObjectType): ChipOption[] {
+function filterOptionToChipOption(selectedIds: number[], options: FilterOption[], type: eRepositoryChipFilterType): ChipOption[] {
     const selectedOptions: FilterOption[] = options.filter(({ value }) => selectedIds.includes(value));
     return selectedOptions.map(({ label: name, value: id }: FilterOption) => ({ id, name, type }));
 }
 
 function sortOptionsAlphabetically(options: FilterOption[]): FilterOption[] {
     return lodash.orderBy(options, [({ label }: FilterOption) => label.toLowerCase().trim()], ['asc']);
+}
+
+export function getTermForRepositoryFilterType(filterType: eRepositoryChipFilterType): string {
+    switch (filterType) {
+        case eRepositoryChipFilterType.eUnit:                   return 'Unit';
+        case eRepositoryChipFilterType.eProject:                return 'Project';
+        case eRepositoryChipFilterType.eHas:                    return 'Has';
+        case eRepositoryChipFilterType.eMissing:                return 'Missing';
+        case eRepositoryChipFilterType.eCaptureMethod:          return 'Capture Method';
+        case eRepositoryChipFilterType.eVariantType:            return 'Variant Type';
+        case eRepositoryChipFilterType.eModelPurpose:           return 'Model Purpose';
+        case eRepositoryChipFilterType.eModelFileType:          return 'Model File Type';
+        case eRepositoryChipFilterType.eDateCreatedFrom:        return 'Created From';
+        case eRepositoryChipFilterType.eDateCreatedTo:          return 'Created To';
+    }
 }

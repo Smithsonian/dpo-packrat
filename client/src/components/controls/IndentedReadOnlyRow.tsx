@@ -12,7 +12,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'grid',
         alignItems: 'center',
-        gridTemplateColumns: ({ indentation }: IndentedReadOnlyRowProps) => indentation ? `${15*indentation}px 15% 15px 1fr` : '15px 15% 15px 1fr',
+        gridTemplateColumns: ({ indentation }: IndentedReadOnlyRowProps) => indentation ? `${15*indentation}px 20% 15px 1fr` : '15px 20% 15px 1fr',
         padding: 10,
         borderRadius: 5,
         width: ({ width }: IndentedReadOnlyRowProps) => width || '100%',

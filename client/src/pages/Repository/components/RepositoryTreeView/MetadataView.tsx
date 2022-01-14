@@ -35,7 +35,7 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
             return (
                 <div key={index} className={makeStyles?.column} style={{ width, color: palette.primary.dark, fontSize: undefined }}>
                     <span className={makeStyles?.text} title={header ? undefined : label} data-tooltip-position='bottom'>
-                        {trimmedMetadataField(label, 20, 10)}
+                        {trimmedMetadataField(label, 14, 7)}
                     </span>
                 </div>
             );

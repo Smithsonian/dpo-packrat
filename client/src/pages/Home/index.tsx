@@ -21,7 +21,9 @@ const useStyles = makeStyles(() => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
-        flex: 1
+        flex: 1,
+        width: 'fit-content',
+        minWidth: '100%'
     },
     content: {
         display: 'flex',
