@@ -26,7 +26,7 @@ export function formatISOToHoursMinutes(time: string): string {
     return `${hours}:${minutes}`;
 }
 
-export function extractISOMonthDateYear(iso: string | Date, materialUI = false): string | null {
+export function extractISOMonthDateYear(iso: string | Date | null, materialUI = false): string | null {
     if (!iso)
         return null;
 
