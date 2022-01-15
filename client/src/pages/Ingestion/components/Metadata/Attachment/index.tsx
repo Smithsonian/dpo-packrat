@@ -85,14 +85,17 @@ function Attachment(props: AttachmentProps): React.ReactElement {
 
     const content = (
         <React.Fragment>
-            <AssetIdentifiers
-                systemCreated={systemCreated}
-                identifiers={identifiers}
-                onSystemCreatedChange={setAttachmentCheckboxField}
-                onAddIdentifer={onAttachmentIdentifierChange}
-                onUpdateIdentifer={onAttachmentIdentifierChange}
-                onRemoveIdentifer={onAttachmentIdentifierChange}
-            />
+            <Box width='52vw'>
+                <AssetIdentifiers
+                    systemCreated={systemCreated}
+                    identifiers={identifiers}
+                    onSystemCreatedChange={setAttachmentCheckboxField}
+                    onAddIdentifer={onAttachmentIdentifierChange}
+                    onUpdateIdentifer={onAttachmentIdentifierChange}
+                    onRemoveIdentifer={onAttachmentIdentifierChange}
+                />
+            </Box>
+
             <AttachmentMetadataForm
                 metadatas={attachmentArr}
                 metadataState={attachmentMetadata}
