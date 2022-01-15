@@ -13,6 +13,7 @@ import MetadataView from './MetadataView';
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
         display: 'flex',
+        alignItems: 'center',
         minHeight: 50,
         height: 'fit-content',
         backgroundColor: palette.primary.light,
@@ -37,9 +38,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
             fontSize: typography.pxToRem(15)
         },
         width: 'calc(30vw + 25px)',
-        minWidth: '325px',
-        maxWidth: '525px'
-
+        flex: 0.9
     },
     treeViewText: {
         left: 20,

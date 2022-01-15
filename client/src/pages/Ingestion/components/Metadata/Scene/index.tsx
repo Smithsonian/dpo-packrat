@@ -183,15 +183,16 @@ function Scene(props: SceneProps): React.ReactElement {
                     />
                 </Box>
             )}
-
-            <AssetIdentifiers
-                systemCreated={scene.systemCreated}
-                identifiers={scene.identifiers}
-                onSystemCreatedChange={setCheckboxField}
-                onAddIdentifer={onIdentifersChange}
-                onUpdateIdentifer={onIdentifersChange}
-                onRemoveIdentifer={onIdentifersChange}
-            />
+            <Box width='52vw'>
+                <AssetIdentifiers
+                    systemCreated={scene.systemCreated}
+                    identifiers={scene.identifiers}
+                    onSystemCreatedChange={setCheckboxField}
+                    onAddIdentifer={onIdentifersChange}
+                    onUpdateIdentifer={onIdentifersChange}
+                    onRemoveIdentifer={onIdentifersChange}
+                />
+            </Box>
             {!idAsset && (
                 <Fragment>
                     <Box mb={2}>

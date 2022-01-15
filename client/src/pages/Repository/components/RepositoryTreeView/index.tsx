@@ -77,14 +77,13 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     label: {
         display: 'flex',
         width: '30vw',
-        minWidth: '300px',
-        maxWidth: '500px',
         alignItems: 'center',
         position: 'sticky',
         left: 45,
         [breakpoints.down('lg')]: {
             left: 30
-        }
+        },
+        flex: 0.9
     },
     labelText: {
         color: 'rgb(44,64,90)',
