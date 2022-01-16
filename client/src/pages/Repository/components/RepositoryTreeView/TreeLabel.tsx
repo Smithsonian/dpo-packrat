@@ -34,11 +34,11 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
     const { idSystemObject, label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType, makeStyles, color } = props;
     const [waitTime, setWaitTime] = useState<NodeJS.Timeout[]>([]);
     const objectTitle = useMemo(() => `${getTermForSystemObjectType(objectType)} ${label}`, [objectType, label]);
-    const WAIT_INTERVAL_MS = 500;
+    const WAIT_INTERVAL_MS = 200;
     const onClick = async (e) => {
         e.stopPropagation();
         // if there's already a click, that means we want to stop the timeout for that and just open a new tab
-        // otherwise just set a timer that'll expand the node in 500 ms
+        // otherwise just set a timer that'll expand the node in 200 ms
         if (waitTime.length) {
             clearTimeout(waitTime[0]);
             setWaitTime([]);
