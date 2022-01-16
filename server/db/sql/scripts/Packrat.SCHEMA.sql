@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `BulkIngest` boolean NOT NULL,
   `idSOAttachment` int(11) NULL,
   `FilePath` varchar(512) NULL,
+  `Comment` text NULL,
   PRIMARY KEY (`idAssetVersion`),
   KEY `AssetVersion_idAsset_Version` (`idAsset`,`Version`),
   KEY `AssetVersion_StorageHash` (`StorageHash`),

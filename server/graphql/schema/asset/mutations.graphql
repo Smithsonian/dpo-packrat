@@ -3,6 +3,7 @@ scalar Upload
 type Mutation {
     uploadAsset(file: Upload!, type: Int!, idAsset: Int, idSOAttachment: Int): UploadAssetResult!
     discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
+    rollbackAssetVersion(input: RollbackAssetVersionInput!): RollbackAssetVersionResult!
 }
 
 type UploadAssetInput {
@@ -30,4 +31,14 @@ input DiscardUploadedAssetVersionsInput {
 
 type DiscardUploadedAssetVersionsResult {
     success: Boolean!
+}
+
+type RollbackAssetVersionResult {
+    success: Boolean!
+    message: String
+}
+
+input RollbackAssetVersionInput {
+    idAssetVersion: Int!
+    rollbackNotes: String!
 }
