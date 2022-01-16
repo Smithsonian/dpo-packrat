@@ -9,6 +9,8 @@ import getModelConstellationForAssetVersion from './queries/getModelConstellatio
 import getSceneForAssetVersion from './queries/getSceneForAssetVersion';
 import getAssetVersionsDetails from './queries/getAssetVersionsDetails';
 import discardUploadedAssetVersions from './mutations/discardUploadedAssetVersions';
+import rollbackAssetVersion from './mutations/rollbackAssetVersion';
+
 import { BigIntResolver } from 'graphql-scalars';
 import { GraphQLUpload } from 'graphql-upload';
 import * as L from 'lodash';
@@ -24,7 +26,8 @@ const resolvers = {
     },
     Mutation: {
         uploadAsset,
-        discardUploadedAssetVersions
+        discardUploadedAssetVersions,
+        rollbackAssetVersion
     },
     Asset,
     AssetGroup,

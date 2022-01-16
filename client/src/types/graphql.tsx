@@ -360,6 +360,7 @@ export type Mutation = {
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
   publish: PublishResult;
+  rollbackAssetVersion: RollbackAssetVersionResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateLicense: CreateLicenseResult;
@@ -475,6 +476,11 @@ export type MutationPublishArgs = {
 };
 
 
+export type MutationRollbackAssetVersionArgs = {
+  input: RollbackAssetVersionInput;
+};
+
+
 export type MutationRollbackSystemObjectVersionArgs = {
   input: RollbackSystemObjectVersionInput;
 };
@@ -540,6 +546,17 @@ export type DiscardUploadedAssetVersionsInput = {
 export type DiscardUploadedAssetVersionsResult = {
   __typename?: 'DiscardUploadedAssetVersionsResult';
   success: Scalars['Boolean'];
+};
+
+export type RollbackAssetVersionResult = {
+  __typename?: 'RollbackAssetVersionResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+};
+
+export type RollbackAssetVersionInput = {
+  idAssetVersion: Scalars['Int'];
+  rollbackNotes: Scalars['String'];
 };
 
 export type GetAssetVersionsDetailsInput = {
@@ -796,6 +813,7 @@ export type AssetVersion = {
   Version: Scalars['Int'];
   idSOAttachment?: Maybe<Scalars['Int']>;
   FilePath: Scalars['String'];
+  Comment?: Maybe<Scalars['String']>;
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
@@ -1966,6 +1984,8 @@ export type DetailVersion = {
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
   ingested: Scalars['Boolean'];
+  Comment?: Maybe<Scalars['String']>;
+  CommentLink?: Maybe<Scalars['String']>;
 };
 
 export type GetVersionsForAssetInput = {
@@ -2685,6 +2705,19 @@ export type DiscardUploadedAssetVersionsMutation = (
   & { discardUploadedAssetVersions: (
     { __typename?: 'DiscardUploadedAssetVersionsResult' }
     & Pick<DiscardUploadedAssetVersionsResult, 'success'>
+  ) }
+);
+
+export type RollbackAssetVersionMutationVariables = Exact<{
+  input: RollbackAssetVersionInput;
+}>;
+
+
+export type RollbackAssetVersionMutation = (
+  { __typename?: 'Mutation' }
+  & { rollbackAssetVersion: (
+    { __typename?: 'RollbackAssetVersionResult' }
+    & Pick<RollbackAssetVersionResult, 'success' | 'message'>
   ) }
 );
 
@@ -3743,7 +3776,7 @@ export type GetVersionsForAssetQuery = (
     { __typename?: 'GetVersionsForAssetResult' }
     & { versions: Array<(
       { __typename?: 'DetailVersion' }
-      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested'>
+      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested' | 'Comment' | 'CommentLink'>
     )> }
   ) }
 );
@@ -4147,6 +4180,40 @@ export function useDiscardUploadedAssetVersionsMutation(baseOptions?: Apollo.Mut
 export type DiscardUploadedAssetVersionsMutationHookResult = ReturnType<typeof useDiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationResult = Apollo.MutationResult<DiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
+export const RollbackAssetVersionDocument = gql`
+    mutation rollbackAssetVersion($input: RollbackAssetVersionInput!) {
+  rollbackAssetVersion(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type RollbackAssetVersionMutationFn = Apollo.MutationFunction<RollbackAssetVersionMutation, RollbackAssetVersionMutationVariables>;
+
+/**
+ * __useRollbackAssetVersionMutation__
+ *
+ * To run a mutation, you first call `useRollbackAssetVersionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRollbackAssetVersionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [rollbackAssetVersionMutation, { data, loading, error }] = useRollbackAssetVersionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRollbackAssetVersionMutation(baseOptions?: Apollo.MutationHookOptions<RollbackAssetVersionMutation, RollbackAssetVersionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RollbackAssetVersionMutation, RollbackAssetVersionMutationVariables>(RollbackAssetVersionDocument, options);
+      }
+export type RollbackAssetVersionMutationHookResult = ReturnType<typeof useRollbackAssetVersionMutation>;
+export type RollbackAssetVersionMutationResult = Apollo.MutationResult<RollbackAssetVersionMutation>;
+export type RollbackAssetVersionMutationOptions = Apollo.BaseMutationOptions<RollbackAssetVersionMutation, RollbackAssetVersionMutationVariables>;
 export const UploadAssetDocument = gql`
     mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int, $idSOAttachment: Int) {
   uploadAsset(
@@ -6663,6 +6730,8 @@ export const GetVersionsForAssetDocument = gql`
       dateCreated
       size
       ingested
+      Comment
+      CommentLink
     }
   }
 }
