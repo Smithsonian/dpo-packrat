@@ -267,7 +267,7 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                 )}
 
-                <Box mb={2}>
+                <Box mb={2} width='52vw'>
                     <AssetIdentifiers
                         systemCreated={model.systemCreated}
                         identifiers={model.identifiers}

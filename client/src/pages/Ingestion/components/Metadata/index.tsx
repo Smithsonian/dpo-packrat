@@ -47,14 +47,12 @@ const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        flexDirection: 'column',
-        overflow: 'auto'
+        flexDirection: 'column'
     },
     content: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        width: '52vw',
         padding: 20,
         paddingBottom: 0
     },
