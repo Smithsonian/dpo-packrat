@@ -222,6 +222,8 @@ type DetailVersion {
     dateCreated: DateTime!
     size: BigInt!
     ingested: Boolean!
+    Comment: String
+    CommentLink: String    
 }
 
 input GetVersionsForAssetInput {

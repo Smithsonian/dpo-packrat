@@ -229,11 +229,13 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         TestCase = { assets: [], assetVersions: [], SOBased };
 
         TestCase.assets.push(new DBAPI.Asset({ idAsset: 0, FileName: fileNameAsset, idAssetGroup: null, idVAssetType: vocabulary.idVocabulary, idSystemObject: null, StorageKey: '' }));
-        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, idSOAttachment: null, FilePath: H.Helpers.randomSlug(), Version: 0 }));
+        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, idSOAttachment: null, FilePath: H.Helpers.randomSlug(), Comment: '', Version: 0 }));
         newAsset = true;
     } else {
         TestCase.SOBased = SOBased;
         newAsset = false;
+        const opInfoTest = await STORE.AssetStorageAdapter.computeOperationInfo(TestCase.assetVersions[0].idUserCreator);
+        expect(opInfoTest).toBeTruthy();
     }
 
     // Get storage interface
@@ -274,7 +276,7 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         FilePath: TestCase.assetVersions[0].FilePath,
         idAssetGroup: TestCase.assets[0].idAssetGroup,
         idVAssetType: TestCase.assets[0].idVAssetType,
-        idUserCreator: TestCase.assetVersions[0].idUserCreator,
+        opInfo,
         DateCreated: TestCase.assetVersions[0].DateCreated
     };
 
@@ -286,7 +288,7 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`, LOG.LS.eTEST);
         ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion({
             storageKey: TestCase.assetVersions[0].StorageKeyStaging, storageHash, asset: TestCase.assets[0], assetNameOverride: TestCase.assetVersions[0].FileName,
-            FilePath: TestCase.assetVersions[0].FilePath, idUserCreator: TestCase.assetVersions[0].idUserCreator, DateCreated: TestCase.assetVersions[0].DateCreated
+            FilePath: TestCase.assetVersions[0].FilePath, opInfo, DateCreated: TestCase.assetVersions[0].DateCreated
         });
     }
     expect(ASRC.success).toBeTruthy();
@@ -534,6 +536,11 @@ async function testReinstateAsset(TestCase: AssetStorageAdapterTestCase, version
 
 async function testCommitNewAssetFailure(TestCase: AssetStorageAdapterTestCase): Promise<boolean> {
     // LOG.info(`testCommitNewAssetFailure ${JSON.stringify(TestCase, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
+    const opInfo: STORE.OperationInfo | null = await STORE.AssetStorageAdapter.computeOperationInfo(TestCase.assetVersions[0].idUserCreator);
+    expect(opInfo).toBeTruthy();
+    if (!opInfo)
+        return false;
+
     const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
         storageKey: H.Helpers.randomSlug(),
         storageHash: H.Helpers.randomSlug(),
@@ -541,7 +548,7 @@ async function testCommitNewAssetFailure(TestCase: AssetStorageAdapterTestCase):
         FilePath: TestCase.assetVersions[0].FilePath,
         idAssetGroup: TestCase.assets[0].idAssetGroup,
         idVAssetType: TestCase.assets[0].idVAssetType,
-        idUserCreator: TestCase.assetVersions[0].idUserCreator,
+        opInfo,
         DateCreated: TestCase.assetVersions[0].DateCreated,
     };
 

@@ -119,7 +119,10 @@ export class Downloader {
                 return DPResults.jobRun ? await this.emitDownloadJobRun(DPResults.jobRun) : this.sendError(404);
 
             case eDownloadMode.eSystemObjectVersionComment:
-                return DPResults.content ? await this.emitDownloadContent(DPResults.content, `VersionComment.${this.downloaderParser.idSystemObjectVersionCommentV}.htm`) : this.sendError(404);
+                return (DPResults.content != null) ? await this.emitDownloadContent(DPResults.content, `VersionComment.${this.downloaderParser.idSystemObjectVersionCommentV}.htm`) : this.sendError(404);
+
+            case eDownloadMode.eAssetVersionComment:
+                return (DPResults.content != null) ? await this.emitDownloadContent(DPResults.content, `AssetVersionComment.${this.downloaderParser.idAssetVersionCommentV}.htm`) : this.sendError(404);
 
             case eDownloadMode.eSitemap:
                 return await this.emitSitemapContent();

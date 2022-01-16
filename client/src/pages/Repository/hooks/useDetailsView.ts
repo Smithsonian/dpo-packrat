@@ -18,6 +18,7 @@ import {
     DeleteObjectConnectionDocument,
     DeleteIdentifierDocument,
     RollbackSystemObjectVersionDocument,
+    RollbackAssetVersionDocument,
     GetLicenseListDocument,
     ClearLicenseAssignmentDocument,
     AssignLicenseDocument,
@@ -170,12 +171,24 @@ export async function deleteIdentifier(idIdentifier: number) {
 }
 
 export async function rollbackSystemObjectVersion(idSystemObjectVersion: number, rollbackNotes: string) {
-    console.log('idSystemObjectVersion', idSystemObjectVersion, 'rollbackNotes', rollbackNotes);
     return await apolloClient.mutate({
         mutation: RollbackSystemObjectVersionDocument,
         variables: {
             input: {
                 idSystemObjectVersion,
+                rollbackNotes
+            }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+    });
+}
+
+export async function rollbackAssetVersion(idAssetVersion: number, rollbackNotes: string) {
+    return await apolloClient.mutate({
+        mutation: RollbackAssetVersionDocument,
+        variables: {
+            input: {
+                idAssetVersion,
                 rollbackNotes
             }
         },

@@ -626,6 +626,7 @@ describe('DB Creation Test Suite', () => {
                 BulkIngest: false,
                 idSOAttachment: null,
                 FilePath: '/test/asset/path/thumbnail',
+                Comment: 'thumbnail',
                 idAssetVersion: 0
             });
         expect(assetVersion).toBeTruthy();
@@ -652,6 +653,7 @@ describe('DB Creation Test Suite', () => {
                 BulkIngest: true,
                 idSOAttachment: null,
                 FilePath: '/test/asset/path/thumbnail',
+                Comment: 'thumbnail Uploaded, Processed',
                 idAssetVersion: 0
             });
             assetVersionNotIngested2 = await UTIL.createAssetVersionTest({
@@ -667,6 +669,7 @@ describe('DB Creation Test Suite', () => {
                 BulkIngest: true,
                 idSOAttachment: null,
                 FilePath: '/test/asset/path/thumbnail',
+                Comment: 'thumbnail Uploaded, Processed',
                 idAssetVersion: 0
             });
         }
@@ -689,6 +692,7 @@ describe('DB Creation Test Suite', () => {
                 BulkIngest: true,
                 idSOAttachment: null,
                 FilePath: '/test/asset/path/thumbnail',
+                Comment: 'thumbnail Uploaded, Not Processed',
                 idAssetVersion: 0
             });
         expect(assetVersionNotProcessed).toBeTruthy();
@@ -1139,6 +1143,7 @@ describe('DB Creation Test Suite', () => {
                 BulkIngest: false,
                 idSOAttachment: null,
                 FilePath: '/test/asset/path/scene',
+                Comment: 'scene',
                 idAssetVersion: 0
             });
         expect(assetVersionScene).toBeTruthy();
@@ -1172,6 +1177,7 @@ describe('DB Creation Test Suite', () => {
                 BulkIngest: false,
                 idSOAttachment: systemObjectScene.idSystemObject,
                 FilePath: '/test/asset/path/model',
+                Comment: 'model',
                 idAssetVersion: 0
             });
         expect(assetVersionModel).toBeTruthy();
@@ -2146,6 +2152,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 BulkIngest: false,
                 idSOAttachment: null,
                 FilePath: '/test/asset/path/thumbnail',
+                Comment: 'Version 2',
                 idAssetVersion: 0
             });
         expect(assetVersion2).toBeTruthy();
@@ -2164,6 +2171,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 BulkIngest: false,
                 idSOAttachment: null,
                 FilePath: '/test/asset/path/thumbnail',
+                Comment: 'Version 3',
                 idAssetVersion: 0
             });
         expect(assetVersion3).toBeTruthy();
