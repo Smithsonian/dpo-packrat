@@ -160,14 +160,16 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     />
                 </Box>
             )}
-            <AssetIdentifiers
-                systemCreated={photogrammetry.systemCreated}
-                identifiers={photogrammetry.identifiers}
-                onSystemCreatedChange={setCheckboxField}
-                onAddIdentifer={onIdentifersChange}
-                onUpdateIdentifer={onIdentifersChange}
-                onRemoveIdentifer={onIdentifersChange}
-            />
+            <Box width='52vw'>
+                <AssetIdentifiers
+                    systemCreated={photogrammetry.systemCreated}
+                    identifiers={photogrammetry.identifiers}
+                    onSystemCreatedChange={setCheckboxField}
+                    onAddIdentifer={onIdentifersChange}
+                    onUpdateIdentifer={onIdentifersChange}
+                    onRemoveIdentifer={onIdentifersChange}
+                />
+            </Box>
             {!idAsset && (
                 <React.Fragment>
                     <Box mb={2}>

@@ -53,14 +53,16 @@ function Other(props: OtherProps): React.ReactElement {
                     />
                 </Box>
             )}
-            <AssetIdentifiers
-                systemCreated={other.systemCreated}
-                identifiers={other.identifiers}
-                onSystemCreatedChange={setCheckboxField}
-                onAddIdentifer={onIdentifersChange}
-                onUpdateIdentifer={onIdentifersChange}
-                onRemoveIdentifer={onIdentifersChange}
-            />
+            <Box width='52vw'>
+                <AssetIdentifiers
+                    systemCreated={other.systemCreated}
+                    identifiers={other.identifiers}
+                    onSystemCreatedChange={setCheckboxField}
+                    onAddIdentifer={onIdentifersChange}
+                    onUpdateIdentifer={onIdentifersChange}
+                    onRemoveIdentifer={onIdentifersChange}
+                />
+            </Box>
         </Box>
     );
 }
