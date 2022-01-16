@@ -2,7 +2,7 @@
 
 import { Box, Typography, Button, Tooltip } from '@material-ui/core';
 import clsx from 'clsx';
-import React, { useState }from 'react';
+import React, { useState } from 'react';
 import { EmptyTable, TextArea, ToolTip } from '../../../../../components';
 import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repository';
 import { extractISOMonthDateYear, updateSystemObjectUploadRedirect, truncateWithEllipses } from '../../../../../constants/helperfunctions';
@@ -34,9 +34,8 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
 
     const { data } = useObjectAssets(idSystemObject);
 
-    if (!objectVersions) {
+    if (!objectVersions)
         return <EmptyTable />;
-    }
 
     const onRollback = async (idSystemObjectVersion: number) => {
         if (rollbackNotes.length < 1) {
@@ -65,11 +64,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
 
     const onExpand = (row) => {
         setRollbackNotes('');
-        if (row === expanded) {
-            setExpanded(-1);
-        } else {
-            setExpanded(row);
-        }
+        setExpanded(row === expanded ? -1 : row);
     };
 
     return (

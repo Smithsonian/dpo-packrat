@@ -12,6 +12,8 @@ const getVersionsForAsset = gql`
                 dateCreated
                 size
                 ingested
+                Comment
+                CommentLink
             }
         }
     }

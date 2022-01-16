@@ -3,6 +3,7 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as LOG from '../../../../../utils/logger';
+import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 
 export default async function getVersionsForAsset(_: Parent, args: QueryGetVersionsForAssetArgs): Promise<GetVersionsForAssetResult> {
     const { input } = args;
@@ -37,7 +38,10 @@ export default async function getVersionsForAsset(_: Parent, args: QueryGetVersi
             creator: user ? user.Name : '',
             dateCreated: assetVersion.DateCreated,
             size: assetVersion.StorageSize,
-            ingested: assetVersion.Ingested ?? false
+            ingested: assetVersion.Ingested ?? false,
+            Comment: assetVersion.Comment,
+            CommentLink: assetVersion.Comment && assetVersion.Comment.length <= 300
+                ? null : RouteBuilder.DownloadAssetVersionComment(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL)
         };
         versions.push(DV);
     }

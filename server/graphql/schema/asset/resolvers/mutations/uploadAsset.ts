@@ -138,6 +138,17 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     private async uploadWorkerOnFinishWorker(storageKey: string, filename: string, idVocabulary: number): Promise<UploadAssetResult> {
+        const idUser: number = this.user!.idUser; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        const opInfo: STORE.OperationInfo | null = await STORE.AssetStorageAdapter.computeOperationInfo(idUser,
+            this.idAsset
+                ? `Uploaded new version of asset ${this.idAsset}, with filename ${filename}`
+                : `Uploaded new asset ${filename}`);
+        if (!opInfo) {
+            const error: string = `uploadAsset unable to compute operation info from user ${idUser}`;
+            LOG.error(error, LOG.LS.eGQL);
+            return { status: UploadStatus.Failed, error };
+        }
+
         let commitResult: STORE.AssetStorageResultCommit;
         if (!this.idAsset) { // create new asset and asset version
             const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
@@ -148,7 +159,7 @@ class UploadAssetWorker extends ResolverBase {
                 idAssetGroup: 0,
                 idVAssetType: idVocabulary,
                 idSOAttachment: this.idSOAttachment,
-                idUserCreator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                opInfo,
                 DateCreated: new Date()
             };
 
@@ -175,7 +186,7 @@ class UploadAssetWorker extends ResolverBase {
                 idSOAttachment: this.idSOAttachment,
                 assetNameOverride: filename,
                 FilePath: assetVersion.FilePath,
-                idUserCreator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                opInfo,
                 DateCreated: new Date()
             };
             commitResult = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAVI);

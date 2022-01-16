@@ -420,3 +420,6 @@ INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, 'SS_BL');
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (32, NULL, 'STRI_YT');
 
 -- 2021-12-08 Deployed to Staging
+
+-- 2022-01-10 Jon
+ALTER TABLE AssetVersion ADD COLUMN Comment text NULL;
