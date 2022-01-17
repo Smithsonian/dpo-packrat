@@ -172,6 +172,7 @@ function useIngest(): UseIngest {
                         photogrammetryData.updateNotes = updateNotes;
                     }
 
+                    // console.log(`useIngest ingestionStart pushing photogrammetry ${JSON.stringify(photogrammetryData)}`);
                     ingestPhotogrammetry.push(photogrammetryData);
                 }
 
@@ -192,13 +193,13 @@ function useIngest(): UseIngest {
                     } = model;
 
                     let {
-                        dateCaptured
+                        dateCreated
                     } = model;
 
-                    if (!dateCaptured) {
-                        dateCaptured = '';
-                    } else if (typeof dateCaptured === 'object') {
-                        dateCaptured = nonNullValue<string>('datecaptured', dateCaptured.toISOString());
+                    if (!dateCreated) {
+                        dateCreated = '';
+                    } else if (typeof dateCreated === 'object') {
+                        dateCreated = nonNullValue<string>('dateCreated', dateCreated.toISOString());
                     }
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
@@ -206,7 +207,7 @@ function useIngest(): UseIngest {
                     const modelData: IngestModelInput = {
                         name,
                         idAssetVersion: parseFileId(file.id),
-                        dateCaptured,
+                        dateCreated,
                         identifiers: ingestIdentifiers,
                         creationMethod: nonNullValue<number>('creationMethod', creationMethod),
                         modality: nonNullValue<number>('modality', modality),
@@ -225,6 +226,7 @@ function useIngest(): UseIngest {
                         modelData.updateNotes = updateNotes;
                     }
 
+                    // console.log(`useIngest ingestionStart pushing model ${JSON.stringify(modelData)}`);
                     ingestModel.push(modelData);
                 }
 
@@ -251,6 +253,7 @@ function useIngest(): UseIngest {
                         sceneData.updateNotes = updateNotes;
                     }
 
+                    // console.log(`useIngest ingestionStart pushing scene ${JSON.stringify(sceneData)}`);
                     ingestScene.push(sceneData);
                 }
 
@@ -270,6 +273,7 @@ function useIngest(): UseIngest {
                         systemCreated,
                         identifiers: ingestIdentifiers
                     };
+                    // console.log(`useIngest ingestionStart pushing attachment ${JSON.stringify(sceneAttachmentData)}`);
                     ingestSceneAttachment.push(sceneAttachmentData);
                 }
 
@@ -290,6 +294,7 @@ function useIngest(): UseIngest {
                         otherData.updateNotes = updateNotes;
                     }
 
+                    // console.log(`useIngest ingestionStart pushing other ${JSON.stringify(otherData)}`);
                     ingestOther.push(otherData);
                 }
             });
@@ -304,7 +309,7 @@ function useIngest(): UseIngest {
                 other: ingestOther,
                 sceneAttachment: ingestSceneAttachment
             };
-            // console.log('** IngestDataInput', input);
+            // console.log(`** IngestDataInput ${input}`);
 
             const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
                 mutation: IngestDataDocument,

@@ -16,13 +16,15 @@ type LoadingButtonProps = ButtonProps & {
 
 const useStyles = makeStyles(({ typography }) => ({
     button: {
-        fontSize: typography.caption.fontSize
+        fontSize: typography.caption.fontSize,
+        outline: '0.5px hidden rgba(141, 171, 196, 0.4)'
     }
 }));
 
 function LoadingButton(props: LoadingButtonProps): React.ReactElement {
     const { loading, loaderSize, className, ...rest } = props;
     const classes = useStyles();
+    // console.log(`LoadingButton className=${className}, loading=${loading}`);
 
     return (
         <Button className={clsx(classes.button, className)} variant='contained' color='primary' disabled={loading}

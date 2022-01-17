@@ -16,7 +16,9 @@ export enum eDownloadMode {
     eWorkflowSet,
     eJobRun,
     eSystemObjectVersionComment,
+    eAssetVersionComment,
     eMetadata,
+    eSitemap,
     eUnknown
 }
 
@@ -33,22 +35,23 @@ export interface DownloaderParserResults {
 }
 
 export class DownloaderParser {
-    private eMode: eDownloadMode = eDownloadMode.eUnknown;
-    private idAssetVersion: number | null = null;
-    private idAsset: number | null = null;
-    private idSystemObject: number | null = null;
-    private idSystemObjectVersion: number | null = null;
+    private eMode: eDownloadMode                        = eDownloadMode.eUnknown;
+    private idAssetVersion: number | null               = null;
+    private idAsset: number | null                      = null;
+    private idSystemObject: number | null               = null;
+    private idSystemObjectVersion: number | null        = null;
 
-    private idMetadata: number | null = null;
+    private idMetadata: number | null                   = null;
 
-    private idWorkflow: number | null = null;
-    private idWorkflowReport: number | null = null;
-    private idWorkflowSet: number | null = null;
-    private idJobRun: number | null = null;
+    private idWorkflow: number | null                   = null;
+    private idWorkflowReport: number | null             = null;
+    private idWorkflowSet: number | null                = null;
+    private idJobRun: number | null                     = null;
     private idSystemObjectVersionComment: number | null = null;
+    private idAssetVersionComment: number | null        = null;
 
-    private systemObjectPath: string | null = null;                                             // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
-    private fileMap: Map<string, DBAPI.AssetVersion> = new Map<string, DBAPI.AssetVersion>();   // Map of asset files path -> asset version
+    private systemObjectPath: string | null             = null;                                     // path of asset (e.g. /FOO/BAR) to be downloaded when accessed via e.g. /download/idSystemObject-ID/FOO/BAR
+    private fileMap: Map<string, DBAPI.AssetVersion>    = new Map<string, DBAPI.AssetVersion>();    // Map of asset files path -> asset version
 
     private rootURL: string;
     private requestPath: string;
@@ -79,6 +82,7 @@ export class DownloaderParser {
     get idWorkflowSetV(): number | null { return this.idWorkflowSet; }
     get idJobRunV(): number | null { return this.idJobRun; }
     get idSystemObjectVersionCommentV(): number | null { return this.idSystemObjectVersionComment; }
+    get idAssetVersionCommentV(): number | null { return this.idAssetVersionComment; }
 
     get systemObjectPathV(): string | null { return this.systemObjectPath; }
     get fileMapV(): Map<string, DBAPI.AssetVersion> { return this.fileMap; }
@@ -89,6 +93,11 @@ export class DownloaderParser {
 
     /** Returns success: false if arguments are invalid */
     async parseArguments(allowUnmatchedPaths?: boolean, collectPaths?: boolean): Promise<DownloaderParserResults> {
+        if (this.requestPath === '/download/sitemap.xml') {
+            this.eMode = eDownloadMode.eSitemap;
+            return { success: true };
+        }
+
         // /download/idSystemObject-ID:         Computes the assets attached to this system object.  If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
         // /download/idSystemObject-ID/FOO/BAR: Computes the asset attached to this system object, found at the path /FOO/BAR.
         let idSystemObjectU: string | string[] | ParsedQs | ParsedQs[] | undefined = undefined;
@@ -108,22 +117,23 @@ export class DownloaderParser {
             idSystemObjectU = this.requestQuery.idSystemObject;
         // LOG.info(`DownloadParser.parseArguments(${this.requestPath}), idSystemObjectU = ${idSystemObjectU}`, LOG.LS.eHTTP);
 
-        const idAssetU = this.requestQuery.idAsset;
-        const idAssetVersionU = this.requestQuery.idAssetVersion;
-        const idSystemObjectVersionU = this.requestQuery.idSystemObjectVersion;
+        const idAssetU                      = this.requestQuery.idAsset;
+        const idAssetVersionU               = this.requestQuery.idAssetVersion;
+        const idSystemObjectVersionU        = this.requestQuery.idSystemObjectVersion;
 
-        const idMetadataU = this.requestQuery.idMetadata;
+        const idMetadataU                   = this.requestQuery.idMetadata;
 
-        const idWorkflowU = this.requestQuery.idWorkflow;
-        const idWorkflowReportU = this.requestQuery.idWorkflowReport;
-        const idWorkflowSetU = this.requestQuery.idWorkflowSet;
-        const idJobRunU = this.requestQuery.idJobRun;
+        const idWorkflowU                   = this.requestQuery.idWorkflow;
+        const idWorkflowReportU             = this.requestQuery.idWorkflowReport;
+        const idWorkflowSetU                = this.requestQuery.idWorkflowSet;
+        const idJobRunU                     = this.requestQuery.idJobRun;
         const idSystemObjectVersionCommentU = this.requestQuery.idSystemObjectVersionComment;
+        const idAssetVersionCommentU        = this.requestQuery.idAssetVersionComment;
 
         const urlParamCount: number = (idSystemObjectU ? 1 : 0) + (idSystemObjectVersionU ? 1 : 0)
             + (idAssetU ? 1 : 0) + (idAssetVersionU ? 1 : 0) + (idMetadataU ? 1 : 0)
             + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0)
-            + (idJobRunU ? 1 : 0) + (idSystemObjectVersionCommentU ? 1 : 0);
+            + (idJobRunU ? 1 : 0) + (idSystemObjectVersionCommentU ? 1 : 0) + (idAssetVersionCommentU ? 1 : 0);
         if (urlParamCount != 1) {
             LOG.error(`DownloadParser called with ${urlParamCount} parameters, expected 1`, LOG.LS.eHTTP);
             return this.recordStatus(404);
@@ -371,7 +381,7 @@ export class DownloaderParser {
                 LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
                 return this.recordStatus(404);
             }
-            this.eMode = eDownloadMode.eSystemObjectVersionComment;
+            this.eMode          = eDownloadMode.eSystemObjectVersionComment;
             this.eObjectType    = DBAPI.eNonSystemObjectType.eSystemObjectVersion;
             this.idObject       = this.idSystemObjectVersionComment;
 
@@ -381,6 +391,25 @@ export class DownloaderParser {
                 return this.recordStatus(404);
             }
             return { success: true, content: systemObjectVersion.Comment };
+        }
+
+        if (idAssetVersionCommentU) {
+            this.idAssetVersionComment = H.Helpers.safeNumber(idAssetVersionCommentU);
+            this.requestURL = `${this.rootURL}?idAssetVersionComment=${idAssetVersionCommentU}`;
+            if (!this.idAssetVersionComment) {
+                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                return this.recordStatus(404);
+            }
+            this.eMode          = eDownloadMode.eAssetVersionComment;
+            this.eObjectType    = DBAPI.eSystemObjectType.eAssetVersion;
+            this.idObject       = this.idAssetVersionComment;
+
+            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(this.idAssetVersionComment!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            if (!assetVersion) {
+                LOG.error(`${this.requestURL} unable to fetch asset version`, LOG.LS.eHTTP);
+                return this.recordStatus(404);
+            }
+            return { success: true, content: assetVersion.Comment };
         }
 
         return this.recordStatus(404);

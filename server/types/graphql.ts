@@ -357,6 +357,7 @@ export type Mutation = {
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
   publish: PublishResult;
+  rollbackAssetVersion: RollbackAssetVersionResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateLicense: CreateLicenseResult;
@@ -472,6 +473,11 @@ export type MutationPublishArgs = {
 };
 
 
+export type MutationRollbackAssetVersionArgs = {
+  input: RollbackAssetVersionInput;
+};
+
+
 export type MutationRollbackSystemObjectVersionArgs = {
   input: RollbackSystemObjectVersionInput;
 };
@@ -539,6 +545,17 @@ export type DiscardUploadedAssetVersionsResult = {
   success: Scalars['Boolean'];
 };
 
+export type RollbackAssetVersionResult = {
+  __typename?: 'RollbackAssetVersionResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+};
+
+export type RollbackAssetVersionInput = {
+  idAssetVersion: Scalars['Int'];
+  rollbackNotes: Scalars['String'];
+};
+
 export type GetAssetVersionsDetailsInput = {
   idAssetVersions: Array<Scalars['Int']>;
 };
@@ -603,7 +620,7 @@ export type IngestModel = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
@@ -699,7 +716,7 @@ export type UpdateModelMetadata = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
 };
 
@@ -793,6 +810,7 @@ export type AssetVersion = {
   Version: Scalars['Int'];
   idSOAttachment?: Maybe<Scalars['Int']>;
   FilePath: Scalars['String'];
+  Comment?: Maybe<Scalars['String']>;
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
@@ -985,7 +1003,7 @@ export type IngestModelInput = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
@@ -1540,7 +1558,7 @@ export type ModelDetailFieldsInput = {
   Modality?: Maybe<Scalars['Int']>;
   Purpose?: Maybe<Scalars['Int']>;
   Units?: Maybe<Scalars['Int']>;
-  DateCaptured?: Maybe<Scalars['DateTime']>;
+  DateCreated?: Maybe<Scalars['DateTime']>;
   ModelFileType?: Maybe<Scalars['Int']>;
 };
 
@@ -1963,6 +1981,8 @@ export type DetailVersion = {
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
   ingested: Scalars['Boolean'];
+  Comment?: Maybe<Scalars['String']>;
+  CommentLink?: Maybe<Scalars['String']>;
 };
 
 export type GetVersionsForAssetInput = {
@@ -2096,6 +2116,7 @@ export type CreateUnitResult = {
 
 export type CreateProjectInput = {
   Name: Scalars['String'];
+  Unit: Scalars['Int'];
   Description: Scalars['String'];
 };
 

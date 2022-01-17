@@ -43,7 +43,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontWeight: typography.fontWeightRegular
     },
     label: {
-        color: palette.primary.contrastText,
+        color: palette.primary.dark,
         fontWeight: typography.fontWeightRegular
     }
 }));

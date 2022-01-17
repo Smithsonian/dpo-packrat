@@ -148,7 +148,7 @@ export function getTreeWidth(columnSize: number, sideBarExpanded: boolean, fullW
     const isXLScreen = window.innerWidth >= 1600;
 
     if (fullWidth) {
-        return '98vw';
+        return '90vw';
     }
 
     if (computedWidth <= 80) {
@@ -174,6 +174,7 @@ let metadataTitleMap: Map<eMetadata, string> | null = null;
 // prettier-ignore
 export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boolean, values?: string[]): TreeViewColumn[] {
     const treeColumns: TreeViewColumn[] = [];
+    // width of each column
     const MIN_SIZE = 5;
 
     if (!metadataTitleMap) {
@@ -215,12 +216,12 @@ type ObjectInterfaceDetails = {
 };
 
 // prettier-ignore
-export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant: RepositoryColorVariant, makeStyles: any): ObjectInterfaceDetails {
+export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant: RepositoryColorVariant, makeStyles: any, idSystemObject: number): ObjectInterfaceDetails {
     const color: string = Colors.repository[objectType][variant];
     const textColor: string = Colors.defaults.white;
     const backgroundColor: string = Colors.repository[objectType][RepositoryColorVariant.dark] || Colors.repository.default[RepositoryColorVariant.dark];
 
-    const iconProps: RepositoryIconProps = { objectType, backgroundColor, textColor, overrideText: undefined };
+    const iconProps: RepositoryIconProps = { objectType, backgroundColor, textColor, overrideText: undefined, idSystemObject };
 
     switch (objectType) {
         default:                                        break;
@@ -264,12 +265,24 @@ export function getDownloadAssetVersionUrlForObject(serverEndPoint: string | und
     return `${serverEndPoint}/download?idAssetVersion=${idAssetVersion}`;
 }
 
-export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | undefined, idSystemObjectVersion): string {
+export function getDownloadObjectVersionUrlForObject(serverEndPoint: string | undefined, idSystemObjectVersion: number): string {
     return `${serverEndPoint}/download?idSystemObjectVersion=${idSystemObjectVersion}`;
 }
 
-export function getDownloadValueForMetadata(serverEndPoint: string | undefined, idMetadata): string {
+export function getDownloadValueForMetadata(serverEndPoint: string | undefined, idMetadata: number): string {
     return `${serverEndPoint}/download?idMetadata=${idMetadata}`;
+}
+
+export function getDownloadValueForWorkflowReport(serverEndPoint: string | undefined, WorkflowReport: number): string {
+    return `${serverEndPoint}/download?idWorkflowReport=${WorkflowReport}`;
+}
+
+export function getDownloadValueForWorkflowSet(serverEndPoint: string | undefined, idWorkflowSet: number): string {
+    return `${serverEndPoint}/download?idWorkflowSet=${idWorkflowSet}`;
+}
+
+export function getDownloadValueForJob(serverEndPoint: string | undefined, idJob: number): string {
+    return `${serverEndPoint}/download?idJobRun=${idJob}`;
 }
 
 export enum eVoyagerStoryMode {
@@ -375,74 +388,74 @@ export function isValidParentChildRelationship(
     child: number,
     selected: ExistingRelationship[],
     existingParentRelationships: ExistingRelationship[],
-    isAddingSource: boolean
+    _isAddingSource: boolean
 ): boolean {
     let result = false;
     /*
         *NOTE: when updating this relationship validation function,
         make sure to also apply changes to the server-side version located at
-        ingestData.ts to maintain consistency
+        ingestData.ts to maintain consistency; ObjectGraph.ts also has it's own version of this logic,
+        in a different form.
         **NOTE: this client-side validation function will be validating a selected item BEFORE adding it,
         which means the maximum connection count will be different from those seen in ingestData.ts
-
-        xproject child to 1 - many unit parent
-        -skip on stakeholders for now
-        -skip on stakeholders for now
-        xitem child to only 1 parent project parent
-        xitem child to multiple subject parent
-        xCD child to 1 - many item parent
-        xmodel child to 1 - many parent Item
-        xscene child to 1 or more item parent
-        xmodel child to 0 - many CD parent
-        xCD child to 0 - many CD parent
-        -skip on actor for now
-        xmodel child to 0 to many model parent
-        xscene child to 1 to many model parent
-        -skip on actor for now
-        xmodel child to only 1 scene parent
-        -skip on IF for now
-        -skip on PD for now
     */
 
     const existingAndNewRelationships = [...existingParentRelationships, ...selected];
     switch (child) {
+        case eSystemObjectType.eUnit:
         case eSystemObjectType.eProject:
-            result = parent === eSystemObjectType.eUnit;
+        case eSystemObjectType.eSubject:
+        case eSystemObjectType.eAsset:
+        case eSystemObjectType.eAssetVersion:
             break;
-        case eSystemObjectType.eItem: {
-            if (parent === eSystemObjectType.eSubject) result = true;
 
-            if (parent === eSystemObjectType.eProject) {
-                if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 1);
-                } else {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 1);
-                }
-            }
+        case eSystemObjectType.eItem:
+            if (parent === eSystemObjectType.eSubject)
+                result = true;
+            else if (parent === eSystemObjectType.eProject)
+                result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eProject, 1);
             break;
-        }
-        case eSystemObjectType.eCaptureData: {
 
-            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eItem) result = true;
+        case eSystemObjectType.eCaptureData:
+            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eItem)
+                result = true;
             break;
-        }
-        case eSystemObjectType.eModel: {
 
-            if (parent === eSystemObjectType.eScene) {
-                if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 1);
-                } else {
-                    result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 1);
-                }
-            }
+        case eSystemObjectType.eModel:
+            if (parent === eSystemObjectType.eScene)
+                result = maximumConnections(existingAndNewRelationships, eSystemObjectType.eScene, 1);
+            else if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eModel || parent === eSystemObjectType.eItem)
+                result = true;
+            break;
 
-            if (parent === eSystemObjectType.eCaptureData || parent === eSystemObjectType.eModel || parent === eSystemObjectType.eItem) result = true;
+        case eSystemObjectType.eScene:
+            if (parent === eSystemObjectType.eItem || parent === eSystemObjectType.eModel)
+                result = true;
             break;
-        }
-        case eSystemObjectType.eScene: {
-            if (parent === eSystemObjectType.eItem || parent === eSystemObjectType.eModel) result = true;
+
+        case eSystemObjectType.eIntermediaryFile:
+            if (parent === eSystemObjectType.eItem)
+                result = true;
             break;
-        }
+
+        case eSystemObjectType.eProjectDocumentation:
+            if (parent === eSystemObjectType.eProject)
+                result = true;
+            break;
+
+        case eSystemObjectType.eActor:
+            if (parent === eSystemObjectType.eCaptureData ||
+                parent === eSystemObjectType.eModel ||
+                parent === eSystemObjectType.eScene ||
+                parent === eSystemObjectType.eIntermediaryFile ||
+                parent === eSystemObjectType.eUnit)
+                result = true;
+            break;
+
+        case eSystemObjectType.eStakeholder:
+            if (parent === eSystemObjectType.eUnit || parent === eSystemObjectType.eProject)
+                result = true;
+            break;
     }
 
     return result;

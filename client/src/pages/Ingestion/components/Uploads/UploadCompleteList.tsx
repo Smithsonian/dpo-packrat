@@ -16,6 +16,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { scrollBarProperties } from '../../../../utils/shared';
 import UploadListHeader from './UploadListHeader';
 import lodash from 'lodash';
+import { Colors } from '../../../../theme';
 
 const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
     container: {
@@ -33,10 +34,6 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
         'overflow-x': 'hidden',
         width: '100%',
         ...scrollBarProperties(true, false, palette.text.disabled)
-        // [breakpoints.down('lg')]: {
-        //     minHeight: '20vh',
-        //     maxHeight: '20vh'
-        // }
     },
     listDetail: {
         textAlign: 'center',
@@ -51,7 +48,7 @@ interface UploadListCompleteProps {
     setUpdatedAssetVersionMetadata: (metadata: any) => void;
 }
 
-function UploadListComplete(props: UploadListCompleteProps): React.ReactElement {
+function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement {
     const { setUpdatedAssetVersionMetadata } = props;
     const classes = useStyles();
 
@@ -64,28 +61,25 @@ function UploadListComplete(props: UploadListCompleteProps): React.ReactElement 
 
             const fileIds: string[] = completed.map(({ id }) => id);
             const idAssetVersionsUpdatedSet = new Set(idAssetVersionsUpdated);
+            // console.log(`UploadCompleteList useEffect UpdatedAssetVersionMetadata=${JSON.stringify(UpdatedAssetVersionMetadata)}; idAssetVersionsUpdated=${JSON.stringify(idAssetVersionsUpdated)}`);
 
             if (UpdatedAssetVersionMetadata && idAssetVersionsUpdated)
-                setUpdatedAssetVersionMetadata({ UpdatedAssetVersionMetadata,  idAssetVersionsUpdatedSet });
+                setUpdatedAssetVersionMetadata({ UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet });
             const sortedAssetVersion = lodash.orderBy(AssetVersion, ['DateCreated'], ['desc']);
 
-            if (!sortedAssetVersion) {
+            if (!sortedAssetVersion)
                 return;
-            }
 
             const completedFiles = sortedAssetVersion.map(assetVersion => {
                 const { idAssetVersion } = assetVersion;
-
                 const id = String(idAssetVersion);
 
-                if (fileIds.includes(id)) {
+                if (fileIds.includes(id))
                     return completed.find(file => file.id === id) || assetVersion;
-                }
 
                 let idAsset = null;
-                if (idAssetVersionsUpdatedSet.has(idAssetVersion)) {
+                if (idAssetVersionsUpdatedSet.has(idAssetVersion))
                     idAsset = assetVersion.Asset.idAsset;
-                }
                 return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType, idAsset);
             });
 
@@ -119,7 +113,7 @@ function UploadListComplete(props: UploadListCompleteProps): React.ReactElement 
                 align='center'
                 label='Uploaded Files'
                 labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'black' } }}
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
                 width={'calc(100% - 20px)'}
             >
                 <UploadListHeader />
@@ -129,4 +123,4 @@ function UploadListComplete(props: UploadListCompleteProps): React.ReactElement 
     );
 }
 
-export default UploadListComplete;
+export default UploadCompleteList;

@@ -156,21 +156,21 @@ async function testLoad(fileName: string | null, assetVersion: DBAPI.AssetVersio
         return !expectSuccess;
 
     const ingestedMetadata: IngestMetadata[] = BIR.ingestedObjects;
-    // LOG.info(`ingestedMetadata: ${JSON.stringify(ingestedMetadata)}`, LOG.LS.eTEST);
+    // LOG.info(`testLoad(${fileName}) ingestedMetadata: ${JSON.stringify(ingestedMetadata)}`, LOG.LS.eTEST);
     expect(ingestedMetadata.length).toBeGreaterThan(0);
 
     // Doctor ingestedMetadata when requested
     if (subject)
         ingestedMetadata[0].idSubject = subject.idSubject;
-    const projectsExpected: boolean = (ingestedMetadata[0].idSubject != 0);
 
-    const projects: DBAPI.Project[] | null = await BulkIngestReader.computeProjects(ingestedMetadata[0]);
-    // LOG.info(`projects: ${JSON.stringify(projects)}`, LOG.LS.eTEST);
-    if (projectsExpected) {
-        expect(projects).toBeTruthy();
-        if (projects)
-            expect(projects.length).toBeGreaterThan(0);
-    }
+    // const projectsExpected: boolean = (ingestedMetadata[0].idSubject != 0);
+    // const projects: DBAPI.Project[] | null = await BulkIngestReader.computeProjects(ingestedMetadata[0]);
+    // LOG.info(`testLoad(${fileName}) projectsExpected ${projectsExpected} projects: ${JSON.stringify(projects)}`, LOG.LS.eTEST);
+    // if (projectsExpected) {
+    //     expect(projects).toBeTruthy();
+    //     if (projects)
+    //         expect(projects.length).toBeGreaterThan(0);
+    // }
 
     if (!autoClose) {
         ioResults = await BIR.close();
@@ -191,7 +191,7 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
         TestCase = { assets: [], assetVersions: [], SOBased };
 
         TestCase.assets.push(new DBAPI.Asset({ idAsset: 0, FileName: fileNameAsset, idAssetGroup: null, idVAssetType: vocabulary.idVocabulary, idSystemObject: null, StorageKey: '' }));
-        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, idSOAttachment: null, FilePath: H.Helpers.randomSlug(), Version: 0 }));
+        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, idSOAttachment: null, FilePath: H.Helpers.randomSlug(), Comment: opInfo.message, Version: 0 }));
         newAsset = true;
     } else {
         TestCase.SOBased = SOBased;
@@ -240,7 +240,7 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
             FilePath: TestCase.assetVersions[0].FilePath,
             idAssetGroup: TestCase.assets[0].idAssetGroup,
             idVAssetType: TestCase.assets[0].idVAssetType,
-            idUserCreator: TestCase.assetVersions[0].idUserCreator,
+            opInfo,
             DateCreated: TestCase.assetVersions[0].DateCreated
         };
         ASRC = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
@@ -252,7 +252,7 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
             asset: TestCase.assets[0],
             assetNameOverride: TestCase.assets[0].FileName,
             FilePath: TestCase.assetVersions[0].FilePath,
-            idUserCreator: TestCase.assetVersions[0].idUserCreator,
+            opInfo,
             DateCreated: TestCase.assetVersions[0].DateCreated
         };
         ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAVI);

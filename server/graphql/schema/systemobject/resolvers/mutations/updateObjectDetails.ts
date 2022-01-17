@@ -306,7 +306,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 const {
                     Name,
-                    DateCaptured,
+                    DateCreated,
                     CreationMethod,
                     Modality,
                     Units,
@@ -320,7 +320,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (Purpose) Model.idVPurpose = Purpose;
                 if (Units) Model.idVUnits = Units;
                 if (ModelFileType) Model.idVFileType = ModelFileType;
-                Model.DateCreated = new Date(DateCaptured);
+                Model.DateCreated = new Date(DateCreated);
 
                 if (!await Model.update())
                     return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);

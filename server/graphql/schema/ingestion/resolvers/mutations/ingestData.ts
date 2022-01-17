@@ -15,6 +15,7 @@ import * as H from '../../../../../utils/helpers';
 import { SvxReader, SvxExtraction } from '../../../../../utils/parser';
 import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
+import * as NAV from '../../../../../navigation/interface';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
@@ -69,9 +70,11 @@ class IngestDataWorker extends ResolverBase {
     private ingestAttachment: boolean = false;
     private assetVersionSet: Set<number> = new Set<number>(); // set of idAssetVersions
 
-    private assetVersionMap: Map<number, AssetVersionInfo> = new Map<number, AssetVersionInfo>();                   // map from idAssetVersion -> ssytem object that "owns" the asset, plus details for ingestion -- populated during creation of asset-owning objects below
+    private assetVersionMap: Map<number, AssetVersionInfo> = new Map<number, AssetVersionInfo>();                   // map from idAssetVersion -> system object that "owns" the asset, plus details for ingestion -- populated during creation of asset-owning objects below
     private ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>();  // map from idAssetVersion -> photogrammetry input
     private ingestModelMap: Map<number, ModelInfo> = new Map<number, ModelInfo>();                                  // map from idAssetVersion -> model input, JCOutput, idModel
+
+    private sceneSOI: DBAPI.SystemObjectInfo | undefined = undefined;
 
     constructor(input: IngestDataInput, user: User | undefined) {
         super();
@@ -130,18 +133,6 @@ class IngestDataWorker extends ResolverBase {
                 subjectsDB.push(subjectDB);
             }
 
-            // wire projects to subjects
-            if (this.input.project.id) {
-                const projectDB: DBAPI.Project | null = await this.wireProjectToSubjects(this.input.project.id, subjectsDB);
-                if (!projectDB)
-                    return { success: false, message: 'failure to wire project to subjects' };
-
-                SOI = await CACHE.SystemObjectCache.getSystemFromProject(projectDB);
-                path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-                href = H.Helpers.computeHref(path, this.input.project.name);
-                await this.appendToWFReport(`Packrat Project: ${href}`);
-            }
-
             itemDB = await this.fetchOrCreateItem(this.input.item);
             if (!itemDB)
                 return { success: false, message: 'failure to retrieve or create item' };
@@ -150,6 +141,18 @@ class IngestDataWorker extends ResolverBase {
             path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
             href = H.Helpers.computeHref(path, itemDB.Name);
             await this.appendToWFReport(`Packrat Item${!this.input.item.id ? ' (created)' : ''}: ${href}`);
+
+            // wire projects to item
+            if (this.input.project.id) {
+                const projectDB: DBAPI.Project | null = await this.wireProjectToItem(this.input.project.id, itemDB);
+                if (!projectDB)
+                    return { success: false, message: 'failure to wire project to item' };
+
+                SOI = await CACHE.SystemObjectCache.getSystemFromProject(projectDB);
+                path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+                href = H.Helpers.computeHref(path, this.input.project.name);
+                await this.appendToWFReport(`Packrat Project: ${href}`);
+            }
 
             // wire subjects to item
             if (!await this.wireSubjectsToItem(subjectsDB, itemDB))
@@ -217,6 +220,8 @@ class IngestDataWorker extends ResolverBase {
         if (itemDB) {
             if (!await this.wireItemToAssetOwners(itemDB))
                 return { success: false, message: 'failure to wire item to asset owner' };
+
+            await this.postItemWiring();
         }
 
         // notify workflow engine about this ingestion:
@@ -446,19 +451,17 @@ class IngestDataWorker extends ResolverBase {
         return subjectDB;
     }
 
-    private async wireProjectToSubjects(idProject: number, subjectsDB: DBAPI.Subject[]): Promise<DBAPI.Project | null> {
+    private async wireProjectToItem(idProject: number, itemDB: DBAPI.Item): Promise<DBAPI.Project | null> {
         const projectDB: DBAPI.Project | null = await DBAPI.Project.fetch(idProject);
         if (!projectDB) {
             LOG.error(`ingestData unable to fetch project ${idProject}`, LOG.LS.eGQL);
             return null;
         }
 
-        for (const subjectDB of subjectsDB) {
-            const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(projectDB, subjectDB);
-            if (!xref) {
-                LOG.error(`ingestData unable to wire project ${JSON.stringify(projectDB)} to subject ${JSON.stringify(subjectDB)}`, LOG.LS.eGQL);
-                return null;
-            }
+        const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(projectDB, itemDB);
+        if (!xref) {
+            LOG.error(`ingestData unable to wire project ${JSON.stringify(projectDB)} to item ${JSON.stringify(itemDB)}`, LOG.LS.eGQL);
+            return null;
         }
         return projectDB;
     }
@@ -706,18 +709,25 @@ class IngestDataWorker extends ResolverBase {
         }
 
         let modelDB: DBAPI.Model | null = idModel ? await DBAPI.Model.fetch(idModel) : null;
+        let cloned: boolean = false;
         if (!modelDB)
             modelDB = JCOutput.modelConstellation.Model;
-        else
+        else {
             modelDB.cloneData(JCOutput.modelConstellation.Model);
+            cloned = true;
+        }
 
         modelDB.Name = model.name;
-        modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCaptured) || new Date();
+        modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCreated) || new Date();
         modelDB.idVCreationMethod = model.creationMethod;
         modelDB.idVModality = model.modality;
         modelDB.idVPurpose = model.purpose;
         modelDB.idVUnits = model.units;
         modelDB.idVFileType = model.modelFileType;
+
+        // if we cloned, put our updates back into the modelConstellation ... as this may get used later
+        if (cloned)
+            JCOutput.modelConstellation.Model.cloneData(modelDB);
 
         const updateRes: boolean = idModel ? await modelDB.update() : await modelDB.create();
         if (!updateRes) {
@@ -858,8 +868,8 @@ class IngestDataWorker extends ResolverBase {
         LOG.info(`ingestData createSceneObjects, updateMode=${updateMode}, sceneDB=${JSON.stringify(sceneDB, H.Helpers.saferStringify)}, sceneConstellation=${JSON.stringify(sceneConstellation, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         let success: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
 
-        const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(sceneDB);
-        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+        this.sceneSOI = await CACHE.SystemObjectCache.getSystemFromScene(sceneDB);
+        const path: string = this.sceneSOI ? RouteBuilder.RepositoryDetails(this.sceneSOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
         const href: string = H.Helpers.computeHref(path, sceneDB.Name);
         await this.appendToWFReport(`Scene: ${href}`);
 
@@ -874,11 +884,11 @@ class IngestDataWorker extends ResolverBase {
 
             for (const MSX of sceneConstellation.ModelSceneXref) {
                 if (MSX.idModelSceneXref || MSX.idScene) {
-                    LOG.error(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as record already was populated: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData could not create ModelSceneXref for scene ${sceneDB.idScene}, as record already was populated: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                     continue;
                 }
                 if (MSX.idModel <= 0) {
-                    LOG.error(`ingestData could not create ModelSceneXref for Scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                    LOG.info(`ingestData could not create ModelSceneXref for scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                     continue;
                 }
 
@@ -898,7 +908,7 @@ class IngestDataWorker extends ResolverBase {
 
                 const modelDB: DBAPI.Model | null = await DBAPI.Model.fetch(MSXUpdate.idModel);
                 if (!modelDB || !await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneDB, modelDB)) {
-                    LOG.error(`ingestData could not create SystemObjectXref for Scene ${sceneDB.idScene} using: ${JSON.stringify(MSXUpdate)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData could not create SystemObjectXref for scene ${sceneDB.idScene} using: ${JSON.stringify(MSXUpdate)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -923,12 +933,6 @@ class IngestDataWorker extends ResolverBase {
                     continue;
                 }
             }
-        }
-
-        if (SOI) {
-            const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(SOI.idSystemObject, this.user?.idUser ?? null);
-            if (!metadataResult.success)
-                LOG.error(`ingestData unable to persist scene attachment metadata: ${metadataResult.error}`, LOG.LS.eGQL);
         }
 
         if (scene.idAssetVersion)
@@ -1009,6 +1013,41 @@ class IngestDataWorker extends ResolverBase {
             }
         }
         return res;
+    }
+
+    private async postItemWiring(): Promise<boolean> {
+        if (this.sceneSOI) {
+            const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(this.sceneSOI.idSystemObject, this.user?.idUser ?? null);
+            if (!metadataResult.success) {
+                LOG.error(`ingestData unable to persist scene attachment metadata: ${metadataResult.error}`, LOG.LS.eGQL);
+                return false;
+            }
+        }
+
+        // explicitly reindex all owning system objects
+        const nav: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
+        if (!nav) {
+            LOG.error('ingestData unable to fetch navigation interface', LOG.LS.eGQL);
+            return false;
+        }
+
+        for (const AVInfo of this.assetVersionMap.values()) {
+            const SO: DBAPI.SystemObject | null = await AVInfo.SOOwner.fetchSystemObject();
+            if (!SO) {
+                LOG.error(`ingestData unable to fetch system object for ${JSON.stringify(AVInfo.SOOwner, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                continue;
+            }
+
+            // index directly instead of scheduling indexing, so that we get an initial SOLR entry right away
+            // NAV.NavigationFactory.scheduleObjectIndexing(SO.idSystemObject);
+            const indexer: NAV.IIndexer | null = await nav.getIndexer();
+            if (!indexer) {
+                LOG.error(`ingestData unable to fetch navigation indexer for ${JSON.stringify(AVInfo.SOOwner, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                continue;
+            }
+            indexer.indexObject(SO.idSystemObject);
+        }
+        return true;
     }
 
     private async extractAndReuseMetadata(idAsset: number | null | undefined, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<boolean> {
@@ -1172,7 +1211,7 @@ class IngestDataWorker extends ResolverBase {
 
             // LOG.info(`ingestData.promoteAssetsIntoRepository AssetVersion=${JSON.stringify(assetVersionDB, H.Helpers.saferStringify)}; Asset=${JSON.stringify(assetDB, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
             const opInfo: OperationInfo = {
-                message: 'Ingesting asset',
+                message: AVInfo.Comment ? AVInfo.Comment : 'Ingesting asset',
                 idUser: user.idUser,
                 userEmailAddress: user.EmailAddress,
                 userName: user.Name
@@ -1184,16 +1223,17 @@ class IngestDataWorker extends ResolverBase {
                 SOBased,
                 idSystemObject: null,
                 opInfo,
-                Comment: AVInfo.Comment
+                Comment: AVInfo.Comment,
+                doNotSendIngestionEvent: true
             };
 
-            const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
-            if (!ISR.success) {
-                LOG.error(`ingestData unable to ingest assetVersion ${idAssetVersion}: ${ISR.error}`, LOG.LS.eGQL);
-                await this.appendToWFReport(`<b>Asset Ingestion Failed</b>: ${ISR.error}`);
+            const IAR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
+            if (!IAR.success) {
+                LOG.error(`ingestData unable to ingest assetVersion ${idAssetVersion}: ${IAR.error}`, LOG.LS.eGQL);
+                await this.appendToWFReport(`<b>Asset Ingestion Failed</b>: ${IAR.error}`);
             } else {
-                if (ISR.assetVersions) {
-                    for (const assetVersion of ISR.assetVersions) {
+                if (IAR.assetVersions) {
+                    for (const assetVersion of IAR.assetVersions) {
                         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
                         const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
                         const hrefObject: string = H.Helpers.computeHref(pathObject, assetVersion.FileName);
@@ -1202,18 +1242,18 @@ class IngestDataWorker extends ResolverBase {
                         await this.appendToWFReport(`Ingested ${hrefObject}: ${hrefDownload}, size ${assetVersion.StorageSize}, hash ${assetVersion.StorageHash}`);
                     }
                 }
-                if (ISR.assets) {
+                if (IAR.assets) {
                     // Handle complex ingestion, such as ingestion of a scene package as a zip file.
                     // In this case, we will receive the scene .svx.json file, supporting HTML, images, CSS, as well as models.
                     // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
                     if (!AVInfo.isAttachment && SOBased instanceof DBAPI.Scene) {
-                        const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, ISR);
+                        const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, IAR, idAssetVersion);
                         if (success && modelTransformUpdated)
                             transformUpdated = true;
                     }
                 }
             }
-            ingestResMap.set(idAssetVersion, ISR);
+            ingestResMap.set(idAssetVersion, IAR);
         }
         if (transformUpdated)
             await this.appendToWFReport('Scene ingested with Model Transform(s) Updated');
@@ -1311,8 +1351,9 @@ class IngestDataWorker extends ResolverBase {
                 if (photogrammetry.sourceObjects && photogrammetry.sourceObjects.length) {
                     for (const sourceObject of photogrammetry.sourceObjects) {
                         if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, photogrammetry.sourceObjects, [], true)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and photogrammetry`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and photogrammetry` };
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and capture data`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1321,8 +1362,9 @@ class IngestDataWorker extends ResolverBase {
                     for (const derivedObject of photogrammetry.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
                         if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between photogrammetry and ${derivedObject.objectType}`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between photogrammetry and ${derivedObject.objectType}` };
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between capture data and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1345,9 +1387,10 @@ class IngestDataWorker extends ResolverBase {
                 // add validation in this area while we iterate through the objects
                 if (model.sourceObjects && model.sourceObjects.length) {
                     for (const sourceObject of model.sourceObjects) {
-                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, model.sourceObjects, [], true)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and model`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and model` };
+                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eModel, model.sourceObjects, [], true)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and model`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1355,9 +1398,10 @@ class IngestDataWorker extends ResolverBase {
                 if (model.derivedObjects && model.derivedObjects.length) {
                     for (const derivedObject of model.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between model and ${derivedObject.objectType}`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between model and ${derivedObject.objectType}` };
+                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eModel, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between model and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1380,9 +1424,10 @@ class IngestDataWorker extends ResolverBase {
                 // add validation in this area while we iterate through the objects
                 if (scene.sourceObjects && scene.sourceObjects.length) {
                     for (const sourceObject of scene.sourceObjects) {
-                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, scene.sourceObjects, [], true)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and scene`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between ${sourceObject.objectType} and scene` };
+                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eScene, scene.sourceObjects, [], true)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and scene`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1390,9 +1435,10 @@ class IngestDataWorker extends ResolverBase {
                 if (scene.derivedObjects && scene.derivedObjects.length) {
                     for (const derivedObject of scene.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            LOG.error(`ingestData will not create the inappropriate parent-child relationship between scene and ${derivedObject.objectType}`, LOG.LS.eGQL);
-                            return { success: false, error: `ingestData will not create the inappropriate parent-child relationship between scene and ${derivedObject.objectType}` };
+                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eScene, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between scene and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                            LOG.error(error, LOG.LS.eGQL);
+                            return { success: false, error };
                         }
                     }
                 }
@@ -1473,8 +1519,8 @@ class IngestDataWorker extends ResolverBase {
         return { success: true };
     }
 
-    private async handleComplexIngestionScene(scene: DBAPI.Scene, ISR: IngestAssetResult): Promise<{ success: boolean, transformUpdated: boolean }> {
-        if (!ISR.assets || !ISR.assetVersions)
+    private async handleComplexIngestionScene(scene: DBAPI.Scene, IAR: IngestAssetResult, idAssetVersion: number): Promise<{ success: boolean, transformUpdated: boolean }> {
+        if (!IAR.assets || !IAR.assetVersions)
             return { success: false, transformUpdated: false };
 
         // first, identify assets and asset versions for the scene and models
@@ -1483,10 +1529,10 @@ class IngestDataWorker extends ResolverBase {
         const modelAssetMap: Map<string, AssetPair> = new Map<string, AssetPair>(); // map of asset name -> { asset, asset version }
 
         const assetVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>(); // map of *asset* id -> asset version
-        for (const assetVersion of ISR.assetVersions)
+        for (const assetVersion of IAR.assetVersions)
             assetVersionMap.set(assetVersion.idAsset, assetVersion); // idAsset is correct here!
 
-        for (const asset of ISR.assets) {
+        for (const asset of IAR.assets) {
             switch (await asset.assetType()) {
                 case eVocabularyID.eAssetAssetTypeScene:
                     if (!sceneAsset) {
@@ -1543,6 +1589,10 @@ class IngestDataWorker extends ResolverBase {
                 // scene.idScene, MSX.Name, .Usage, .Quality, .UVResolution
                 // if not found, create model and MSX
                 // if found, determine if MSX transform has changed; if so, update MSX, and return a status that can be used to kick off download generation workflow
+                const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion, MSX.Name);
+                if (JCOutput && !JCOutput.success)
+                    LOG.error(`ingestData handleComplexIngestionScene failed to extract JobCookSIPackratInspectOutput from idAssetVersion ${idAssetVersion}, model ${MSX.Name}`, LOG.LS.eGQL);
+
                 const MSXSources: DBAPI.ModelSceneXref[] | null =
                     await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(scene.idScene, MSX.Name, MSX.Usage, MSX.Quality, MSX.UVResolution);
                 const MSXSource: DBAPI.ModelSceneXref | null = (MSXSources && MSXSources.length > 0) ? MSXSources[0] : null;
@@ -1562,10 +1612,20 @@ class IngestDataWorker extends ResolverBase {
                         continue;
                     }
                     LOG.info(`ingestData handleComplexIngestionScene found existing ModelSceneXref=${JSON.stringify(MSXSource, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+
+                    if (JCOutput && JCOutput.success && JCOutput.modelConstellation && JCOutput.modelConstellation.Model) {
+                        this.extractModelMetrics(model, JCOutput.modelConstellation.Model);
+                        if (!await model.update())
+                            LOG.error(`ingestData handleComplexIngestionScene unable to update model ${MSXSource.idModel} with metrics`, LOG.LS.eGQL);
+                    }
+
                 } else {
                     model = await this.transformModelSceneXrefIntoModel(MSX);
+                    if (JCOutput && JCOutput.success && JCOutput.modelConstellation && JCOutput.modelConstellation.Model)
+                        this.extractModelMetrics(model, JCOutput.modelConstellation.Model);
+
                     if (!await model.create()) {
-                        LOG.error(`ingestData handleComplexIngestionScene unable to create Model from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                        LOG.error(`ingestData handleComplexIngestionScene unable to create model from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
                         success = false;
                         continue;
                     }
@@ -1586,7 +1646,7 @@ class IngestDataWorker extends ResolverBase {
 
                     const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
                     if (!SOX) {
-                        LOG.error(`ingestData handleComplexIngestionScene unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together`, LOG.LS.eGQL);
+                        LOG.error(`ingestData handleComplexIngestionScene unable to wire scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and model ${JSON.stringify(model, H.Helpers.saferStringify)} together`, LOG.LS.eGQL);
                         success = false;
                         continue;
                     }
@@ -1601,14 +1661,14 @@ class IngestDataWorker extends ResolverBase {
                 // reassign asset to model; create SystemObjectVersion and SystemObjectVersionAssetVersionXref
                 const SO: DBAPI.SystemObject | null = await model.fetchSystemObject();
                 if (!SO) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to fetch SystemObject for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to fetch SystemObject for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
 
                 assetPair.asset.idSystemObject = SO.idSystemObject;
                 if (!await assetPair.asset.update()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.saferStringify)} to model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -1621,7 +1681,7 @@ class IngestDataWorker extends ResolverBase {
                     idSystemObjectVersion: 0
                 });
                 if (!await SOV.create()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersion ${JSON.stringify(SOV, H.Helpers.saferStringify)} for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersion ${JSON.stringify(SOV, H.Helpers.saferStringify)} for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -1632,7 +1692,7 @@ class IngestDataWorker extends ResolverBase {
                     idSystemObjectVersionAssetVersionXref: 0,
                 });
                 if (!await SOVAVX.create()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)} for Model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)} for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -1642,7 +1702,7 @@ class IngestDataWorker extends ResolverBase {
         return { success, transformUpdated };
     }
 
-    extractSceneMetrics(scene: DBAPI.Scene, svxExtraction: SvxExtraction): void {
+    private extractSceneMetrics(scene: DBAPI.Scene, svxExtraction: SvxExtraction): void {
         const sceneExtract: DBAPI.Scene = svxExtraction.extractScene();
         scene.CountScene = sceneExtract.CountScene;
         scene.CountNode = sceneExtract.CountNode;
@@ -1671,6 +1731,20 @@ class IngestDataWorker extends ResolverBase {
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
             AutomationTag: MSX.computeModelAutomationTag()
         });
+    }
+
+    private extractModelMetrics(model: DBAPI.Model, modelMetrics: DBAPI.Model): void {
+        model.CountAnimations = modelMetrics.CountAnimations;
+        model.CountCameras = modelMetrics.CountCameras;
+        model.CountFaces = modelMetrics.CountFaces;
+        model.CountLights = modelMetrics.CountLights;
+        model.CountMaterials = modelMetrics.CountMaterials;
+        model.CountMeshes = modelMetrics.CountMeshes;
+        model.CountVertices = modelMetrics.CountVertices;
+        model.CountEmbeddedTextures = modelMetrics.CountEmbeddedTextures;
+        model.CountLinkedTextures = modelMetrics.CountLinkedTextures;
+        model.FileEncoding = modelMetrics.FileEncoding;
+        model.IsDracoCompressed = modelMetrics.IsDracoCompressed;
     }
 
     private async createWorkflow(): Promise<IWorkflowHelper> {
@@ -1720,66 +1794,68 @@ export function isValidParentChildRelationship(parent: DBAPI.eSystemObjectType, 
     /*
         *NOTE: when updating this relationship validation function,
         make sure to also apply changes to the client-side version located at
-        client/src/util/repository.tsx to maintain consistency
+        ingestData.ts to maintain consistency; ObjectGraph.ts also has it's own version of this logic,
+        in a different form.
         **NOTE: this server-side validation function will be validating a selected item AFTER adding it,
         which means the maximum connection count will be different from those seen in repository.tsx
-
-        xproject child to 1 - many unit parent
-        -skip on stakeholders for now
-        -skip on stakeholders for now
-        xitem child to only 1 parent project parent
-        xitem child to multiple subject parent
-        xCD child to 1 - many item parent
-        xmodel child to 1 - many parent Item
-        xscene child to 1 or more item parent
-        xmodel child to 0 - many CD parent
-        xCD child to 0 - many CD parent
-        -skip on actor for now
-        xmodel child to 0 to many model parent
-        xscene child to 1 to many model parent
-        -skip on actor for now
-        xmodel child to only 1 scene parent
-        -skip on IF for now
-        -skip on PD for now
     */
 
     const existingAndNewRelationships = [...existingParentRelationships, ...selected];
     switch (child) {
+        case DBAPI.eSystemObjectType.eUnit:
         case DBAPI.eSystemObjectType.eProject:
-            result = parent === DBAPI.eSystemObjectType.eUnit;
+        case DBAPI.eSystemObjectType.eSubject:
+        case DBAPI.eSystemObjectType.eAsset:
+        case DBAPI.eSystemObjectType.eAssetVersion:
             break;
-        case DBAPI.eSystemObjectType.eItem: {
-            if (parent === DBAPI.eSystemObjectType.eSubject) result = true;
 
-            if (parent === DBAPI.eSystemObjectType.eProject) {
-                if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eProject, 2);
-                } else {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eProject, 1);
-                }
-            }
+        case DBAPI.eSystemObjectType.eItem:
+            if (parent === DBAPI.eSystemObjectType.eSubject)
+                result = true;
+            else if (parent === DBAPI.eSystemObjectType.eProject)
+                result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eProject, isAddingSource ? 2 : 1);
             break;
-        }
-        case DBAPI.eSystemObjectType.eCaptureData: {
-            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eItem) result = true;
-            break;
-        }
-        case DBAPI.eSystemObjectType.eModel: {
-            if (parent === DBAPI.eSystemObjectType.eScene) {
-                if (isAddingSource) {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eScene, 2);
-                } else {
-                    result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eScene, 1);
-                }
-            }
 
-            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eModel || parent === DBAPI.eSystemObjectType.eItem) result = true;
+        case DBAPI.eSystemObjectType.eCaptureData:
+            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eItem)
+                result = true;
             break;
-        }
-        case DBAPI.eSystemObjectType.eScene: {
-            if (parent === DBAPI.eSystemObjectType.eItem || parent === DBAPI.eSystemObjectType.eModel) result = true;
+
+        case DBAPI.eSystemObjectType.eModel:
+            if (parent === DBAPI.eSystemObjectType.eScene)
+                result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eScene, isAddingSource ? 2 : 1);
+            else if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eModel || parent === DBAPI.eSystemObjectType.eItem)
+                result = true;
             break;
-        }
+
+        case DBAPI.eSystemObjectType.eScene:
+            if (parent === DBAPI.eSystemObjectType.eItem || parent === DBAPI.eSystemObjectType.eModel)
+                result = true;
+            break;
+
+        case DBAPI.eSystemObjectType.eIntermediaryFile:
+            if (parent === DBAPI.eSystemObjectType.eItem)
+                result = true;
+            break;
+
+        case DBAPI.eSystemObjectType.eProjectDocumentation:
+            if (parent === DBAPI.eSystemObjectType.eProject)
+                result = true;
+            break;
+
+        case DBAPI.eSystemObjectType.eActor:
+            if (parent === DBAPI.eSystemObjectType.eCaptureData ||
+                parent === DBAPI.eSystemObjectType.eModel ||
+                parent === DBAPI.eSystemObjectType.eScene ||
+                parent === DBAPI.eSystemObjectType.eIntermediaryFile ||
+                parent === DBAPI.eSystemObjectType.eUnit)
+                result = true;
+            break;
+
+        case DBAPI.eSystemObjectType.eStakeholder:
+            if (parent === DBAPI.eSystemObjectType.eUnit || parent === DBAPI.eSystemObjectType.eProject)
+                result = true;
+            break;
     }
 
     return result;

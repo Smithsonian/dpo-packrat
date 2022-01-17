@@ -1,6 +1,6 @@
 {
   "name": "dpo-packrat",
-  "version": "0.9.0",
+  "version": "0.9.5",
   "private": true,
   "license": "Apache-2.0",
   "description": "Data Repository and Workflow Management for 3D data captures, models, and scenes",

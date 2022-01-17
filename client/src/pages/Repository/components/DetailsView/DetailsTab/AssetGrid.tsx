@@ -25,9 +25,14 @@ import { CheckCircleOutline, GetApp } from '@material-ui/icons';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import { DataTableOptions } from '../../../../../types/component';
+import API from '../../../../../api';
 
 export const useStyles = makeStyles(({ palette }) => ({
-    btn: { ...sharedButtonProps, width: 'fit-content' },
+    btn: {
+        ...sharedButtonProps,
+        width: 'fit-content',
+        outline: '0.1px hidden #FFFCD1'
+    },
     tableContainer: {
         height: 'fit-content',
         backgroundColor: palette.secondary.light,
@@ -114,6 +119,19 @@ const getMuiTheme = () =>
                 root: {
                     borderBottom: '1.2px solid rgb(128,128,128)'
                 }
+            },
+            MuiButtonBase: {
+                root: {
+                    '&:focus': {
+                        outline: '0.5px hidden rgba(141, 171, 196, 0.4)'
+                    },
+                    outline: '0.1px hidden #FFFCD1'
+                }
+            },
+            MuiTypography: {
+                h6: {
+                    display: 'none'
+                }
             }
         }
     });
@@ -121,7 +139,7 @@ const getMuiTheme = () =>
 function AssetGrid(props: AssetGridProps): React.ReactElement {
     const classes = useStyles();
     const { idSystemObject, systemObjectType } = props;
-    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
+    const serverEndpoint = API.serverEndpoint();
     const history = useHistory();
     const [assetColumns, setAssetColumns] = useState<any>([]);
     const [assetRows, setAssetRows] = useState<any[]>([]);
@@ -213,7 +231,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                                 } else if (value.origin === eLinkOrigin.eServer) {
                                     return (
                                         <a
-                                            href={REACT_APP_PACKRAT_SERVER_ENDPOINT + value.path}
+                                            href={serverEndpoint + value.path}
                                             style={{ textDecoration: 'underline', color: '#2C405A' }}
                                         >
                                             {value.label}
@@ -232,9 +250,10 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                                 } else if (value.origin === eLinkOrigin.eServer) {
                                     return (
                                         <a
-                                            href={REACT_APP_PACKRAT_SERVER_ENDPOINT + value.path}
+                                            href={serverEndpoint + value.path}
                                             style={{ textDecoration: 'underline', color: '#2C405A', display: 'flex' }}
                                         >
+                                            <span style={{ display: 'none' }}>Download Icon</span>
                                             {renderIcon(value.icon)}
                                         </a>
                                     );
@@ -308,18 +327,16 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         <React.Fragment>
             <MuiThemeProvider theme={getMuiTheme()}>
                 <Box className={classes.tableContainer}>
-                    <MUIDataTable title='' data={assetRows} columns={assetColumns} options={options} />
+                    <MUIDataTable title='Assets' data={assetRows} columns={assetColumns} options={options} />
                 </Box>
             </MuiThemeProvider>
 
             <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' mt={1} width='100%'>
                 <Box display='flex' flexDirection='row' alignItems='center'>
                     {assetRows.length > 0 && (
-                        <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
-                            <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ whiteSpace: 'nowrap' }}>
-                                Download All
-                            </Button>
-                        </a>
+                        <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ whiteSpace: 'nowrap' }} href={getDownloadAllAssetsUrlForObject(serverEndpoint, idSystemObject)}>
+                            Download All
+                        </Button>
                     )}
                     <Button className={classes.btn} variant='contained' color='primary' style={{ marginLeft: '2px' }} onClick={redirect}>
                         Add Version

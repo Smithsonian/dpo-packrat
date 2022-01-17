@@ -126,6 +126,7 @@ function SubjectItem(): React.ReactElement {
         const { file: { id, type } } = metadatas[0];
         const { isLast } = getMetadataInfo(id);
         const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
+        // console.log(`SubjectItem onNext() nextRoute=${nextRoute}, metadatas=${JSON.stringify(metadatas)}`);
         toast.dismiss();
         history.push(nextRoute);
     };

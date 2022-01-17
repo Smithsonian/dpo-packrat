@@ -56,7 +56,6 @@ describe('Navigation Traversal', () => {
         await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [eSystemObjectType.eUnit], metadataColumns });
         await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [eSystemObjectType.eProject], metadataColumns });
 
-
         // Not yet implemented:
         await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [eSystemObjectType.eSubject], metadataColumns }, false);
         await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [eSystemObjectType.eItem], metadataColumns }, false);
@@ -74,10 +73,8 @@ describe('Navigation Traversal', () => {
 
     test('Navigation Children', async () => {
         await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.unit1), objectTypes: [eSystemObjectType.eSubject], metadataColumns });
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.project1), objectTypes: [eSystemObjectType.eSubject], metadataColumns });
         await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.subject1), objectTypes: [eSystemObjectType.eItem], metadataColumns });
         await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.item1), objectTypes: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel, eSystemObjectType.eScene], metadataColumns });
-
 
         // Not yet implemented:
         await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.captureData1), objectTypes: [eSystemObjectType.eAsset], metadataColumns }, false);

@@ -7,7 +7,6 @@ module.exports = {
     testMatch: [
         // The complete test suite, on one line, to aid in quick commenting out
         '**/tests/auth/**', '**/tests/cache/cache.test.ts', '**/tests/collections/*.test.ts', '**/tests/db/**/*.test.ts', '**/tests/graphql/graphql.test.ts', '**/tests/metadata/*.test.ts', '**/tests/job/**/*.test.ts', '**/tests/navigation/**/*.test.ts', '**/tests/storage/**/*.test.ts', '**/tests/utils/**/*.test.ts',
-        // '**/tests/job/impl/JobNS.test.ts',
         // '**/tests/db/dbcreation.test.ts',
 
         // Larger test collections, left here to aid in quick, focused testing; these are the elements on the line above:
@@ -29,6 +28,8 @@ module.exports = {
         // '**/tests/auth/local/logout.test.ts',
         // '**/tests/collections/EdanCollection.test.ts',
         // '**/tests/db/dbcreation.test.ts',
+        // '**/tests/db/composite/IngestionSubjectProjectAlgo.test.ts',
+        // '**/tests/db/composite/LicenseResolver.test.ts',
         // '**/tests/db/composite/ObjectGraph.test.ts',
         // '**/tests/db/composite/SubjectUnitIdentifier.test.ts',
         // '**/tests/job/impl/JobNS.test.ts',

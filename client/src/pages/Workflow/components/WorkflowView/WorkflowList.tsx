@@ -13,6 +13,8 @@ import { ePaginationChange } from '../../../../store';
 import { EmptyTable } from '../../../../components';
 import { truncateWithEllipses } from '../../../../constants/helperfunctions';
 import { DataTableOptions } from '../../../../types/component';
+import { getDownloadValueForWorkflowReport, getDownloadValueForWorkflowSet, getDownloadValueForJob } from '../../../../utils/repository';
+import API from '../../../../api';
 import clsx from 'clsx';
 
 interface WorkflowIconProps {
@@ -41,18 +43,15 @@ export const useStyles = makeStyles(({ palette }) => ({
         '& > span': {
             '& > button': {
                 marginRight: 0,
-                marginLeft: '0px'
+                marginLeft: '0px',
+                '&:focus': {
+                    outline: '0.5px solid #8DABC4'
+                }
             },
             justifyContent: 'center'
         }
     },
-    container: {
-        width: 'calc(100% + 10px)',
-        background: palette.secondary.light,
-        padding: 5,
-        borderRadius: 5,
-        marginBottom: 7
-    },
+
     header: {
         fontSize: '0.9em',
         color: palette.primary.dark,
@@ -68,6 +67,11 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     link: {
         textDecoration: 'underline'
+    },
+    footerBtn: {
+        '&:focus': {
+            outline: '0.5px solid #8DABC4'
+        }
     }
 }));
 
@@ -105,6 +109,21 @@ const getMuiTheme = () =>
             MuiTableHead: {
                 root: {
                     borderBottom: '1.2px solid rgb(128,128,128)'
+                }
+            },
+            MuiInputBase: {
+                input: {
+                    '&:-webkit-autofill': {
+                        animationDuration: '4s'
+                    },
+                    '&:focus': {
+                        outline: '0.5px solid #8DABC4',
+                    }
+                }
+            },
+            MuiButtonBase: {
+                root: {
+                    outline: '0.5px solid rgb(255, 252, 209)'
                 }
             }
         }
@@ -149,7 +168,7 @@ function WorkflowList(): React.ReactElement {
         rowsPerPageOptions: [10, 25, 100],
         sortOrder: { name: workflowListSortEnumToString(sortBy), direction: sortOrder ? 'asc' : 'desc' },
         onColumnSortChange: (changedColumn: string, direction: string) => paginationUpdateAndRefetchList(ePaginationChange.eSort, null, changedColumn, direction),
-        customFooter: function Pagination() {
+        customTableBodyFooterRender: function Pagination() {
             return (
                 <tfoot>
                     <tr>
@@ -159,12 +178,20 @@ function WorkflowList(): React.ReactElement {
                             count={count}
                             onChangeRowsPerPage={({ target: { value } }) => paginationUpdateAndRefetchList(ePaginationChange.eRowCount, Number(value), null, null)}
                             onChangePage={(_e, currentPage) => paginationUpdateAndRefetchList(ePaginationChange.ePage, currentPage, null, null)}
+                            backIconButtonProps={{ className: classes.footerBtn }}
+                            nextIconButtonProps={{ className: classes.footerBtn }}
                         />
                     </tr>
                 </tfoot>
             );
-        }
+        },
+        setRowProps: () => {
+            return { role: 'row' };
+        },
+        // setTableProps: () => {}
     };
+
+    const serverEndpoint = API.serverEndpoint();
 
     if (loading) {
         return (
@@ -178,7 +205,7 @@ function WorkflowList(): React.ReactElement {
         return {
             className: clsx({
                 [classes.centeredTableHead]: true
-            })
+            }),
         };
     };
 
@@ -197,7 +224,7 @@ function WorkflowList(): React.ReactElement {
             name: 'Type',
             label: 'Type',
             options: {
-                setCellProps: setCenterCell,
+                // setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
             }
         },
@@ -246,36 +273,36 @@ function WorkflowList(): React.ReactElement {
             }
         },
         {
-            name: 'HyperlinkReport',
+            name: 'idWorkflowReport',
             label: 'Report',
             options: {
                 customBodyRender(value) {
                     if (!value) return '';
-                    return <WorkflowIcon reportType={eWorkflowLinkType.eReport} path={value} />;
+                    return <WorkflowIcon reportType={eWorkflowLinkType.eReport} path={getDownloadValueForWorkflowReport(serverEndpoint, value)} />;
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
             }
         },
         {
-            name: 'HyperlinkSet',
+            name: 'idWorkflowSet',
             label: 'Set',
             options: {
                 customBodyRender(value) {
                     if (!value) return '';
-                    return <WorkflowIcon reportType={eWorkflowLinkType.eSet} path={value} />;
+                    return <WorkflowIcon reportType={eWorkflowLinkType.eSet} path={getDownloadValueForWorkflowSet(serverEndpoint, value)} />;
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
             }
         },
         {
-            name: 'HyperlinkJob',
+            name: 'idJobRun',
             label: 'Job',
             options: {
                 customBodyRender(value) {
                     if (!value) return '';
-                    return <WorkflowIcon reportType={eWorkflowLinkType.eJob} path={value} />;
+                    return <WorkflowIcon reportType={eWorkflowLinkType.eJob} path={getDownloadValueForJob(serverEndpoint, value)} />;
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
@@ -293,7 +320,7 @@ function WorkflowList(): React.ReactElement {
                         </Tooltip>
                     );
                 },
-                setCellProps: setCenterCell,
+                // setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
             }
         }

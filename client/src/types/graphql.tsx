@@ -360,6 +360,7 @@ export type Mutation = {
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
   publish: PublishResult;
+  rollbackAssetVersion: RollbackAssetVersionResult;
   rollbackSystemObjectVersion: RollbackSystemObjectVersionResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
   updateLicense: CreateLicenseResult;
@@ -475,6 +476,11 @@ export type MutationPublishArgs = {
 };
 
 
+export type MutationRollbackAssetVersionArgs = {
+  input: RollbackAssetVersionInput;
+};
+
+
 export type MutationRollbackSystemObjectVersionArgs = {
   input: RollbackSystemObjectVersionInput;
 };
@@ -542,6 +548,17 @@ export type DiscardUploadedAssetVersionsResult = {
   success: Scalars['Boolean'];
 };
 
+export type RollbackAssetVersionResult = {
+  __typename?: 'RollbackAssetVersionResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+};
+
+export type RollbackAssetVersionInput = {
+  idAssetVersion: Scalars['Int'];
+  rollbackNotes: Scalars['String'];
+};
+
 export type GetAssetVersionsDetailsInput = {
   idAssetVersions: Array<Scalars['Int']>;
 };
@@ -606,7 +623,7 @@ export type IngestModel = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
@@ -702,7 +719,7 @@ export type UpdateModelMetadata = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
 };
 
@@ -796,6 +813,7 @@ export type AssetVersion = {
   Version: Scalars['Int'];
   idSOAttachment?: Maybe<Scalars['Int']>;
   FilePath: Scalars['String'];
+  Comment?: Maybe<Scalars['String']>;
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;
   SystemObject?: Maybe<SystemObject>;
@@ -988,7 +1006,7 @@ export type IngestModelInput = {
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
   units: Scalars['Int'];
-  dateCaptured: Scalars['String'];
+  dateCreated: Scalars['String'];
   modelFileType: Scalars['Int'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
@@ -1543,7 +1561,7 @@ export type ModelDetailFieldsInput = {
   Modality?: Maybe<Scalars['Int']>;
   Purpose?: Maybe<Scalars['Int']>;
   Units?: Maybe<Scalars['Int']>;
-  DateCaptured?: Maybe<Scalars['DateTime']>;
+  DateCreated?: Maybe<Scalars['DateTime']>;
   ModelFileType?: Maybe<Scalars['Int']>;
 };
 
@@ -1966,6 +1984,8 @@ export type DetailVersion = {
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
   ingested: Scalars['Boolean'];
+  Comment?: Maybe<Scalars['String']>;
+  CommentLink?: Maybe<Scalars['String']>;
 };
 
 export type GetVersionsForAssetInput = {
@@ -2099,6 +2119,7 @@ export type CreateUnitResult = {
 
 export type CreateProjectInput = {
   Name: Scalars['String'];
+  Unit: Scalars['Int'];
   Description: Scalars['String'];
 };
 
@@ -2687,6 +2708,19 @@ export type DiscardUploadedAssetVersionsMutation = (
   ) }
 );
 
+export type RollbackAssetVersionMutationVariables = Exact<{
+  input: RollbackAssetVersionInput;
+}>;
+
+
+export type RollbackAssetVersionMutation = (
+  { __typename?: 'Mutation' }
+  & { rollbackAssetVersion: (
+    { __typename?: 'RollbackAssetVersionResult' }
+    & Pick<RollbackAssetVersionResult, 'success' | 'message'>
+  ) }
+);
+
 export type UploadAssetMutationVariables = Exact<{
   file: Scalars['Upload'];
   type: Scalars['Int'];
@@ -3157,7 +3191,7 @@ export type GetAssetVersionsDetailsQuery = (
         )> }
       )>, Model?: Maybe<(
         { __typename?: 'IngestModel' }
-        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory'>
+        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCreated' | 'modelFileType' | 'directory'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
           & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3256,7 +3290,7 @@ export type GetUploadedAssetVersionQuery = (
         )> }
       )>, Model?: Maybe<(
         { __typename?: 'UpdateModelMetadata' }
-        & Pick<UpdateModelMetadata, 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType'>
+        & Pick<UpdateModelMetadata, 'name' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCreated' | 'modelFileType'>
       )>, Scene?: Maybe<(
         { __typename?: 'UpdateSceneMetadata' }
         & Pick<UpdateSceneMetadata, 'name' | 'approvedForPublication' | 'posedAndQCd'>
@@ -3742,7 +3776,7 @@ export type GetVersionsForAssetQuery = (
     { __typename?: 'GetVersionsForAssetResult' }
     & { versions: Array<(
       { __typename?: 'DetailVersion' }
-      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested'>
+      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested' | 'Comment' | 'CommentLink'>
     )> }
   ) }
 );
@@ -4103,7 +4137,7 @@ export type GetWorkflowListQuery = (
     { __typename?: 'GetWorkflowListResult' }
     & { WorkflowList?: Maybe<Array<Maybe<(
       { __typename?: 'WorkflowListResult' }
-      & Pick<WorkflowListResult, 'idWorkflow' | 'idWorkflowSet' | 'idWorkflowReport' | 'idJobRun' | 'Type' | 'State' | 'DateStart' | 'DateLast' | 'HyperlinkReport' | 'HyperlinkSet' | 'HyperlinkJob' | 'Error'>
+      & Pick<WorkflowListResult, 'idWorkflow' | 'idWorkflowSet' | 'idWorkflowReport' | 'idJobRun' | 'Type' | 'State' | 'DateStart' | 'DateLast' | 'Error'>
       & { Owner?: Maybe<(
         { __typename?: 'User' }
         & Pick<User, 'Name'>
@@ -4146,6 +4180,40 @@ export function useDiscardUploadedAssetVersionsMutation(baseOptions?: Apollo.Mut
 export type DiscardUploadedAssetVersionsMutationHookResult = ReturnType<typeof useDiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationResult = Apollo.MutationResult<DiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
+export const RollbackAssetVersionDocument = gql`
+    mutation rollbackAssetVersion($input: RollbackAssetVersionInput!) {
+  rollbackAssetVersion(input: $input) {
+    success
+    message
+  }
+}
+    `;
+export type RollbackAssetVersionMutationFn = Apollo.MutationFunction<RollbackAssetVersionMutation, RollbackAssetVersionMutationVariables>;
+
+/**
+ * __useRollbackAssetVersionMutation__
+ *
+ * To run a mutation, you first call `useRollbackAssetVersionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRollbackAssetVersionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [rollbackAssetVersionMutation, { data, loading, error }] = useRollbackAssetVersionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRollbackAssetVersionMutation(baseOptions?: Apollo.MutationHookOptions<RollbackAssetVersionMutation, RollbackAssetVersionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RollbackAssetVersionMutation, RollbackAssetVersionMutationVariables>(RollbackAssetVersionDocument, options);
+      }
+export type RollbackAssetVersionMutationHookResult = ReturnType<typeof useRollbackAssetVersionMutation>;
+export type RollbackAssetVersionMutationResult = Apollo.MutationResult<RollbackAssetVersionMutation>;
+export type RollbackAssetVersionMutationOptions = Apollo.BaseMutationOptions<RollbackAssetVersionMutation, RollbackAssetVersionMutationVariables>;
 export const UploadAssetDocument = gql`
     mutation uploadAsset($file: Upload!, $type: Int!, $idAsset: Int, $idSOAttachment: Int) {
   uploadAsset(
@@ -5245,7 +5313,7 @@ export const GetAssetVersionsDetailsDocument = gql`
         modality
         purpose
         units
-        dateCaptured
+        dateCreated
         modelFileType
         directory
         identifiers {
@@ -5483,7 +5551,7 @@ export const GetUploadedAssetVersionDocument = gql`
         modality
         purpose
         units
-        dateCaptured
+        dateCreated
         modelFileType
       }
       Scene {
@@ -6662,6 +6730,8 @@ export const GetVersionsForAssetDocument = gql`
       dateCreated
       size
       ingested
+      Comment
+      CommentLink
     }
   }
 }
@@ -7522,9 +7592,6 @@ export const GetWorkflowListDocument = gql`
       }
       DateStart
       DateLast
-      HyperlinkReport
-      HyperlinkSet
-      HyperlinkJob
       Error
     }
   }

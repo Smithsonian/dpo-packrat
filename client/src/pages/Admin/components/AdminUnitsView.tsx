@@ -14,6 +14,7 @@ import { GetUnitsFromNameSearchDocument, GetUnitsFromNameSearchResult } from '..
 import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -51,16 +52,20 @@ const useStyles = makeStyles({
         minHeight: '46px',
         paddingLeft: '20px',
         paddingRight: '20px',
-        background: '#0079C482',
+        background: '#ECF5FD',
         color: '#3F536E',
         marginBottom: '2%',
         width: 'fit-content'
     },
     styledButton: {
-        backgroundColor: '#687DDB',
+        backgroundColor: '#3854d0',
         color: 'white',
         width: '90px',
-        height: '30px'
+        height: '30px',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     },
     AdminSearchFilterContainer: {
         display: 'flex',
@@ -155,6 +160,7 @@ function AdminUnitsList({ units }): React.ReactElement {
 
 function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSearchText: string) => Promise<void> }): React.ReactElement {
     const [searchFilter, setSearchFilter] = useState('');
+    const history = useHistory();
     const classes = useStyles();
 
     const handleSearchFilterChange = e => {
@@ -168,15 +174,14 @@ function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSear
     return (
         <Box className={classes.AdminSearchFilterContainer}>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
+                <label htmlFor='searchFilter' style={{ display: 'none' }}>Search Unit</label>
                 <TextField className={classes.searchFilter} placeholder='Search Unit' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
                 <Button className={classes.styledButton} style={{ right: '25px' }} onClick={searchUnits}>
                     Search
                 </Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/units/create' target='_blank'>
-                    <Button className={classes.styledButton}>Create</Button>
-                </Link>
+                <Button className={classes.styledButton} onClick={() => history.push('/admin/units/create')}>Create</Button>
             </Box>
         </Box>
     );

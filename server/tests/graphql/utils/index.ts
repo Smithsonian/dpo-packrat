@@ -92,6 +92,7 @@ class TestSuiteUtils {
     createProjectInput = (): CreateProjectInput => {
         return {
             Name: 'Test Name',
+            Unit: 1,
             Description: 'Test Description'
         };
     };
@@ -155,6 +156,7 @@ class TestSuiteUtils {
             BulkIngest: false,
             idSOAttachment: null,
             FilePath: '/test/asset/path',
+            Comment: 'Test file',
             Version: 0
         };
     };

@@ -72,7 +72,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             },
             model: {
                 name: false,
-                dateCaptured: false,
+                dateCreated: false,
                 creationMethod: false,
                 modality: false,
                 units: false,
@@ -93,7 +93,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         if (assetType.model) {
             errors.model.name = lodash.isNull(metadata.model.name) || metadata.model.name.length < 1;
-            errors.model.dateCaptured = lodash.isNull(metadata.model.dateCaptured) || metadata.model.dateCaptured.toString() === 'Invalid Date';
+            errors.model.dateCreated = lodash.isNull(metadata.model.dateCreated) || metadata.model.dateCreated.toString() === 'Invalid Date';
             errors.model.creationMethod = lodash.isNull(metadata.model.creationMethod);
             errors.model.modality = lodash.isNull(metadata.model.modality);
             errors.model.units = lodash.isNull(metadata.model.units);
@@ -147,7 +147,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         const { addSubjects } = useSubjectStore.getState();
         const { addProjects } = useProjectStore.getState();
         const { addItems } = useItemStore.getState();
-        const { UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet } = existingMetadata;
+        const { UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet } = (existingMetadata ? existingMetadata : { UpdatedAssetVersionMetadata: [], idAssetVersionsUpdatedSet: new Set<number>() });
         const selectedFiles = getSelectedFiles(completed, true);
 
         if (!selectedFiles.length) {
@@ -295,7 +295,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                                 ...metadataStep.model,
                                 ...(Model && {
                                     ...Model,
-                                    dateCaptured: new Date(Model.dateCaptured),
+                                    dateCreated: new Date(Model.dateCreated),
                                     identifiers: stateIdentifiers,
                                 })
                             }
@@ -343,12 +343,14 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (folders) metadataStep.photogrammetry.folders = folders;
                         }
                         if (existingIdAssetVersion && updateModel) {
-                            const { creationMethod, modality, units, purpose, modelFileType } = updateModel;
+                            const { creationMethod, modality, units, purpose, modelFileType, name, dateCreated } = updateModel;
                             if (creationMethod) metadataStep.model.creationMethod = creationMethod;
                             if (modality) metadataStep.model.modality = modality;
                             if (units) metadataStep.model.units = units;
                             if (purpose) metadataStep.model.purpose = purpose;
                             if (modelFileType) metadataStep.model.creationMethod = creationMethod;
+                            if (name) metadataStep.model.name = name;
+                            if (dateCreated) metadataStep.model.dateCreated = dateCreated;
                         }
                         if (existingIdAssetVersion && updateScene) {
                             const { name, posedAndQCd, referenceModels, approvedForPublication } = updateScene;
@@ -358,7 +360,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (referenceModels) metadataStep.scene.referenceModels = referenceModels;
                         }
                         metadatas.push(metadataStep);
-                        // console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
+                        console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
                     }
                 }
 

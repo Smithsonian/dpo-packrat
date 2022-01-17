@@ -61,7 +61,8 @@ const useStyles = makeStyles(theme => ({
         flexDirection: 'row',
         borderRadius: 5,
         backgroundColor: theme.palette.primary.light,
-        width: 'auto',
+        width: 'fit-content',
+        paddingRight: 20,
         justifyContent: 'space-around'
     },
     captionContainer: {
@@ -158,12 +159,14 @@ function Model(props: ModelProps): React.ReactElement {
             if (data.getModelConstellationForAssetVersion.ModelConstellation) {
                 const modelConstellation = data.getModelConstellationForAssetVersion.ModelConstellation;
                 const { ingestionModel, modelObjects, assets } = extractModelConstellation(modelConstellation);
-                updateMetadataField(metadataIndex, 'name', modelConstellation.Model.Name, MetadataType.model);
+                // if we're not in update mode, set the name:
+                if (!idAsset)
+                    updateMetadataField(metadataIndex, 'name', modelConstellation.Model.Name, MetadataType.model);
 
                 // handles 0 and non-numeric idVFileTypes
-                if (modelConstellation.Model.idVFileType) {
+                if (modelConstellation.Model.idVFileType)
                     updateMetadataField(metadataIndex, 'modelFileType', Number(modelConstellation.Model.idVFileType), MetadataType.model);
-                }
+
                 setIngestionModel(ingestionModel);
                 setModelObjects(modelObjects);
                 setAssetFiles(assets);
@@ -171,7 +174,7 @@ function Model(props: ModelProps): React.ReactElement {
         }
 
         fetchModelConstellation();
-    }, [idAssetVersion, metadataIndex, updateMetadataField]);
+    }, [idAssetVersion, idAsset, metadataIndex, updateMetadataField]);
 
     // use subject's idSystemObject as the root to initialize the repository browser
     const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
@@ -264,7 +267,7 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                 )}
 
-                <Box mb={2}>
+                <Box mb={2} width='52vw'>
                     <AssetIdentifiers
                         systemCreated={model.systemCreated}
                         identifiers={model.identifiers}
@@ -275,27 +278,31 @@ function Model(props: ModelProps): React.ReactElement {
                     />
                 </Box>
 
-                <Box mb={2}>
-                    <RelatedObjectsList
-                        type={RelatedObjectType.Source}
-                        relatedObjects={model.sourceObjects}
-                        onAdd={openSourceObjectModal}
-                        onRemove={onRemoveSourceObject}
-                        relationshipLanguage='Parent(s)'
-                    />
-                </Box>
-                <Box mb={2}>
-                    <RelatedObjectsList
-                        type={RelatedObjectType.Derived}
-                        relatedObjects={model.derivedObjects}
-                        onAdd={openDerivedObjectModal}
-                        onRemove={onRemoveDerivedObject}
-                        relationshipLanguage='Child(ren)'
-                    />
-                </Box>
-                <Box mb={2}>
-                    <AssetFilesTable files={assetFiles} />
-                </Box>
+                {!idAsset && (
+                    <React.Fragment>
+                        <Box mb={2}>
+                            <RelatedObjectsList
+                                type={RelatedObjectType.Source}
+                                relatedObjects={model.sourceObjects}
+                                onAdd={openSourceObjectModal}
+                                onRemove={onRemoveSourceObject}
+                                relationshipLanguage='Parent(s)'
+                            />
+                        </Box>
+                        <Box mb={2}>
+                            <RelatedObjectsList
+                                type={RelatedObjectType.Derived}
+                                relatedObjects={model.derivedObjects}
+                                onAdd={openDerivedObjectModal}
+                                onRemove={onRemoveDerivedObject}
+                                relationshipLanguage='Child(ren)'
+                            />
+                        </Box>
+                        <Box mb={2}>
+                            <AssetFilesTable files={assetFiles} />
+                        </Box>
+                    </React.Fragment>
+                )}
                 {/* Start of data-entry form */}
                 <Box className={classes.ModelMetricsAndFormContainer}>
                     <Box className={classes.captionContainer}>
@@ -306,8 +313,8 @@ function Model(props: ModelProps): React.ReactElement {
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
                             <InputField required type='string' label='Name' value={model.name} name='name' onChange={setNameField} error={errors.model.name} />
 
-                            <FieldType error={errors.model.dateCaptured} required label='Date Created' direction='row' containerProps={rowFieldProps}>
-                                <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
+                            <FieldType error={errors.model.dateCreated} required label='Date Created' direction='row' containerProps={rowFieldProps}>
+                                <DateInputField value={model.dateCreated} onChange={(_, value) => setDateField('dateCreated', value)} />
                             </FieldType>
 
                             <SelectField

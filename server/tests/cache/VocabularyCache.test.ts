@@ -3,12 +3,12 @@ import * as DBAPI from '../../db';
 import * as H from '../../utils/helpers';
 import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
 import * as LOG from '../../utils/logger';
-
+/*
 afterAll(async done => {
     await H.Helpers.sleep(4000);
     done();
 });
-
+*/
 enum eCacheTestMode {
     eInitial,
     eClear,

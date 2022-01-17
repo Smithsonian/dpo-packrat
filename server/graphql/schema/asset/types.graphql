@@ -28,6 +28,7 @@ type AssetVersion {
     Version: Int!
     idSOAttachment: Int
     FilePath: String!
+    Comment: String
     Asset: Asset
     User: User
     SystemObject: SystemObject

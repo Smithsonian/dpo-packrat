@@ -16,14 +16,19 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     systemCreatedText: {
         marginLeft: spacing(2),
         fontStyle: 'italic',
-        color: palette.primary.contrastText
+        color: palette.primary.dark,
+        backgroundColor: 'rgb(236, 245, 253)'
     },
     addIdentifierButton: {
         height: 30,
         width: 80,
         fontSize: '0.8em',
         color: '#FFFFFF',
-        backgroundColor: '#0079C4'
+        backgroundColor: '#0079C4',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     }
 }));
 
@@ -79,7 +84,14 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
             <FieldType required label='Asset Identifier(s)'>
                 <Box display='flex' justifyContent='space-between'>
                     <Box className={classes.assetIdentifier}>
-                        <Checkbox name='systemCreated' checked={systemCreated} color='primary' onChange={onSystemCreatedChange} />
+                        <label htmlFor='systemCreated' style={{ display: 'none' }}>System Created Identifier</label>
+                        <Checkbox
+                            id='systemCreated'
+                            name='systemCreated'
+                            checked={systemCreated}
+                            color='primary'
+                            onChange={onSystemCreatedChange}
+                        />
                         <Typography className={classes.systemCreatedText} variant='body1'>
                             System will create an identifier
                         </Typography>

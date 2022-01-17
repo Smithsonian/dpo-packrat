@@ -7,7 +7,7 @@
 import { createMuiTheme, Theme } from '@material-ui/core/styles';
 import createBreakpoints from '@material-ui/core/styles/createBreakpoints';
 import Colors from './colors';
-import { createTypographyOverrides } from './typography';
+import { createOverrides } from './typography';
 
 export const palette = {
     primary: {
@@ -18,13 +18,16 @@ export const palette = {
     },
     secondary: {
         light: '#FFFCD1',
-        main: '#F8D00D'
+        main: '#F8D00D',
+    },
+    background: {
+        default: '#FFFFFF'
     }
 };
 
 const breakpoints = createBreakpoints({});
 
-const overrides = createTypographyOverrides(breakpoints);
+const overrides = createOverrides(breakpoints);
 
 const theme: Theme = createMuiTheme({ palette, overrides });
 

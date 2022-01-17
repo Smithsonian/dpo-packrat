@@ -36,7 +36,7 @@ export type FieldErrors = {
     };
     model: {
         name: boolean;
-        dateCaptured: boolean;
+        dateCreated: boolean;
         creationMethod: boolean;
         modality: boolean;
         units: boolean;
@@ -98,7 +98,7 @@ export type ModelFields = {
     identifiers: StateIdentifier[];
     sourceObjects: StateRelatedObject[];
     derivedObjects: StateRelatedObject[];
-    dateCaptured: Date | string | null;
+    dateCreated: Date | string | null;
     creationMethod: number | null;
     modality: number | null;
     units: number | null;

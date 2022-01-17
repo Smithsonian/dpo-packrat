@@ -5,7 +5,7 @@
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Fragment } from 'react';
 import { AssetIdentifiers } from '../../../../../components';
 import { StateIdentifier, useMetadataStore, StateRelatedObject, useRepositoryStore, useSubjectStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
@@ -183,34 +183,39 @@ function Scene(props: SceneProps): React.ReactElement {
                     />
                 </Box>
             )}
-
-            <AssetIdentifiers
-                systemCreated={scene.systemCreated}
-                identifiers={scene.identifiers}
-                onSystemCreatedChange={setCheckboxField}
-                onAddIdentifer={onIdentifersChange}
-                onUpdateIdentifer={onIdentifersChange}
-                onRemoveIdentifer={onIdentifersChange}
-            />
-            <Box mb={2}>
-                <RelatedObjectsList
-                    type={RelatedObjectType.Source}
-                    relatedObjects={scene.sourceObjects}
-                    onAdd={openSourceObjectModal}
-                    onRemove={onRemoveSourceObject}
-                    relationshipLanguage='Parent(s)'
+            <Box width='52vw'>
+                <AssetIdentifiers
+                    systemCreated={scene.systemCreated}
+                    identifiers={scene.identifiers}
+                    onSystemCreatedChange={setCheckboxField}
+                    onAddIdentifer={onIdentifersChange}
+                    onUpdateIdentifer={onIdentifersChange}
+                    onRemoveIdentifer={onIdentifersChange}
                 />
             </Box>
-            <Box mb={2}>
-                <RelatedObjectsList
-                    type={RelatedObjectType.Derived}
-                    relatedObjects={scene.derivedObjects}
-                    onAdd={openDerivedObjectModal}
-                    onRemove={onRemoveDerivedObject}
-                    relationshipLanguage='Child(ren)'
-                />
-            </Box>
-            <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
+            {!idAsset && (
+                <Fragment>
+                    <Box mb={2}>
+                        <RelatedObjectsList
+                            type={RelatedObjectType.Source}
+                            relatedObjects={scene.sourceObjects}
+                            onAdd={openSourceObjectModal}
+                            onRemove={onRemoveSourceObject}
+                            relationshipLanguage='Parent(s)'
+                        />
+                    </Box>
+                    <Box mb={2}>
+                        <RelatedObjectsList
+                            type={RelatedObjectType.Derived}
+                            relatedObjects={scene.derivedObjects}
+                            onAdd={openDerivedObjectModal}
+                            onRemove={onRemoveDerivedObject}
+                            relationshipLanguage='Child(ren)'
+                        />
+                    </Box>
+                    <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
+                </Fragment>
+            )}
             <SceneDataForm
                 sceneData={sceneData}
                 setCheckboxField={setCheckboxField}
