@@ -59,7 +59,7 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
                 </Typography>
             </Box>
             <Box mr={4}>
-                <DebounceInput element='input' disabled={disabled} value={name || ''} className={classes.name} name='name' onChange={onNameUpdate} debounceTimeout={400} />
+                <DebounceInput title='object name' element='input' disabled={disabled} value={name || ''} className={classes.name} name='name' onChange={onNameUpdate} debounceTimeout={400} />
             </Box>
             <Box display='flex' flex={1} justifyContent='flex-end'>
                 {!!path.length && <BreadcrumbsView highlighted items={path} />}

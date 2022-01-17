@@ -58,7 +58,7 @@ const getAssetVersionsDetails = gql`
                     modality
                     purpose
                     units
-                    dateCaptured
+                    dateCreated
                     modelFileType
                     directory
                     identifiers {

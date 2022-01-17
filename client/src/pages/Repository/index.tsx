@@ -26,14 +26,13 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '85vw' : '93vw'),
+        width: 'fit-content',
         flexDirection: 'column',
         padding: 20,
         paddingBottom: 0,
         paddingRight: 0,
         [breakpoints.down('lg')]: {
-            paddingRight: 20,
-            maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '85vw' : '92vw')
+            paddingRight: 20
         }
     }
 }));

@@ -19,6 +19,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { truncateWithEllipses } from '../../../../../constants';
 import { ToolTip } from '../../../../../components';
 import { getDownloadValueForMetadata, getDownloadAssetVersionUrlForObject } from '../../../../../utils/repository';
+import API from '../../../../../api';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     btn: {
@@ -43,7 +44,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 }));
 
 function MetadataDisplayTable(): React.ReactElement {
-    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
+    const serverEndpoint = API.serverEndpoint();
     const classes = useStyles();
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const sources = getEntries(eVocabularySetID.eMetadataMetadataSource);
@@ -74,14 +75,14 @@ function MetadataDisplayTable(): React.ReactElement {
                 if (ValueExtended) {
                     content = (
                         <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(Value, 1000)} /> }>
-                            <a href={getDownloadValueForMetadata(REACT_APP_PACKRAT_SERVER_ENDPOINT, idMetadata)} rel='noopener noreferrer' target='_blank'>
+                            <a href={getDownloadValueForMetadata(serverEndpoint, idMetadata)} rel='noopener noreferrer' target='_blank'>
                                 <Typography className={clsx(classes.textField, classes.text)}>{truncateWithEllipses(Value, 90)}</Typography>
                             </a>
                         </Tooltip>
                     );
                 } else if (idAssetVersionValue) {
                     content = (
-                        <a href={getDownloadAssetVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idAssetVersionValue)} rel='noopener noreferrer' target='_blank'>
+                        <a href={getDownloadAssetVersionUrlForObject(serverEndpoint, idAssetVersionValue)} rel='noopener noreferrer' target='_blank'>
                             <Typography className={clsx(classes.textField, classes.text)}>{`Asset Version ${idAssetVersionValue}`}</Typography>
                         </a>
                     );

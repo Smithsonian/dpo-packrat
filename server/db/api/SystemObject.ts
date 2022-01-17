@@ -1,8 +1,10 @@
 /* eslint-disable camelcase */
 import * as P from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { WorkflowStep } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+// import * as H from '../../utils/helpers';
 import { eEventKey } from '../../event/interface/EventEnums';
 
 export interface SystemObjectBased {
@@ -312,6 +314,58 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idUnit } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SystemObject.fetchSystemObjectFromUnit', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** Returns list of idSystemObject's affected by update to any of the specified idAssets.
+     * Find SystemObjects whose current SystemObjectVersion points at
+     * the most recent AssetVersion of any of the specified Assets.
+     *
+     * Note: this method should be called before ingestion adds updated asset versions for
+     * the specified assets!
+     */
+    static async computeAffectedByUpdate(idAssets: number[]): Promise<Set<number> | null> {
+        /* istanbul ignore if */
+        if (!idAssets)
+            return null;
+        try {
+            // LOG.info(`SystemObject.computeAffectedByUpdate(${JSON.stringify(idAssets)})`, LOG.LS.eDB);
+            const SOInfo: [{ idSystemObject: number, idAsset: number }] =
+                await DBC.DBConnection.prisma.$queryRaw<[{ idSystemObject: number, idAsset: number }]>`
+                WITH
+                _MaxVersion (idAsset, Version) AS (
+                     SELECT idAsset, MAX(Version)
+                     FROM AssetVersion
+                     WHERE idAsset IN (${Prisma.join(idAssets)})
+                     GROUP BY idAsset
+                     HAVING MAX(Version) > 0
+                ),
+                _MaxAssetVersion (idAssetVersion, idAsset) AS (
+                    SELECT DISTINCT AV.idAssetVersion, AV.idAsset
+                    FROM AssetVersion AS AV
+                    JOIN _MaxVersion AS MV ON (AV.idAsset = MV.idAsset AND AV.Version = MV.Version)
+                ),
+                _CurrentSOV (idSystemObject, idSystemObjectVersion) AS (
+                    SELECT SOV.idSystemObject, MAX(SOV.idSystemObjectVersion) AS 'idSystemObjectVersion'
+                    FROM SystemObjectVersionAssetVersionXref AS SOVAVX
+                    JOIN SystemObjectVersion AS SOV ON (SOVAVX.idSystemObjectVersion = SOV.idSystemObjectVersion)
+                    GROUP BY SOV.idSystemObject
+                )
+                SELECT SOV.idSystemObject, MAV.idAsset
+                FROM _MaxAssetVersion AS MAV
+                JOIN SystemObjectVersionAssetVersionXref AS SOVAVX ON (MAV.idAssetVersion = SOVAVX.idAssetVersion)
+                JOIN _CurrentSOV AS SOV ON (SOVAVX.idSystemObjectVersion = SOV.idSystemObjectVersion)`;
+            /* istanbul ignore next */
+            if (!SOInfo)
+                return null;
+            const idSystemObjects: Set<number> = new Set<number>();
+            for (const { idSystemObject } of SOInfo)
+                idSystemObjects.add(idSystemObject);
+            // LOG.info(`SystemObject.computeAffectedByUpdate(${JSON.stringify(idAssets)}) = ${JSON.stringify(idSystemObjects, H.Helpers.saferStringify)}`, LOG.LS.eDB);
+            return idSystemObjects;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.SystemObject.computeAffectedByUpdate', LOG.LS.eDB, error);
             return null;
         }
     }

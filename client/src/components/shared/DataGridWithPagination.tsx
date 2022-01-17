@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Box, TextField, Button, FormControl, Select, MenuItem } from '@material-ui/core';
+// import { Link } from 'react-router-dom';
+import { Box, TextField, Button, FormControl, Select, MenuItem, InputLabel } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { DataGrid, GridColumns, GridSortModel, GridSortModelParams, GridPageChangeParams } from '@material-ui/data-grid';
+import { useHistory } from 'react-router-dom';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
     Container: {
         display: 'flex',
         flex: 1,
@@ -36,10 +37,14 @@ const useStyles = makeStyles({
         backgroundColor: 'white'
     },
     FilterBtn: {
-        backgroundColor: '#687DDB',
+        backgroundColor: '#3854d0',
         color: 'white',
         width: '90px',
-        height: '30px'
+        height: '30px',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        }
     },
     searchFilterContainer: {
         display: 'flex',
@@ -71,10 +76,34 @@ const useStyles = makeStyles({
         backgroundColor: 'white',
         borderRadius: '4px'
     },
+    select: {
+        minWidth: 70,
+        width: 'fit-content',
+        height: 30,
+        marginLeft: 10,
+        padding: '0px 5px',
+        color: palette.primary.dark,
+        borderRadius: 5,
+        border: `0.5px solid ${palette.primary.contrastText}`,
+        [breakpoints.down('lg')]: {
+            height: 26
+        }
+    },
     searchFilter: {
         width: '380px'
+    },
+    selectLabel: {
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily,
+        fontSize: 'inherit',
+        color: 'black'
+    },
+    labelSelectContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        width: 'fit-content'
     }
-});
+}));
 
 type DropDownOption = {
     value: string | number;
@@ -125,6 +154,7 @@ type DataGridWithPaginationProps = {
     handleSortChange: (params: GridSortModelParams) => void;
     handleSearchKeywordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleSearch: () => void;
+    searchType: string;
 };
 
 function DataGridWithPagination(props: DataGridWithPaginationProps): React.ReactElement {
@@ -141,8 +171,10 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
         handleDropDownChange,
         handleSortChange,
         handleSearchKeywordChange,
-        handleSearch
+        handleSearch,
+        searchType
     } = props;
+    const history = useHistory();
     const classes = useStyles();
 
     const handleDropDown = handleDropDownChange
@@ -167,23 +199,27 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
         <Box className={classes.Container}>
             <Box className={classes.searchFilterContainer}>
                 <Box className={classes.searchFilterSettingsContainer}>
+                    <label htmlFor='searchFilter' style={{ display: 'none' }}>Search {searchType}</label>
                     <TextField
                         className={classes.searchFilter}
                         placeholder={Search.placeholderText || ''}
                         type='search'
                         value={Search.text}
                         id='searchFilter'
+                        name='searchFilter'
                         onChange={handleSearchKeyword}
                     />
                     {DropDown && (
-                        <React.Fragment>
-                            <p>{DropDown.name}</p>
-                            <FormControl variant='outlined' style={{ width: 'fit-content', marginRight: '40px' }}>
+                        <Box className={classes.labelSelectContainer}>
+                            <InputLabel htmlFor='searchDropdown' className={classes.selectLabel}>{DropDown.name}</InputLabel>
+                            <FormControl style={{ width: 'fit-content', marginRight: '40px' }}>
                                 <Select
                                     value={DropDown.value}
-                                    className={classes.formField}
+                                    className={classes.select}
                                     style={{ minWidth: '50px', height: '30px', fontSize: 'inherit', width: 'inherit' }}
                                     onChange={handleDropDown}
+                                    id='searchDropdown'
+                                    disableUnderline
                                 >
                                     {DropDown.options.map(option => (
                                         <MenuItem value={option.value} key={option.value}>
@@ -192,7 +228,7 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                                     ))}
                                 </Select>
                             </FormControl>
-                        </React.Fragment>
+                        </Box>
                     )}
                     <Button className={classes.FilterBtn} onClick={handleSearch}>
                         {Search.btnText || 'Search'}
@@ -200,9 +236,7 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                 </Box>
                 {LinkBtn && (
                     <Box className={classes.searchFilterSettingsContainer2}>
-                        <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to={LinkBtn.link} target={LinkBtn.target || '_self'}>
-                            <Button className={classes.FilterBtn}>{LinkBtn.btnText || 'Create'}</Button>
-                        </Link>
+                        <Button className={classes.FilterBtn} onClick={() => history.push(LinkBtn.link)}>{LinkBtn.btnText || 'Create'}</Button>
                     </Box>
                 )}
             </Box>

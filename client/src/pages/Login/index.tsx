@@ -5,7 +5,7 @@
  */
 import { Box, Container, Typography } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
-import { Field, Formik, FormikHelpers } from 'formik';
+import { Field, Formik } from 'formik';
 import { TextField } from 'formik-material-ui';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
@@ -57,7 +57,7 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
         marginBottom: 5
     },
     subtitle: {
-        color: palette.primary.contrastText,
+        color: palette.primary.dark,
         fontWeight: typography.fontWeightRegular,
         textAlign: 'center'
     },
@@ -85,7 +85,8 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
     },
     contactUs: {
         cursor: 'pointer',
-        marginLeft: 5
+        marginLeft: 5,
+        color: 'rgb(0, 110, 190)'
     },
     loginBackground: {
         position: 'absolute',
@@ -108,17 +109,14 @@ function Login(): React.ReactElement {
         }
     };
 
-    const onLogin = async (values: ILoginForm, actions: FormikHelpers<ILoginForm>): Promise<void> => {
+    const onLogin = async (values: ILoginForm): Promise<void> => {
         const { email, password } = values;
-        const { setSubmitting } = actions;
 
         try {
             const { success, message, originalUrl } = await login(email, password);
-            setSubmitting(false);
 
             if (success) {
                 toast.success('Welcome to Packrat');
-                // console.log(`*** src/pages/Login/index.tsx Login.onLogin history.push(${originalUrl ?? ROUTES.HOME})`);
                 history.push(originalUrl ?? ROUTES.HOME);
             } else {
                 toast.error(message);

@@ -19,12 +19,15 @@ import { apolloClient } from '../../../../../graphql';
 import { GetAssetDocument } from '../../../../../types/graphql';
 import { useDetailTabStore } from '../../../../../store';
 
-export const useStyles = makeStyles(({ palette }) => ({
+export const useStyles = makeStyles(() => ({
     value: {
         fontSize: '0.8em',
-        color: palette.primary.dark
+        color: 'black',
     },
-    button: sharedButtonProps
+    button: {
+        ...sharedButtonProps,
+        outline: '0.5px hidden rgba(141, 171, 196, 0.4)'
+    }
 }));
 
 function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {

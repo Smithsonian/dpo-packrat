@@ -2,7 +2,7 @@
 
 import { Box, Typography, Button, Tooltip } from '@material-ui/core';
 import clsx from 'clsx';
-import React, { useState }from 'react';
+import React, { useState } from 'react';
 import { EmptyTable, TextArea, ToolTip } from '../../../../../components';
 import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repository';
 import { extractISOMonthDateYear, updateSystemObjectUploadRedirect, truncateWithEllipses } from '../../../../../constants/helperfunctions';
@@ -14,6 +14,7 @@ import { SystemObjectVersion } from '../../../../../types/graphql';
 import { toast } from 'react-toastify';
 import { useHistory } from 'react-router-dom';
 import { MdExpandMore, MdExpandLess } from 'react-icons/md';
+import API from '../../../../../api';
 
 interface ObjectVersionsTableProps {
     idSystemObject: number;
@@ -24,7 +25,7 @@ interface ObjectVersionsTableProps {
 function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElement {
     const classes = useStyles();
     const { objectVersions, idSystemObject, systemObjectType } = props;
-    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
+    const serverEndpoint = API.serverEndpoint();
     const history = useHistory();
     const [expanded, setExpanded] = useState<number>(-1);
     const [rollbackNotes, setRollbackNotes] = useState<string>('');
@@ -33,9 +34,8 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
 
     const { data } = useObjectAssets(idSystemObject);
 
-    if (!objectVersions) {
+    if (!objectVersions)
         return <EmptyTable />;
-    }
 
     const onRollback = async (idSystemObjectVersion: number) => {
         if (rollbackNotes.length < 1) {
@@ -64,11 +64,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
 
     const onExpand = (row) => {
         setRollbackNotes('');
-        if (row === expanded) {
-            setExpanded(-1);
-        } else {
-            setExpanded(row);
-        }
+        setExpanded(row === expanded ? -1 : row);
     };
 
     return (
@@ -111,7 +107,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                 <tr key={index}>
                                     <td align='center'>
                                         <a
-                                            href={getDownloadObjectVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, version.idSystemObjectVersion)}
+                                            href={getDownloadObjectVersionUrlForObject(serverEndpoint, version.idSystemObjectVersion)}
                                             style={{ textDecoration: 'none', color: 'black' }}
                                         >
                                             <GetAppIcon />

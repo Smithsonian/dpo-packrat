@@ -18,12 +18,15 @@ import { isArray } from 'lodash';
 import * as path from 'path';
 
 export class JobCookSIPackratInspectParameters {
-    constructor(sourceMeshFile: string, sourceMaterialFiles: string | undefined = undefined) {
+    /** Specify sourceMeshStream when we have the stream for sourceMeshFile in hand (e.g. during upload fo a scene zip that contains this model) */
+    constructor(sourceMeshFile: string, sourceMaterialFiles: string | undefined = undefined, sourceMeshStream: NodeJS.ReadableStream | undefined = undefined) {
         this.sourceMeshFile = path.basename(sourceMeshFile);
         this.sourceMaterialFiles = sourceMaterialFiles ? path.basename(sourceMaterialFiles) : undefined;
+        this.sourceMeshStream = sourceMeshStream;
     }
     sourceMeshFile: string;
     sourceMaterialFiles?: string | undefined;
+    sourceMeshStream?: NodeJS.ReadableStream | undefined;
 }
 
 export class JobCookBoundingBox {
@@ -524,7 +527,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         return JCOutput;
     }
 
-    static async extractFromAssetVersion(idAssetVersion: number): Promise<JobCookSIPackratInspectOutput | null> {
+    static async extractFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<JobCookSIPackratInspectOutput | null> {
         // find JobCook results for this asset version
         const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         if (!idVJobType) {
@@ -532,9 +535,9 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             return null;
         }
 
-        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eWorkflowJobRunStatus.eDone, true, [idAssetVersion]);
+        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eWorkflowJobRunStatus.eDone, true, [idAssetVersion], sourceMeshFile);
         if (!jobRuns || jobRuns.length != 1) {
-            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}`, LOG.LS.eJOB);
+            LOG.info(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}, sourceMeshFile ${sourceMeshFile}`, LOG.LS.eJOB);
             return null;
         }
 
@@ -658,6 +661,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             BulkIngest: false,
             idSOAttachment: null,
             FilePath: '',
+            Comment: 'Created by Cook si-packrat-inspect',
             idAssetVersion
         });
         return new DBAPI.ModelAsset(asset, assetVersion, isModel, channelList);
@@ -666,12 +670,19 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
 export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectParameters> {
     private parameters: JobCookSIPackratInspectParameters;
+    private sourceMeshStream: NodeJS.ReadableStream | undefined;
 
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIPackratInspectParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-packrat-inspect',
             CookRecipe.getCookRecipeID('si-packrat-inspect', 'bb602690-76c9-11eb-9439-0242ac130002'),
             null, idAssetVersions, report, dbJobRun);
+        if (parameters.sourceMeshStream) {
+            this.sourceMeshStream = parameters.sourceMeshStream;
+            delete parameters.sourceMeshStream; // strip this out, as Cook will choke on it!
+        } else
+            this.sourceMeshStream = undefined;
+
         this.parameters = parameters;
     }
 
@@ -681,15 +692,27 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
     protected async getParameters(): Promise<JobCookSIPackratInspectParameters> {
         // if asset is zipped, unzip the asset, seek geometry file, and then plan to stage that file using this._streamOverrideMap
-        await this.testForZip();
+        await this.testForZipOrStream();
         return this.parameters;
     }
 
-    private async testForZip(): Promise<boolean> {
-        if (path.extname(this.parameters.sourceMeshFile).toLowerCase() !== '.zip')
+    private async testForZipOrStream(): Promise<boolean> {
+        if (!this._idAssetVersions || this._idAssetVersions.length == 0)
             return false;
 
-        if (!this._idAssetVersions || this._idAssetVersions.length == 0)
+        // if we've been handed a stream to act on it ... do so!
+        if (this.sourceMeshStream) {
+            const RSRs: STORE.ReadStreamResult[] = [{
+                readStream: this.sourceMeshStream,
+                fileName: this.parameters.sourceMeshFile,
+                storageHash: null,
+                success: true
+            }];
+            this._streamOverrideMap.set(this._idAssetVersions[0], RSRs);
+            return true;
+        }
+
+        if (path.extname(this.parameters.sourceMeshFile).toLowerCase() !== '.zip')
             return false;
 
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(this._idAssetVersions[0]);

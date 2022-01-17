@@ -7,6 +7,7 @@ import * as STORE from '../../storage/interface';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { DownloaderParser, DownloaderParserResults, eDownloadMode } from './DownloaderParser';
+import { SitemapGenerator } from './SitemapGenerator';
 import { isAuthenticated } from '../auth';
 
 import { Request, Response } from 'express';
@@ -31,6 +32,7 @@ import path from 'path';
  * /download?idWorkflowSet=ID:                  Downloads the WorkflowReport(s) for workflows in the specified workflow set
  * /download?idJobRun=ID:                       Downloads the JobRun output for idJobRun with the specified ID
  * /download?idSystemObjectVersionComment=ID    Downloads the SystemObjectVersion.Comment for the SystemObjectVersion with the specified ID
+ * /download/sitemap.xml                        Generates a sitemap
  */
 export async function download(request: Request, response: Response): Promise<boolean> {
     const DL: Downloader = new Downloader(request, response);
@@ -67,9 +69,11 @@ export class Downloader {
             return this.sendError(DPResults.statusCode ?? 200, DPResults.message);
 
         // Audit download
-        const auditData = { url: this.downloaderParser.requestURLV, auth: true };
-        const auditOID: DBAPI.ObjectIDAndType = { eObjectType: this.downloaderParser.eObjectTypeV, idObject: this.downloaderParser.idObjectV };
-        AuditFactory.audit(auditData, auditOID, eEventKey.eHTTPDownload);
+        if (this.downloaderParser.eModeV !== eDownloadMode.eSitemap) {
+            const auditData = { url: this.downloaderParser.requestURLV, auth: true };
+            const auditOID: DBAPI.ObjectIDAndType = { eObjectType: this.downloaderParser.eObjectTypeV, idObject: this.downloaderParser.idObjectV };
+            AuditFactory.audit(auditData, auditOID, eEventKey.eHTTPDownload);
+        }
 
         if (DPResults.message) {
             this.response.send(DPResults.message);
@@ -115,8 +119,13 @@ export class Downloader {
                 return DPResults.jobRun ? await this.emitDownloadJobRun(DPResults.jobRun) : this.sendError(404);
 
             case eDownloadMode.eSystemObjectVersionComment:
-                return DPResults.content ? await this.emitDownloadContent(DPResults.content, `VersionComment.${this.downloaderParser.idSystemObjectVersionCommentV}.htm`) : this.sendError(404);
+                return (DPResults.content != null) ? await this.emitDownloadContent(DPResults.content, `VersionComment.${this.downloaderParser.idSystemObjectVersionCommentV}.htm`) : this.sendError(404);
 
+            case eDownloadMode.eAssetVersionComment:
+                return (DPResults.content != null) ? await this.emitDownloadContent(DPResults.content, `AssetVersionComment.${this.downloaderParser.idAssetVersionCommentV}.htm`) : this.sendError(404);
+
+            case eDownloadMode.eSitemap:
+                return await this.emitSitemapContent();
         }
         return this.sendError(404);
     }
@@ -231,6 +240,13 @@ export class Downloader {
             this.response.setHeader('Content-type', mimeType);
         readStream.pipe(this.response);
         return true;
+    }
+
+    private async emitSitemapContent(): Promise<boolean> {
+        this.response.setHeader('Content-type', 'application/xml');
+        const ret: boolean = await SitemapGenerator.generate(this.response);
+        this.response.end();
+        return ret;
     }
 
     private sendError(statusCode: number, message?: string | undefined): boolean {

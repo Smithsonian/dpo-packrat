@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * CheckboxField
  *
  * This component renders checkbox field used in ingestion and repository UI.
  */
-import { Checkbox } from '@material-ui/core';
+import { Checkbox, Tooltip } from '@material-ui/core';
 import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -18,6 +20,7 @@ interface CheckboxFieldProps extends ViewableProps {
     value: boolean | null;
     onChange: ((event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void) | undefined;
     required?: boolean;
+    tooltip?: any;
 }
 
 const CheckboxNoPadding = withStyles({
@@ -28,9 +31,18 @@ const CheckboxNoPadding = withStyles({
 })(Checkbox);
 
 function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
-    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, updated = false } = props;
+    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, updated = false, tooltip } = props;
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
-
+    const checkbox = (
+        <CheckboxNoPadding
+            name={name}
+            disabled={disabled}
+            checked={withDefaultValueBoolean(value, false)}
+            onChange={onChange}
+            {...getUpdatedCheckboxProps(updated)}
+            inputProps={{ 'title': name }}
+        />
+    );
     return (
         <FieldType
             required={required}
@@ -39,13 +51,11 @@ function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
             containerProps={rowFieldProps}
             width={viewMode ? 'auto' : undefined}
         >
-            <CheckboxNoPadding
-                name={name}
-                disabled={disabled}
-                checked={withDefaultValueBoolean(value, false)}
-                onChange={onChange}
-                {...getUpdatedCheckboxProps(updated)}
-            />
+            {tooltip ? (
+                <Tooltip {...tooltip}>
+                    {checkbox}
+                </Tooltip>
+            ) : checkbox}
         </FieldType>
     );
 }

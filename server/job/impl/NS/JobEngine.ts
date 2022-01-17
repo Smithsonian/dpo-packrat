@@ -3,6 +3,7 @@ import * as JOB from '../../interface';
 import { JobPackrat } from './JobPackrat';
 import * as COOK from '../Cook';
 import * as LOG from '../../../utils/logger';
+import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import * as REP from '../../../report/interface';
@@ -133,7 +134,7 @@ export class JobEngine implements JOB.IJobEngine {
         const dbJobRun: DBAPI.JobRun = new DBAPI.JobRun({
             idJobRun: 0, idJob: dbJob.idJob, Status: DBAPI.eWorkflowJobRunStatus.eUnitialized,
             Result: null, DateStart: null, DateEnd: null, Configuration: JSON.stringify(configuration),
-            Parameters: JSON.stringify(parameters),
+            Parameters: JSON.stringify(parameters, H.Helpers.saferStringify),
             Output: null, Error: null
         });
 
@@ -175,6 +176,7 @@ export class JobEngine implements JOB.IJobEngine {
         parameters: any, dbJobRun: DBAPI.JobRun): Promise<JobPackrat | null> {
         let job: JobPackrat | null = null;
         let expectedJob: string = '';
+        const context: string = `: ${JSON.stringify(parameters, H.Helpers.saferStringify)}`;
         switch (eJobType) {
             case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect:
                 expectedJob = 'Cook si-packrat-inspect';
@@ -197,9 +199,9 @@ export class JobEngine implements JOB.IJobEngine {
         }
 
         if (!job)
-            LOG.error(`JobEngine.createJobWorker called with parameters not of type ${expectedJob}: ${JSON.stringify(parameters)}`, LOG.LS.eJOB);
+            LOG.error(`JobEngine.createJobWorker called with parameters not consistent with job type ${expectedJob}${context}`, LOG.LS.eJOB);
         else if (report)
-            await report.append(`JobEngine creating ${expectedJob}`);
+            await report.append(`JobEngine creating ${expectedJob}${context}`);
 
         return job;
     }

@@ -131,6 +131,7 @@ model AssetVersion {
   BulkIngest                                             Boolean
   idSOAttachment                                         Int?
   FilePath                                               String                                @mariasql.VarChar(512)
+  Comment                                                String?                               @mariasql.Text
   Asset                                                  Asset                                 @relation(fields: [idAsset], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_assetversion_asset1")
   SystemObject_AssetVersion_idSOAttachmentToSystemObject SystemObject?                         @relation("AssetVersion_idSOAttachmentToSystemObject", fields: [idSOAttachment], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_assetversion_systemobject1")
   User                                                   User                                  @relation(fields: [idUserCreator], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_assetversion_user1")

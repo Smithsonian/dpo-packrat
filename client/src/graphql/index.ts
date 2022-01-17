@@ -11,6 +11,7 @@ import { apolloFetch } from './utils';
 import { DocumentNode } from 'graphql';
 import { ROUTES } from '../constants';
 import { authenticationFailureMessage } from '../types/server';
+import API from '../api';
 
 class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
     constructor(options: ApolloClientOptions<NormalizedCacheObject>) { // eslint-disable-line @typescript-eslint/no-useless-constructor
@@ -48,7 +49,7 @@ class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
 const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (graphQLErrors) {
         graphQLErrors.forEach(({ message, locations, path }) => {
-            console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`);
+            console.log(`[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}`);
             if (message.includes(authenticationFailureMessage)) {
                 global.alert('The Packrat user is no longer authenticated. Please login.');
                 window.location.href = ROUTES.LOGIN;
@@ -56,17 +57,19 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         });
     }
 
-    if (networkError)
+    if (networkError) {
         console.log(`[Network error]: ${networkError}`);
+        if (networkError.toString() !== 'TypeError: Failed to fetch') {
+            global.alert('The Packrat user is no longer authenticated. Please login.');
+            window.location.href = ROUTES.LOGIN;
+        }
+    }
 });
 
 function configureApolloClient(): ApolloClient<NormalizedCacheObject> {
-    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
-    if (!REACT_APP_PACKRAT_SERVER_ENDPOINT) {
-        throw new Error('REACT_APP_PACKRAT_SERVER_ENDPOINT was not provided to apollo client');
-    }
-
-    const uri: string = `${REACT_APP_PACKRAT_SERVER_ENDPOINT}/graphql`;
+    const serverEndpoint = API.serverEndpoint();
+    const uri: string = `${serverEndpoint}/graphql`;
+    console.log(`Packrat using server endpoint ${serverEndpoint} to access graphql @ ${uri}`);
 
     const uploadLink = createUploadLink({
         uri,

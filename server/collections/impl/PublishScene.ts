@@ -46,7 +46,6 @@ export class PublishScene {
         this.idSystemObject = idSystemObject;
     }
 
-    /** Has no side effects (i.e. just computes the resource list) */
     async computeResourceMap(): Promise<Map<SceneAssetCollector, COL.Edan3DResource> | null> {
         if (!this.analyzed) {
             const result: boolean = await this.analyze();
@@ -188,6 +187,7 @@ export class PublishScene {
     }
 
     private async fetchScene(ePublishedStateIntended?: DBAPI.ePublishedState): Promise<boolean> {
+        const changingPubState: boolean = (ePublishedStateIntended !== undefined);
         const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(this.idSystemObject);
         if (!oID) {
             LOG.error(`PublishScene.fetchScene unable to retrieve object details from ${this.idSystemObject}`, LOG.LS.eCOLL);
@@ -201,7 +201,7 @@ export class PublishScene {
 
         // fetch SystemObjectVersion
         this.systemObjectVersion = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(this.idSystemObject);
-        if (!this.systemObjectVersion) {
+        if (!this.systemObjectVersion && changingPubState) {
             LOG.error(`PublishScene.fetchScene could not compute SystemObjectVersion for idSystemObject ${this.idSystemObject}`, LOG.LS.eCOLL);
             return false;
         }
@@ -214,19 +214,20 @@ export class PublishScene {
         }
 
         // If we're intending to change publishing state, verify that we can given the intended published state
-        if (ePublishedStateIntended !== undefined &&
-            ePublishedStateIntended !== DBAPI.ePublishedState.eNotPublished &&
-            (!this.scene.ApprovedForPublication || !this.scene.PosedAndQCd)) {
-            LOG.error(`PublishScene.fetchScene attempting to publish non-Approved and/or non-QC'd scene ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
-            return false;
-        }
-
-        // create UUID if not done already
-        if (!this.scene.EdanUUID) {
-            this.scene.EdanUUID = uuidv4();
-            if (!await this.scene.update()) {
-                LOG.error(`PublishScene.fetchScene unable to persist UUID for scene object ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+        if (changingPubState) {
+            if (ePublishedStateIntended !== DBAPI.ePublishedState.eNotPublished &&
+               (!this.scene.ApprovedForPublication || !this.scene.PosedAndQCd)) {
+                LOG.error(`PublishScene.fetchScene attempting to publish non-Approved and/or non-QC'd scene ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
                 return false;
+            }
+
+            // create UUID if not done already
+            if (!this.scene.EdanUUID) {
+                this.scene.EdanUUID = uuidv4();
+                if (!await this.scene.update()) {
+                    LOG.error(`PublishScene.fetchScene unable to persist UUID for scene object ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+                    return false;
+                }
             }
         }
 

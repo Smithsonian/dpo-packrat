@@ -124,6 +124,7 @@ type Mutation {
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
   publish(input: PublishInput!): PublishResult!
+  rollbackAssetVersion(input: RollbackAssetVersionInput!): RollbackAssetVersionResult!
   rollbackSystemObjectVersion(input: RollbackSystemObjectVersionInput!): RollbackSystemObjectVersionResult!
   updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
   updateLicense(input: UpdateLicenseInput!): CreateLicenseResult!
@@ -158,6 +159,16 @@ input DiscardUploadedAssetVersionsInput {
 
 type DiscardUploadedAssetVersionsResult {
   success: Boolean!
+}
+
+type RollbackAssetVersionResult {
+  success: Boolean!
+  message: String
+}
+
+input RollbackAssetVersionInput {
+  idAssetVersion: Int!
+  rollbackNotes: String!
 }
 
 input GetAssetVersionsDetailsInput {
@@ -219,7 +230,7 @@ type IngestModel {
   modality: Int!
   purpose: Int!
   units: Int!
-  dateCaptured: String!
+  dateCreated: String!
   modelFileType: Int!
   directory: String!
   identifiers: [IngestIdentifier!]!
@@ -308,7 +319,7 @@ type UpdateModelMetadata {
   modality: Int!
   purpose: Int!
   units: Int!
-  dateCaptured: String!
+  dateCreated: String!
   modelFileType: Int!
 }
 
@@ -394,6 +405,7 @@ type AssetVersion {
   Version: Int!
   idSOAttachment: Int
   FilePath: String!
+  Comment: String
   Asset: Asset
   User: User
   SystemObject: SystemObject
@@ -577,7 +589,7 @@ input IngestModelInput {
   modality: Int!
   purpose: Int!
   units: Int!
-  dateCaptured: String!
+  dateCreated: String!
   modelFileType: Int!
   directory: String!
   identifiers: [IngestIdentifierInput!]!
@@ -1100,7 +1112,7 @@ input ModelDetailFieldsInput {
   Modality: Int
   Purpose: Int
   Units: Int
-  DateCaptured: DateTime
+  DateCreated: DateTime
   ModelFileType: Int
 }
 
@@ -1495,6 +1507,8 @@ type DetailVersion {
   dateCreated: DateTime!
   size: BigInt!
   ingested: Boolean!
+  Comment: String
+  CommentLink: String
 }
 
 input GetVersionsForAssetInput {
@@ -1620,6 +1634,7 @@ type CreateUnitResult {
 
 input CreateProjectInput {
   Name: String!
+  Unit: Int!
   Description: String!
 }
 

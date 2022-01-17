@@ -32,12 +32,7 @@ export default class API {
     }
 
     static async request(route: string, options: RequestInit = {}): Promise<any> {
-        const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
-
-        if (!REACT_APP_PACKRAT_SERVER_ENDPOINT) {
-            throw new Error('REACT_APP_PACKRAT_SERVER_ENDPOINT was not provided to rest api client');
-        }
-
+        const serverEndpoint = API.serverEndpoint();
         const defaultOptions: RequestInit = {
             headers: {
                 'Content-Type': 'application/json'
@@ -46,6 +41,18 @@ export default class API {
             ...options
         };
 
-        return fetch(`${REACT_APP_PACKRAT_SERVER_ENDPOINT}/${route}`, defaultOptions).then(response => response.json());
+        return fetch(`${serverEndpoint}/${route}`, defaultOptions).then(response => response.json());
+    }
+
+    static serverEndpoint(): string {
+        // If we're accessing Packrat via Telework, hard-code server path to the server directory of the host root
+        if (window.location.hostname === 'packrat-telework.si.edu')
+            return 'https://packrat-telework.si.edu/server';
+
+        const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
+        if (!REACT_APP_PACKRAT_SERVER_ENDPOINT)
+            throw new Error('REACT_APP_PACKRAT_SERVER_ENDPOINT is not defined!');
+
+        return REACT_APP_PACKRAT_SERVER_ENDPOINT;
     }
 }

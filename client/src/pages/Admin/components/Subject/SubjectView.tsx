@@ -32,7 +32,7 @@ const useStyles = makeStyles({
         minHeight: '46px',
         paddingLeft: '20px',
         paddingRight: '20px',
-        background: '#0079C482',
+        background: '#ECF5FD',
         color: '#3F536E',
         marginBottom: '2%',
         width: 'fit-content'
@@ -186,6 +186,7 @@ function SubjectView(): React.ReactElement {
                 handleSortChange={handleSortChange}
                 handleSearchKeywordChange={handleSearchKeywordChange}
                 handleSearch={fetchSubjectList}
+                searchType='Subject'
             />
         </Box>
     );

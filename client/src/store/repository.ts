@@ -12,6 +12,7 @@ import { parseRepositoryTreeNodeId, validateArray, getTermForSystemObjectType } 
 import { apolloClient } from '../graphql';
 import { GetSystemObjectDetailsDocument } from '../types/graphql';
 import { toast } from 'react-toastify';
+import { eRepositoryChipFilterType } from '../pages/Repository/components/RepositoryFilterView/RepositoryFilterOptions';
 
 type RepositoryStore = {
     isExpanded: boolean;
@@ -39,7 +40,7 @@ type RepositoryStore = {
     repositoryBrowserRootObjectType: string | null;
     repositoryBrowserRootName: string | null;
     getFilterState: () => RepositoryFilter;
-    removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
+    removeChipOption: (id: number, type: eRepositoryChipFilterType) => void;
     updateFilterValue: (name: string, value: number | number[] | Date | null) => void;
     resetRepositoryFilter: (modifyCookie?: boolean) => void;
     resetKeywordSearch: () => void;
@@ -186,25 +187,76 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             }
         }
     },
-    removeUnitsOrProjects: (id: number, type: eSystemObjectType): void => {
-        const { units, projects, setCookieToState, initializeTree, keyword } = get();
-        let updatedUnits: number[] = units.slice();
-        let updatedProjects: number[] = projects.slice();
+    removeChipOption: (id: number, type: eRepositoryChipFilterType): void => {
+        const { units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType, setCookieToState, initializeTree, keyword } = get();
 
         switch (type) {
-            case eSystemObjectType.eUnit: {
+            case eRepositoryChipFilterType.eUnit: {
+                let updatedUnits: number[] = units.slice();
                 if (updatedUnits.length === 1) updatedUnits = [];
                 else updatedUnits = updatedUnits.filter(unit => unit !== id);
+                set({ units: updatedUnits });
                 break;
             }
-            case eSystemObjectType.eProject: {
+            case eRepositoryChipFilterType.eProject: {
+                let updatedProjects = projects.slice();
                 if (updatedProjects.length === 1) updatedProjects = [];
                 else updatedProjects = updatedProjects.filter(project => project !== id);
+                set({ projects: updatedProjects });
+                break;
+            }
+            case eRepositoryChipFilterType.eHas: {
+                let updatedHas: eSystemObjectType[] = has.slice();
+                if (updatedHas.length === 1) updatedHas = [];
+                else updatedHas = updatedHas.filter(has => has !== id);
+                set({ has: updatedHas });
+                break;
+            }
+            case eRepositoryChipFilterType.eMissing: {
+                let updatedMissing: eSystemObjectType[] = missing.slice();
+                if (updatedMissing.length === 1) updatedMissing = [];
+                else updatedMissing = updatedMissing.filter(missing => missing !== id);
+                set({ missing: updatedMissing });
+                break;
+            }
+            case eRepositoryChipFilterType.eCaptureMethod: {
+                let updatedCaptureMethod: eSystemObjectType[] = captureMethod.slice();
+                if (updatedCaptureMethod.length === 1) updatedCaptureMethod = [];
+                else updatedCaptureMethod = updatedCaptureMethod.filter(captureMethod => captureMethod !== id);
+                set({ captureMethod: updatedCaptureMethod });
+                break;
+            }
+            case eRepositoryChipFilterType.eVariantType: {
+                let updatedVariantType: eSystemObjectType[] = variantType.slice();
+                if (updatedVariantType.length === 1) updatedVariantType = [];
+                else updatedVariantType = updatedVariantType.filter(variantType => variantType !== id);
+                set({ variantType: updatedVariantType });
+                break;
+            }
+            case eRepositoryChipFilterType.eModelPurpose: {
+                let updatedModelPurpose: eSystemObjectType[] = modelPurpose.slice();
+                if (updatedModelPurpose.length === 1) updatedModelPurpose = [];
+                else updatedModelPurpose = updatedModelPurpose.filter(modelPurpose => modelPurpose !== id);
+                set({ modelPurpose: updatedModelPurpose });
+                break;
+            }
+            case eRepositoryChipFilterType.eModelFileType: {
+                let updatedModelFileType: eSystemObjectType[] = modelFileType.slice();
+                if (updatedModelFileType.length === 1) updatedModelFileType = [];
+                else updatedModelFileType = updatedModelFileType.filter(modelFileType => modelFileType !== id);
+                set({ modelFileType: updatedModelFileType });
+                break;
+            }
+            case eRepositoryChipFilterType.eDateCreatedFrom: {
+                set({ dateCreatedFrom: null });
+                break;
+            }
+            case eRepositoryChipFilterType.eDateCreatedTo: {
+                set({ dateCreatedTo: null });
                 break;
             }
         }
-
-        set({ units: updatedUnits, projects: updatedProjects, search: keyword });
+        set({ search: keyword });
         setCookieToState();
         initializeTree();
     },

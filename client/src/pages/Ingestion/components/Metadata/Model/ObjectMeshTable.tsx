@@ -5,7 +5,7 @@
 import React from 'react';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { ReadOnlyRow } from '../../../../../components';
+import { ReadOnlyRow, IndentedReadOnlyRow } from '../../../../../components';
 
 const useStyles = makeStyles(theme => ({
     notRequiredFields: {
@@ -15,27 +15,29 @@ const useStyles = makeStyles(theme => ({
         backgroundColor: theme.palette.secondary.light,
         '& > *': {
             minHeight: '20px',
+            height: 'fit-content',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
         },
-        width: '350px'
+        width: '48%'
     },
     materialFields: {
         display: 'flex',
         flexDirection: 'column',
-        width: '350px',
+        width: '48%',
         marginRight: '30px'
     },
     unindentedFields: {
         '& > :first-child': {
             minHeight: '20px',
+            height: 'fit-content',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
-        }
+        },
+        width: '100%'
     },
     indentedFields: {
         '& > *': {
-            textIndent: '15px',
             minHeight: '20px',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
@@ -45,7 +47,8 @@ const useStyles = makeStyles(theme => ({
         display: 'flex',
         width: '100%',
         marginBottom: '3%',
-        justifyContent: 'space-around'
+        justifyContent: 'space-around',
+        paddingRight: 20
     },
     boundingBox: {
         '& > *': {
@@ -67,9 +70,11 @@ const useStyles = makeStyles(theme => ({
         borderRadius: 5,
         padding: 10,
         backgroundColor: theme.palette.primary.light,
-        width: 'fit-content',
+        minWidth: '750px',
+        maxWidth: '40vw',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        wordBreak: 'break-word'
     },
     captionContainer: {
         flex: '1 1 0%',
@@ -113,9 +118,9 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                                         <Box className={classes.unindentedFields} key={channel.idModelMaterialChannel}>
                                                             <ReadOnlyRow label='Type' value={channel.Type} />
                                                             <Box className={classes.indentedFields}>
-                                                                <ReadOnlyRow label='Source' value={channel.Source} />
-                                                                <ReadOnlyRow label='Value' value={channel.Value} />
-                                                                <ReadOnlyRow label='Additional' value={channel.AdditionalAttributes} />
+                                                                <IndentedReadOnlyRow label='Source' value={channel.Source} indentation={1} />
+                                                                <IndentedReadOnlyRow label='Value' value={channel.Value} indentation={1} />
+                                                                <IndentedReadOnlyRow label='Additional' value={channel.AdditionalAttributes} indentation={1} />
                                                             </Box>
                                                         </Box>
                                                     );

@@ -130,6 +130,32 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
         }
     }
 
+    static async fetchMasters(idSystemObjectDerived: number): Promise<SystemObjectXref[] | null> {
+        if (!idSystemObjectDerived)
+            return null;
+        try {
+            return DBC.CopyArray<SystemObjectXrefBase, SystemObjectXref>(
+                await DBC.DBConnection.prisma.systemObjectXref.findMany({
+                    where: { idSystemObjectDerived }, }), SystemObjectXref);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.SystemObjectXref.fetchMasters', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchDerived(idSystemObjectMaster: number): Promise<SystemObjectXref[] | null> {
+        if (!idSystemObjectMaster)
+            return null;
+        try {
+            return DBC.CopyArray<SystemObjectXrefBase, SystemObjectXref>(
+                await DBC.DBConnection.prisma.systemObjectXref.findMany({
+                    where: { idSystemObjectMaster }, }), SystemObjectXref);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.SystemObjectXref.fetchDerived', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
     static async wireObjectsIfNeeded(master: SystemObjectBased, derived: SystemObjectBased): Promise<SystemObjectXref | null>;
     static async wireObjectsIfNeeded(master: SystemObjectBased, derivedID: number): Promise<SystemObjectXref | null>;
     static async wireObjectsIfNeeded(masterID: number, derived: SystemObjectBased): Promise<SystemObjectXref | null>;

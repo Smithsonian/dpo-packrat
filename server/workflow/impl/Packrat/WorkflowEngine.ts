@@ -50,7 +50,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return null;
         }
 
-        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}] ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
+        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}] ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
         if (!WFC)
             return null;
@@ -62,6 +62,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
         if (WFC.workflow)
             this.workflowMap.set(WFC.workflow.idWorkflow, workflow);
+
         const startResults: H.IOResults = await workflow.start();
         if (!startResults) {
             LOG.error(`WorkflowEngine.create failed to start workflow ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
@@ -107,7 +108,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return result;
     }
 
-    async event(eWorkflowEvent: CACHE.eVocabularyID, workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow | null> {
+    async event(eWorkflowEvent: CACHE.eVocabularyID, workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
         LOG.info(`WorkflowEngine.event ${CACHE.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
         const idVWorkflowEvent: number | undefined = await WorkflowEngine.computeWorkflowIDFromEnum(eWorkflowEvent, CACHE.eVocabularySetID.eWorkflowEvent);
         if (!idVWorkflowEvent) {
@@ -116,7 +117,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
 
         switch (eWorkflowEvent) {
-            case CACHE.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion: return this.eventIngestionUploadAssetVersion(workflowParams);
             case CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject: return this.eventIngestionIngestObject(workflowParams);
             default:
                 LOG.info(`WorkflowEngine.event called with unhandled workflow event type ${CACHE.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
@@ -124,46 +124,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
     }
 
-    private async eventIngestionUploadAssetVersion(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow | null> {
-        if (!workflowParams || !workflowParams.idSystemObject)
-            return null;
-
-        let workflow: WF.IWorkflow | null = null;
-        for (const idSystemObject of workflowParams.idSystemObject) {
-            const { success, asset, assetVersion } = await this.computeAssetAndVersion(idSystemObject);
-            if (!success || !asset || !assetVersion)
-                continue;
-
-            // take appropriate workflow actions based on asset version type
-            const eAssetType: CACHE.eVocabularyID | undefined = await asset.assetType();
-            switch (eAssetType) {
-                case CACHE.eVocabularyID.eAssetAssetTypeModel:
-                case CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile: {
-                    // initiate WorkflowJob for cook si-packrat-inspect
-                    const parameters: WFP.WorkflowJobParameters =
-                        new WFP.WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect,
-                            new COOK.JobCookSIPackratInspectParameters(assetVersion.FileName));
-
-                    const wfParams: WF.WorkflowParameters = {
-                        eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
-                        idSystemObject: [idSystemObject],
-                        idProject: workflowParams.idProject,
-                        idUserInitiator: workflowParams.idUserInitiator,
-                        parameters,
-                    };
-
-                    workflow = await this.create(wfParams);
-                    if (!workflow) {
-                        LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}`, LOG.LS.eWF);
-                        continue;
-                    }
-                } break;
-            }
-        }
-        return workflow;
-    }
-
-    private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow | null> {
+    private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
         LOG.info(`WorkflowEngine.eventIngestionIngestObject params=${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
         if (!workflowParams || !workflowParams.idSystemObject)
             return null;
@@ -172,14 +133,15 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             ? workflowParams.parameters.modelTransformUpdated : false;
         const assetsIngested: boolean = workflowParams.parameters?.assetsIngested !== undefined
             ?  workflowParams.parameters.assetsIngested : false;
+        // LOG.info(`WorkflowEngine.eventIngestionIngestObject modelTransformUpdated=${modelTransformUpdated}, assetsIngested=${assetsIngested}`, LOG.LS.eWF);
 
-        let workflow: WF.IWorkflow | null = null;
         let CMIR: ComputeModelInfoResult | undefined = undefined;
         let CSIR: ComputeSceneInfoResult | undefined = undefined;
 
         const systemObjectHandled: Set<number> = new Set<number>();
         for (const idSystemObject of workflowParams.idSystemObject) {
             const { success, asset, assetVersion } = await this.computeAssetAndVersion(idSystemObject);
+            // LOG.info(`WorkflowEngine.eventIngestionIngestObject computeAssetAndVersion ${JSON.stringify({ success, asset, assetVersion }, H.Helpers.saferStringify)}`, LOG.LS.eWF);
             if (!success || !asset || !assetVersion || !asset.idSystemObject)
                 continue;
 
@@ -202,11 +164,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         CMIR = await this.computeModelInfo(oID.idObject, asset.idSystemObject);
                         if (CMIR.exitEarly || CMIR.assetVersionGeometry === undefined) {
                             LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping model ${JSON.stringify(oID)}`, LOG.LS.eWF);
+                            CMIR = undefined;
                             continue;
                         }
                     } else if (CMIR.idModel !== oID.idObject) { // make sure we're processing the same model
                         LOG.error(`WorkflowEngine.eventIngestionIngestObject encountered multiple models ([${CMIR.idModel}, ${oID.idObject}])`, LOG.LS.eWF);
-                        return null;
+                        continue;
                     }
                     break;
 
@@ -216,30 +179,34 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                             CSIR = await this.computeSceneInfo(oID.idObject, asset.idSystemObject);
                             if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
                                 LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)}`, LOG.LS.eWF);
-                                return null;
+                                CSIR = undefined;
+                                continue;
                             }
                         } else if (CSIR.idScene !== oID.idObject) {
                             LOG.error(`WorkflowEngine.eventIngestionIngestObject encountered multiple scenes ([${CSIR.idScene}, ${oID.idObject}])`, LOG.LS.eWF);
-                            return null;
-                        } else if (CSIR.scene !== undefined && !CSIR.scene.PosedAndQCd) { // we have scene info, and that scene has not been posed and QCd
+                            continue;
+                        }
+
+                        if (CSIR.scene !== undefined && !CSIR.scene.PosedAndQCd) { // we have scene info, and that scene has not been posed and QCd
                             LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)} which has not been PosedAndQCd`, LOG.LS.eWF);
-                            return null;
+                            CSIR = undefined;
+                            continue;
                         }
                     }
                     break;
             }
         }
 
+        let workflows: WF.IWorkflow[] = [];
         if (CMIR)
-            workflow = await this.eventIngestionIngestObjectModel(CMIR, workflowParams, assetsIngested);
-
+            workflows = workflows.concat(await this.eventIngestionIngestObjectModel(CMIR, workflowParams, assetsIngested) ?? []);
         if (CSIR)
-            workflow = await this.eventIngestionIngestObjectScene(CSIR, workflowParams, assetsIngested);
+            workflows = workflows.concat(await this.eventIngestionIngestObjectScene(CSIR, workflowParams, assetsIngested) ?? []);
 
-        return workflow;
+        return workflows.length > 0 ? workflows : null;
     }
 
-    private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean): Promise<WF.IWorkflow | null> {
+    private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean): Promise<WF.IWorkflow[] | null> {
         if (!assetsIngested) {
             LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
             return null;
@@ -299,14 +266,17 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             parameters: jobParamSIVoyagerScene,
         };
 
-        const workflow: WF.IWorkflow | null = await this.create(wfParamSIVoyagerScene);
-        if (!workflow)
+        const workflows: WF.IWorkflow[] = [];
+        const wfSIVoyagerScene: WF.IWorkflow | null = await this.create(wfParamSIVoyagerScene);
+        if (wfSIVoyagerScene)
+            workflows.push(wfSIVoyagerScene);
+        else
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIVoyagerScene)}`, LOG.LS.eWF);
 
         // does this ingested model have a scene child?  If so, initiate WorkflowJob for cook si-generate-downloads
         const SODerived: DBAPI.SystemObject[] | null = CMIR.idSystemObjectModel ? await DBAPI.SystemObject.fetchDerivedFromXref(CMIR.idSystemObjectModel) : null;
         if (!SODerived)
-            return workflow;
+            return workflows.length > 0 ? workflows : null;
 
         for (const SO of SODerived) {
             if (SO.idScene) {
@@ -349,17 +319,17 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 };
 
                 const wfSIGenerateDownloads: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
-                if (!wfSIGenerateDownloads)
+                if (wfSIGenerateDownloads)
+                    workflows.push(wfSIGenerateDownloads);
+                else
                     LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
-
-                return workflow;
             }
         }
 
-        return workflow;
+        return workflows.length > 0 ? workflows : null;
     }
 
-    private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean): Promise<WF.IWorkflow | null> {
+    private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean): Promise<WF.IWorkflow[] | null> {
         if (!assetsIngested) {
             LOG.info(`WorkflowEngine.eventIngestionIngestObjectScene skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CSIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
             return null;
@@ -408,9 +378,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         };
 
         const workflow: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
-        if (!workflow)
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to create Cook si-generate-downloads workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
-        return workflow;
+        if (workflow)
+            return [workflow];
+        LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to create Cook si-generate-downloads workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
+        return null;
     }
 
     static async computeWorkflowIDFromEnum(eVocabEnum: CACHE.eVocabularyID, eVocabSetEnum: CACHE.eVocabularySetID): Promise<number | undefined> {
@@ -458,7 +429,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idUserInitiator: workflowParams.idUserInitiator,
             DateInitiated: dtNow,
             DateUpdated: dtNow,
-            Parameters: workflowParams.parameters ? JSON.stringify(workflowParams.parameters) : null,
+            Parameters: workflowParams.parameters ? JSON.stringify(workflowParams.parameters, H.Helpers.saferStringify) : null,
             idWorkflowSet: WFC.workflowSet ? WFC.workflowSet.idWorkflowSet : null,
             idWorkflow: 0
         });

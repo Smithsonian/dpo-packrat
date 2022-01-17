@@ -26,7 +26,7 @@ export function formatISOToHoursMinutes(time: string): string {
     return `${hours}:${minutes}`;
 }
 
-export function extractISOMonthDateYear(iso: string | Date, materialUI = false): string | null {
+export function extractISOMonthDateYear(iso: string | Date | null, materialUI = false): string | null {
     if (!iso)
         return null;
 
@@ -133,3 +133,7 @@ export const attachSystemObjectUploadRedirect = (idSystemObject: number, ObjectT
 };
 
 export const truncateWithEllipses = (text: string, max: number) => text.substr(0, max - 1) + (text.length > max ? ' ...' : '');
+
+export function getDownloadSiteMapXMLLink(serverEndPoint: string | undefined): string {
+    return `${serverEndPoint}/download/sitemap.xml`;
+}

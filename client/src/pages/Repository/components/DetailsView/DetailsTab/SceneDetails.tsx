@@ -4,14 +4,14 @@
  *
  * This component renders details tab for Scene specific details used in DetailsTab component.
  */
-import { Box, makeStyles, Checkbox } from '@material-ui/core';
+import { Box, makeStyles } from '@material-ui/core';
 import React, { useEffect, useRef } from 'react';
 import { Loader } from '../../../../../components';
 import { GetSceneDocument } from '../../../../../types/graphql';
 import { DetailComponentProps } from './index';
 import { apolloClient } from '../../../../../graphql/index';
 import ReferenceModels from '../../../../Ingestion/components/Metadata/Scene/ReferenceModels';
-import { ReadOnlyRow, FieldType } from '../../../../../components/index';
+import { ReadOnlyRow, CheckboxField } from '../../../../../components/index';
 import { useDetailTabStore } from '../../../../../store';
 import { eSystemObjectType } from '../../../../../types/server';
 
@@ -21,13 +21,13 @@ export const useStyles = makeStyles(({ palette }) => ({
         color: palette.primary.dark
     },
     container: {
-        display: 'flex',
-        flexDirection: 'column',
         marginBottom: 10,
-        width: 'fit-content',
         '& > *': {
-            minWidth: '200px',
-            height: '20px',
+            width: '30%',
+            minWidth: '250px',
+            maxWidth: '70%',
+            minHeight: '20px',
+            height: 'fit-content',
             '&:not(:last-child)': {
                 borderBottom: '1px solid #D8E5EE'
             }
@@ -86,47 +86,34 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eScene, name, checked);
     };
 
-    const gridTemplateColumns = '200px 1fr';
-    const rowFieldProps = { alignItems: 'center', alignContent: 'center', style: { borderRadius: 0, display: 'grid', gridTemplateColumns } };
-
     return (
         <Box>
             <ReferenceModels referenceModels={SceneDetails.ModelSceneXref} />
-
-            <Box className={classes.container}>
-                <FieldType
-                    required
+            <Box display='flex' flexDirection='column' className={classes.container}>
+                <CheckboxField
                     label='Approved for Publication'
-                    direction='row'
-                    width='100%'
-                    containerProps={rowFieldProps}
-                >
-                    <Box width='fit-content' textAlign='right'>
-                        <Checkbox name='ApprovedForPublication' checked={SceneDetails.ApprovedForPublication} color='primary' onChange={setCheckboxField} />
-                    </Box>
-                </FieldType>
-
-                <FieldType
+                    name='ApprovedForPublication'
+                    value={SceneDetails.ApprovedForPublication}
+                    onChange={setCheckboxField}
                     required
+                />
+                <CheckboxField
                     label="Posed and QC'd"
-                    direction='row'
-                    width='100%'
-                    containerProps={rowFieldProps}
-                >
-                    <Box width='fit-content' textAlign='right'>
-                        <Checkbox name='PosedAndQCd' checked={SceneDetails.PosedAndQCd} color='primary' onChange={setCheckboxField} />
-                    </Box>
-                </FieldType>
-                <ReadOnlyRow label='Publication Approver' value={SceneDetails.PublicationApprover} padding={15} gridTemplate={gridTemplateColumns} />
-                <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} padding={15} gridTemplate={gridTemplateColumns} />
-                <ReadOnlyRow label='Scene Count' value={SceneDetails.CountScene} padding={15} gridTemplate={gridTemplateColumns} />
-                <ReadOnlyRow label='Node Count' value={SceneDetails.CountNode} padding={15} gridTemplate={gridTemplateColumns} />
-                <ReadOnlyRow label='Camera Count' value={SceneDetails.CountCamera} padding={15} gridTemplate={gridTemplateColumns} />
-                <ReadOnlyRow label='Light Count' value={SceneDetails.CountLight} padding={15} gridTemplate={gridTemplateColumns} />
-                <ReadOnlyRow label='Model Count' value={SceneDetails.CountModel} padding={15} gridTemplate={gridTemplateColumns} />
-                <ReadOnlyRow label='Meta Count' value={SceneDetails.CountMeta} padding={15} gridTemplate={gridTemplateColumns} />
-                <ReadOnlyRow label='Setup Count' value={SceneDetails.CountSetup} padding={15} gridTemplate={gridTemplateColumns} />
-                <ReadOnlyRow label='Tour Count' value={SceneDetails.CountTour} padding={15} gridTemplate={gridTemplateColumns} />
+                    name='PosedAndQCd'
+                    value={SceneDetails.PosedAndQCd}
+                    onChange={setCheckboxField}
+                    tooltip={{ title: 'When checked, downloads will be generated if this scene has a master model as a parent, as well as every time the scene is re-posed.', placement: 'left' }}
+                    required
+                />
+                <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} />
+                <ReadOnlyRow label='Scene Count' value={SceneDetails.CountScene} padding={15} />
+                <ReadOnlyRow label='Node Count' value={SceneDetails.CountNode} padding={15} />
+                <ReadOnlyRow label='Camera Count' value={SceneDetails.CountCamera} padding={15} />
+                <ReadOnlyRow label='Light Count' value={SceneDetails.CountLight} padding={15} />
+                <ReadOnlyRow label='Model Count' value={SceneDetails.CountModel} padding={15} />
+                <ReadOnlyRow label='Meta Count' value={SceneDetails.CountMeta} padding={15} />
+                <ReadOnlyRow label='Setup Count' value={SceneDetails.CountSetup} padding={15} />
+                <ReadOnlyRow label='Tour Count' value={SceneDetails.CountTour} padding={15} />
             </Box>
         </Box>
     );
