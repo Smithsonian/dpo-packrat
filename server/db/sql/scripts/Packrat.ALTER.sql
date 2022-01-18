@@ -423,3 +423,5 @@ INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (32, NULL, 'STRI_YT');
 
 -- 2022-01-10 Jon
 ALTER TABLE AssetVersion ADD COLUMN Comment text NULL;
+
+-- 2022-01-16 Deployed to Staging
