@@ -43,22 +43,21 @@ type SubjectStore = {
 export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>, get: GetState<SubjectStore>) => ({
     subjects: [],
     addSubjects: async (fetchedSubjects: StateSubject[]): Promise<void> => {
-        const { subjects } = get();
+        // console.log(`subjectStore.addSubjects ${JSON.stringify(fetchedSubjects)}`);
+        const { subjects, updateProjectsAndItemsForSubjects } = get();
         const newSubjects: StateSubject[] = lodash.concat(subjects, fetchedSubjects);
         set({ subjects: newSubjects });
+        updateProjectsAndItemsForSubjects(newSubjects);
     },
     addSubject: async (subject: StateSubject): Promise<void> => {
-        const { subjects, addSubjects, updateProjectsAndItemsForSubjects } = get();
+        // console.log(`subjectStore.addSubject ${JSON.stringify(subject)}`);
+        const { subjects, addSubjects } = get();
         const alreadyExists = subject.arkId ? !!lodash.find(subjects, { arkId: subject.arkId }) : false;
 
-        if (!alreadyExists) {
+        if (!alreadyExists)
             addSubjects([subject]);
-            const selectedSubjects = [...subjects, subject];
-
-            updateProjectsAndItemsForSubjects(selectedSubjects);
-        } else {
+        else
             toast.info(`Subject ${subject.name} has already been added`);
-        }
     },
     removeSubject: (arkId: string) => {
         const { subjects, updateProjectsAndItemsForSubjects } = get();
@@ -101,6 +100,7 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
                 }
             });
             const { data: { getProjectList: { projects: defaultProjectsList } } } = projectListQuery;
+            // console.log(`defaultProjectsList = ${JSON.stringify(defaultProjectsList)}`);
 
             // fetch list of projects associated with subject
             const projectsQueryResult: ApolloQueryResult<GetIngestionProjectsForSubjectsQuery> = await apolloClient.query({
@@ -112,6 +112,8 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
             const projectQueryResultMap = new Map();
             const { data } = projectsQueryResult;
             if (data) {
+                // console.log(`GetIngestionProjectsForSubjectsDocument = ${JSON.stringify(data)}`);
+
                 const { Project: foundProjects, Default } = data.getIngestionProjectsForSubjects;
                 foundProjects.forEach((project) => projectQueryResultMap.set(project.idProject, project));
 
