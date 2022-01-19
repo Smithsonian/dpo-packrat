@@ -23,7 +23,7 @@ import { eSystemObjectType } from '../../../../../types/server';
 const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
-        width: (viewMode: boolean) => (viewMode ? undefined : '52vw'),
+        width: (viewMode: boolean) => (viewMode ? undefined : 'calc(100% - 20px)'),
         flexDirection: 'column',
         borderRadius: 5,
         padding: 10,

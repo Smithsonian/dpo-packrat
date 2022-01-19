@@ -280,7 +280,7 @@ function Model(props: ModelProps): React.ReactElement {
 
                 {!idAsset && (
                     <React.Fragment>
-                        <Box mb={2}>
+                        <Box mb={2} width='52vw'>
                             <RelatedObjectsList
                                 type={RelatedObjectType.Source}
                                 relatedObjects={model.sourceObjects}
@@ -289,7 +289,7 @@ function Model(props: ModelProps): React.ReactElement {
                                 relationshipLanguage='Parent(s)'
                             />
                         </Box>
-                        <Box mb={2}>
+                        <Box mb={2} width='52vw'>
                             <RelatedObjectsList
                                 type={RelatedObjectType.Derived}
                                 relatedObjects={model.derivedObjects}
