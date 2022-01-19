@@ -9,7 +9,7 @@ import lodash from 'lodash';
 export const defaultItem: StateItem = {
     id: 'default',
     name: '',
-    entireSubject: false,
+    entireSubject: true,
     selected: true
 };
 
