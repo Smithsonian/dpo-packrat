@@ -222,6 +222,18 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
     const backgroundColor: string = Colors.repository[objectType][RepositoryColorVariant.dark] || Colors.repository.default[RepositoryColorVariant.dark];
 
     const iconProps: RepositoryIconProps = { objectType, backgroundColor, textColor, overrideText: undefined, idSystemObject };
+    const fileIcon = (
+        <a
+            href={getDetailsUrlForObject(idSystemObject)}
+            onClick={event => event.stopPropagation()}
+            target='_blank'
+            rel='noopener noreferrer'
+            aria-label={`link to view system object of id ${idSystemObject}`}
+            style={{ textDecoration: 'none', color: 'black' }}
+        >
+            <AiOutlineFileText />
+        </a>
+    );
 
     switch (objectType) {
         default:                                        break;
@@ -232,7 +244,7 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
 
         case eSystemObjectType.eAsset:
         case eSystemObjectType.eAssetVersion:
-            return { icon: <AiOutlineFileText />, color };
+            return { icon: fileIcon, color };
     }
 
     return { icon: <RepositoryIcon {...iconProps} makeStyles={{ ...makeStyles, color, backgroundColor }} />, color };
