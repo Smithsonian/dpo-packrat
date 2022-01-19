@@ -158,6 +158,9 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             /* istanbul ignore if */
             if (!idItems1)
                 return null;
+            /* istanbul ignore if */
+            if (idItems1.length === 0)
+                return [];
 
             // next, for those item IDs, find those with total relationships to subjects that equal our subject count
             // (i.e. all of their subject relationships are with our desired subjects and none other)
