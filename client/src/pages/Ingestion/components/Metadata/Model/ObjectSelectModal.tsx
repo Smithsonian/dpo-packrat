@@ -85,18 +85,18 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
             if (props.relationship === 'Source' && idSystemObject) {
                 const { data } = await updateSourceObjects(idSystemObject, objectType, selectedRelationships, previouslySelectedObjects);
                 if (data.updateSourceObjects.success) {
-                    if (data.updateSourceObjects.status === 'success') toast.success('Parent(s) successfully added');
-                    if (data.updateSourceObjects.status === 'warn') toast.warn(`The following parent(s) had mismatched relationship: ${data.updateSourceObjects.message}`);
+                    if (data.updateSourceObjects.status === 'success') toast.success('Parents successfully added');
+                    if (data.updateSourceObjects.status === 'warn') toast.warn(`The following parents had mismatched relationship: ${data.updateSourceObjects.message}`);
                 } else {
-                    toast.error('Parent(s) could not be added. Please try again later');
+                    toast.error('Parents could not be added. Please try again later');
                 }
             } else if (props.relationship === 'Derived' && idSystemObject) {
                 const { data } = await updateDerivedObjects(idSystemObject, objectType, selectedRelationships, []);
                 if (data.updateDerivedObjects.success) {
-                    if (data.updateDerivedObjects.status === 'success') toast.success('Child(ren) successfully added');
-                    if (data.updateDerivedObjects.status === 'warn') toast.warn(`The following child(ren) had mismatched relationship: ${data.updateDerivedObjects.message}`);
+                    if (data.updateDerivedObjects.status === 'success') toast.success('Children successfully added');
+                    if (data.updateDerivedObjects.status === 'warn') toast.warn(`The following children had mismatched relationship: ${data.updateDerivedObjects.message}`);
                 } else {
-                    toast.error('Child(ren) could not be added. Please try again later');
+                    toast.error('Children could not be added. Please try again later');
                 }
             }
         } catch (error) {
@@ -186,7 +186,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                             Close
                         </Button>
                         <Typography variant='h6' className={classes.title}>
-                            Select {props?.relationship === 'Source' ? 'Parent(s)' : 'Child(ren)'}
+                            Select {props?.relationship === 'Source' ? 'Parents' : 'Children'}
                         </Typography>
                         <Button autoFocus color='inherit' onClick={onClick}>
                             {isSaving ? 'Saving...' : 'Save'}

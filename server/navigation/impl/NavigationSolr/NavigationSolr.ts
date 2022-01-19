@@ -98,10 +98,10 @@ export class NavigationSolr implements NAV.INavigation {
         // variantType: number[];                  // idVocabulary[] for variant type filter
         // modelPurpose: number[];                 // idVocabulary[] for model purpose filter
         // modelFileType: number[];                // idVocabulary[] for model file type filter
-        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.captureMethod, 'ChildrenCaptureMethods');
-        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.variantType, 'ChildrenVariantTypes');
-        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelPurpose, 'ChildrenModelPurposes');
-        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelFileType, 'ChildrenModelFileTypes');
+        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.captureMethod, 'ChildrenCaptureMethods', '||');
+        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.variantType, 'ChildrenVariantTypes', '||');
+        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelPurpose, 'ChildrenModelPurposes', '||');
+        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelFileType, 'ChildrenModelFileTypes', '||');
 
         // dateCreatedFrom: Date | null;           // Date Created filter
         // dateCreatedTo: Date | null;             // Date Created filter
@@ -154,9 +154,11 @@ export class NavigationSolr implements NAV.INavigation {
         return this.computeFilterParamFromStrings(SQ, filterValueList, filterSchema, operator);
     }
 
-    private async computeFilterParamFromVocabIDArray(SQ: solr.Query, vocabFilterIDs: number[], filterSchema: string): Promise<solr.Query> {
+    private async computeFilterParamFromVocabIDArray(SQ: solr.Query, vocabFilterIDs: number[], filterSchema: string, operator?: string | undefined): Promise<solr.Query> {
+        if (operator === undefined)
+            operator = '&&';
         const filterValueList: string[] | null = await this.transformVocabIDArrayToStrings(vocabFilterIDs);
-        return this.computeFilterParamFromStrings(SQ, filterValueList, filterSchema, '&&');
+        return this.computeFilterParamFromStrings(SQ, filterValueList, filterSchema, operator);
     }
 
     private computeFilterParamFromStrings(SQ: solr.Query, filterValueList: string[] | null, filterSchema: string, operator: string): solr.Query  {

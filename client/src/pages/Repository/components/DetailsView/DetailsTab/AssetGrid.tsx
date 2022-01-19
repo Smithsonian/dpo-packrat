@@ -9,14 +9,14 @@
  * This component renders asset grid tab for the DetailsTab component.
  */
 
-import { Box, Button } from '@material-ui/core';
+import { Box, Button, Typography, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { NewTabLink, EmptyTable } from '../../../../../components';
+import { NewTabLink, EmptyTable, ToolTip } from '../../../../../components';
 import { eSystemObjectType, eIcon, eAssetGridColumnType, eLinkOrigin } from '../../../../../types/server';
 import { getObjectAssets } from '../../../hooks/useDetailsView';
 import { getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
-import { sharedButtonProps, formatDate } from '../../../../../utils/shared';
+import { sharedButtonProps, formatDate, formatDateAndTime } from '../../../../../utils/shared';
 import { updateSystemObjectUploadRedirect, attachSystemObjectUploadRedirect } from '../../../../../constants';
 import { useHistory } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
@@ -62,6 +62,10 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     value: {
         fontSize: '0.8em',
+        color: palette.primary.dark
+    },
+    date: {
+        fontSize: '0.9em',
         color: palette.primary.dark
     },
     empty: {
@@ -205,7 +209,11 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                     gridColumnObject.options = {
                         ...gridColumnObject.options,
                         customBodyRender(value) {
-                            return formatDate(value);
+                            return (
+                                <Tooltip arrow title={ <ToolTip text={formatDateAndTime(value)} /> }>
+                                    <Typography className={classes.date}>{formatDate(value)}</Typography>
+                                </Tooltip>
+                            );
                         }
                     };
                     break;
