@@ -286,7 +286,7 @@ function Model(props: ModelProps): React.ReactElement {
                                 relatedObjects={model.sourceObjects}
                                 onAdd={openSourceObjectModal}
                                 onRemove={onRemoveSourceObject}
-                                relationshipLanguage='Parent(s)'
+                                relationshipLanguage='Parents'
                             />
                         </Box>
                         <Box mb={2} width='52vw'>
@@ -295,7 +295,7 @@ function Model(props: ModelProps): React.ReactElement {
                                 relatedObjects={model.derivedObjects}
                                 onAdd={openDerivedObjectModal}
                                 onRemove={onRemoveDerivedObject}
-                                relationshipLanguage='Child(ren)'
+                                relationshipLanguage='Children'
                             />
                         </Box>
                         <Box mb={2}>

@@ -54,6 +54,7 @@ function DateInputField(props: DateInputFieldProps): React.ReactElement {
                 className={classes.date}
                 InputProps={{ disableUnderline: true }}
                 onChange={onChange}
+                autoOk
             />
         </MuiPickersUtilsProvider>
     );

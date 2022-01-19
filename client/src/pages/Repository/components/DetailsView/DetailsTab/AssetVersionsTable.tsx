@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { EmptyTable, NewTabLink, TextArea, ToolTip } from '../../../../../components';
 import { StateDetailVersion } from '../../../../../store';
 import { getDetailsUrlForObject, getDownloadAssetVersionUrlForObject } from '../../../../../utils/repository';
-import { formatDate } from '../../../../../utils/shared';
+import { formatDate, formatDateAndTime } from '../../../../../utils/shared';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectVersions, rollbackAssetVersion } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetGrid';
@@ -128,7 +128,9 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                                     <Typography className={classes.value}>{version.creator}</Typography>
                                 </td>
                                 <td align='center'>
-                                    <Typography className={classes.value}>{formatDate(version.dateCreated)}</Typography>
+                                    <Tooltip arrow title={ <ToolTip text={formatDateAndTime(version.dateCreated)} /> }>
+                                        <Typography className={classes.value}>{formatDate(version.dateCreated)}</Typography>
+                                    </Tooltip>
                                 </td>
                                 <td align='center'>
                                     <Typography className={classes.value}>{formatBytes(version.size)}</Typography>

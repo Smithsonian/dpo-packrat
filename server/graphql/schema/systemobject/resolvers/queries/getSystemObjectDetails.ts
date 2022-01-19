@@ -165,6 +165,14 @@ export async function getRelatedObjects(idSystemObject: number, type: RelatedObj
         relatedObjects.push(sourceObject);
     }
 
+    relatedObjects.sort((a, b) => {
+        if (a.objectType < b.objectType)
+            return -1;
+        if (a.objectType > b.objectType)
+            return 1;
+        return a.name.localeCompare(b.name);
+    });
+
     return relatedObjects;
 }
 
