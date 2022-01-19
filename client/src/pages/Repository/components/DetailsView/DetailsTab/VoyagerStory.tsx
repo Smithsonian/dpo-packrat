@@ -22,6 +22,7 @@ type VoyagerStoryProps = {
     width?: string;
     height?: string;
     mode?: string;
+    id?: string;
 };
 
 function VoyagerStory(props: VoyagerStoryProps): React.ReactElement {
@@ -45,7 +46,15 @@ function VoyagerStory(props: VoyagerStoryProps): React.ReactElement {
     // NOTE:  root and document are *not* properties of voyager-story
     // Instead, they need to be present as arguments to the URL for the page
     // hosting this control
-    return <voyager-story root={root} document={document} mode={mode} style={{ width: width || '300px', height: height || '300px', display: 'block', position: 'relative' }} />;
+    return (
+        <voyager-story
+            id='Voyager-Story'
+            root={root}
+            document={document}
+            mode={mode}
+            style={{ width: width || '300px', height: height || '300px', display: 'block', position: 'relative' }}
+        />
+    );
 }
 
 export default VoyagerStory;
