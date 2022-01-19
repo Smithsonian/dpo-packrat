@@ -20,17 +20,17 @@ export function RepositoryIcon(props: RepositoryIconProps): React.ReactElement {
     const { objectType, overrideText, makeStyles, idSystemObject } = props;
     const initial = !overrideText ? getTermForSystemObjectType(objectType).toUpperCase().slice(0, 1) : overrideText;
     return (
-        <div className={makeStyles?.container} style={{ backgroundColor: makeStyles?.backgroundColor }}>
-            <a
-                href={getDetailsUrlForObject(idSystemObject)}
-                onClick={event => event.stopPropagation()}
-                target='_blank'
-                rel='noopener noreferrer'
-                aria-label={`link to view system object of id ${idSystemObject}`}
-                style={{ textDecoration: 'none' }}
-            >
+        <a
+            href={getDetailsUrlForObject(idSystemObject)}
+            onClick={event => event.stopPropagation()}
+            target='_blank'
+            rel='noopener noreferrer'
+            aria-label={`link to view system object of id ${idSystemObject}`}
+            style={{ textDecoration: 'none' }}
+        >
+            <div className={makeStyles?.container} style={{ backgroundColor: makeStyles?.backgroundColor }}>
                 <p className={makeStyles?.initial} style={{ color: '#232023' }}>{initial}</p>
-            </a>
-        </div>
+            </div>
+        </a>
     );
 }
