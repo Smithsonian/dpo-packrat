@@ -2,7 +2,8 @@
  * Identifier store for managing IdentifierList
  */
 import create, { GetState, SetState } from 'zustand';
-import { eIdentifierIdentifierType } from '../types/server';
+import { useVocabularyStore } from './vocabulary';
+import { eVocabularyID } from '../types/server';
 import lodash from 'lodash';
 
 type Identifier = {
@@ -47,10 +48,13 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
     },
     addNewIdentifier: () => {
         const { stateIdentifiers } = get();
+
+        const { getVocabularyId } = useVocabularyStore.getState();
+
         const newIdentifier: StateIdentifier = {
             id: stateIdentifiers.length + 1,
             identifier: '',
-            identifierType: eIdentifierIdentifierType.eARK,
+            identifierType: getVocabularyId(eVocabularyID.eIdentifierIdentifierTypeARK) ?? 0,
             idIdentifier: 0,
             preferred: false
         };

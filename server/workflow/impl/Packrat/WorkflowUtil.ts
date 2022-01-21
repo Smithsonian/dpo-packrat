@@ -2,6 +2,7 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
+import * as COMMON from '../../../../client/src/types/server';
 
 export type WorkflowUtilExtractAssetVersions = {
     success: boolean;
@@ -24,7 +25,7 @@ export class WorkflowUtil {
                 const error: string = `WorkflowUtil.extractAssetVersions unable to compute system object type for ${idSystemObject}`;
                 LOG.error(error, LOG.LS.eWF);
                 return { success: false, error, idAssetVersions: null };
-            } else if (OID.eObjectType != DBAPI.eSystemObjectType.eAssetVersion) {
+            } else if (OID.eObjectType != COMMON.eSystemObjectType.eAssetVersion) {
                 const error: string = `WorkflowUtil.extractAssetVersions called with invalid system object type ${JSON.stringify(OID)} for ${idSystemObject}; expected eAssetVersion`;
                 LOG.error(error, LOG.LS.eWF);
                 return { success: false, error, idAssetVersions: null };

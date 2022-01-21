@@ -8,7 +8,7 @@ import { formatDate } from '../../../../utils/shared';
 import SetIcon from '../../../../assets/images/Workflow_Set_Icon.svg';
 import ReportIcon from '../../../../assets/images/Workflow_Report_Icon.svg';
 import JobIcon from '../../../../assets/images/Workflow_Job_Icon.svg';
-import { workflowListSortEnumToString } from '../../../../types/server';
+import { eWorkflowListSortColumns } from '../../../../types/server';
 import { ePaginationChange } from '../../../../store';
 import { EmptyTable } from '../../../../components';
 import { truncateWithEllipses } from '../../../../constants/helperfunctions';
@@ -356,3 +356,18 @@ function WorkflowIcon(props: WorkflowIconProps): React.ReactElement {
         </a>
     );
 }
+
+const workflowListSortEnumToString = (col: eWorkflowListSortColumns): string => {
+    switch (col) {
+        case eWorkflowListSortColumns.eType: return 'Type';
+        case eWorkflowListSortColumns.eState: return 'State';
+        case eWorkflowListSortColumns.eOwner: return 'Owner';
+        case eWorkflowListSortColumns.eStart: return 'DateStart';
+        case eWorkflowListSortColumns.eLast: return 'DateLast';
+        case eWorkflowListSortColumns.eReport: return 'idWorkflowReport';
+        case eWorkflowListSortColumns.eJobRun: return 'idJobRun';
+        case eWorkflowListSortColumns.eError: return 'Error';
+        case eWorkflowListSortColumns.eSet: return 'idWorkflowSet';
+        default: return 'idWorkflowSet';
+    }
+};

@@ -7,6 +7,7 @@ import * as JOB from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
@@ -529,13 +530,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
     static async extractFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<JobCookSIPackratInspectOutput | null> {
         // find JobCook results for this asset version
-        const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         if (!idVJobType) {
             LOG.error('JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job ID of si-packrat-inspect', LOG.LS.eJOB);
             return null;
         }
 
-        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eWorkflowJobRunStatus.eDone, true, [idAssetVersion], sourceMeshFile);
+        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, COMMON.eWorkflowJobRunStatus.eDone, true, [idAssetVersion], sourceMeshFile);
         if (!jobRuns || jobRuns.length != 1) {
             LOG.info(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}, sourceMeshFile ${sourceMeshFile}`, LOG.LS.eJOB);
             return null;
@@ -732,7 +733,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         const files: string[] = await ZS.getJustFiles(null);
         const RSRs: STORE.ReadStreamResult[] = [];
         for (const file of files) {
-            const eVocabID: CACHE.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
+            const eVocabID: COMMON.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
             const extension: string = path.extname(file).toLowerCase() || file.toLowerCase();
 
             // for the time being, only handle model geometry files, OBJ .mtl files, and GLTF .bin files

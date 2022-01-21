@@ -13,6 +13,7 @@ import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder
 import { ASL, LocalStore } from '../../../../../utils/localStore';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eEventKey } from '../../../../../event/interface/EventEnums';
+import * as COMMON from '../../../../../../client/src/types/server';
 
 interface ApolloFile {
     filename: string;
@@ -52,7 +53,7 @@ class UploadAssetWorker extends ResolverBase {
 
         const success: boolean = (UAR.status === UploadStatus.Complete);
         if (this.workflowHelper?.workflow)
-            await this.workflowHelper.workflow.updateStatus(success ? DBAPI.eWorkflowJobRunStatus.eDone : DBAPI.eWorkflowJobRunStatus.eError);
+            await this.workflowHelper.workflow.updateStatus(success ? COMMON.eWorkflowJobRunStatus.eDone : COMMON.eWorkflowJobRunStatus.eError);
 
         if (success)
             await this.appendToWFReport('<b>Upload succeeded</b>');
@@ -63,7 +64,7 @@ class UploadAssetWorker extends ResolverBase {
 
     private async uploadWorker(): Promise<UploadAssetResult> {
         const { filename, createReadStream } = this.apolloFile;
-        AuditFactory.audit({ url: `/ingestion/uploads/${filename}`, auth: (this.user !== undefined) }, { eObjectType: DBAPI.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 }, eEventKey.eHTTPUpload);
+        AuditFactory.audit({ url: `/ingestion/uploads/${filename}`, auth: (this.user !== undefined) }, { eObjectType: COMMON.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 }, eEventKey.eHTTPUpload);
 
         if (!this.user) {
             LOG.error('uploadAsset unable to retrieve user context', LOG.LS.eGQL);
@@ -221,7 +222,7 @@ class UploadAssetWorker extends ResolverBase {
         for (const assetVersion of assetVersions) {
             const oID: DBAPI.ObjectIDAndType = {
                 idObject: assetVersion.idAssetVersion,
-                eObjectType: DBAPI.eSystemObjectType.eAssetVersion,
+                eObjectType: COMMON.eSystemObjectType.eAssetVersion,
             };
             const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
             if (SOI) {
@@ -235,7 +236,7 @@ class UploadAssetWorker extends ResolverBase {
         }
 
         const wfParams: WF.WorkflowParameters = {
-            eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeUpload,
+            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeUpload,
             idSystemObject,
             idProject: null,    // TODO: populate with idProject
             idUserInitiator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion

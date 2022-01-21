@@ -3,6 +3,7 @@ import * as CACHE from '../../cache';
 import * as COL from '../../collections/interface';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import * as COMMON from '../../../client/src/types/server';
 
 import { ParsedQs, parse } from 'qs';
 
@@ -147,7 +148,7 @@ export class DownloaderParser {
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eAssetVersion;
-            this.eObjectType = DBAPI.eSystemObjectType.eAssetVersion;
+            this.eObjectType = COMMON.eSystemObjectType.eAssetVersion;
             this.idObject = this.idAssetVersion;
 
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(this.idAssetVersion!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
@@ -166,7 +167,7 @@ export class DownloaderParser {
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eAsset;
-            this.eObjectType = DBAPI.eSystemObjectType.eAsset;
+            this.eObjectType = COMMON.eSystemObjectType.eAsset;
             this.idObject = this.idAsset;
 
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(this.idAsset!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
@@ -227,7 +228,7 @@ export class DownloaderParser {
             }
 
             if (assetVersionMatch) {
-                this.eObjectType    = DBAPI.eSystemObjectType.eAssetVersion;
+                this.eObjectType    = COMMON.eSystemObjectType.eAssetVersion;
                 this.idObject       = assetVersionMatch.idAssetVersion;
                 return { success: true, assetVersion: assetVersionMatch };
             }
@@ -401,7 +402,7 @@ export class DownloaderParser {
                 return this.recordStatus(404);
             }
             this.eMode          = eDownloadMode.eAssetVersionComment;
-            this.eObjectType    = DBAPI.eSystemObjectType.eAssetVersion;
+            this.eObjectType    = COMMON.eSystemObjectType.eAssetVersion;
             this.idObject       = this.idAssetVersionComment;
 
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(this.idAssetVersionComment!); // eslint-disable-line @typescript-eslint/no-non-null-assertion

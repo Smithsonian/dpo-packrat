@@ -2,6 +2,7 @@ import * as EVENT from '../../interface';
 import { EventConsumer } from './EventConsumer';
 import { EventConsumerDB } from './EventConsumerDB';
 import { EventEngine } from './EventEngine';
+import * as COMMON from '../../../../client/src/types/server';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
@@ -55,7 +56,7 @@ export class EventConsumerPublish extends EventConsumer {
             return false;
         }
 
-        if (audit.getDBObjectType() !== DBAPI.eSystemObjectType.eScene) {
+        if (audit.getDBObjectType() !== COMMON.eSystemObjectType.eScene) {
             LOG.error(`EventConsumerPublish.publishScene received eSceneQCd event for non scene object ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eEVENT);
             return false;
         }
