@@ -17,11 +17,12 @@ import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
 import * as NAV from '../../../../../navigation/interface';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
-import { VocabularyCache, eVocabularyID } from '../../../../../cache';
+import { VocabularyCache } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
 import { PublishScene } from '../../../../../collections/impl/PublishScene';
+import * as COMMON from '../../../../../../client/src/types/server';
 
 type AssetPair = {
     asset: DBAPI.Asset;
@@ -86,7 +87,7 @@ class IngestDataWorker extends ResolverBase {
         const IDR: IngestDataResult = await this.ingestWorker();
 
         if (this.workflowHelper?.workflow)
-            await this.workflowHelper.workflow.updateStatus(IDR.success ? DBAPI.eWorkflowJobRunStatus.eDone : DBAPI.eWorkflowJobRunStatus.eError);
+            await this.workflowHelper.workflow.updateStatus(IDR.success ? COMMON.eWorkflowJobRunStatus.eDone : COMMON.eWorkflowJobRunStatus.eError);
 
         if (IDR.success)
             await this.appendToWFReport('<b>Ingest validation succeeded</b>');
@@ -238,7 +239,7 @@ class IngestDataWorker extends ResolverBase {
 
     private async getVocabularyARK(): Promise<DBAPI.Vocabulary | undefined> {
         if (!this.vocabularyARK) {
-            this.vocabularyARK = await VocabularyCache.vocabularyByEnum(eVocabularyID.eIdentifierIdentifierTypeARK);
+            this.vocabularyARK = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
             if (!this.vocabularyARK) {
                 LOG.error('ingestData unable to fetch vocabulary for ARK Identifiers', LOG.LS.eGQL);
                 return undefined;
@@ -502,7 +503,7 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetryInput): Promise<boolean> {
-        const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry);
+        const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry);
         if (!vocabulary) {
             LOG.error('ingestData unable to retrieve photogrammetry capture method vocabulary from cache', LOG.LS.eGQL);
             return false;
@@ -694,9 +695,9 @@ class IngestDataWorker extends ResolverBase {
                 return false;
             }
 
-            const assetType: CACHE.eVocabularyID | undefined = await asset.assetType();
-            if (assetType === CACHE.eVocabularyID.eAssetAssetTypeModel ||
-                assetType === CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile) {
+            const assetType: COMMON.eVocabularyID | undefined = await asset.assetType();
+            if (assetType === COMMON.eVocabularyID.eAssetAssetTypeModel ||
+                assetType === COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile) {
                 const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
                 if (!SO) {
                     LOG.error(`ingestData createModelObjects unable to fetch model's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
@@ -844,8 +845,8 @@ class IngestDataWorker extends ResolverBase {
                 LOG.error(`ingestData createSceneObjects unable to fetch scene's asset for ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                 return { success: false };
             }
-            const assetType: CACHE.eVocabularyID | undefined = await asset.assetType();
-            if (assetType === CACHE.eVocabularyID.eAssetAssetTypeScene) {
+            const assetType: COMMON.eVocabularyID | undefined = await asset.assetType();
+            if (assetType === COMMON.eVocabularyID.eAssetAssetTypeScene) {
                 const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
                 if (!SO) {
                     LOG.error(`ingestData createSceneObjects unable to fetch scene's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
@@ -1283,7 +1284,7 @@ class IngestDataWorker extends ResolverBase {
 
             const systemObjectSet: Set<number> = new Set<number>();
             for (const assetVersion of IAR.assetVersions) {
-                const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion };
+                const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion };
                 const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
                 if (!sysInfo) {
                     LOG.error(`ingestData sendWorkflowIngestionEvent could not find system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
@@ -1330,7 +1331,7 @@ class IngestDataWorker extends ResolverBase {
             };
 
             // send workflow engine event, but don't wait for results
-            workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);
+            workflowEngine.event(COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);
         }
 
         return ret;
@@ -1350,8 +1351,8 @@ class IngestDataWorker extends ResolverBase {
                 // add validation in this area while we iterate through the objects
                 if (photogrammetry.sourceObjects && photogrammetry.sourceObjects.length) {
                     for (const sourceObject of photogrammetry.sourceObjects) {
-                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eCaptureData, photogrammetry.sourceObjects, [], true)) {
-                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and capture data`;
+                        if (!isValidParentChildRelationship(sourceObject.objectType, COMMON.eSystemObjectType.eCaptureData, photogrammetry.sourceObjects, [], true)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${COMMON.eSystemObjectType[sourceObject.objectType]} and capture data`;
                             LOG.error(error, LOG.LS.eGQL);
                             return { success: false, error };
                         }
@@ -1361,8 +1362,8 @@ class IngestDataWorker extends ResolverBase {
                 if (photogrammetry.derivedObjects && photogrammetry.derivedObjects.length) {
                     for (const derivedObject of photogrammetry.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            const error: string = `ingestData will not create the inappropriate parent-child relationship between capture data and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                        if (!isValidParentChildRelationship(COMMON.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between capture data and ${COMMON.eSystemObjectType[derivedObject.objectType]}`;
                             LOG.error(error, LOG.LS.eGQL);
                             return { success: false, error };
                         }
@@ -1387,8 +1388,8 @@ class IngestDataWorker extends ResolverBase {
                 // add validation in this area while we iterate through the objects
                 if (model.sourceObjects && model.sourceObjects.length) {
                     for (const sourceObject of model.sourceObjects) {
-                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eModel, model.sourceObjects, [], true)) {
-                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and model`;
+                        if (!isValidParentChildRelationship(sourceObject.objectType, COMMON.eSystemObjectType.eModel, model.sourceObjects, [], true)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${COMMON.eSystemObjectType[sourceObject.objectType]} and model`;
                             LOG.error(error, LOG.LS.eGQL);
                             return { success: false, error };
                         }
@@ -1398,8 +1399,8 @@ class IngestDataWorker extends ResolverBase {
                 if (model.derivedObjects && model.derivedObjects.length) {
                     for (const derivedObject of model.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eModel, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            const error: string = `ingestData will not create the inappropriate parent-child relationship between model and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                        if (!isValidParentChildRelationship(COMMON.eSystemObjectType.eModel, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between model and ${COMMON.eSystemObjectType[derivedObject.objectType]}`;
                             LOG.error(error, LOG.LS.eGQL);
                             return { success: false, error };
                         }
@@ -1424,8 +1425,8 @@ class IngestDataWorker extends ResolverBase {
                 // add validation in this area while we iterate through the objects
                 if (scene.sourceObjects && scene.sourceObjects.length) {
                     for (const sourceObject of scene.sourceObjects) {
-                        if (!isValidParentChildRelationship(sourceObject.objectType, DBAPI.eSystemObjectType.eScene, scene.sourceObjects, [], true)) {
-                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${DBAPI.eSystemObjectType[sourceObject.objectType]} and scene`;
+                        if (!isValidParentChildRelationship(sourceObject.objectType, COMMON.eSystemObjectType.eScene, scene.sourceObjects, [], true)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${COMMON.eSystemObjectType[sourceObject.objectType]} and scene`;
                             LOG.error(error, LOG.LS.eGQL);
                             return { success: false, error };
                         }
@@ -1435,8 +1436,8 @@ class IngestDataWorker extends ResolverBase {
                 if (scene.derivedObjects && scene.derivedObjects.length) {
                     for (const derivedObject of scene.derivedObjects) {
                         const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
-                        if (!isValidParentChildRelationship(DBAPI.eSystemObjectType.eScene, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
-                            const error: string = `ingestData will not create the inappropriate parent-child relationship between scene and ${DBAPI.eSystemObjectType[derivedObject.objectType]}`;
+                        if (!isValidParentChildRelationship(COMMON.eSystemObjectType.eScene, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between scene and ${COMMON.eSystemObjectType[derivedObject.objectType]}`;
                             LOG.error(error, LOG.LS.eGQL);
                             return { success: false, error };
                         }
@@ -1534,7 +1535,7 @@ class IngestDataWorker extends ResolverBase {
 
         for (const asset of IAR.assets) {
             switch (await asset.assetType()) {
-                case eVocabularyID.eAssetAssetTypeScene:
+                case COMMON.eVocabularyID.eAssetAssetTypeScene:
                     if (!sceneAsset) {
                         sceneAsset = asset;
                         sceneAssetVersion = assetVersionMap.get(asset.idAsset);
@@ -1542,8 +1543,8 @@ class IngestDataWorker extends ResolverBase {
                         LOG.error(`ingestData handleComplexIngestionScene skipping unexpected scene ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                     break;
 
-                case eVocabularyID.eAssetAssetTypeModel:
-                case eVocabularyID.eAssetAssetTypeModelGeometryFile: {
+                case COMMON.eVocabularyID.eAssetAssetTypeModel:
+                case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile: {
                     const assetVersion: DBAPI.AssetVersion | undefined = assetVersionMap.get(asset.idAsset);
                     modelAssetMap.set(asset.FileName.toLowerCase(), { asset, assetVersion });
                 } break;
@@ -1675,7 +1676,7 @@ class IngestDataWorker extends ResolverBase {
 
                 const SOV: DBAPI.SystemObjectVersion = new DBAPI.SystemObjectVersion({
                     idSystemObject: SO.idSystemObject,
-                    PublishedState: DBAPI.ePublishedState.eNotPublished,
+                    PublishedState: COMMON.ePublishedState.eNotPublished,
                     DateCreated: new Date(),
                     Comment: null,
                     idSystemObjectVersion: 0
@@ -1717,7 +1718,7 @@ class IngestDataWorker extends ResolverBase {
     private async transformModelSceneXrefIntoModel(MSX: DBAPI.ModelSceneXref): Promise<DBAPI.Model> {
         const Name: string = MSX.Name ?? '';
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
-        const vPurpose: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeWebDelivery);
+        const vPurpose: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeWebDelivery);
         return new DBAPI.Model({
             idModel: 0,
             Name,
@@ -1760,7 +1761,7 @@ class IngestDataWorker extends ResolverBase {
         for (const idObject of this.assetVersionSet.values()) {
             const oID: DBAPI.ObjectIDAndType = {
                 idObject,
-                eObjectType: DBAPI.eSystemObjectType.eAssetVersion,
+                eObjectType: COMMON.eSystemObjectType.eAssetVersion,
             };
             const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
             if (SOI)
@@ -1770,7 +1771,7 @@ class IngestDataWorker extends ResolverBase {
         }
 
         const wfParams: WF.WorkflowParameters = {
-            eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeIngestion,
+            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeIngestion,
             idSystemObject,
             idProject: null,    // TODO: populate with idProject
             idUserInitiator: this.user?.idUser ?? null,
@@ -1789,7 +1790,7 @@ class IngestDataWorker extends ResolverBase {
     }
 }
 
-export function isValidParentChildRelationship(parent: DBAPI.eSystemObjectType, child: DBAPI.eSystemObjectType, selected: ExistingRelationship[], existingParentRelationships: ExistingRelationship[], isAddingSource: boolean): boolean {
+export function isValidParentChildRelationship(parent: COMMON.eSystemObjectType, child: COMMON.eSystemObjectType, selected: ExistingRelationship[], existingParentRelationships: ExistingRelationship[], isAddingSource: boolean): boolean {
     let result = false;
     /*
         *NOTE: when updating this relationship validation function,
@@ -1802,58 +1803,58 @@ export function isValidParentChildRelationship(parent: DBAPI.eSystemObjectType, 
 
     const existingAndNewRelationships = [...existingParentRelationships, ...selected];
     switch (child) {
-        case DBAPI.eSystemObjectType.eUnit:
-        case DBAPI.eSystemObjectType.eProject:
-        case DBAPI.eSystemObjectType.eSubject:
-        case DBAPI.eSystemObjectType.eAsset:
-        case DBAPI.eSystemObjectType.eAssetVersion:
+        case COMMON.eSystemObjectType.eUnit:
+        case COMMON.eSystemObjectType.eProject:
+        case COMMON.eSystemObjectType.eSubject:
+        case COMMON.eSystemObjectType.eAsset:
+        case COMMON.eSystemObjectType.eAssetVersion:
             break;
 
-        case DBAPI.eSystemObjectType.eItem:
-            if (parent === DBAPI.eSystemObjectType.eSubject)
+        case COMMON.eSystemObjectType.eItem:
+            if (parent === COMMON.eSystemObjectType.eSubject)
                 result = true;
-            else if (parent === DBAPI.eSystemObjectType.eProject)
-                result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eProject, isAddingSource ? 2 : 1);
+            else if (parent === COMMON.eSystemObjectType.eProject)
+                result = maximumConnections(existingAndNewRelationships, COMMON.eSystemObjectType.eProject, isAddingSource ? 2 : 1);
             break;
 
-        case DBAPI.eSystemObjectType.eCaptureData:
-            if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eItem)
-                result = true;
-            break;
-
-        case DBAPI.eSystemObjectType.eModel:
-            if (parent === DBAPI.eSystemObjectType.eScene)
-                result = maximumConnections(existingAndNewRelationships, DBAPI.eSystemObjectType.eScene, isAddingSource ? 2 : 1);
-            else if (parent === DBAPI.eSystemObjectType.eCaptureData || parent === DBAPI.eSystemObjectType.eModel || parent === DBAPI.eSystemObjectType.eItem)
+        case COMMON.eSystemObjectType.eCaptureData:
+            if (parent === COMMON.eSystemObjectType.eCaptureData || parent === COMMON.eSystemObjectType.eItem)
                 result = true;
             break;
 
-        case DBAPI.eSystemObjectType.eScene:
-            if (parent === DBAPI.eSystemObjectType.eItem || parent === DBAPI.eSystemObjectType.eModel)
+        case COMMON.eSystemObjectType.eModel:
+            if (parent === COMMON.eSystemObjectType.eScene)
+                result = maximumConnections(existingAndNewRelationships, COMMON.eSystemObjectType.eScene, isAddingSource ? 2 : 1);
+            else if (parent === COMMON.eSystemObjectType.eCaptureData || parent === COMMON.eSystemObjectType.eModel || parent === COMMON.eSystemObjectType.eItem)
                 result = true;
             break;
 
-        case DBAPI.eSystemObjectType.eIntermediaryFile:
-            if (parent === DBAPI.eSystemObjectType.eItem)
+        case COMMON.eSystemObjectType.eScene:
+            if (parent === COMMON.eSystemObjectType.eItem || parent === COMMON.eSystemObjectType.eModel)
                 result = true;
             break;
 
-        case DBAPI.eSystemObjectType.eProjectDocumentation:
-            if (parent === DBAPI.eSystemObjectType.eProject)
+        case COMMON.eSystemObjectType.eIntermediaryFile:
+            if (parent === COMMON.eSystemObjectType.eItem)
                 result = true;
             break;
 
-        case DBAPI.eSystemObjectType.eActor:
-            if (parent === DBAPI.eSystemObjectType.eCaptureData ||
-                parent === DBAPI.eSystemObjectType.eModel ||
-                parent === DBAPI.eSystemObjectType.eScene ||
-                parent === DBAPI.eSystemObjectType.eIntermediaryFile ||
-                parent === DBAPI.eSystemObjectType.eUnit)
+        case COMMON.eSystemObjectType.eProjectDocumentation:
+            if (parent === COMMON.eSystemObjectType.eProject)
                 result = true;
             break;
 
-        case DBAPI.eSystemObjectType.eStakeholder:
-            if (parent === DBAPI.eSystemObjectType.eUnit || parent === DBAPI.eSystemObjectType.eProject)
+        case COMMON.eSystemObjectType.eActor:
+            if (parent === COMMON.eSystemObjectType.eCaptureData ||
+                parent === COMMON.eSystemObjectType.eModel ||
+                parent === COMMON.eSystemObjectType.eScene ||
+                parent === COMMON.eSystemObjectType.eIntermediaryFile ||
+                parent === COMMON.eSystemObjectType.eUnit)
+                result = true;
+            break;
+
+        case COMMON.eSystemObjectType.eStakeholder:
+            if (parent === COMMON.eSystemObjectType.eUnit || parent === COMMON.eSystemObjectType.eProject)
                 result = true;
             break;
     }
@@ -1861,4 +1862,4 @@ export function isValidParentChildRelationship(parent: DBAPI.eSystemObjectType, 
     return result;
 }
 
-const maximumConnections = (relationships: ExistingRelationship[], objectType: DBAPI.eSystemObjectType, limit: number) => relationships.filter(relationship => relationship.objectType === objectType).length < limit;
+const maximumConnections = (relationships: ExistingRelationship[], objectType: COMMON.eSystemObjectType, limit: number) => relationships.filter(relationship => relationship.objectType === objectType).length < limit;

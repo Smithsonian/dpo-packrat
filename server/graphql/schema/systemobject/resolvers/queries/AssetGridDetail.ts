@@ -2,7 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../../../../db';
 import { RouteBuilder } from '../../../../../http/routes/routeBuilder';
-import { AssetGridDetailBase, ColumnObject, LinkObject, eAssetGridColumnType, eIcon, eLinkOrigin } from './AssetGridCommon';
+import { AssetGridDetailBase, ColumnObject, LinkObject } from './AssetGridCommon';
+import * as COMMON from '../../../../../../client/src/types/server';
 
 export class AssetGridDetail extends AssetGridDetailBase {
     link: LinkObject;
@@ -15,8 +16,8 @@ export class AssetGridDetail extends AssetGridDetailBase {
 
     constructor(_asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, vocabulary: DBAPI.Vocabulary) {
         super(idSystemObject, assetVersion.idAsset, assetVersion.idAssetVersion);
-        this.link = { label: null, path: `${RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion)}`, icon: eIcon.eIconDownload, origin: eLinkOrigin.eServer };
-        this.name = { label: assetVersion.FileName, path: `${RouteBuilder.RepositoryDetails(idSystemObject)}`, icon: null, origin: eLinkOrigin.eClient };
+        this.link = { label: null, path: `${RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion)}`, icon: COMMON.eIcon.eIconDownload, origin: COMMON.eLinkOrigin.eServer };
+        this.name = { label: assetVersion.FileName, path: `${RouteBuilder.RepositoryDetails(idSystemObject)}`, icon: null, origin: COMMON.eLinkOrigin.eClient };
         this.filePath = assetVersion.FilePath;
         this.assetType = vocabulary.Term;
         this.version = assetVersion.Version;
@@ -26,13 +27,13 @@ export class AssetGridDetail extends AssetGridDetailBase {
 
     static getColumns(): ColumnObject[] {
         return [
-            { colName: 'link', colLabel: 'Link', colDisplay: true, colType: eAssetGridColumnType.eHyperLink, colAlign: 'center' },
-            { colName: 'name', colLabel: 'Name', colDisplay: true, colType: eAssetGridColumnType.eHyperLink, colAlign: 'left' },
-            { colName: 'filePath', colLabel: 'Path', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'left' },
-            { colName: 'assetType', colLabel: 'Asset Type', colDisplay: true, colType: eAssetGridColumnType.eString, colAlign: 'center' },
-            { colName: 'version', colLabel: 'Version', colDisplay: true, colType: eAssetGridColumnType.eNumber, colAlign: 'center' },
-            { colName: 'dateCreated', colLabel: 'Date Created', colDisplay: true, colType: eAssetGridColumnType.eDate, colAlign: 'center' },
-            { colName: 'size', colLabel: 'Size', colDisplay: true, colType: eAssetGridColumnType.eFileSize, colAlign: 'center' }
+            { colName: 'link', colLabel: 'Link', colDisplay: true, colType: COMMON.eAssetGridColumnType.eHyperLink, colAlign: 'center' },
+            { colName: 'name', colLabel: 'Name', colDisplay: true, colType: COMMON.eAssetGridColumnType.eHyperLink, colAlign: 'left' },
+            { colName: 'filePath', colLabel: 'Path', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'assetType', colLabel: 'Asset Type', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
+            { colName: 'version', colLabel: 'Version', colDisplay: true, colType: COMMON.eAssetGridColumnType.eNumber, colAlign: 'center' },
+            { colName: 'dateCreated', colLabel: 'Date Created', colDisplay: true, colType: COMMON.eAssetGridColumnType.eDate, colAlign: 'center' },
+            { colName: 'size', colLabel: 'Size', colDisplay: true, colType: COMMON.eAssetGridColumnType.eFileSize, colAlign: 'center' }
         ];
     }
 }

@@ -9,6 +9,7 @@ import * as ZIP from '../../utils/zipStream';
 import * as STORE from '../../storage/interface';
 import { SvxReader } from '../../utils/parser';
 import { IDocument } from '../../types/voyager';
+import * as COMMON from '../../../client/src/types/server';
 
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -68,7 +69,7 @@ export class PublishScene {
         return resourceMap;
     }
 
-    async publish(ICol: COL.ICollection, ePublishedStateIntended: DBAPI.ePublishedState): Promise<boolean> {
+    async publish(ICol: COL.ICollection, ePublishedStateIntended: COMMON.ePublishedState): Promise<boolean> {
         if (!this.analyzed) {
             const result: boolean = await this.analyze(ePublishedStateIntended);
             if (!result)
@@ -171,7 +172,7 @@ export class PublishScene {
         return retValue;
     }
 
-    private async analyze(ePublishedStateIntended?: DBAPI.ePublishedState): Promise<boolean> {
+    private async analyze(ePublishedStateIntended?: COMMON.ePublishedState): Promise<boolean> {
         this.analyzed = true;
         if (!await this.fetchScene(ePublishedStateIntended) || !this.scene || !this.subject)
             return false;
@@ -186,7 +187,7 @@ export class PublishScene {
         return true;
     }
 
-    private async fetchScene(ePublishedStateIntended?: DBAPI.ePublishedState): Promise<boolean> {
+    private async fetchScene(ePublishedStateIntended?: COMMON.ePublishedState): Promise<boolean> {
         const changingPubState: boolean = (ePublishedStateIntended !== undefined);
         const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(this.idSystemObject);
         if (!oID) {
@@ -194,7 +195,7 @@ export class PublishScene {
             return false;
         }
 
-        if (oID.eObjectType !== DBAPI.eSystemObjectType.eScene) {
+        if (oID.eObjectType !== COMMON.eSystemObjectType.eScene) {
             LOG.error(`PublishScene.fetchScene called for non scene object ${JSON.stringify(oID, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
             return false;
         }
@@ -215,7 +216,7 @@ export class PublishScene {
 
         // If we're intending to change publishing state, verify that we can given the intended published state
         if (changingPubState) {
-            if (ePublishedStateIntended !== DBAPI.ePublishedState.eNotPublished &&
+            if (ePublishedStateIntended !== COMMON.ePublishedState.eNotPublished &&
                (!this.scene.ApprovedForPublication || !this.scene.PosedAndQCd)) {
                 LOG.error(`PublishScene.fetchScene attempting to publish non-Approved and/or non-QC'd scene ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
                 return false;
@@ -254,7 +255,7 @@ export class PublishScene {
         const DownloadMSXMap: Map<number, DBAPI.ModelSceneXref> = new Map<number, DBAPI.ModelSceneXref>();
         for (const MSX of MSXs) {
             if (MSX.Usage && MSX.Usage.startsWith('Download')) {
-                const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ eObjectType: DBAPI.eSystemObjectType.eModel, idObject: MSX.idModel });
+                const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ eObjectType: COMMON.eSystemObjectType.eModel, idObject: MSX.idModel });
                 if (SOI)
                     DownloadMSXMap.set(SOI.idSystemObject, MSX);
             }
@@ -263,7 +264,7 @@ export class PublishScene {
         return true;
     }
 
-    private async collectAssets(ePublishedStateIntended?: DBAPI.ePublishedState): Promise<boolean> {
+    private async collectAssets(ePublishedStateIntended?: COMMON.ePublishedState): Promise<boolean> {
         if (!this.DownloadMSXMap)
             return false;
         this.assetVersions = await DBAPI.AssetVersion.fetchLatestFromSystemObject(this.idSystemObject);
@@ -598,15 +599,15 @@ export class PublishScene {
         return { filename, url, type, title, name, attributes, category };
     }
 
-    private async updatePublishedState(ePublishedStateIntended: DBAPI.ePublishedState): Promise<boolean> {
+    private async updatePublishedState(ePublishedStateIntended: COMMON.ePublishedState): Promise<boolean> {
         if (!this.systemObjectVersion)
             return false;
 
         // Determine if licensing prevents publishing
         const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(this.idSystemObject);
         if (LR && LR.License &&
-            DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) === DBAPI.ePublishedState.eNotPublished)
-            ePublishedStateIntended = DBAPI.ePublishedState.eNotPublished;
+            DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) === COMMON.ePublishedState.eNotPublished)
+            ePublishedStateIntended = COMMON.ePublishedState.eNotPublished;
         LOG.info(`PublishScene.updatePublishedState computed license ${LR ? JSON.stringify(LR.License, H.Helpers.saferStringify) : 'none'}, resulting in published state of ${ePublishedStateIntended}`, LOG.LS.eCOLL);
 
         if (this.systemObjectVersion.publishedStateEnum() !== ePublishedStateIntended) {
@@ -620,19 +621,19 @@ export class PublishScene {
         return true;
     }
 
-    private computeEdanSearchFlags(edanRecord: COL.EdanRecord, eState: DBAPI.ePublishedState): { status: number, publicSearch: boolean, downloads: boolean } {
+    private computeEdanSearchFlags(edanRecord: COL.EdanRecord, eState: COMMON.ePublishedState): { status: number, publicSearch: boolean, downloads: boolean } {
         let status: number = edanRecord.status;
         let publicSearch: boolean = edanRecord.publicSearch;
         let downloads: boolean = publicSearch;
 
         switch (eState) {
             default:
-            case DBAPI.ePublishedState.eNotPublished:       status = 1; publicSearch = false; downloads = false; break;
-            case DBAPI.ePublishedState.eAPIOnly:            status = 0; publicSearch = false; downloads = true;  break;
-            case DBAPI.ePublishedState.ePublished:          status = 0; publicSearch = true;  downloads = true;  break;
-            // case DBAPI.ePublishedState.eViewOnly:           status = 0; publicSearch = true;  downloads = false; break;
+            case COMMON.ePublishedState.eNotPublished:       status = 1; publicSearch = false; downloads = false; break;
+            case COMMON.ePublishedState.eAPIOnly:            status = 0; publicSearch = false; downloads = true;  break;
+            case COMMON.ePublishedState.ePublished:          status = 0; publicSearch = true;  downloads = true;  break;
+            // case COMMON.ePublishedState.eViewOnly:           status = 0; publicSearch = true;  downloads = false; break;
         }
-        LOG.info(`PublishScene.computeEdanSearchFlags(${DBAPI.ePublishedState[eState]}) = { status ${status}, publicSearch ${publicSearch}, downloads ${downloads} }`, LOG.LS.eCOLL);
+        LOG.info(`PublishScene.computeEdanSearchFlags(${COMMON.ePublishedState[eState]}) = { status ${status}, publicSearch ${publicSearch}, downloads ${downloads} }`, LOG.LS.eCOLL);
         return { status, publicSearch, downloads };
     }
 }

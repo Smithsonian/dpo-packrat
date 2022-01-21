@@ -1,19 +1,4 @@
-export enum eSystemObjectType {
-    eUnknown = 0,
-    eUnit = 1,
-    eProject = 2,
-    eSubject = 3,
-    eItem = 4,
-    eCaptureData = 5,
-    eModel = 6,
-    eScene = 7,
-    eIntermediaryFile = 8,
-    eProjectDocumentation = 9,
-    eAsset = 10,
-    eAssetVersion = 11,
-    eActor = 12,
-    eStakeholder = 13,
-}
+import * as COMMON from '../../../client/src/types/server';
 
 export enum eNonSystemObjectType {
     eUnknown = 0,
@@ -62,7 +47,7 @@ export enum eNonSystemObjectType {
     eWorkflowStepSystemObjectXref = 59,
 }
 
-export type eDBObjectType = eSystemObjectType | eNonSystemObjectType;
+export type eDBObjectType = COMMON.eSystemObjectType | eNonSystemObjectType;
 
 export type ObjectIDAndType = {
     idObject: number;
@@ -79,67 +64,67 @@ export type SystemObjectIDAndType = {
     sID: SystemObjectInfo;
 };
 
-export function SystemObjectTypeToName(eObjectType: eSystemObjectType | null): string {
+export function SystemObjectTypeToName(eObjectType: COMMON.eSystemObjectType | null): string {
     switch (eObjectType) {
-        case eSystemObjectType.eUnit:                   return 'Unit';
-        case eSystemObjectType.eProject:                return 'Project';
-        case eSystemObjectType.eSubject:                return 'Subject';
-        case eSystemObjectType.eItem:                   return 'Item';
-        case eSystemObjectType.eCaptureData:            return 'Capture Data';
-        case eSystemObjectType.eModel:                  return 'Model';
-        case eSystemObjectType.eScene:                  return 'Scene';
-        case eSystemObjectType.eIntermediaryFile:       return 'Intermediary File';
-        case eSystemObjectType.eProjectDocumentation:   return 'Project Documentation';
-        case eSystemObjectType.eAsset:                  return 'Asset';
-        case eSystemObjectType.eAssetVersion:           return 'Asset Version';
-        case eSystemObjectType.eActor:                  return 'Actor';
-        case eSystemObjectType.eStakeholder:            return 'Stakeholder';
-        case eSystemObjectType.eUnknown:                return 'Unknown';
+        case COMMON.eSystemObjectType.eUnit:                   return 'Unit';
+        case COMMON.eSystemObjectType.eProject:                return 'Project';
+        case COMMON.eSystemObjectType.eSubject:                return 'Subject';
+        case COMMON.eSystemObjectType.eItem:                   return 'Item';
+        case COMMON.eSystemObjectType.eCaptureData:            return 'Capture Data';
+        case COMMON.eSystemObjectType.eModel:                  return 'Model';
+        case COMMON.eSystemObjectType.eScene:                  return 'Scene';
+        case COMMON.eSystemObjectType.eIntermediaryFile:       return 'Intermediary File';
+        case COMMON.eSystemObjectType.eProjectDocumentation:   return 'Project Documentation';
+        case COMMON.eSystemObjectType.eAsset:                  return 'Asset';
+        case COMMON.eSystemObjectType.eAssetVersion:           return 'Asset Version';
+        case COMMON.eSystemObjectType.eActor:                  return 'Actor';
+        case COMMON.eSystemObjectType.eStakeholder:            return 'Stakeholder';
+        case COMMON.eSystemObjectType.eUnknown:                return 'Unknown';
         default:                                        return 'Unknown';
     }
 }
 
-export function SystemObjectNameToType(objectTypeName: string | null): eSystemObjectType {
+export function SystemObjectNameToType(objectTypeName: string | null): COMMON.eSystemObjectType {
     switch (objectTypeName) {
-        case 'Unit':                    return eSystemObjectType.eUnit;
-        case 'Project':                 return eSystemObjectType.eProject;
-        case 'Subject':                 return eSystemObjectType.eSubject;
-        case 'Item':                    return eSystemObjectType.eItem;
-        case 'CaptureData':             return eSystemObjectType.eCaptureData;
-        case 'Capture Data':            return eSystemObjectType.eCaptureData;
-        case 'Model':                   return eSystemObjectType.eModel;
-        case 'Scene':                   return eSystemObjectType.eScene;
-        case 'IntermediaryFile':        return eSystemObjectType.eIntermediaryFile;
-        case 'Intermediary File':       return eSystemObjectType.eIntermediaryFile;
-        case 'ProjectDocumentation':    return eSystemObjectType.eProjectDocumentation;
-        case 'Project Documentation':   return eSystemObjectType.eProjectDocumentation;
-        case 'Asset':                   return eSystemObjectType.eAsset;
-        case 'AssetVersion':            return eSystemObjectType.eAssetVersion;
-        case 'Asset Version':           return eSystemObjectType.eAssetVersion;
-        case 'Actor':                   return eSystemObjectType.eActor;
-        case 'Stakeholder':             return eSystemObjectType.eStakeholder;
+        case 'Unit':                    return COMMON.eSystemObjectType.eUnit;
+        case 'Project':                 return COMMON.eSystemObjectType.eProject;
+        case 'Subject':                 return COMMON.eSystemObjectType.eSubject;
+        case 'Item':                    return COMMON.eSystemObjectType.eItem;
+        case 'CaptureData':             return COMMON.eSystemObjectType.eCaptureData;
+        case 'Capture Data':            return COMMON.eSystemObjectType.eCaptureData;
+        case 'Model':                   return COMMON.eSystemObjectType.eModel;
+        case 'Scene':                   return COMMON.eSystemObjectType.eScene;
+        case 'IntermediaryFile':        return COMMON.eSystemObjectType.eIntermediaryFile;
+        case 'Intermediary File':       return COMMON.eSystemObjectType.eIntermediaryFile;
+        case 'ProjectDocumentation':    return COMMON.eSystemObjectType.eProjectDocumentation;
+        case 'Project Documentation':   return COMMON.eSystemObjectType.eProjectDocumentation;
+        case 'Asset':                   return COMMON.eSystemObjectType.eAsset;
+        case 'AssetVersion':            return COMMON.eSystemObjectType.eAssetVersion;
+        case 'Asset Version':           return COMMON.eSystemObjectType.eAssetVersion;
+        case 'Actor':                   return COMMON.eSystemObjectType.eActor;
+        case 'Stakeholder':             return COMMON.eSystemObjectType.eStakeholder;
 
         default:
-        case 'Unknown':                 return eSystemObjectType.eUnknown;
+        case 'Unknown':                 return COMMON.eSystemObjectType.eUnknown;
     }
 }
 
 export function DBObjectTypeToName(dbType: eDBObjectType | null): string {
     switch (dbType) {
-        case eSystemObjectType.eUnit:
-        case eSystemObjectType.eProject:
-        case eSystemObjectType.eSubject:
-        case eSystemObjectType.eItem:
-        case eSystemObjectType.eCaptureData:
-        case eSystemObjectType.eModel:
-        case eSystemObjectType.eScene:
-        case eSystemObjectType.eIntermediaryFile:
-        case eSystemObjectType.eProjectDocumentation:
-        case eSystemObjectType.eAsset:
-        case eSystemObjectType.eAssetVersion:
-        case eSystemObjectType.eActor:
-        case eSystemObjectType.eStakeholder:
-        case eSystemObjectType.eUnknown:
+        case COMMON.eSystemObjectType.eUnit:
+        case COMMON.eSystemObjectType.eProject:
+        case COMMON.eSystemObjectType.eSubject:
+        case COMMON.eSystemObjectType.eItem:
+        case COMMON.eSystemObjectType.eCaptureData:
+        case COMMON.eSystemObjectType.eModel:
+        case COMMON.eSystemObjectType.eScene:
+        case COMMON.eSystemObjectType.eIntermediaryFile:
+        case COMMON.eSystemObjectType.eProjectDocumentation:
+        case COMMON.eSystemObjectType.eAsset:
+        case COMMON.eSystemObjectType.eAssetVersion:
+        case COMMON.eSystemObjectType.eActor:
+        case COMMON.eSystemObjectType.eStakeholder:
+        case COMMON.eSystemObjectType.eUnknown:
             return SystemObjectTypeToName(dbType);
 
         case eNonSystemObjectType.eAccessAction:                        return 'AccessAction';
@@ -191,8 +176,8 @@ export function DBObjectTypeToName(dbType: eDBObjectType | null): string {
 }
 
 export function DBObjectNameToType(objectTypeName: string | null): eDBObjectType {
-    const systemObjectType: eSystemObjectType = SystemObjectNameToType(objectTypeName);
-    if (systemObjectType !== eSystemObjectType.eUnknown)
+    const systemObjectType: COMMON.eSystemObjectType = SystemObjectNameToType(objectTypeName);
+    if (systemObjectType !== COMMON.eSystemObjectType.eUnknown)
         return systemObjectType;
 
     switch (objectTypeName) {
@@ -290,83 +275,40 @@ export enum eAuditType {
     eAuthFailed = 8,
 }
 
-export enum eLicense {
-    eViewDownloadCC0 = 1,           // 'View and Download CC0'
-    eViewDownloadRestriction = 2,   // 'View and Download with usage restrictions',
-    eViewOnly = 3,                  // 'View Only',
-    eRestricted = 4,                // 'Restricted', default
-}
-
-export enum ePublishedState {
-    eNotPublished = 0,              // 'Not Published', default
-    eAPIOnly = 1,                   // 'API Only',
-    ePublished = 2,                 // 'Published'
-}
-
-export function LicenseEnumToString(eState: eLicense): string {
-    switch (eState) {
-        case eLicense.eViewDownloadCC0:         return 'View and Download CC0';
-        case eLicense.eViewDownloadRestriction: return 'View and Download with usage restrictions';
-        case eLicense.eViewOnly:                return 'View Only';
-        default:
-        case eLicense.eRestricted:              return 'Restricted';
-    }
-}
-
-export function PublishedStateEnumToString(eState: ePublishedState): string {
-    switch (eState) {
-        case ePublishedState.eAPIOnly:                  return 'API Only';
-        case ePublishedState.ePublished:                return 'Published';
-        default:
-        case ePublishedState.eNotPublished:             return 'Not Published';
-    }
-}
-
-export function LicenseRestrictLevelToPublishedStateEnum(restrictLevel: number): ePublishedState {
+export function LicenseRestrictLevelToPublishedStateEnum(restrictLevel: number): COMMON.ePublishedState {
     if (restrictLevel <= 10)
-        return ePublishedState.ePublished;
+        return COMMON.ePublishedState.ePublished;
     if (restrictLevel <= 20)
-        return ePublishedState.ePublished;
+        return COMMON.ePublishedState.ePublished;
     if (restrictLevel <= 30)
-        return ePublishedState.ePublished;
-    return ePublishedState.eNotPublished;
+        return COMMON.ePublishedState.ePublished;
+    return COMMON.ePublishedState.eNotPublished;
 }
 
 // Keep this in sync with SQL in WorkflowListResult.search()
-export enum eWorkflowJobRunStatus {
-    eUnitialized = 0,
-    eCreated = 1,
-    eRunning = 2,
-    eWaiting = 3,
-    eDone = 4,
-    eError = 5,
-    eCancelled = 6,
-}
-
-// Keep this in sync with SQL in WorkflowListResult.search()
-export function convertWorkflowJobRunStatusEnumToString(eStatus: eWorkflowJobRunStatus): string {
+export function convertWorkflowJobRunStatusEnumToString(eStatus: COMMON.eWorkflowJobRunStatus): string {
     switch (eStatus) {
         default: return 'Uninitialized';
-        case eWorkflowJobRunStatus.eUnitialized: return 'Uninitialized';
-        case eWorkflowJobRunStatus.eCreated: return 'Created';
-        case eWorkflowJobRunStatus.eRunning: return 'Running';
-        case eWorkflowJobRunStatus.eWaiting: return 'Waiting';
-        case eWorkflowJobRunStatus.eDone: return 'Done';
-        case eWorkflowJobRunStatus.eError: return 'Error';
-        case eWorkflowJobRunStatus.eCancelled: return 'Cancelled';
+        case COMMON.eWorkflowJobRunStatus.eUnitialized: return 'Uninitialized';
+        case COMMON.eWorkflowJobRunStatus.eCreated: return 'Created';
+        case COMMON.eWorkflowJobRunStatus.eRunning: return 'Running';
+        case COMMON.eWorkflowJobRunStatus.eWaiting: return 'Waiting';
+        case COMMON.eWorkflowJobRunStatus.eDone: return 'Done';
+        case COMMON.eWorkflowJobRunStatus.eError: return 'Error';
+        case COMMON.eWorkflowJobRunStatus.eCancelled: return 'Cancelled';
     }
 }
 
-export function convertWorkflowJobRunStatusToEnum(Status: number): eWorkflowJobRunStatus {
+export function convertWorkflowJobRunStatusToEnum(Status: number): COMMON.eWorkflowJobRunStatus {
     switch (Status) {
-        default:    return eWorkflowJobRunStatus.eUnitialized;
-        case 0:     return eWorkflowJobRunStatus.eUnitialized;
-        case 1:     return eWorkflowJobRunStatus.eCreated;
-        case 2:     return eWorkflowJobRunStatus.eRunning;
-        case 3:     return eWorkflowJobRunStatus.eWaiting;
-        case 4:     return eWorkflowJobRunStatus.eDone;
-        case 5:     return eWorkflowJobRunStatus.eError;
-        case 6:     return eWorkflowJobRunStatus.eCancelled;
+        default:    return COMMON.eWorkflowJobRunStatus.eUnitialized;
+        case 0:     return COMMON.eWorkflowJobRunStatus.eUnitialized;
+        case 1:     return COMMON.eWorkflowJobRunStatus.eCreated;
+        case 2:     return COMMON.eWorkflowJobRunStatus.eRunning;
+        case 3:     return COMMON.eWorkflowJobRunStatus.eWaiting;
+        case 4:     return COMMON.eWorkflowJobRunStatus.eDone;
+        case 5:     return COMMON.eWorkflowJobRunStatus.eError;
+        case 6:     return COMMON.eWorkflowJobRunStatus.eCancelled;
     }
 }
 

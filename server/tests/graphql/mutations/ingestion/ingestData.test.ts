@@ -16,7 +16,7 @@ import {
     CreateVocabularySetInput
 } from '../../../../types/graphql';
 import { Context } from '../../../../types/resolvers';
-import { eVocabularySetID } from '../../../../cache';
+import * as COMMON from '../../../../../client/src/types/server';
 import { Asset, AssetVersion } from '@prisma/client';
 import * as DBAPI from '../../../../db';
 
@@ -25,7 +25,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
     let createAssetInput: (idVAssetType: number) => Asset;
     let createUserInput: () => CreateUserInput;
     let getVocabularyEntryMap: (vocabularyEntries: VocabularyEntry[]) => Map<number, Vocabulary[]>;
-    let getInitialEntryWithVocabularies: (vocabularies: Map<number, Vocabulary[]>, eVocabularySetID: eVocabularySetID) => number | null;
+    let getInitialEntryWithVocabularies: (vocabularies: Map<number, Vocabulary[]>, eVocabularySetID: COMMON.eVocabularySetID) => number | null;
     let createAssetVersionInput: (idAsset: number, idUser: number) => AssetVersion;
     let createVocabularyInput: (idVocabularySet: number) => CreateVocabularyInput;
     let createVocabularySetInput: () => CreateVocabularySetInput;
@@ -110,16 +110,16 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                         };
 
                         const vocabularyEntriesInput = {
-                            eVocabSetIDs: [eVocabularySetID.eCaptureDataDatasetType, eVocabularySetID.eIdentifierIdentifierType, eVocabularySetID.eCaptureDataFileVariantType]
+                            eVocabSetIDs: [COMMON.eVocabularySetID.eCaptureDataDatasetType, COMMON.eVocabularySetID.eIdentifierIdentifierType, COMMON.eVocabularySetID.eCaptureDataFileVariantType]
                         };
 
                         const { VocabularyEntries } = await graphQLApi.getVocabularyEntries(vocabularyEntriesInput);
 
                         const vocabularyMap = getVocabularyEntryMap(VocabularyEntries);
 
-                        const identifierType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eIdentifierIdentifierType) || 0;
-                        const variantType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eCaptureDataFileVariantType) || 0;
-                        const datasetType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eCaptureDataDatasetType) || 0;
+                        const identifierType = getInitialEntryWithVocabularies(vocabularyMap, COMMON.eVocabularySetID.eIdentifierIdentifierType) || 0;
+                        const variantType = getInitialEntryWithVocabularies(vocabularyMap, COMMON.eVocabularySetID.eCaptureDataFileVariantType) || 0;
+                        const datasetType = getInitialEntryWithVocabularies(vocabularyMap, COMMON.eVocabularySetID.eCaptureDataDatasetType) || 0;
 
                         const identifier: IngestIdentifier = {
                             identifier: 'ark:/65665/p2b-a6ae6ff4-89a5-44b3-9edc-09728f884076',

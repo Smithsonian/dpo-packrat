@@ -1,6 +1,7 @@
 import * as WF from '../../interface';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
+import * as COMMON from '../../../../client/src/types/server';
 
 // This Workflow represents an ingestion action, typically initiated by a user.
 // The workflow itself performs no work (ingestion is performed in the graphQl ingestData routine)
@@ -23,7 +24,7 @@ export class WorkflowIngestion implements WF.IWorkflow {
         const workflowStep: DBAPI.WorkflowStep | null = (!this.workflowData.workflowStep || this.workflowData.workflowStep.length <= 0)
             ? null : this.workflowData.workflowStep[this.workflowData.workflowStep.length - 1];
         if (workflowStep) {
-            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eRunning);
+            workflowStep.setState(COMMON.eWorkflowJobRunStatus.eRunning);
             await workflowStep.update();
         }
         return { success: true };
@@ -33,10 +34,10 @@ export class WorkflowIngestion implements WF.IWorkflow {
         return { success: true, workflowComplete: true };
     }
 
-    async updateStatus(eStatus: DBAPI.eWorkflowJobRunStatus): Promise<WF.WorkflowUpdateResults> {
-        const workflowComplete: boolean = (eStatus === DBAPI.eWorkflowJobRunStatus.eDone
-            || eStatus === DBAPI.eWorkflowJobRunStatus.eError
-            || eStatus === DBAPI.eWorkflowJobRunStatus.eCancelled);
+    async updateStatus(eStatus: COMMON.eWorkflowJobRunStatus): Promise<WF.WorkflowUpdateResults> {
+        const workflowComplete: boolean = (eStatus === COMMON.eWorkflowJobRunStatus.eDone
+            || eStatus === COMMON.eWorkflowJobRunStatus.eError
+            || eStatus === COMMON.eWorkflowJobRunStatus.eCancelled);
 
         const workflowStep: DBAPI.WorkflowStep | null = (!this.workflowData.workflowStep || this.workflowData.workflowStep.length <= 0)
             ? null : this.workflowData.workflowStep[this.workflowData.workflowStep.length - 1];
