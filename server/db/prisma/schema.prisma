@@ -383,6 +383,7 @@ model Model {
   FileEncoding                                   String?                 @mariasql.VarChar(40)
   IsDracoCompressed                              Boolean?
   AutomationTag                                  String?                 @mariasql.VarChar(256)
+  CountTriangles                                 Int?
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_asset1")
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary?             @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary1")
   Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary?             @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary5")
@@ -469,6 +470,7 @@ model ModelObject {
   IsTwoManifoldBounded           Boolean?
   IsWatertight                   Boolean?
   SelfIntersecting               Boolean?
+  CountTriangles                 Int?
   Model                          Model                          @relation(fields: [idModel], references: [idModel], onDelete: NoAction, onUpdate: NoAction, map: "fk_modelobject_model1")
   ModelObjectModelMaterialXref   ModelObjectModelMaterialXref[]
 

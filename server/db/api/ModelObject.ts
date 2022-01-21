@@ -26,6 +26,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
     IsTwoManifoldBounded!: boolean | null;
     IsWatertight!: boolean | null;
     SelfIntersecting!: boolean | null;
+    CountTriangles!: number | null;
 
     constructor(input: ModelObjectBase) {
         super(input);
@@ -38,7 +39,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
         try {
             const { idModel, BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z, CountVertices,
                 CountFaces, CountColorChannels, CountTextureCoordinateChannels, HasBones, HasFaceNormals, HasTangents, HasTextureCoordinates,
-                HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded, IsTwoManifoldBounded, IsWatertight, SelfIntersecting } = this;
+                HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded, IsTwoManifoldBounded, IsWatertight, SelfIntersecting, CountTriangles } = this;
             ({ idModelObject: this.idModelObject, idModel: this.idModel,
                 BoundingBoxP1X: this.BoundingBoxP1X, BoundingBoxP1Y: this.BoundingBoxP1Y, BoundingBoxP1Z: this.BoundingBoxP1Z,
                 BoundingBoxP2X: this.BoundingBoxP2X, BoundingBoxP2Y: this.BoundingBoxP2Y, BoundingBoxP2Z: this.BoundingBoxP2Z,
@@ -46,14 +47,14 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
                 CountTextureCoordinateChannels: this.CountTextureCoordinateChannels, HasBones: this.HasBones, HasFaceNormals: this.HasFaceNormals,
                 HasTangents: this.HasTangents, HasTextureCoordinates: this.HasTextureCoordinates, HasVertexNormals: this.HasVertexNormals,
                 HasVertexColor: this.HasVertexColor, IsTwoManifoldUnbounded: this.IsTwoManifoldUnbounded, IsTwoManifoldBounded: this.IsTwoManifoldBounded,
-                IsWatertight: this.IsWatertight, SelfIntersecting: this.SelfIntersecting } =
+                IsWatertight: this.IsWatertight, SelfIntersecting: this.SelfIntersecting, CountTriangles: this.CountTriangles } =
                 await DBC.DBConnection.prisma.modelObject.create({
                     data: {
                         Model:              { connect: { idModel }, },
                         BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
                         CountVertices, CountFaces, CountColorChannels, CountTextureCoordinateChannels, HasBones, HasFaceNormals,
                         HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded,
-                        IsTwoManifoldBounded, IsWatertight, SelfIntersecting
+                        IsTwoManifoldBounded, IsWatertight, SelfIntersecting, CountTriangles
                     },
                 }));
             return true;
@@ -68,7 +69,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
             const { idModelObject, idModel, BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y,
                 BoundingBoxP2Z,CountVertices, CountFaces, CountColorChannels, CountTextureCoordinateChannels, HasBones, HasFaceNormals,
                 HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded, IsTwoManifoldBounded,
-                IsWatertight, SelfIntersecting } = this;
+                IsWatertight, SelfIntersecting, CountTriangles } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.modelObject.update({
                 where: { idModelObject, },
                 data: {
@@ -76,7 +77,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
                     BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
                     CountVertices, CountFaces, CountColorChannels, CountTextureCoordinateChannels, HasBones, HasFaceNormals,
                     HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded,
-                    IsTwoManifoldBounded, IsWatertight, SelfIntersecting
+                    IsTwoManifoldBounded, IsWatertight, SelfIntersecting, CountTriangles
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
