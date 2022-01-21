@@ -1086,7 +1086,7 @@ describe('DB Creation Test Suite', () => {
                 idVPurpose: vocabulary.idVocabulary,
                 idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: assetThumbnail.idAsset,
-                CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+                CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountTriangles: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
                 CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
                 idModel: 0
             });
@@ -1103,7 +1103,7 @@ describe('DB Creation Test Suite', () => {
             idVPurpose: null,
             idVFileType: null,
             idAssetThumbnail: null,
-            CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+            CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountTriangles: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
             CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
             idModel: 0
         });
@@ -1189,7 +1189,7 @@ describe('DB Creation Test Suite', () => {
             modelObject = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
                 BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
-                CountVertices: 100, CountFaces: 50, CountColorChannels: 0, CountTextureCoordinateChannels: 0, HasBones: true, HasFaceNormals: false,
+                CountVertices: 100, CountFaces: 50, CountTriangles: 50, CountColorChannels: 0, CountTextureCoordinateChannels: 0, HasBones: true, HasFaceNormals: false,
                 HasTangents: true, HasTextureCoordinates: false, HasVertexNormals: true, HasVertexColor: false, IsTwoManifoldUnbounded: true,
                 IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
                 idModelObject: 0
@@ -1200,7 +1200,7 @@ describe('DB Creation Test Suite', () => {
             modelObject2 = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
                 BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 2, BoundingBoxP2Y: 2, BoundingBoxP2Z: 2,
-                CountVertices: null, CountFaces: null, CountColorChannels: 0, CountTextureCoordinateChannels: 0, HasBones: false, HasFaceNormals: false,
+                CountVertices: null, CountFaces: null, CountTriangles: null, CountColorChannels: 0, CountTextureCoordinateChannels: 0, HasBones: false, HasFaceNormals: false,
                 HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: false, HasVertexColor: true, IsTwoManifoldUnbounded: false,
                 IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
                 idModelObject: 0
@@ -1211,7 +1211,7 @@ describe('DB Creation Test Suite', () => {
             modelObject3 = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
                 BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null, BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
-                CountVertices: null, CountFaces: null, CountColorChannels: null, CountTextureCoordinateChannels: null, HasBones: null, HasFaceNormals: null,
+                CountVertices: null, CountFaces: null, CountTriangles: null, CountColorChannels: null, CountTextureCoordinateChannels: null, HasBones: null, HasFaceNormals: null,
                 HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: null, HasVertexColor: null, IsTwoManifoldUnbounded: null,
                 IsTwoManifoldBounded: null, IsWatertight: null, SelfIntersecting: null,
                 idModelObject: 0
@@ -5050,7 +5050,7 @@ describe('DB Fetch Special Test Suite', () => {
             idVPurpose: null,
             idVFileType: null,
             idAssetThumbnail: null,
-            CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+            CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountTriangles: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
             CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
             idModel: 0
         });
@@ -5070,6 +5070,7 @@ describe('DB Fetch Special Test Suite', () => {
             expect(modelClone.CountAnimations).toEqual(model.CountAnimations);
             expect(modelClone.CountCameras).toEqual(model.CountCameras);
             expect(modelClone.CountFaces).toEqual(model.CountFaces);
+            expect(modelClone.CountTriangles).toEqual(model.CountTriangles);
             expect(modelClone.CountLights).toEqual(model.CountLights);
             expect(modelClone.CountMaterials).toEqual(model.CountMaterials);
             expect(modelClone.CountMeshes).toEqual(model.CountMeshes);

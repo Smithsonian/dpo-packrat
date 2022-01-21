@@ -612,14 +612,14 @@ export class IndexSolr implements NAV.IIndexer {
 
         const captureDataFiles: DBAPI.CaptureDataFile[] | null = await DBAPI.CaptureDataFile.fetchFromCaptureData(captureData.idCaptureData);
         if (captureDataFiles) {
-            const variantTypeMap: Map<string, boolean> = new Map<string, boolean>();
+            const variantTypeSet: Set<string> = new Set<string>();
             for (const captureDataFile of captureDataFiles) {
                 const variantType: string | null = await this.lookupVocabulary(captureDataFile.idVVariantType);
                 if (variantType)
-                    variantTypeMap.set(variantType, true);
+                    variantTypeSet.add(variantType);
             }
-            if (variantTypeMap.size > 0)
-                doc.CDVariantType = [...variantTypeMap.keys()];
+            if (variantTypeSet.size > 0)
+                doc.CDVariantType = [...variantTypeSet];
         }
         this.countCaptureData++;
         return true;
@@ -646,6 +646,7 @@ export class IndexSolr implements NAV.IIndexer {
         doc.ModelCountAnimations = model.CountAnimations;
         doc.ModelCountCameras = model.CountCameras;
         doc.ModelCountFaces = model.CountFaces;
+        doc.ModelCountTriangles = model.CountTriangles;
         doc.ModelCountLights = model.CountLights;
         doc.ModelCountMaterials = model.CountMaterials;
         doc.ModelCountMeshes = model.CountMeshes;
@@ -655,40 +656,41 @@ export class IndexSolr implements NAV.IIndexer {
         doc.ModelFileEncoding = model.FileEncoding;
         doc.ModelIsDracoCompressed = model.IsDracoCompressed;
 
-        const modelMaterialNameMap: Map<string, boolean> = new Map<string, boolean>();
-        const modelMaterialChannelTypeMap: Map<string, boolean> = new Map<string, boolean>();
-        const modelMaterialChannelTypeOtherMap: Map<string, boolean> = new Map<string, boolean>();
-        const modelMaterialChannelUVMapEmbeddedMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMaterialChannelPositionMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMaterialChannelWidthMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMaterialChannelValuesMap: Map<string, boolean> = new Map<string, boolean>();
-        const modelMaterialChannelAdditionalAttributesMap: Map<string, boolean> = new Map<string, boolean>();
-        const modelMaterialUVMapEdgeLengthMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectBoundingBoxP1XMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectBoundingBoxP1YMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectBoundingBoxP1ZMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectBoundingBoxP2XMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectBoundingBoxP2YMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectBoundingBoxP2ZMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectCountVerticesMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectCountFacesMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectCountColorChannelsMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectCountTextureCoordinateChannelsMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectHasBonesMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelObjectHasFaceNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelObjectHasTangentsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelObjectHasTextureCoordinatesMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelObjectHasVertexNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelObjectHasVertexColorMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelObjectIsTwoManifoldUnboundedMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelObjectIsTwoManifoldBoundedMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelObjectIsWatertightMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelObjectSelfIntersectingMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMaterialNameSet: Set<string> = new Set<string>();
+        const modelMaterialChannelTypeSet: Set<string> = new Set<string>();
+        const modelMaterialChannelTypeOtherSet: Set<string> = new Set<string>();
+        const modelMaterialChannelUVMapEmbeddedSet: Set<boolean> = new Set<boolean>();
+        const modelMaterialChannelPositionSet: Set<number> = new Set<number>();
+        const modelMaterialChannelWidthSet: Set<number> = new Set<number>();
+        const modelMaterialChannelValuesSet: Set<string> = new Set<string>();
+        const modelMaterialChannelAdditionalAttributesSet: Set<string> = new Set<string>();
+        const modelMaterialUVMapEdgeLengthSet: Set<number> = new Set<number>();
+        const modelObjectBoundingBoxP1XSet: Set<number> = new Set<number>();
+        const modelObjectBoundingBoxP1YSet: Set<number> = new Set<number>();
+        const modelObjectBoundingBoxP1ZSet: Set<number> = new Set<number>();
+        const modelObjectBoundingBoxP2XSet: Set<number> = new Set<number>();
+        const modelObjectBoundingBoxP2YSet: Set<number> = new Set<number>();
+        const modelObjectBoundingBoxP2ZSet: Set<number> = new Set<number>();
+        const modelObjectCountVerticesSet: Set<number> = new Set<number>();
+        const modelObjectCountFacesSet: Set<number> = new Set<number>();
+        const modelObjectCountTrianglesSet: Set<number> = new Set<number>();
+        const modelObjectCountColorChannelsSet: Set<number> = new Set<number>();
+        const modelObjectCountTextureCoordinateChannelsSet: Set<number> = new Set<number>();
+        const modelObjectHasBonesSet: Set<boolean> = new Set<boolean>();
+        const modelObjectHasFaceNormalsSet: Set<boolean> = new Set<boolean>();
+        const modelObjectHasTangentsSet: Set<boolean> = new Set<boolean>();
+        const modelObjectHasTextureCoordinatesSet: Set<boolean> = new Set<boolean>();
+        const modelObjectHasVertexNormalsSet: Set<boolean> = new Set<boolean>();
+        const modelObjectHasVertexColorSet: Set<boolean> = new Set<boolean>();
+        const modelObjectIsTwoManifoldUnboundedSet: Set<boolean> = new Set<boolean>();
+        const modelObjectIsTwoManifoldBoundedSet: Set<boolean> = new Set<boolean>();
+        const modelObjectIsWatertightSet: Set<boolean> = new Set<boolean>();
+        const modelObjectSelfIntersectingSet: Set<boolean> = new Set<boolean>();
 
         if (modelConstellation.ModelMaterials) {
             for (const modelMaterial of modelConstellation.ModelMaterials) {
                 if (modelMaterial.Name)
-                    modelMaterialNameMap.set(modelMaterial.Name, true);
+                    modelMaterialNameSet.add(modelMaterial.Name);
             }
         }
 
@@ -697,83 +699,85 @@ export class IndexSolr implements NAV.IIndexer {
                 if (modelMaterialChannel.idVMaterialType) {
                     const materialType = await this.computeVocabulary(modelMaterialChannel.idVMaterialType);
                     if (materialType)
-                        modelMaterialChannelTypeMap.set(materialType, true);
+                        modelMaterialChannelTypeSet.add(materialType);
                 }
-                if (modelMaterialChannel.MaterialTypeOther) modelMaterialChannelTypeOtherMap.set(modelMaterialChannel.MaterialTypeOther, true);
-                if (modelMaterialChannel.UVMapEmbedded !== null) modelMaterialChannelUVMapEmbeddedMap.set(modelMaterialChannel.UVMapEmbedded, true);
-                if (modelMaterialChannel.ChannelPosition) modelMaterialChannelPositionMap.set(modelMaterialChannel.ChannelPosition, true);
-                if (modelMaterialChannel.ChannelWidth) modelMaterialChannelWidthMap.set(modelMaterialChannel.ChannelWidth, true);
+                if (modelMaterialChannel.MaterialTypeOther) modelMaterialChannelTypeOtherSet.add(modelMaterialChannel.MaterialTypeOther);
+                if (modelMaterialChannel.UVMapEmbedded !== null) modelMaterialChannelUVMapEmbeddedSet.add(modelMaterialChannel.UVMapEmbedded);
+                if (modelMaterialChannel.ChannelPosition) modelMaterialChannelPositionSet.add(modelMaterialChannel.ChannelPosition);
+                if (modelMaterialChannel.ChannelWidth) modelMaterialChannelWidthSet.add(modelMaterialChannel.ChannelWidth);
 
                 let channelValue: string = [modelMaterialChannel.Scalar1, modelMaterialChannel.Scalar2,
                     modelMaterialChannel.Scalar3, modelMaterialChannel.Scalar4].join(', ');
                 if (channelValue.indexOf(',') >= 0)
                     channelValue = `(${channelValue})`;
-                if (channelValue) modelMaterialChannelValuesMap.set(channelValue, true);
+                if (channelValue) modelMaterialChannelValuesSet.add(channelValue);
 
-                if (modelMaterialChannel.AdditionalAttributes) modelMaterialChannelAdditionalAttributesMap.set(modelMaterialChannel.AdditionalAttributes, true);
+                if (modelMaterialChannel.AdditionalAttributes) modelMaterialChannelAdditionalAttributesSet.add(modelMaterialChannel.AdditionalAttributes);
             }
         }
 
         if (modelConstellation.ModelMaterialUVMaps) {
             for (const modelMaterialUVMap of modelConstellation.ModelMaterialUVMaps)
-                modelMaterialUVMapEdgeLengthMap.set(modelMaterialUVMap.UVMapEdgeLength, true);
+                modelMaterialUVMapEdgeLengthSet.add(modelMaterialUVMap.UVMapEdgeLength);
         }
 
         const modelObjectsList: DBAPI.ModelObject[] = [];
         if (modelConstellation.ModelObjects)
             modelObjectsList.push(...modelConstellation.ModelObjects);
         for (const modelObject of modelObjectsList) {
-            if (modelObject.BoundingBoxP1X) modelObjectBoundingBoxP1XMap.set(modelObject.BoundingBoxP1X, true);
-            if (modelObject.BoundingBoxP1Y) modelObjectBoundingBoxP1YMap.set(modelObject.BoundingBoxP1Y, true);
-            if (modelObject.BoundingBoxP1Z) modelObjectBoundingBoxP1ZMap.set(modelObject.BoundingBoxP1Z, true);
-            if (modelObject.BoundingBoxP2X) modelObjectBoundingBoxP2XMap.set(modelObject.BoundingBoxP2X, true);
-            if (modelObject.BoundingBoxP2Y) modelObjectBoundingBoxP2YMap.set(modelObject.BoundingBoxP2Y, true);
-            if (modelObject.BoundingBoxP2Z) modelObjectBoundingBoxP2ZMap.set(modelObject.BoundingBoxP2Z, true);
-            if (modelObject.CountVertices) modelObjectCountVerticesMap.set(modelObject.CountVertices, true);
-            if (modelObject.CountFaces) modelObjectCountFacesMap.set(modelObject.CountFaces, true);
-            if (modelObject.CountColorChannels) modelObjectCountColorChannelsMap.set(modelObject.CountColorChannels, true);
-            if (modelObject.CountTextureCoordinateChannels) modelObjectCountTextureCoordinateChannelsMap.set(modelObject.CountTextureCoordinateChannels, true);
-            if (modelObject.HasBones) modelObjectHasBonesMap.set(modelObject.HasBones, true);
-            if (modelObject.HasFaceNormals) modelObjectHasFaceNormalsMap.set(modelObject.HasFaceNormals, true);
-            if (modelObject.HasTangents) modelObjectHasTangentsMap.set(modelObject.HasTangents, true);
-            if (modelObject.HasTextureCoordinates) modelObjectHasTextureCoordinatesMap.set(modelObject.HasTextureCoordinates, true);
-            if (modelObject.HasVertexNormals) modelObjectHasVertexNormalsMap.set(modelObject.HasVertexNormals, true);
-            if (modelObject.HasVertexColor) modelObjectHasVertexColorMap.set(modelObject.HasVertexColor, true);
-            if (modelObject.IsTwoManifoldUnbounded) modelObjectIsTwoManifoldUnboundedMap.set(modelObject.IsTwoManifoldUnbounded, true);
-            if (modelObject.IsTwoManifoldBounded) modelObjectIsTwoManifoldBoundedMap.set(modelObject.IsTwoManifoldBounded, true);
-            if (modelObject.IsWatertight) modelObjectIsWatertightMap.set(modelObject.IsWatertight, true);
-            if (modelObject.SelfIntersecting) modelObjectSelfIntersectingMap.set(modelObject.SelfIntersecting, true);
+            if (modelObject.BoundingBoxP1X) modelObjectBoundingBoxP1XSet.add(modelObject.BoundingBoxP1X);
+            if (modelObject.BoundingBoxP1Y) modelObjectBoundingBoxP1YSet.add(modelObject.BoundingBoxP1Y);
+            if (modelObject.BoundingBoxP1Z) modelObjectBoundingBoxP1ZSet.add(modelObject.BoundingBoxP1Z);
+            if (modelObject.BoundingBoxP2X) modelObjectBoundingBoxP2XSet.add(modelObject.BoundingBoxP2X);
+            if (modelObject.BoundingBoxP2Y) modelObjectBoundingBoxP2YSet.add(modelObject.BoundingBoxP2Y);
+            if (modelObject.BoundingBoxP2Z) modelObjectBoundingBoxP2ZSet.add(modelObject.BoundingBoxP2Z);
+            if (modelObject.CountVertices) modelObjectCountVerticesSet.add(modelObject.CountVertices);
+            if (modelObject.CountFaces) modelObjectCountFacesSet.add(modelObject.CountFaces);
+            if (modelObject.CountTriangles) modelObjectCountTrianglesSet.add(modelObject.CountTriangles);
+            if (modelObject.CountColorChannels) modelObjectCountColorChannelsSet.add(modelObject.CountColorChannels);
+            if (modelObject.CountTextureCoordinateChannels) modelObjectCountTextureCoordinateChannelsSet.add(modelObject.CountTextureCoordinateChannels);
+            if (modelObject.HasBones) modelObjectHasBonesSet.add(modelObject.HasBones);
+            if (modelObject.HasFaceNormals) modelObjectHasFaceNormalsSet.add(modelObject.HasFaceNormals);
+            if (modelObject.HasTangents) modelObjectHasTangentsSet.add(modelObject.HasTangents);
+            if (modelObject.HasTextureCoordinates) modelObjectHasTextureCoordinatesSet.add(modelObject.HasTextureCoordinates);
+            if (modelObject.HasVertexNormals) modelObjectHasVertexNormalsSet.add(modelObject.HasVertexNormals);
+            if (modelObject.HasVertexColor) modelObjectHasVertexColorSet.add(modelObject.HasVertexColor);
+            if (modelObject.IsTwoManifoldUnbounded) modelObjectIsTwoManifoldUnboundedSet.add(modelObject.IsTwoManifoldUnbounded);
+            if (modelObject.IsTwoManifoldBounded) modelObjectIsTwoManifoldBoundedSet.add(modelObject.IsTwoManifoldBounded);
+            if (modelObject.IsWatertight) modelObjectIsWatertightSet.add(modelObject.IsWatertight);
+            if (modelObject.SelfIntersecting) modelObjectSelfIntersectingSet.add(modelObject.SelfIntersecting);
 
         }
-        doc.ModelMaterialName = [...modelMaterialNameMap.keys()];
-        doc.ModelMaterialChannelType = [...modelMaterialChannelTypeMap.keys()];
-        doc.ModelMaterialChannelTypeOther = [...modelMaterialChannelTypeOtherMap.keys()];
-        doc.ModelMaterialChannelUVMapEmbedded = [...modelMaterialChannelUVMapEmbeddedMap.keys()];
-        doc.ModelMaterialChannelPosition = [...modelMaterialChannelPositionMap.keys()];
-        doc.ModelMaterialChannelWidth = [...modelMaterialChannelWidthMap.keys()];
-        doc.ModelMaterialChannelValues = [...modelMaterialChannelValuesMap.keys()];
-        doc.ModelMaterialChannelAdditionalAttributes = [...modelMaterialChannelAdditionalAttributesMap.keys()];
-        doc.ModelMaterialUVMapEdgeLength = [...modelMaterialUVMapEdgeLengthMap.keys()];
-        doc.ModelObjectBoundingBoxP1X = [...modelObjectBoundingBoxP1XMap.keys()];
-        doc.ModelObjectBoundingBoxP1Y = [...modelObjectBoundingBoxP1YMap.keys()];
-        doc.ModelObjectBoundingBoxP1Z = [...modelObjectBoundingBoxP1ZMap.keys()];
-        doc.ModelObjectBoundingBoxP2X = [...modelObjectBoundingBoxP2XMap.keys()];
-        doc.ModelObjectBoundingBoxP2Y = [...modelObjectBoundingBoxP2YMap.keys()];
-        doc.ModelObjectBoundingBoxP2Z = [...modelObjectBoundingBoxP2ZMap.keys()];
-        doc.ModelObjectCountVertices = [...modelObjectCountVerticesMap.keys()];
-        doc.ModelObjectCountFaces = [...modelObjectCountFacesMap.keys()];
-        doc.ModelObjectCountColorChannels = [...modelObjectCountColorChannelsMap.keys()];
-        doc.ModelObjectCountTextureCoordinateChannels = [...modelObjectCountTextureCoordinateChannelsMap.keys()];
-        doc.ModelObjectHasBones = [...modelObjectHasBonesMap.keys()];
-        doc.ModelObjectHasFaceNormals = [...modelObjectHasFaceNormalsMap.keys()];
-        doc.ModelObjectHasTangents = [...modelObjectHasTangentsMap.keys()];
-        doc.ModelObjectHasTextureCoordinates = [...modelObjectHasTextureCoordinatesMap.keys()];
-        doc.ModelObjectHasVertexNormals = [...modelObjectHasVertexNormalsMap.keys()];
-        doc.ModelObjectHasVertexColor = [...modelObjectHasVertexColorMap.keys()];
-        doc.ModelObjectIsTwoManifoldUnbounded = [...modelObjectIsTwoManifoldUnboundedMap.keys()];
-        doc.ModelObjectIsTwoManifoldBounded = [...modelObjectIsTwoManifoldBoundedMap.keys()];
-        doc.ModelObjectIsWatertight = [...modelObjectIsWatertightMap.keys()];
-        doc.ModelObjectSelfIntersecting = [...modelObjectSelfIntersectingMap.keys()];
+        doc.ModelMaterialName = [...modelMaterialNameSet];
+        doc.ModelMaterialChannelType = [...modelMaterialChannelTypeSet];
+        doc.ModelMaterialChannelTypeOther = [...modelMaterialChannelTypeOtherSet];
+        doc.ModelMaterialChannelUVMapEmbedded = [...modelMaterialChannelUVMapEmbeddedSet];
+        doc.ModelMaterialChannelPosition = [...modelMaterialChannelPositionSet];
+        doc.ModelMaterialChannelWidth = [...modelMaterialChannelWidthSet];
+        doc.ModelMaterialChannelValues = [...modelMaterialChannelValuesSet];
+        doc.ModelMaterialChannelAdditionalAttributes = [...modelMaterialChannelAdditionalAttributesSet];
+        doc.ModelMaterialUVMapEdgeLength = [...modelMaterialUVMapEdgeLengthSet];
+        doc.ModelObjectBoundingBoxP1X = [...modelObjectBoundingBoxP1XSet];
+        doc.ModelObjectBoundingBoxP1Y = [...modelObjectBoundingBoxP1YSet];
+        doc.ModelObjectBoundingBoxP1Z = [...modelObjectBoundingBoxP1ZSet];
+        doc.ModelObjectBoundingBoxP2X = [...modelObjectBoundingBoxP2XSet];
+        doc.ModelObjectBoundingBoxP2Y = [...modelObjectBoundingBoxP2YSet];
+        doc.ModelObjectBoundingBoxP2Z = [...modelObjectBoundingBoxP2ZSet];
+        doc.ModelObjectCountVertices = [...modelObjectCountVerticesSet];
+        doc.ModelObjectCountFaces = [...modelObjectCountFacesSet];
+        doc.ModelObjectCountTriangles = [...modelObjectCountTrianglesSet];
+        doc.ModelObjectCountColorChannels = [...modelObjectCountColorChannelsSet];
+        doc.ModelObjectCountTextureCoordinateChannels = [...modelObjectCountTextureCoordinateChannelsSet];
+        doc.ModelObjectHasBones = [...modelObjectHasBonesSet];
+        doc.ModelObjectHasFaceNormals = [...modelObjectHasFaceNormalsSet];
+        doc.ModelObjectHasTangents = [...modelObjectHasTangentsSet];
+        doc.ModelObjectHasTextureCoordinates = [...modelObjectHasTextureCoordinatesSet];
+        doc.ModelObjectHasVertexNormals = [...modelObjectHasVertexNormalsSet];
+        doc.ModelObjectHasVertexColor = [...modelObjectHasVertexColorSet];
+        doc.ModelObjectIsTwoManifoldUnbounded = [...modelObjectIsTwoManifoldUnboundedSet];
+        doc.ModelObjectIsTwoManifoldBounded = [...modelObjectIsTwoManifoldBoundedSet];
+        doc.ModelObjectIsWatertight = [...modelObjectIsWatertightSet];
+        doc.ModelObjectSelfIntersecting = [...modelObjectSelfIntersectingSet];
 
         // TODO: should we turn multivalued metrics and bounding boxes into single valued attributes, and combine the multiple values in a meaningful way (e.g. add point and face counts, combine bounding boxes)
         this.countModel++;

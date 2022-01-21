@@ -135,6 +135,7 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                             <Box className={classes.notRequiredFields}>
                                 <ReadOnlyRow label='Vertex Count' value={modelObject.CountVertices} />
                                 <ReadOnlyRow label='Face Count' value={modelObject.CountFaces} />
+                                <ReadOnlyRow label='Triangle Count' value={modelObject.CountTriangles} />
                                 <ReadOnlyRow label='Color Channel Count' value={modelObject.CountColorChannels} />
                                 <ReadOnlyRow label='Texture Coord Channel Count' value={modelObject.CountTextureCoordinateChannels} />
                                 <ReadOnlyRow label='Has Bones?' value={interpretTrinary(modelObject.HasBones)} />
