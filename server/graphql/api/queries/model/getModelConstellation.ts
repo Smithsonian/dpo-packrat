@@ -27,6 +27,7 @@ const getModelConstellation = gql`
                     CountAnimations
                     CountCameras
                     CountFaces
+                    CountTriangles
                     CountLights
                     CountMaterials
                     CountMeshes
@@ -47,6 +48,7 @@ const getModelConstellation = gql`
                     BoundingBoxP2Z
                     CountVertices
                     CountFaces
+                    CountTriangles
                     CountColorChannels
                     CountTextureCoordinateChannels
                     HasBones
