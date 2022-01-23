@@ -7,8 +7,12 @@ ADD package.json yarn.lock ./
 COPY . .
 
 FROM base AS server-builder
-# Remove client from server build
-RUN rm -rf client
+# Remove client files, except server.ts, to prevent duplication
+RUN rm -rf client/build
+RUN rm -rf client/node_modules
+RUN rm -rf client/public
+RUN find client/src -maxdepth 1 ! -path client/src/types ! -path client/src -type d -exec rm -rf {} +
+RUN find client -type f -not -name 'server.ts' -delete
 # Install git, needed to fetch npm-server-webdav
 RUN apk update
 RUN apk add git

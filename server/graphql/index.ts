@@ -5,6 +5,7 @@ import GraphQLApi from './api';
 import schema from './schema';
 import { isAuthenticated } from '../http/auth';
 import * as LOG from '../utils/logger';
+import * as COMMON from '../../client/src/types/server';
 
 const unauthenticatedGQLQueries: Set<string> = new Set<string>([
     'getCurrentUser',
@@ -20,7 +21,7 @@ const ApolloServerOptions: ApolloServerExpressConfig = {
         if (!isAuthenticated(req)) {
             const gqlQuery: string = computeGQLQuery(req) || '';
             if (!unauthenticatedGQLQueries.has(gqlQuery))
-                throw new AuthenticationError(`GraphQL user is not authenticated for ${gqlQuery}`); // move this message to common source, shared to client/src/types/server.ts
+                throw new AuthenticationError(`${COMMON.authenticationFailureMessage} for ${gqlQuery}`);
         }
 
         return {

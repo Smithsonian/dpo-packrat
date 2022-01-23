@@ -7,6 +7,7 @@ import { WorkflowUpload } from './WorkflowUpload';
 import * as COOK from '../../../job/impl/Cook';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import * as DBAPI from '../../../db';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import * as H from '../../../utils/helpers';
@@ -50,14 +51,14 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return null;
         }
 
-        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}] ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}] ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
         if (!WFC)
             return null;
 
         const workflow: WF.IWorkflow | null = await this.fetchWorkflowImpl(workflowParams, WFC);
         if (!workflow) {
-            LOG.error(`WorkflowEngine.create failed to fetch workflow implementation ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
+            LOG.error(`WorkflowEngine.create failed to fetch workflow implementation ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
             return null;
         }
         if (WFC.workflow)
@@ -65,7 +66,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         const startResults: H.IOResults = await workflow.start();
         if (!startResults) {
-            LOG.error(`WorkflowEngine.create failed to start workflow ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
+            LOG.error(`WorkflowEngine.create failed to start workflow ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
             return null;
         }
         LOG.info(`WorkflowEngine.created workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
@@ -108,18 +109,18 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return result;
     }
 
-    async event(eWorkflowEvent: CACHE.eVocabularyID, workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
-        LOG.info(`WorkflowEngine.event ${CACHE.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
-        const idVWorkflowEvent: number | undefined = await WorkflowEngine.computeWorkflowIDFromEnum(eWorkflowEvent, CACHE.eVocabularySetID.eWorkflowEvent);
+    async event(eWorkflowEvent: COMMON.eVocabularyID, workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
+        LOG.info(`WorkflowEngine.event ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
+        const idVWorkflowEvent: number | undefined = await WorkflowEngine.computeWorkflowIDFromEnum(eWorkflowEvent, COMMON.eVocabularySetID.eWorkflowEvent);
         if (!idVWorkflowEvent) {
-            LOG.error(`WorkflowEngine.event called with invalid workflow event type ${CACHE.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
+            LOG.error(`WorkflowEngine.event called with invalid workflow event type ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
             return null;
         }
 
         switch (eWorkflowEvent) {
-            case CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject: return this.eventIngestionIngestObject(workflowParams);
+            case COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject: return this.eventIngestionIngestObject(workflowParams);
             default:
-                LOG.info(`WorkflowEngine.event called with unhandled workflow event type ${CACHE.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
+                LOG.info(`WorkflowEngine.event called with unhandled workflow event type ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
                 return null;
         }
     }
@@ -159,7 +160,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
             // for now, we only have special rules for ingestion of asset versions owned by models and scenes:
             switch (oID.eObjectType) {
-                case DBAPI.eSystemObjectType.eModel:
+                case COMMON.eSystemObjectType.eModel:
                     if (!CMIR) { // lookup model info, if we haven't already
                         CMIR = await this.computeModelInfo(oID.idObject, asset.idSystemObject);
                         if (CMIR.exitEarly || CMIR.assetVersionGeometry === undefined) {
@@ -173,7 +174,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     }
                     break;
 
-                case DBAPI.eSystemObjectType.eScene:
+                case COMMON.eSystemObjectType.eScene:
                     if (modelTransformUpdated) { // only progress through scene ingestion workflows if our model transform was updated
                         if (!CSIR) {
                             CSIR = await this.computeSceneInfo(oID.idObject, asset.idSystemObject);
@@ -217,21 +218,21 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return null;
         }
 
-        const eModelType: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.mapModelFileByExtensionID(CMIR.assetVersionGeometry.FileName);
+        const eModelType: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.mapModelFileByExtensionID(CMIR.assetVersionGeometry.FileName);
         switch (eModelType) {
             // Allowable types!
-            case CACHE.eVocabularyID.eModelFileTypestl:
-            case CACHE.eVocabularyID.eModelFileTypeply:
-            case CACHE.eVocabularyID.eModelFileTypeobj:
-            case CACHE.eVocabularyID.eModelFileTypefbx:
-            case CACHE.eVocabularyID.eModelFileTypewrl:
-            case CACHE.eVocabularyID.eModelFileTypex3d:
-            case CACHE.eVocabularyID.eModelFileTypedae:
+            case COMMON.eVocabularyID.eModelFileTypestl:
+            case COMMON.eVocabularyID.eModelFileTypeply:
+            case COMMON.eVocabularyID.eModelFileTypeobj:
+            case COMMON.eVocabularyID.eModelFileTypefbx:
+            case COMMON.eVocabularyID.eModelFileTypewrl:
+            case COMMON.eVocabularyID.eModelFileTypex3d:
+            case COMMON.eVocabularyID.eModelFileTypedae:
                 break;
 
             // All others will not result in scene or download generation
             default:
-                LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping unsupported model type ${eModelType ? CACHE.eVocabularyID[eModelType] : 'unknown'} for ${JSON.stringify(CMIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+                LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping unsupported model type ${eModelType ? COMMON.eVocabularyID[eModelType] : 'unknown'} for ${JSON.stringify(CMIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
                 return null;
         }
 
@@ -257,12 +258,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // initiate WorkflowJob for cook si-voyager-scene
         if (CMIR.units !== undefined) {
             const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
-                new WFP.WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
+                new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
                     new COOK.JobCookSIVoyagerSceneParameters(CMIR.idModel, CMIR.assetVersionGeometry.FileName, CMIR.units,
                     CMIR.assetVersionDiffuse?.FileName, baseName + '.svx.json'));
 
             const wfParamSIVoyagerScene: WF.WorkflowParameters = {
-                eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
+                eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
                 idSystemObject,
                 idProject: workflowParams.idProject,
                 idUserInitiator: workflowParams.idUserInitiator,
@@ -310,12 +311,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     idSystemObjectClone.push(SOSceneAsset.idSystemObject);
 
                 const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
-                    new WFP.WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
+                    new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
                         new COOK.JobCookSIGenerateDownloadsParameters(SO.idScene, CMIR.idModel, CMIR.assetVersionGeometry.FileName,
                             sceneAssetVersion.FileName, CMIR.assetVersionDiffuse?.FileName, CMIR.assetVersionMTL?.FileName, baseName));
 
                 const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
-                    eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
+                    eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
                     idSystemObject: idSystemObjectClone,
                     idProject: workflowParams.idProject,
                     idUserInitiator: workflowParams.idUserInitiator,
@@ -369,12 +370,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // initiate WorkflowJob for cook si-generate-download
         const baseName: string = path.parse(CSIR.assetVersionGeometry.FileName).name;
         const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
-            new WFP.WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
+            new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
                 new COOK.JobCookSIGenerateDownloadsParameters(CSIR.idScene, CSIR.idModel, CSIR.assetVersionGeometry.FileName,
                     CSIR.assetSVX.FileName, CSIR.assetVersionDiffuse?.FileName, CSIR.assetVersionMTL?.FileName, baseName));
 
         const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
-            eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
+            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
             idSystemObject,
             idProject: workflowParams.idProject,
             idUserInitiator: workflowParams.idUserInitiator,
@@ -388,27 +389,27 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return null;
     }
 
-    static async computeWorkflowIDFromEnum(eVocabEnum: CACHE.eVocabularyID, eVocabSetEnum: CACHE.eVocabularySetID): Promise<number | undefined> {
+    static async computeWorkflowIDFromEnum(eVocabEnum: COMMON.eVocabularyID, eVocabSetEnum: COMMON.eVocabularySetID): Promise<number | undefined> {
         const idVocab: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eVocabEnum);
         if (!idVocab) {
-            LOG.error(`WorkflowEngine.computeWorkflowTypeFromEnum called with invalid workflow type ${CACHE.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
+            LOG.error(`WorkflowEngine.computeWorkflowTypeFromEnum called with invalid workflow type ${COMMON.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
             return undefined;
         }
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eVocabEnum, eVocabSetEnum)) {
-            LOG.error(`WorkflowEngine.computeWorkflowTypeFromEnum called with non-workflow type vocabulary ${CACHE.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
+            LOG.error(`WorkflowEngine.computeWorkflowTypeFromEnum called with non-workflow type vocabulary ${COMMON.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
             return undefined;
         }
         return idVocab;
     }
 
-    static async computeWorkflowEnumFromID(idVocab: number, eVocabSetEnum: CACHE.eVocabularySetID): Promise<CACHE.eVocabularyID | undefined> {
-        const eVocabEnum: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVocab);
+    static async computeWorkflowEnumFromID(idVocab: number, eVocabSetEnum: COMMON.eVocabularySetID): Promise<COMMON.eVocabularyID | undefined> {
+        const eVocabEnum: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVocab);
         if (!eVocabEnum) {
             LOG.error(`WorkflowEngine.computeWorkflowTypeEnumFromID called with invalid workflow type ${idVocab}`, LOG.LS.eWF);
             return undefined;
         }
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eVocabEnum, eVocabSetEnum)) {
-            LOG.error(`WorkflowEngine.computeWorkflowTypeEnumFromID called with non-workflow type vocabulary ${CACHE.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
+            LOG.error(`WorkflowEngine.computeWorkflowTypeEnumFromID called with non-workflow type vocabulary ${COMMON.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
             return undefined;
         }
         return eVocabEnum;
@@ -420,7 +421,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // Workflow
         if (!workflowParams.eWorkflowType)
             return null;
-        const idVWorkflowType: number | undefined = await WorkflowEngine.computeWorkflowIDFromEnum(workflowParams.eWorkflowType, CACHE.eVocabularySetID.eWorkflowType);
+        const idVWorkflowType: number | undefined = await WorkflowEngine.computeWorkflowIDFromEnum(workflowParams.eWorkflowType, COMMON.eVocabularySetID.eWorkflowType);
         if (!idVWorkflowType)
             return null;
         const dtNow: Date = new Date();
@@ -442,9 +443,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         // *****************************************************
         // WorkflowStep for initiation
-        const idVWorkflowStepType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eWorkflowStepTypeStart);
+        const idVWorkflowStepType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eWorkflowStepTypeStart);
         if (!idVWorkflowStepType) {
-            LOG.error(`WorkflowEngine.create called with invalid workflow type ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
+            LOG.error(`WorkflowEngine.create called with invalid workflow type ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
             return null;
         }
 
@@ -453,7 +454,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idJobRun: null,
             idUserOwner: workflowParams.idUserInitiator,
             idVWorkflowStepType,
-            State: DBAPI.eWorkflowJobRunStatus.eCreated,
+            State: COMMON.eWorkflowJobRunStatus.eCreated,
             DateCreated: dtNow,
             DateCompleted: dtNow,
             idWorkflowStep: 0
@@ -487,9 +488,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
     private async fetchWorkflowImpl(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WF.IWorkflow | null> {
         switch (workflowParams.eWorkflowType) {
-            case CACHE.eVocabularyID.eWorkflowTypeCookJob: return await WorkflowJob.constructWorkflow(workflowParams, WFC);
-            case CACHE.eVocabularyID.eWorkflowTypeIngestion: return await WorkflowIngestion.constructWorkflow(workflowParams, WFC);
-            case CACHE.eVocabularyID.eWorkflowTypeUpload: return await WorkflowUpload.constructWorkflow(workflowParams, WFC);
+            case COMMON.eVocabularyID.eWorkflowTypeCookJob: return await WorkflowJob.constructWorkflow(workflowParams, WFC);
+            case COMMON.eVocabularyID.eWorkflowTypeIngestion: return await WorkflowIngestion.constructWorkflow(workflowParams, WFC);
+            case COMMON.eVocabularyID.eWorkflowTypeUpload: return await WorkflowUpload.constructWorkflow(workflowParams, WFC);
         }
         return null;
     }
@@ -501,7 +502,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { success: false };
         }
 
-        if (oID.eObjectType != DBAPI.eSystemObjectType.eAssetVersion) {
+        if (oID.eObjectType != COMMON.eSystemObjectType.eAssetVersion) {
             LOG.error(`WorkflowEngine.computeAssetAndVersion skipping invalid object ${JSON.stringify(oID)}`, LOG.LS.eWF);
             return { success: false };
         }
@@ -523,8 +524,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     }
 
     private async computeModelInfo(idModel: number, idSystemObjectModel: number): Promise<ComputeModelInfoResult> {
-        const vMaster: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeMaster);
-        const vDiffuse: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+        const vMaster: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
+        const vDiffuse: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
         if (!vMaster || !vDiffuse) {
             LOG.error('WorkflowEngine.computeModelInfo unable to compute model vocabulary', LOG.LS.eWF);
             return { exitEarly: true };
@@ -581,10 +582,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             if (idAssetDiffuse === modelAsset.Asset.idAsset)
                 assetVersionDiffuse = modelAsset.AssetVersion;
 
-            const eAssetType: CACHE.eVocabularyID | undefined = await modelAsset.Asset.assetType();
+            const eAssetType: COMMON.eVocabularyID | undefined = await modelAsset.Asset.assetType();
             switch (eAssetType) {
-                case CACHE.eVocabularyID.eAssetAssetTypeModel:
-                case CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile:
+                case COMMON.eVocabularyID.eAssetAssetTypeModel:
+                case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile:
                     if (!assetVersionGeometry)
                         assetVersionGeometry = modelAsset.AssetVersion;
                     else {
@@ -605,7 +606,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     }
 
     private async computeSceneInfo(idScene: number, idSystemObjectScene: number): Promise<ComputeSceneInfoResult> {
-        const vAssetType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeScene);
+        const vAssetType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
         if (!vAssetType) {
             LOG.error('WorkflowEngine.computeSceneInfo unable to compute scene asset type', LOG.LS.eWF);
             return { exitEarly: true };

@@ -1,8 +1,9 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
+import { ObjectGraphTestSetup } from './ObjectGraph.setup';
 // import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';
-import { ObjectGraphTestSetup } from './ObjectGraph.setup';
 
 const OGTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
 /*
@@ -35,10 +36,10 @@ describe('DB Composite LicenseResolver', () => {
     });
 
     test('LicenseCache', async () => {
-        expect(await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadCC0)).toEqual(OGTS.licenseCC0);
-        expect(await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadRestriction)).toEqual(OGTS.licenseDownload);
-        expect(await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewOnly)).toEqual(OGTS.licenseView);
-        expect(await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eRestricted)).toEqual(OGTS.licenseRestricted);
+        expect(await CACHE.LicenseCache.getLicenseByEnum(COMMON.eLicense.eViewDownloadCC0)).toEqual(OGTS.licenseCC0);
+        expect(await CACHE.LicenseCache.getLicenseByEnum(COMMON.eLicense.eViewDownloadRestriction)).toEqual(OGTS.licenseDownload);
+        expect(await CACHE.LicenseCache.getLicenseByEnum(COMMON.eLicense.eViewOnly)).toEqual(OGTS.licenseView);
+        expect(await CACHE.LicenseCache.getLicenseByEnum(COMMON.eLicense.eRestricted)).toEqual(OGTS.licenseRestricted);
     });
 });
 

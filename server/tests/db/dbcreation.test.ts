@@ -4,7 +4,8 @@ import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as UTIL from './api';
-import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
+import { VocabularyCache } from '../../cache';
+import * as COMMON from '../../../client/src/types/server';
 
 afterAll(async done => {
     // await H.Helpers.sleep(4000);
@@ -195,7 +196,7 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Fetch/Creation: Vocabulary WorkflowType', async () => {
-        const idVocabularySet: number | undefined = await VocabularyCache.vocabularySetEnumToId(eVocabularySetID.eWorkflowType);
+        const idVocabularySet: number | undefined = await VocabularyCache.vocabularySetEnumToId(COMMON.eVocabularySetID.eWorkflowType);
         const vocabularyEntries: DBAPI.Vocabulary[] | undefined = idVocabularySet ? await VocabularyCache.vocabularySetEntries(idVocabularySet) : undefined;
         let createVocab: boolean = false;
         if (vocabularyEntries && vocabularyEntries.length > 0)
@@ -247,7 +248,7 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Asset', async () => {
-        const vocabBulkIngest: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eAssetAssetTypeBulkIngestion);
+        const vocabBulkIngest: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeBulkIngestion);
         expect(vocabBulkIngest).toBeTruthy();
         if (vocabBulkIngest)
             assetBulkIngest = await UTIL.createAssetTest({
@@ -704,7 +705,7 @@ describe('DB Creation Test Suite', () => {
                 idUser: userActive.idUser,
                 AuditDate: UTIL.nowCleansed(),
                 AuditType: DBAPI.eAuditType.eDBUpdate,
-                DBObjectType: DBAPI.eSystemObjectType.eSubject,
+                DBObjectType: COMMON.eSystemObjectType.eSubject,
                 idDBObject: subject.idSubject,
                 idSystemObject: systemObjectSubject.idSystemObject,
                 Data: JSON.stringify(subject, H.Helpers.stringifyDatabaseRow),
@@ -962,7 +963,7 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Job Packrat Inspect', async () => {
-        vocabJobSIPackratInspect = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect) || null;
+        vocabJobSIPackratInspect = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect) || null;
         expect(vocabJobSIPackratInspect).toBeTruthy();
         const jobSIPackratInspects: DBAPI.Job[] | null = vocabJobSIPackratInspect ? await DBAPI.Job.fetchByType(vocabJobSIPackratInspect.idVocabulary) : null;
         jobSIPackratInspect = jobSIPackratInspects && jobSIPackratInspects.length > 0 ? jobSIPackratInspects[0] : null;
@@ -973,7 +974,7 @@ describe('DB Creation Test Suite', () => {
         if (jobSIPackratInspect)
             jobRun = await UTIL.createJobRunTest({
                 idJob: jobSIPackratInspect.idJob,
-                Status: DBAPI.eWorkflowJobRunStatus.eDone,
+                Status: COMMON.eWorkflowJobRunStatus.eDone,
                 Result: true,
                 DateStart: UTIL.nowCleansed(),
                 DateEnd: null,
@@ -988,7 +989,7 @@ describe('DB Creation Test Suite', () => {
         if (jobSIPackratInspect) {
             const jobRunTemp: DBAPI.JobRun = DBAPI.JobRun.constructFromPrisma({
                 idJob: jobSIPackratInspect.idJob,
-                Status: DBAPI.eWorkflowJobRunStatus.eDone,
+                Status: COMMON.eWorkflowJobRunStatus.eDone,
                 Result: true,
                 DateStart: UTIL.nowCleansed(),
                 DateEnd: null,
@@ -2345,9 +2346,9 @@ describe('DB Fetch By ID Test Suite', () => {
 
             const eDBObjectTypeOrig: DBAPI.eDBObjectType = audit.getDBObjectType();
             audit.setDBObjectType(null);
-            expect(audit.getDBObjectType()).toEqual(DBAPI.eSystemObjectType.eUnknown);
-            audit.setDBObjectType(DBAPI.eSystemObjectType.eUnit);
-            expect(audit.getDBObjectType()).toEqual(DBAPI.eSystemObjectType.eUnit);
+            expect(audit.getDBObjectType()).toEqual(COMMON.eSystemObjectType.eUnknown);
+            audit.setDBObjectType(COMMON.eSystemObjectType.eUnit);
+            expect(audit.getDBObjectType()).toEqual(COMMON.eSystemObjectType.eUnit);
             audit.setDBObjectType(DBAPI.eNonSystemObjectType.eUnitEdan);
             expect(audit.getDBObjectType()).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
             audit.setDBObjectType(eDBObjectTypeOrig);
@@ -3296,7 +3297,7 @@ describe('DB Fetch By ID Test Suite', () => {
         let workflowFetch: DBAPI.Workflow[] | null = null;
         if (vocabularyWorkflowType) {
             LOG.info(`DB Fetch Workflow fetching from workflow vocab ${JSON.stringify(vocabularyWorkflowType)}`, LOG.LS.eTEST);
-            const eVocabEnum: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(vocabularyWorkflowType.idVocabulary);
+            const eVocabEnum: COMMON.eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(vocabularyWorkflowType.idVocabulary);
             expect(eVocabEnum).toBeTruthy();
 
             if (eVocabEnum) {
@@ -3309,9 +3310,9 @@ describe('DB Fetch By ID Test Suite', () => {
         }
         expect(workflowFetch).toBeTruthy();
 
-        workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabularyID.eAssetAssetTypeModel);
+        workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(COMMON.eVocabularyID.eAssetAssetTypeModel);
         expect(workflowFetch).toBeFalsy();
-        workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabularyID.eNone);
+        workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(COMMON.eVocabularyID.eNone);
         expect(workflowFetch).toBeFalsy();
     });
 
@@ -4248,84 +4249,84 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: LicenseEnumToString', async () => {
-        expect(DBAPI.LicenseEnumToString(-1)).toEqual('Restricted');
-        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eViewDownloadCC0)).toEqual('View and Download CC0');
-        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eViewDownloadRestriction)).toEqual('View and Download with usage restrictions');
-        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eViewOnly)).toEqual('View Only');
-        expect(DBAPI.LicenseEnumToString(DBAPI.eLicense.eRestricted)).toEqual('Restricted');
+    test('DB Fetch SystemObject: COMMON.LicenseEnumToString', async () => {
+        expect(COMMON.LicenseEnumToString(-1)).toEqual('Restricted');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadCC0)).toEqual('View and Download CC0');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadRestriction)).toEqual('View and Download with usage restrictions');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewOnly)).toEqual('View Only');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eRestricted)).toEqual('Restricted');
     });
 
-    test('DB Fetch SystemObject: PublishedStateEnumToString', async () => {
-        expect(DBAPI.PublishedStateEnumToString(-1)).toEqual('Not Published');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eNotPublished)).toEqual('Not Published');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.eAPIOnly)).toEqual('API Only');
-        expect(DBAPI.PublishedStateEnumToString(DBAPI.ePublishedState.ePublished)).toEqual('Published');
+    test('DB Fetch SystemObject: COMMON.PublishedStateEnumToString', async () => {
+        expect(COMMON.PublishedStateEnumToString(-1)).toEqual('Not Published');
+        expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eNotPublished)).toEqual('Not Published');
+        expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eAPIOnly)).toEqual('API Only');
+        expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.ePublished)).toEqual('Published');
     });
 
     test('DB Fetch SystemObject: LicenseRestrictLevelToPublishedStateEnum', async () => {
-        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(-1)).toEqual(DBAPI.ePublishedState.ePublished);
-        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(10)).toEqual(DBAPI.ePublishedState.ePublished);
-        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(15)).toEqual(DBAPI.ePublishedState.ePublished);
-        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(20)).toEqual(DBAPI.ePublishedState.ePublished);
-        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(25)).toEqual(DBAPI.ePublishedState.ePublished);
-        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(30)).toEqual(DBAPI.ePublishedState.ePublished);
-        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(35)).toEqual(DBAPI.ePublishedState.eNotPublished);
-        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(1000)).toEqual(DBAPI.ePublishedState.eNotPublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(-1)).toEqual(COMMON.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(10)).toEqual(COMMON.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(15)).toEqual(COMMON.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(20)).toEqual(COMMON.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(25)).toEqual(COMMON.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(30)).toEqual(COMMON.ePublishedState.ePublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(35)).toEqual(COMMON.ePublishedState.eNotPublished);
+        expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(1000)).toEqual(COMMON.ePublishedState.eNotPublished);
     });
 
     test('DB Fetch SystemObject: SystemObjectTypeToName', async () => {
         expect(DBAPI.SystemObjectTypeToName(null)).toEqual('Unknown');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eUnit)).toEqual('Unit');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eProject)).toEqual('Project');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eSubject)).toEqual('Subject');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eItem)).toEqual('Item');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eCaptureData)).toEqual('Capture Data');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eModel)).toEqual('Model');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eScene)).toEqual('Scene');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eIntermediaryFile)).toEqual('Intermediary File');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eProjectDocumentation)).toEqual('Project Documentation');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eAsset)).toEqual('Asset');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eAssetVersion)).toEqual('Asset Version');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eActor)).toEqual('Actor');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eStakeholder)).toEqual('Stakeholder');
-        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eUnknown)).toEqual('Unknown');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eUnit)).toEqual('Unit');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eProject)).toEqual('Project');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eSubject)).toEqual('Subject');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eItem)).toEqual('Item');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eCaptureData)).toEqual('Capture Data');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eModel)).toEqual('Model');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eScene)).toEqual('Scene');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eIntermediaryFile)).toEqual('Intermediary File');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eProjectDocumentation)).toEqual('Project Documentation');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eAsset)).toEqual('Asset');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eAssetVersion)).toEqual('Asset Version');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eActor)).toEqual('Actor');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eStakeholder)).toEqual('Stakeholder');
+        expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eUnknown)).toEqual('Unknown');
     });
 
     test('DB Fetch SystemObject: SystemObjectNameToType', async () => {
-        expect(DBAPI.SystemObjectNameToType(null)).toEqual(DBAPI.eSystemObjectType.eUnknown);
-        expect(DBAPI.SystemObjectNameToType('Unit')).toEqual(DBAPI.eSystemObjectType.eUnit);
-        expect(DBAPI.SystemObjectNameToType('Project')).toEqual(DBAPI.eSystemObjectType.eProject);
-        expect(DBAPI.SystemObjectNameToType('Subject')).toEqual(DBAPI.eSystemObjectType.eSubject);
-        expect(DBAPI.SystemObjectNameToType('Item')).toEqual(DBAPI.eSystemObjectType.eItem);
-        expect(DBAPI.SystemObjectNameToType('Capture Data')).toEqual(DBAPI.eSystemObjectType.eCaptureData);
-        expect(DBAPI.SystemObjectNameToType('Model')).toEqual(DBAPI.eSystemObjectType.eModel);
-        expect(DBAPI.SystemObjectNameToType('Scene')).toEqual(DBAPI.eSystemObjectType.eScene);
-        expect(DBAPI.SystemObjectNameToType('Intermediary File')).toEqual(DBAPI.eSystemObjectType.eIntermediaryFile);
-        expect(DBAPI.SystemObjectNameToType('Project Documentation')).toEqual(DBAPI.eSystemObjectType.eProjectDocumentation);
-        expect(DBAPI.SystemObjectNameToType('Asset')).toEqual(DBAPI.eSystemObjectType.eAsset);
-        expect(DBAPI.SystemObjectNameToType('Asset Version')).toEqual(DBAPI.eSystemObjectType.eAssetVersion);
-        expect(DBAPI.SystemObjectNameToType('Actor')).toEqual(DBAPI.eSystemObjectType.eActor);
-        expect(DBAPI.SystemObjectNameToType('Stakeholder')).toEqual(DBAPI.eSystemObjectType.eStakeholder);
-        expect(DBAPI.SystemObjectNameToType('Unknown')).toEqual(DBAPI.eSystemObjectType.eUnknown);
+        expect(DBAPI.SystemObjectNameToType(null)).toEqual(COMMON.eSystemObjectType.eUnknown);
+        expect(DBAPI.SystemObjectNameToType('Unit')).toEqual(COMMON.eSystemObjectType.eUnit);
+        expect(DBAPI.SystemObjectNameToType('Project')).toEqual(COMMON.eSystemObjectType.eProject);
+        expect(DBAPI.SystemObjectNameToType('Subject')).toEqual(COMMON.eSystemObjectType.eSubject);
+        expect(DBAPI.SystemObjectNameToType('Item')).toEqual(COMMON.eSystemObjectType.eItem);
+        expect(DBAPI.SystemObjectNameToType('Capture Data')).toEqual(COMMON.eSystemObjectType.eCaptureData);
+        expect(DBAPI.SystemObjectNameToType('Model')).toEqual(COMMON.eSystemObjectType.eModel);
+        expect(DBAPI.SystemObjectNameToType('Scene')).toEqual(COMMON.eSystemObjectType.eScene);
+        expect(DBAPI.SystemObjectNameToType('Intermediary File')).toEqual(COMMON.eSystemObjectType.eIntermediaryFile);
+        expect(DBAPI.SystemObjectNameToType('Project Documentation')).toEqual(COMMON.eSystemObjectType.eProjectDocumentation);
+        expect(DBAPI.SystemObjectNameToType('Asset')).toEqual(COMMON.eSystemObjectType.eAsset);
+        expect(DBAPI.SystemObjectNameToType('Asset Version')).toEqual(COMMON.eSystemObjectType.eAssetVersion);
+        expect(DBAPI.SystemObjectNameToType('Actor')).toEqual(COMMON.eSystemObjectType.eActor);
+        expect(DBAPI.SystemObjectNameToType('Stakeholder')).toEqual(COMMON.eSystemObjectType.eStakeholder);
+        expect(DBAPI.SystemObjectNameToType('Unknown')).toEqual(COMMON.eSystemObjectType.eUnknown);
     });
 
     test('DB Fetch SystemObject: DBObjectTypeToName', async () => {
         expect(DBAPI.DBObjectTypeToName(null)).toEqual('Unknown');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eUnit)).toEqual('Unit');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eProject)).toEqual('Project');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eSubject)).toEqual('Subject');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eItem)).toEqual('Item');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eCaptureData)).toEqual('Capture Data');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eModel)).toEqual('Model');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eScene)).toEqual('Scene');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eIntermediaryFile)).toEqual('Intermediary File');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eProjectDocumentation)).toEqual('Project Documentation');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eAsset)).toEqual('Asset');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eAssetVersion)).toEqual('Asset Version');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eActor)).toEqual('Actor');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eStakeholder)).toEqual('Stakeholder');
-        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eUnknown)).toEqual('Unknown');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eUnit)).toEqual('Unit');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eProject)).toEqual('Project');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eSubject)).toEqual('Subject');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eItem)).toEqual('Item');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eCaptureData)).toEqual('Capture Data');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eModel)).toEqual('Model');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eScene)).toEqual('Scene');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eIntermediaryFile)).toEqual('Intermediary File');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eProjectDocumentation)).toEqual('Project Documentation');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eAsset)).toEqual('Asset');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eAssetVersion)).toEqual('Asset Version');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eActor)).toEqual('Actor');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eStakeholder)).toEqual('Stakeholder');
+        expect(DBAPI.DBObjectTypeToName(COMMON.eSystemObjectType.eUnknown)).toEqual('Unknown');
 
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eAccessAction)).toEqual('AccessAction');
         expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eAccessContext)).toEqual('AccessContext');
@@ -4374,21 +4375,21 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     });
 
     test('DB Fetch SystemObject: DBObjectNameToType', async () => {
-        expect(DBAPI.DBObjectNameToType(null)).toEqual(DBAPI.eSystemObjectType.eUnknown);
-        expect(DBAPI.DBObjectNameToType('Unit')).toEqual(DBAPI.eSystemObjectType.eUnit);
-        expect(DBAPI.DBObjectNameToType('Project')).toEqual(DBAPI.eSystemObjectType.eProject);
-        expect(DBAPI.DBObjectNameToType('Subject')).toEqual(DBAPI.eSystemObjectType.eSubject);
-        expect(DBAPI.DBObjectNameToType('Item')).toEqual(DBAPI.eSystemObjectType.eItem);
-        expect(DBAPI.DBObjectNameToType('Capture Data')).toEqual(DBAPI.eSystemObjectType.eCaptureData);
-        expect(DBAPI.DBObjectNameToType('Model')).toEqual(DBAPI.eSystemObjectType.eModel);
-        expect(DBAPI.DBObjectNameToType('Scene')).toEqual(DBAPI.eSystemObjectType.eScene);
-        expect(DBAPI.DBObjectNameToType('Intermediary File')).toEqual(DBAPI.eSystemObjectType.eIntermediaryFile);
-        expect(DBAPI.DBObjectNameToType('Project Documentation')).toEqual(DBAPI.eSystemObjectType.eProjectDocumentation);
-        expect(DBAPI.DBObjectNameToType('Asset')).toEqual(DBAPI.eSystemObjectType.eAsset);
-        expect(DBAPI.DBObjectNameToType('Asset Version')).toEqual(DBAPI.eSystemObjectType.eAssetVersion);
-        expect(DBAPI.DBObjectNameToType('Actor')).toEqual(DBAPI.eSystemObjectType.eActor);
-        expect(DBAPI.DBObjectNameToType('Stakeholder')).toEqual(DBAPI.eSystemObjectType.eStakeholder);
-        expect(DBAPI.DBObjectNameToType('Unknown')).toEqual(DBAPI.eSystemObjectType.eUnknown);
+        expect(DBAPI.DBObjectNameToType(null)).toEqual(COMMON.eSystemObjectType.eUnknown);
+        expect(DBAPI.DBObjectNameToType('Unit')).toEqual(COMMON.eSystemObjectType.eUnit);
+        expect(DBAPI.DBObjectNameToType('Project')).toEqual(COMMON.eSystemObjectType.eProject);
+        expect(DBAPI.DBObjectNameToType('Subject')).toEqual(COMMON.eSystemObjectType.eSubject);
+        expect(DBAPI.DBObjectNameToType('Item')).toEqual(COMMON.eSystemObjectType.eItem);
+        expect(DBAPI.DBObjectNameToType('Capture Data')).toEqual(COMMON.eSystemObjectType.eCaptureData);
+        expect(DBAPI.DBObjectNameToType('Model')).toEqual(COMMON.eSystemObjectType.eModel);
+        expect(DBAPI.DBObjectNameToType('Scene')).toEqual(COMMON.eSystemObjectType.eScene);
+        expect(DBAPI.DBObjectNameToType('Intermediary File')).toEqual(COMMON.eSystemObjectType.eIntermediaryFile);
+        expect(DBAPI.DBObjectNameToType('Project Documentation')).toEqual(COMMON.eSystemObjectType.eProjectDocumentation);
+        expect(DBAPI.DBObjectNameToType('Asset')).toEqual(COMMON.eSystemObjectType.eAsset);
+        expect(DBAPI.DBObjectNameToType('Asset Version')).toEqual(COMMON.eSystemObjectType.eAssetVersion);
+        expect(DBAPI.DBObjectNameToType('Actor')).toEqual(COMMON.eSystemObjectType.eActor);
+        expect(DBAPI.DBObjectNameToType('Stakeholder')).toEqual(COMMON.eSystemObjectType.eStakeholder);
+        expect(DBAPI.DBObjectNameToType('Unknown')).toEqual(COMMON.eSystemObjectType.eUnknown);
 
         expect(DBAPI.DBObjectNameToType('AccessAction')).toEqual(DBAPI.eNonSystemObjectType.eAccessAction);
         expect(DBAPI.DBObjectNameToType('Access Action')).toEqual(DBAPI.eNonSystemObjectType.eAccessAction);
@@ -4667,7 +4668,7 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
     test('DB Fetch Special: Asset.assetType undefined', async() => {
-        let eVocabID: eVocabularyID | undefined = undefined;
+        let eVocabID: COMMON.eVocabularyID | undefined = undefined;
         if (assetThumbnail)
             eVocabID = await assetThumbnail.assetType();
         expect(eVocabID).toBeUndefined();
@@ -4675,20 +4676,20 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
     test('DB Fetch Special: Asset.assetType defined', async() => {
-        let eVocabID: eVocabularyID | undefined = undefined;
+        let eVocabID: COMMON.eVocabularyID | undefined = undefined;
         if (assetBulkIngest)
             eVocabID = await assetBulkIngest.assetType();
         expect(eVocabID).toBeDefined();
         expect(eVocabID).toBeTruthy();
-        expect(eVocabID).toEqual(eVocabularyID.eAssetAssetTypeBulkIngestion);
+        expect(eVocabID).toEqual(COMMON.eVocabularyID.eAssetAssetTypeBulkIngestion);
     });
 
     test('DB Fetch Special: Asset.setAssetType', async() => {
         expect(assetThumbnail).toBeTruthy();
         if (assetThumbnail) {
-            expect(await assetThumbnail.setAssetType(eVocabularyID.eNone)).toBeFalsy();
+            expect(await assetThumbnail.setAssetType(COMMON.eVocabularyID.eNone)).toBeFalsy();
 
-            const eVocabID: eVocabularyID = eVocabularyID.eAssetAssetTypeOther;
+            const eVocabID: COMMON.eVocabularyID = COMMON.eVocabularyID.eAssetAssetTypeOther;
             expect(await assetThumbnail.setAssetType(eVocabID)).toBeTruthy();
             expect(await assetThumbnail.update()).toBeTruthy();
 
@@ -4908,40 +4909,40 @@ describe('DB Fetch Special Test Suite', () => {
 
     test('DB Fetch Special: convertWorkflowJobRunStatusEnumToString', async () => {
         expect(DBAPI.convertWorkflowJobRunStatusEnumToString(-1)).toEqual('Uninitialized');
-        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eUnitialized)).toEqual('Uninitialized');
-        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eCreated)).toEqual('Created');
-        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eRunning)).toEqual('Running');
-        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eWaiting)).toEqual('Waiting');
-        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eDone)).toEqual('Done');
-        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eError)).toEqual('Error');
-        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(DBAPI.eWorkflowJobRunStatus.eCancelled)).toEqual('Cancelled');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eUnitialized)).toEqual('Uninitialized');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eCreated)).toEqual('Created');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eRunning)).toEqual('Running');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eWaiting)).toEqual('Waiting');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eDone)).toEqual('Done');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eError)).toEqual('Error');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eCancelled)).toEqual('Cancelled');
     });
 
     test('DB Fetch Special: JobRun.convertJobRunStatusToEnum', async () => {
-        expect(DBAPI.convertWorkflowJobRunStatusToEnum(-1)).toEqual(DBAPI.eWorkflowJobRunStatus.eUnitialized);
-        expect(DBAPI.convertWorkflowJobRunStatusToEnum(0)).toEqual(DBAPI.eWorkflowJobRunStatus.eUnitialized);
-        expect(DBAPI.convertWorkflowJobRunStatusToEnum(1)).toEqual(DBAPI.eWorkflowJobRunStatus.eCreated);
-        expect(DBAPI.convertWorkflowJobRunStatusToEnum(2)).toEqual(DBAPI.eWorkflowJobRunStatus.eRunning);
-        expect(DBAPI.convertWorkflowJobRunStatusToEnum(3)).toEqual(DBAPI.eWorkflowJobRunStatus.eWaiting);
-        expect(DBAPI.convertWorkflowJobRunStatusToEnum(4)).toEqual(DBAPI.eWorkflowJobRunStatus.eDone);
-        expect(DBAPI.convertWorkflowJobRunStatusToEnum(5)).toEqual(DBAPI.eWorkflowJobRunStatus.eError);
-        expect(DBAPI.convertWorkflowJobRunStatusToEnum(6)).toEqual(DBAPI.eWorkflowJobRunStatus.eCancelled);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(-1)).toEqual(COMMON.eWorkflowJobRunStatus.eUnitialized);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(0)).toEqual(COMMON.eWorkflowJobRunStatus.eUnitialized);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(1)).toEqual(COMMON.eWorkflowJobRunStatus.eCreated);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(2)).toEqual(COMMON.eWorkflowJobRunStatus.eRunning);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(3)).toEqual(COMMON.eWorkflowJobRunStatus.eWaiting);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(4)).toEqual(COMMON.eWorkflowJobRunStatus.eDone);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(5)).toEqual(COMMON.eWorkflowJobRunStatus.eError);
+        expect(DBAPI.convertWorkflowJobRunStatusToEnum(6)).toEqual(COMMON.eWorkflowJobRunStatus.eCancelled);
 
         expect(jobRun).toBeTruthy();
         if (jobRun) {
-            jobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eCreated);
-            expect(jobRun.getStatus()).toEqual(DBAPI.eWorkflowJobRunStatus.eCreated);
+            jobRun.setStatus(COMMON.eWorkflowJobRunStatus.eCreated);
+            expect(jobRun.getStatus()).toEqual(COMMON.eWorkflowJobRunStatus.eCreated);
             expect(jobRun.Status).toEqual(1);
-            jobRun.setStatus(DBAPI.eWorkflowJobRunStatus.eUnitialized);
+            jobRun.setStatus(COMMON.eWorkflowJobRunStatus.eUnitialized);
         }
     });
 
     test('DB Fetch Special: JobRun.fetchMatching', async () => {
-        const jobRuns1: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eWorkflowJobRunStatus.eDone, true, [0], undefined);
+        const jobRuns1: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, COMMON.eWorkflowJobRunStatus.eDone, true, [0], undefined);
         expect(jobRuns1).toBeTruthy();
         if (jobRuns1)
             expect(jobRuns1.length).toBeFalsy();
-        const jobRuns2: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eWorkflowJobRunStatus.eDone, true, null, undefined);
+        const jobRuns2: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, COMMON.eWorkflowJobRunStatus.eDone, true, null, undefined);
         expect(jobRuns2).toBeTruthy();
         if (jobRuns2)
             expect(jobRuns2.length).toBeFalsy();
@@ -4951,10 +4952,10 @@ describe('DB Fetch Special Test Suite', () => {
         if (vocabJobSIPackratInspect) {
             // The following will return a row if the JobNS test has run and successfully completed testing of packrat-cook integration.
             // We cannot rely on this test having been run, so for now, we don't validate the result
-            await DBAPI.JobRun.fetchMatching(1, vocabJobSIPackratInspect.idVocabulary, DBAPI.eWorkflowJobRunStatus.eDone, true, null, undefined);
+            await DBAPI.JobRun.fetchMatching(1, vocabJobSIPackratInspect.idVocabulary, COMMON.eWorkflowJobRunStatus.eDone, true, null, undefined);
 
             if (assetVersion)
-                await DBAPI.JobRun.fetchMatching(1, vocabJobSIPackratInspect.idVocabulary, DBAPI.eWorkflowJobRunStatus.eDone, true, [assetVersion.idAssetVersion], 'unmatched');
+                await DBAPI.JobRun.fetchMatching(1, vocabJobSIPackratInspect.idVocabulary, COMMON.eWorkflowJobRunStatus.eDone, true, [assetVersion.idAssetVersion], 'unmatched');
         }
     });
 
@@ -7037,18 +7038,18 @@ describe('DB Update Test Suite', () => {
     test('DB Update: SystemObjectVersion.update', async () => {
         let bUpdated: boolean = false;
         if (systemObjectVersion) {
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eNotPublished);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eNotPublished);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.eAPIOnly);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.eAPIOnly);
-            systemObjectVersion.setPublishedState(DBAPI.ePublishedState.ePublished);
-            expect(systemObjectVersion.publishedStateEnum()).toEqual(DBAPI.ePublishedState.ePublished);
+            systemObjectVersion.setPublishedState(COMMON.ePublishedState.eNotPublished);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(COMMON.ePublishedState.eNotPublished);
+            systemObjectVersion.setPublishedState(COMMON.ePublishedState.eAPIOnly);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(COMMON.ePublishedState.eAPIOnly);
+            systemObjectVersion.setPublishedState(COMMON.ePublishedState.ePublished);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(COMMON.ePublishedState.ePublished);
             bUpdated = await systemObjectVersion.update();
 
             const systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(systemObjectVersion.idSystemObjectVersion);
             expect(systemObjectVersionFetch).toBeTruthy();
             if (systemObjectVersionFetch)
-                expect(systemObjectVersionFetch.publishedStateEnum()).toEqual(DBAPI.ePublishedState.ePublished);
+                expect(systemObjectVersionFetch.publishedStateEnum()).toEqual(COMMON.ePublishedState.ePublished);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -7408,26 +7409,26 @@ describe('DB Update Test Suite', () => {
         if (workflowStep && workflowNulls) {
             workflowStep.idWorkflow = workflowNulls.idWorkflow;
 
-            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eUnitialized);
-            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eUnitialized);
+            workflowStep.setState(COMMON.eWorkflowJobRunStatus.eUnitialized);
+            expect(workflowStep.getState()).toEqual(COMMON.eWorkflowJobRunStatus.eUnitialized);
 
-            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eCreated);
-            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eCreated);
+            workflowStep.setState(COMMON.eWorkflowJobRunStatus.eCreated);
+            expect(workflowStep.getState()).toEqual(COMMON.eWorkflowJobRunStatus.eCreated);
 
-            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eRunning);
-            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eRunning);
+            workflowStep.setState(COMMON.eWorkflowJobRunStatus.eRunning);
+            expect(workflowStep.getState()).toEqual(COMMON.eWorkflowJobRunStatus.eRunning);
 
-            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eWaiting);
-            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eWaiting);
+            workflowStep.setState(COMMON.eWorkflowJobRunStatus.eWaiting);
+            expect(workflowStep.getState()).toEqual(COMMON.eWorkflowJobRunStatus.eWaiting);
 
-            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eError);
-            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eError);
+            workflowStep.setState(COMMON.eWorkflowJobRunStatus.eError);
+            expect(workflowStep.getState()).toEqual(COMMON.eWorkflowJobRunStatus.eError);
 
-            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eCancelled);
-            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eCancelled);
+            workflowStep.setState(COMMON.eWorkflowJobRunStatus.eCancelled);
+            expect(workflowStep.getState()).toEqual(COMMON.eWorkflowJobRunStatus.eCancelled);
 
-            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eDone);
-            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowJobRunStatus.eDone);
+            workflowStep.setState(COMMON.eWorkflowJobRunStatus.eDone);
+            expect(workflowStep.getState()).toEqual(COMMON.eWorkflowJobRunStatus.eDone);
 
             bUpdated = await workflowStep.update();
 

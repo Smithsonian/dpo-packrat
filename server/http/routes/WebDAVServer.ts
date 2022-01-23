@@ -3,6 +3,7 @@ import * as LOG from '../../utils/logger';
 import * as STORE from '../../storage/interface';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
+import * as COMMON from '../../../client/src/types/server';
 import * as H from '../../utils/helpers';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
@@ -410,11 +411,11 @@ class WebDAVFileSystem extends webdav.FileSystem {
             const FilePath: string = (secondSlashIndex >= 0) ? path.dirname(pathS.substring(secondSlashIndex + 1)) : '';
             const FileName: string = path.basename(pathS);
 
-            let eVocab: CACHE.eVocabularyID = CACHE.eVocabularyID.eAssetAssetTypeOther;
+            let eVocab: COMMON.eVocabularyID = COMMON.eVocabularyID.eAssetAssetTypeOther;
             if (FileName.toLowerCase().endsWith('.svx.json'))
-                eVocab = CACHE.eVocabularyID.eAssetAssetTypeScene;
+                eVocab = COMMON.eVocabularyID.eAssetAssetTypeScene;
             else if (await CACHE.VocabularyCache.mapModelFileByExtensionID(FileName) !== undefined)
-                eVocab = CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile;
+                eVocab = COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile;
             const VAssetType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(eVocab);
             if (VAssetType === undefined) {
                 const error: string = `WebDAVFileSystem._openWriteStream(${pathS}) failed: unable to compute asset type for ${FileName}`;
@@ -424,7 +425,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 return;
             }
 
-            LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}), FileName ${FileName}, FilePath ${FilePath}, asset type ${CACHE.eVocabularyID[eVocab]}, SOBased ${JSON.stringify(SOBased, H.Helpers.saferStringify)}`, LOG.LS.eHTTP);
+            LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}), FileName ${FileName}, FilePath ${FilePath}, asset type ${COMMON.eVocabularyID[eVocab]}, SOBased ${JSON.stringify(SOBased, H.Helpers.saferStringify)}`, LOG.LS.eHTTP);
 
             const LS: LocalStore = await ASL.getOrCreateStore();
             const idUserCreator: number = LS?.idUser ?? 0;

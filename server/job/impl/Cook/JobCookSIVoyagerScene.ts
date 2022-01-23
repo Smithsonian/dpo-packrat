@@ -7,6 +7,7 @@ import * as JOB from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
@@ -82,8 +83,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to compute source model from id ${this.idModel}`);
 
         const svxFile: string = this.parameters.svxFile ?? 'scene.svx.json';
-        const vScene: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeScene);
-        const vModel: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+        const vScene: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
+        const vModel: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
         if (!vScene || !vModel)
             return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to calculate vocabulary needed to ingest scene file ${svxFile}`);
 
@@ -141,7 +142,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 const sceneAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(sceneSO.idSystemObject);
                 if (sceneAssets) {
                     for (const sceneAsset of sceneAssets) {
-                        if (await sceneAsset.assetType() === CACHE.eVocabularyID.eAssetAssetTypeScene) {
+                        if (await sceneAsset.assetType() === COMMON.eVocabularyID.eAssetAssetTypeScene) {
                             asset = sceneAsset;
                             break;
                         }
@@ -204,8 +205,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                             if (modelAssets) {
                                 for (const modelAsset of modelAssets) {
                                     switch (await modelAsset.assetType()) {
-                                        case CACHE.eVocabularyID.eAssetAssetTypeModel:
-                                        case CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile:
+                                        case COMMON.eVocabularyID.eAssetAssetTypeModel:
+                                        case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile:
                                             asset = modelAsset;
                                             break;
                                     }
@@ -315,21 +316,21 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         if (!idVUnits)
             return undefined;
 
-        // acceptable units for Cook's si-voyager-scene, as of 5/3/2021:  "mm", "cm", "m", "in", "ft", "yd"
-        const eModelUnits: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVUnits);
+        // acceptable units for Cook's si-voyager-scene, as of 1/20/2022:  "mm", "cm", "m", "in", "ft", "yd"
+        const eModelUnits: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVUnits);
         switch (eModelUnits) {
-            case CACHE.eVocabularyID.eModelUnitsMillimeter: return 'mm';
-            case CACHE.eVocabularyID.eModelUnitsCentimeter: return 'cm';
-            case CACHE.eVocabularyID.eModelUnitsMeter: return 'm';
-            case CACHE.eVocabularyID.eModelUnitsInch: return 'in';
-            case CACHE.eVocabularyID.eModelUnitsFoot: return 'ft';
-            case CACHE.eVocabularyID.eModelUnitsYard: return 'yd';
+            case COMMON.eVocabularyID.eModelUnitsMillimeter: return 'mm';
+            case COMMON.eVocabularyID.eModelUnitsCentimeter: return 'cm';
+            case COMMON.eVocabularyID.eModelUnitsMeter: return 'm';
+            case COMMON.eVocabularyID.eModelUnitsInch: return 'in';
+            case COMMON.eVocabularyID.eModelUnitsFoot: return 'ft';
+            case COMMON.eVocabularyID.eModelUnitsYard: return 'yd';
 
-            // not supported by Cook as of 5/3/2021:
-            case CACHE.eVocabularyID.eModelUnitsMicrometer:
-            case CACHE.eVocabularyID.eModelUnitsKilometer:
-            case CACHE.eVocabularyID.eModelUnitsMile:
-            case CACHE.eVocabularyID.eModelUnitsAstronomicalUnit:
+            // not supported by Cook as of 1/20/2022:
+            case COMMON.eVocabularyID.eModelUnitsMicrometer:
+            case COMMON.eVocabularyID.eModelUnitsKilometer:
+            case COMMON.eVocabularyID.eModelUnitsMile:
+            case COMMON.eVocabularyID.eModelUnitsAstronomicalUnit:
             default:
                 return undefined;
         }

@@ -1,7 +1,7 @@
 import create, { GetState, SetState } from 'zustand';
 import { WorkflowListResult, GetWorkflowListInput } from '../types/graphql';
 import { getWorkflowList } from '../pages/Workflow/hooks/useWorkflow';
-import { workflowListSortStringToEnum, eWorkflowListSortColumns } from '../types/server';
+import { eWorkflowListSortColumns } from '../types/server';
 
 export enum ePaginationChange {
     eRowCount,
@@ -106,4 +106,19 @@ const handleEndDate = (input: Date | null) => {
     if (!input) return null;
     const date = new Date(input.getUTCFullYear(), input.getUTCMonth(), input.getUTCDate() + 1);
     return date;
+};
+
+const workflowListSortStringToEnum = (col: string): eWorkflowListSortColumns => {
+    switch (col) {
+        case 'idWorkflowSet': return eWorkflowListSortColumns.eSet;
+        case 'Type': return eWorkflowListSortColumns.eType;
+        case 'State': return eWorkflowListSortColumns.eState;
+        case 'Owner': return eWorkflowListSortColumns.eOwner;
+        case 'DateStart': return eWorkflowListSortColumns.eStart;
+        case 'DateLast': return eWorkflowListSortColumns.eLast;
+        case 'idWorkflowReport': return eWorkflowListSortColumns.eReport;
+        case 'idJobRun': return eWorkflowListSortColumns.eJobRun;
+        case 'Error': return eWorkflowListSortColumns.eError;
+        default: return eWorkflowListSortColumns.eDefault;
+    }
 };

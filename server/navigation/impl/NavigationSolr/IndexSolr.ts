@@ -4,8 +4,9 @@ import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
-import { eSystemObjectType, ObjectGraphDataEntry } from '../../../db';
+import { ObjectGraphDataEntry } from '../../../db';
 import { SolrClient, eSolrCore } from './SolrClient';
+import * as COMMON from '../../../../client/src/types/server';
 
 export class IndexSolr implements NAV.IIndexer {
     private objectGraphDatabase: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
@@ -348,22 +349,22 @@ export class IndexSolr implements NAV.IIndexer {
         await this.extractCommonFields(doc, objectGraphDataEntry);
 
         switch (objectGraphDataEntry.systemObjectIDType.eObjectType) {
-            case eSystemObjectType.eUnit:                   return await this.handleUnit(doc, objectGraphDataEntry);
-            case eSystemObjectType.eProject:                return await this.handleProject(doc, objectGraphDataEntry);
-            case eSystemObjectType.eSubject:                return await this.handleSubject(doc, objectGraphDataEntry);
-            case eSystemObjectType.eItem:                   return await this.handleItem(doc, objectGraphDataEntry);
-            case eSystemObjectType.eCaptureData:            return await this.handleCaptureData(doc, objectGraphDataEntry);
-            case eSystemObjectType.eModel:                  return await this.handleModel(doc, objectGraphDataEntry);
-            case eSystemObjectType.eScene:                  return await this.handleScene(doc, objectGraphDataEntry);
-            case eSystemObjectType.eIntermediaryFile:       return await this.handleIntermediaryFile(doc, objectGraphDataEntry);
-            case eSystemObjectType.eProjectDocumentation:   return await this.handleProjectDocumentation(doc, objectGraphDataEntry);
-            case eSystemObjectType.eAsset:                  return await this.handleAsset(doc, objectGraphDataEntry);
-            case eSystemObjectType.eAssetVersion:           return await this.handleAssetVersion(doc, objectGraphDataEntry);
-            case eSystemObjectType.eActor:                  return await this.handleActor(doc, objectGraphDataEntry);
-            case eSystemObjectType.eStakeholder:            return await this.handleStakeholder(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eUnit:                   return await this.handleUnit(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eProject:                return await this.handleProject(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eSubject:                return await this.handleSubject(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eItem:                   return await this.handleItem(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eCaptureData:            return await this.handleCaptureData(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eModel:                  return await this.handleModel(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eScene:                  return await this.handleScene(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eIntermediaryFile:       return await this.handleIntermediaryFile(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eProjectDocumentation:   return await this.handleProjectDocumentation(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eAsset:                  return await this.handleAsset(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eAssetVersion:           return await this.handleAssetVersion(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eActor:                  return await this.handleActor(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eStakeholder:            return await this.handleStakeholder(doc, objectGraphDataEntry);
 
             default:
-            case eSystemObjectType.eUnknown:                return await this.handleUnknown(doc, objectGraphDataEntry);
+            case COMMON.eSystemObjectType.eUnknown:                return await this.handleUnknown(doc, objectGraphDataEntry);
         }
     }
 

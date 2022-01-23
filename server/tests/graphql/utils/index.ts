@@ -23,7 +23,7 @@ import {
 } from '../../../types/graphql';
 import { Asset, AssetVersion } from '@prisma/client';
 import { randomStorageKey, nowCleansed } from '../../db/utils';
-import { eVocabularySetID } from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 
 class TestSuiteUtils {
     graphQLApi!: GraphQLApi;
@@ -171,7 +171,7 @@ class TestSuiteUtils {
         return vocabularyMap;
     };
 
-    getInitialEntryWithVocabularies = (vocabularies: Map<number, Vocabulary[]>, eVocabularyID: eVocabularySetID): number | null => {
+    getInitialEntryWithVocabularies = (vocabularies: Map<number, Vocabulary[]>, eVocabularyID: COMMON.eVocabularySetID): number | null => {
         const vocabularyEntry = vocabularies.get(eVocabularyID);
 
         if (vocabularyEntry) {

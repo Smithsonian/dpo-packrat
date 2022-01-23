@@ -1,4 +1,5 @@
 import { SystemObjectCache } from '../../cache';
+import * as COMMON from '../../../client/src/types/server';
 import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 // import * as H from '../../utils/helpers';
@@ -71,19 +72,19 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
         });
 
         test('Cache: SystemObjectCache.getSystemFromObjectIDInternal ' + description, async () => {
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eUnit });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eProject });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eSubject });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eItem });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eCaptureData });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eModel });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eScene });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eIntermediaryFile });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eProjectDocumentation });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eAsset });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eAssetVersion });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eActor });
-            await testObjectAndID({ idObject: 1, eObjectType: DBAPI.eSystemObjectType.eStakeholder });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eUnit });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eProject });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eSubject });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eItem });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eCaptureData });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eModel });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eScene });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eIntermediaryFile });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eProjectDocumentation });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eAsset });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eAssetVersion });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eActor });
+            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eStakeholder });
         });
 
         test('Cache: SystemObjectCache Cache Misses ' + description, async () => {
@@ -96,7 +97,7 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
             expect(SOItem1).toBeTruthy();
             if (SOItem1)
                 await testSystemObject(SOItem1);
-            await testObjectAndID({ idObject: item2.idItem, eObjectType: DBAPI.eSystemObjectType.eItem });
+            await testObjectAndID({ idObject: item2.idItem, eObjectType: COMMON.eSystemObjectType.eItem });
         });
 
         test('Cache: SystemObjectCache Invalid and Other ' + description, async () => {
@@ -106,7 +107,7 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
             const oIDsID: DBAPI.SystemObjectIDAndType | undefined = await SystemObjectCache.getObjectAndSystemFromSystem(1000000000);
             expect(oIDsID).toBeFalsy();
 
-            const SOInfo: DBAPI.SystemObjectInfo | undefined = await SystemObjectCache.getSystemFromObjectID({ idObject: 1000000000, eObjectType: DBAPI.eSystemObjectType.eItem });
+            const SOInfo: DBAPI.SystemObjectInfo | undefined = await SystemObjectCache.getSystemFromObjectID({ idObject: 1000000000, eObjectType: COMMON.eSystemObjectType.eItem });
             expect(SOInfo).toBeFalsy();
 
             oIDFetch = SystemObjectCache.convertSystemObjectToObjectID(null);
@@ -138,22 +139,22 @@ async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean>
     let SO: DBAPI.SystemObject | null = null;
     const { idObject, eObjectType } = oID;
     switch (eObjectType) {
-        case DBAPI.eSystemObjectType.eUnit: SO = await DBAPI.SystemObject.fetchFromUnitID(idObject); break;
-        case DBAPI.eSystemObjectType.eProject: SO = await DBAPI.SystemObject.fetchFromProjectID(idObject); break;
-        case DBAPI.eSystemObjectType.eSubject: SO = await DBAPI.SystemObject.fetchFromSubjectID(idObject); break;
-        case DBAPI.eSystemObjectType.eItem: SO = await DBAPI.SystemObject.fetchFromItemID(idObject); break;
-        case DBAPI.eSystemObjectType.eCaptureData: SO = await DBAPI.SystemObject.fetchFromCaptureDataID(idObject); break;
-        case DBAPI.eSystemObjectType.eModel: SO = await DBAPI.SystemObject.fetchFromModelID(idObject); break;
-        case DBAPI.eSystemObjectType.eScene: SO = await DBAPI.SystemObject.fetchFromSceneID(idObject); break;
-        case DBAPI.eSystemObjectType.eIntermediaryFile: SO = await DBAPI.SystemObject.fetchFromIntermediaryFileID(idObject); break;
-        case DBAPI.eSystemObjectType.eProjectDocumentation: SO = await DBAPI.SystemObject.fetchFromProjectDocumentationID(idObject); break;
-        case DBAPI.eSystemObjectType.eAsset: SO = await DBAPI.SystemObject.fetchFromAssetID(idObject); break;
-        case DBAPI.eSystemObjectType.eAssetVersion: SO = await DBAPI.SystemObject.fetchFromAssetVersionID(idObject); break;
-        case DBAPI.eSystemObjectType.eActor: SO = await DBAPI.SystemObject.fetchFromActorID(idObject); break;
-        case DBAPI.eSystemObjectType.eStakeholder: SO = await DBAPI.SystemObject.fetchFromStakeholderID(idObject); break;
-        case DBAPI.eSystemObjectType.eUnknown:
+        case COMMON.eSystemObjectType.eUnit: SO = await DBAPI.SystemObject.fetchFromUnitID(idObject); break;
+        case COMMON.eSystemObjectType.eProject: SO = await DBAPI.SystemObject.fetchFromProjectID(idObject); break;
+        case COMMON.eSystemObjectType.eSubject: SO = await DBAPI.SystemObject.fetchFromSubjectID(idObject); break;
+        case COMMON.eSystemObjectType.eItem: SO = await DBAPI.SystemObject.fetchFromItemID(idObject); break;
+        case COMMON.eSystemObjectType.eCaptureData: SO = await DBAPI.SystemObject.fetchFromCaptureDataID(idObject); break;
+        case COMMON.eSystemObjectType.eModel: SO = await DBAPI.SystemObject.fetchFromModelID(idObject); break;
+        case COMMON.eSystemObjectType.eScene: SO = await DBAPI.SystemObject.fetchFromSceneID(idObject); break;
+        case COMMON.eSystemObjectType.eIntermediaryFile: SO = await DBAPI.SystemObject.fetchFromIntermediaryFileID(idObject); break;
+        case COMMON.eSystemObjectType.eProjectDocumentation: SO = await DBAPI.SystemObject.fetchFromProjectDocumentationID(idObject); break;
+        case COMMON.eSystemObjectType.eAsset: SO = await DBAPI.SystemObject.fetchFromAssetID(idObject); break;
+        case COMMON.eSystemObjectType.eAssetVersion: SO = await DBAPI.SystemObject.fetchFromAssetVersionID(idObject); break;
+        case COMMON.eSystemObjectType.eActor: SO = await DBAPI.SystemObject.fetchFromActorID(idObject); break;
+        case COMMON.eSystemObjectType.eStakeholder: SO = await DBAPI.SystemObject.fetchFromStakeholderID(idObject); break;
+        case COMMON.eSystemObjectType.eUnknown:
             LOG.error(`SystemObjectCache.convertSystemObjectToObjectID(${JSON.stringify(SOExamine)}) encountered unknown SystemObject type: ${JSON.stringify(oID)}`, LOG.LS.eTEST);
-            expect(eObjectType).not.toEqual(DBAPI.eSystemObjectType.eUnknown);
+            expect(eObjectType).not.toEqual(COMMON.eSystemObjectType.eUnknown);
             break;
     }
     expect(SO).toBeTruthy();
@@ -199,74 +200,74 @@ async function testObjectAndID(oID: DBAPI.ObjectIDAndType): Promise<boolean> {
     let SOI: DBAPI.SystemObjectInfo | undefined = undefined;
     const { idObject, eObjectType } = oID;
     switch (eObjectType) {
-        case DBAPI.eSystemObjectType.eUnit: {
+        case COMMON.eSystemObjectType.eUnit: {
             SO = await DBAPI.SystemObject.fetchFromUnitID(idObject);
             const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(oID.idObject);
             SOI = (unit) ? await SystemObjectCache.getSystemFromUnit(unit) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eProject: {
+        case COMMON.eSystemObjectType.eProject: {
             SO = await DBAPI.SystemObject.fetchFromProjectID(idObject);
             const project: DBAPI.Project | null = await DBAPI.Project.fetch(oID.idObject);
             SOI = (project) ? await SystemObjectCache.getSystemFromProject(project) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eSubject: {
+        case COMMON.eSystemObjectType.eSubject: {
             SO = await DBAPI.SystemObject.fetchFromSubjectID(idObject);
             const subject: DBAPI.Subject | null = await DBAPI.Subject.fetch(oID.idObject);
             SOI = (subject) ? await SystemObjectCache.getSystemFromSubject(subject) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eItem: {
+        case COMMON.eSystemObjectType.eItem: {
             SO = await DBAPI.SystemObject.fetchFromItemID(idObject);
             const item: DBAPI.Item | null = await DBAPI.Item.fetch(oID.idObject);
             SOI = (item) ? await SystemObjectCache.getSystemFromItem(item) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eCaptureData: {
+        case COMMON.eSystemObjectType.eCaptureData: {
             SO = await DBAPI.SystemObject.fetchFromCaptureDataID(idObject);
             const captureData: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetch(oID.idObject);
             SOI = (captureData) ? await SystemObjectCache.getSystemFromCaptureData(captureData) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eModel: {
+        case COMMON.eSystemObjectType.eModel: {
             SO = await DBAPI.SystemObject.fetchFromModelID(idObject);
             const model: DBAPI.Model | null = await DBAPI.Model.fetch(oID.idObject);
             SOI = (model) ? await SystemObjectCache.getSystemFromModel(model) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eScene: {
+        case COMMON.eSystemObjectType.eScene: {
             SO = await DBAPI.SystemObject.fetchFromSceneID(idObject);
             const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
             SOI = (scene) ? await SystemObjectCache.getSystemFromScene(scene) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eIntermediaryFile: {
+        case COMMON.eSystemObjectType.eIntermediaryFile: {
             SO = await DBAPI.SystemObject.fetchFromIntermediaryFileID(idObject);
             const intermediaryFile: DBAPI.IntermediaryFile | null = await DBAPI.IntermediaryFile.fetch(oID.idObject);
             SOI = (intermediaryFile) ? await SystemObjectCache.getSystemFromIntermediaryFile(intermediaryFile) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eProjectDocumentation: {
+        case COMMON.eSystemObjectType.eProjectDocumentation: {
             SO = await DBAPI.SystemObject.fetchFromProjectDocumentationID(idObject);
             const projectDocumentation: DBAPI.ProjectDocumentation | null = await DBAPI.ProjectDocumentation.fetch(oID.idObject);
             SOI = (projectDocumentation) ? await SystemObjectCache.getSystemFromProjectDocumentation(projectDocumentation) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eAsset: {
+        case COMMON.eSystemObjectType.eAsset: {
             SO = await DBAPI.SystemObject.fetchFromAssetID(idObject);
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(oID.idObject);
             SOI = (asset) ? await SystemObjectCache.getSystemFromAsset(asset) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eAssetVersion: {
+        case COMMON.eSystemObjectType.eAssetVersion: {
             SO = await DBAPI.SystemObject.fetchFromAssetVersionID(idObject);
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(oID.idObject);
             SOI = (assetVersion) ? await SystemObjectCache.getSystemFromAssetVersion(assetVersion) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eActor: {
+        case COMMON.eSystemObjectType.eActor: {
             SO = await DBAPI.SystemObject.fetchFromActorID(idObject);
             const actor: DBAPI.Actor | null = await DBAPI.Actor.fetch(oID.idObject);
             SOI = (actor) ? await SystemObjectCache.getSystemFromActor(actor) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eStakeholder: {
+        case COMMON.eSystemObjectType.eStakeholder: {
             SO = await DBAPI.SystemObject.fetchFromStakeholderID(idObject);
             const stakeholder: DBAPI.Stakeholder | null = await DBAPI.Stakeholder.fetch(oID.idObject);
             SOI = (stakeholder) ? await SystemObjectCache.getSystemFromStakeholder(stakeholder) : undefined;
         } break;
-        case DBAPI.eSystemObjectType.eUnknown:
+        case COMMON.eSystemObjectType.eUnknown:
             LOG.error('Invalid Test Case!', LOG.LS.eTEST);
-            expect(eObjectType).not.toEqual(DBAPI.eSystemObjectType.eUnknown);
+            expect(eObjectType).not.toEqual(COMMON.eSystemObjectType.eUnknown);
             break;
     }
 

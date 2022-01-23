@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { PrismaClient, SystemObjectVersion as SystemObjectVersionBase } from '@prisma/client';
-import { ePublishedState, SystemObjectVersionAssetVersionXref } from '..';
+import { SystemObjectVersionAssetVersionXref } from '..';
+import * as COMMON from '../../../client/src/types/server';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 // import * as H from '../../utils/helpers';
@@ -19,15 +20,15 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
     public fetchTableName(): string { return 'SystemObjectVersion'; }
     public fetchID(): number { return this.idSystemObjectVersion; }
 
-    public publishedStateEnum(): ePublishedState {
+    public publishedStateEnum(): COMMON.ePublishedState {
         switch (this.PublishedState) {
-            case 1: return ePublishedState.eAPIOnly;
-            case 2: return ePublishedState.ePublished;
-            default: return ePublishedState.eNotPublished;
+            case 1: return COMMON.ePublishedState.eAPIOnly;
+            case 2: return COMMON.ePublishedState.ePublished;
+            default: return COMMON.ePublishedState.eNotPublished;
         }
     }
 
-    public setPublishedState(eState: ePublishedState): void {
+    public setPublishedState(eState: COMMON.ePublishedState): void {
         this.PublishedState = eState;
     }
 
@@ -129,7 +130,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
     /** Clones the specified SystemObject's version. If idSystemObjectVersion is specified, we clone that specific record;
      * otherwise, we clone the latest SystemObjectVersion for idSystemObject.
      * We make a copy of the SystemObjectVersion, and if !assetsUnzipped, its related SystemObjectVersionAssetVersionXref records.
-     * The published state of the clone is set to ePublishedState.eNotPublished. An optional assetVersionOverrideMap may
+     * The published state of the clone is set to COMMON.ePublishedState.eNotPublished. An optional assetVersionOverrideMap may
      * be supplied; this mapping from idAsset to idAssetVersion can be used to override the cloned xref records.
      * Returns the newly created SystemObjectVersion or null if failure */
     static async cloneObjectAndXrefs(idSystemObject: number, idSystemObjectVersion: number | null, Comment: string | null,
@@ -180,7 +181,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             const SOV: SystemObjectVersion = new SystemObjectVersion({
                 idSystemObjectVersion: 0,
                 idSystemObject,
-                PublishedState: ePublishedState.eNotPublished,
+                PublishedState: COMMON.ePublishedState.eNotPublished,
                 DateCreated: new Date(),
                 Comment
             }); /* istanbul ignore next */

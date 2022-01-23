@@ -1,5 +1,6 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import * as STORE from '../../../storage/interface';
 import * as H from '../../../utils/helpers';
 import * as UTIL from '../api';
@@ -206,13 +207,13 @@ export class ModelTestSetup {
             return false;
         }
 
-        this.vocabModel             = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeModel);
-        this.vocabModelUVMapFile    = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeModelUVMapFile);
-        this.vocabMCreation         = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelCreationMethodCAD);
-        this.vocabMModality         = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelModalityMesh);
-        this.vocabMUnits            = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelUnitsMillimeter);
-        this.vocabMPurposeMaster    = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeMaster);
-        this.vocabMPurposeDownload  = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeDownload);
+        this.vocabModel             = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
+        this.vocabModelUVMapFile    = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile);
+        this.vocabMCreation         = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelCreationMethodCAD);
+        this.vocabMModality         = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelModalityMesh);
+        this.vocabMUnits            = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelUnitsMillimeter);
+        this.vocabMPurposeMaster    = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
+        this.vocabMPurposeDownload  = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
 
         if (!this.vocabModel || !this.vocabModelUVMapFile || !this.vocabMCreation || !this.vocabMModality || !this.vocabMUnits || !this.vocabMPurposeMaster || !this.vocabMPurposeDownload) {
             LOG.error('ModelTestSetup failed to fetch Model-related Vocabulary', LOG.LS.eTEST);

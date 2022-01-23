@@ -5,7 +5,8 @@ import * as DBAPI from '../../../../../db';
 import * as COL from '../../../../../collections/interface';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
-import { VocabularyCache, eVocabularyID } from '../../../../../cache';
+import { VocabularyCache } from '../../../../../cache';
+import * as COMMON from '../../../../../../client/src/types/server';
 
 export default async function createSubjectWithIdentifiers(_: Parent, args: MutationCreateSubjectWithIdentifiersArgs, context: Context): Promise<CreateSubjectWithIdentifiersResult> {
     const {
@@ -14,7 +15,7 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
     const { user } = context;
     const { idUnit, Name, idGeoLocation } = subject;
 
-    const identifierTypeARK: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eIdentifierIdentifierTypeARK);
+    const identifierTypeARK: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
     if (!identifierTypeARK)
         return { success: false, message: 'Unable to lookup ARK Vocabulary' };
     const idIentifierType = identifierTypeARK.idVocabulary;
@@ -102,6 +103,6 @@ function sendResult(success: boolean, message?: string): CreateSubjectWithIdenti
 
 async function publishSubject(idSystemObject: number): Promise<H.IOResults> {
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
-    const success: boolean = await ICol.publish(idSystemObject, DBAPI.ePublishedState.ePublished);
+    const success: boolean = await ICol.publish(idSystemObject, COMMON.ePublishedState.ePublished);
     return { success, error: success ? '' : 'Error encountered during publishing' };
 }
