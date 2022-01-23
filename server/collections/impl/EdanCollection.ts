@@ -10,6 +10,7 @@ import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import * as COMMON from '../../../client/src/types/server';
 
 interface HttpRequestResult {
     output: string;
@@ -114,9 +115,9 @@ export class EdanCollection implements COL.ICollection {
 
     async publish(idSystemObject: number, ePublishState: number): Promise<boolean> {
         switch (ePublishState) {
-            case DBAPI.ePublishedState.eNotPublished:
-            case DBAPI.ePublishedState.eAPIOnly:
-            case DBAPI.ePublishedState.ePublished:
+            case COMMON.ePublishedState.eNotPublished:
+            case COMMON.ePublishedState.eAPIOnly:
+            case COMMON.ePublishedState.ePublished:
                 break;
             default:
                 LOG.error(`EdanCollection.publish called with invalid ePublishState ${ePublishState} for idSystemObject ${idSystemObject}`, LOG.LS.eCOLL);
@@ -130,11 +131,11 @@ export class EdanCollection implements COL.ICollection {
         }
 
         switch (oID.eObjectType) {
-            case DBAPI.eSystemObjectType.eScene: {
+            case COMMON.eSystemObjectType.eScene: {
                 const PS: PublishScene = new PublishScene(idSystemObject);
                 return PS.publish(this, ePublishState);
             }
-            case DBAPI.eSystemObjectType.eSubject: {
+            case COMMON.eSystemObjectType.eSubject: {
                 const PS: PublishSubject = new PublishSubject(idSystemObject);
                 const PSRes: H.IOResults = await PS.publish(this);
                 return PSRes.success;

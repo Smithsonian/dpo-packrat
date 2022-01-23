@@ -3,13 +3,7 @@ import { Vocabulary } from '../Vocabulary';
 import * as DBC from '../../connection';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
-
-export enum eSubjectUnitIdentifierSortColumns {
-    eUnitAbbreviation = 1,
-    eSubjectName = 2,
-    eIdentifierValue = 3,
-    eDefault = 0
-}
+import * as COMMON from '../../../../client/src/types/server';
 
 export class SubjectUnitIdentifier {
     idSubject!: number;
@@ -29,8 +23,8 @@ export class SubjectUnitIdentifier {
 
         try {
             if (!SubjectUnitIdentifier.initialized) {
-                const vocabARK:         Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eIdentifierIdentifierTypeARK);
-                const vocabUnitCMSID:   Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eIdentifierIdentifierTypeUnitCMSID);
+                const vocabARK:         Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
+                const vocabUnitCMSID:   Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeUnitCMSID);
                 SubjectUnitIdentifier.idVocabARK = vocabARK ? vocabARK.idVocabulary : /* istanbul ignore next */ 76;
                 SubjectUnitIdentifier.idVocabUnitCMSID = vocabUnitCMSID ? vocabUnitCMSID.idVocabulary : /* istanbul ignore next */ 77;
                 SubjectUnitIdentifier.initialized = true;
@@ -89,7 +83,7 @@ export class SubjectUnitIdentifier {
     }
 
     static async search(query: string, idUnit?: number | undefined, pageNumber?: number | undefined,
-        rowCount?: number | undefined, sortBy?: eSubjectUnitIdentifierSortColumns | undefined,
+        rowCount?: number | undefined, sortBy?: COMMON.eSubjectUnitIdentifierSortColumns | undefined,
         sortDirection?: boolean | undefined): Promise<SubjectUnitIdentifier[] | null> {
         try {
             const queryRawParams: string[] = [];
@@ -110,20 +104,20 @@ export class SubjectUnitIdentifier {
 
             let orderBy: string = '';
             if (sortBy === undefined)
-                sortBy = eSubjectUnitIdentifierSortColumns.eDefault;
+                sortBy = COMMON.eSubjectUnitIdentifierSortColumns.eDefault;
             switch (sortBy) { /* istanbul ignore next */
                 default:
-                case eSubjectUnitIdentifierSortColumns.eDefault:
-                case eSubjectUnitIdentifierSortColumns.eSubjectName:
+                case COMMON.eSubjectUnitIdentifierSortColumns.eDefault:
+                case COMMON.eSubjectUnitIdentifierSortColumns.eSubjectName:
                     orderBy = 'ORDER BY S.Name' + ((sortDirection === false) ? ' DESC' : '');
                     break;
-                case eSubjectUnitIdentifierSortColumns.eUnitAbbreviation:
+                case COMMON.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation:
                     if (sortDirection === false)
                         orderBy = 'ORDER BY U.Abbreviation DESC, S.Name';
                     else
                         orderBy = 'ORDER BY U.Abbreviation, S.Name';
                     break;
-                case eSubjectUnitIdentifierSortColumns.eIdentifierValue:
+                case COMMON.eSubjectUnitIdentifierSortColumns.eIdentifierValue:
                     orderBy = 'ORDER BY ID.IdentifierValue' + ((sortDirection === false) ? ' DESC' : '');
                     break;
             }

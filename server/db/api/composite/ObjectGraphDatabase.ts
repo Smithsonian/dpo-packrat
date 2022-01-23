@@ -1,7 +1,8 @@
 import { Unit, Project, Subject, Item, SystemObjectIDType, Actor, Asset, AssetVersion, CaptureData, CaptureDataFile, IntermediaryFile,
-    Model, ProjectDocumentation, Scene, Stakeholder, eSystemObjectType, SystemObjectInfo, ObjectIDAndType, SystemObjectIDAndType } from '../..';
+    Model, ProjectDocumentation, Scene, Stakeholder, SystemObjectInfo, ObjectIDAndType, SystemObjectIDAndType } from '../..';
 import { ObjectGraphDataEntry, eApplyGraphStateDirection, ObjectGraphState } from './ObjectGraphDataEntry';
 import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
+import * as COMMON from '../../../../client/src/types/server';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';
@@ -87,7 +88,7 @@ export class ObjectGraphDatabase {
         return await this.applyGraphData();
     }
 
-    private async computeGraphDataFromObject(idObject: number, eObjectType: eSystemObjectType, functionName: string): Promise<boolean> {
+    private async computeGraphDataFromObject(idObject: number, eObjectType: COMMON.eSystemObjectType, functionName: string): Promise<boolean> {
         const oID: ObjectIDAndType = { idObject, eObjectType };
         const sID: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
         if (!sID) {
@@ -124,7 +125,7 @@ export class ObjectGraphDatabase {
         const total: number = units.length;
         for (const unit of units) {
             LOG.info(`ObjectGraphDatabase.computeGraphDataFromUnits ${++count}/${total}`, LOG.LS.eDB);
-            if (!await this.computeGraphDataFromObject(unit.idUnit, eSystemObjectType.eUnit, 'computeGraphDataFromUnits'))
+            if (!await this.computeGraphDataFromObject(unit.idUnit, COMMON.eSystemObjectType.eUnit, 'computeGraphDataFromUnits'))
                 continue;
         }
         return true;
@@ -140,7 +141,7 @@ export class ObjectGraphDatabase {
         // const total: number = projects.length;
         for (const project of projects) {
             // LOG.info(`ObjectGraphDatabase.computeGraphDataFromProjects ${++count}/${total}`, LOG.LS.eDB);
-            if (!await this.computeGraphDataFromObject(project.idProject, eSystemObjectType.eProject, 'computeGraphDataFromProjects'))
+            if (!await this.computeGraphDataFromObject(project.idProject, COMMON.eSystemObjectType.eProject, 'computeGraphDataFromProjects'))
                 continue;
         }
         return true;
@@ -156,7 +157,7 @@ export class ObjectGraphDatabase {
         // const total: number = subjects.length;
         for (const subject of subjects) {
             // LOG.info(`ObjectGraphDatabase.computeGraphDataFromSubjects ${++count}/${total}`, LOG.LS.eDB);
-            if (!await this.computeGraphDataFromObject(subject.idSubject, eSystemObjectType.eSubject, 'computeGraphDataFromSubjects'))
+            if (!await this.computeGraphDataFromObject(subject.idSubject, COMMON.eSystemObjectType.eSubject, 'computeGraphDataFromSubjects'))
                 continue;
         }
         return true;
@@ -172,7 +173,7 @@ export class ObjectGraphDatabase {
         // const total: number = items.length;
         for (const item of items) {
             // LOG.info(`ObjectGraphDatabase.computeGraphDataFromItems ${++count}/${total}`, LOG.LS.eDB);
-            if (!await this.computeGraphDataFromObject(item.idItem, eSystemObjectType.eItem, 'computeGraphDataFromItems'))
+            if (!await this.computeGraphDataFromObject(item.idItem, COMMON.eSystemObjectType.eItem, 'computeGraphDataFromItems'))
                 continue;
         }
         return true;
@@ -185,7 +186,7 @@ export class ObjectGraphDatabase {
         if (!CaptureDatas)
             return false;
         for (const CaptureData of CaptureDatas) {
-            if (!await this.computeGraphDataFromObject(CaptureData.idCaptureData, eSystemObjectType.eCaptureData, 'computeGraphDataFromCaptureDatas'))
+            if (!await this.computeGraphDataFromObject(CaptureData.idCaptureData, COMMON.eSystemObjectType.eCaptureData, 'computeGraphDataFromCaptureDatas'))
                 continue;
         }
         return true;
@@ -198,7 +199,7 @@ export class ObjectGraphDatabase {
         if (!Models)
             return false;
         for (const Model of Models) {
-            if (!await this.computeGraphDataFromObject(Model.idModel, eSystemObjectType.eModel, 'computeGraphDataFromModels'))
+            if (!await this.computeGraphDataFromObject(Model.idModel, COMMON.eSystemObjectType.eModel, 'computeGraphDataFromModels'))
                 continue;
         }
         return true;
@@ -211,7 +212,7 @@ export class ObjectGraphDatabase {
         if (!Scenes)
             return false;
         for (const Scene of Scenes) {
-            if (!await this.computeGraphDataFromObject(Scene.idScene, eSystemObjectType.eScene, 'computeGraphDataFromScenes'))
+            if (!await this.computeGraphDataFromObject(Scene.idScene, COMMON.eSystemObjectType.eScene, 'computeGraphDataFromScenes'))
                 continue;
         }
         return true;
@@ -224,7 +225,7 @@ export class ObjectGraphDatabase {
         if (!IntermediaryFiles)
             return false;
         for (const IntermediaryFile of IntermediaryFiles) {
-            if (!await this.computeGraphDataFromObject(IntermediaryFile.idIntermediaryFile, eSystemObjectType.eIntermediaryFile, 'computeGraphDataFromIntermediaryFiles'))
+            if (!await this.computeGraphDataFromObject(IntermediaryFile.idIntermediaryFile, COMMON.eSystemObjectType.eIntermediaryFile, 'computeGraphDataFromIntermediaryFiles'))
                 continue;
         }
         return true;
@@ -238,7 +239,7 @@ export class ObjectGraphDatabase {
             return false;
         for (const ProjectDocumentation of ProjectDocumentations) {
             if (!await this.computeGraphDataFromObject(ProjectDocumentation.idProjectDocumentation,
-                eSystemObjectType.eProjectDocumentation, 'computeGraphDataFromProjectDocumentations'))
+                COMMON.eSystemObjectType.eProjectDocumentation, 'computeGraphDataFromProjectDocumentations'))
                 continue;
         }
         return true;
@@ -251,7 +252,7 @@ export class ObjectGraphDatabase {
         if (!Assets)
             return false;
         for (const Asset of Assets) {
-            if (!await this.computeGraphDataFromObject(Asset.idAsset, eSystemObjectType.eAsset, 'computeGraphDataFromAssets'))
+            if (!await this.computeGraphDataFromObject(Asset.idAsset, COMMON.eSystemObjectType.eAsset, 'computeGraphDataFromAssets'))
                 continue;
         }
         return true;
@@ -264,7 +265,7 @@ export class ObjectGraphDatabase {
         if (!AssetVersions)
             return false;
         for (const AssetVersion of AssetVersions) {
-            if (!await this.computeGraphDataFromObject(AssetVersion.idAssetVersion, eSystemObjectType.eAssetVersion, 'computeGraphDataFromAssetVersions'))
+            if (!await this.computeGraphDataFromObject(AssetVersion.idAssetVersion, COMMON.eSystemObjectType.eAssetVersion, 'computeGraphDataFromAssetVersions'))
                 continue;
         }
         return true;
@@ -277,7 +278,7 @@ export class ObjectGraphDatabase {
         if (!Actors)
             return false;
         for (const Actor of Actors) {
-            if (!await this.computeGraphDataFromObject(Actor.idActor, eSystemObjectType.eActor, 'computeGraphDataFromActors'))
+            if (!await this.computeGraphDataFromObject(Actor.idActor, COMMON.eSystemObjectType.eActor, 'computeGraphDataFromActors'))
                 continue;
         }
         return true;
@@ -290,7 +291,7 @@ export class ObjectGraphDatabase {
         if (!Stakeholders)
             return false;
         for (const Stakeholder of Stakeholders) {
-            if (!await this.computeGraphDataFromObject(Stakeholder.idStakeholder, eSystemObjectType.eStakeholder, 'computeGraphDataFromStakeholders'))
+            if (!await this.computeGraphDataFromObject(Stakeholder.idStakeholder, COMMON.eSystemObjectType.eStakeholder, 'computeGraphDataFromStakeholders'))
                 continue;
         }
         return true;
@@ -369,15 +370,15 @@ export class ObjectGraphDatabase {
         objectGraphState.ancestorObject = systemObjectIDType;
         switch (systemObjectIDType.eObjectType) {
             /*
-            case eSystemObjectType.eUnit:
-            case eSystemObjectType.eProject:
-            case eSystemObjectType.eSubject:
-            case eSystemObjectType.eItem:
-            case eSystemObjectType.eAsset:
+            case COMMON.eSystemObjectType.eUnit:
+            case COMMON.eSystemObjectType.eProject:
+            case COMMON.eSystemObjectType.eSubject:
+            case COMMON.eSystemObjectType.eItem:
+            case COMMON.eSystemObjectType.eAsset:
                 objectGraphState.ancestorObject = systemObjectIDType;
                 break;
             */
-            case eSystemObjectType.eCaptureData:{
+            case COMMON.eSystemObjectType.eCaptureData:{
                 const captureData: CaptureData | null = await CaptureData.fetch(systemObjectIDType.idObject);
                 if (captureData) {
                     objectGraphState.captureMethod = captureData.idVCaptureMethod;
@@ -393,7 +394,7 @@ export class ObjectGraphDatabase {
                     LOG.error(`ObjectGraphDatabase.applyGraphData() Unable to load CaptureData from ${systemObjectIDType}`, LOG.LS.eDB);
             } break;
 
-            case eSystemObjectType.eModel: {
+            case COMMON.eSystemObjectType.eModel: {
                 const model: Model | null = await Model.fetch(systemObjectIDType.idObject);
                 if (model) {
                     objectGraphState.modelPurpose = model.idVPurpose;
@@ -403,13 +404,13 @@ export class ObjectGraphDatabase {
                     LOG.error(`ObjectGraphDatabase.applyGraphData() Unable to load Model from ${systemObjectIDType}`, LOG.LS.eDB);
             } break;
 
-            case eSystemObjectType.eIntermediaryFile: {
+            case COMMON.eSystemObjectType.eIntermediaryFile: {
                 const intermediaryFile: IntermediaryFile | null = await IntermediaryFile.fetch(systemObjectIDType.idObject);
                 if (intermediaryFile)
                     objectGraphState.commonDateCreated = intermediaryFile.DateCreated;
             } break;
 
-            case eSystemObjectType.eAssetVersion: {
+            case COMMON.eSystemObjectType.eAssetVersion: {
                 const assetVersion: AssetVersion | null = await AssetVersion.fetch(systemObjectIDType.idObject);
                 if (assetVersion)
                     objectGraphState.commonDateCreated = assetVersion.DateCreated;

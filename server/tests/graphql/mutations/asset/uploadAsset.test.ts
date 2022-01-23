@@ -6,6 +6,7 @@ import { UploadAssetInput, UploadStatus } from '../../../../types/graphql';
 import { Context } from '../../../../types/resolvers';
 import { CreateUserInput } from '../../../../types/graphql';
 import * as CACHE from '../../../../cache';
+import * as COMMON from '../../../../../client/src/types/server';
 import * as H from '../../../../utils/helpers';
 import { Config } from '../../../../config';
 
@@ -58,7 +59,7 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
                 const path: string = join(__dirname, `../../../mock/graphql/${filename}`);
                 const file = fs.createReadStream(path);
 
-                const Vocabulary = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeOther);
+                const Vocabulary = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
                 if (Vocabulary) {
                     const { idVocabulary } = Vocabulary;
 
@@ -87,7 +88,7 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
                     isAuthenticated: true
                 };
 
-                const Vocabulary = await CACHE.VocabularyCache.vocabularySetEntriesByEnum(CACHE.eVocabularySetID.eAssetAssetType);
+                const Vocabulary = await CACHE.VocabularyCache.vocabularySetEntriesByEnum(COMMON.eVocabularySetID.eAssetAssetType);
 
                 if (Vocabulary) {
                     const [{ idVocabulary }] = Vocabulary;

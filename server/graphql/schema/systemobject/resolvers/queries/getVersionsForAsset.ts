@@ -4,6 +4,7 @@ import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as LOG from '../../../../../utils/logger';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
+import * as COMMON from '../../../../../../client/src/types/server';
 
 export default async function getVersionsForAsset(_: Parent, args: QueryGetVersionsForAssetArgs): Promise<GetVersionsForAssetResult> {
     const { input } = args;
@@ -28,7 +29,7 @@ export default async function getVersionsForAsset(_: Parent, args: QueryGetVersi
 
     for (const assetVersion of assetVersions) {
         const user: DBAPI.User | undefined = await CACHE.UserCache.getUser(assetVersion.idUserCreator);
-        const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion };
+        const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion };
         const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
         const DV: DetailVersion = {
             idSystemObject: sID ? sID.idSystemObject : 0,

@@ -1,8 +1,9 @@
 /* eslint-disable camelcase */
 import { WorkflowStep as WorkflowStepBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject, eWorkflowJobRunStatus, convertWorkflowJobRunStatusToEnum } from '..';
+import { SystemObject, convertWorkflowJobRunStatusToEnum } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as COMMON from '../../../client/src/types/server';
 
 export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements WorkflowStepBase {
     idWorkflowStep!: number;
@@ -67,10 +68,10 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
         }
     }
 
-    getState(): eWorkflowJobRunStatus {
+    getState(): COMMON.eWorkflowJobRunStatus {
         return convertWorkflowJobRunStatusToEnum(this.State);
     }
-    setState(eState: eWorkflowJobRunStatus): void {
+    setState(eState: COMMON.eWorkflowJobRunStatus): void {
         this.State = eState;
     }
 

@@ -4,6 +4,7 @@
 import * as path from 'path';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
+import * as COMMON from '../../../client/src/types/server';
 import * as STORE from '../../storage/interface';
 import * as H from '../helpers';
 import * as LOG from '../logger';
@@ -320,32 +321,32 @@ export class BulkIngestReader {
     private async extractCaptureDataPhotoFromCSV(bagitCDP: CaptureDataPhotoCSVFields): Promise<IngestPhotogrammetry | null> {
         let vocabResult: { idVocabulary: number, error?: string | null };
 
-        vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataDatasetType, bagitCDP.capture_dataset_type);
+        vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataDatasetType, bagitCDP.capture_dataset_type);
         if (vocabResult.error)
         { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const datasetType: number = vocabResult.idVocabulary;
 
-        vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataItemPositionType, bagitCDP.item_position_type);
+        vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataItemPositionType, bagitCDP.item_position_type);
         if (vocabResult.error)
         { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const itemPositionType: number = vocabResult.idVocabulary;
 
-        vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataFocusType, bagitCDP.focus_type);
+        vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataFocusType, bagitCDP.focus_type);
         if (vocabResult.error)
         { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const focusType: number = vocabResult.idVocabulary;
 
-        vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataLightSourceType, bagitCDP.light_source_type);
+        vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataLightSourceType, bagitCDP.light_source_type);
         if (vocabResult.error)
         { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const lightsourceType: number = vocabResult.idVocabulary;
 
-        vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, bagitCDP.background_removal_method);
+        vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, bagitCDP.background_removal_method);
         if (vocabResult.error)
         { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const backgroundRemovalMethod: number = vocabResult.idVocabulary;
 
-        vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataClusterType, bagitCDP.cluster_type);
+        vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataClusterType, bagitCDP.cluster_type);
         if (vocabResult.error)
         { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const clusterType: number = vocabResult.idVocabulary;
@@ -392,22 +393,22 @@ export class BulkIngestReader {
     private async extractModelFromCSV(bagitModel: ModelsCSVFields): Promise<IngestModel | null> {
         let vocabResult: { idVocabulary: number, error?: string | null };
 
-        vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelCreationMethod, bagitModel.creation_method);
+        vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eModelCreationMethod, bagitModel.creation_method);
         if (vocabResult.error)
         { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const creationMethod: number = vocabResult.idVocabulary;
 
-        vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelModality, bagitModel.modality);
+        vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eModelModality, bagitModel.modality);
         if (vocabResult.error)
         { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const modality: number = vocabResult.idVocabulary;
 
-        vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelPurpose, bagitModel.purpose);
+        vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eModelPurpose, bagitModel.purpose);
         if (vocabResult.error)
         { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const purpose: number = vocabResult.idVocabulary;
 
-        vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelUnits, bagitModel.units);
+        vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eModelUnits, bagitModel.units);
         if (vocabResult.error)
         { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const units: number = vocabResult.idVocabulary;
@@ -444,10 +445,10 @@ export class BulkIngestReader {
         };
     }
 
-    private async computeVocabulary(eVocabSetID: CACHE.eVocabularySetID, term: string): Promise<{ idVocabulary: number, error?: string | null }> {
+    private async computeVocabulary(eVocabSetID: COMMON.eVocabularySetID, term: string): Promise<{ idVocabulary: number, error?: string | null }> {
         const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyBySetAndTerm(eVocabSetID, term); /* istanbul ignore next */
         if (!vocabulary) {
-            const error: string = `Unable to locate ${CACHE.eVocabularySetID[eVocabSetID]} ${term}`;
+            const error: string = `Unable to locate ${COMMON.eVocabularySetID[eVocabSetID]} ${term}`;
             LOG.error(error, LOG.LS.eSYS);
             return { idVocabulary: 0, error };
         }

@@ -1,3 +1,12 @@
+/**
+ * This file exists to provide a single location for enumerations, functions, strings, etc shared
+ * between client and server code.
+ *
+ * Only add shared content like that here ... and this shared content cannot depend on external modules
+ * (i.e. no imports here!)
+ */
+
+/** enum used to provide declarative, programmatic access to sorted vocabulary for system-generated vocabulary sets */
 export enum eVocabularySetID {
     eCaptureDataCaptureMethod,
     eCaptureDataDatasetType,
@@ -53,6 +62,7 @@ export enum eVocabularyID {
     eAssetAssetTypeAttachment,
     eAssetAssetTypeOther,
     eMetadataMetadataSourceBulkIngestion,
+    eMetadataMetadataSourceImage,
     eCaptureDataCaptureMethodPhotogrammetry,
     eCaptureDataCaptureMethodCT,
     eCaptureDataCaptureMethodStructuredLight,
@@ -84,6 +94,7 @@ export enum eVocabularyID {
     eModelFileTypestl,
     eModelFileTypeglb,
     eModelFileTypegltf,
+    eModelFileTypeusd,
     eModelFileTypeusdz,
     eModelFileTypex3d,
     eModelFileTypewrl,
@@ -93,6 +104,21 @@ export enum eVocabularyID {
     eModelFileType3ds,
     eModelFileTypeptx,
     eModelFileTypepts,
+    eModelMaterialChannelMaterialTypeDiffuse,
+    eModelMaterialChannelMaterialTypeSpecular,
+    eModelMaterialChannelMaterialTypeAmbient,
+    eModelMaterialChannelMaterialTypeEmissive,
+    eModelMaterialChannelMaterialTypeBump,
+    eModelMaterialChannelMaterialTypeNormal,
+    eModelMaterialChannelMaterialTypeGlossiness,
+    eModelMaterialChannelMaterialTypeOpacity,
+    eModelMaterialChannelMaterialTypeDisplacement,
+    eModelMaterialChannelMaterialTypeOcclusion,
+    eModelMaterialChannelMaterialTypeReflection,
+    eModelMaterialChannelMaterialTypeMetalness,
+    eModelMaterialChannelMaterialTypeRoughness,
+    eModelMaterialChannelMaterialTypeNone,
+    eModelMaterialChannelMaterialTypeUnknown,
     eJobJobTypeCookBake,
     eJobJobTypeCookDecimateUnwrap,
     eJobJobTypeCookDecimate,
@@ -108,6 +134,7 @@ export enum eVocabularyID {
     eJobJobTypeCookUnwrap,
     eWorkflowTypeCookJob,
     eWorkflowTypeIngestion,
+    eWorkflowTypeUpload,
     eWorkflowStepTypeStart,
     eWorkflowEventIngestionUploadAssetVersion,
     eWorkflowEventIngestionIngestObject,
@@ -298,6 +325,12 @@ export enum eIcon {
     eIconDownload = 1
 }
 
+export enum eLinkOrigin {
+    eClient = 1,
+    eServer = 2,
+    eNone = 0
+}
+
 export enum eAssetGridColumnType {
     eString = 0,
     eNumber = 1,
@@ -307,21 +340,7 @@ export enum eAssetGridColumnType {
     eFileSize = 5
 }
 
-export enum eLinkOrigin {
-    eClient = 1,
-    eServer = 2,
-    eNone = 0
-}
-
-export const subjectUnitIdentifierStringToEnum = (col: string): eSubjectUnitIdentifierSortColumns => {
-    switch (col) {
-        case 'Unit': return eSubjectUnitIdentifierSortColumns.eUnitAbbreviation;
-        case 'Name': return eSubjectUnitIdentifierSortColumns.eSubjectName;
-        case 'Identifier': return eSubjectUnitIdentifierSortColumns.eIdentifierValue;
-        default: return eSubjectUnitIdentifierSortColumns.eDefault;
-    }
-};
-
+// Keep this in sync with SQL in WorkflowListResult.search()
 export enum eWorkflowJobRunStatus {
     eUnitialized = 0,
     eCreated = 1,
@@ -345,36 +364,6 @@ export enum eWorkflowListSortColumns {
     eDefault = 0
 }
 
-export const workflowListSortStringToEnum = (col: string): eWorkflowListSortColumns => {
-    switch (col) {
-        case 'idWorkflowSet': return eWorkflowListSortColumns.eSet;
-        case 'Type': return eWorkflowListSortColumns.eType;
-        case 'State': return eWorkflowListSortColumns.eState;
-        case 'Owner': return eWorkflowListSortColumns.eOwner;
-        case 'DateStart': return eWorkflowListSortColumns.eStart;
-        case 'DateLast': return eWorkflowListSortColumns.eLast;
-        case 'idWorkflowReport': return eWorkflowListSortColumns.eReport;
-        case 'idJobRun': return eWorkflowListSortColumns.eJobRun;
-        case 'Error': return eWorkflowListSortColumns.eError;
-        default: return eWorkflowListSortColumns.eDefault;
-    }
-};
-
-export const workflowListSortEnumToString = (col: eWorkflowListSortColumns): string => {
-    switch (col) {
-        case eWorkflowListSortColumns.eType: return 'Type';
-        case eWorkflowListSortColumns.eState: return 'State';
-        case eWorkflowListSortColumns.eOwner: return 'Owner';
-        case eWorkflowListSortColumns.eStart: return 'DateStart';
-        case eWorkflowListSortColumns.eLast: return 'DateLast';
-        case eWorkflowListSortColumns.eReport: return 'idWorkflowReport';
-        case eWorkflowListSortColumns.eJobRun: return 'idJobRun';
-        case eWorkflowListSortColumns.eError: return 'Error';
-        case eWorkflowListSortColumns.eSet: return 'idWorkflowSet';
-        default: return 'idWorkflowSet';
-    }
-};
+export const authenticationFailureMessage: string = 'GraphQL user is not authenticated';
 
 export const repositoryRowCount = 300;
-
-export const authenticationFailureMessage: string = 'GraphQL user is not authenticated';

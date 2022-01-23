@@ -1,7 +1,8 @@
 import * as LOG from '../utils/logger';
 import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
-import { SystemObject, eSystemObjectType } from '../db';
+import { SystemObject } from '../db';
+import * as COMMON from '../../client/src/types/server';
 
 export class SystemObjectCache {
     private static singleton: SystemObjectCache | null = null;
@@ -66,19 +67,19 @@ export class SystemObjectCache {
             let isASystemObject: boolean = true;
             const { idObject, eObjectType } = oID;
             switch (eObjectType) {
-                case eSystemObjectType.eUnit: SO = await SystemObject.fetchFromUnitID(idObject); break;
-                case eSystemObjectType.eProject: SO = await SystemObject.fetchFromProjectID(idObject); break;
-                case eSystemObjectType.eSubject: SO = await SystemObject.fetchFromSubjectID(idObject); break;
-                case eSystemObjectType.eItem: SO = await SystemObject.fetchFromItemID(idObject); break;
-                case eSystemObjectType.eCaptureData: SO = await SystemObject.fetchFromCaptureDataID(idObject); break;
-                case eSystemObjectType.eModel: SO = await SystemObject.fetchFromModelID(idObject); break;
-                case eSystemObjectType.eScene: SO = await SystemObject.fetchFromSceneID(idObject); break;
-                case eSystemObjectType.eIntermediaryFile: SO = await SystemObject.fetchFromIntermediaryFileID(idObject); break;
-                case eSystemObjectType.eProjectDocumentation: SO = await SystemObject.fetchFromProjectDocumentationID(idObject); break;
-                case eSystemObjectType.eAsset: SO = await SystemObject.fetchFromAssetID(idObject); break;
-                case eSystemObjectType.eAssetVersion: SO = await SystemObject.fetchFromAssetVersionID(idObject); break;
-                case eSystemObjectType.eActor: SO = await SystemObject.fetchFromActorID(idObject); break;
-                case eSystemObjectType.eStakeholder: SO = await SystemObject.fetchFromStakeholderID(idObject); break;
+                case COMMON.eSystemObjectType.eUnit: SO = await SystemObject.fetchFromUnitID(idObject); break;
+                case COMMON.eSystemObjectType.eProject: SO = await SystemObject.fetchFromProjectID(idObject); break;
+                case COMMON.eSystemObjectType.eSubject: SO = await SystemObject.fetchFromSubjectID(idObject); break;
+                case COMMON.eSystemObjectType.eItem: SO = await SystemObject.fetchFromItemID(idObject); break;
+                case COMMON.eSystemObjectType.eCaptureData: SO = await SystemObject.fetchFromCaptureDataID(idObject); break;
+                case COMMON.eSystemObjectType.eModel: SO = await SystemObject.fetchFromModelID(idObject); break;
+                case COMMON.eSystemObjectType.eScene: SO = await SystemObject.fetchFromSceneID(idObject); break;
+                case COMMON.eSystemObjectType.eIntermediaryFile: SO = await SystemObject.fetchFromIntermediaryFileID(idObject); break;
+                case COMMON.eSystemObjectType.eProjectDocumentation: SO = await SystemObject.fetchFromProjectDocumentationID(idObject); break;
+                case COMMON.eSystemObjectType.eAsset: SO = await SystemObject.fetchFromAssetID(idObject); break;
+                case COMMON.eSystemObjectType.eAssetVersion: SO = await SystemObject.fetchFromAssetVersionID(idObject); break;
+                case COMMON.eSystemObjectType.eActor: SO = await SystemObject.fetchFromActorID(idObject); break;
+                case COMMON.eSystemObjectType.eStakeholder: SO = await SystemObject.fetchFromStakeholderID(idObject); break;
                 default: isASystemObject = false; break;
             }
 
@@ -94,7 +95,7 @@ export class SystemObjectCache {
                     this.objectIDToSystemMap.set(oIDCleansed, sID);
                 }
             } else
-                LOG.error(`SystemObjectCache.getSystemFromObjectIDInternal unable to lookup ${eSystemObjectType[eObjectType]}, id ${idObject}`, LOG.LS.eCACHE );
+                LOG.error(`SystemObjectCache.getSystemFromObjectIDInternal unable to lookup ${COMMON.eSystemObjectType[eObjectType]}, id ${idObject}`, LOG.LS.eCACHE );
         }
         return sID;
     }
@@ -126,35 +127,35 @@ export class SystemObjectCache {
             return undefined;
 
         switch (oID.eObjectType) {
-            case eSystemObjectType.eUnit: {
+            case COMMON.eSystemObjectType.eUnit: {
                 const Unit = SO.idUnit ? await DBAPI.Unit.fetch(SO.idUnit) : /* istanbul ignore next */ null;
                 return Unit ? Unit.Name : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eProject: {
+            case COMMON.eSystemObjectType.eProject: {
                 const Project = SO.idProject ? await DBAPI.Project.fetch(SO.idProject) : /* istanbul ignore next */ null;
                 return Project ? Project.Name : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eSubject: {
+            case COMMON.eSystemObjectType.eSubject: {
                 const Subject = SO.idSubject ? await DBAPI.Subject.fetch(SO.idSubject) : /* istanbul ignore next */ null;
                 return Subject ? Subject.Name : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eItem: {
+            case COMMON.eSystemObjectType.eItem: {
                 const Item = SO.idItem ? await DBAPI.Item.fetch(SO.idItem) : /* istanbul ignore next */ null;
                 return Item ? Item.Name : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eCaptureData: {
+            case COMMON.eSystemObjectType.eCaptureData: {
                 const CaptureData = SO.idCaptureData ? await DBAPI.CaptureData.fetch(SO.idCaptureData) : /* istanbul ignore next */ null;
                 return CaptureData ? CaptureData.Name : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eModel: {
+            case COMMON.eSystemObjectType.eModel: {
                 const Model = SO.idModel ? await DBAPI.Model.fetch(SO.idModel) : /* istanbul ignore next */ null;
                 return Model ? Model.Name : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eScene: {
+            case COMMON.eSystemObjectType.eScene: {
                 const Scene = SO.idScene ? await DBAPI.Scene.fetch(SO.idScene) : /* istanbul ignore next */ null;
                 return Scene ? Scene.Name : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eIntermediaryFile: {
+            case COMMON.eSystemObjectType.eIntermediaryFile: {
                 const IntermediaryFile = SO.idIntermediaryFile ? await DBAPI.IntermediaryFile.fetch(SO.idIntermediaryFile) : /* istanbul ignore next */ null; /* istanbul ignore else */
                 if (IntermediaryFile) {
                     const Asset = await DBAPI.Asset.fetch(IntermediaryFile.idAsset);
@@ -162,23 +163,23 @@ export class SystemObjectCache {
                 }
                 return /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eProjectDocumentation: {
+            case COMMON.eSystemObjectType.eProjectDocumentation: {
                 const ProjectDocumentation = SO.idProjectDocumentation ? await DBAPI.ProjectDocumentation.fetch(SO.idProjectDocumentation) : /* istanbul ignore next */ null;
                 return ProjectDocumentation ? ProjectDocumentation.Name : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eAsset: {
+            case COMMON.eSystemObjectType.eAsset: {
                 const Asset = SO.idAsset ? await DBAPI.Asset.fetch(SO.idAsset) : /* istanbul ignore next */ null;
                 return Asset ? Asset.FileName : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eAssetVersion: {
+            case COMMON.eSystemObjectType.eAssetVersion: {
                 const AssetVersion = SO.idAssetVersion ? await DBAPI.AssetVersion.fetch(SO.idAssetVersion) : /* istanbul ignore next */ null;
                 return AssetVersion ? AssetVersion.FileName : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eActor: {
+            case COMMON.eSystemObjectType.eActor: {
                 const Actor = SO.idActor ? await DBAPI.Actor.fetch(SO.idActor) : /* istanbul ignore next */ null;
                 return Actor ? (Actor.IndividualName ?? undefined) : /* istanbul ignore next */ undefined;
             }
-            case eSystemObjectType.eStakeholder: {
+            case COMMON.eSystemObjectType.eStakeholder: {
                 const Stakeholder = SO.idStakeholder ? await DBAPI.Stakeholder.fetch(SO.idStakeholder) : /* istanbul ignore next */ null;
                 return Stakeholder ? Stakeholder.IndividualName : /* istanbul ignore next */ undefined;
             }
@@ -250,73 +251,73 @@ export class SystemObjectCache {
     }
 
     static async getSystemFromUnit(unit: DBAPI.Unit): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: unit.idUnit, eObjectType: DBAPI.eSystemObjectType.eUnit });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: unit.idUnit, eObjectType: COMMON.eSystemObjectType.eUnit });
     }
 
     static async getSystemFromProject(project: DBAPI.Project): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: project.idProject, eObjectType: DBAPI.eSystemObjectType.eProject });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: project.idProject, eObjectType: COMMON.eSystemObjectType.eProject });
     }
 
     static async getSystemFromSubject(subject: DBAPI.Subject): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: subject.idSubject, eObjectType: DBAPI.eSystemObjectType.eSubject });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: subject.idSubject, eObjectType: COMMON.eSystemObjectType.eSubject });
     }
 
     static async getSystemFromItem(item: DBAPI.Item): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: item.idItem, eObjectType: DBAPI.eSystemObjectType.eItem });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: item.idItem, eObjectType: COMMON.eSystemObjectType.eItem });
     }
 
     static async getSystemFromCaptureData(captureData: DBAPI.CaptureData): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: captureData.idCaptureData, eObjectType: DBAPI.eSystemObjectType.eCaptureData });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: captureData.idCaptureData, eObjectType: COMMON.eSystemObjectType.eCaptureData });
     }
 
     static async getSystemFromModel(model: DBAPI.Model): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: model.idModel, eObjectType: DBAPI.eSystemObjectType.eModel });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: model.idModel, eObjectType: COMMON.eSystemObjectType.eModel });
     }
 
     static async getSystemFromScene(scene: DBAPI.Scene): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: scene.idScene, eObjectType: DBAPI.eSystemObjectType.eScene });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: scene.idScene, eObjectType: COMMON.eSystemObjectType.eScene });
     }
 
     static async getSystemFromIntermediaryFile(intermediaryFile: DBAPI.IntermediaryFile): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: intermediaryFile.idIntermediaryFile, eObjectType: DBAPI.eSystemObjectType.eIntermediaryFile });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: intermediaryFile.idIntermediaryFile, eObjectType: COMMON.eSystemObjectType.eIntermediaryFile });
     }
 
     static async getSystemFromProjectDocumentation(projectDocumentation: DBAPI.ProjectDocumentation): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: projectDocumentation.idProjectDocumentation, eObjectType: DBAPI.eSystemObjectType.eProjectDocumentation });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: projectDocumentation.idProjectDocumentation, eObjectType: COMMON.eSystemObjectType.eProjectDocumentation });
     }
 
     static async getSystemFromAsset(asset: DBAPI.Asset): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: asset.idAsset, eObjectType: DBAPI.eSystemObjectType.eAsset });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: asset.idAsset, eObjectType: COMMON.eSystemObjectType.eAsset });
     }
 
     static async getSystemFromAssetVersion(assetVersion: DBAPI.AssetVersion): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: assetVersion.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion });
     }
 
     static async getSystemFromActor(actor: DBAPI.Actor): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: actor.idActor, eObjectType: DBAPI.eSystemObjectType.eActor });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: actor.idActor, eObjectType: COMMON.eSystemObjectType.eActor });
     }
 
     static async getSystemFromStakeholder(stakeholder: DBAPI.Stakeholder): Promise<DBAPI.SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: stakeholder.idStakeholder, eObjectType: DBAPI.eSystemObjectType.eStakeholder });
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: stakeholder.idStakeholder, eObjectType: COMMON.eSystemObjectType.eStakeholder });
     }
 
     static convertSystemObjectToObjectID(SO: SystemObject | null): DBAPI.ObjectIDAndType | undefined {
         if (!SO)
             return undefined;
-        if (SO.idUnit) return { idObject: SO.idUnit, eObjectType: eSystemObjectType.eUnit };
-        else if (SO.idProject) return { idObject: SO.idProject, eObjectType: eSystemObjectType.eProject };
-        else if (SO.idSubject) return { idObject: SO.idSubject, eObjectType: eSystemObjectType.eSubject };
-        else if (SO.idItem) return { idObject: SO.idItem, eObjectType: eSystemObjectType.eItem };
-        else if (SO.idCaptureData) return { idObject: SO.idCaptureData, eObjectType: eSystemObjectType.eCaptureData };
-        else if (SO.idModel) return { idObject: SO.idModel, eObjectType: eSystemObjectType.eModel };
-        else if (SO.idScene) return { idObject: SO.idScene, eObjectType: eSystemObjectType.eScene };
-        else if (SO.idIntermediaryFile) return { idObject: SO.idIntermediaryFile, eObjectType: eSystemObjectType.eIntermediaryFile };
-        else if (SO.idProjectDocumentation) return { idObject: SO.idProjectDocumentation, eObjectType: eSystemObjectType.eProjectDocumentation };
-        else if (SO.idAsset) return { idObject: SO.idAsset, eObjectType: eSystemObjectType.eAsset };
-        else if (SO.idAssetVersion) return { idObject: SO.idAssetVersion, eObjectType: eSystemObjectType.eAssetVersion };
-        else if (SO.idActor) return { idObject: SO.idActor, eObjectType: eSystemObjectType.eActor };
-        else if (SO.idStakeholder) return { idObject: SO.idStakeholder, eObjectType: eSystemObjectType.eStakeholder };
+        if (SO.idUnit) return { idObject: SO.idUnit, eObjectType: COMMON.eSystemObjectType.eUnit };
+        else if (SO.idProject) return { idObject: SO.idProject, eObjectType: COMMON.eSystemObjectType.eProject };
+        else if (SO.idSubject) return { idObject: SO.idSubject, eObjectType: COMMON.eSystemObjectType.eSubject };
+        else if (SO.idItem) return { idObject: SO.idItem, eObjectType: COMMON.eSystemObjectType.eItem };
+        else if (SO.idCaptureData) return { idObject: SO.idCaptureData, eObjectType: COMMON.eSystemObjectType.eCaptureData };
+        else if (SO.idModel) return { idObject: SO.idModel, eObjectType: COMMON.eSystemObjectType.eModel };
+        else if (SO.idScene) return { idObject: SO.idScene, eObjectType: COMMON.eSystemObjectType.eScene };
+        else if (SO.idIntermediaryFile) return { idObject: SO.idIntermediaryFile, eObjectType: COMMON.eSystemObjectType.eIntermediaryFile };
+        else if (SO.idProjectDocumentation) return { idObject: SO.idProjectDocumentation, eObjectType: COMMON.eSystemObjectType.eProjectDocumentation };
+        else if (SO.idAsset) return { idObject: SO.idAsset, eObjectType: COMMON.eSystemObjectType.eAsset };
+        else if (SO.idAssetVersion) return { idObject: SO.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion };
+        else if (SO.idActor) return { idObject: SO.idActor, eObjectType: COMMON.eSystemObjectType.eActor };
+        else if (SO.idStakeholder) return { idObject: SO.idStakeholder, eObjectType: COMMON.eSystemObjectType.eStakeholder };
 
         LOG.error(`SystemObjectCache.convertSystemObjectToObjectID unable to interpret ${JSON.stringify(SO)}`, LOG.LS.eCACHE );
         return undefined;

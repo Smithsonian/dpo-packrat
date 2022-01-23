@@ -3,7 +3,8 @@ import * as LOG from '../../utils/logger';
 import * as CACHE from '../../cache';
 import * as DBAPI from '../../db';
 // import * as H from '../../utils/helpers';
-import { eSystemObjectType, ObjectIDAndType } from '../../db';
+import { ObjectIDAndType } from '../../db';
+import * as COMMON from '../../../client/src/types/server';
 
 export class NavigationDB implements NAV.INavigation {
     async getObjectChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
@@ -25,21 +26,21 @@ export class NavigationDB implements NAV.INavigation {
 
         for (const eObjectType of filter.objectTypes) {
             switch (eObjectType) {
-                case eSystemObjectType.eUnit: entries = entries.concat(await NavigationDB.computeRootUnits(filter)); break;
-                case eSystemObjectType.eProject: entries = entries.concat(await NavigationDB.computeRootProjects(filter)); break;
+                case COMMON.eSystemObjectType.eUnit: entries = entries.concat(await NavigationDB.computeRootUnits(filter)); break;
+                case COMMON.eSystemObjectType.eProject: entries = entries.concat(await NavigationDB.computeRootProjects(filter)); break;
 
-                case eSystemObjectType.eSubject:
-                case eSystemObjectType.eItem:
-                case eSystemObjectType.eCaptureData:
-                case eSystemObjectType.eModel:
-                case eSystemObjectType.eScene:
-                case eSystemObjectType.eIntermediaryFile:
-                case eSystemObjectType.eAsset:
-                case eSystemObjectType.eAssetVersion:
-                case eSystemObjectType.eProjectDocumentation:
-                case eSystemObjectType.eActor:
-                case eSystemObjectType.eStakeholder:
-                case eSystemObjectType.eUnknown:
+                case COMMON.eSystemObjectType.eSubject:
+                case COMMON.eSystemObjectType.eItem:
+                case COMMON.eSystemObjectType.eCaptureData:
+                case COMMON.eSystemObjectType.eModel:
+                case COMMON.eSystemObjectType.eScene:
+                case COMMON.eSystemObjectType.eIntermediaryFile:
+                case COMMON.eSystemObjectType.eAsset:
+                case COMMON.eSystemObjectType.eAssetVersion:
+                case COMMON.eSystemObjectType.eProjectDocumentation:
+                case COMMON.eSystemObjectType.eActor:
+                case COMMON.eSystemObjectType.eStakeholder:
+                case COMMON.eSystemObjectType.eUnknown:
                 default:
                     return { success: false, error: 'Not implemented', entries, metadataColumns: filter.metadataColumns };
             }
@@ -61,21 +62,21 @@ export class NavigationDB implements NAV.INavigation {
         const entries: NAV.NavigationResultEntry[] = [];
 
         switch (oID.eObjectType) {
-            case eSystemObjectType.eUnit: await NavigationDB.computeChildrenForUnitOrProject(filter, oID, OG, entries); break;
-            case eSystemObjectType.eProject: await NavigationDB.computeChildrenForUnitOrProject(filter, oID, OG, entries); break;
-            case eSystemObjectType.eSubject: await NavigationDB.computeChildrenForSubject(filter, oID, OG, entries); break;
-            case eSystemObjectType.eItem: await NavigationDB.computeChildrenForItem(filter, oID, OG, entries); break;
+            case COMMON.eSystemObjectType.eUnit: await NavigationDB.computeChildrenForUnitOrProject(filter, oID, OG, entries); break;
+            case COMMON.eSystemObjectType.eProject: await NavigationDB.computeChildrenForUnitOrProject(filter, oID, OG, entries); break;
+            case COMMON.eSystemObjectType.eSubject: await NavigationDB.computeChildrenForSubject(filter, oID, OG, entries); break;
+            case COMMON.eSystemObjectType.eItem: await NavigationDB.computeChildrenForItem(filter, oID, OG, entries); break;
 
-            case eSystemObjectType.eCaptureData:
-            case eSystemObjectType.eModel:
-            case eSystemObjectType.eScene:
-            case eSystemObjectType.eIntermediaryFile:
-            case eSystemObjectType.eAsset:
-            case eSystemObjectType.eAssetVersion:
-            case eSystemObjectType.eProjectDocumentation:
-            case eSystemObjectType.eActor:
-            case eSystemObjectType.eStakeholder: /* istanbul ignore next */
-            case eSystemObjectType.eUnknown: /* istanbul ignore next */
+            case COMMON.eSystemObjectType.eCaptureData:
+            case COMMON.eSystemObjectType.eModel:
+            case COMMON.eSystemObjectType.eScene:
+            case COMMON.eSystemObjectType.eIntermediaryFile:
+            case COMMON.eSystemObjectType.eAsset:
+            case COMMON.eSystemObjectType.eAssetVersion:
+            case COMMON.eSystemObjectType.eProjectDocumentation:
+            case COMMON.eSystemObjectType.eActor:
+            case COMMON.eSystemObjectType.eStakeholder: /* istanbul ignore next */
+            case COMMON.eSystemObjectType.eUnknown: /* istanbul ignore next */
             default:
                 return { success: false, error: 'Not implemented', entries, metadataColumns: filter.metadataColumns };
         }
@@ -93,7 +94,7 @@ export class NavigationDB implements NAV.INavigation {
         }
 
         for (const unit of units) {
-            const oID: DBAPI.ObjectIDAndType = { idObject: unit.idUnit, eObjectType: eSystemObjectType.eUnit };
+            const oID: DBAPI.ObjectIDAndType = { idObject: unit.idUnit, eObjectType: COMMON.eSystemObjectType.eUnit };
             const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
             if (!sID) {
                 LOG.error(`NavigationDB.getRoot unable to compute idSystemObject for ${JSON.stringify(oID)}`, LOG.LS.eNAV);
@@ -103,7 +104,7 @@ export class NavigationDB implements NAV.INavigation {
             const entry: NAV.NavigationResultEntry = {
                 idSystemObject: sID.idSystemObject,
                 name: unit.Abbreviation || '<UNKNOWN>',
-                objectType: eSystemObjectType.eUnit,
+                objectType: COMMON.eSystemObjectType.eUnit,
                 idObject: unit.idUnit,
                 metadata: NavigationDB.computeMetadataForUnit(unit, filter.metadataColumns)
             };
@@ -116,13 +117,13 @@ export class NavigationDB implements NAV.INavigation {
         filter; oID; /* istanbul ignore else */
         if (OG.subject) {
             for (const subject of OG.subject) {
-                const oIDSubject: ObjectIDAndType = { idObject: subject.idSubject, eObjectType: eSystemObjectType.eSubject };
+                const oIDSubject: ObjectIDAndType = { idObject: subject.idSubject, eObjectType: COMMON.eSystemObjectType.eSubject };
                 const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDSubject); /* istanbul ignore else */
                 if (sID)
                     entries.push({
                         idSystemObject: sID.idSystemObject,
                         name: subject.Name,
-                        objectType: eSystemObjectType.eSubject,
+                        objectType: COMMON.eSystemObjectType.eSubject,
                         idObject: subject.idSubject,
                         metadata: await NavigationDB.computeMetadataForSubject(subject, filter.metadataColumns)
                     });
@@ -132,15 +133,15 @@ export class NavigationDB implements NAV.INavigation {
         }
     }
 
-    private static computeMetadataForUnit(unit: DBAPI.Unit, metadataColumns: NAV.eMetadata[]): string[] {
+    private static computeMetadataForUnit(unit: DBAPI.Unit, metadataColumns: COMMON.eMetadata[]): string[] {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eHierarchyUnit: metadata.push(unit.Abbreviation || '<UNKNOWN>'); break; /* istanbul ignore next */
+                case COMMON.eMetadata.eHierarchyUnit: metadata.push(unit.Abbreviation || '<UNKNOWN>'); break; /* istanbul ignore next */
 
                 default:
-                case NAV.eMetadata.eHierarchyItem:
-                case NAV.eMetadata.eHierarchySubject:
+                case COMMON.eMetadata.eHierarchyItem:
+                case COMMON.eMetadata.eHierarchySubject:
                     metadata.push('');
                     break;
             }
@@ -160,7 +161,7 @@ export class NavigationDB implements NAV.INavigation {
         }
 
         for (const project of projects) {
-            const oID: DBAPI.ObjectIDAndType = { idObject: project.idProject, eObjectType: eSystemObjectType.eProject };
+            const oID: DBAPI.ObjectIDAndType = { idObject: project.idProject, eObjectType: COMMON.eSystemObjectType.eProject };
             const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
             if (!sID) {
                 LOG.error(`NavigationDB.getRoot unable to compute idSystemObject for ${JSON.stringify(oID)}`, LOG.LS.eNAV);
@@ -170,7 +171,7 @@ export class NavigationDB implements NAV.INavigation {
             const entry: NAV.NavigationResultEntry = {
                 idSystemObject: sID.idSystemObject,
                 name: project.Name,
-                objectType: eSystemObjectType.eProject,
+                objectType: COMMON.eSystemObjectType.eProject,
                 idObject: project.idProject,
                 metadata: await NavigationDB.computeMetadataForProject(project, filter.metadataColumns)
             };
@@ -181,11 +182,11 @@ export class NavigationDB implements NAV.INavigation {
 
     // computeChildrenForUnitOrProject handles project's subject children, for the time being
 
-    private static async computeMetadataForProject(project: DBAPI.Project, metadataColumns: NAV.eMetadata[]): Promise<string[]> {
+    private static async computeMetadataForProject(project: DBAPI.Project, metadataColumns: COMMON.eMetadata[]): Promise<string[]> {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eHierarchyUnit: {
+                case COMMON.eMetadata.eHierarchyUnit: {
                     const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchMasterFromProjects([project.idProject]); // TODO: consider placing this in a cache
                     let unitAbbreviation: string = ''; /* istanbul ignore else */
                     if (units) {
@@ -196,8 +197,8 @@ export class NavigationDB implements NAV.INavigation {
                 } break; /* istanbul ignore next */
 
                 default:
-                case NAV.eMetadata.eHierarchyItem:
-                case NAV.eMetadata.eHierarchySubject:
+                case COMMON.eMetadata.eHierarchyItem:
+                case COMMON.eMetadata.eHierarchySubject:
                     metadata.push('');
                     break;
             }
@@ -218,13 +219,13 @@ export class NavigationDB implements NAV.INavigation {
         /* istanbul ignore else */
         if (OG.item) {
             for (const item of OG.item) {
-                const oIDITem: ObjectIDAndType = { idObject: item.idItem, eObjectType: eSystemObjectType.eItem };
+                const oIDITem: ObjectIDAndType = { idObject: item.idItem, eObjectType: COMMON.eSystemObjectType.eItem };
                 const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDITem); /* istanbul ignore else */
                 if (sID)
                     entries.push({
                         idSystemObject: sID.idSystemObject,
                         name: item.Name,
-                        objectType: eSystemObjectType.eItem,
+                        objectType: COMMON.eSystemObjectType.eItem,
                         idObject: item.idItem,
                         metadata: await NavigationDB.computeMetadataForItem(item, subject, filter.metadataColumns)
                     });
@@ -234,16 +235,16 @@ export class NavigationDB implements NAV.INavigation {
         }
     }
 
-    private static async computeMetadataForSubject(subject: DBAPI.Subject, metadataColumns: NAV.eMetadata[]): Promise<string[]> {
+    private static async computeMetadataForSubject(subject: DBAPI.Subject, metadataColumns: COMMON.eMetadata[]): Promise<string[]> {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eHierarchyUnit: {
+                case COMMON.eMetadata.eHierarchyUnit: {
                     const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subject.idUnit);
                     metadata.push(unit ? (unit.Abbreviation || /* istanbul ignore next */ '<UNKNOWN>') : /* istanbul ignore next */ '');
                 } break;
 
-                case NAV.eMetadata.eHierarchySubject: {
+                case COMMON.eMetadata.eHierarchySubject: {
                     const identifier: DBAPI.Identifier | null = (subject.idIdentifierPreferred)
                         ? await DBAPI.Identifier.fetch(subject.idIdentifierPreferred)
                         : null;
@@ -251,7 +252,7 @@ export class NavigationDB implements NAV.INavigation {
                 } break; /* istanbul ignore next */
 
                 default:
-                case NAV.eMetadata.eHierarchyItem:
+                case COMMON.eMetadata.eHierarchyItem:
                     metadata.push('');
                     break;
             }
@@ -272,13 +273,13 @@ export class NavigationDB implements NAV.INavigation {
         if (OG.captureData) {
             for (const captureData of OG.captureData) {
                 const vCaptureMethod: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(captureData.idVCaptureMethod);
-                const oIDCD: ObjectIDAndType = { idObject: captureData.idCaptureData, eObjectType: eSystemObjectType.eCaptureData };
+                const oIDCD: ObjectIDAndType = { idObject: captureData.idCaptureData, eObjectType: COMMON.eSystemObjectType.eCaptureData };
                 const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDCD); /* istanbul ignore else */
                 if (sID)
                     entries.push({
                         idSystemObject: sID.idSystemObject,
                         name: `Capture Set${vCaptureMethod ? ' ' + vCaptureMethod.Term : /* istanbul ignore next */ ''}`, /* : ${H.Helpers.convertDateToYYYYMMDD(captureData.DateCaptured)} */
-                        objectType: eSystemObjectType.eCaptureData,
+                        objectType: COMMON.eSystemObjectType.eCaptureData,
                         idObject: captureData.idCaptureData,
                         metadata: await NavigationDB.computeMetadataForItemChildren(/* captureData, */ item, filter.metadataColumns)
                     });
@@ -290,13 +291,13 @@ export class NavigationDB implements NAV.INavigation {
         if (OG.model) {
             for (const model of OG.model) {
                 const vPurpose: DBAPI.Vocabulary | undefined = model.idVPurpose ? await CACHE.VocabularyCache.vocabulary(model.idVPurpose) : undefined;
-                const oIDModel: ObjectIDAndType = { idObject: model.idModel, eObjectType: eSystemObjectType.eModel };
+                const oIDModel: ObjectIDAndType = { idObject: model.idModel, eObjectType: COMMON.eSystemObjectType.eModel };
                 const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDModel); /* istanbul ignore else */
                 if (sID)
                     entries.push({
                         idSystemObject: sID.idSystemObject,
                         name: `Model${vPurpose ? ' ' + vPurpose.Term : /* istanbul ignore next */ ''}`, /* : ${H.Helpers.convertDateToYYYYMMDD(model.DateCreated)} */
-                        objectType: eSystemObjectType.eModel,
+                        objectType: COMMON.eSystemObjectType.eModel,
                         idObject: model.idModel,
                         metadata: await NavigationDB.computeMetadataForItemChildren(/* model, */ item, filter.metadataColumns)
                     });
@@ -307,13 +308,13 @@ export class NavigationDB implements NAV.INavigation {
 
         if (OG.scene) {
             for (const scene of OG.scene) {
-                const oIDScene: ObjectIDAndType = { idObject: scene.idScene, eObjectType: eSystemObjectType.eScene };
+                const oIDScene: ObjectIDAndType = { idObject: scene.idScene, eObjectType: COMMON.eSystemObjectType.eScene };
                 const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDScene); /* istanbul ignore else */
                 if (sID)
                     entries.push({
                         idSystemObject: sID.idSystemObject,
                         name: `Scene ${scene.Name}`,
-                        objectType: eSystemObjectType.eScene,
+                        objectType: COMMON.eSystemObjectType.eScene,
                         idObject: scene.idScene,
                         metadata: await NavigationDB.computeMetadataForItemChildren(/* scene, */ item, filter.metadataColumns)
                     });
@@ -323,23 +324,23 @@ export class NavigationDB implements NAV.INavigation {
         }
     }
 
-    private static async computeMetadataForItem(item: DBAPI.Item, subject: DBAPI.Subject, metadataColumns: NAV.eMetadata[]): Promise<string[]> {
+    private static async computeMetadataForItem(item: DBAPI.Item, subject: DBAPI.Subject, metadataColumns: COMMON.eMetadata[]): Promise<string[]> {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eHierarchyUnit: {
+                case COMMON.eMetadata.eHierarchyUnit: {
                     const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subject.idUnit);
                     metadata.push(unit ? (unit.Abbreviation || /* istanbul ignore next */ '<UNKNOWN>') : /* istanbul ignore next */ '');
                 } break;
 
-                case NAV.eMetadata.eHierarchySubject: {
+                case COMMON.eMetadata.eHierarchySubject: {
                     const identifier: DBAPI.Identifier | null = (subject.idIdentifierPreferred)
                         ? await DBAPI.Identifier.fetch(subject.idIdentifierPreferred)
                         : /* istanbul ignore next */ null;
                     metadata.push(identifier ? identifier.IdentifierValue : /* istanbul ignore next */ '');
                 } break;
 
-                case NAV.eMetadata.eHierarchyItem:
+                case COMMON.eMetadata.eHierarchyItem:
                     metadata.push(`Item ${item.Name}`);
                     break;
 
@@ -353,12 +354,12 @@ export class NavigationDB implements NAV.INavigation {
     }
     /* #endregion */
 
-    private static async computeMetadataForItemChildren(item: DBAPI.Item, metadataColumns: NAV.eMetadata[]): Promise<string[]> {
+    private static async computeMetadataForItemChildren(item: DBAPI.Item, metadataColumns: COMMON.eMetadata[]): Promise<string[]> {
         const subjects: DBAPI.Subject[] | null = await DBAPI.Subject.fetchMasterFromItems([item.idItem]);
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eHierarchyUnit: { /* istanbul ignore else */
+                case COMMON.eMetadata.eHierarchyUnit: { /* istanbul ignore else */
                     if (subjects && subjects.length > 0) {  // TODO: deal with multiple subjects
                         const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subjects[0].idUnit);
                         metadata.push(unit ? (unit.Abbreviation || /* istanbul ignore next */ '<UNKNOWN>') : /* istanbul ignore next */ '');
@@ -366,7 +367,7 @@ export class NavigationDB implements NAV.INavigation {
                         metadata.push('');
                 } break;
 
-                case NAV.eMetadata.eHierarchySubject: { /* istanbul ignore else */
+                case COMMON.eMetadata.eHierarchySubject: { /* istanbul ignore else */
                     if (subjects && subjects.length > 0) {  // TODO: deal with multiple subjects
                         const identifier: DBAPI.Identifier | null = (subjects[0].idIdentifierPreferred)
                             ? await DBAPI.Identifier.fetch(subjects[0].idIdentifierPreferred)
@@ -376,7 +377,7 @@ export class NavigationDB implements NAV.INavigation {
                         metadata.push('');
                 } break;
 
-                case NAV.eMetadata.eHierarchyItem:
+                case COMMON.eMetadata.eHierarchyItem:
                     metadata.push(`Item ${item.Name}`);
                     break;
 

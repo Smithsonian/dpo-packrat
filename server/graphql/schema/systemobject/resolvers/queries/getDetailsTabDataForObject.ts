@@ -1,5 +1,5 @@
 import * as DBAPI from '../../../../../db';
-import { eSystemObjectType } from '../../../../../db';
+import * as COMMON from '../../../../../../client/src/types/server';
 import {
     AssetVersionDetailFields,
     AssetDetailFields,
@@ -36,13 +36,13 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
     const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
 
     switch (objectType) {
-        case eSystemObjectType.eUnit:
+        case COMMON.eSystemObjectType.eUnit:
             if (systemObject?.idUnit) result.Unit = await DBAPI.Unit.fetch(systemObject.idUnit);
             break;
-        case eSystemObjectType.eProject:
+        case COMMON.eSystemObjectType.eProject:
             if (systemObject?.idProject) result.Project = await DBAPI.Project.fetch(systemObject.idProject);
             break;
-        case eSystemObjectType.eSubject: {
+        case COMMON.eSystemObjectType.eSubject: {
             if (systemObject?.idSubject) {
                 let fields: SubjectDetailFields = {};
 
@@ -58,7 +58,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
             }
             break;
         }
-        case eSystemObjectType.eItem: {
+        case COMMON.eSystemObjectType.eItem: {
             if (systemObject?.idItem) {
                 let fields: ItemDetailFields = {};
 
@@ -74,17 +74,17 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
             }
             break;
         }
-        case eSystemObjectType.eCaptureData:
+        case COMMON.eSystemObjectType.eCaptureData:
             if (systemObject?.idCaptureData) {
                 result.CaptureData = await getCaptureDataDetailFields(systemObject.idCaptureData);
             }
             break;
-        case eSystemObjectType.eModel:
+        case COMMON.eSystemObjectType.eModel:
             if (systemObject?.idModel) {
                 result.Model = await DBAPI.ModelConstellation.fetch(systemObject.idModel);
             }
             break;
-        case eSystemObjectType.eScene:
+        case COMMON.eSystemObjectType.eScene:
             if (systemObject?.idScene) {
                 let fields: SceneDetailFields = {
                     Links: []
@@ -113,13 +113,13 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 result.Scene = fields;
             }
             break;
-        case eSystemObjectType.eIntermediaryFile:
+        case COMMON.eSystemObjectType.eIntermediaryFile:
             if (systemObject?.idIntermediaryFile) result.IntermediaryFile = await DBAPI.IntermediaryFile.fetch(systemObject.idIntermediaryFile);
             break;
-        case eSystemObjectType.eProjectDocumentation:
+        case COMMON.eSystemObjectType.eProjectDocumentation:
             if (systemObject?.idProjectDocumentation) result.ProjectDocumentation = await DBAPI.ProjectDocumentation.fetch(systemObject.idProjectDocumentation);
             break;
-        case eSystemObjectType.eAsset: {
+        case COMMON.eSystemObjectType.eAsset: {
             if (systemObject?.idAsset) {
                 let fields: AssetDetailFields = {};
 
@@ -134,7 +134,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
             }
             break;
         }
-        case eSystemObjectType.eAssetVersion: {
+        case COMMON.eSystemObjectType.eAssetVersion: {
             if (systemObject?.idAssetVersion) {
                 let fields: AssetVersionDetailFields = {};
 
@@ -150,10 +150,10 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
 
             break;
         }
-        case eSystemObjectType.eActor:
+        case COMMON.eSystemObjectType.eActor:
             if (systemObject?.idActor) result.Actor = await DBAPI.Actor.fetch(systemObject.idActor);
             break;
-        case eSystemObjectType.eStakeholder:
+        case COMMON.eSystemObjectType.eStakeholder:
             if (systemObject?.idStakeholder) result.Stakeholder = await DBAPI.Stakeholder.fetch(systemObject.idStakeholder);
             break;
         default:
