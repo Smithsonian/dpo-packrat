@@ -99,6 +99,7 @@ function Model(props: ModelProps): React.ReactElement {
     const [ingestionModel, setIngestionModel] = useState<any>({
         CountVertices: null,
         CountFaces: null,
+        CountTriangles: null,
         CountAnimations: null,
         CountCameras: null,
         CountLights: null,
@@ -116,6 +117,7 @@ function Model(props: ModelProps): React.ReactElement {
             idModelObject: null,
             CountPoint: null,
             CountFace: null,
+            CountTriangles: null,
             CountColorChannel: null,
             CountTextureCoordinateChannel: null,
             HasBones: null,
@@ -156,8 +158,10 @@ function Model(props: ModelProps): React.ReactElement {
                     }
                 }
             });
+            // console.log(`data=${JSON.stringify(data)}`);
             if (data.getModelConstellationForAssetVersion.ModelConstellation) {
                 const modelConstellation = data.getModelConstellationForAssetVersion.ModelConstellation;
+                // console.log(`modelConstellation=${JSON.stringify(modelConstellation)}`);
                 const { ingestionModel, modelObjects, assets } = extractModelConstellation(modelConstellation);
                 // if we're not in update mode, set the name:
                 if (!idAsset)
@@ -167,6 +171,8 @@ function Model(props: ModelProps): React.ReactElement {
                 if (modelConstellation.Model.idVFileType)
                     updateMetadataField(metadataIndex, 'modelFileType', Number(modelConstellation.Model.idVFileType), MetadataType.model);
 
+                // console.log(`ingestionModel=${JSON.stringify(ingestionModel)}`);
+                // console.log(`modelObjects=${JSON.stringify(modelObjects)}`);
                 setIngestionModel(ingestionModel);
                 setModelObjects(modelObjects);
                 setAssetFiles(assets);
@@ -372,6 +378,7 @@ function Model(props: ModelProps): React.ReactElement {
                         <Box className={classes.notRequiredFields}>
                             <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} />
                             <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} />
+                            <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} />
                             <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} />
                             <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} />
                             <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} />

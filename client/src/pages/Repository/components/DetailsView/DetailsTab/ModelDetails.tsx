@@ -183,6 +183,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                     <Box className={classes.notRequiredFields}>
                         <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} />
                         <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} />
+                        <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} />
                         <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} />
                         <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} />
                         <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} />

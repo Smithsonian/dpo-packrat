@@ -760,6 +760,7 @@ type Model {
   CountAnimations: Int
   CountCameras: Int
   CountFaces: Int
+  CountTriangles: Int
   CountLights: Int
   CountMaterials: Int
   CountMeshes: Int
@@ -837,6 +838,7 @@ type ModelObject {
   BoundingBoxP2Z: Float
   CountVertices: Int
   CountFaces: Int
+  CountTriangles: Int
   CountColorChannels: Int
   CountTextureCoordinateChannels: Int
   HasBones: Boolean

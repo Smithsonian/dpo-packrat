@@ -1186,6 +1186,7 @@ export type Model = {
   CountAnimations?: Maybe<Scalars['Int']>;
   CountCameras?: Maybe<Scalars['Int']>;
   CountFaces?: Maybe<Scalars['Int']>;
+  CountTriangles?: Maybe<Scalars['Int']>;
   CountLights?: Maybe<Scalars['Int']>;
   CountMaterials?: Maybe<Scalars['Int']>;
   CountMeshes?: Maybe<Scalars['Int']>;
@@ -1268,6 +1269,7 @@ export type ModelObject = {
   BoundingBoxP2Z?: Maybe<Scalars['Float']>;
   CountVertices?: Maybe<Scalars['Int']>;
   CountFaces?: Maybe<Scalars['Int']>;
+  CountTriangles?: Maybe<Scalars['Int']>;
   CountColorChannels?: Maybe<Scalars['Int']>;
   CountTextureCoordinateChannels?: Maybe<Scalars['Int']>;
   HasBones?: Maybe<Scalars['Boolean']>;
