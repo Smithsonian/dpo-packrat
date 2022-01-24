@@ -319,6 +319,8 @@ export class ObjectGraphDatabase {
         let entry: number = 0;
         for (const objectGraphDataEntry of this.objectMap.values()) {
             const objectGraphState = await this.extractState(objectGraphDataEntry.systemObjectIDType);
+            // if (ObjectGraphDataEntry.SODebugSet.has(objectGraphDataEntry.systemObjectIDType.idSystemObject))
+            //     LOG.info(`ObjectGraphDatabase.applyGraphData(${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}) ${JSON.stringify(objectGraphDataEntry, H.Helpers.saferStringify)}\nOGS: ${JSON.stringify(objectGraphState, H.Helpers.saferStringify)}`, LOG.LS.eDB);
             retValue = await this.applyGraphState(objectGraphDataEntry, objectGraphState, ++entry, entries) && retValue;
         }
         if (log)
