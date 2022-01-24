@@ -62,6 +62,7 @@ const getDetailsTabDataForObject = gql`
                     idModel
                     CountVertices
                     CountFaces
+                    CountTriangles
                     CountAnimations
                     CountCameras
                     CountLights
@@ -90,6 +91,7 @@ const getDetailsTabDataForObject = gql`
                     BoundingBoxP2Z
                     CountVertices
                     CountFaces
+                    CountTriangles
                     CountColorChannels
                     CountTextureCoordinateChannels
                     HasBones
