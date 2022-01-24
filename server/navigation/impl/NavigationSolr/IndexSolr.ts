@@ -68,6 +68,8 @@ export class IndexSolr implements NAV.IIndexer {
         // LOG.info(`IndexSolr.indexObject(${idSystemObject}) OGDE ${JSON.stringify(OGDE, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
         if (await this.handleObject(doc, OGDE)) {
             docs.set(doc.id, doc);
+            // if (ObjectGraphDataEntry.SODebugSet.has(doc.id))
+            //     LOG.info(`IndexSolr.indexObject(${idSystemObject}) ${JSON.stringify(doc, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
 
             if (!await this.handleAncestors(docs, OGDE)) // updates docs, if there are ancestors and if OGDE has children data
                 return false;
