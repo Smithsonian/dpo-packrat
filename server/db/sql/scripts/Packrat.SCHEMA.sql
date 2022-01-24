@@ -292,6 +292,7 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `FileEncoding` varchar(40) NULL,
   `IsDracoCompressed` boolean NULL,
   `AutomationTag` varchar(256) NULL,
+  `CountTriangles` int(11) DEFAULT NULL,
   PRIMARY KEY (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -352,6 +353,7 @@ CREATE TABLE IF NOT EXISTS `ModelObject` (
   `IsTwoManifoldBounded` boolean DEFAULT NULL,
   `IsWatertight` boolean DEFAULT NULL,
   `SelfIntersecting` boolean DEFAULT NULL,
+  `CountTriangles` int(11) DEFAULT NULL,
   PRIMARY KEY (`idModelObject`),
   KEY `ModelObject_idModel` (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;

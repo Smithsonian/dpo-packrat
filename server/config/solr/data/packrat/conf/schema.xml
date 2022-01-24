@@ -57,6 +57,7 @@
     <field name="ModelCountAnimations" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="ModelCountCameras" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="ModelCountFaces" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelCountTriangles" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="ModelCountLights" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="ModelCountMaterials" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="ModelCountMeshes" type="pint" indexed="true" stored="true" multiValued="false" />
@@ -86,6 +87,7 @@
     <field name="ModelObjectBoundingBoxP2Z" type="pdoubles" indexed="true" stored="true"/>
     <field name="ModelObjectCountVertices" type="pdoubles" indexed="true" stored="true"/>
     <field name="ModelObjectCountFaces" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectCountTriangles" type="pdoubles" indexed="true" stored="true"/>
     <field name="ModelObjectCountColorChannels" type="pdoubles" indexed="true" stored="true"/>
     <field name="ModelObjectCountTextureCoordinateChannels" type="pdoubles" indexed="true" stored="true"/>
     <field name="ModelObjectHasBones" type="booleans" indexed="true" stored="true"/>

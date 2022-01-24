@@ -1730,7 +1730,7 @@ class IngestDataWorker extends ResolverBase {
             idVFileType: vFileType ? vFileType.idVocabulary : null,
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null, CountMaterials: null,
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
-            AutomationTag: MSX.computeModelAutomationTag()
+            AutomationTag: MSX.computeModelAutomationTag(), CountTriangles: null
         });
     }
 
@@ -1738,6 +1738,7 @@ class IngestDataWorker extends ResolverBase {
         model.CountAnimations = modelMetrics.CountAnimations;
         model.CountCameras = modelMetrics.CountCameras;
         model.CountFaces = modelMetrics.CountFaces;
+        model.CountTriangles = modelMetrics.CountTriangles;
         model.CountLights = modelMetrics.CountLights;
         model.CountMaterials = modelMetrics.CountMaterials;
         model.CountMeshes = modelMetrics.CountMeshes;

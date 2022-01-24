@@ -9,6 +9,7 @@ const getModelConstellationForAssetVersion = gql`
                     idModel
                     CountVertices
                     CountFaces
+                    CountTriangles
                     CountAnimations
                     CountCameras
                     CountLights
@@ -32,6 +33,7 @@ const getModelConstellationForAssetVersion = gql`
                     BoundingBoxP2Z
                     CountVertices
                     CountFaces
+                    CountTriangles
                     CountColorChannels
                     CountTextureCoordinateChannels
                     HasBones
