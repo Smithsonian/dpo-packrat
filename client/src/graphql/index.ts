@@ -46,13 +46,20 @@ class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
     }
 }
 
+const loginMessage: string = 'The Packrat user is no longer authenticated. Please login.';
+
 const errorLink = onError(({ graphQLErrors, networkError }) => {
+    let sentToLogin: boolean = false;
+
     if (graphQLErrors) {
         graphQLErrors.forEach(({ message, locations, path }) => {
             console.log(`[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}`);
             if (message.includes(authenticationFailureMessage)) {
-                global.alert('The Packrat user is no longer authenticated. Please login.');
-                window.location.href = ROUTES.LOGIN;
+                if (!sentToLogin) {
+                    global.alert(loginMessage);
+                    window.location.href = ROUTES.LOGIN;
+                    sentToLogin = true;
+                }
             }
         });
     }
@@ -60,8 +67,11 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (networkError) {
         console.log(`[Network error]: ${networkError}`);
         if (networkError.toString() !== 'TypeError: Failed to fetch') {
-            global.alert('The Packrat user is no longer authenticated. Please login.');
-            window.location.href = ROUTES.LOGIN;
+            if (!sentToLogin) {
+                global.alert(loginMessage);
+                window.location.href = ROUTES.LOGIN;
+                sentToLogin = true;
+            }
         }
     }
 });
