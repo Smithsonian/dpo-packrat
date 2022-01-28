@@ -22,6 +22,11 @@ interface ObjectVersionsTableProps {
     systemObjectType?: eSystemObjectType | undefined;
 }
 
+interface headerColumn {
+    name: string;
+    width: number | string;
+}
+
 function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElement {
     const classes = useStyles();
     const { objectVersions, idSystemObject, systemObjectType } = props;
@@ -30,7 +35,8 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     const [expanded, setExpanded] = useState<number>(-1);
     const [rollbackNotes, setRollbackNotes] = useState<string>('');
 
-    const headers: string[] = ['Link', 'Published State', 'Action', 'Timestamp', 'Notes'];
+    const headers: headerColumn[] = [{ name: 'Date', width: '10%' }, { name: 'Link', width: '5%' }, { name: 'Published State', width: '15%' }, { name: 'Action', width: '10%' }, { name: 'Notes', width: '60%' }];
+
 
     const { data } = useObjectAssets(idSystemObject);
 
@@ -68,20 +74,15 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     };
 
     return (
-        <Box>
-            <table className={classes.container} style={{ tableLayout: 'fixed' }}>
+        <Box style={{ minWidth: '620px' }}>
+            <table className={classes.container} style={{ tableLayout: 'fixed', borderCollapse: 'collapse' }}>
                 <thead>
-                    <tr>
-                        {headers.map((header, index: number) => (
-                            <th key={index} align='center'>
-                                <Typography className={classes.header}>{header}</Typography>
+                    <tr style={{ width: '100%', borderBottom: '1px solid grey' }}>
+                        {headers.map(({ name, width }, index: number) => (
+                            <th key={index} align='center' style={{ width, padding: 5 }}>
+                                <Typography className={classes.header}>{name}</Typography>
                             </th>
                         ))}
-                    </tr>
-                    <tr>
-                        <td colSpan={headers.length}>
-                            <hr />
-                        </td>
                     </tr>
                 </thead>
 
@@ -105,18 +106,21 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                         return (
                             <React.Fragment key={index}>
                                 <tr key={index}>
-                                    <td align='center'>
+                                    <td align='center' style={{ padding: 0 }}>
+                                        <Typography className={clsx(classes.value)}>{extractISOMonthDateYear(version.DateCreated)}</Typography>
+                                    </td>
+                                    <td align='center' style={{ padding: 0 }}>
                                         <a
                                             href={getDownloadObjectVersionUrlForObject(serverEndpoint, version.idSystemObjectVersion)}
-                                            style={{ textDecoration: 'none', color: 'black' }}
+                                            style={{ textDecoration: 'none', color: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                         >
                                             <GetAppIcon />
                                         </a>
                                     </td>
-                                    <td align='center'>
+                                    <td align='center' style={{ padding: 0 }}>
                                         <Typography className={clsx(classes.value)}>{PublishedStateEnumToString(version.PublishedState)}</Typography>
                                     </td>
-                                    <td align='center'>
+                                    <td align='center' style={{ padding: 0 }}>
                                         {index >= objectVersions.length - 1 ? null : (
                                             <Typography
                                                 style={{ width: 'fit-content', whiteSpace: 'nowrap', color: 'rgb(0,121,196)', cursor: 'pointer' }}
@@ -128,10 +132,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                             </Typography>
                                         )}
                                     </td>
-                                    <td align='center'>
-                                        <Typography className={clsx(classes.value)}>{extractISOMonthDateYear(version.DateCreated)}</Typography>
-                                    </td>
-                                    <td>
+                                    <td style={{ padding: 0 }}>
                                         {comment}
                                     </td>
                                 </tr>
