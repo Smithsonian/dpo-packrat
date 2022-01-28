@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../db';
+import * as COMMON from '../../../client/src/types/server';
 import * as H from '../../utils/helpers';
-import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
+import { VocabularyCache } from '../../cache';
 import * as LOG from '../../utils/logger';
 /*
 afterAll(async done => {
@@ -81,173 +82,173 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             if (!vocabularyAll)
                 return;
 
-            // iterate through all enums of eVocabularyID; for each:
-            for (const sVocabID in eVocabularyID) {
+            // iterate through all enums of COMMON.eVocabularyID; for each:
+            for (const sVocabID in COMMON.eVocabularyID) {
                 if (!isNaN(Number(sVocabID)))
                     continue;
-                const eVocabID: eVocabularyID = (<any>eVocabularyID)[sVocabID];
+                const eVocabID: COMMON.eVocabularyID = (<any>COMMON.eVocabularyID)[sVocabID];
                 const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
 
                 switch (eVocabID) {
-                    case eVocabularyID.eIdentifierIdentifierTypeARK: testVocabulary(vocabulary, 'ARK'); break;
-                    case eVocabularyID.eIdentifierIdentifierTypeDOI: testVocabulary(vocabulary, 'DOI'); break;
-                    case eVocabularyID.eIdentifierIdentifierTypeUnitCMSID: testVocabulary(vocabulary, 'Unit CMS ID'); break;
+                    case COMMON.eVocabularyID.eIdentifierIdentifierTypeARK: testVocabulary(vocabulary, 'ARK'); break;
+                    case COMMON.eVocabularyID.eIdentifierIdentifierTypeDOI: testVocabulary(vocabulary, 'DOI'); break;
+                    case COMMON.eVocabularyID.eIdentifierIdentifierTypeUnitCMSID: testVocabulary(vocabulary, 'Unit CMS ID'); break;
 
-                    case eVocabularyID.eAssetAssetTypeBulkIngestion: testVocabulary(vocabulary, 'Bulk Ingestion'); break;
-                    case eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry: testVocabulary(vocabulary, 'Capture Data Set: Photogrammetry'); break;
-                    case eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde: testVocabulary(vocabulary, 'Capture Data Set: Diconde'); break;
-                    case eVocabularyID.eAssetAssetTypeCaptureDataSetDicom: testVocabulary(vocabulary, 'Capture Data Set: Dicom'); break;
-                    case eVocabularyID.eAssetAssetTypeCaptureDataSetLaserLine: testVocabulary(vocabulary, 'Capture Data Set: Laser Line'); break;
-                    case eVocabularyID.eAssetAssetTypeCaptureDataSetSphericalLaser: testVocabulary(vocabulary, 'Capture Data Set: Spherical Laser'); break;
-                    case eVocabularyID.eAssetAssetTypeCaptureDataSetStructuredLight: testVocabulary(vocabulary, 'Capture Data Set: Structured Light'); break;
-                    case eVocabularyID.eAssetAssetTypeCaptureDataSetOther: testVocabulary(vocabulary, 'Capture Data Set: Other'); break;
-                    case eVocabularyID.eAssetAssetTypeCaptureDataFile: testVocabulary(vocabulary, 'Capture Data File'); break;
-                    case eVocabularyID.eAssetAssetTypeModel: testVocabulary(vocabulary, 'Model'); break;
-                    case eVocabularyID.eAssetAssetTypeModelGeometryFile: testVocabulary(vocabulary, 'Model Geometry File'); break;
-                    case eVocabularyID.eAssetAssetTypeModelUVMapFile: testVocabulary(vocabulary, 'Model UV Map File'); break;
-                    case eVocabularyID.eAssetAssetTypeScene: testVocabulary(vocabulary, 'Scene'); break;
-                    case eVocabularyID.eAssetAssetTypeProjectDocumentation: testVocabulary(vocabulary, 'Project Documentation'); break;
-                    case eVocabularyID.eAssetAssetTypeIntermediaryFile: testVocabulary(vocabulary, 'Intermediary File'); break;
-                    case eVocabularyID.eAssetAssetTypeAttachment: testVocabulary(vocabulary, 'Attachment'); break;
-                    case eVocabularyID.eAssetAssetTypeOther: testVocabulary(vocabulary, 'Other'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeBulkIngestion: testVocabulary(vocabulary, 'Bulk Ingestion'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry: testVocabulary(vocabulary, 'Capture Data Set: Photogrammetry'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde: testVocabulary(vocabulary, 'Capture Data Set: Diconde'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetDicom: testVocabulary(vocabulary, 'Capture Data Set: Dicom'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetLaserLine: testVocabulary(vocabulary, 'Capture Data Set: Laser Line'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetSphericalLaser: testVocabulary(vocabulary, 'Capture Data Set: Spherical Laser'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetStructuredLight: testVocabulary(vocabulary, 'Capture Data Set: Structured Light'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetOther: testVocabulary(vocabulary, 'Capture Data Set: Other'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataFile: testVocabulary(vocabulary, 'Capture Data File'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeModel: testVocabulary(vocabulary, 'Model'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile: testVocabulary(vocabulary, 'Model Geometry File'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile: testVocabulary(vocabulary, 'Model UV Map File'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeScene: testVocabulary(vocabulary, 'Scene'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeProjectDocumentation: testVocabulary(vocabulary, 'Project Documentation'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeIntermediaryFile: testVocabulary(vocabulary, 'Intermediary File'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeAttachment: testVocabulary(vocabulary, 'Attachment'); break;
+                    case COMMON.eVocabularyID.eAssetAssetTypeOther: testVocabulary(vocabulary, 'Other'); break;
 
-                    case eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry: testVocabulary(vocabulary, 'Photogrammetry'); break;
-                    case eVocabularyID.eCaptureDataCaptureMethodCT: testVocabulary(vocabulary, 'CT'); break;
-                    case eVocabularyID.eCaptureDataCaptureMethodStructuredLight: testVocabulary(vocabulary, 'Structured Light'); break;
-                    case eVocabularyID.eCaptureDataCaptureMethodLaserLine: testVocabulary(vocabulary, 'Laser Line'); break;
-                    case eVocabularyID.eCaptureDataCaptureMethodSphericalLaser: testVocabulary(vocabulary, 'Spherical Laser'); break;
+                    case COMMON.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry: testVocabulary(vocabulary, 'Photogrammetry'); break;
+                    case COMMON.eVocabularyID.eCaptureDataCaptureMethodCT: testVocabulary(vocabulary, 'CT'); break;
+                    case COMMON.eVocabularyID.eCaptureDataCaptureMethodStructuredLight: testVocabulary(vocabulary, 'Structured Light'); break;
+                    case COMMON.eVocabularyID.eCaptureDataCaptureMethodLaserLine: testVocabulary(vocabulary, 'Laser Line'); break;
+                    case COMMON.eVocabularyID.eCaptureDataCaptureMethodSphericalLaser: testVocabulary(vocabulary, 'Spherical Laser'); break;
 
-                    case eVocabularyID.eCaptureDataFileVariantTypeRaw: testVocabulary(vocabulary, 'Raw'); break;
-                    case eVocabularyID.eCaptureDataFileVariantTypeProcessed: testVocabulary(vocabulary, 'Processed'); break;
-                    case eVocabularyID.eCaptureDataFileVariantTypeFromCamera: testVocabulary(vocabulary, 'From Camera'); break;
+                    case COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw: testVocabulary(vocabulary, 'Raw'); break;
+                    case COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed: testVocabulary(vocabulary, 'Processed'); break;
+                    case COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera: testVocabulary(vocabulary, 'From Camera'); break;
 
-                    case eVocabularyID.eModelCreationMethodScanToMesh: testVocabulary(vocabulary, 'Scan To Mesh'); break;
-                    case eVocabularyID.eModelCreationMethodCAD: testVocabulary(vocabulary, 'CAD'); break;
+                    case COMMON.eVocabularyID.eModelCreationMethodScanToMesh: testVocabulary(vocabulary, 'Scan To Mesh'); break;
+                    case COMMON.eVocabularyID.eModelCreationMethodCAD: testVocabulary(vocabulary, 'CAD'); break;
 
-                    case eVocabularyID.eModelModalityPointCloud: testVocabulary(vocabulary, 'Point Cloud'); break;
-                    case eVocabularyID.eModelModalityMesh: testVocabulary(vocabulary, 'Mesh'); break;
+                    case COMMON.eVocabularyID.eModelModalityPointCloud: testVocabulary(vocabulary, 'Point Cloud'); break;
+                    case COMMON.eVocabularyID.eModelModalityMesh: testVocabulary(vocabulary, 'Mesh'); break;
 
-                    case eVocabularyID.eModelUnitsMicrometer: testVocabulary(vocabulary, 'Micrometer'); break;
-                    case eVocabularyID.eModelUnitsMillimeter: testVocabulary(vocabulary, 'Millimeter'); break;
-                    case eVocabularyID.eModelUnitsCentimeter: testVocabulary(vocabulary, 'Centimeter'); break;
-                    case eVocabularyID.eModelUnitsMeter: testVocabulary(vocabulary, 'Meter'); break;
-                    case eVocabularyID.eModelUnitsKilometer: testVocabulary(vocabulary, 'Kilometer'); break;
-                    case eVocabularyID.eModelUnitsInch: testVocabulary(vocabulary, 'Inch'); break;
-                    case eVocabularyID.eModelUnitsFoot: testVocabulary(vocabulary, 'Foot'); break;
-                    case eVocabularyID.eModelUnitsYard: testVocabulary(vocabulary, 'Yard'); break;
-                    case eVocabularyID.eModelUnitsMile: testVocabulary(vocabulary, 'Mile'); break;
-                    case eVocabularyID.eModelUnitsAstronomicalUnit: testVocabulary(vocabulary, 'Astronomical Unit'); break;
+                    case COMMON.eVocabularyID.eModelUnitsMicrometer: testVocabulary(vocabulary, 'Micrometer'); break;
+                    case COMMON.eVocabularyID.eModelUnitsMillimeter: testVocabulary(vocabulary, 'Millimeter'); break;
+                    case COMMON.eVocabularyID.eModelUnitsCentimeter: testVocabulary(vocabulary, 'Centimeter'); break;
+                    case COMMON.eVocabularyID.eModelUnitsMeter: testVocabulary(vocabulary, 'Meter'); break;
+                    case COMMON.eVocabularyID.eModelUnitsKilometer: testVocabulary(vocabulary, 'Kilometer'); break;
+                    case COMMON.eVocabularyID.eModelUnitsInch: testVocabulary(vocabulary, 'Inch'); break;
+                    case COMMON.eVocabularyID.eModelUnitsFoot: testVocabulary(vocabulary, 'Foot'); break;
+                    case COMMON.eVocabularyID.eModelUnitsYard: testVocabulary(vocabulary, 'Yard'); break;
+                    case COMMON.eVocabularyID.eModelUnitsMile: testVocabulary(vocabulary, 'Mile'); break;
+                    case COMMON.eVocabularyID.eModelUnitsAstronomicalUnit: testVocabulary(vocabulary, 'Astronomical Unit'); break;
 
-                    case eVocabularyID.eModelPurposeMaster: testVocabulary(vocabulary, 'Master'); break;
-                    case eVocabularyID.eModelPurposeWebDelivery: testVocabulary(vocabulary, 'Web Delivery'); break;
-                    case eVocabularyID.eModelPurposeDownload: testVocabulary(vocabulary, 'Download'); break;
-                    case eVocabularyID.eModelPurposeIntermediateProcessingStep: testVocabulary(vocabulary, 'Intermediate Processing Step'); break;
+                    case COMMON.eVocabularyID.eModelPurposeMaster: testVocabulary(vocabulary, 'Master'); break;
+                    case COMMON.eVocabularyID.eModelPurposeWebDelivery: testVocabulary(vocabulary, 'Web Delivery'); break;
+                    case COMMON.eVocabularyID.eModelPurposeDownload: testVocabulary(vocabulary, 'Download'); break;
+                    case COMMON.eVocabularyID.eModelPurposeIntermediateProcessingStep: testVocabulary(vocabulary, 'Intermediate Processing Step'); break;
 
-                    case eVocabularyID.eModelFileTypeobj: testVocabulary(vocabulary, 'obj - Alias Wavefront Object'); break;
-                    case eVocabularyID.eModelFileTypeply: testVocabulary(vocabulary, 'ply - Stanford Polygon File Format'); break;
-                    case eVocabularyID.eModelFileTypestl: testVocabulary(vocabulary, 'stl - StereoLithography'); break;
-                    case eVocabularyID.eModelFileTypeglb: testVocabulary(vocabulary, 'glb - GL Transmission Format Binary'); break;
-                    case eVocabularyID.eModelFileTypegltf: testVocabulary(vocabulary, 'gltf - GL Transmission Format'); break;
-                    case eVocabularyID.eModelFileTypeusd: testVocabulary(vocabulary, 'usd - Universal Scene Description'); break;
-                    case eVocabularyID.eModelFileTypeusdz: testVocabulary(vocabulary, 'usdz - Universal Scene Description (zipped)'); break;
-                    case eVocabularyID.eModelFileTypex3d: testVocabulary(vocabulary, 'x3d'); break;
-                    case eVocabularyID.eModelFileTypewrl: testVocabulary(vocabulary, 'wrl - VRML'); break;
-                    case eVocabularyID.eModelFileTypedae: testVocabulary(vocabulary, 'dae - COLLADA'); break;
-                    case eVocabularyID.eModelFileTypefbx: testVocabulary(vocabulary, 'fbx - Filmbox'); break;
-                    case eVocabularyID.eModelFileTypema: testVocabulary(vocabulary, 'ma - Maya'); break;
-                    case eVocabularyID.eModelFileType3ds: testVocabulary(vocabulary, '3ds - 3D Studio'); break;
-                    case eVocabularyID.eModelFileTypeptx: testVocabulary(vocabulary, 'ptx'); break;
-                    case eVocabularyID.eModelFileTypepts: testVocabulary(vocabulary, 'pts'); break;
+                    case COMMON.eVocabularyID.eModelFileTypeobj: testVocabulary(vocabulary, 'obj - Alias Wavefront Object'); break;
+                    case COMMON.eVocabularyID.eModelFileTypeply: testVocabulary(vocabulary, 'ply - Stanford Polygon File Format'); break;
+                    case COMMON.eVocabularyID.eModelFileTypestl: testVocabulary(vocabulary, 'stl - StereoLithography'); break;
+                    case COMMON.eVocabularyID.eModelFileTypeglb: testVocabulary(vocabulary, 'glb - GL Transmission Format Binary'); break;
+                    case COMMON.eVocabularyID.eModelFileTypegltf: testVocabulary(vocabulary, 'gltf - GL Transmission Format'); break;
+                    case COMMON.eVocabularyID.eModelFileTypeusd: testVocabulary(vocabulary, 'usd - Universal Scene Description'); break;
+                    case COMMON.eVocabularyID.eModelFileTypeusdz: testVocabulary(vocabulary, 'usdz - Universal Scene Description (zipped)'); break;
+                    case COMMON.eVocabularyID.eModelFileTypex3d: testVocabulary(vocabulary, 'x3d'); break;
+                    case COMMON.eVocabularyID.eModelFileTypewrl: testVocabulary(vocabulary, 'wrl - VRML'); break;
+                    case COMMON.eVocabularyID.eModelFileTypedae: testVocabulary(vocabulary, 'dae - COLLADA'); break;
+                    case COMMON.eVocabularyID.eModelFileTypefbx: testVocabulary(vocabulary, 'fbx - Filmbox'); break;
+                    case COMMON.eVocabularyID.eModelFileTypema: testVocabulary(vocabulary, 'ma - Maya'); break;
+                    case COMMON.eVocabularyID.eModelFileType3ds: testVocabulary(vocabulary, '3ds - 3D Studio'); break;
+                    case COMMON.eVocabularyID.eModelFileTypeptx: testVocabulary(vocabulary, 'ptx'); break;
+                    case COMMON.eVocabularyID.eModelFileTypepts: testVocabulary(vocabulary, 'pts'); break;
 
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse: testVocabulary(vocabulary, 'Diffuse'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeSpecular: testVocabulary(vocabulary, 'Specular'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeAmbient: testVocabulary(vocabulary, 'Ambient'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeEmissive: testVocabulary(vocabulary, 'Emissive'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeBump: testVocabulary(vocabulary, 'Bump'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeNormal: testVocabulary(vocabulary, 'Normal'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeGlossiness: testVocabulary(vocabulary, 'Glossiness'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeOpacity: testVocabulary(vocabulary, 'Opacity'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeDisplacement: testVocabulary(vocabulary, 'Displacement'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeOcclusion: testVocabulary(vocabulary, 'Occlusion'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeReflection: testVocabulary(vocabulary, 'Reflection'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeMetalness: testVocabulary(vocabulary, 'Metalness'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeRoughness: testVocabulary(vocabulary, 'Roughness'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeNone: testVocabulary(vocabulary, 'None'); break;
-                    case eVocabularyID.eModelMaterialChannelMaterialTypeUnknown: testVocabulary(vocabulary, 'Unknown'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse: testVocabulary(vocabulary, 'Diffuse'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeSpecular: testVocabulary(vocabulary, 'Specular'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeAmbient: testVocabulary(vocabulary, 'Ambient'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeEmissive: testVocabulary(vocabulary, 'Emissive'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeBump: testVocabulary(vocabulary, 'Bump'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeNormal: testVocabulary(vocabulary, 'Normal'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeGlossiness: testVocabulary(vocabulary, 'Glossiness'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeOpacity: testVocabulary(vocabulary, 'Opacity'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeDisplacement: testVocabulary(vocabulary, 'Displacement'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeOcclusion: testVocabulary(vocabulary, 'Occlusion'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeReflection: testVocabulary(vocabulary, 'Reflection'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeMetalness: testVocabulary(vocabulary, 'Metalness'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeRoughness: testVocabulary(vocabulary, 'Roughness'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeNone: testVocabulary(vocabulary, 'None'); break;
+                    case COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeUnknown: testVocabulary(vocabulary, 'Unknown'); break;
 
-                    case eVocabularyID.eMetadataMetadataSourceBulkIngestion:    testVocabulary(vocabulary, 'Bulk Ingestion'); break;
-                    case eVocabularyID.eMetadataMetadataSourceImage:            testVocabulary(vocabulary, 'Image'); break;
+                    case COMMON.eVocabularyID.eMetadataMetadataSourceBulkIngestion:    testVocabulary(vocabulary, 'Bulk Ingestion'); break;
+                    case COMMON.eVocabularyID.eMetadataMetadataSourceImage:            testVocabulary(vocabulary, 'Image'); break;
 
-                    case eVocabularyID.eJobJobTypeCookBake:                     testVocabulary(vocabulary, 'Cook: bake'); break;
-                    case eVocabularyID.eJobJobTypeCookDecimateUnwrap:           testVocabulary(vocabulary, 'Cook: decimate-unwrap'); break;
-                    case eVocabularyID.eJobJobTypeCookDecimate:                 testVocabulary(vocabulary, 'Cook: decimate'); break;
-                    case eVocabularyID.eJobJobTypeCookGenerateUsdz:             testVocabulary(vocabulary, 'Cook: generate-usdz'); break;
-                    case eVocabularyID.eJobJobTypeCookGenerateWebGltf:          testVocabulary(vocabulary, 'Cook: generate-web-gltf'); break;
-                    case eVocabularyID.eJobJobTypeCookInspectMesh:              testVocabulary(vocabulary, 'Cook: inspect-mesh'); break;
-                    case eVocabularyID.eJobJobTypeCookSIArBackfillFix:          testVocabulary(vocabulary, 'Cook: si-ar-backfill-fix'); break;
-                    case eVocabularyID.eJobJobTypeCookSIGenerateDownloads:      testVocabulary(vocabulary, 'Cook: si-generate-downloads'); break;
-                    case eVocabularyID.eJobJobTypeCookSIOrientModelToSvx:       testVocabulary(vocabulary, 'Cook: si-orient-model-to-svx'); break;
-                    case eVocabularyID.eJobJobTypeCookSIPackratInspect:         testVocabulary(vocabulary, 'Cook: si-packrat-inspect'); break;
-                    case eVocabularyID.eJobJobTypeCookSIVoyagerAsset:           testVocabulary(vocabulary, 'Cook: si-voyager-asset'); break;
-                    case eVocabularyID.eJobJobTypeCookSIVoyagerScene:           testVocabulary(vocabulary, 'Cook: si-voyager-scene'); break;
-                    case eVocabularyID.eJobJobTypeCookUnwrap:                   testVocabulary(vocabulary, 'Cook: unwrap'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookBake:                     testVocabulary(vocabulary, 'Cook: bake'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookDecimateUnwrap:           testVocabulary(vocabulary, 'Cook: decimate-unwrap'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookDecimate:                 testVocabulary(vocabulary, 'Cook: decimate'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookGenerateUsdz:             testVocabulary(vocabulary, 'Cook: generate-usdz'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookGenerateWebGltf:          testVocabulary(vocabulary, 'Cook: generate-web-gltf'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookInspectMesh:              testVocabulary(vocabulary, 'Cook: inspect-mesh'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookSIArBackfillFix:          testVocabulary(vocabulary, 'Cook: si-ar-backfill-fix'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads:      testVocabulary(vocabulary, 'Cook: si-generate-downloads'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookSIOrientModelToSvx:       testVocabulary(vocabulary, 'Cook: si-orient-model-to-svx'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect:         testVocabulary(vocabulary, 'Cook: si-packrat-inspect'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerAsset:           testVocabulary(vocabulary, 'Cook: si-voyager-asset'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene:           testVocabulary(vocabulary, 'Cook: si-voyager-scene'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeCookUnwrap:                   testVocabulary(vocabulary, 'Cook: unwrap'); break;
 
-                    case eVocabularyID.eWorkflowTypeCookJob:                    testVocabulary(vocabulary, 'Cook Job'); break;
-                    case eVocabularyID.eWorkflowTypeIngestion:                  testVocabulary(vocabulary, 'Ingestion'); break;
-                    case eVocabularyID.eWorkflowTypeUpload:                     testVocabulary(vocabulary, 'Upload'); break;
+                    case COMMON.eVocabularyID.eWorkflowTypeCookJob:                    testVocabulary(vocabulary, 'Cook Job'); break;
+                    case COMMON.eVocabularyID.eWorkflowTypeIngestion:                  testVocabulary(vocabulary, 'Ingestion'); break;
+                    case COMMON.eVocabularyID.eWorkflowTypeUpload:                     testVocabulary(vocabulary, 'Upload'); break;
 
-                    case eVocabularyID.eWorkflowStepTypeStart:                  testVocabulary(vocabulary, 'Start'); break;
+                    case COMMON.eVocabularyID.eWorkflowStepTypeStart:                  testVocabulary(vocabulary, 'Start'); break;
 
-                    case eVocabularyID.eWorkflowEventIngestionUploadAssetVersion:   testVocabulary(vocabulary, 'Ingestion: Upload Asset Version'); break;
-                    case eVocabularyID.eWorkflowEventIngestionIngestObject:         testVocabulary(vocabulary, 'Ingestion: Ingest Object'); break;
+                    case COMMON.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion:   testVocabulary(vocabulary, 'Ingestion: Upload Asset Version'); break;
+                    case COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject:         testVocabulary(vocabulary, 'Ingestion: Ingest Object'); break;
 
-                    case eVocabularyID.eEdan3DResourceAttributeUnitsmm:             testVocabulary(vocabulary, 'mm'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeUnitscm:             testVocabulary(vocabulary, 'cm'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeUnitsm:              testVocabulary(vocabulary, 'm'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeUnitskm:             testVocabulary(vocabulary, 'km'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeUnitsin:             testVocabulary(vocabulary, 'in'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeUnitsft:             testVocabulary(vocabulary, 'ft'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeUnitsyd:             testVocabulary(vocabulary, 'yd'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeUnitsmi:             testVocabulary(vocabulary, 'mi'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypeobj:    testVocabulary(vocabulary, 'obj'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypeply:    testVocabulary(vocabulary, 'ply'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypestl:    testVocabulary(vocabulary, 'stl'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypeglb:    testVocabulary(vocabulary, 'glb'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypex3d:    testVocabulary(vocabulary, 'x3d'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypegltf:   testVocabulary(vocabulary, 'gltf'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeModelFileTypeusdz:   testVocabulary(vocabulary, 'usdz'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeFileTypezip:         testVocabulary(vocabulary, 'zip'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeFileTypeglb:         testVocabulary(vocabulary, 'glb'); break;
-                    case eVocabularyID.eEdan3DResourceAttributeFileTypeusdz:        testVocabulary(vocabulary, 'usdz'); break;
-                    case eVocabularyID.eEdan3DResourceType3dmesh:                   testVocabulary(vocabulary, '3d mesh'); break;
-                    case eVocabularyID.eEdan3DResourceTypeCADmodel:                 testVocabulary(vocabulary, 'CAD model'); break;
-                    case eVocabularyID.eEdan3DResourceCategoryFullresolution:       testVocabulary(vocabulary, 'Full resolution'); break;
-                    case eVocabularyID.eEdan3DResourceCategoryMediumresolution:     testVocabulary(vocabulary, 'Medium resolution'); break;
-                    case eVocabularyID.eEdan3DResourceCategoryLowresolution:        testVocabulary(vocabulary, 'Low resolution'); break;
-                    case eVocabularyID.eEdan3DResourceCategoryWatertight:           testVocabulary(vocabulary, 'Watertight'); break;
-                    case eVocabularyID.eEdan3DResourceCategoryiOSARmodel:           testVocabulary(vocabulary, 'iOS AR model'); break;
-                    case eVocabularyID.eEdanMDMFieldsLabel:                         testVocabulary(vocabulary, 'Label'); break;
-                    case eVocabularyID.eEdanMDMFieldsTitle:                         testVocabulary(vocabulary, 'Title'); break;
-                    case eVocabularyID.eEdanMDMFieldsRecordID:                      testVocabulary(vocabulary, 'Record ID'); break;
-                    case eVocabularyID.eEdanMDMFieldsUnit:                          testVocabulary(vocabulary, 'Unit'); break;
-                    case eVocabularyID.eEdanMDMFieldsLicense:                       testVocabulary(vocabulary, 'License'); break;
-                    case eVocabularyID.eEdanMDMFieldsLicenseText:                   testVocabulary(vocabulary, 'License Text'); break;
-                    case eVocabularyID.eEdanMDMFieldsObjectType:                    testVocabulary(vocabulary, 'Object Type'); break;
-                    case eVocabularyID.eEdanMDMFieldsDate:                          testVocabulary(vocabulary, 'Date'); break;
-                    case eVocabularyID.eEdanMDMFieldsPlace:                         testVocabulary(vocabulary, 'Place'); break;
-                    case eVocabularyID.eEdanMDMFieldsTopic:                         testVocabulary(vocabulary, 'Topic'); break;
-                    case eVocabularyID.eEdanMDMFieldsIdentifierFT:                  testVocabulary(vocabulary, 'Identifier (FT)'); break;
-                    case eVocabularyID.eEdanMDMFieldsDataSourceFT:                  testVocabulary(vocabulary, 'Data Source (FT)'); break;
-                    case eVocabularyID.eEdanMDMFieldsDateFT:                        testVocabulary(vocabulary, 'Date (FT)'); break;
-                    case eVocabularyID.eEdanMDMFieldsNameFT:                        testVocabulary(vocabulary, 'Name (FT)'); break;
-                    case eVocabularyID.eEdanMDMFieldsObjectRightsFT:                testVocabulary(vocabulary, 'Object Rights (FT)'); break;
-                    case eVocabularyID.eEdanMDMFieldsPlaceFT:                       testVocabulary(vocabulary, 'Place (FT)'); break;
-                    case eVocabularyID.eEdanMDMFieldsTaxonomicNameFT:               testVocabulary(vocabulary, 'Taxonomic Name (FT)'); break;
-                    case eVocabularyID.eEdanMDMFieldsNotesFT:                       testVocabulary(vocabulary, 'Notes (FT)'); break;
-                    case eVocabularyID.eEdanMDMFieldsPhysicalDescriptionFT:         testVocabulary(vocabulary, 'Physical Description (FT)'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsmm:             testVocabulary(vocabulary, 'mm'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitscm:             testVocabulary(vocabulary, 'cm'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsm:              testVocabulary(vocabulary, 'm'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitskm:             testVocabulary(vocabulary, 'km'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsin:             testVocabulary(vocabulary, 'in'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsft:             testVocabulary(vocabulary, 'ft'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsyd:             testVocabulary(vocabulary, 'yd'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsmi:             testVocabulary(vocabulary, 'mi'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeModelFileTypeobj:    testVocabulary(vocabulary, 'obj'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeModelFileTypeply:    testVocabulary(vocabulary, 'ply'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeModelFileTypestl:    testVocabulary(vocabulary, 'stl'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeModelFileTypeglb:    testVocabulary(vocabulary, 'glb'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeModelFileTypex3d:    testVocabulary(vocabulary, 'x3d'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeModelFileTypegltf:   testVocabulary(vocabulary, 'gltf'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeModelFileTypeusdz:   testVocabulary(vocabulary, 'usdz'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeFileTypezip:         testVocabulary(vocabulary, 'zip'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeFileTypeglb:         testVocabulary(vocabulary, 'glb'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceAttributeFileTypeusdz:        testVocabulary(vocabulary, 'usdz'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceType3dmesh:                   testVocabulary(vocabulary, '3d mesh'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceTypeCADmodel:                 testVocabulary(vocabulary, 'CAD model'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceCategoryFullresolution:       testVocabulary(vocabulary, 'Full resolution'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceCategoryMediumresolution:     testVocabulary(vocabulary, 'Medium resolution'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceCategoryLowresolution:        testVocabulary(vocabulary, 'Low resolution'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceCategoryWatertight:           testVocabulary(vocabulary, 'Watertight'); break;
+                    case COMMON.eVocabularyID.eEdan3DResourceCategoryiOSARmodel:           testVocabulary(vocabulary, 'iOS AR model'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsLabel:                         testVocabulary(vocabulary, 'Label'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsTitle:                         testVocabulary(vocabulary, 'Title'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsRecordID:                      testVocabulary(vocabulary, 'Record ID'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsUnit:                          testVocabulary(vocabulary, 'Unit'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsLicense:                       testVocabulary(vocabulary, 'License'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsLicenseText:                   testVocabulary(vocabulary, 'License Text'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsObjectType:                    testVocabulary(vocabulary, 'Object Type'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsDate:                          testVocabulary(vocabulary, 'Date'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsPlace:                         testVocabulary(vocabulary, 'Place'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsTopic:                         testVocabulary(vocabulary, 'Topic'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsIdentifierFT:                  testVocabulary(vocabulary, 'Identifier (FT)'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsDataSourceFT:                  testVocabulary(vocabulary, 'Data Source (FT)'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsDateFT:                        testVocabulary(vocabulary, 'Date (FT)'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsNameFT:                        testVocabulary(vocabulary, 'Name (FT)'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsObjectRightsFT:                testVocabulary(vocabulary, 'Object Rights (FT)'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsPlaceFT:                       testVocabulary(vocabulary, 'Place (FT)'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsTaxonomicNameFT:               testVocabulary(vocabulary, 'Taxonomic Name (FT)'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsNotesFT:                       testVocabulary(vocabulary, 'Notes (FT)'); break;
+                    case COMMON.eVocabularyID.eEdanMDMFieldsPhysicalDescriptionFT:         testVocabulary(vocabulary, 'Physical Description (FT)'); break;
 
-                    case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
-                    default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
+                    case COMMON.eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
+                    default: expect(`Untested COMMON.eVocabularyID enum ${COMMON.eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
             }
         });
@@ -271,50 +272,50 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             if (!vocabularySetAll)
                 return;
 
-            // iterate through all enums of eVocabularySetID; for each:
-            for (const sVocabSetID in eVocabularySetID) {
+            // iterate through all enums of COMMON.eVocabularySetID; for each:
+            for (const sVocabSetID in COMMON.eVocabularySetID) {
                 if (!isNaN(Number(sVocabSetID)))
                     continue;
-                const eVocabSetID: eVocabularySetID = (<any>eVocabularySetID)[sVocabSetID];
+                const eVocabSetID: COMMON.eVocabularySetID = (<any>COMMON.eVocabularySetID)[sVocabSetID];
                 const vocabularySet: DBAPI.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
 
                 switch (eVocabSetID) {
-                    case eVocabularySetID.eCaptureDataCaptureMethod:
-                    case eVocabularySetID.eCaptureDataDatasetType:
-                    case eVocabularySetID.eCaptureDataItemPositionType:
-                    case eVocabularySetID.eCaptureDataFocusType:
-                    case eVocabularySetID.eCaptureDataLightSourceType:
-                    case eVocabularySetID.eCaptureDataBackgroundRemovalMethod:
-                    case eVocabularySetID.eCaptureDataClusterType:
-                    case eVocabularySetID.eCaptureDataFileVariantType:
-                    case eVocabularySetID.eModelCreationMethod:
-                    case eVocabularySetID.eModelModality:
-                    case eVocabularySetID.eModelUnits:
-                    case eVocabularySetID.eModelPurpose:
-                    case eVocabularySetID.eModelFileType:
-                    case eVocabularySetID.eModelProcessingActionStepActionMethod:
-                    case eVocabularySetID.eModelMaterialChannelMaterialType:
-                    case eVocabularySetID.eIdentifierIdentifierType:
-                    case eVocabularySetID.eIdentifierIdentifierTypeActor:
-                    case eVocabularySetID.eMetadataMetadataSource:
-                    case eVocabularySetID.eWorkflowStepWorkflowStepType:
-                    case eVocabularySetID.eAssetAssetType:
-                    case eVocabularySetID.eJobJobType:
-                    case eVocabularySetID.eWorkflowType:
-                    case eVocabularySetID.eWorkflowEvent:
-                    case eVocabularySetID.eEdan3DResourceAttributeUnits:
-                    case eVocabularySetID.eEdan3DResourceAttributeModelFileType:
-                    case eVocabularySetID.eEdan3DResourceAttributeFileType:
-                    case eVocabularySetID.eEdan3DResourceType:
-                    case eVocabularySetID.eEdan3DResourceCategory:
-                    case eVocabularySetID.eEdanMDMFields:
+                    case COMMON.eVocabularySetID.eCaptureDataCaptureMethod:
+                    case COMMON.eVocabularySetID.eCaptureDataDatasetType:
+                    case COMMON.eVocabularySetID.eCaptureDataItemPositionType:
+                    case COMMON.eVocabularySetID.eCaptureDataFocusType:
+                    case COMMON.eVocabularySetID.eCaptureDataLightSourceType:
+                    case COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod:
+                    case COMMON.eVocabularySetID.eCaptureDataClusterType:
+                    case COMMON.eVocabularySetID.eCaptureDataFileVariantType:
+                    case COMMON.eVocabularySetID.eModelCreationMethod:
+                    case COMMON.eVocabularySetID.eModelModality:
+                    case COMMON.eVocabularySetID.eModelUnits:
+                    case COMMON.eVocabularySetID.eModelPurpose:
+                    case COMMON.eVocabularySetID.eModelFileType:
+                    case COMMON.eVocabularySetID.eModelProcessingActionStepActionMethod:
+                    case COMMON.eVocabularySetID.eModelMaterialChannelMaterialType:
+                    case COMMON.eVocabularySetID.eIdentifierIdentifierType:
+                    case COMMON.eVocabularySetID.eIdentifierIdentifierTypeActor:
+                    case COMMON.eVocabularySetID.eMetadataMetadataSource:
+                    case COMMON.eVocabularySetID.eWorkflowStepWorkflowStepType:
+                    case COMMON.eVocabularySetID.eAssetAssetType:
+                    case COMMON.eVocabularySetID.eJobJobType:
+                    case COMMON.eVocabularySetID.eWorkflowType:
+                    case COMMON.eVocabularySetID.eWorkflowEvent:
+                    case COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits:
+                    case COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType:
+                    case COMMON.eVocabularySetID.eEdan3DResourceAttributeFileType:
+                    case COMMON.eVocabularySetID.eEdan3DResourceType:
+                    case COMMON.eVocabularySetID.eEdan3DResourceCategory:
+                    case COMMON.eVocabularySetID.eEdanMDMFields:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet)
                             expect('e' + vocabularySet.Name.replace('.', '')).toEqual(sVocabSetID);
                         break;
 
-                    case eVocabularySetID.eNone:
+                    case COMMON.eVocabularySetID.eNone:
                         expect(vocabularySet).toBeFalsy();
                         break;
 
@@ -360,12 +361,12 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 vocabNameMap.set(sVocabSetNameNorm, vocabularySet.idVocabularySet);
             }
 
-            // iterate through all enums of eVocabularySetID; for each:
-            for (const sVocabSetID in eVocabularySetID) { // Object.keys(eVocabularySetID).filter(k => typeof eVocabularySetID[k as any] === 'number')) {
+            // iterate through all enums of COMMON.eVocabularySetID; for each:
+            for (const sVocabSetID in COMMON.eVocabularySetID) { // Object.keys(COMMON.eVocabularySetID).filter(k => typeof COMMON.eVocabularySetID[k as any] === 'number')) {
                 if (!isNaN(Number(sVocabSetID)))
                     continue;
-                const eVocabSetID: eVocabularySetID = (<any>eVocabularySetID)[sVocabSetID]; // <eVocabularySetID><unknown>eVocabularySetID[sVocabSetID]; // eVocabularySetID = sVocabSetID as keyof typeof eVocabularySetID; // (<any>eVocabularySetID)[sVocabSetID];
-                if (eVocabSetID == eVocabularySetID.eNone)
+                const eVocabSetID: COMMON.eVocabularySetID = (<any>COMMON.eVocabularySetID)[sVocabSetID]; // <COMMON.eVocabularySetID><unknown>COMMON.eVocabularySetID[sVocabSetID]; // COMMON.eVocabularySetID = sVocabSetID as keyof typeof COMMON.eVocabularySetID; // (<any>COMMON.eVocabularySetID)[sVocabSetID];
+                if (eVocabSetID == COMMON.eVocabularySetID.eNone)
                     continue;
 
                 // compute the vocabulary set entries
@@ -391,292 +392,292 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             }
 
             const vocabularySetEntriesInCacheByEnumNone: DBAPI.Vocabulary[] | undefined =
-                await VocabularyCache.vocabularySetEntriesByEnum(eVocabularySetID.eNone);
+                await VocabularyCache.vocabularySetEntriesByEnum(COMMON.eVocabularySetID.eNone);
             expect(vocabularySetEntriesInCacheByEnumNone).toBeUndefined();
         });
 
         test('Cache: VocabularyCache.vocabularyBySetAndTerm ' + description, async () => {
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataCaptureMethod, 'Photogrammetry');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataCaptureMethod, 'CT');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataCaptureMethod, 'Structured Light');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataCaptureMethod, 'Laser Line');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataCaptureMethod, 'Spherical Laser');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataDatasetType, 'Photogrammetry Image Set');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataDatasetType, 'Grey Card Image Set');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataDatasetType, 'Color Card Image Set');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataDatasetType, 'Background Removal Image Set');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataDatasetType, 'Calibration Dataset');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataItemPositionType, 'Relative To Environment');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataItemPositionType, 'Relative To Turntable');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataFocusType, 'Fixed');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataFocusType, 'Variable');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataLightSourceType, 'Ambient');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataLightSourceType, 'Strobe Standard');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataLightSourceType, 'Strobe Cross');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataLightSourceType, 'Patterned/Structured');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'None');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Clip Black');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Clip White');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Background Subtraction By Capture Dataset Set');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataClusterType, 'None');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataClusterType, 'Array');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataClusterType, 'Spherical Image Station');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataClusterType, 'Focal Stack Position Based');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataClusterType, 'Focal Stack Focus Based');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataFileVariantType, 'Raw');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataFileVariantType, 'Processed');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataFileVariantType, 'From Camera');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelCreationMethod, 'Scan To Mesh');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelCreationMethod, 'CAD');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelModality, 'Point Cloud');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelModality, 'Mesh');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Micrometer');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Millimeter');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Centimeter');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Meter');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Kilometer');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Inch');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Foot');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Yard');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Mile');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUnits, 'Astronomical Unit');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Master');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Web Delivery');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Download');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Intermediate Processing Step');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'obj - Alias Wavefront Object');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'ply - Stanford Polygon File Format');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'stl - StereoLithography');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'glb - GL Transmission Format Binary');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'gltf - GL Transmission Format');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'usd - Universal Scene Description');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'usdz - Universal Scene Description (zipped)');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'x3d');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'wrl - VRML');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'dae - COLLADA');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'fbx - Filmbox');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'ma - Maya');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, '3ds - 3D Studio');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'ptx');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'pts');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Diffuse');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Specular');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Ambient');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Emissive');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Bump');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Normal');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Glossiness');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Opacity');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Displacement');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Occlusion');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Reflection');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Metalness');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Roughness');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'None');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Unknown');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'ARK');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'DOI');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'Unit CMS ID');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierTypeActor, 'ORCID');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierTypeActor, 'ISNI');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eMetadataMetadataSource, 'Bulk Ingestion');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eMetadataMetadataSource, 'Image');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Bulk Ingestion');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Photogrammetry');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Diconde');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Dicom');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Laser Line');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Spherical Laser');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Structured Light');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Other');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data File');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Model');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Model Geometry File');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Model UV Map File');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Scene');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Project Documentation');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Intermediary File');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Other');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: bake');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: decimate-unwrap');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: decimate');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: generate-usdz');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: generate-web-gltf');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: inspect-mesh');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-ar-backfill-fix');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-generate-downloads');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-orient-model-to-svx');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-packrat-inspect');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-voyager-asset');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-voyager-scene');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: unwrap');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowType, 'Cook Job');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowStepWorkflowStepType, 'Start');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowEvent, 'Ingestion: Upload Asset Version');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowEvent, 'Ingestion: Ingest Object');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'mm');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'cm');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'm');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'km');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'in');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'ft');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'yd');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeUnits, 'mi');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'obj');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'ply');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'stl');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'glb');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'x3d');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'gltf');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'usdz');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeFileType, 'zip');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeFileType, 'glb');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceAttributeFileType, 'usdz');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceType, '3d mesh');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceType, 'CAD model');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'Full resolution');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'Medium resolution');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'Low resolution');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'Watertight');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdan3DResourceCategory, 'iOS AR model');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Label');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Title');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Record ID');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Unit');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'License');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'License Text');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Object Type');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Date');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Place');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Topic');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Identifier (FT)');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Data Source (FT)');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Date (FT)');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Name (FT)');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Object Rights (FT)');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Place (FT)');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Taxonomic Name (FT)');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eEdanMDMFields, 'Notes (FT)');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Photogrammetry');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'CT');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Structured Light');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Laser Line');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Spherical Laser');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataDatasetType, 'Photogrammetry Image Set');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataDatasetType, 'Grey Card Image Set');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataDatasetType, 'Color Card Image Set');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataDatasetType, 'Background Removal Image Set');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataDatasetType, 'Calibration Dataset');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataItemPositionType, 'Relative To Environment');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataItemPositionType, 'Relative To Turntable');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFocusType, 'Fixed');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFocusType, 'Variable');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Ambient');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Strobe Standard');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Strobe Cross');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Patterned/Structured');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'None');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Clip Black');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Clip White');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Background Subtraction By Capture Dataset Set');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataClusterType, 'None');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataClusterType, 'Array');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataClusterType, 'Spherical Image Station');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataClusterType, 'Focal Stack Position Based');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataClusterType, 'Focal Stack Focus Based');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFileVariantType, 'Raw');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFileVariantType, 'Processed');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFileVariantType, 'From Camera');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelCreationMethod, 'Scan To Mesh');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelCreationMethod, 'CAD');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelModality, 'Point Cloud');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelModality, 'Mesh');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Micrometer');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Millimeter');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Centimeter');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Meter');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Kilometer');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Inch');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Foot');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Yard');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Mile');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Astronomical Unit');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelPurpose, 'Master');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelPurpose, 'Web Delivery');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelPurpose, 'Download');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelPurpose, 'Intermediate Processing Step');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'obj - Alias Wavefront Object');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'ply - Stanford Polygon File Format');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'stl - StereoLithography');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'glb - GL Transmission Format Binary');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'gltf - GL Transmission Format');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'usd - Universal Scene Description');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'usdz - Universal Scene Description (zipped)');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'x3d');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'wrl - VRML');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'dae - COLLADA');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'fbx - Filmbox');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'ma - Maya');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, '3ds - 3D Studio');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'ptx');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'pts');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Diffuse');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Specular');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Ambient');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Emissive');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Bump');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Normal');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Glossiness');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Opacity');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Displacement');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Occlusion');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Reflection');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Metalness');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Roughness');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'None');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Unknown');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'ARK');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'DOI');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'Unit CMS ID');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierTypeActor, 'ORCID');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierTypeActor, 'ISNI');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eMetadataMetadataSource, 'Bulk Ingestion');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eMetadataMetadataSource, 'Image');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Bulk Ingestion');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Capture Data Set: Photogrammetry');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Capture Data Set: Diconde');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Capture Data Set: Dicom');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Capture Data Set: Laser Line');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Capture Data Set: Spherical Laser');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Capture Data Set: Structured Light');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Capture Data Set: Other');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Capture Data File');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Model');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Model Geometry File');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Model UV Map File');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Scene');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Project Documentation');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Intermediary File');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'Other');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: bake');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: decimate-unwrap');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: decimate');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: generate-usdz');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: generate-web-gltf');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: inspect-mesh');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: si-ar-backfill-fix');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: si-generate-downloads');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: si-orient-model-to-svx');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: si-packrat-inspect');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: si-voyager-asset');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: si-voyager-scene');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: unwrap');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eWorkflowType, 'Cook Job');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eWorkflowStepWorkflowStepType, 'Start');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eWorkflowEvent, 'Ingestion: Upload Asset Version');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eWorkflowEvent, 'Ingestion: Ingest Object');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'mm');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'cm');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'm');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'km');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'in');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'ft');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'yd');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'mi');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'obj');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'ply');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'stl');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'glb');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'x3d');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'gltf');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType, 'usdz');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeFileType, 'zip');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeFileType, 'glb');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeFileType, 'usdz');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceType, '3d mesh');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceType, 'CAD model');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceCategory, 'Full resolution');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceCategory, 'Medium resolution');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceCategory, 'Low resolution');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceCategory, 'Watertight');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceCategory, 'iOS AR model');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Label');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Title');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Record ID');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Unit');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'License');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'License Text');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Object Type');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Date');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Place');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Topic');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Identifier (FT)');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Data Source (FT)');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Date (FT)');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Name (FT)');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Object Rights (FT)');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Place (FT)');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Taxonomic Name (FT)');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdanMDMFields, 'Notes (FT)');
 
-            await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
-            await testVocabularyBySetAndTerm(eVocabularySetID.eNone, 'Other', false);
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eNone, 'Other', false);
         });
 
         test('Cache: VocabularyCache.mapPhotogrammetryVariantType ' + description, async () => {
-            await testMapPhotogrammetryVariantType('raw', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('cr2', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('cr3', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('dng', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('arw', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('cam_dng', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('tif', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('tiff', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('bmp', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('png', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('processed', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
-            await testMapPhotogrammetryVariantType('col_cor', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
-            await testMapPhotogrammetryVariantType('zeroed', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
-            await testMapPhotogrammetryVariantType('from camera', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
-            await testMapPhotogrammetryVariantType('fromcamera', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
-            await testMapPhotogrammetryVariantType('jpg', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
-            await testMapPhotogrammetryVariantType('jpeg', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
-            await testMapPhotogrammetryVariantType('camerajpg', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
-            await testMapPhotogrammetryVariantType('camera', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
-            await testMapPhotogrammetryVariantType('FOOBARFAULTY', eVocabularyID.eNone);
+            await testMapPhotogrammetryVariantType('raw', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('cr2', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('cr3', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('dng', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('arw', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('cam_dng', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('tif', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('tiff', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('bmp', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('png', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('processed', COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed);
+            await testMapPhotogrammetryVariantType('col_cor', COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed);
+            await testMapPhotogrammetryVariantType('zeroed', COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed);
+            await testMapPhotogrammetryVariantType('from camera', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('fromcamera', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('jpg', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('jpeg', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('camerajpg', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('camera', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('FOOBARFAULTY', COMMON.eVocabularyID.eNone);
         });
 
         test('Cache: VocabularyCache.mapModelFileByExtension ' + description, async () => {
-            await testMapModelFileByExtension('.obj',  eVocabularyID.eModelFileTypeobj);
-            await testMapModelFileByExtension('.ply',  eVocabularyID.eModelFileTypeply);
-            await testMapModelFileByExtension('.stl',  eVocabularyID.eModelFileTypestl);
-            await testMapModelFileByExtension('.glb' , eVocabularyID.eModelFileTypeglb);
-            await testMapModelFileByExtension('.gltf', eVocabularyID.eModelFileTypegltf);
-            await testMapModelFileByExtension('.usda', eVocabularyID.eModelFileTypeusd);
-            await testMapModelFileByExtension('.usdc', eVocabularyID.eModelFileTypeusd);
-            await testMapModelFileByExtension('.usdz', eVocabularyID.eModelFileTypeusdz);
-            await testMapModelFileByExtension('.x3d',  eVocabularyID.eModelFileTypex3d);
-            await testMapModelFileByExtension('.wrl',  eVocabularyID.eModelFileTypewrl);
-            await testMapModelFileByExtension('.dae',  eVocabularyID.eModelFileTypedae);
-            await testMapModelFileByExtension('.fbx',  eVocabularyID.eModelFileTypefbx);
-            await testMapModelFileByExtension('.ma',   eVocabularyID.eModelFileTypema);
-            await testMapModelFileByExtension('.3ds',  eVocabularyID.eModelFileType3ds);
-            await testMapModelFileByExtension('.ptx',  eVocabularyID.eModelFileTypeptx);
-            await testMapModelFileByExtension('.pts',  eVocabularyID.eModelFileTypepts);
-            await testMapModelFileByExtension('FOOBARFAULTY', eVocabularyID.eNone);
+            await testMapModelFileByExtension('.obj',  COMMON.eVocabularyID.eModelFileTypeobj);
+            await testMapModelFileByExtension('.ply',  COMMON.eVocabularyID.eModelFileTypeply);
+            await testMapModelFileByExtension('.stl',  COMMON.eVocabularyID.eModelFileTypestl);
+            await testMapModelFileByExtension('.glb' , COMMON.eVocabularyID.eModelFileTypeglb);
+            await testMapModelFileByExtension('.gltf', COMMON.eVocabularyID.eModelFileTypegltf);
+            await testMapModelFileByExtension('.usda', COMMON.eVocabularyID.eModelFileTypeusd);
+            await testMapModelFileByExtension('.usdc', COMMON.eVocabularyID.eModelFileTypeusd);
+            await testMapModelFileByExtension('.usdz', COMMON.eVocabularyID.eModelFileTypeusdz);
+            await testMapModelFileByExtension('.x3d',  COMMON.eVocabularyID.eModelFileTypex3d);
+            await testMapModelFileByExtension('.wrl',  COMMON.eVocabularyID.eModelFileTypewrl);
+            await testMapModelFileByExtension('.dae',  COMMON.eVocabularyID.eModelFileTypedae);
+            await testMapModelFileByExtension('.fbx',  COMMON.eVocabularyID.eModelFileTypefbx);
+            await testMapModelFileByExtension('.ma',   COMMON.eVocabularyID.eModelFileTypema);
+            await testMapModelFileByExtension('.3ds',  COMMON.eVocabularyID.eModelFileType3ds);
+            await testMapModelFileByExtension('.ptx',  COMMON.eVocabularyID.eModelFileTypeptx);
+            await testMapModelFileByExtension('.pts',  COMMON.eVocabularyID.eModelFileTypepts);
+            await testMapModelFileByExtension('FOOBARFAULTY', COMMON.eVocabularyID.eNone);
         });
 
         test('Cache: VocabularyCache.mapModelChannelMaterialType ' + description, async () => {
-            await testMapModelChannelMaterialType('diffuse',        eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
-            await testMapModelChannelMaterialType('specular',       eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
-            await testMapModelChannelMaterialType('ambient',        eVocabularyID.eModelMaterialChannelMaterialTypeAmbient);
-            await testMapModelChannelMaterialType('emissive',       eVocabularyID.eModelMaterialChannelMaterialTypeEmissive);
-            await testMapModelChannelMaterialType('bump',           eVocabularyID.eModelMaterialChannelMaterialTypeBump);
-            await testMapModelChannelMaterialType('normal',         eVocabularyID.eModelMaterialChannelMaterialTypeNormal);
-            await testMapModelChannelMaterialType('glossiness',     eVocabularyID.eModelMaterialChannelMaterialTypeGlossiness);
-            await testMapModelChannelMaterialType('opacity',        eVocabularyID.eModelMaterialChannelMaterialTypeOpacity);
-            await testMapModelChannelMaterialType('displacement',   eVocabularyID.eModelMaterialChannelMaterialTypeDisplacement);
-            await testMapModelChannelMaterialType('occlusion',      eVocabularyID.eModelMaterialChannelMaterialTypeOcclusion);
-            await testMapModelChannelMaterialType('reflection',     eVocabularyID.eModelMaterialChannelMaterialTypeReflection);
-            await testMapModelChannelMaterialType('metalness',      eVocabularyID.eModelMaterialChannelMaterialTypeMetalness);
-            await testMapModelChannelMaterialType('roughness',      eVocabularyID.eModelMaterialChannelMaterialTypeRoughness);
-            await testMapModelChannelMaterialType('none',           eVocabularyID.eModelMaterialChannelMaterialTypeNone);
-            await testMapModelChannelMaterialType('unknown',        eVocabularyID.eModelMaterialChannelMaterialTypeUnknown);
-            await testMapModelChannelMaterialType('FOOBARFAULTY',   eVocabularyID.eModelMaterialChannelMaterialTypeUnknown);
+            await testMapModelChannelMaterialType('diffuse',        COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('specular',       COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('ambient',        COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeAmbient);
+            await testMapModelChannelMaterialType('emissive',       COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeEmissive);
+            await testMapModelChannelMaterialType('bump',           COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeBump);
+            await testMapModelChannelMaterialType('normal',         COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeNormal);
+            await testMapModelChannelMaterialType('glossiness',     COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeGlossiness);
+            await testMapModelChannelMaterialType('opacity',        COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeOpacity);
+            await testMapModelChannelMaterialType('displacement',   COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeDisplacement);
+            await testMapModelChannelMaterialType('occlusion',      COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeOcclusion);
+            await testMapModelChannelMaterialType('reflection',     COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeReflection);
+            await testMapModelChannelMaterialType('metalness',      COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeMetalness);
+            await testMapModelChannelMaterialType('roughness',      COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeRoughness);
+            await testMapModelChannelMaterialType('none',           COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeNone);
+            await testMapModelChannelMaterialType('unknown',        COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeUnknown);
+            await testMapModelChannelMaterialType('FOOBARFAULTY',   COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeUnknown);
         });
 
         test('Cache: VocabularyCache.isPreferredAsset ' + description, async () => {
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry, DBAPI.eSystemObjectType.eCaptureData);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde, DBAPI.eSystemObjectType.eCaptureData);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetDicom, DBAPI.eSystemObjectType.eCaptureData);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetLaserLine, DBAPI.eSystemObjectType.eCaptureData);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetSphericalLaser, DBAPI.eSystemObjectType.eCaptureData);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetStructuredLight, DBAPI.eSystemObjectType.eCaptureData);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataSetOther, DBAPI.eSystemObjectType.eCaptureData);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeModel, DBAPI.eSystemObjectType.eModel);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeModelGeometryFile, DBAPI.eSystemObjectType.eModel);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeScene, DBAPI.eSystemObjectType.eScene);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeProjectDocumentation, DBAPI.eSystemObjectType.eProjectDocumentation);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeIntermediaryFile, DBAPI.eSystemObjectType.eIntermediaryFile);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeBulkIngestion, DBAPI.eSystemObjectType.eUnknown);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeCaptureDataFile, DBAPI.eSystemObjectType.eUnknown);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeModelUVMapFile, DBAPI.eSystemObjectType.eUnknown);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeAttachment, DBAPI.eSystemObjectType.eUnknown);
-            await testIsPreferredAsset(eVocabularyID.eAssetAssetTypeOther, DBAPI.eSystemObjectType.eUnknown);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry, COMMON.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde, COMMON.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetDicom, COMMON.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetLaserLine, COMMON.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetSphericalLaser, COMMON.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetStructuredLight, COMMON.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetOther, COMMON.eSystemObjectType.eCaptureData);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeModel, COMMON.eSystemObjectType.eModel);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile, COMMON.eSystemObjectType.eModel);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeScene, COMMON.eSystemObjectType.eScene);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeProjectDocumentation, COMMON.eSystemObjectType.eProjectDocumentation);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeIntermediaryFile, COMMON.eSystemObjectType.eIntermediaryFile);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeBulkIngestion, COMMON.eSystemObjectType.eUnknown);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeCaptureDataFile, COMMON.eSystemObjectType.eUnknown);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile, COMMON.eSystemObjectType.eUnknown);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeAttachment, COMMON.eSystemObjectType.eUnknown);
+            await testIsPreferredAsset(COMMON.eVocabularyID.eAssetAssetTypeOther, COMMON.eSystemObjectType.eUnknown);
         });
 
         test('Cache: VocabularyCache.vocabularyEnumToId and vocabularyIdToEnum ' + description, async () => {
-            // iterate through all enums of eVocabularyID; for each:
-            for (const sVocabID in eVocabularyID) {
+            // iterate through all enums of COMMON.eVocabularyID; for each:
+            for (const sVocabID in COMMON.eVocabularyID) {
                 if (!isNaN(Number(sVocabID)))
                     continue;
-                const eVocabID: eVocabularyID = (<any>eVocabularyID)[sVocabID];
+                const eVocabID: COMMON.eVocabularyID = (<any>COMMON.eVocabularyID)[sVocabID];
                 const idVocabulary: number | undefined = await VocabularyCache.vocabularyEnumToId(eVocabID);
-                if (eVocabID != eVocabularyID.eNone)
+                if (eVocabID != COMMON.eVocabularyID.eNone)
                     expect(idVocabulary).toBeTruthy();
                 else {
                     expect(idVocabulary).toBeFalsy();
                     continue;
                 }
 
-                const eVocabIDFetch: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(idVocabulary || 0);
+                const eVocabIDFetch: COMMON.eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(idVocabulary || 0);
                 expect(eVocabIDFetch).toBeTruthy;
                 expect(eVocabIDFetch).toEqual(eVocabID);
             }
-            expect(await VocabularyCache.vocabularyEnumToId(eVocabularyID.eNone)).toBeFalsy();
+            expect(await VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eNone)).toBeFalsy();
             expect(await VocabularyCache.vocabularyIdToEnum(0)).toBeFalsy();
         });
 
         test('Cache: VocabularyCache.vocabularySetEnumToId and vocabularySetIdToEnum' + description, async () => {
-            // iterate through all enums of eVocabularySetID; for each:
-            for (const sVocabSetID in eVocabularySetID) {
+            // iterate through all enums of COMMON.eVocabularySetID; for each:
+            for (const sVocabSetID in COMMON.eVocabularySetID) {
                 if (!isNaN(Number(sVocabSetID)))
                     continue;
                 // LOG.info(`VocabularyCache.vocabularySetEnumToId of ${sVocabSetID}`, LOG.LS.eTEST);
-                const eVocabSetID: eVocabularySetID = (<any>eVocabularySetID)[sVocabSetID];
+                const eVocabSetID: COMMON.eVocabularySetID = (<any>COMMON.eVocabularySetID)[sVocabSetID];
                 const vocabularySet: DBAPI.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
                 const vocabSetID: number | undefined = await VocabularyCache.vocabularySetEnumToId(eVocabSetID);
 
-                if (eVocabSetID != eVocabularySetID.eNone) {
+                if (eVocabSetID != COMMON.eVocabularySetID.eNone) {
                     expect(vocabularySet).toBeTruthy();
                     expect(vocabSetID).toBeTruthy();
                 } else {
@@ -691,41 +692,41 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
                 // LOG.info(`VocabularyCache.vocabularySetIdToEnum of ${vocabularySet.idVocabularySet}`, LOG.LS.eTEST);
                 // fetches the VocabularySet.idVocabularySet for a given vocabulary set enum
-                // static async vocabularySetIdToEnum(idVocabularySet: number): Promise<eVocabularySetID | undefined> {
-                const eVocabSetIDFetch: eVocabularySetID | undefined = await VocabularyCache.vocabularySetIdToEnum(vocabularySet.idVocabularySet);
+                // static async vocabularySetIdToEnum(idVocabularySet: number): Promise<COMMON.eVocabularySetID | undefined> {
+                const eVocabSetIDFetch: COMMON.eVocabularySetID | undefined = await VocabularyCache.vocabularySetIdToEnum(vocabularySet.idVocabularySet);
                 expect(eVocabSetIDFetch).not.toBeUndefined();
                 expect(eVocabSetIDFetch).toEqual(eVocabSetID);
             }
         });
 
         test('Cache: VocabularyCache.isVocabularyInSet ' + description, async () => {
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eCaptureDataFileVariantTypeRaw, eVocabularySetID.eCaptureDataFileVariantType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelCreationMethodScanToMesh, eVocabularySetID.eModelCreationMethod)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelModalityPointCloud, eVocabularySetID.eModelModality)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelUnitsMicrometer, eVocabularySetID.eModelUnits)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelPurposeMaster, eVocabularySetID.eModelPurpose)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelFileTypeobj, eVocabularySetID.eModelFileType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse, eVocabularySetID.eModelMaterialChannelMaterialType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eIdentifierIdentifierTypeARK, eVocabularySetID.eIdentifierIdentifierType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eMetadataMetadataSourceBulkIngestion, eVocabularySetID.eMetadataMetadataSource)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eAssetAssetTypeBulkIngestion, eVocabularySetID.eAssetAssetType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eJobJobTypeCookBake, eVocabularySetID.eJobJobType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eWorkflowType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeIngestion, eVocabularySetID.eWorkflowType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeUpload, eVocabularySetID.eWorkflowType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowStepTypeStart, eVocabularySetID.eWorkflowStepWorkflowStepType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw, COMMON.eVocabularySetID.eCaptureDataFileVariantType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eModelCreationMethodScanToMesh, COMMON.eVocabularySetID.eModelCreationMethod)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eModelModalityPointCloud, COMMON.eVocabularySetID.eModelModality)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eModelUnitsMicrometer, COMMON.eVocabularySetID.eModelUnits)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eModelPurposeMaster, COMMON.eVocabularySetID.eModelPurpose)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eModelFileTypeobj, COMMON.eVocabularySetID.eModelFileType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse, COMMON.eVocabularySetID.eModelMaterialChannelMaterialType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK, COMMON.eVocabularySetID.eIdentifierIdentifierType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eMetadataMetadataSourceBulkIngestion, COMMON.eVocabularySetID.eMetadataMetadataSource)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eAssetAssetTypeBulkIngestion, COMMON.eVocabularySetID.eAssetAssetType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eJobJobTypeCookBake, COMMON.eVocabularySetID.eJobJobType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularySetID.eWorkflowType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeIngestion, COMMON.eVocabularySetID.eWorkflowType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeUpload, COMMON.eVocabularySetID.eWorkflowType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowStepTypeStart, COMMON.eVocabularySetID.eWorkflowStepWorkflowStepType)).toBeTruthy();
 
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowEventIngestionUploadAssetVersion, eVocabularySetID.eWorkflowEvent)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceAttributeUnitsmm, eVocabularySetID.eEdan3DResourceAttributeUnits)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceAttributeModelFileTypeobj, eVocabularySetID.eEdan3DResourceAttributeModelFileType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceAttributeFileTypezip, eVocabularySetID.eEdan3DResourceAttributeFileType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceType3dmesh, eVocabularySetID.eEdan3DResourceType)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdan3DResourceCategoryFullresolution, eVocabularySetID.eEdan3DResourceCategory)).toBeTruthy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eEdanMDMFieldsNameFT, eVocabularySetID.eEdanMDMFields)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion, COMMON.eVocabularySetID.eWorkflowEvent)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsmm, COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eEdan3DResourceAttributeModelFileTypeobj, COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eEdan3DResourceAttributeFileTypezip, COMMON.eVocabularySetID.eEdan3DResourceAttributeFileType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eEdan3DResourceType3dmesh, COMMON.eVocabularySetID.eEdan3DResourceType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eEdan3DResourceCategoryFullresolution, COMMON.eVocabularySetID.eEdan3DResourceCategory)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eEdanMDMFieldsNameFT, COMMON.eVocabularySetID.eEdanMDMFields)).toBeTruthy();
 
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eNone, eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eNone)).toBeFalsy();
-            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eNone, COMMON.eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularySetID.eNone)).toBeFalsy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
         });
     });
 }
@@ -747,7 +748,7 @@ function testVocabulary(vocabulary: DBAPI.Vocabulary | undefined, termExpected: 
         expect(vocabulary.Term).toEqual(termExpected);
 }
 
-async function testVocabularyBySetAndTerm(eVocabSetId: eVocabularySetID, term: string, expectSuccess: boolean = true): Promise<void> {
+async function testVocabularyBySetAndTerm(eVocabSetId: COMMON.eVocabularySetID, term: string, expectSuccess: boolean = true): Promise<void> {
     const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyBySetAndTerm(eVocabSetId, term);
     if (expectSuccess)
         expect(vocabulary).toBeTruthy();
@@ -755,11 +756,11 @@ async function testVocabularyBySetAndTerm(eVocabSetId: eVocabularySetID, term: s
         expect(vocabulary.Term).toEqual(term);
 }
 
-async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: eVocabularyID): Promise<void> {
-    // LOG.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
+async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: COMMON.eVocabularyID): Promise<void> {
+    // LOG.info(`Testing ${variantType}; expecting ${COMMON.eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
     const vocabObserved: DBAPI.Vocabulary | undefined = await VocabularyCache.mapPhotogrammetryVariantType(variantType);
     const vocabExpected: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
-    if (eVocabID != eVocabularyID.eNone) {
+    if (eVocabID != COMMON.eVocabularyID.eNone) {
         expect(vocabObserved).toBeTruthy();
         expect(vocabExpected).toBeTruthy();
     } else {
@@ -769,11 +770,11 @@ async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: e
     expect(vocabObserved).toEqual(vocabExpected);
 }
 
-async function testMapModelFileByExtension(modelExtension: string, eVocabID: eVocabularyID): Promise<void> {
-    // LOG.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
+async function testMapModelFileByExtension(modelExtension: string, eVocabID: COMMON.eVocabularyID): Promise<void> {
+    // LOG.info(`Testing ${variantType}; expecting ${COMMON.eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
     const vocabObserved: DBAPI.Vocabulary | undefined = await VocabularyCache.mapModelFileByExtension(modelExtension);
     const vocabExpected: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
-    if (eVocabID != eVocabularyID.eNone) {
+    if (eVocabID != COMMON.eVocabularyID.eNone) {
         expect(vocabObserved).toBeTruthy();
         expect(vocabExpected).toBeTruthy();
     } else {
@@ -783,11 +784,11 @@ async function testMapModelFileByExtension(modelExtension: string, eVocabID: eVo
     expect(vocabObserved).toEqual(vocabExpected);
 }
 
-async function testMapModelChannelMaterialType(materialType: string, eVocabID: eVocabularyID): Promise<void> {
-    // LOG.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
+async function testMapModelChannelMaterialType(materialType: string, eVocabID: COMMON.eVocabularyID): Promise<void> {
+    // LOG.info(`Testing ${variantType}; expecting ${COMMON.eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
     const vocabObserved: DBAPI.Vocabulary | undefined = await VocabularyCache.mapModelChannelMaterialType(materialType);
     const vocabExpected: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
-    if (eVocabID != eVocabularyID.eNone) {
+    if (eVocabID != COMMON.eVocabularyID.eNone) {
         expect(vocabObserved).toBeTruthy();
         expect(vocabExpected).toBeTruthy();
     } else {
@@ -797,7 +798,7 @@ async function testMapModelChannelMaterialType(materialType: string, eVocabID: e
     expect(vocabObserved).toEqual(vocabExpected);
 }
 
-async function testIsPreferredAsset(eVocabID: eVocabularyID, eObjectType: DBAPI.eSystemObjectType): Promise<void> {
+async function testIsPreferredAsset(eVocabID: COMMON.eVocabularyID, eObjectType: COMMON.eSystemObjectType): Promise<void> {
     const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
     expect(vocabulary).toBeTruthy();
 
@@ -808,21 +809,21 @@ async function testIsPreferredAsset(eVocabID: eVocabularyID, eObjectType: DBAPI.
     let SOMatch: DBAPI.SystemObject;
     const SONonMatch: DBAPI.SystemObject = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false });
     switch (eObjectType) {
-        case DBAPI.eSystemObjectType.eCaptureData:          SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 1, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eModel:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 1, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eScene:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 1, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eProjectDocumentation: SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 1, idActor: 0, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eIntermediaryFile:     SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 1, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eCaptureData:          SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 1, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eModel:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 1, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eScene:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 1, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eProjectDocumentation: SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 1, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eIntermediaryFile:     SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 1, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
 
-        case DBAPI.eSystemObjectType.eActor:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 1, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eAsset:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 1, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eAssetVersion:         SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 1, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eItem:                 SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 1, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eProject:              SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 1, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eStakeholder:          SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 1, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eSubject:              SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 1, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eUnit:                 SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 1, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
-        case DBAPI.eSystemObjectType.eUnknown:              SOMatch = SONonMatch; expectFailure = true; break;
+        case COMMON.eSystemObjectType.eActor:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 1, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eAsset:                SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 1, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eAssetVersion:         SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 1, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eItem:                 SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 1, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eProject:              SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 1, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eStakeholder:          SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 1, Retired: false }); break;
+        case COMMON.eSystemObjectType.eSubject:              SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 1, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eUnit:                 SOMatch = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 1, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false }); break;
+        case COMMON.eSystemObjectType.eUnknown:              SOMatch = SONonMatch; expectFailure = true; break;
 
         default:
             expect(false).toBeTruthy();
@@ -833,9 +834,9 @@ async function testIsPreferredAsset(eVocabID: eVocabularyID, eObjectType: DBAPI.
     const nonMatch: boolean = await VocabularyCache.isPreferredAsset(vocabulary.idVocabulary, SONonMatch);
     if (!expectFailure) {
         if (!match)
-            LOG.error(`testIsPreferredAsset(${eVocabularyID[eVocabID]}, ${DBAPI.eSystemObjectType[eObjectType]}): ${JSON.stringify(vocabulary)} FAILED`, LOG.LS.eTEST);
+            LOG.error(`testIsPreferredAsset(${COMMON.eVocabularyID[eVocabID]}, ${COMMON.eSystemObjectType[eObjectType]}): ${JSON.stringify(vocabulary)} FAILED`, LOG.LS.eTEST);
         // else
-        //     LOG.info(`testIsPreferredAsset(${eVocabularyID[eVocabID]}, ${DBAPI.eSystemObjectType[eObjectType]}): ${JSON.stringify(vocabulary)} Success`, LOG.LS.eTEST);
+        //     LOG.info(`testIsPreferredAsset(${COMMON.eVocabularyID[eVocabID]}, ${COMMON.eSystemObjectType[eObjectType]}): ${JSON.stringify(vocabulary)} Success`, LOG.LS.eTEST);
         expect(match).toBeTruthy();
     } else
         expect(match).toBeFalsy();

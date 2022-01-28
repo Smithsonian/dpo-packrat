@@ -1,9 +1,10 @@
 /* eslint-disable camelcase */
 import { Asset as AssetBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
-import { VocabularyCache, eVocabularyID } from '../../cache';
+import { VocabularyCache } from '../../cache';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as COMMON from '../../../client/src/types/server';
 
 export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemObjectBased {
     idAsset!: number;
@@ -228,12 +229,12 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
         return this.updateWorker();
     }
 
-    async assetType(): Promise<eVocabularyID | undefined> {
+    async assetType(): Promise<COMMON.eVocabularyID | undefined> {
         return await VocabularyCache.vocabularyIdToEnum(this.idVAssetType);
     }
 
     /** Don't forget to call update! */
-    async setAssetType(eVocabID: eVocabularyID): Promise<boolean> {
+    async setAssetType(eVocabID: COMMON.eVocabularyID): Promise<boolean> {
         const idVocabulary: number | undefined = await VocabularyCache.vocabularyEnumToId(eVocabID);
         if (!idVocabulary)
             return false;

@@ -1189,6 +1189,7 @@ export type Model = {
   CountAnimations?: Maybe<Scalars['Int']>;
   CountCameras?: Maybe<Scalars['Int']>;
   CountFaces?: Maybe<Scalars['Int']>;
+  CountTriangles?: Maybe<Scalars['Int']>;
   CountLights?: Maybe<Scalars['Int']>;
   CountMaterials?: Maybe<Scalars['Int']>;
   CountMeshes?: Maybe<Scalars['Int']>;
@@ -1271,6 +1272,7 @@ export type ModelObject = {
   BoundingBoxP2Z?: Maybe<Scalars['Float']>;
   CountVertices?: Maybe<Scalars['Int']>;
   CountFaces?: Maybe<Scalars['Int']>;
+  CountTriangles?: Maybe<Scalars['Int']>;
   CountColorChannels?: Maybe<Scalars['Int']>;
   CountTextureCoordinateChannels?: Maybe<Scalars['Int']>;
   HasBones?: Maybe<Scalars['Boolean']>;
@@ -3238,10 +3240,10 @@ export type GetModelConstellationForAssetVersionQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'idVFileType'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountTriangles' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
-        & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
+        & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountTriangles' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
       )>>, ModelMaterials?: Maybe<Array<(
         { __typename?: 'ModelMaterial' }
         & Pick<ModelMaterial, 'idModelMaterial' | 'Name'>
@@ -3413,7 +3415,7 @@ export type GetModelConstellationQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed'>
+        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountTriangles' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed'>
         & { VCreationMethod?: Maybe<(
           { __typename?: 'Vocabulary' }
           & Pick<Vocabulary, 'Term'>
@@ -3432,7 +3434,7 @@ export type GetModelConstellationQuery = (
         )> }
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
-        & Pick<ModelObject, 'idModelObject' | 'idModel' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
+        & Pick<ModelObject, 'idModelObject' | 'idModel' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountTriangles' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
       )>>, ModelMaterials?: Maybe<Array<(
         { __typename?: 'ModelMaterial' }
         & Pick<ModelMaterial, 'idModelMaterial' | 'Name'>
@@ -3618,10 +3620,10 @@ export type GetDetailsTabDataForObjectQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'DateCreated' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountTriangles' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'IsDracoCompressed' | 'Name' | 'DateCreated' | 'idVCreationMethod' | 'idVModality' | 'idVUnits' | 'idVPurpose' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
-        & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
+        & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountTriangles' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
       )>>, ModelMaterials?: Maybe<Array<(
         { __typename?: 'ModelMaterial' }
         & Pick<ModelMaterial, 'idModelMaterial' | 'Name'>
@@ -5415,6 +5417,7 @@ export const GetModelConstellationForAssetVersionDocument = gql`
         idModel
         CountVertices
         CountFaces
+        CountTriangles
         CountAnimations
         CountCameras
         CountLights
@@ -5438,6 +5441,7 @@ export const GetModelConstellationForAssetVersionDocument = gql`
         BoundingBoxP2Z
         CountVertices
         CountFaces
+        CountTriangles
         CountColorChannels
         CountTextureCoordinateChannels
         HasBones
@@ -5862,6 +5866,7 @@ export const GetModelConstellationDocument = gql`
         CountAnimations
         CountCameras
         CountFaces
+        CountTriangles
         CountLights
         CountMaterials
         CountMeshes
@@ -5882,6 +5887,7 @@ export const GetModelConstellationDocument = gql`
         BoundingBoxP2Z
         CountVertices
         CountFaces
+        CountTriangles
         CountColorChannels
         CountTextureCoordinateChannels
         HasBones
@@ -6342,6 +6348,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
         idModel
         CountVertices
         CountFaces
+        CountTriangles
         CountAnimations
         CountCameras
         CountLights
@@ -6370,6 +6377,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
         BoundingBoxP2Z
         CountVertices
         CountFaces
+        CountTriangles
         CountColorChannels
         CountTextureCoordinateChannels
         HasBones

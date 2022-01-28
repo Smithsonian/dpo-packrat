@@ -1,19 +1,7 @@
 /* eslint-disable camelcase */
 import * as DBC from '../../connection';
 import * as LOG from '../../../utils/logger';
-
-export enum eWorkflowListSortColumns {
-    eSet = 1,
-    eType = 2,
-    eState = 3,
-    eOwner = 4,
-    eStart = 5,
-    eLast = 6,
-    eReport = 7,
-    eJobRun = 8,
-    eError = 9,
-    eDefault = 0
-}
+import * as COMMON from '../../../../client/src/types/server';
 
 export class WorkflowListResult {
     idWorkflow: number = 0;
@@ -31,7 +19,7 @@ export class WorkflowListResult {
     static async search(idVWorkflowType: number[] | undefined | null, idVJobType: number[] | undefined | null, State: number[] | undefined | null,
         DateFrom: Date | undefined | null, DateTo: Date | undefined | null, idUserInitiator: number[] | undefined | null, idUserOwner: number[] | undefined | null,
         pageNumber: number | undefined | null, rowCount: number | undefined | null,
-        sortBy: eWorkflowListSortColumns | undefined | null, sortOrder: boolean | undefined | null): Promise<WorkflowListResult[] | null> {
+        sortBy: COMMON.eWorkflowListSortColumns | undefined | null, sortOrder: boolean | undefined | null): Promise<WorkflowListResult[] | null> {
         try {
             const whereConditions: string[] = [];
             const queryRawParams: string[] = [];
@@ -70,43 +58,43 @@ export class WorkflowListResult {
 
             let orderBy: string = '';
             if (sortBy === undefined)
-                sortBy = eWorkflowListSortColumns.eDefault;
+                sortBy = COMMON.eWorkflowListSortColumns.eDefault;
             switch (sortBy) {
                 default:
-                case eWorkflowListSortColumns.eDefault:
-                case eWorkflowListSortColumns.eSet:
+                case COMMON.eWorkflowListSortColumns.eDefault:
+                case COMMON.eWorkflowListSortColumns.eSet:
                     orderBy = 'ORDER BY WF.idWorkflowSet' + ((sortOrder === false) ? ' DESC' : '') + ', WF.idWorkflow';
                     break;
 
-                case eWorkflowListSortColumns.eType:
+                case COMMON.eWorkflowListSortColumns.eType:
                     orderBy = 'ORDER BY IFNULL(VWF.TERM, \'Unknown\')' + ((sortOrder === false) ? ' DESC' : '');
                     break;
 
-                case eWorkflowListSortColumns.eState:
+                case COMMON.eWorkflowListSortColumns.eState:
                     orderBy = 'ORDER BY IFNULL(JOB.JobStatus, WFL.WFState)' + ((sortOrder === false) ? ' DESC' : '');
                     break;
 
-                case eWorkflowListSortColumns.eOwner:
+                case COMMON.eWorkflowListSortColumns.eOwner:
                     orderBy = 'ORDER BY U.Name' + ((sortOrder === false) ? ' DESC' : '');
                     break;
 
-                case eWorkflowListSortColumns.eStart:
+                case COMMON.eWorkflowListSortColumns.eStart:
                     orderBy = 'ORDER BY WF.DateInitiated' + ((sortOrder === false) ? ' DESC' : '');
                     break;
 
-                case eWorkflowListSortColumns.eLast:
+                case COMMON.eWorkflowListSortColumns.eLast:
                     orderBy = 'ORDER BY WF.DateUpdated' + ((sortOrder === false) ? ' DESC' : '');
                     break;
 
-                case eWorkflowListSortColumns.eReport:
+                case COMMON.eWorkflowListSortColumns.eReport:
                     orderBy = 'ORDER BY WR.idWorkflowReport' + ((sortOrder === false) ? ' DESC' : '') + ', WF.idWorkflow';
                     break;
 
-                case eWorkflowListSortColumns.eJobRun:
+                case COMMON.eWorkflowListSortColumns.eJobRun:
                     orderBy = 'ORDER BY CASE WHEN JOB.JobOutputPresent = 1 THEN JOB.idJobRun ELSE 0 END' + ((sortOrder === false) ? ' DESC' : '') + ', WF.idWorkflow';
                     break;
 
-                case eWorkflowListSortColumns.eError:
+                case COMMON.eWorkflowListSortColumns.eError:
                     orderBy = 'ORDER BY JOB.JobError' + ((sortOrder === false) ? ' DESC' : '');
                     break;
             }

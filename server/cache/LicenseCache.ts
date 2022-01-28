@@ -2,11 +2,12 @@ import * as LOG from '../utils/logger';
 // import * as H from '../utils/helpers';
 import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
+import * as COMMON from '../../client/src/types/server';
 
 export class LicenseCache {
     private static singleton: LicenseCache | null = null;
     private licenseMap: Map<number, DBAPI.License> = new Map<number, DBAPI.License>(); // map of idLicense -> License
-    private licenseEnumMap: Map<DBAPI.eLicense, DBAPI.License> = new Map<DBAPI.eLicense, DBAPI.License>(); // map of eLicense -> License
+    private licenseEnumMap: Map<COMMON.eLicense, DBAPI.License> = new Map<COMMON.eLicense, DBAPI.License>(); // map of COMMON.eLicense -> License
     private licenseResolverMap: Map<number, DBAPI.LicenseResolver> = new Map<number, DBAPI.LicenseResolver>(); // map of idSystemObject -> LicenseResolver, representing cache of resolved license information
 
     // **************************
@@ -45,10 +46,10 @@ export class LicenseCache {
         for (const license of LicenseFetch) {
             this.licenseMap.set(license.idLicense, license);
             switch (license.Name.toLowerCase()) {
-                case 'view and download cc0':           this.licenseEnumMap.set(DBAPI.eLicense.eViewDownloadCC0, license); break;
-                case 'view with download restrictions': this.licenseEnumMap.set(DBAPI.eLicense.eViewDownloadRestriction, license); break;
-                case 'view only':                       this.licenseEnumMap.set(DBAPI.eLicense.eViewOnly, license); break;
-                case 'restricted':                      this.licenseEnumMap.set(DBAPI.eLicense.eRestricted, license); break;
+                case 'view and download cc0':           this.licenseEnumMap.set(COMMON.eLicense.eViewDownloadCC0, license); break;
+                case 'view with download restrictions': this.licenseEnumMap.set(COMMON.eLicense.eViewDownloadRestriction, license); break;
+                case 'view only':                       this.licenseEnumMap.set(COMMON.eLicense.eViewOnly, license); break;
+                case 'restricted':                      this.licenseEnumMap.set(COMMON.eLicense.eRestricted, license); break;
             }
         }
         // LOG.info(`LicenseCache publishedStateMap=\n${JSON.stringify(this.publishedStateMap, H.Helpers.saferStringify)}`, LOG.LS.eCACHE);
@@ -69,7 +70,7 @@ export class LicenseCache {
         return license ?? undefined;
     }
 
-    private async getLicenseByEnumInternal(eState: DBAPI.eLicense): Promise<DBAPI.License | undefined> {
+    private async getLicenseByEnumInternal(eState: COMMON.eLicense): Promise<DBAPI.License | undefined> {
         return this.licenseEnumMap.get(eState);
     }
 
@@ -127,7 +128,7 @@ export class LicenseCache {
         return await (await this.getInstance()).getLicenseInternal(idLicense);
     }
 
-    static async getLicenseByEnum(eState: DBAPI.eLicense): Promise<DBAPI.License | undefined> {
+    static async getLicenseByEnum(eState: COMMON.eLicense): Promise<DBAPI.License | undefined> {
         return await (await this.getInstance()).getLicenseByEnumInternal(eState);
     }
 

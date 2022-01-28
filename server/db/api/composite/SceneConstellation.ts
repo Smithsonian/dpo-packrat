@@ -3,6 +3,7 @@ import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 import * as STORE from '../../../storage/interface';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import { IZip } from '../../../utils/IZip';
 import { SvxReader } from '../../../utils/parser/svxReader';
 
@@ -83,8 +84,8 @@ export class SceneConstellation {
             let modelSceneXrefs: ModelSceneXref[] | null = null;
             if (svx.SvxExtraction.modelDetails) {
                 modelSceneXrefs = [];
-                const v1: Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeModel);
-                const v2: Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+                const v1: Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
+                const v2: Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
                 const idVAssetType1: number | undefined = v1?.idVocabulary;
                 const idVAssetType2: number | undefined = v2?.idVocabulary;
                 if (!idVAssetType1 || !idVAssetType2) {

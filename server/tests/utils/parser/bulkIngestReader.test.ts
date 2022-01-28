@@ -3,6 +3,7 @@ import * as STORE from '../../../storage/interface/';
 // import * as ST from '../../../storage/impl/LocalStorage/SharedTypes';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import * as H from '../../../utils/helpers';
 import { BagitReader } from '../../../utils/parser/bagitReader';
 import * as LOG from '../../../utils/logger';
@@ -66,13 +67,13 @@ describe('BulkIngestReader Setup', () => {
             userName: OHTS.user1 ? OHTS.user1.Name : ''
         };
 
-        let vAssetTypeLookup: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeBulkIngestion);
+        let vAssetTypeLookup: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeBulkIngestion);
         expect(vAssetTypeLookup).toBeTruthy();
         if (!vAssetTypeLookup)
             return;
         vAssetTypeBulk = vAssetTypeLookup;
 
-        vAssetTypeLookup = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeOther);
+        vAssetTypeLookup = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
         expect(vAssetTypeLookup).toBeTruthy();
         if (!vAssetTypeLookup)
             return;

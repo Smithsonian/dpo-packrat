@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { JobRun as JobRunBase, Prisma } from '@prisma/client';
-import { eWorkflowJobRunStatus, convertWorkflowJobRunStatusToEnum } from '..';
+import { convertWorkflowJobRunStatusToEnum } from '..';
+import * as COMMON from '../../../client/src/types/server';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
@@ -39,8 +40,8 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
         });
     }
 
-    getStatus(): eWorkflowJobRunStatus { return convertWorkflowJobRunStatusToEnum(this.Status); }
-    setStatus(eStatus: eWorkflowJobRunStatus): void { this.Status = eStatus; }
+    getStatus(): COMMON.eWorkflowJobRunStatus { return convertWorkflowJobRunStatusToEnum(this.Status); }
+    setStatus(eStatus: COMMON.eWorkflowJobRunStatus): void { this.Status = eStatus; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -105,12 +106,12 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
     /**
      * Fetches JobRun records that match the specified criteria, ordered from most recent to least recent
      * @param limitRows Number of records to fetch
-     * @param idVJobType Vocabulary ID of JobType to fetch, e.g. await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect)
+     * @param idVJobType Vocabulary ID of JobType to fetch, e.g. await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect)
      * @param assetVersionIDs array of asset version IDs to which this job run is connected, via workflow
      * @param eStatus job status
      * @param result job result
      */
-    static async fetchMatching(limitRows: number, idVJobType: number, eStatus: eWorkflowJobRunStatus, result: boolean,
+    static async fetchMatching(limitRows: number, idVJobType: number, eStatus: COMMON.eWorkflowJobRunStatus, result: boolean,
         assetVersionIDs: number[] | null, parameterMatch?: string | undefined): Promise<JobRun[] | null> {
         if (limitRows <= 0)
             return null;

@@ -1,6 +1,7 @@
 import * as H from '../utils/helpers';
 import * as LOG from '../utils/logger';
 import * as CACHE from '../cache';
+import * as COMMON from '../../client/src/types/server';
 import { IExtractor, IExtractorResults } from './IExtractor';
 
 import { pathExists } from 'fs-extra';
@@ -10,10 +11,10 @@ type ExifModule = typeof import('./ExtractorImageExiftool');
 
 export class MetadataExtractor {
     metadata: Map<string, string> = new Map<string, string>();  // Map of metadata name -> value
-    eMetadataSource: CACHE.eVocabularyID | null = null;
+    eMetadataSource: COMMON.eVocabularyID | null = null;
     static extractorImage: IExtractor | null = null;
 
-    constructor(eMetadataSource?: CACHE.eVocabularyID | null) {
+    constructor(eMetadataSource?: COMMON.eVocabularyID | null) {
         this.eMetadataSource = eMetadataSource ?? null;
     }
 

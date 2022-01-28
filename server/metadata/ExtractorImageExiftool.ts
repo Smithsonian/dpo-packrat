@@ -1,7 +1,7 @@
 import { IExtractor, IExtractorResults } from './IExtractor';
 import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
-import * as CACHE from '../cache';
+import * as COMMON from '../../client/src/types/server';
 
 import path from 'path';
 import { ExifTool, Tags } from 'exiftool-vendored';
@@ -98,8 +98,8 @@ export class ExtractorImageExiftool implements IExtractor  {
         return { success: false, error: 'ExtractorImageExiftool.extractMetadata failed' };
     }
 
-    eMetadataSource(): CACHE.eVocabularyID | null {
-        return CACHE.eVocabularyID.eMetadataMetadataSourceImage;
+    eMetadataSource(): COMMON.eVocabularyID | null {
+        return COMMON.eVocabularyID.eMetadataMetadataSourceImage;
     }
 
     private async initializeExiftools(): Promise<IExtractorResults> {

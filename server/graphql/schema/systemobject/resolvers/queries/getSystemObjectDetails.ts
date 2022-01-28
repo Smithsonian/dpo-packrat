@@ -1,5 +1,6 @@
 import * as CACHE from '../../../../../cache';
 import * as DBAPI from '../../../../../db';
+import * as COMMON from '../../../../../../client/src/types/server';
 import {
     GetSystemObjectDetailsResult,
     IngestIdentifier,
@@ -14,7 +15,7 @@ import * as LOG from '../../../../../utils/logger';
 
 type PublishedStateInfo = {
     publishedState: string;
-    publishedEnum: DBAPI.ePublishedState;
+    publishedEnum: COMMON.ePublishedState;
     publishable: boolean;
 };
 
@@ -105,18 +106,18 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndType | undefined,
     LR: DBAPI.LicenseResolver | undefined): Promise<PublishedStateInfo> {
     const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
-    const publishedEnum: DBAPI.ePublishedState = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : DBAPI.ePublishedState.eNotPublished;
-    const publishedState: string = DBAPI.PublishedStateEnumToString(publishedEnum);
+    const publishedEnum: COMMON.ePublishedState = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : COMMON.ePublishedState.eNotPublished;
+    const publishedState: string = COMMON.PublishedStateEnumToString(publishedEnum);
 
     let publishable: boolean = false;
     if (oID) {
         switch (oID.eObjectType) {
-            case DBAPI.eSystemObjectType.eScene: {
+            case COMMON.eSystemObjectType.eScene: {
                 const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
                 if (scene) {
                     const mayBePublished: boolean = (LR != null) &&
                                                     (LR.License != null) &&
-                                                    (DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) !== DBAPI.ePublishedState.eNotPublished);
+                                                    (DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) !== COMMON.ePublishedState.eNotPublished);
                     publishable = scene.ApprovedForPublication && // Approved for Publication
                                   scene.PosedAndQCd &&            // Posed and QCd
                                   mayBePublished;                 // License defined and allows publishing
@@ -124,7 +125,7 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
                     LOG.error(`Unable to compute scene for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
             } break;
 
-            case DBAPI.eSystemObjectType.eSubject:
+            case COMMON.eSystemObjectType.eSubject:
                 publishable = true;
                 break;
         }
@@ -218,11 +219,11 @@ async function computeAssetAndOwner(oID: DBAPI.ObjectIDAndType): Promise<{ owner
     let asset: RepositoryPath | undefined = undefined;
 
     switch (oID.eObjectType) {
-        case DBAPI.eSystemObjectType.eAsset:
+        case COMMON.eSystemObjectType.eAsset:
             idAsset = oID.idObject;
             break;
 
-        case DBAPI.eSystemObjectType.eAssetVersion: {
+        case COMMON.eSystemObjectType.eAssetVersion: {
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(oID.idObject);
             if (!assetVersion)
                 LOG.error(`getSystemObjectDetails: failed to load asset version with id ${oID.idObject}`, LOG.LS.eGQL);
@@ -247,7 +248,7 @@ async function computeAssetAndOwner(oID: DBAPI.ObjectIDAndType): Promise<{ owner
     }
 
     const assetName: string | undefined = await resolveNameForObject(SOAsset.idSystemObject);
-    asset = { idSystemObject: SOAsset.idSystemObject, name: assetName ?? '', objectType: DBAPI.eSystemObjectType.eAsset };
+    asset = { idSystemObject: SOAsset.idSystemObject, name: assetName ?? '', objectType: COMMON.eSystemObjectType.eAsset };
 
     if (!assetDB.idSystemObject)
         return { owner, asset };

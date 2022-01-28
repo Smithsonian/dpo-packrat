@@ -153,17 +153,17 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                             </React.Fragment>
                         );
                     })}
-                    <tr>
-                        <td colSpan={headers.length}>
-                            {!objectVersions.length && (
+                    {!objectVersions.length && (
+                        <tr>
+                            <td colSpan={headers.length}>
                                 <Box my={2}>
                                     <Typography align='center' className={classes.value}>
                                         No versions found
                                     </Typography>
                                 </Box>
-                            )}
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
+                    )}
                 </tbody>
             </table>
             <Button className={classes.btn} variant='contained' color='primary' style={{ width: 'fit-content' }} onClick={redirect}>

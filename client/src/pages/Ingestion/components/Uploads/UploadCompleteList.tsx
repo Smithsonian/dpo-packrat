@@ -53,7 +53,8 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
     const classes = useStyles();
 
     const { completed, loadCompleted } = useUploadStore();
-    const { data, loading, error } = useQuery(GetUploadedAssetVersionDocument);
+    const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
+
     useEffect(() => {
         if (!loading && !error) {
             const { getUploadedAssetVersion } = data;
@@ -83,7 +84,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
                 return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType, idAsset);
             });
 
-            loadCompleted(completedFiles);
+            loadCompleted(completedFiles, refetch);
         }
     }, [data, loading, error]);
 
