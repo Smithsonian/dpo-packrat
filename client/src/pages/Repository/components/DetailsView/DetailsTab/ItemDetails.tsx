@@ -44,7 +44,7 @@ function ItemDetails(props: DetailComponentProps): React.ReactElement {
     const itemData = data.getDetailsTabDataForObject?.Item;
 
     return (
-        <Box>
+        <Box style={{ backgroundColor: 'rgb(236, 245, 253)' }}>
             <CheckboxField
                 viewMode
                 required
@@ -54,8 +54,17 @@ function ItemDetails(props: DetailComponentProps): React.ReactElement {
                 label='Entire Subject'
                 value={ItemDetails?.EntireSubject ?? false}
                 onChange={setCheckboxField}
+                valueLeftAligned
+                gridLabel={2}
+                padding='5px 10px 1px 10px'
             />
-            <SubjectFields {...ItemDetails} originalFields={itemData} disabled={disabled} onChange={onSetField} />
+            <SubjectFields
+                {...ItemDetails}
+                originalFields={itemData}
+                disabled={disabled}
+                onChange={onSetField}
+                noTopPadding
+            />
         </Box>
     );
 }

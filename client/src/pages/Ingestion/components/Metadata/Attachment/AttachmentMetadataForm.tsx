@@ -9,24 +9,12 @@
  */
 
 import React from 'react';
-import { Box, Checkbox } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import { InputField, SelectField, FieldType } from '../../../../../components';
+import { Checkbox, TableContainer, TableBody, Table, TableRow, TableCell, Paper, Select, MenuItem, Typography } from '@material-ui/core';
+import { useStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
+// import { SelectField } from '../../../../../components';
 import { useVocabularyStore, VocabularyOption } from '../../../../../store';
-
-const useStyles = makeStyles(() => ({
-    container: {
-        marginBottom: 10,
-        '& > *': {
-            width: 'fit-content',
-            minWidth: '300px',
-            height: '20px',
-            '&:not(:last-child)': {
-                borderBottom: '1px solid #D8E5EE'
-            }
-        }
-    }
-}));
+import { DebounceInput } from 'react-debounce-input';
+import clsx from 'clsx';
 
 export interface metadataRow {
     name: string;
@@ -47,47 +35,72 @@ function AttachmentMetadataForm(props: AttachmentMetadataProps): React.ReactElem
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const { metadatas, metadataState, setNameField, setCheckboxField } = props;
     const classes = useStyles();
-    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     const rows = metadatas.map(({ type, label, name, index }) => {
+        let content;
         if (type === 'boolean') {
-            return (
-                <FieldType key={name} required label={label} direction='row' containerProps={rowFieldProps}>
-                    <Checkbox name={name} checked={metadataState[name] as boolean} color='primary' onChange={setCheckboxField} />
-                </FieldType>
+            content = (
+                <Checkbox
+                    className={classes.checkbox}
+                    name={name}
+                    onChange={setCheckboxField}
+                    checked={metadataState[name] as boolean}
+                    title={`${name}-input`}
+                    size='small'
+                    style={{ height: '24px' }}
+                />
             );
         } else if (type === 'index') {
             let options: VocabularyOption[] = [];
-
             if (index) {
                 options = getEntries(index);
                 if (!options || options.length === 0) {
-                    console.log(`AttachmentMetadataForm called for ${name} of type 'index', finding no entries`);
                     options = [];
                 }
             } else
-                console.log(`AttachmentMetadataForm called for ${name} of type 'index', without an index`);
-
-            return (
-                <SelectField
-                    key={name}
-                    required
-                    label={label}
-                    value={metadataState[name] as number}
+                content = (
+                    <Select
+                        value={metadataState[name] as number}
+                        name={name}
+                        onChange={setNameField}
+                        disableUnderline
+                        className={clsx(classes.select, classes.datasetFieldSelect)}
+                    >
+                        {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                    </Select>
+                );
+        } else
+            content = (
+                <DebounceInput
+                    element='input'
+                    title={`${name}-input`}
+                    value={metadataState[name] as string}
+                    type='string'
                     name={name}
                     onChange={setNameField}
-                    options={options}
+                    className={clsx(classes.input, classes.datasetFieldInput)}
                 />
             );
-        } else
-            return ( <InputField key={name} required type='string' label={label} value={metadataState[name] as string} name={name} onChange={setNameField} /> );
-
+        return (
+            <TableRow className={classes.tableRow} key={name}>
+                <TableCell className={classes.tableCell}>
+                    <Typography className={classes.labelText}>{label}</Typography>
+                </TableCell>
+                <TableCell className={classes.tableCell}>
+                    {content}
+                </TableCell>
+            </TableRow>
+        );
     });
 
     return (
-        <Box display='flex' flexDirection='column' className={classes.container}>
-            {rows}
-        </Box>
+        <TableContainer component={Paper} className={classes.captureMethodTableContainer} style={{ paddingTop: '10px', paddingBottom: '10px' }} elevation={0}>
+            <Table className={classes.table}>
+                <TableBody>
+                    {rows}
+                </TableBody>
+            </Table>
+        </TableContainer>
     );
 }
 

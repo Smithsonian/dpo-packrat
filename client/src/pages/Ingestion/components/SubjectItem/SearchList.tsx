@@ -81,7 +81,7 @@ function SearchList(props: SearchListProps): React.ReactElement {
     }
 
     return (
-        <FieldType required={false} label='Search for Subject' marginTop={2}>
+        <FieldType required={false} label='Search for Subject' marginTop={2} padding='10px'>
             <Box className={classes.container}>
                 <label htmlFor='searchSubjectFilter' style={{ display: 'none' }}>Search Subject</label>
                 <TextField

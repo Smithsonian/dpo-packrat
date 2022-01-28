@@ -21,9 +21,14 @@ interface CheckboxFieldProps extends ViewableProps {
     onChange: ((event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void) | undefined;
     required?: boolean;
     tooltip?: any;
+    valueLeftAligned?: boolean;
+    gridValue?: number;
+    gridLabel?: number;
+    padding?: string;
+    gridGap?: string;
 }
 
-const CheckboxNoPadding = withStyles({
+export const CheckboxNoPadding = withStyles({
     root: {
         border: '0px',
         padding: '0px'
@@ -31,7 +36,7 @@ const CheckboxNoPadding = withStyles({
 })(Checkbox);
 
 function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
-    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, updated = false, tooltip } = props;
+    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, updated = false, tooltip, valueLeftAligned = false, gridValue, gridLabel, padding, gridGap } = props;
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
     const checkbox = (
         <CheckboxNoPadding
@@ -41,8 +46,10 @@ function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
             onChange={onChange}
             {...getUpdatedCheckboxProps(updated)}
             inputProps={{ 'title': name }}
+            size='small'
         />
     );
+
     return (
         <FieldType
             required={required}
@@ -50,6 +57,11 @@ function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
             direction='row'
             containerProps={rowFieldProps}
             width={viewMode ? 'auto' : undefined}
+            valueLeftAligned={valueLeftAligned}
+            gridValue={gridValue}
+            gridLabel={gridLabel}
+            padding={padding}
+            gridGap={gridGap}
         >
             {tooltip ? (
                 <Tooltip {...tooltip}>

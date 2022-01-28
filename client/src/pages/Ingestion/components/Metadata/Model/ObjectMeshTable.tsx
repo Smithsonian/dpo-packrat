@@ -19,12 +19,12 @@ const useStyles = makeStyles(theme => ({
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
         },
-        width: '48%'
+        width: 'min(48%, 250px)'
     },
     materialFields: {
         display: 'flex',
         flexDirection: 'column',
-        width: '48%',
+        width: 'min(48%, 300px)',
         marginRight: '30px'
     },
     unindentedFields: {
@@ -47,12 +47,13 @@ const useStyles = makeStyles(theme => ({
         display: 'flex',
         width: '100%',
         marginBottom: '3%',
-        justifyContent: 'space-around',
+        justifyContent: 'start',
         paddingRight: 20
     },
     boundingBox: {
         '& > *': {
-            height: '10px'
+            minHeight: '10px',
+            padding: '3px 10px 3px 10px'
         },
         '& :not(:first-child)': {
             textIndent: '30px'
@@ -63,6 +64,7 @@ const useStyles = makeStyles(theme => ({
         flexDirection: 'row',
         borderRadius: 5,
         paddingTop: 5,
+        paddingLeft: 10,
         backgroundColor: theme.palette.primary.light,
         width: 'auto'
     },
@@ -112,15 +114,15 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                     return (
                                         <React.Fragment key={materialType.idModelMaterial}>
                                             <Box className={classes.unindentedFields}>
-                                                <ReadOnlyRow label='Material Name' value={materialType.Name} />
+                                                <ReadOnlyRow label='Material Name' value={materialType.Name} paddingString='3px 10px' />
                                                 {materialType.ModelMaterialChannel.map(channel => {
                                                     return (
                                                         <Box className={classes.unindentedFields} key={channel.idModelMaterialChannel}>
-                                                            <ReadOnlyRow label='Type' value={channel.Type} />
+                                                            <ReadOnlyRow label='Type' value={channel.Type} paddingString='3px 10px' />
                                                             <Box className={classes.indentedFields}>
-                                                                <IndentedReadOnlyRow label='Source' value={channel.Source} indentation={1} />
-                                                                <IndentedReadOnlyRow label='Value' value={channel.Value} indentation={1} />
-                                                                <IndentedReadOnlyRow label='Additional' value={channel.AdditionalAttributes} indentation={1} />
+                                                                <IndentedReadOnlyRow label='Source' value={channel.Source} indentation={1} padding='3px 10px' />
+                                                                <IndentedReadOnlyRow label='Value' value={channel.Value} indentation={1} padding='3px 10px' />
+                                                                <IndentedReadOnlyRow label='Additional' value={channel.AdditionalAttributes} indentation={1} padding='3px 10px' />
                                                             </Box>
                                                         </Box>
                                                     );
@@ -133,20 +135,20 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                             </Box>
 
                             <Box className={classes.notRequiredFields}>
-                                <ReadOnlyRow label='Vertex Count' value={modelObject.CountVertices} />
-                                <ReadOnlyRow label='Face Count' value={modelObject.CountFaces} />
-                                <ReadOnlyRow label='Color Channel Count' value={modelObject.CountColorChannels} />
-                                <ReadOnlyRow label='Texture Coord Channel Count' value={modelObject.CountTextureCoordinateChannels} />
-                                <ReadOnlyRow label='Has Bones?' value={interpretTrinary(modelObject.HasBones)} />
-                                <ReadOnlyRow label='Has Face Normals?' value={interpretTrinary(modelObject.HasFaceNormals)} />
-                                <ReadOnlyRow label='Has Tangents?' value={interpretTrinary(modelObject.HasTangents)} />
-                                <ReadOnlyRow label='Has Texture Coordinates?' value={interpretTrinary(modelObject.HasTextureCoordinates)} />
-                                <ReadOnlyRow label='Has Vertex Normals?' value={interpretTrinary(modelObject.HasVertextNormals)} />
-                                <ReadOnlyRow label='Has Vertex Color?' value={interpretTrinary(modelObject.HasVertexColor)} />
-                                <ReadOnlyRow label='Manifold (Closed)?' value={interpretTrinary(modelObject.IsTwoManifoldUnbounded)} />
-                                <ReadOnlyRow label='Manifold (Open)?' value={interpretTrinary(modelObject.IsTwoManifoldBounded)} />
-                                <ReadOnlyRow label='Is Watertight?' value={interpretTrinary(modelObject.IsWatertight)} />
-                                <ReadOnlyRow label='Self Intersecting?' value={interpretTrinary(modelObject.SelfIntersecting)} />
+                                <ReadOnlyRow label='Vertex Count' value={modelObject.CountVertices} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Face Count' value={modelObject.CountFaces} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Color Channel Count' value={modelObject.CountColorChannels} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Texture Coord Channel Count' value={modelObject.CountTextureCoordinateChannels} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Has Bones?' value={interpretTrinary(modelObject.HasBones)} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Has Face Normals?' value={interpretTrinary(modelObject.HasFaceNormals)} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Has Tangents?' value={interpretTrinary(modelObject.HasTangents)} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Has Texture Coordinates?' value={interpretTrinary(modelObject.HasTextureCoordinates)} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Has Vertex Normals?' value={interpretTrinary(modelObject.HasVertextNormals)} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Has Vertex Color?' value={interpretTrinary(modelObject.HasVertexColor)} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Manifold (Closed)?' value={interpretTrinary(modelObject.IsTwoManifoldUnbounded)} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Manifold (Open)?' value={interpretTrinary(modelObject.IsTwoManifoldBounded)} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Is Watertight?' value={interpretTrinary(modelObject.IsWatertight)} paddingString='3px 10px' />
+                                <ReadOnlyRow label='Self Intersecting?' value={interpretTrinary(modelObject.SelfIntersecting)} paddingString='3px 10px' />
                                 <Box className={classes.boundingBox}>
                                     <ReadOnlyRow label='Bounding Box' />
                                     <ReadOnlyRow
@@ -154,12 +156,14 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                         value={`(${roundToTwoPlaces(modelObject.BoundingBoxP1X)} , ${roundToTwoPlaces(modelObject.BoundingBoxP1Y)} , ${roundToTwoPlaces(
                                             modelObject.BoundingBoxP1Z
                                         )})`}
+                                        paddingString='3px 10px 3px 10px'
                                     />
                                     <ReadOnlyRow
                                         label='Max'
                                         value={`(${roundToTwoPlaces(modelObject.BoundingBoxP2X)} , ${roundToTwoPlaces(modelObject.BoundingBoxP2Y)} , ${roundToTwoPlaces(
                                             modelObject.BoundingBoxP2Z
                                         )})`}
+                                        paddingString='3px 10px 3px 10px'
                                     />
                                 </Box>
                             </Box>

@@ -41,7 +41,7 @@ function AssetDetails(props: DetailComponentProps): React.ReactElement {
     const assetData = data.getDetailsTabDataForObject?.Asset;
 
     return (
-        <Box>
+        <Box style={{ backgroundColor: 'rgb(236, 245, 253)' }}>
             <SelectField
                 required
                 viewMode
@@ -52,8 +52,13 @@ function AssetDetails(props: DetailComponentProps): React.ReactElement {
                 name='AssetType'
                 onChange={setIdField}
                 options={getEntries(eVocabularySetID.eAssetAssetType)}
+                valueLeftAligned
+                gridLabel={2}
+                padding='5px 10px'
+                selectFitContent
             />
         </Box>
+
     );
 }
 

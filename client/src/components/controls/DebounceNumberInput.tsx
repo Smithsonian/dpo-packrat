@@ -15,14 +15,14 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         padding: 8,
         borderRadius: 5,
-        marginLeft: 5,
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
             fontSize: '0.8em',
             minWidth: 50,
             maxWidth: 50,
-        }
+        },
+        height: 3
     }
 }));
 
