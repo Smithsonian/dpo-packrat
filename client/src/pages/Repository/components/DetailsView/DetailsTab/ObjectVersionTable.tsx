@@ -139,13 +139,13 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                 {
                                     expanded === index ? (
                                         <tr>
-                                            <td colSpan={4} align='center'>
-                                                <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} placeholder='Please provide rollback notes...' rows='4' />
-                                            </td>
-                                            <td colSpan={1} align='left'>
-                                                <Box>
-                                                    <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5, marginRight: '4px' }} variant='contained' color='primary'>Rollback</Button>
-                                                    <Button onClick={cancel} className={classes.btn} style={{ padding: 0 }} variant='contained' color='primary'>Cancel</Button>
+                                            <td style={{ width: '60%' }} colSpan={5} align='center'>
+                                                <Box display='flex' style={{ width: '90%', alignItems: 'center', columnGap: '10px' }}>
+                                                    <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} placeholder='Please provide rollback notes...' rows='4' />
+                                                    <Box style={{ columnGap: '3px', display: 'flex' }}>
+                                                        <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5 }} variant='contained' color='primary'>Rollback</Button>
+                                                        <Button onClick={cancel} className={classes.btn} style={{ padding: 0 }} variant='contained' color='primary'>Cancel</Button>
+                                                    </Box>
                                                 </Box>
                                             </td>
                                         </tr>
