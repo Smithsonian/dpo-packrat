@@ -42,7 +42,8 @@ import { Helmet } from 'react-helmet';
 const useStyles = makeStyles({
     AdminPageContainer: {
         display: 'flex',
-        font: 'var(--unnamed-font-style-normal) normal medium 11px/17px var(--unnamed-font-family-heebo)'
+        font: 'var(--unnamed-font-style-normal) normal medium 11px/17px var(--unnamed-font-family-heebo)',
+        width: '100%'
     }
 });
 

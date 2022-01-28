@@ -97,7 +97,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
 
     return (
         <Box overflow='hidden'>
-            <FieldType required={false} renderLabel={false} width='auto'>
+            <FieldType required={false} renderLabel={false} width='auto' padding='10px'>
                 {hasIdentifiers && <Header />}
                 {!hasIdentifiers && viewMode && (
                     <Box pb={1}>

@@ -14,33 +14,47 @@ import { ViewableProps } from '../../types/repository';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     date: {
-        width: '50%',
         background: palette.background.paper,
-        border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
-        backgroundColor: (updated: boolean) => (updated ? palette.secondary.light : palette.background.paper),
-        padding: '1px 8px',
+        border: ({ updated }: DateInputFieldProps) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
+        backgroundColor: ({ updated }: DateInputFieldProps) => (updated ? palette.secondary.light : palette.background.paper),
+        paddingLeft: '10px',
+        paddingRight: '10px',
         color: Colors.defaults.white,
         marginTop: 0,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
-            minWidth: 160,
-            maxWidth: 160,
             '& > div > input': {
-                fontSize: '0.8em'
+                fontSize: '0.8em',
+            },
+            '& > div':  {
+                width: '97px'
             }
         },
-        marginBottom: 0
+        [breakpoints.up('xl')]: {
+            '& > div': {
+                width: '114px'
+            }
+        },
+        borderRadius: 5,
+        marginBottom: 0,
+        height: ({ dateHeight }: DateInputFieldProps) => dateHeight ? dateHeight : undefined,
+        alignItems: 'baseline',
+        '& .MuiSvgIcon-root': {
+            height: 20,
+            width: 20
+        }
     }
 }));
 
 interface DateInputFieldProps extends ViewableProps {
     value: Date | null | string;
     onChange: (date: MaterialUiPickersDate, value?: string | null | undefined) => void;
+    dateHeight?: string;
 }
 
 function DateInputField(props: DateInputFieldProps): React.ReactElement {
-    const { value, onChange, disabled = false, updated = false } = props;
-    const classes = useStyles(updated);
+    const { value, onChange, disabled = false } = props;
+    const classes = useStyles(props);
 
     return (
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
@@ -49,12 +63,13 @@ function DateInputField(props: DateInputFieldProps): React.ReactElement {
                 disableToolbar
                 variant='inline'
                 format='MM/dd/yyyy'
-                margin='normal'
                 value={value}
                 className={classes.date}
-                InputProps={{ disableUnderline: true }}
+                InputProps={{ disableUnderline: true, style: { height: '100%' } }}
                 onChange={onChange}
                 autoOk
+                inputProps={{ style: { alignSelf: 'center' } }}
+                KeyboardButtonProps={{ style: { padding: 0 }, size: 'small' }}
             />
         </MuiPickersUtilsProvider>
     );

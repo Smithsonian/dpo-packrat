@@ -44,10 +44,11 @@ interface SubjectFieldsProps extends SubjectDetailFields {
     disabled: boolean;
     originalFields?: SubjectDetailFields | ItemDetailFields | null;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    noTopPadding?: boolean;
 }
 
 export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
-    const { originalFields, Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3, disabled, onChange } = props;
+    const { originalFields, Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3, disabled, onChange, noTopPadding } = props;
 
     const details = {
         Latitude,
@@ -64,41 +65,52 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
 
     return (
         <React.Fragment>
-            <InputField
-                viewMode
-                required
-                type='number'
-                updated={isFieldUpdated(details, originalFields, 'Latitude')}
-                disabled={disabled}
-                label='Latitude'
-                value={details.Latitude}
-                name='Latitude'
-                onChange={onChange}
-            />
-            <InputField
-                viewMode
-                required
-                type='number'
-                updated={isFieldUpdated(details, originalFields, 'Longitude')}
-                disabled={disabled}
-                label='Longitude'
-                value={details.Longitude}
-                name='Longitude'
-                onChange={onChange}
-            />
-            <InputField
-                viewMode
-                required
-                type='number'
-                updated={isFieldUpdated(details, originalFields, 'Altitude')}
-                disabled={disabled}
-                label='Altitude'
-                value={details.Altitude}
-                name='Altitude'
-                onChange={onChange}
-            />
-            <RotationOriginInput originalFields={originalFields} TS0={details.TS0} TS1={details.TS1} TS2={details.TS2} onChange={onChange} />
-            <RotationQuaternionInput originalFields={originalFields} R0={details.R0} R1={details.R1} R2={details.R2} R3={details.R3} onChange={onChange} />
+            <Box minWidth='fit-content' style={{ backgroundColor: 'rgb(236, 245, 253)' }}>
+                <InputField
+                    viewMode
+                    required
+                    type='number'
+                    updated={isFieldUpdated(details, originalFields, 'Latitude')}
+                    disabled={disabled}
+                    label='Latitude'
+                    value={details.Latitude}
+                    name='Latitude'
+                    onChange={onChange}
+                    valueLeftAligned
+                    gridLabel={2}
+                    padding={noTopPadding ? '1px 10px' : '5px 10px 1px 10px' }
+                />
+                <InputField
+                    viewMode
+                    required
+                    type='number'
+                    updated={isFieldUpdated(details, originalFields, 'Longitude')}
+                    disabled={disabled}
+                    label='Longitude'
+                    value={details.Longitude}
+                    name='Longitude'
+                    onChange={onChange}
+                    valueLeftAligned
+                    gridLabel={2}
+                    padding='1px 10px'
+                />
+                <InputField
+                    viewMode
+                    required
+                    type='number'
+                    updated={isFieldUpdated(details, originalFields, 'Altitude')}
+                    disabled={disabled}
+                    label='Altitude'
+                    value={details.Altitude}
+                    name='Altitude'
+                    onChange={onChange}
+                    valueLeftAligned
+                    gridLabel={2}
+                    padding='1px 10px'
+                />
+                <RotationOriginInput originalFields={originalFields} TS0={details.TS0} TS1={details.TS1} TS2={details.TS2} onChange={onChange} />
+                <RotationQuaternionInput originalFields={originalFields} R0={details.R0} R1={details.R1} R2={details.R2} R3={details.R3} onChange={onChange} />
+            </Box>
         </React.Fragment>
     );
 }
@@ -115,8 +127,6 @@ interface RotationOriginInputProps {
 export function RotationOriginInput(props: RotationOriginInputProps): React.ReactElement {
     const { TS0, TS1, TS2, onChange, originalFields, ignoreUpdate } = props;
 
-    const rowFieldProps = { justifyContent: 'space-between', style: { borderRadius: 0 } };
-
     const details = {
         TS0,
         TS1,
@@ -124,9 +134,9 @@ export function RotationOriginInput(props: RotationOriginInputProps): React.Reac
     };
 
     return (
-        <FieldType required label='Rotation Origin' direction='row' containerProps={rowFieldProps} width='auto'>
-            <Box display='flex' flex={1} flexDirection='column'>
-                <Box display='flex' justifyContent='flex-end'>
+        <FieldType required label='Rotation Origin' direction='row' valueLeftAligned gridLabel={2} padding='1px 10px' containerProps={{ style: { borderRadius: 0, alignItems: 'center' } }}>
+            <Box display='flex' flex={1}>
+                <Box display='flex'>
                     <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'TS0')} value={TS0} name='TS0' onChange={onChange} />
                     <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'TS1')} value={TS1} name='TS1' onChange={onChange} />
                     <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'TS2')} value={TS2} name='TS2' onChange={onChange} />
@@ -149,8 +159,6 @@ interface RotationQuaternionInputProps {
 export function RotationQuaternionInput(props: RotationQuaternionInputProps): React.ReactElement {
     const { R0, R1, R2, R3, onChange, originalFields, ignoreUpdate } = props;
 
-    const rowFieldProps = { justifyContent: 'space-between', style: { borderRadius: 0 } };
-
     const details = {
         R0,
         R1,
@@ -158,9 +166,9 @@ export function RotationQuaternionInput(props: RotationQuaternionInputProps): Re
         R3
     };
     return (
-        <FieldType required label='Rotation Quaternion' direction='row' containerProps={rowFieldProps} width='auto'>
-            <Box display='flex' flex={1} flexDirection='column'>
-                <Box display='flex' justifyContent='flex-end'>
+        <FieldType required label='Rotation Quaternion' direction='row' valueLeftAligned gridLabel={2} containerProps={{ style: { borderRadius: 0, alignItems: 'center' } }} padding='1px 10px 5px 10px'>
+            <Box display='flex' flex={1}>
+                <Box display='flex'>
                     <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'R0')} value={R0} name='R0' onChange={onChange} />
                     <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'R1')} value={R1} name='R1' onChange={onChange} />
                     <DebounceNumberInput updated={ignoreUpdate ? false : isFieldUpdated(details, originalFields, 'R2')} value={R2} name='R2' onChange={onChange} />

@@ -32,7 +32,7 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
     const unitData = data.getDetailsTabDataForObject?.Unit;
 
     return (
-        <Box>
+        <Box style={{ backgroundColor: 'rgb(236, 245, 253)' }}>
             <InputField
                 viewMode
                 required
@@ -42,6 +42,9 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
                 value={UnitDetails?.Abbreviation}
                 name='Abbreviation'
                 onChange={onSetField}
+                valueLeftAligned
+                gridLabel={3}
+                padding='3px 10px'
             />
             <InputField
                 viewMode
@@ -52,6 +55,9 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
                 value={UnitDetails?.ARKPrefix}
                 name='ARKPrefix'
                 onChange={onSetField}
+                valueLeftAligned
+                gridLabel={3}
+                padding='3px 10px'
             />
         </Box>
     );

@@ -16,7 +16,6 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         width: '80%',
         padding: 10,
         resize: 'none',
-        overflow: 'scroll',
         border: `${palette.primary.contrastText}, 0.4`,
         backgroundColor: palette.background.paper,
         borderRadius: 5,
@@ -50,6 +49,7 @@ function TextArea(props: TextAreaProps): React.ReactElement {
                 direction='row'
                 containerProps={rowFieldProps}
                 width={viewMode ? 'auto' : undefined}
+                padding='10px'
             >
                 <DebounceInput
                     forceNotifyByEnter={false}

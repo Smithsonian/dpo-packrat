@@ -55,7 +55,7 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eAssetVersion, name, checked);
     };
 
-    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
+    const rowFieldProps = { alignItems: 'center', style: { borderRadius: 0 } };
 
     const assetVersionData = data.getDetailsTabDataForObject?.AssetVersion;
 
@@ -80,7 +80,7 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
 
     return (
         <Box>
-            <FieldType required label='Version' direction='row' containerProps={rowFieldProps} width='auto'>
+            <FieldType required label='Version' direction='row' containerProps={rowFieldProps} width='auto' valueLeftAligned gridLabel={2} gridValue={5} padding='3px 10px'>
                 <Typography className={classes.value}>{AssetVersionDetails.Version}</Typography>
             </FieldType>
             <InputField
@@ -92,14 +92,18 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
                 value={assetVersionData?.FilePath}
                 name='FilePath'
                 onChange={onSetField}
+                valueLeftAligned
+                gridLabel={2}
+                gridValue={5}
+                padding='3px 10px'
             />
-            <FieldType required label='Creator' direction='row' containerProps={rowFieldProps} width='auto'>
+            <FieldType required label='Creator' direction='row' containerProps={rowFieldProps} width='auto' valueLeftAligned gridLabel={2} gridValue={5} padding='3px 10px'>
                 <Typography className={classes.value}>{AssetVersionDetails.Creator}</Typography>
             </FieldType>
-            <FieldType required label='Date Created' direction='row' containerProps={rowFieldProps} width='auto'>
+            <FieldType required label='Date Created' direction='row' containerProps={rowFieldProps} width='auto' valueLeftAligned gridLabel={2} gridValue={5} padding='3px 10px'>
                 <Typography className={classes.value}>{AssetVersionDetails.DateCreated}</Typography>
             </FieldType>
-            <FieldType required label='Storage Size' direction='row' containerProps={rowFieldProps} width='auto'>
+            <FieldType required label='Storage Size' direction='row' containerProps={rowFieldProps} width='auto' valueLeftAligned gridLabel={2} gridValue={5} padding='3px 10px'>
                 <Typography className={classes.value}>{formatBytes(AssetVersionDetails.StorageSize ?? 0)}</Typography>
             </FieldType>
 
@@ -112,8 +116,10 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
                 label='Ingested'
                 value={AssetVersionDetails.Ingested ?? false}
                 onChange={setCheckboxField}
+                valueLeftAligned
+                gridLabel={2}
+                gridValue={5}
             />
-
             <Button className={classes.button} variant='contained' color='primary' style={{ width: 'fit-content', marginTop: '7px' }} onClick={redirect}>
                 Add Version
             </Button>

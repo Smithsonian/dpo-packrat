@@ -28,7 +28,8 @@ const useStyles = makeStyles(({ palette }) => ({
     content: {
         display: 'flex',
         flex: 1,
-        width: '52vw',
+        minWidth: '52vw',
+        width: 'fit-content',
         flexDirection: 'column',
         padding: 20,
         paddingBottom: 0
@@ -297,10 +298,10 @@ function SubjectForm(): React.ReactElement {
             </Helmet>
             <Box className={classes.content}>
                 <SearchList EdanOnly />
-                <Box style={{ marginTop: '10px', marginBottom: '10px', width: '600px' }}>
-                    <InputField viewMode required label='Name' value={subjectName} name='Name' onChange={({ target }) => setSubjectName(target.value)} updated={!validName} />
-                    <FieldType width='auto' direction='row' label='Unit' required containerProps={{ justifyContent: 'space-between', marginBottom: '10px' }}>
-                        <Select value={subjectUnit} onChange={handleUnitSelectChange} error={!validUnit}>
+                <Box style={{ marginTop: '10px', marginBottom: '10px', width: '600px', backgroundColor: 'rgb(236, 245, 253)' }}>
+                    <InputField viewMode required label='Name' value={subjectName} name='Name' onChange={({ target }) => setSubjectName(target.value)} updated={!validName} valueLeftAligned gridLabel={2} />
+                    <FieldType width='auto' direction='row' label='Unit' required containerProps={{ justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }} valueLeftAligned gridLabel={2}>
+                        <Select value={subjectUnit} onChange={handleUnitSelectChange} error={!validUnit} style={{ height: '21px' }}>
                             <MenuItem value={0} key={0}>
                                 None
                             </MenuItem>
@@ -311,9 +312,9 @@ function SubjectForm(): React.ReactElement {
                             ))}
                         </Select>
                     </FieldType>
-                    <InputField viewMode required type='number' label='Latitude' value={coordinateValues.Latitude} name='Latitude' onChange={handleCoordinateChange} />
-                    <InputField viewMode required type='number' label='Longitude' value={coordinateValues.Longitude} name='Longitude' onChange={handleCoordinateChange} />
-                    <InputField viewMode required type='number' label='Altitude' value={coordinateValues.Altitude} name='Altitude' onChange={handleCoordinateChange} />
+                    <InputField viewMode required type='number' label='Latitude' value={coordinateValues.Latitude} name='Latitude' onChange={handleCoordinateChange} valueLeftAligned gridLabel={2} />
+                    <InputField viewMode required type='number' label='Longitude' value={coordinateValues.Longitude} name='Longitude' onChange={handleCoordinateChange} valueLeftAligned gridLabel={2} />
+                    <InputField viewMode required type='number' label='Altitude' value={coordinateValues.Altitude} name='Altitude' onChange={handleCoordinateChange} valueLeftAligned gridLabel={2} />
                     <RotationOriginInput TS0={coordinateValues.TS0} TS1={coordinateValues.TS1} TS2={coordinateValues.TS2} onChange={handleCoordinateChange} ignoreUpdate />
                     <RotationQuaternionInput
                         R0={coordinateValues.R0}

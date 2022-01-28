@@ -6,9 +6,9 @@
  *
  * This component renders the metadata fields specific to model asset.
  */
-import { Box, makeStyles, Typography } from '@material-ui/core';
+import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, /*FieldType, InputField, SelectField,*/ ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
@@ -19,8 +19,12 @@ import ObjectMeshTable from './ObjectMeshTable';
 import AssetFilesTable from './AssetFilesTable';
 import { extractModelConstellation } from '../../../../../constants';
 import { apolloClient } from '../../../../../graphql/index';
+import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
+import { DebounceInput } from 'react-debounce-input';
+import { errorFieldStyling } from '../Photogrammetry';
+import clsx from 'clsx';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         marginTop: 20
     },
@@ -28,30 +32,31 @@ const useStyles = makeStyles(theme => ({
         display: 'flex',
         flexDirection: 'column',
         borderRadius: 5,
-        backgroundColor: theme.palette.secondary.light,
-        width: '350px',
+        backgroundColor: palette.secondary.light,
+        minWidth: '250px',
+        maxWidth: '400px',
         '& > *': {
-            height: '20px',
+            minHeight: '20px',
+            height: 'fit-content',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
         }
     },
     dataEntry: {
-        width: '350px',
+        display: 'flex',
+        flexDirection: 'column',
+        width: 'fit-content',
         marginRight: '30px',
         '& > *': {
-            height: '20px',
-            borderBottom: '0.5px solid #D8E5EE',
-            borderTop: '0.5px solid #D8E5EE',
-            width: 'auto'
+            minHeight: '20px',
+            borderRadius: 0
         },
-        border: '1px solid #D8E5EE',
         height: 'fit-content'
     },
     ModelMetricsAndFormContainer: {
         borderRadius: 5,
         padding: 10,
-        backgroundColor: theme.palette.primary.light,
+        backgroundColor: palette.primary.light,
         width: 'fit-content',
         display: 'flex',
         flexDirection: 'column'
@@ -60,10 +65,10 @@ const useStyles = makeStyles(theme => ({
         display: 'flex',
         flexDirection: 'row',
         borderRadius: 5,
-        backgroundColor: theme.palette.primary.light,
+        backgroundColor: palette.primary.light,
         width: 'fit-content',
         paddingRight: 20,
-        justifyContent: 'space-around'
+        // justifyContent: 'space-around'
     },
     captionContainer: {
         flex: '1 1 0%',
@@ -87,6 +92,7 @@ interface ModelProps {
 function Model(props: ModelProps): React.ReactElement {
     const { metadataIndex, onPrevious, onClickRight, isLast, rightLoading, disableNavigation } = props;
     const classes = useStyles();
+    const tableClasses = useTableStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { model, file } = metadata;
     const { idAsset } = file;
@@ -257,7 +263,6 @@ function Model(props: ModelProps): React.ReactElement {
         onModalClose();
     };
 
-    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
     return (
         <React.Fragment>
             <Box className={classes.container}>
@@ -311,60 +316,102 @@ function Model(props: ModelProps): React.ReactElement {
 
                     <Box className={classes.modelMetricsAndForm}>
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
-                            <InputField required type='string' label='Name' value={model.name} name='name' onChange={setNameField} error={errors.model.name} />
-
-                            <FieldType error={errors.model.dateCreated} required label='Date Created' direction='row' containerProps={rowFieldProps}>
-                                <DateInputField value={model.dateCreated} onChange={(_, value) => setDateField('dateCreated', value)} />
-                            </FieldType>
-
-                            <SelectField
-                                required
-                                label='Creation Method'
-                                error={errors.model.creationMethod}
-                                value={model.creationMethod}
-                                name='creationMethod'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eModelCreationMethod)}
-                            />
-                            <SelectField
-                                required
-                                label='Modality'
-                                error={errors.model.modality}
-                                value={model.modality}
-                                name='modality'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eModelModality)}
-                            />
-
-                            <SelectField
-                                required
-                                label='Units'
-                                error={errors.model.units}
-                                value={model.units}
-                                name='units'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eModelUnits)}
-                            />
-
-                            <SelectField
-                                required
-                                label='Purpose'
-                                error={errors.model.purpose}
-                                value={model.purpose}
-                                name='purpose'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eModelPurpose)}
-                            />
-
-                            <SelectField
-                                required
-                                label='Model File Type'
-                                error={errors.model.modelFileType}
-                                value={model.modelFileType}
-                                name='modelFileType'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eModelFileType)}
-                            />
+                            <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ backgroundColor: 'rgb(255, 252, 209', paddingTop: '10px' }}>
+                                <Table className={tableClasses.table}>
+                                    <TableBody>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.name)}>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Name</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <DebounceInput
+                                                    element='input'
+                                                    title='name-input'
+                                                    value={model.name}
+                                                    type='string'
+                                                    name='name'
+                                                    onChange={setNameField}
+                                                    className={clsx(tableClasses.input, tableClasses.datasetFieldInput)}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.dateCreated)}>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Date Created</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <DateInputField value={model.dateCreated} onChange={(_, value) => setDateField('dateCreated', value)} dateHeight='22px' />
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.creationMethod)}>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Creation Method</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Select
+                                                    value={model.creationMethod}
+                                                    name='creationMethod'
+                                                    onChange={setIdField}
+                                                    disableUnderline
+                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                >
+                                                    {getEntries(eVocabularySetID.eModelCreationMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                </Select>
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.modality)}>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Modality</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Select
+                                                    value={model.modality}
+                                                    name='modality'
+                                                    onChange={setIdField}
+                                                    disableUnderline
+                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                >
+                                                    {getEntries(eVocabularySetID.eModelModality).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                </Select>
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.units)}>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Units</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Select
+                                                    value={model.units}
+                                                    name='units'
+                                                    onChange={setIdField}
+                                                    disableUnderline
+                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                >
+                                                    {getEntries(eVocabularySetID.eModelUnits).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                </Select>
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.purpose)}>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Purpose</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Select
+                                                    value={model.purpose}
+                                                    name='purpose'
+                                                    onChange={setIdField}
+                                                    disableUnderline
+                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                >
+                                                    {getEntries(eVocabularySetID.eModelPurpose).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                </Select>
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.modelFileType)}>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Model File Type</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Select
+                                                    value={model.modelFileType}
+                                                    name='modelFileType'
+                                                    onChange={setIdField}
+                                                    disableUnderline
+                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                >
+                                                    {getEntries(eVocabularySetID.eModelFileType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                </Select>
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
                         </Box>
                         {/* End of data-entry form */}
 
