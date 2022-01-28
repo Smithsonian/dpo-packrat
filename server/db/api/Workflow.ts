@@ -3,6 +3,7 @@ import { Workflow as WorkflowBase } from '@prisma/client';
 import { WorkflowSet, WorkflowStep, WorkflowStepSystemObjectXref } from '..';
 import * as DBC from '../connection';
 import * as CACHE from '../../cache';
+import * as COMMON from '../../../client/src/types/server';
 import * as LOG from '../../utils/logger';
 
 export class WorkflowConstellation {
@@ -142,9 +143,9 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
         }
     }
 
-    static async fetchFromWorkflowType(eWorkType: CACHE.eVocabularyID): Promise<Workflow[] | null> {
-        if (!await CACHE.VocabularyCache.isVocabularyInSet(eWorkType, CACHE.eVocabularySetID.eWorkflowType)) {
-            LOG.error(`Workflow.fetchFromWorkflowType ${CACHE.eVocabularyID[eWorkType]} is not from the correct vocabulary set`, LOG.LS.eDB);
+    static async fetchFromWorkflowType(eWorkType: COMMON.eVocabularyID): Promise<Workflow[] | null> {
+        if (!await CACHE.VocabularyCache.isVocabularyInSet(eWorkType, COMMON.eVocabularySetID.eWorkflowType)) {
+            LOG.error(`Workflow.fetchFromWorkflowType ${COMMON.eVocabularyID[eWorkType]} is not from the correct vocabulary set`, LOG.LS.eDB);
             return null;
         }
 

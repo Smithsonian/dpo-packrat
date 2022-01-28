@@ -425,3 +425,7 @@ INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (32, NULL, 'STRI_YT');
 ALTER TABLE AssetVersion ADD COLUMN Comment text NULL;
 
 -- 2022-01-16 Deployed to Staging
+
+-- 2022-01-21 Jon
+ALTER TABLE Model ADD COLUMN CountTriangles int(11) DEFAULT NULL;
+ALTER TABLE ModelObject ADD COLUMN CountTriangles int(11) DEFAULT NULL;

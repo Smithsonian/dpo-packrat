@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Upload Store
  *
@@ -52,7 +53,7 @@ type UploadStore = {
     setUpdateWorkflowFileType: (fileType: eSystemObjectType) => void;
     getSelectedFiles: (files: IngestionFile[], selected: boolean) => IngestionFile[];
     loadPending: (acceptedFiles: File[]) => void;
-    loadCompleted: (completed: IngestionFile[]) => void;
+    loadCompleted: (completed: IngestionFile[], refetch) => void;
     selectFile: (id: FileId, selected: boolean) => void;
     startUpload: (id: FileId) => void;
     cancelUpload: (id: FileId) => void;
@@ -67,6 +68,7 @@ type UploadStore = {
     onFailedEvent: (data: UploadFailedEvent) => void;
     onCompleteEvent: (data: UploadCompleteEvent) => void;
     reset: () => void;
+    refetch?: (variables?) => Promise<any>;
 };
 
 export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, get: GetState<UploadStore>) => ({
@@ -121,8 +123,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             set({ pending: updatedPendingFiles });
         }
     },
-    loadCompleted: (completed: IngestionFile[]): void => {
-        set({ completed, loading: false });
+    loadCompleted: (completed: IngestionFile[], refetch): void => {
+        set({ completed, loading: false, refetch });
     },
     selectFile: (id: FileId, selected: boolean) => {
         const { completed } = get();
@@ -286,7 +288,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         set({ pending: updatedPending });
     },
     discardFiles: async (): Promise<void> => {
-        const { completed, getSelectedFiles } = get();
+        const { completed, getSelectedFiles, refetch } = get();
         const selectedFiles = getSelectedFiles(completed, true);
 
         if (!selectedFiles.length) {
@@ -295,18 +297,12 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         }
 
         const isConfirmed = global.confirm('Do you want to discard selected items?');
-
-        if (!isConfirmed) return;
-
-        const idAssetVersions: number[] = selectedFiles.map(({ id }) => parseFileId(id));
-
-        const discardMutationVariables = {
-            input: {
-                idAssetVersions
-            }
-        };
+        if (!isConfirmed)
+            return;
 
         try {
+            const idAssetVersions: number[] = selectedFiles.map(({ id }) => parseFileId(id));
+            const discardMutationVariables = { input: { idAssetVersions } };
             const { data }: FetchResult<DiscardUploadedAssetVersionsMutation> = await apolloClient.mutate({
                 mutation: DiscardUploadedAssetVersionsDocument,
                 variables: discardMutationVariables
@@ -324,6 +320,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 const updatedCompleted = getSelectedFiles(completed, false);
                 set({ completed: updatedCompleted });
 
+                if (refetch)
+                    refetch();
                 toast.info('Selected files have been discarded');
                 return;
             }

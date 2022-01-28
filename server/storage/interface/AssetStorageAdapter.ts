@@ -12,10 +12,11 @@ import { BagitReader, BAGIT_DATA_DIRECTORY, BulkIngestReader, IngestMetadata } f
 import { StorageFactory } from './StorageFactory';
 import { IStorage } from './IStorage';
 import { AssetVersionContent } from '../../types/graphql';
-import { eVocabularyID, VocabularyCache } from '../../cache';
+import { VocabularyCache } from '../../cache';
 import { ASL, LocalStore } from '../../utils/localStore';
 import { SvxReader } from '../../utils/parser';
 import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
+import * as COMMON from '../../../client/src/types/server';
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
@@ -222,7 +223,7 @@ export class AssetStorageAdapter {
         }
 
         // detect & handle bulk ingest
-        const isBulkIngest: boolean = (await asset.assetType() == eVocabularyID.eAssetAssetTypeBulkIngestion);
+        const isBulkIngest: boolean = (await asset.assetType() == COMMON.eVocabularyID.eAssetAssetTypeBulkIngestion);
         return (isBulkIngest)
             ? await AssetStorageAdapter.commitNewAssetVersionBulk(commitWriteStreamInput, asset, FilePath, idSOAttachment, opInfo, DateCreated, resStorage, storage)
             : await AssetStorageAdapter.commitNewAssetVersionNonBulk(commitWriteStreamInput, asset, FilePath, idSOAttachment, opInfo, DateCreated, assetNameOverride, resStorage);
@@ -236,8 +237,8 @@ export class AssetStorageAdapter {
         // set model and scene package Ingested to null, which means uploaded but not yet processed; WorkflowUpload will set this to false once validation is complete
         let Ingested: boolean | null = false;
         switch (await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType)) {
-            case eVocabularyID.eAssetAssetTypeModel:
-            case eVocabularyID.eAssetAssetTypeScene:
+            case COMMON.eVocabularyID.eAssetAssetTypeModel:
+            case COMMON.eVocabularyID.eAssetAssetTypeScene:
                 Ingested = null;
                 break;
         }
@@ -281,14 +282,14 @@ export class AssetStorageAdapter {
             const assetClone: DBAPI.Asset = new DBAPI.Asset({ ...asset });
 
             let ingested: boolean | null = false;
-            let eVocabID: eVocabularyID = eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry; /* istanbul ignore else */
+            let eVocabID: COMMON.eVocabularyID = COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry; /* istanbul ignore else */
             if (BulkIngestReader.ingestedObjectIsPhotogrammetry(ingestedObject))
-                eVocabID = eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry;
+                eVocabID = COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry;
             else if (BulkIngestReader.ingestedObjectIsModel(ingestedObject)) {
-                eVocabID = eVocabularyID.eAssetAssetTypeModel;
+                eVocabID = COMMON.eVocabularyID.eAssetAssetTypeModel;
                 ingested = null;
             } else if (BulkIngestReader.ingestedObjectIsScene(ingestedObject))
-                eVocabID = eVocabularyID.eAssetAssetTypeScene;
+                eVocabID = COMMON.eVocabularyID.eAssetAssetTypeScene;
 
             /* istanbul ignore next */
             if (!await assetClone.setAssetType(eVocabID))
@@ -367,7 +368,7 @@ export class AssetStorageAdapter {
             return false;
         }
 
-        const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eMetadataMetadataSourceBulkIngestion);
+        const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eMetadataMetadataSourceBulkIngestion);
         const metadata: DBAPI.Metadata = new DBAPI.Metadata({
             Name: 'Bulk Ingestion',
             ValueShort: null,
@@ -395,7 +396,7 @@ export class AssetStorageAdapter {
         if (!metadataList)
             return null;
 
-        const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eMetadataMetadataSourceBulkIngestion); /* istanbul ignore next */
+        const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eMetadataMetadataSourceBulkIngestion); /* istanbul ignore next */
         if (!vocabulary)
             return null;
 
@@ -497,13 +498,13 @@ export class AssetStorageAdapter {
 
         let IAR: IngestAssetResult;
         const isZipFilename: boolean = (path.extname(assetVersion.FileName).toLowerCase() === '.zip');
-        const eAssetType: CACHE.eVocabularyID | undefined = await asset.assetType();
+        const eAssetType: COMMON.eVocabularyID | undefined = await asset.assetType();
         const unzipAssets: boolean = allowZipCracking && isZipFilename &&
-            (eAssetType == CACHE.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry ||
-             eAssetType == CACHE.eVocabularyID.eAssetAssetTypeCaptureDataFile ||
-             eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModel ||
-             eAssetType == CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile ||
-             eAssetType == CACHE.eVocabularyID.eAssetAssetTypeScene);
+            (eAssetType == COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry ||
+             eAssetType == COMMON.eVocabularyID.eAssetAssetTypeCaptureDataFile ||
+             eAssetType == COMMON.eVocabularyID.eAssetAssetTypeModel ||
+             eAssetType == COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile ||
+             eAssetType == COMMON.eVocabularyID.eAssetAssetTypeScene);
         if (assetVersion.BulkIngest || unzipAssets) {
             // Use bulkIngestReader to extract contents for assets in and below asset.FilePath
             const CAR: CrackAssetResult = await AssetStorageAdapter.crackAssetWorker(storage, asset, assetVersion); /* istanbul ignore next */
@@ -548,7 +549,7 @@ export class AssetStorageAdapter {
 
         const systemObjectSet: Set<number> = new Set<number>();
         for (const assetVersion of IAR.assetVersions) {
-            const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion };
+            const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion };
             const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
             if (!sysInfo) {
                 error = `ingestData sendWorkflowIngestionEvent could not find system object for ${JSON.stringify(oID)}`;
@@ -602,7 +603,7 @@ export class AssetStorageAdapter {
         };
 
         // send workflow engine event, but don't wait for results
-        workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);
+        workflowEngine.event(COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);
         return { success: error === undefined ? true : false, error };
     }
 
@@ -621,7 +622,7 @@ export class AssetStorageAdapter {
 
         for (const asset of IAR.assets) {
             switch (await asset.assetType()) {
-                case eVocabularyID.eAssetAssetTypeScene:
+                case COMMON.eVocabularyID.eAssetAssetTypeScene:
                     if (!sceneAsset) {
                         sceneAsset = asset;
                         sceneAssetVersion = assetVersionMap.get(asset.idAsset);
@@ -701,7 +702,7 @@ export class AssetStorageAdapter {
         metadata: DBAPI.ObjectGraph, opInfo: STORE.OperationInfo, zip: IZip, bulkIngest: boolean): Promise<IngestAssetResult> {
         const assets: DBAPI.Asset[] = [];
         const assetVersions: DBAPI.AssetVersion[] = [];
-        const eAssetTypeMaster: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType);
+        const eAssetTypeMaster: COMMON.eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(asset.idVAssetType);
         let IAR: IngestAssetResult = { success: true };
         let assetsIngested: boolean = false;
         let affectedSystemObjectIds: Set<number> | null = null;
@@ -741,41 +742,41 @@ export class AssetStorageAdapter {
             }
 
             // Determine asset type
-            let eAssetType: eVocabularyID;
+            let eAssetType: COMMON.eVocabularyID;
             let ingested: boolean | null = false;
             const unzippedFileName: string = path.basename(entry);
             switch (eAssetTypeMaster) {
-                case eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry:
-                case eVocabularyID.eAssetAssetTypeCaptureDataFile:
-                    eAssetType = eVocabularyID.eAssetAssetTypeCaptureDataFile;
+                case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry:
+                case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataFile:
+                    eAssetType = COMMON.eVocabularyID.eAssetAssetTypeCaptureDataFile;
                     break;
 
-                case eVocabularyID.eAssetAssetTypeModel:
-                case eVocabularyID.eAssetAssetTypeModelGeometryFile:
+                case COMMON.eVocabularyID.eAssetAssetTypeModel:
+                case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile:
                     ingested = null;
                     if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
-                        eAssetType = eVocabularyID.eAssetAssetTypeModelGeometryFile;
+                        eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile;
                     else {
                         const mimeType: string = mime.lookup(unzippedFileName);
                         if (mimeType.startsWith('image/'))
-                            eAssetType = eVocabularyID.eAssetAssetTypeModelUVMapFile;
+                            eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile;
                         else
-                            eAssetType = eVocabularyID.eAssetAssetTypeOther;
+                            eAssetType = COMMON.eVocabularyID.eAssetAssetTypeOther;
                     }
                     break; /* istanbul ignore next */
 
-                case eVocabularyID.eAssetAssetTypeScene:
+                case COMMON.eVocabularyID.eAssetAssetTypeScene:
                     if (unzippedFileName.toLowerCase().endsWith('.svx.json'))
-                        eAssetType = eVocabularyID.eAssetAssetTypeScene;
+                        eAssetType = COMMON.eVocabularyID.eAssetAssetTypeScene;
                     else if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
-                        eAssetType = eVocabularyID.eAssetAssetTypeModelGeometryFile;
+                        eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile;
                     else
-                        eAssetType = eVocabularyID.eAssetAssetTypeOther;
+                        eAssetType = COMMON.eVocabularyID.eAssetAssetTypeOther;
                     break; /* istanbul ignore next */
 
                 default:
                     LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker encountered unexpected asset type id for Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
-                    eAssetType = eVocabularyID.eAssetAssetTypeOther;
+                    eAssetType = COMMON.eVocabularyID.eAssetAssetTypeOther;
                     break;
             }
             const idVAssetType: number | undefined = await VocabularyCache.vocabularyEnumToId(eAssetType); /* istanbul ignore next */
@@ -1216,7 +1217,7 @@ export class AssetStorageAdapter {
         }
 
         const isZipFilename: boolean = (path.extname(assetVersion.FileName).toLowerCase() === '.zip');
-        const isBulkIngest: boolean = assetVersion.BulkIngest || (await asset.assetType() == eVocabularyID.eAssetAssetTypeBulkIngestion);
+        const isBulkIngest: boolean = assetVersion.BulkIngest || (await asset.assetType() == COMMON.eVocabularyID.eAssetAssetTypeBulkIngestion);
 
         let reader: IZip | null = null;
         try {

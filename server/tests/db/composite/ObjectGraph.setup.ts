@@ -1,5 +1,6 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import * as UTIL from '../api';
 import * as LOG from '../../../utils/logger';
 
@@ -89,7 +90,7 @@ export class ObjectGraphTestSetup {
         jest.setTimeout(60000);
 
         let assigned: boolean = true;
-        this.v1 = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eIdentifierIdentifierTypeARK);
+        this.v1 = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
         expect(this.v1).toBeTruthy();
         if (!this.v1)
             return;
@@ -137,7 +138,7 @@ export class ObjectGraphTestSetup {
         this.assetVersion3 = await UTIL.createAssetVersionTest({ idAsset: this.asset3.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test assetVersion3', StorageKeyStaging: '', idSOAttachment: null, FilePath: '/OA Test', Comment: 'OA Test assetVersion3',Version: 0 });
         this.asset4 = await UTIL.createAssetTest({ FileName: 'OA Test asset4', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersion4 = await UTIL.createAssetVersionTest({ idAsset: this.asset4.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test assetVersion4', StorageKeyStaging: '', idSOAttachment: null, FilePath: '/OA Test', Comment: 'OA Test assetVersion4',Version: 0 });
-        this.model1 = await UTIL.createModelTest({ Name: 'OA Test model1', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idVFileType: this.v1.idVocabulary, idAssetThumbnail: this.assetT4.idAsset, CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0, CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null, idModel: 0 });
+        this.model1 = await UTIL.createModelTest({ Name: 'OA Test model1', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idVFileType: this.v1.idVocabulary, idAssetThumbnail: this.assetT4.idAsset, CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0, CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null, CountTriangles: 0, idModel: 0 });
 
         assigned = await this.asset2.assignOwner(this.model1); expect(assigned).toBeTruthy();
         assigned = await this.asset3.assignOwner(this.model1); expect(assigned).toBeTruthy();
@@ -146,17 +147,17 @@ export class ObjectGraphTestSetup {
 
         this.asset5 = await UTIL.createAssetTest({ FileName: 'OA Test asset5', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersion5 = await UTIL.createAssetVersionTest({ idAsset: this.asset5.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test assetVersion5', StorageKeyStaging: '', idSOAttachment: null, FilePath: '/OA Test', Comment: 'OA Test assetVersion5',Version: 0 });
-        this.model2 = await UTIL.createModelTest({ Name: 'OA Test model2', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idVFileType: this.v1.idVocabulary, idAssetThumbnail: null, CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0, CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null, idModel: 0 });
+        this.model2 = await UTIL.createModelTest({ Name: 'OA Test model2', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idVFileType: this.v1.idVocabulary, idAssetThumbnail: null, CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0, CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null, CountTriangles: 0, idModel: 0 });
         assigned = await this.asset5.assignOwner(this.model2); expect(assigned).toBeTruthy();
 
         this.asset6 = await UTIL.createAssetTest({ FileName: 'OA Test asset6', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersion6 = await UTIL.createAssetVersionTest({ idAsset: this.asset6.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test assetVersion6', StorageKeyStaging: '', idSOAttachment: null, FilePath: '/OA Test', Comment: 'OA Test assetVersion6',Version: 0 });
-        this.model3 = await UTIL.createModelTest({ Name: 'OA Test model3', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idVFileType: this.v1.idVocabulary, idAssetThumbnail: null, CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0, CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null, idModel: 0 });
+        this.model3 = await UTIL.createModelTest({ Name: 'OA Test model3', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idVFileType: this.v1.idVocabulary, idAssetThumbnail: null, CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0, CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null, CountTriangles: 0, idModel: 0 });
         assigned = await this.asset6.assignOwner(this.model3); expect(assigned).toBeTruthy();
 
         this.asset7 = await UTIL.createAssetTest({ FileName: 'OA Test asset7', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersion7 = await UTIL.createAssetVersionTest({ idAsset: this.asset7.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test assetVersion7', StorageKeyStaging: '', idSOAttachment: null, FilePath: '/OA Test', Comment: 'OA Test assetVersion7',Version: 0 });
-        this.model4 = await UTIL.createModelTest({ Name: 'OA Test model4', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idVFileType: this.v1.idVocabulary, idAssetThumbnail: null, CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0, CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null, idModel: 0 });
+        this.model4 = await UTIL.createModelTest({ Name: 'OA Test model4', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idVFileType: this.v1.idVocabulary, idAssetThumbnail: null, CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0, CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null, CountTriangles: 0, idModel: 0 });
         assigned = await this.asset7.assignOwner(this.model4); expect(assigned).toBeTruthy();
 
         this.assetT5 = await UTIL.createAssetTest({ FileName: 'OA Test assetT5', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
@@ -248,10 +249,10 @@ export class ObjectGraphTestSetup {
     }
 
     async assignLicenses(): Promise<boolean> {
-        this.licenseCC0        = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadCC0) ?? null;
-        this.licenseDownload   = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadRestriction) ?? null;
-        this.licenseView       = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewOnly) ?? null;
-        this.licenseRestricted = await CACHE.LicenseCache.getLicenseByEnum(DBAPI.eLicense.eRestricted) ?? null;
+        this.licenseCC0        = await CACHE.LicenseCache.getLicenseByEnum(COMMON.eLicense.eViewDownloadCC0) ?? null;
+        this.licenseDownload   = await CACHE.LicenseCache.getLicenseByEnum(COMMON.eLicense.eViewDownloadRestriction) ?? null;
+        this.licenseView       = await CACHE.LicenseCache.getLicenseByEnum(COMMON.eLicense.eViewOnly) ?? null;
+        this.licenseRestricted = await CACHE.LicenseCache.getLicenseByEnum(COMMON.eLicense.eRestricted) ?? null;
 
         if (!this.licenseCC0 || !this.licenseDownload || !this.licenseView || !this.licenseRestricted) {
             LOG.error('ObjectGraphTestSetup.assignLicenses unable to fetch cached licenses', LOG.LS.eTEST);

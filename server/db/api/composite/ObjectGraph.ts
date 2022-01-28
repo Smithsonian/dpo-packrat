@@ -1,14 +1,15 @@
 import { Actor, Asset, AssetVersion, CaptureData, Identifier, IntermediaryFile, Item, Model,
     Project, ProjectDocumentation, Scene, Stakeholder, Subject, SystemObject,
-    SystemObjectPairs, Unit, eSystemObjectType } from '../..';
+    SystemObjectPairs, Unit } from '../..';
 import * as LOG from '../../../utils/logger';
 import * as L from 'lodash';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
+import * as COMMON from '../../../../client/src/types/server';
 
 export type SystemObjectIDType = {
     idSystemObject: number;
     idObject: number;
-    eObjectType: eSystemObjectType;
+    eObjectType: COMMON.eSystemObjectType;
 };
 
 export enum eObjectGraphMode {
@@ -182,7 +183,7 @@ export class ObjectGraph {
             const sourceType: SystemObjectIDType = {
                 idSystemObject,
                 idObject: 0,
-                eObjectType: eSystemObjectType.eUnknown
+                eObjectType: COMMON.eSystemObjectType.eUnknown
             };
 
             // short-circuit if we're building an ObjectGraphDatabase and we've already processed this object
@@ -229,7 +230,7 @@ export class ObjectGraph {
             }
 
             /* istanbul ignore if */
-            if (sourceType.eObjectType == eSystemObjectType.eUnknown)
+            if (sourceType.eObjectType == COMMON.eSystemObjectType.eUnknown)
                 LOG.error(`DBAPI.ObjectGraph.fetchWorker Unidentified SystemObject type ${JSON.stringify(SOP)}`, LOG.LS.eDB);
 
             this.systemObjectProcessed.set(idSystemObject, sourceType);
@@ -240,8 +241,8 @@ export class ObjectGraph {
 
             /*
             const valid: string = (this.validHierarchy ? '' : ' INVALID HIERARCHY') + (this.noCycles ? '' : ' CYCLE');
-            const sourceDesc: string = `${eSystemObjectType[sourceType.eObjectType]} ${sourceType.idObject}/${sourceType.idSystemObject}`;
-            const relatedDesc: string = (relatedType) ? `${eSystemObjectType[relatedType.eObjectType]} ${relatedType.idObject}/${relatedType.idSystemObject}` : 'root';
+            const sourceDesc: string = `${COMMON.eSystemObjectType[sourceType.eObjectType]} ${sourceType.idObject}/${sourceType.idSystemObject}`;
+            const relatedDesc: string = (relatedType) ? `${COMMON.eSystemObjectType[relatedType.eObjectType]} ${relatedType.idObject}/${relatedType.idSystemObject}` : 'root';
             const traverseType: string = (eMode == eObjectGraphMode.eAncestors) ? '^^' : 'vv';
             const prefix: string = `OA [${this.pushCount.toString().padStart(3, '0')} ${traverseType}]: `;
             if (eMode == eObjectGraphMode.eAncestors)
@@ -309,17 +310,17 @@ export class ObjectGraph {
     private async pushActor(actor: Actor, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = actor.idActor;
-        sourceType.eObjectType = eSystemObjectType.eActor;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eActor;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType)
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eCaptureData &&
-                 relatedType.eObjectType != eSystemObjectType.eModel &&
-                 relatedType.eObjectType != eSystemObjectType.eScene &&
-                 relatedType.eObjectType != eSystemObjectType.eIntermediaryFile &&
-                 relatedType.eObjectType != eSystemObjectType.eUnit))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eCaptureData &&
+                 relatedType.eObjectType != COMMON.eSystemObjectType.eModel &&
+                 relatedType.eObjectType != COMMON.eSystemObjectType.eScene &&
+                 relatedType.eObjectType != COMMON.eSystemObjectType.eIntermediaryFile &&
+                 relatedType.eObjectType != COMMON.eSystemObjectType.eUnit))
                 this.validHierarchy = false;
         }
 
@@ -350,9 +351,9 @@ export class ObjectGraph {
     private async pushAsset(asset: Asset, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = asset.idAsset;
-        sourceType.eObjectType = eSystemObjectType.eAsset;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eAsset;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
-            if (relatedType && relatedType.eObjectType != eSystemObjectType.eAssetVersion)
+            if (relatedType && relatedType.eObjectType != COMMON.eSystemObjectType.eAssetVersion)
                 this.validHierarchy = false;
         } // allowable parents -- any system object can have an asset
 
@@ -391,12 +392,12 @@ export class ObjectGraph {
     private async pushAssetVersion(assetVersion: AssetVersion, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = assetVersion.idAssetVersion;
-        sourceType.eObjectType = eSystemObjectType.eAssetVersion;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eAssetVersion;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType)
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
-            if (relatedType && relatedType.eObjectType != eSystemObjectType.eAsset)
+            if (relatedType && relatedType.eObjectType != COMMON.eSystemObjectType.eAsset)
                 this.validHierarchy = false;
         }
 
@@ -426,18 +427,18 @@ export class ObjectGraph {
     private async pushCaptureData(captureData: CaptureData, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = captureData.idCaptureData;
-        sourceType.eObjectType = eSystemObjectType.eCaptureData;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eCaptureData;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eAsset &&
-                relatedType.eObjectType != eSystemObjectType.eModel &&
-                relatedType.eObjectType != eSystemObjectType.eActor &&
-                relatedType.eObjectType != eSystemObjectType.eCaptureData))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eAsset &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eModel &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eActor &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eCaptureData))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
             if (relatedType &&
-                relatedType.eObjectType != eSystemObjectType.eItem &&
-                relatedType.eObjectType != eSystemObjectType.eCaptureData)
+                relatedType.eObjectType != COMMON.eSystemObjectType.eItem &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eCaptureData)
                 this.validHierarchy = false;
         }
 
@@ -470,14 +471,14 @@ export class ObjectGraph {
     private async pushIntermediaryFile(intermediaryFile: IntermediaryFile, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = intermediaryFile.idIntermediaryFile;
-        sourceType.eObjectType = eSystemObjectType.eIntermediaryFile;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eIntermediaryFile;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eAsset &&
-                relatedType.eObjectType != eSystemObjectType.eActor))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eAsset &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eActor))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
-            if (relatedType && relatedType.eObjectType != eSystemObjectType.eItem)
+            if (relatedType && relatedType.eObjectType != COMMON.eSystemObjectType.eItem)
                 this.validHierarchy = false;
         }
 
@@ -499,18 +500,18 @@ export class ObjectGraph {
     private async pushItem(item: Item, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = item.idItem;
-        sourceType.eObjectType = eSystemObjectType.eItem;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eItem;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eAsset &&
-                relatedType.eObjectType != eSystemObjectType.eCaptureData &&
-                relatedType.eObjectType != eSystemObjectType.eModel &&
-                relatedType.eObjectType != eSystemObjectType.eScene &&
-                relatedType.eObjectType != eSystemObjectType.eIntermediaryFile))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eAsset &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eCaptureData &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eModel &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eScene &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eIntermediaryFile))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
-            if (relatedType && relatedType.eObjectType != eSystemObjectType.eProject &&
-                relatedType && relatedType.eObjectType != eSystemObjectType.eSubject)
+            if (relatedType && relatedType.eObjectType != COMMON.eSystemObjectType.eProject &&
+                relatedType && relatedType.eObjectType != COMMON.eSystemObjectType.eSubject)
                 this.validHierarchy = false;
         }
 
@@ -544,20 +545,20 @@ export class ObjectGraph {
     private async pushModel(model: Model, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = model.idModel;
-        sourceType.eObjectType = eSystemObjectType.eModel;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eModel;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eAsset &&
-                relatedType.eObjectType != eSystemObjectType.eScene &&
-                relatedType.eObjectType != eSystemObjectType.eModel &&
-                relatedType.eObjectType != eSystemObjectType.eActor))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eAsset &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eScene &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eModel &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eActor))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eItem &&
-                relatedType.eObjectType != eSystemObjectType.eCaptureData &&
-                relatedType.eObjectType != eSystemObjectType.eModel &&
-                relatedType.eObjectType != eSystemObjectType.eScene))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eItem &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eCaptureData &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eModel &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eScene))
                 this.validHierarchy = false;
         }
 
@@ -590,12 +591,12 @@ export class ObjectGraph {
     private async pushProject(project: Project, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = project.idProject;
-        sourceType.eObjectType = eSystemObjectType.eProject;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eProject;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eItem &&
-                relatedType.eObjectType != eSystemObjectType.eProjectDocumentation &&
-                relatedType.eObjectType != eSystemObjectType.eStakeholder))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eItem &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eProjectDocumentation &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eStakeholder))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
             if (relatedType)
@@ -637,12 +638,12 @@ export class ObjectGraph {
     private async pushProjectDocumentation(projectDocumentation: ProjectDocumentation, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = projectDocumentation.idProjectDocumentation;
-        sourceType.eObjectType = eSystemObjectType.eProjectDocumentation;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eProjectDocumentation;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
-            if (relatedType && relatedType.eObjectType != eSystemObjectType.eAsset)
+            if (relatedType && relatedType.eObjectType != COMMON.eSystemObjectType.eAsset)
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
-            if (relatedType && relatedType.eObjectType != eSystemObjectType.eProject)
+            if (relatedType && relatedType.eObjectType != COMMON.eSystemObjectType.eProject)
                 this.validHierarchy = false;
         }
 
@@ -672,17 +673,17 @@ export class ObjectGraph {
     private async pushScene(scene: Scene, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = scene.idScene;
-        sourceType.eObjectType = eSystemObjectType.eScene;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eScene;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eAsset &&
-                relatedType.eObjectType != eSystemObjectType.eModel &&
-                relatedType.eObjectType != eSystemObjectType.eActor))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eAsset &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eModel &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eActor))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eItem &&
-                relatedType.eObjectType != eSystemObjectType.eModel))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eItem &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eModel))
                 this.validHierarchy = false;
         }
 
@@ -717,14 +718,14 @@ export class ObjectGraph {
     private async pushStakeholder(stakeholder: Stakeholder, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = stakeholder.idStakeholder;
-        sourceType.eObjectType = eSystemObjectType.eStakeholder;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eStakeholder;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType)
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
             if (relatedType &&
-               (relatedType.eObjectType != eSystemObjectType.eUnit &&
-                relatedType.eObjectType != eSystemObjectType.eProject))
+               (relatedType.eObjectType != COMMON.eSystemObjectType.eUnit &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eProject))
                 this.validHierarchy = false;
         }
 
@@ -746,15 +747,15 @@ export class ObjectGraph {
     private async pushSubject(subject: Subject, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = subject.idSubject;
-        sourceType.eObjectType = eSystemObjectType.eSubject;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eSubject;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eAsset &&
-                relatedType.eObjectType != eSystemObjectType.eItem))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eAsset &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eItem))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eUnit))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eUnit))
                 this.validHierarchy = false;
         }
 
@@ -792,12 +793,12 @@ export class ObjectGraph {
     private async pushUnit(unit: Unit, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         sourceType.idObject = unit.idUnit;
-        sourceType.eObjectType = eSystemObjectType.eUnit;
+        sourceType.eObjectType = COMMON.eSystemObjectType.eUnit;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType &&
-                (relatedType.eObjectType != eSystemObjectType.eSubject &&
-                relatedType.eObjectType != eSystemObjectType.eActor &&
-                relatedType.eObjectType != eSystemObjectType.eStakeholder))
+                (relatedType.eObjectType != COMMON.eSystemObjectType.eSubject &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eActor &&
+                relatedType.eObjectType != COMMON.eSystemObjectType.eStakeholder))
                 this.validHierarchy = false;
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // allowable parents
             if (relatedType)

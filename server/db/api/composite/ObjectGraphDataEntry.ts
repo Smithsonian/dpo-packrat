@@ -1,5 +1,6 @@
 // import {  Unit, Project, Subject, Item, Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Model, ProjectDocumentation, Scene, Stakeholder, SystemObject } from '../..';
-import { SystemObjectIDType, eSystemObjectType } from '../..';
+import { SystemObjectIDType } from '../..';
+import * as COMMON from '../../../../client/src/types/server';
 // import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';
 // import * as CACHE from '../../../cache';
@@ -11,7 +12,7 @@ export enum eApplyGraphStateDirection {
 }
 
 export class ObjectGraphState {
-    eType: eSystemObjectType | null = null;
+    eType: COMMON.eSystemObjectType | null = null;
     ancestorObject: SystemObjectIDType | null = null;
     captureMethod: number | null = null;
     variantTypes: Map<number, boolean> | null = null;
@@ -23,7 +24,7 @@ export class ObjectGraphState {
 export class ObjectGraphDataEntryHierarchy {
     idSystemObject: number = 0;
     retired: boolean = false;
-    eObjectType: eSystemObjectType | null = null;
+    eObjectType: COMMON.eSystemObjectType | null = null;
     idObject: number = 0;
 
     parents: number[] = [];     // array of SystemObject.idSystemObject
@@ -35,7 +36,7 @@ export class ObjectGraphDataEntryHierarchy {
     subjects: SystemObjectIDType[] = [];
     items: SystemObjectIDType[] = [];
 
-    childrenObjectTypes: eSystemObjectType[] = [];
+    childrenObjectTypes: COMMON.eSystemObjectType[] = [];
     childrenCaptureMethods: number[] = [];
     childrenVariantTypes: number[] = [];
     childrenModelPurposes: number[] = [];
@@ -69,8 +70,10 @@ export class ObjectGraphDataEntry {
     parentMap: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map of parent idSystemObject -> parent objects
     ancestorObjectMap: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map of ancestor objects of significance (unit, project, subject, item, asset), idSystemObject -> object info
 
+    // static SODebugSet: Set<number> = new Set<number>([6, 1746]);
+
     // Child data types
-    childrenObjectTypes: Set<eSystemObjectType> = new Set<eSystemObjectType>();
+    childrenObjectTypes: Set<COMMON.eSystemObjectType> = new Set<COMMON.eSystemObjectType>();
     childrenCaptureMethods: Set<number> = new Set<number>(); // set of idVocabulary of Capture Methods associated with this object
     childrenVariantTypes: Set<number> = new Set<number>(); // set of idVocabulary of Capture Variant Types associated with this object
     childrenModelPurposes: Set<number> = new Set<number>(); // set of idVocabulary of Model Purposes associated with this object
@@ -95,6 +98,8 @@ export class ObjectGraphDataEntry {
     // Returns true if applying objectGraphState updated the state of this ObjectGraphDataEntry
     applyGraphState(objectGraphState: ObjectGraphState, eDirection: eApplyGraphStateDirection): boolean {
         let retValue: boolean = false;
+        // if (ObjectGraphDataEntry.SODebugSet.has(this.systemObjectIDType.idSystemObject))
+        //     LOG.info(`ObjectGraphDataEntry.applyGraphState(${JSON.stringify(this.systemObjectIDType)}) BEFORE OGDE=${JSON.stringify(this, H.Helpers.saferStringify)}`, LOG.LS.eDB);
 
         if (eDirection == eApplyGraphStateDirection.eSelf ||
             eDirection == eApplyGraphStateDirection.eChild) {
@@ -153,7 +158,9 @@ export class ObjectGraphDataEntry {
                 }
             }
         }
-        // LOG.info(`ObjectGraphDataEntry.applyGraphState OGDE=${JSON.stringify(this, H.Helpers.saferStringify)}`, LOG.LS.eDB);
+
+        // if (ObjectGraphDataEntry.SODebugSet.has(this.systemObjectIDType.idSystemObject))
+        //     LOG.info(`ObjectGraphDataEntry.applyGraphState(${JSON.stringify(this.systemObjectIDType)}) AFTER OGDE=${JSON.stringify(this, H.Helpers.saferStringify)}`, LOG.LS.eDB);
         return retValue;
     }
 
@@ -173,10 +180,10 @@ export class ObjectGraphDataEntry {
 
         for (const systemObjectIDType of this.ancestorObjectMap.values()) {
             switch (systemObjectIDType.eObjectType) {
-                case eSystemObjectType.eUnit:       objectGraphDataEntryHierarchy.units.push(systemObjectIDType); break;
-                case eSystemObjectType.eProject:    objectGraphDataEntryHierarchy.projects.push(systemObjectIDType); break;
-                case eSystemObjectType.eSubject:    objectGraphDataEntryHierarchy.subjects.push(systemObjectIDType); break;
-                case eSystemObjectType.eItem:       objectGraphDataEntryHierarchy.items.push(systemObjectIDType); break;
+                case COMMON.eSystemObjectType.eUnit:       objectGraphDataEntryHierarchy.units.push(systemObjectIDType); break;
+                case COMMON.eSystemObjectType.eProject:    objectGraphDataEntryHierarchy.projects.push(systemObjectIDType); break;
+                case COMMON.eSystemObjectType.eSubject:    objectGraphDataEntryHierarchy.subjects.push(systemObjectIDType); break;
+                case COMMON.eSystemObjectType.eItem:       objectGraphDataEntryHierarchy.items.push(systemObjectIDType); break;
             }
             // Gather ancestors ... but don't add self as an ancestor!
             if (systemObjectIDType.idSystemObject != this.systemObjectIDType.idSystemObject)

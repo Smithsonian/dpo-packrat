@@ -175,17 +175,17 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                         </React.Fragment>
                     );
                 })}
-                <tr>
-                    <td colSpan={headers.length}>
-                        {!versions.length && (
+                {!versions.length && (
+                    <tr>
+                        <td colSpan={headers.length}>
                             <Box my={2}>
                                 <Typography align='center' className={classes.value}>
                                     No versions found
                                 </Typography>
                             </Box>
-                        )}
-                    </td>
-                </tr>
+                        </td>
+                    </tr>
+                )}
             </tbody>
         </table>
     );

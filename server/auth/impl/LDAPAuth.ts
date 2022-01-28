@@ -48,7 +48,12 @@ class LDAPAuth implements IAuth {
 
         // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
         this._client.on('error', error => {
-            LOG.error('LDAPAuth.fetchClient', LOG.LS.eAUTH, error);
+            const errorMessage: string | undefined = (error instanceof Error) ? error.message : undefined;
+            if (errorMessage && errorMessage.includes('ECONNRESET'))
+                LOG.info('LDAPAuth.fetchClient ECONNRESET; destroying old LDAP client', LOG.LS.eAUTH);
+            else
+                LOG.error('LDAPAuth.fetchClient', LOG.LS.eAUTH, error);
+
             if (this._client) {
                 this._client.destroy();
                 this._client = null;
