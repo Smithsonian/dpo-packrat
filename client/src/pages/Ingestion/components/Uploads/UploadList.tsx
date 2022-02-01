@@ -87,6 +87,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
                 label='Upload Files'
                 labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
                 width={'calc(100% - 20px)'}
+                padding='10px'
             >
                 <UploadListHeader />
                 <Box className={classes.list}>

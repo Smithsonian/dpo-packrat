@@ -195,7 +195,7 @@ function Scene(props: SceneProps): React.ReactElement {
             </Box>
             {!idAsset && (
                 <Fragment>
-                    <Box mb={2}>
+                    <Box mb={2} width='60vw'>
                         <RelatedObjectsList
                             type={RelatedObjectType.Source}
                             relatedObjects={scene.sourceObjects}
@@ -204,7 +204,7 @@ function Scene(props: SceneProps): React.ReactElement {
                             relationshipLanguage='Parents'
                         />
                     </Box>
-                    <Box mb={2}>
+                    <Box mb={2} width='60vw'>
                         <RelatedObjectsList
                             type={RelatedObjectType.Derived}
                             relatedObjects={scene.derivedObjects}

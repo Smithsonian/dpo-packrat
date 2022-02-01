@@ -17,12 +17,18 @@ interface ReadOnlyRowProps extends ViewableProps {
     gridTemplate?: string;
     width?: string;
     labelProps?: any;
+    valueLeftAligned?: boolean;
+    gridValue?: number;
+    gridLabel?: number;
+    paddingString?: string;
+    containerStyle?: any;
+    required?: boolean;
 }
 
 function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
-    const { label, value, padding, gridTemplate, width, labelProps } = props;
+    const { label, value, padding, gridTemplate, width, labelProps, valueLeftAligned, gridValue, gridLabel, paddingString, containerStyle, required = false } = props;
 
-    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
+    const rowFieldProps = { alignItems: 'baseline', justifyContent: 'space-between', style: { borderRadius: 0, ...containerStyle } };
     if (width) {
         rowFieldProps['style']['width'] = width;
     }
@@ -32,7 +38,7 @@ function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
     }
 
     return (
-        <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps} labelProps={labelProps}>
+        <FieldType label={label} direction='row' containerProps={rowFieldProps} labelProps={{ ...labelProps, style: { wordBreak: 'keep-all' } }} valueLeftAligned={valueLeftAligned} gridValue={gridValue} gridLabel={gridLabel} padding={paddingString} required={required}>
             <Box width='fit-content' textAlign='right'>
                 <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A', overflowWrap: 'break-word', padding }}>
                     {value}

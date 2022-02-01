@@ -13,7 +13,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         display: 'grid',
         alignItems: 'center',
         gridTemplateColumns: ({ indentation }: IndentedReadOnlyRowProps) => indentation ? `${15*indentation}px 20% 15px 1fr` : '15px 20% 15px 1fr',
-        padding: 10,
+        padding: ({ padding }: IndentedReadOnlyRowProps) => padding ? padding : '0px 10px',
         borderRadius: 5,
         width: ({ width }: IndentedReadOnlyRowProps) => width || '100%',
         marginTop: ({ marginTop }: IndentedReadOnlyRowProps) => spacing(marginTop || 0),
@@ -53,6 +53,7 @@ interface IndentedReadOnlyRowProps {
     labelTooltip?: string;
     value: string | number | null;
     indentation?: number;
+    padding?: string;
 }
 
 function IndentedReadOnlyRow(props: IndentedReadOnlyRowProps): React.ReactElement {

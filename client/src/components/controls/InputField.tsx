@@ -19,11 +19,12 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         borderRadius: 5,
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
+        fontSize: '0.8em',
         [breakpoints.down('lg')]: {
-            fontSize: '0.8em',
             minWidth: 160,
             maxWidth: 160,
-        }
+        },
+        height: ({ inputHeight }: InputFieldProps ) => inputHeight ? inputHeight : 3,
     }
 }));
 
@@ -34,10 +35,16 @@ interface InputFieldProps extends ViewableProps {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     type?: string;
     error?: boolean;
+    valueLeftAligned?: boolean;
+    gridValue?: number;
+    gridLabel?: number;
+    padding?: string;
+    inputHeight?: string;
+    gridGap?: string;
 }
 
 function InputField(props: InputFieldProps): React.ReactElement {
-    const { label, name, value, onChange, type, required = false, viewMode = false, disabled = false } = props;
+    const { label, name, value, onChange, type, required = false, viewMode = false, disabled = false, valueLeftAligned = false, gridLabel, gridValue, padding, gridGap } = props;
     const classes = useStyles(props);
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
@@ -49,6 +56,11 @@ function InputField(props: InputFieldProps): React.ReactElement {
             direction='row'
             containerProps={rowFieldProps}
             width={viewMode ? 'auto' : undefined}
+            valueLeftAligned={valueLeftAligned}
+            gridLabel={gridLabel}
+            gridValue={gridValue}
+            padding={padding}
+            gridGap={gridGap}
         >
             <DebounceInput
                 element='input'

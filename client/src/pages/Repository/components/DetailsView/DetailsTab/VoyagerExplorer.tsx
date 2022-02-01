@@ -20,6 +20,7 @@ type VoyagerExplorerProps = {
     document: string;
     width?: string;
     height?: string;
+    id?: string;
 };
 
 function VoyagerExplorer(props: VoyagerExplorerProps): React.ReactElement {
@@ -28,7 +29,7 @@ function VoyagerExplorer(props: VoyagerExplorerProps): React.ReactElement {
     // this is the script required to run voyager-explorer component
     useScript('https://3d-api.si.edu/resources/js/voyager-explorer.min.js');
 
-    return <voyager-explorer root={root} document={document} style={{ width: width || '300px', height: height || '300px', display: 'block', position: 'relative' }} />;
+    return <voyager-explorer id='Voyager-Explorer' root={root} document={document} style={{ width: width || '300px', height: height || '300px', display: 'block', position: 'relative' }} />;
 }
 
 export default VoyagerExplorer;
