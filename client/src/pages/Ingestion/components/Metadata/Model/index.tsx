@@ -9,7 +9,7 @@
 import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, /*FieldType, InputField, SelectField,*/ ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
-import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
+import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
@@ -46,7 +46,6 @@ const useStyles = makeStyles(({ palette }) => ({
         display: 'flex',
         flexDirection: 'column',
         width: 'fit-content',
-        marginRight: '30px',
         '& > *': {
             minHeight: '20px',
             borderRadius: 0
@@ -68,7 +67,7 @@ const useStyles = makeStyles(({ palette }) => ({
         backgroundColor: palette.primary.light,
         width: 'fit-content',
         paddingRight: 20,
-        // justifyContent: 'space-around'
+        columnGap: '10px'
     },
     captionContainer: {
         flex: '1 1 0%',
@@ -145,6 +144,7 @@ function Model(props: ModelProps): React.ReactElement {
             ModelMaterials: []
         }
     ]);
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>();
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
@@ -198,8 +198,6 @@ function Model(props: ModelProps): React.ReactElement {
         }
     });
     const idSystemObject: number | undefined = subjects.length > 0 ? subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject : undefined;
-
-    const errors = getFieldErrors(metadata);
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
         updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.model);
@@ -325,7 +323,7 @@ function Model(props: ModelProps): React.ReactElement {
                             <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ backgroundColor: 'rgb(255, 252, 209', paddingTop: '10px' }}>
                                 <Table className={tableClasses.table}>
                                     <TableBody>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.name)}>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.name || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Name</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <DebounceInput
@@ -339,13 +337,13 @@ function Model(props: ModelProps): React.ReactElement {
                                                 />
                                             </TableCell>
                                         </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.dateCreated)}>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.dateCreated || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Date Created</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <DateInputField value={model.dateCreated} onChange={(_, value) => setDateField('dateCreated', value)} dateHeight='22px' />
                                             </TableCell>
                                         </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.creationMethod)}>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.creationMethod || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Creation Method</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
@@ -359,7 +357,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                 </Select>
                                             </TableCell>
                                         </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.modality)}>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modality || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Modality</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
@@ -373,7 +371,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                 </Select>
                                             </TableCell>
                                         </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.units)}>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.units || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Units</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
@@ -387,7 +385,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                 </Select>
                                             </TableCell>
                                         </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.purpose)}>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.purpose || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Purpose</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
@@ -401,7 +399,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                 </Select>
                                             </TableCell>
                                         </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(errors.model.modelFileType)}>
+                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modelFileType || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Model File Type</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
@@ -445,7 +443,7 @@ function Model(props: ModelProps): React.ReactElement {
                     leftLabel='Previous'
                     onClickLeft={onPrevious}
                     rightLabel={isLast ? 'Finish' : 'Next'}
-                    onClickRight={onClickRight}
+                    onClickRight={() => { setFieldErrors(getFieldErrors(metadata)); onClickRight();  }}
                     disableNavigation={disableNavigation}
                 />
                 <ObjectMeshTable modelObjects={modelObjects} />

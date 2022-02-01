@@ -54,7 +54,6 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         overflowY: 'scroll',
         backgroundColor: palette.primary.light,
         [breakpoints.down('lg')]: {
-            // maxHeight: 'calc(100vh - 120px)',
             padding: 10
         }
     },

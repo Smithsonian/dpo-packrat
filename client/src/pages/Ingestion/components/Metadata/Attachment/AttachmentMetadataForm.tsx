@@ -11,7 +11,6 @@
 import React from 'react';
 import { Checkbox, TableContainer, TableBody, Table, TableRow, TableCell, Paper, Select, MenuItem, Typography } from '@material-ui/core';
 import { useStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
-// import { SelectField } from '../../../../../components';
 import { useVocabularyStore, VocabularyOption } from '../../../../../store';
 import { DebounceInput } from 'react-debounce-input';
 import clsx from 'clsx';
@@ -56,19 +55,22 @@ function AttachmentMetadataForm(props: AttachmentMetadataProps): React.ReactElem
                 options = getEntries(index);
                 if (!options || options.length === 0) {
                     options = [];
+                    console.log(`AttachmentMetadataForm called for ${name} of type 'index', finding no entries`);
                 }
-            } else
-                content = (
-                    <Select
-                        value={metadataState[name] as number}
-                        name={name}
-                        onChange={setNameField}
-                        disableUnderline
-                        className={clsx(classes.select, classes.datasetFieldSelect)}
-                    >
-                        {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                    </Select>
-                );
+            } else {
+                console.log(`AttachmentMetadataForm called for ${name} of type 'index', without an index`);
+            }
+            content = (
+                <Select
+                    value={metadataState[name] as number}
+                    name={name}
+                    onChange={setNameField}
+                    disableUnderline
+                    className={clsx(classes.select, classes.datasetFieldSelect)}
+                >
+                    {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                </Select>
+            );
         } else
             content = (
                 <DebounceInput

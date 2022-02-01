@@ -96,6 +96,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     onChange={setCheckboxField}
                     required
                     padding='3px 10px 1px 10px'
+                    containerStyle={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', paddingTop: '5px' }}
                 />
                 <CheckboxField
                     label="Posed and QC'd"
@@ -114,7 +115,12 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                 <ReadOnlyRow label='Model Count' value={SceneDetails.CountModel} padding={10} paddingString='1px 10px' />
                 <ReadOnlyRow label='Meta Count' value={SceneDetails.CountMeta} padding={10} paddingString='1px 10px' />
                 <ReadOnlyRow label='Setup Count' value={SceneDetails.CountSetup} padding={10} paddingString='1px 10px' />
-                <ReadOnlyRow label='Tour Count' value={SceneDetails.CountTour} padding={10} paddingString='1px 10px' />
+                <ReadOnlyRow
+                    label='Tour Count'
+                    value={SceneDetails.CountTour}
+                    padding={10} paddingString='1px 10px'
+                    containerStyle={{ borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '5px' }}
+                />
             </Box>
         </Box>
     );

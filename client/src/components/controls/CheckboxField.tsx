@@ -26,6 +26,7 @@ interface CheckboxFieldProps extends ViewableProps {
     gridLabel?: number;
     padding?: string;
     gridGap?: string;
+    containerStyle?: any;
 }
 
 export const CheckboxNoPadding = withStyles({
@@ -36,8 +37,8 @@ export const CheckboxNoPadding = withStyles({
 })(Checkbox);
 
 function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
-    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, updated = false, tooltip, valueLeftAligned = false, gridValue, gridLabel, padding, gridGap } = props;
-    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
+    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, updated = false, tooltip, valueLeftAligned = false, gridValue, gridLabel, padding, gridGap, containerStyle } = props;
+    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0, ...containerStyle } };
     const checkbox = (
         <CheckboxNoPadding
             name={name}

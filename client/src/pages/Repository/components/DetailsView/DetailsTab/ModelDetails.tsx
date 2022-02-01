@@ -38,7 +38,6 @@ export const useStyles = makeStyles(({ palette }) => ({
         display: 'flex',
         flexDirection: 'column',
         width: 'fit-content',
-        marginRight: '30px',
         '& > *': {
             height: '20px',
             width: 'auto'
@@ -63,7 +62,8 @@ export const useStyles = makeStyles(({ palette }) => ({
         borderRadius: 5,
         backgroundColor: palette.primary.light,
         width: 'auto',
-        justifyContent: 'space-around'
+        justifyContent: 'space-around',
+        columnGap: '10px'
     },
     captionContainer: {
         flex: '1 1 0%',
@@ -206,6 +206,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                     <Box className={classes.notRequiredFields}>
                         <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='3px 10px 3px 10px' />
                         <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='3px 10px 3px 10px' />
+                        <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} paddingString='3px 10px 3px 10px' />
                         <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} paddingString='3px 10px 3px 10px' />
                         <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} paddingString='3px 10px 3px 10px' />
                         <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} paddingString='3px 10px 3px 10px' />

@@ -5,7 +5,7 @@
  * https://material-ui.com/customization/palette
  */
 import { createMuiTheme, Theme } from '@material-ui/core/styles';
-import createBreakpoints from '@material-ui/core/styles/createBreakpoints';
+// import createBreakpoints from '@material-ui/core/styles/createBreakpoints';
 import Colors from './colors';
 import { createOverrides } from './typography';
 
@@ -25,9 +25,9 @@ export const palette = {
     }
 };
 
-const breakpoints = createBreakpoints({});
+// const breakpoints = createBreakpoints({});
 
-const overrides = createOverrides(breakpoints);
+const overrides = createOverrides();
 
 const theme: Theme = createMuiTheme({ palette, overrides });
 

@@ -19,8 +19,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         borderRadius: 5,
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
+        fontSize: '0.8em',
         [breakpoints.down('lg')]: {
-            fontSize: '0.8em',
             minWidth: 160,
             maxWidth: 160,
         },
