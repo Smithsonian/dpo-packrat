@@ -6,9 +6,9 @@
  */
 import { Box } from '@material-ui/core';
 import React, { useEffect } from 'react';
-import { CheckboxField, Loader } from '../../../../../components';
+import { /*CheckboxField,*/ Loader } from '../../../../../components';
 import { SubjectDetailFields } from '../../../../../types/graphql';
-import { isFieldUpdated } from '../../../../../utils/repository';
+// import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 import { SubjectFields } from './SubjectDetails';
 import { eSystemObjectType } from '../../../../../types/server';
@@ -44,18 +44,17 @@ function ItemDetails(props: DetailComponentProps): React.ReactElement {
     const itemData = data.getDetailsTabDataForObject?.Item;
 
     return (
-        <Box>
-            <CheckboxField
-                viewMode
-                required
-                updated={isFieldUpdated(ItemDetails, itemData, 'EntireSubject')}
+        <Box style={{ backgroundColor: 'rgb(236, 245, 253)' }}>
+            <SubjectFields
+                {...ItemDetails}
+                originalFields={itemData}
                 disabled={disabled}
-                name='EntireSubject'
-                label='Entire Subject'
-                value={ItemDetails?.EntireSubject ?? false}
-                onChange={setCheckboxField}
+                onChange={onSetField}
+                isItemView
+                setCheckboxField={setCheckboxField}
+                ItemDetails={ItemDetails}
+                itemData={itemData}
             />
-            <SubjectFields {...ItemDetails} originalFields={itemData} disabled={disabled} onChange={onSetField} />
         </Box>
     );
 }

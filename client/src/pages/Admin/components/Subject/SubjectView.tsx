@@ -23,8 +23,7 @@ const useStyles = makeStyles({
         overflow: 'auto',
         maxHeight: 'calc(100vh - 60px)',
         paddingLeft: '1%',
-        width: '1200px',
-        margin: '0 auto'
+        width: '1200px'
     },
     AdminBreadCrumbsContainer: {
         display: 'flex',

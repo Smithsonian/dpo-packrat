@@ -23,14 +23,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        // maxHeight: 'calc(100vh - 140px)',
         padding: 20,
         marginBottom: 20,
         borderRadius: 10,
         overflowY: 'scroll',
         backgroundColor: palette.primary.light,
         [breakpoints.down('lg')]: {
-            // maxHeight: 'calc(100vh - 120px)',
             padding: 10
         }
     }

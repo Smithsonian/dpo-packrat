@@ -10,15 +10,10 @@ const useStyles = makeStyles(() => ({
     container: {
         display: 'flex',
         flex: 1,
-        // maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '85vw' : '93vw'),
         flexDirection: 'column',
         padding: 20,
         paddingBottom: 0,
         paddingRight: 0
-        // [breakpoints.down('lg')]: {
-        //     paddingRight: 20,
-        //     maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '85vw' : '92vw')
-        // }
     }
 }));
 

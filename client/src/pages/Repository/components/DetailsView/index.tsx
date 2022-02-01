@@ -54,7 +54,6 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         overflowY: 'scroll',
         backgroundColor: palette.primary.light,
         [breakpoints.down('lg')]: {
-            // maxHeight: 'calc(100vh - 120px)',
             padding: 10
         }
     },
@@ -528,6 +527,7 @@ function DetailsView(): React.ReactElement {
                     Update
                 </LoadingButton>
                 {(updatedIdentifiers || updatedMetadata) && <div style={{ fontStyle: 'italic', marginLeft: '5px' }}>Update needed to save your data</div>}
+                {objectType === eSystemObjectType.eScene && <LoadingButton className={classes.updateButton} loading={false} onClick={() => document.getElementById('Voyager-Explorer')?.scrollIntoView()} style={{ marginLeft: 5 }}>View</LoadingButton>}
             </Box>
 
             <Box display='flex'>
@@ -545,9 +545,10 @@ function DetailsView(): React.ReactElement {
                     detailQuery={detailQuery}
                     metadata={metadata}
                 />
-                <Box display='flex' flex={1} padding={2}>
-                    <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />
-                </Box>
+            </Box>
+
+            <Box display='flex' flex={1} padding={2}>
+                <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />
             </Box>
 
             <ObjectSelectModal

@@ -32,11 +32,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         left: 0,
         alignItems: 'center',
         color: palette.primary.dark,
-        fontSize: typography.pxToRem(18),
+        fontSize: typography.pxToRem(15),
         fontWeight: typography.fontWeightRegular,
-        [breakpoints.down('lg')]: {
-            fontSize: typography.pxToRem(15)
-        },
         width: 'calc(30vw + 25px)',
         flex: 0.9
     },
@@ -58,20 +55,15 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         display: 'flex',
         alignItems: 'center',
         padding: '0px 10px',
-        fontSize: typography.pxToRem(18),
+        fontSize: typography.pxToRem(14),
         color: palette.primary.dark,
         fontWeight: typography.fontWeightRegular,
         overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        [breakpoints.down('lg')]: {
-            fontSize: typography.pxToRem(14),
-        }
+        textOverflow: 'ellipsis'
+
     },
     text: {
-        fontSize: '0.8em',
-        [breakpoints.down('lg')]: {
-            fontSize: '0.9em',
-        }
+        fontSize: '0.9em',
     }
 }));
 

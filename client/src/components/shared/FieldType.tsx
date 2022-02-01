@@ -3,7 +3,7 @@
  *
  * This component wraps content and highlights it as required field or not.
  */
-import { Box, BoxProps, PropTypes, Typography, TypographyProps, Tooltip } from '@material-ui/core';
+import { Box, BoxProps, PropTypes, Typography, TypographyProps, Tooltip, Grid, GridSize } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import Progress from './Progress';
@@ -11,7 +11,7 @@ import Progress from './Progress';
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'flex',
-        padding: 10,
+        padding: ({ padding }: FieldTypeProps) => padding ? padding : '0px 10px',
         borderRadius: 5,
         width: ({ width }: FieldTypeProps) => width || '100%',
         marginTop: ({ marginTop }: FieldTypeProps) => spacing(marginTop || 0),
@@ -41,10 +41,15 @@ interface FieldTypeProps {
     loading?: boolean;
     children?: React.ReactNode;
     labelTooltip?: string;
+    valueLeftAligned?: boolean;
+    gridLabel?: number;
+    gridValue?: number;
+    padding?: string;
+    gridGap?: string;
 }
 
 function FieldType(props: FieldTypeProps): React.ReactElement {
-    const { label, renderLabel, children, align = 'left', direction, containerProps, labelProps, loading, labelTooltip } = props;
+    const { label, renderLabel, children, align = 'left', direction, containerProps, labelProps, loading, labelTooltip, valueLeftAligned, gridLabel, gridValue, gridGap } = props;
     const classes = useStyles(props);
 
     let content: React.ReactNode = (
@@ -68,13 +73,32 @@ function FieldType(props: FieldTypeProps): React.ReactElement {
         content = null;
     }
 
-    return (
+    let field: React.ReactElement = (
         <Box position='relative' className={classes.container} flexDirection={direction || 'column'} {...containerProps}>
             {content}
             {children}
             {loading && <Progress className={classes.loading} size={15} />}
         </Box>
     );
+
+
+    if (valueLeftAligned) {
+        field = (
+            <Grid container className={classes.container} {...containerProps} style={{ columnGap: gridGap ?? '0px' }}>
+                <Grid xs={gridLabel as GridSize ?? 3}>
+                    {content}
+                </Grid>
+                <Grid>
+
+                </Grid>
+                <Grid xs={gridValue as GridSize ?? 7}>
+                    {children}
+                </Grid>
+            </Grid>
+        );
+    }
+
+    return field;
 }
 
 export default FieldType;

@@ -81,7 +81,7 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
 
     return (
         <Box marginBottom='10px'>
-            <FieldType required label='Asset Identifier(s)'>
+            <FieldType required label='Asset Identifier(s)' padding='10px'>
                 <Box display='flex' justifyContent='space-between'>
                     <Box className={classes.assetIdentifier}>
                         <label htmlFor='systemCreated' style={{ display: 'none' }}>System Created Identifier</label>
