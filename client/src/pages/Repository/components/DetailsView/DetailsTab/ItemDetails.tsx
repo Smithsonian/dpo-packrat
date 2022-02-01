@@ -6,9 +6,9 @@
  */
 import { Box } from '@material-ui/core';
 import React, { useEffect } from 'react';
-import { CheckboxField, Loader } from '../../../../../components';
+import { /*CheckboxField,*/ Loader } from '../../../../../components';
 import { SubjectDetailFields } from '../../../../../types/graphql';
-import { isFieldUpdated } from '../../../../../utils/repository';
+// import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 import { SubjectFields } from './SubjectDetails';
 import { eSystemObjectType } from '../../../../../types/server';
@@ -45,25 +45,15 @@ function ItemDetails(props: DetailComponentProps): React.ReactElement {
 
     return (
         <Box style={{ backgroundColor: 'rgb(236, 245, 253)' }}>
-            <CheckboxField
-                viewMode
-                required
-                updated={isFieldUpdated(ItemDetails, itemData, 'EntireSubject')}
-                disabled={disabled}
-                name='EntireSubject'
-                label='Entire Subject'
-                value={ItemDetails?.EntireSubject ?? false}
-                onChange={setCheckboxField}
-                valueLeftAligned
-                gridLabel={2}
-                padding='5px 10px 1px 10px'
-            />
             <SubjectFields
                 {...ItemDetails}
                 originalFields={itemData}
                 disabled={disabled}
                 onChange={onSetField}
-                noTopPadding
+                isItemView
+                setCheckboxField={setCheckboxField}
+                ItemDetails={ItemDetails}
+                itemData={itemData}
             />
         </Box>
     );

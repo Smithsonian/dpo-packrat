@@ -26,8 +26,8 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         borderRadius: 5,
         fontFamily: typography.fontFamily,
         width: '150px',
+        fontSize: '0.8rem',
         [breakpoints.down('lg')]: {
-            fontSize: '0.8rem',
             width: '130px'
         }
     },

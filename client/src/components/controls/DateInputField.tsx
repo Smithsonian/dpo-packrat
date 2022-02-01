@@ -22,10 +22,10 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         color: Colors.defaults.white,
         marginTop: 0,
         fontFamily: typography.fontFamily,
+        '& > div > input': {
+            fontSize: '0.8rem',
+        },
         [breakpoints.down('lg')]: {
-            '& > div > input': {
-                fontSize: '0.8em',
-            },
             '& > div':  {
                 width: '97px'
             }

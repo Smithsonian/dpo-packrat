@@ -50,18 +50,11 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     lightLabelText: {
         color: palette.primary.dark,
         wordBreak: 'break-word',
-        fontSize: '0.875rem',
-        [breakpoints.down('lg')]: {
-            fontSize: '0.75rem'
-        }
+        fontSize: '0.8rem'
     },
     labelText: {
         color: 'auto',
-        wordBreak: 'break-word',
-        fontSize: '0.875rem',
-        [breakpoints.down('lg')]: {
-            fontSize: '0.75rem'
-        }
+        fontSize: '0.8rem'
     },
     select: {
         height: 24,
@@ -70,22 +63,18 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         borderRadius: 5,
         fontFamily: typography.fontFamily,
-        [breakpoints.down('lg')]: {
-            fontSize: '0.8rem'
-        }
+        fontSize: '0.8rem'
     },
     checkbox: {
         border: '0px',
         padding: '0px',
-        height: '18px',
+        height: '16px',
     },
     input: {
         height: 22,
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         fontFamily: typography.fontFamily,
-        [breakpoints.down('lg')]: {
-            fontSize: '0.8rem',
-        },
+        fontSize: '0.8rem',
         padding: '0px 10px',
         borderRadius: 5,
     },
@@ -119,11 +108,9 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         }
     },
     valueText: {
-        fontSize: '1rem',
-        [breakpoints.down('lg')]: {
-            fontSize: '0.8rem'
-        },
-        height: '24px'
+        fontSize: '0.8rem',
+        height: '24px',
+        wordBreak: 'break-word'
     }
 }));
 
@@ -425,7 +412,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 <TableCell className={classes.tableCell}>
                                     <Typography className={classes.labelText}>Camera Settings Uniform</Typography>
                                 </TableCell>
-                                <TableCell className={classes.tableCell}>
+                                <TableCell className={classes.tableCell} style={{ verticalAlign: 'middle' }}>
                                     <Checkbox
                                         className={classes.checkbox}
                                         name='cameraSettingUniform'
@@ -449,6 +436,6 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 export default CaptureDataDetails;
 
 
-const updatedFieldStyling = (isUpdated: boolean): React.CSSProperties => {
+export const updatedFieldStyling = (isUpdated: boolean): React.CSSProperties => {
     return isUpdated ? { backgroundColor: palette.secondary.light, border: `1px solid ${fade(palette.secondary.main, 0.4)}` } : {};
 };

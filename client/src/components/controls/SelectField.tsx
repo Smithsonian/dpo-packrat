@@ -21,9 +21,9 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         backgroundColor: ({ updated }: SelectFieldProps) => (updated ? palette.secondary.light : palette.background.paper),
         borderRadius: 5,
         fontFamily: typography.fontFamily,
+        fontSize: '0.8em',
         [breakpoints.down('lg')]: {
-            fontSize: '0.8em',
-            minWidth: 180,
+            minWidth: 180
         },
         height: ({ selectHeight }: SelectFieldProps ) => selectHeight ? selectHeight : undefined,
         '& .MuiSelect-selectMenu': {
