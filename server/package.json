@@ -1,6 +1,6 @@
 {
   "name": "@dpo-packrat/server",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "private": true,
   "license": "Apache-2.0",
   "description": "Node server for Packrat",
