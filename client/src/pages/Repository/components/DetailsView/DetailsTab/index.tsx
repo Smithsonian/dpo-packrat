@@ -65,8 +65,9 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     assetOwner: {
         display: 'flex',
-        width: '100%',
-        marginBottom: 12
+        backgroundColor: palette.primary.light,
+        borderRadius: '5px',
+        padding: '8px'
     },
     assetOwnerLink: {
         color: palette.primary.main,
@@ -129,7 +130,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     let tabPanels: React.ReactNode = null;
     const RelatedTab = (index: number) => (
         <TabPanel value={tab} index={index} id={`tab-${index}`}>
-            <Box>
+            <Box style={{ width: '60%', minWidth: '500px' }}>
                 {assetOwner &&
                 (
                     <Box className={classes.assetOwner}>
