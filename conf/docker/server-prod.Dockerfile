@@ -6,6 +6,7 @@ ADD package.json yarn.lock ./
 # Copy app files
 COPY . .
 
+# Build server from common base
 FROM base AS server-builder
 # Remove client files, except server.ts, to prevent duplication
 RUN rm -rf client/build

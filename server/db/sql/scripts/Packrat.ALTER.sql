@@ -429,3 +429,6 @@ ALTER TABLE AssetVersion ADD COLUMN Comment text NULL;
 -- 2022-01-21 Jon
 ALTER TABLE Model ADD COLUMN CountTriangles int(11) DEFAULT NULL;
 ALTER TABLE ModelObject ADD COLUMN CountTriangles int(11) DEFAULT NULL;
+
+-- 2022-01-31 Deployed to Staging and Production
+
