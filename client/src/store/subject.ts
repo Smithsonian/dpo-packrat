@@ -97,7 +97,8 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
                     input: {
                         search: ''
                     }
-                }
+                },
+                fetchPolicy: 'no-cache'
             });
             const { data: { getProjectList: { projects: defaultProjectsList } } } = projectListQuery;
             // console.log(`defaultProjectsList = ${JSON.stringify(defaultProjectsList)}`);
@@ -105,7 +106,8 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
             // fetch list of projects associated with subject
             const projectsQueryResult: ApolloQueryResult<GetIngestionProjectsForSubjectsQuery> = await apolloClient.query({
                 query: GetIngestionProjectsForSubjectsDocument,
-                variables
+                variables,
+                fetchPolicy: 'no-cache'
             });
 
             // hash the associated projects and push the rest of projects
