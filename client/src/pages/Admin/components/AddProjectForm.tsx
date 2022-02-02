@@ -12,7 +12,7 @@ import clsx from 'clsx';
 import { LoadingButton } from '../../../components';
 import { CreateProjectDocument } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
-import { getUnitsList } from '../hooks/useAdminview';
+import { getUnitsList } from '../hooks/useAdminView';
 import { toTitleCase } from '../../../constants/helperfunctions';
 
 const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
