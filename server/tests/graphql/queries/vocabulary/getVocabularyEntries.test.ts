@@ -1,7 +1,7 @@
 import { GetVocabularyEntriesInput, GetVocabularyEntriesResult } from '../../../../types/graphql';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
-import { eVocabularySetID } from '../../../../cache';
+import * as COMMON from '../../../../../client/src/types/server';
 
 const getVocabularyEntriesTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
@@ -14,21 +14,21 @@ const getVocabularyEntriesTest = (utils: TestSuiteUtils): void => {
         test('should work with valid input', async () => {
             const input: GetVocabularyEntriesInput = {
                 eVocabSetIDs: [
-                    eVocabularySetID.eIdentifierIdentifierType,
-                    eVocabularySetID.eCaptureDataDatasetType,
-                    eVocabularySetID.eCaptureDataItemPositionType,
-                    eVocabularySetID.eCaptureDataFocusType,
-                    eVocabularySetID.eCaptureDataLightSourceType,
-                    eVocabularySetID.eCaptureDataBackgroundRemovalMethod,
-                    eVocabularySetID.eCaptureDataClusterType,
-                    eVocabularySetID.eCaptureDataFileVariantType
+                    COMMON.eVocabularySetID.eIdentifierIdentifierType,
+                    COMMON.eVocabularySetID.eCaptureDataDatasetType,
+                    COMMON.eVocabularySetID.eCaptureDataItemPositionType,
+                    COMMON.eVocabularySetID.eCaptureDataFocusType,
+                    COMMON.eVocabularySetID.eCaptureDataLightSourceType,
+                    COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod,
+                    COMMON.eVocabularySetID.eCaptureDataClusterType,
+                    COMMON.eVocabularySetID.eCaptureDataFileVariantType
                 ]
             };
 
             const { VocabularyEntries }: GetVocabularyEntriesResult = await graphQLApi.getVocabularyEntries(input);
 
             expect(VocabularyEntries).toBeTruthy();
-            expect(VocabularyEntries[0].eVocabSetID).toBe(eVocabularySetID.eIdentifierIdentifierType);
+            expect(VocabularyEntries[0].eVocabSetID).toBe(COMMON.eVocabularySetID.eIdentifierIdentifierType);
         });
     });
 };

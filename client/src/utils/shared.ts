@@ -86,3 +86,10 @@ export function formatDate(value: any): string {
         return '';
     return date.toLocaleDateString();
 }
+
+export function formatDateAndTime(value: any): string {
+    const date: Date | null = safeDate(value);
+    if (!date)
+        return '';
+    return date.toLocaleString();
+}

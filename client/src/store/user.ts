@@ -28,7 +28,7 @@ export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: Ge
     login: async (email: string, password: string): Promise<AuthResponseType> => {
         // extract ou query parameter, if any
         const ouIndex: number = (window.location.href) ? window.location.href.indexOf('?ou=') : -1;
-        const originalUrl: string | null = (ouIndex !== -1) ? window.location.href.substring(ouIndex + 4) : null;
+        const originalUrl: string | null = (ouIndex !== -1) ? decodeURI(window.location.href.substring(ouIndex + 4)) : null;
         // console.log(`*** login originalUrl=${originalUrl}`);
 
         const authResponse = await API.login(email, password);

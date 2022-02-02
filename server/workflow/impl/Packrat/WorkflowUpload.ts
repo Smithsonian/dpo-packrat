@@ -4,6 +4,7 @@ import { WorkflowJobParameters } from './WorkflowJob';
 import * as COOK from '../../../job/impl/Cook';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as LOG from '../../../utils/logger';
@@ -40,12 +41,12 @@ export class WorkflowUpload implements WF.IWorkflow {
         const workflowStep: DBAPI.WorkflowStep | null = (!this.workflowData.workflowStep || this.workflowData.workflowStep.length <= 0)
             ? null : this.workflowData.workflowStep[this.workflowData.workflowStep.length - 1];
         if (workflowStep) {
-            workflowStep.setState(DBAPI.eWorkflowJobRunStatus.eRunning);
+            workflowStep.setState(COMMON.eWorkflowJobRunStatus.eRunning);
             await workflowStep.update();
         }
         const validateRes: H.IOResults = await this.validateFiles();
         if (!validateRes.success)
-            await this.updateStatus(DBAPI.eWorkflowJobRunStatus.eError);
+            await this.updateStatus(COMMON.eWorkflowJobRunStatus.eError);
         return validateRes;
     }
 
@@ -53,10 +54,10 @@ export class WorkflowUpload implements WF.IWorkflow {
         return { success: true, workflowComplete: true };
     }
 
-    async updateStatus(eStatus: DBAPI.eWorkflowJobRunStatus): Promise<WF.WorkflowUpdateResults> {
-        const workflowComplete: boolean = (eStatus === DBAPI.eWorkflowJobRunStatus.eDone
-            || eStatus === DBAPI.eWorkflowJobRunStatus.eError
-            || eStatus === DBAPI.eWorkflowJobRunStatus.eCancelled);
+    async updateStatus(eStatus: COMMON.eWorkflowJobRunStatus): Promise<WF.WorkflowUpdateResults> {
+        const workflowComplete: boolean = (eStatus === COMMON.eWorkflowJobRunStatus.eDone
+            || eStatus === COMMON.eWorkflowJobRunStatus.eError
+            || eStatus === COMMON.eWorkflowJobRunStatus.eCancelled);
 
         const workflowStep: DBAPI.WorkflowStep | null = (!this.workflowData.workflowStep || this.workflowData.workflowStep.length <= 0)
             ? null : this.workflowData.workflowStep[this.workflowData.workflowStep.length - 1];
@@ -207,11 +208,11 @@ export class WorkflowUpload implements WF.IWorkflow {
 
         // initiate WorkflowJob for cook si-packrat-inspect
         const parameters: WorkflowJobParameters =
-            new WorkflowJobParameters(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect,
+            new WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect,
                 new COOK.JobCookSIPackratInspectParameters(fileName /* assetVersion.FileName */, undefined, !fromZip ? undefined : readStream));
 
         const wfParams: WF.WorkflowParameters = {
-            eWorkflowType: CACHE.eVocabularyID.eWorkflowTypeCookJob,
+            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
             idSystemObject: [idSystemObject],
             idProject: this.workflowParams.idProject,
             idUserInitiator: this.workflowParams.idUserInitiator,
@@ -239,10 +240,10 @@ export class WorkflowUpload implements WF.IWorkflow {
         if (await CACHE.VocabularyCache.mapModelFileByExtension(fileName) !== undefined)
             return true;
         // might be zipped; check asset
-        const eAssetType: CACHE.eVocabularyID | undefined = await asset.assetType();
+        const eAssetType: COMMON.eVocabularyID | undefined = await asset.assetType();
         switch (eAssetType) {
-            case CACHE.eVocabularyID.eAssetAssetTypeModel:
-            case CACHE.eVocabularyID.eAssetAssetTypeModelGeometryFile:
+            case COMMON.eVocabularyID.eAssetAssetTypeModel:
+            case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile:
                 return true;
         }
         return false;

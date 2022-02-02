@@ -7,13 +7,16 @@
 import React, { useEffect } from 'react';
 import { Loader } from '../../../../../components';
 import { isFieldUpdated } from '../../../../../utils/repository';
-import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
 import { DetailComponentProps } from './index';
 import { eSystemObjectType } from '../../../../../types/server';
 import { useDetailTabStore } from '../../../../../store';
+import { Typography, Table, TableBody, TableCell, TableContainer, TableRow, Box } from '@material-ui/core';
+import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
+import { DebounceInput } from 'react-debounce-input';
 
 function ProjectDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
+    const classes = useStyles();
     const [ProjectDetails, updateDetailField] = useDetailTabStore(state => [state.ProjectDetails, state.updateDetailField]);
 
     useEffect(() => {
@@ -32,13 +35,42 @@ function ProjectDetails(props: DetailComponentProps): React.ReactElement {
     const projectData = data.getDetailsTabDataForObject?.Project;
 
     return (
-        <Description
-            updated={isFieldUpdated(ProjectDetails, projectData, 'Description')}
-            disabled={disabled}
-            viewMode
-            value={ProjectDetails?.Description ?? ''}
-            onChange={onSetField}
-        />
+        <Box minWidth='fit-content' style={{ backgroundColor: 'rgb(236, 245, 253)' }}>
+            <TableContainer style={{ paddingTop: '10px', paddingBottom: '5px' }}>
+                <Table className={classes.table}>
+                    <TableBody>
+                        <TableRow className={classes.tableRow}>
+                            <TableCell className={classes.tableCell}>
+                                <Typography className={classes.labelText}>Description</Typography>
+                            </TableCell>
+                            <TableCell className={classes.tableCell} style={{ verticalAlign: 'middle', height: 'fit-content' }}>
+                                <DebounceInput
+                                    title='Description-input'
+                                    disabled={disabled}
+                                    value={ProjectDetails?.Description || ''}
+                                    type='string'
+                                    name='Description'
+                                    onChange={onSetField}
+                                    className={classes.input}
+                                    element='textarea'
+                                    forceNotifyByEnter={false}
+                                    debounceTimeout={400}
+                                    style={{
+                                        height: '80px',
+                                        width: '600px',
+                                        padding: 10,
+                                        resize: 'none',
+                                        borderRadius: 5,
+                                        ...updatedFieldStyling(isFieldUpdated(ProjectDetails, projectData, 'Description'))
+                                    }}
+                                >
+                                </DebounceInput>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Box>
     );
 }
 

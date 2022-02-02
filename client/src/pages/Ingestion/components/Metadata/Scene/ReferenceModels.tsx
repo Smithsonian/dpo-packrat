@@ -33,7 +33,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         maxWidth: '1100px',
         flexDirection: 'column',
         borderRadius: 5,
-        padding: 10,
+        padding: '10px 10px 0px 10px',
         backgroundColor: palette.primary.light,
         marginBottom: 10
     },

@@ -92,11 +92,8 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         alignItems: 'center',
         justifyContent: 'space-between',
         width: '60%',
-        fontSize: '0.8em',
         zIndex: 10,
-        [breakpoints.down('lg')]: {
-            fontSize: '0.9em',
-        }
+        fontSize: '0.9em'
     },
     column: {
         display: 'flex',
@@ -111,10 +108,7 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     text: {
         color: 'rgb(44,64,90)',
         fontWeight: 400,
-        fontSize: '0.8em',
-        [breakpoints.down('lg')]: {
-            fontSize: '0.9em',
-        }
+        fontSize: '0.9em'
     },
     options: {
         display: 'flex',

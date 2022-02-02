@@ -148,7 +148,13 @@ function SubjectItem(): React.ReactElement {
                     {metadatas.map(({ file }, index) => <Chip key={index} className={classes.fileChip} label={file.name} variant='outlined' />)}
                 </Box>
                 <SearchList />
-                <FieldType error={subjectError} required label='Subject(s) Selected' marginTop={2}>
+                <FieldType
+                    error={subjectError}
+                    required
+                    label='Subject(s) Selected'
+                    marginTop={2}
+                    padding='10px'
+                >
                     <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
                 </FieldType>
 
@@ -159,6 +165,7 @@ function SubjectItem(): React.ReactElement {
                     required
                     label='Project'
                     marginTop={2}
+                    padding='10px'
                 >
                     <ProjectList />
                 </FieldType>
@@ -169,6 +176,7 @@ function SubjectItem(): React.ReactElement {
                     required
                     label='Item'
                     marginTop={2}
+                    padding='10px'
                 >
                     <ItemList />
                 </FieldType>

@@ -9,14 +9,14 @@
  * This component renders asset grid tab for the DetailsTab component.
  */
 
-import { Box, Button } from '@material-ui/core';
+import { Box, Button, Typography, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { NewTabLink, EmptyTable } from '../../../../../components';
+import { NewTabLink, ToolTip } from '../../../../../components';
 import { eSystemObjectType, eIcon, eAssetGridColumnType, eLinkOrigin } from '../../../../../types/server';
 import { getObjectAssets } from '../../../hooks/useDetailsView';
 import { getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
-import { sharedButtonProps, formatDate } from '../../../../../utils/shared';
+import { sharedButtonProps, formatDate, formatDateAndTime } from '../../../../../utils/shared';
 import { updateSystemObjectUploadRedirect, attachSystemObjectUploadRedirect } from '../../../../../constants';
 import { useHistory } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
@@ -62,6 +62,16 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     value: {
         fontSize: '0.8em',
+        color: palette.primary.dark
+    },
+    emptyValue: {
+        fontSize: '0.8em',
+        color: palette.primary.dark,
+        paddingTop: 10,
+        paddingBottom: 5
+    },
+    date: {
+        fontSize: '0.9em',
         color: palette.primary.dark
     },
     empty: {
@@ -146,20 +156,11 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
 
     useEffect(() => {
         const initializeColumnsAndRows = async () => {
-            const {
-                data: {
-                    getAssetDetailsForSystemObject: { columns, assetDetailRows }
-                }
-            } = await getObjectAssets(idSystemObject);
+            const { data: { getAssetDetailsForSystemObject: { columns, assetDetailRows } } } = await getObjectAssets(idSystemObject);
 
-            if (columns) {
-                const formattedColumns = formatToDataTableColumns(columns, classes);
-                await setAssetColumns(formattedColumns);
-            }
-
-            if (assetDetailRows) {
-                await setAssetRows(assetDetailRows);
-            }
+            const formattedColumns = columns.length > 0 ? formatToDataTableColumns(columns, classes) : [];
+            setAssetColumns(formattedColumns);
+            setAssetRows(assetDetailRows);
         };
 
         initializeColumnsAndRows();
@@ -205,7 +206,11 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                     gridColumnObject.options = {
                         ...gridColumnObject.options,
                         customBodyRender(value) {
-                            return formatDate(value);
+                            return (
+                                <Tooltip arrow title={ <ToolTip text={formatDateAndTime(value)} /> }>
+                                    <Typography className={classes.date}>{formatDate(value)}</Typography>
+                                </Tooltip>
+                            );
                         }
                     };
                     break;
@@ -281,10 +286,6 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         return;
     };
 
-    if (!assetColumns.length) {
-        return <EmptyTable />;
-    }
-
     const toggleColumn = (changedColumn: string, _action: string) => {
         const assetColumnsCopy = [...assetColumns];
         const column = assetColumnsCopy.find(col => col.field === changedColumn);
@@ -295,7 +296,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
     };
 
     let redirect = () => {};
-    if (assetRows[0]) {
+    if (assetRows.length > 0 && assetRows[0]) {
         const { idAsset, idAssetVersion, assetType } = assetRows[0];
         redirect = () => {
             const newEndpoint = updateSystemObjectUploadRedirect(idAsset, idAssetVersion, systemObjectType, assetType);
@@ -327,7 +328,14 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         <React.Fragment>
             <MuiThemeProvider theme={getMuiTheme()}>
                 <Box className={classes.tableContainer}>
-                    <MUIDataTable title='Assets' data={assetRows} columns={assetColumns} options={options} />
+                    {assetRows.length > 0 && (
+                        <MUIDataTable title='Assets' data={assetRows} columns={assetColumns} options={options} />
+                    )}
+                    {assetRows.length === 0 && (
+                        <Typography align='center' className={classes.emptyValue}>
+                            No assets found
+                        </Typography>
+                    )}
                 </Box>
             </MuiThemeProvider>
 

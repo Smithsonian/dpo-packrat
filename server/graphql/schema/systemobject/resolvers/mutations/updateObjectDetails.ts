@@ -1,4 +1,3 @@
-import { eSystemObjectType } from '../../../../../db';
 import { UpdateObjectDetailsResult, MutationUpdateObjectDetailsArgs, MetadataInput, User } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as COL from '../../../../../collections/interface/';
@@ -8,6 +7,7 @@ import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
 import { SystemObjectTypeToName } from '../../../../../db/api/ObjectType';
 import * as H from '../../../../../utils/helpers';
+import * as COMMON from '../../../../../../client/src/types/server';
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs, context: Context): Promise<UpdateObjectDetailsResult> {
     const { input } = args;
@@ -75,7 +75,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         return sendResult(false, metadataRes.error);
 
     switch (objectType) {
-        case eSystemObjectType.eUnit: {
+        case COMMON.eSystemObjectType.eUnit: {
             const Unit = await DBAPI.Unit.fetch(idObject);
             if (!Unit)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
@@ -91,7 +91,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
-        case eSystemObjectType.eProject: {
+        case COMMON.eSystemObjectType.eProject: {
             const Project = await DBAPI.Project.fetch(idObject);
             if (!Project)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
@@ -106,7 +106,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
-        case eSystemObjectType.eSubject: {
+        case COMMON.eSystemObjectType.eSubject: {
             if (data.Subject) {
                 const { Altitude, Latitude, Longitude, R0, R1, R2, R3, TS0, TS1, TS2 } = data.Subject;
                 const geoLocationProvided: boolean = Altitude !== null || Latitude !== null || Longitude !== null || R0 !== null ||
@@ -163,7 +163,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
             break;
         }
-        case eSystemObjectType.eItem: {
+        case COMMON.eSystemObjectType.eItem: {
             if (data.Item) {
                 const { EntireSubject, Altitude, Latitude, Longitude, R0, R1, R2, R3, TS0, TS1, TS2 } = data.Item;
                 const geoLocationProvided: boolean = Altitude !== null || Latitude !== null || Longitude !== null || R0 !== null ||
@@ -221,7 +221,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
             break;
         }
-        case eSystemObjectType.eCaptureData: {
+        case COMMON.eSystemObjectType.eCaptureData: {
             if (data.CaptureData) {
                 const CaptureData = await DBAPI.CaptureData.fetch(idObject);
                 if (!CaptureData)
@@ -298,7 +298,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
             break;
         }
-        case eSystemObjectType.eModel: {
+        case COMMON.eSystemObjectType.eModel: {
             if (data.Model) {
                 const Model = await DBAPI.Model.fetch(idObject);
                 if (!Model)
@@ -327,7 +327,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
             break;
         }
-        case eSystemObjectType.eScene: {
+        case COMMON.eSystemObjectType.eScene: {
             const Scene = await DBAPI.Scene.fetch(idObject);
             if (!Scene)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
@@ -341,7 +341,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
-        case eSystemObjectType.eIntermediaryFile: {
+        case COMMON.eSystemObjectType.eIntermediaryFile: {
             const IntermediaryFile = await DBAPI.IntermediaryFile.fetch(idObject);
             if (!IntermediaryFile)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
@@ -361,7 +361,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
-        case eSystemObjectType.eProjectDocumentation: {
+        case COMMON.eSystemObjectType.eProjectDocumentation: {
             const ProjectDocumentation = await DBAPI.ProjectDocumentation.fetch(idObject);
             if (!ProjectDocumentation)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
@@ -376,7 +376,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
-        case eSystemObjectType.eAsset: {
+        case COMMON.eSystemObjectType.eAsset: {
             const Asset = await DBAPI.Asset.fetch(idObject);
             if (!Asset)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
@@ -391,7 +391,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
-        case eSystemObjectType.eAssetVersion: {
+        case COMMON.eSystemObjectType.eAssetVersion: {
             const AssetVersion = await DBAPI.AssetVersion.fetch(idObject);
             if (!AssetVersion)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
@@ -408,7 +408,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
-        case eSystemObjectType.eActor: {
+        case COMMON.eSystemObjectType.eActor: {
             const Actor = await DBAPI.Actor.fetch(idObject);
             if (!Actor)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
@@ -422,7 +422,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
-        case eSystemObjectType.eStakeholder: {
+        case COMMON.eSystemObjectType.eStakeholder: {
             const Stakeholder = await DBAPI.Stakeholder.fetch(idObject);
             if (!Stakeholder)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);

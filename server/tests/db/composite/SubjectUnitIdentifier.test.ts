@@ -1,6 +1,7 @@
 import * as DBAPI from '../../../db';
 import * as COL from '../../../collections/interface/';
 import * as LOG from '../../../utils/logger';
+import * as COMMON from '../../../../client/src/types/server';
 // import * as H from '../../../utils/helpers';
 
 afterAll(async done => {
@@ -36,10 +37,10 @@ describe('DB Composite SubjectUnitIdentifier Test', () => {
     executeSearch('65665', false, false, -1);
     executeSearch('65665', false, true, 12, 1, 100);
     executeSearch('65665', false, true, 12, 2, 10);
-    executeSearch('65665', false, true, 12, 2, 10, DBAPI.eSubjectUnitIdentifierSortColumns.eDefault, true);
-    executeSearch('65665', false, true, 12, 2, 10, DBAPI.eSubjectUnitIdentifierSortColumns.eIdentifierValue, false);
-    executeSearch('65665', false, true, 12, 2, 10, DBAPI.eSubjectUnitIdentifierSortColumns.eSubjectName, true);
-    executeSearch('65665', false, true, 12, 2, 10, DBAPI.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation, false);
+    executeSearch('65665', false, true, 12, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eDefault, true);
+    executeSearch('65665', false, true, 12, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eIdentifierValue, false);
+    executeSearch('65665', false, true, 12, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eSubjectName, true);
+    executeSearch('65665', false, true, 12, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation, false);
 });
 
 function executeQuery(query: string, expectNull: boolean, expectResults: boolean): void {
@@ -95,7 +96,7 @@ function executeQueryCollection(ICollection: COL.ICollection, query: string, exp
 
 function executeSearch(query: string, expectNull: boolean, expectResults: boolean,
     idUnit?: number | undefined, pageNumber?: number | undefined, rowCount?: number | undefined,
-    sortBy?: DBAPI.eSubjectUnitIdentifierSortColumns | undefined,
+    sortBy?: COMMON.eSubjectUnitIdentifierSortColumns | undefined,
     sortDirection?: boolean | undefined): void {
     test(`DB Composite SubjectUnitIdentifier.search '${query}', ${idUnit}, ${pageNumber}, ${rowCount}, ${sortBy}, ${sortDirection}`, async () => {
         const results: DBAPI.SubjectUnitIdentifier[] | null = await DBAPI.SubjectUnitIdentifier.search(query, idUnit, pageNumber, rowCount, sortBy, sortDirection);

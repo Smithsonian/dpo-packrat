@@ -21,6 +21,7 @@ import { eSystemObjectType, ePublishedState } from '../../../../types/server';
 const useStyles = makeStyles(({ typography, palette }) => ({
     detail: {
         display: 'flex',
+        alignItems: 'center',
         minHeight: 20,
         width: '100%',
         marginBottom: 8
@@ -38,17 +39,18 @@ const useStyles = makeStyles(({ typography, palette }) => ({
 
 const useObjectDetailsStyles = makeStyles(({ breakpoints, palette }) => ({
     loadingBtn: {
-        height: 35,
+        height: 20,
         width: 'fit-content',
         color: palette.background.paper,
         [breakpoints.down('lg')]: {
-            height: 30
+            height: 24
         }
     },
     select: {
         fontSize: '0.875rem',
         color: 'rgb(44, 64, 90)',
-        marginRight: '5px'
+        marginRight: '5px',
+        height: 20
     },
     assignedLicense: {
         display: 'flex',
@@ -78,7 +80,10 @@ const useObjectDetailsStyles = makeStyles(({ breakpoints, palette }) => ({
 const CheckboxNoPadding = withStyles({
     root: {
         border: '0px',
-        padding: '0px'
+        padding: '0px',
+        height: 10,
+        width: 10,
+        paddingLeft: 3
     }
 })(Checkbox);
 

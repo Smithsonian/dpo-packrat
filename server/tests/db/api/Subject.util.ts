@@ -1,5 +1,6 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import { createIdentifierForSystemObject } from './Identifier.util';
 import { Subject as SubjectBase } from '@prisma/client';
 
@@ -14,7 +15,7 @@ export async function createSubjectTest(base: SubjectBase): Promise<DBAPI.Subjec
 export async function createSubjectWithIdentifierTest(base: SubjectBase, identifierValue: string | null = null): Promise<DBAPI.Subject> {
     const subject: DBAPI.Subject = await createSubjectTest(base);
 
-    const vIDTypeArk: DBAPI.Vocabulary | null = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eIdentifierIdentifierTypeARK) || null;
+    const vIDTypeArk: DBAPI.Vocabulary | null = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK) || null;
     expect(vIDTypeArk).toBeTruthy();
     const identifier: DBAPI.Identifier | null = await createIdentifierForSystemObject(subject, identifierValue, vIDTypeArk);
     expect(identifier).toBeTruthy();

@@ -1,7 +1,7 @@
 import { IExtractor, IExtractorResults } from './IExtractor';
 import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
-import * as CACHE from '../cache';
+import * as COMMON from '../../client/src/types/server';
 
 import * as path from 'path';
 import exifr from 'exifr';
@@ -74,8 +74,8 @@ export class ExtractorImageExifr implements IExtractor  {
         return { success: true, metadata };
     }
 
-    eMetadataSource(): CACHE.eVocabularyID | null {
-        return CACHE.eVocabularyID.eMetadataMetadataSourceImage;
+    eMetadataSource(): COMMON.eVocabularyID | null {
+        return COMMON.eVocabularyID.eMetadataMetadataSourceImage;
     }
 
     static exifrFormatOptions = {

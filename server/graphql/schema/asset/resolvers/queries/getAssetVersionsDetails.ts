@@ -3,10 +3,11 @@ import { QueryGetAssetVersionsDetailsArgs, GetAssetVersionsDetailsResult,
     Item, IngestPhotogrammetry, IngestModel, IngestScene, SubjectUnitIdentifier } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import { AssetStorageAdapter } from '../../../../../storage/interface';
-import { AssetVersion, Project, eSystemObjectType, SystemObjectInfo } from '../../../../../db';
+import { AssetVersion, Project, SystemObjectInfo } from '../../../../../db';
 import* as CACHE from '../../../../../cache';
 import { IngestMetadata, BulkIngestReader } from '../../../../../utils/parser';
 import * as LOG from '../../../../../utils/logger';
+import * as COMMON from '../../../../../../client/src/types/server';
 
 export default async function getAssetVersionsDetails(_: Parent, args: QueryGetAssetVersionsDetailsArgs, _context: Context): Promise<GetAssetVersionsDetailsResult> {
     let firstSubject: SubjectUnitIdentifier | null = null;
@@ -30,7 +31,7 @@ export default async function getAssetVersionsDetails(_: Parent, args: QueryGetA
         const Project: Project[] | null = await BulkIngestReader.computeProjects(ingestMetadata);
 
         const { idSubject, SubjectName, UnitAbbreviation, IdentifierPublic, IdentifierCollection } = ingestMetadata;
-        const SOI: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ idObject: idSubject, eObjectType: eSystemObjectType.eSubject });
+        const SOI: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ idObject: idSubject, eObjectType: COMMON.eSystemObjectType.eSubject });
         const SubjectUnitIdentifier: SubjectUnitIdentifier = {
             idSubject,
             idSystemObject: SOI ? SOI.idSystemObject : 0,

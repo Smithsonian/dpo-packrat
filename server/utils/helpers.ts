@@ -74,7 +74,7 @@ export class Helpers {
             await fsp.copyFile(nameSource, nameDestination, allowOverwrite ? 0 : fs.constants.COPYFILE_EXCL);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.copyFile', LOG.LS.eSYS, error);
-            return { success: false, error: `Unable to copy ${nameSource} to ${nameDestination}: ${error}` };
+            return { success: false, error: `Unable to copy ${nameSource} to ${nameDestination} (cwd = ${process.cwd()}): ${error}` };
         }
         return { success: true };
     }

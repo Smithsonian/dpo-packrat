@@ -37,12 +37,11 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         }
     },
     label: {
-        fontSize: 16,
+        fontSize: '0.7em',
         fontWeight: typography.fontWeightLight,
         borderRadius: 5,
         padding: '2.5px 5px',
         [breakpoints.down('lg')]: {
-            fontSize: '0.7em',
             padding: '4px 8px'
         },
         backgroundColor: 'transparent !important',

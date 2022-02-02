@@ -4,6 +4,7 @@ import * as CACHE from '../../cache';
 import * as COL from '../../collections/interface/';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import * as COMMON from '../../../client/src/types/server';
 
 /** This class is used to create and update EDANMDM records, translating Packrat Subject data and metadata into the EdanMDMContent format required for EDANMDM records */
 export class PublishSubject {
@@ -44,7 +45,7 @@ export class PublishSubject {
         }
 
         // update SystemObjectVersion.PublishedState
-        res = await this.updatePublishedState(DBAPI.ePublishedState.ePublished);
+        res = await this.updatePublishedState(COMMON.ePublishedState.ePublished);
         if (!res.success)
             return res;
         return PublishSubject.returnResults(true);
@@ -55,7 +56,7 @@ export class PublishSubject {
         if (!oID)
             return PublishSubject.returnResults(false, `unable to retrieve object details from ${this.idSystemObject}`);
 
-        if (oID.eObjectType !== DBAPI.eSystemObjectType.eSubject)
+        if (oID.eObjectType !== COMMON.eSystemObjectType.eSubject)
             return PublishSubject.returnResults(false, `called for non subject object ${JSON.stringify(oID, H.Helpers.saferStringify)}`);
 
         // fetch subject
@@ -168,7 +169,7 @@ export class PublishSubject {
         return retValue;
     }
 
-    private async updatePublishedState(ePublishedStateIntended: DBAPI.ePublishedState): Promise<H.IOResults> {
+    private async updatePublishedState(ePublishedStateIntended: COMMON.ePublishedState): Promise<H.IOResults> {
         let systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(this.idSystemObject);
         if (systemObjectVersion) {
             if (systemObjectVersion.publishedStateEnum() !== ePublishedStateIntended) {

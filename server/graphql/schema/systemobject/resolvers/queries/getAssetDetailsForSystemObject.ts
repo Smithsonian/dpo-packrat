@@ -10,6 +10,7 @@ import { AssetGridDetailBase } from './AssetGridCommon';
 import { AssetGridDetail } from './AssetGridDetail';
 import { AssetGridDetailCaptureData } from './AssetGridDetailCaptureData';
 import { AssetGridDetailScene } from './AssetGridDetailScene';
+import * as COMMON from '../../../../../../client/src/types/server';
 
 enum eAssetGridType {
     eStandard,
@@ -53,7 +54,7 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
     let assetDetailPreferred: AssetGridDetailBase | null = null;
     for (const assetVersion of assetVersions) {
         // We need the idSystemObject for the asset
-        const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAsset, eObjectType: DBAPI.eSystemObjectType.eAsset };
+        const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAsset, eObjectType: COMMON.eSystemObjectType.eAsset };
         const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
         if (!sID) {
             LOG.error(`getAssetDetailsForSystemObject could not retrieve system object info for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
@@ -81,14 +82,14 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
 
             case eAssetGridType.eCaptureData: {
                 // Fetch metadata for the system object of the asset version
-                const oIDAV: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion };
+                const oIDAV: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion };
                 const metadataMap: Map<string, string> = await computeMetadataSet(oIDAV, metadataMetaMap);
                 assetDetail = new AssetGridDetailCaptureData(asset, assetVersion, sID.idSystemObject, metadataMap);
             }   break;
 
             case eAssetGridType.eScene: {
                 // Fetch metadata for the system object of the asset version
-                const oIDAV: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion };
+                const oIDAV: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion };
                 const metadataMap: Map<string, string> = await computeMetadataSet(oIDAV, metadataMetaMap);
                 const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabulary(asset.idVAssetType);
                 if (!vocabulary) {

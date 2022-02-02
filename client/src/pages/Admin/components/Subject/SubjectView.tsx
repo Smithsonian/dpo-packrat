@@ -12,8 +12,8 @@ import { getUnitsList, getSubjectList } from '../../hooks/useAdminview';
 import { resolveSubRoute, ADMIN_ROUTE, ADMIN_ROUTES_TYPE } from '../../../../constants/routes';
 import { Subject } from '../../../../types/graphql';
 import { toast } from 'react-toastify';
-import { subjectUnitIdentifierStringToEnum } from '../../../../types/server';
 import { Helmet } from 'react-helmet';
+import { eSubjectUnitIdentifierSortColumns } from '../../../../types/server';
 
 const useStyles = makeStyles({
     AdminViewContainer: {
@@ -23,8 +23,7 @@ const useStyles = makeStyles({
         overflow: 'auto',
         maxHeight: 'calc(100vh - 60px)',
         paddingLeft: '1%',
-        width: '1200px',
-        margin: '0 auto'
+        width: '1200px'
     },
     AdminBreadCrumbsContainer: {
         display: 'flex',
@@ -191,5 +190,14 @@ function SubjectView(): React.ReactElement {
         </Box>
     );
 }
+
+const subjectUnitIdentifierStringToEnum = (col: string): eSubjectUnitIdentifierSortColumns => {
+    switch (col) {
+        case 'Unit': return eSubjectUnitIdentifierSortColumns.eUnitAbbreviation;
+        case 'Name': return eSubjectUnitIdentifierSortColumns.eSubjectName;
+        case 'Identifier': return eSubjectUnitIdentifierSortColumns.eIdentifierValue;
+        default: return eSubjectUnitIdentifierSortColumns.eDefault;
+    }
+};
 
 export default SubjectView;

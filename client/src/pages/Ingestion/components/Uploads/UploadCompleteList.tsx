@@ -53,7 +53,8 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
     const classes = useStyles();
 
     const { completed, loadCompleted } = useUploadStore();
-    const { data, loading, error } = useQuery(GetUploadedAssetVersionDocument);
+    const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
+
     useEffect(() => {
         if (!loading && !error) {
             const { getUploadedAssetVersion } = data;
@@ -83,7 +84,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
                 return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType, idAsset);
             });
 
-            loadCompleted(completedFiles);
+            loadCompleted(completedFiles, refetch);
         }
     }, [data, loading, error]);
 
@@ -115,6 +116,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
                 labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
                 labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
                 width={'calc(100% - 20px)'}
+                padding='10px'
             >
                 <UploadListHeader />
                 <Box className={classes.list}>{content}</Box>

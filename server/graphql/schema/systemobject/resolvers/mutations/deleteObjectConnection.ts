@@ -4,8 +4,7 @@ import * as DBAPI from '../../../../../db';
 import * as LOG from '../../../../../utils/logger';
 import { getRelatedObjects } from '../queries/getSystemObjectDetails';
 import { RelatedObjectType } from '../../../../../types/graphql';
-import { eSystemObjectType } from '../../../../../db';
-
+import * as COMMON from '../../../../../../client/src/types/server';
 
 export default async function deleteObjectConnection(_: Parent, args: MutationDeleteObjectConnectionArgs): Promise<DeleteObjectConnectionResult> {
     const { input: { idSystemObjectMaster, objectTypeMaster, idSystemObjectDerived, objectTypeDerived } } = args;
@@ -13,9 +12,9 @@ export default async function deleteObjectConnection(_: Parent, args: MutationDe
 
     const idSystemObjectXrefs = await DBAPI.SystemObjectXref.fetchXref(idSystemObjectMaster, idSystemObjectDerived);
 
-    if ((objectTypeDerived === eSystemObjectType.eModel && objectTypeMaster === eSystemObjectType.eItem) || (objectTypeDerived === eSystemObjectType.eCaptureData && objectTypeMaster === eSystemObjectType.eItem)) {
+    if ((objectTypeDerived === COMMON.eSystemObjectType.eModel && objectTypeMaster === COMMON.eSystemObjectType.eItem) || (objectTypeDerived === COMMON.eSystemObjectType.eCaptureData && objectTypeMaster === COMMON.eSystemObjectType.eItem)) {
         const sourceObjectsOfChild = await getRelatedObjects(idSystemObjectDerived, RelatedObjectType.Source);
-        const sourceItemCount = sourceObjectsOfChild.filter(source => source.objectType === eSystemObjectType.eItem).length;
+        const sourceItemCount = sourceObjectsOfChild.filter(source => source.objectType === COMMON.eSystemObjectType.eItem).length;
         if (sourceItemCount <= 1) {
             return { success: false, details: 'Cannot delete last item parent' };
         }

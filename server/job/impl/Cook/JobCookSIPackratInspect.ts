@@ -7,6 +7,7 @@ import * as JOB from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
@@ -48,6 +49,7 @@ export class JobCookBoundingBox {
 
 export class JobCookStatistics {
     numFaces: number | null = null;
+    numTriangles: number | null = null;
     numVertices: number | null = null;
     numTexCoordChannels: number | null = null;
     numColorChannels: number | null = null;
@@ -66,6 +68,7 @@ export class JobCookStatistics {
     static extract(statistics: any): JobCookStatistics {
         const JCStat: JobCookStatistics = new JobCookStatistics();
         JCStat.numFaces = maybe<number>(statistics?.numFaces);
+        JCStat.numTriangles = maybe<number>(statistics?.numTriangles);
         JCStat.numVertices = maybe<number>(statistics?.numVertices);
         JCStat.numTexCoordChannels = maybe<number>(statistics?.numTexCoordChannels);
         JCStat.numColorChannels = maybe<number>(statistics?.numColorChannels);
@@ -146,6 +149,8 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 model.CountCameras = modelSource.CountCameras;
             if (modelSource.CountFaces)
                 model.CountFaces = modelSource.CountFaces;
+            if (modelSource.CountTriangles)
+                model.CountTriangles = modelSource.CountTriangles;
             if (modelSource.CountLights)
                 model.CountLights = modelSource.CountLights;
             if (modelSource.CountMaterials)
@@ -341,7 +346,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let idAssetVersion: number = 0;
 
         const model: DBAPI.Model = await JobCookSIPackratInspectOutput.createModel(++idModel, modelStats, sourceMeshFile ? sourceMeshFile : fileName, dateCreated);
-        // LOG.info(`JobCookSIPackratInspectOutput.extract model: ${JSON.stringify(model, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
+        // LOG.info(`JobCookSIPackratInspectOutput.extract model: ${JSON.stringify(model, H.Helpers.saferStringify)} from stats ${JSON.stringify(modelStats)}`, LOG.LS.eJOB);
 
         if (sourceMeshFile) {
             if (!modelAssets)
@@ -360,7 +365,10 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             const boundingBox: any = mesh.geometry?.boundingBox;
             const JCBoundingBox: JobCookBoundingBox | null = JobCookBoundingBox.extract(boundingBox);
             const JCStat: JobCookStatistics = JobCookStatistics.extract(statistics);
-            modelObjects.push(JobCookSIPackratInspectOutput.createModelObject(idModelObject, idModel, JCBoundingBox, JCStat));
+
+            const modelObject: DBAPI.ModelObject = JobCookSIPackratInspectOutput.createModelObject(idModelObject, idModel, JCBoundingBox, JCStat);
+            modelObjects.push(modelObject);
+            // LOG.info(`JobCookSIPackratInspectOutput.extract model object: ${JSON.stringify(modelObject, H.Helpers.saferStringify)} mesh stats: ${JSON.stringify(JCStat)}`, LOG.LS.eJOB);
 
             // ModelObjectModelMaterialXref
             if (JCStat.materialIndex) {
@@ -529,13 +537,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
     static async extractFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<JobCookSIPackratInspectOutput | null> {
         // find JobCook results for this asset version
-        const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         if (!idVJobType) {
             LOG.error('JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job ID of si-packrat-inspect', LOG.LS.eJOB);
             return null;
         }
 
-        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eWorkflowJobRunStatus.eDone, true, [idAssetVersion], sourceMeshFile);
+        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, COMMON.eWorkflowJobRunStatus.eDone, true, [idAssetVersion], sourceMeshFile);
         if (!jobRuns || jobRuns.length != 1) {
             LOG.info(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}, sourceMeshFile ${sourceMeshFile}`, LOG.LS.eJOB);
             return null;
@@ -597,6 +605,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             FileEncoding: modelStats ? maybe<string>(modelStats?.fileEncoding) : null,
             IsDracoCompressed: modelStats ? maybe<boolean>(modelStats?.isDracoCompressed) : null,
             AutomationTag: null,
+            CountTriangles: modelStats ? maybe<number>(modelStats?.numTriangles) : null,
             idModel
         });
     }
@@ -626,6 +635,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             IsTwoManifoldBounded: JCStat.isTwoManifoldBounded,
             IsWatertight: JCStat.isWatertight,
             SelfIntersecting: JCStat.selfIntersecting,
+            CountTriangles: JCStat.numTriangles,
         });
     }
 
@@ -732,7 +742,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         const files: string[] = await ZS.getJustFiles(null);
         const RSRs: STORE.ReadStreamResult[] = [];
         for (const file of files) {
-            const eVocabID: CACHE.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
+            const eVocabID: COMMON.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
             const extension: string = path.extname(file).toLowerCase() || file.toLowerCase();
 
             // for the time being, only handle model geometry files, OBJ .mtl files, and GLTF .bin files

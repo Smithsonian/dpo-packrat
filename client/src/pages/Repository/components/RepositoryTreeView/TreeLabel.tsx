@@ -87,12 +87,9 @@ const useLabelStyle = makeStyles(({ breakpoints, palette, typography }) => ({
         }
     },
     emptyText: {
-        fontSize: '0.8em',
+        fontSize: '0.7em',
         fontWeight: typography.fontWeightLight,
-        color: palette.grey[500],
-        [breakpoints.down('lg')]: {
-            fontSize: '0.7em',
-        }
+        color: palette.grey[500]
     },
     stickyItem: {
         position: 'sticky',

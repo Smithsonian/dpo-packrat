@@ -1,8 +1,8 @@
 import { QueryGetModelConstellationForAssetVersionArgs, GetModelConstellationForAssetVersionResult } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
+import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook/JobCookSIPackratInspect';
 import * as LOG from '../../../../../utils/logger';
 // import * as H from '../../../../../utils/helpers';
-import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook/JobCookSIPackratInspect';
 
 export default async function getModelConstellationForAssetVersion(_: Parent, args: QueryGetModelConstellationForAssetVersionArgs,
     __: Context): Promise<GetModelConstellationForAssetVersionResult> {
@@ -14,6 +14,6 @@ export default async function getModelConstellationForAssetVersion(_: Parent, ar
         return { idAssetVersion };
     }
 
-    // LOG.info(`GraphQL getModelConstellationForAssetVersion(${JSON.stringify(idAssetVersion)}) = ${JSON.stringify(JCOutput.modelConstellation, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eGQL);
+    // LOG.info(`GraphQL getModelConstellationForAssetVersion(${JSON.stringify(idAssetVersion)}) = ${JSON.stringify(JCOutput.modelConstellation, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
     return { idAssetVersion, ModelConstellation: JCOutput.modelConstellation };
 }

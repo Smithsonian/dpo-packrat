@@ -1,27 +1,10 @@
-export enum eIcon {
-    eIconDownload = 1
-}
-
-export enum eLinkOrigin {
-    eClient = 1,
-    eServer = 2,
-    eNone = 0
-}
-
-export enum eAssetGridColumnType {
-    eString = 0,
-    eNumber = 1,
-    eBoolean = 2,
-    eHyperLink = 3,
-    eDate = 4,
-    eFileSize = 5
-}
+import * as COMMON from '../../../../../../client/src/types/server';
 
 export type ColumnObject = {
     colName: string;
     colLabel: string;
     colDisplay: boolean;
-    colType: eAssetGridColumnType;
+    colType: COMMON.eAssetGridColumnType;
     colAlign: string;
 };
 
@@ -29,7 +12,7 @@ export type LinkObject = {
     label: string | null;
     path: string | null;
     icon: number | null;
-    origin: eLinkOrigin;
+    origin: COMMON.eLinkOrigin;
 };
 
 export class AssetGridDetailBase {
