@@ -6,7 +6,7 @@
  *
  * This component renders the source object list with add capability.
  */
-import { Box, Button, Typography } from '@material-ui/core';
+import { Box, Button, Typography, Table, TableBody, TableCell, TableContainer, TableRow, TableHead } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
@@ -26,15 +26,13 @@ const useStyles = makeStyles(({ palette }) => ({
         width: (viewMode: boolean) => (viewMode ? undefined : 'calc(100% - 20px)'),
         flexDirection: 'column',
         borderRadius: 5,
-        padding: 10,
-        marginTop: (viewMode: boolean) => (viewMode ? 10 : 0),
+        padding: '6px 10px 10px 10px',
+        marginTop: '8px',
         backgroundColor: (viewMode: boolean) => (viewMode ? palette.secondary.light : palette.primary.light)
     },
     list: {
-        paddingTop: 10,
-        paddingLeft: (viewMode: boolean) => (viewMode ? 0 : 10),
         borderRadius: 5,
-        backgroundColor: palette.secondary.light
+        backgroundColor: '#ffffe0'
     },
     header: {
         ...sharedLabelProps
@@ -50,7 +48,7 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     addButton: {
         ...sharedButtonProps,
-        marginTop: 5
+        marginTop: 10
     }
 }));
 
@@ -69,30 +67,49 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
     const { relatedObjects, type, onAdd, onRemove, viewMode = false, disabled = false, currentObject, onRemoveConnection, objectType, relationshipLanguage } = props;
     const classes = useStyles(viewMode);
 
-    const titles = [`${relationshipLanguage || type.toString() + ' Object(s)'}`, 'Identifier', 'Object Type'];
     const hasRelatedObjects = !!relatedObjects.length;
 
     const buttonLabel: string = viewMode ? 'Connect' : 'Add';
 
     return (
         <Box className={classes.container}>
-            <Header titles={titles} />
-            {hasRelatedObjects && (
-                <Box className={classes.list}>
-                    {relatedObjects.map((sourceObject: StateRelatedObject, index: number) => (
-                        <Item
-                            type={type}
-                            key={index}
-                            viewMode={viewMode}
-                            sourceObject={sourceObject}
-                            currentObject={currentObject}
-                            onRemove={onRemove}
-                            onRemoveConnection={onRemoveConnection}
-                            systemObjectType={objectType}
-                        />
-                    ))}
-                </Box>
-            )}
+            <TableContainer>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell style={{ padding: '2px 0px 4px 6px' }}>
+                                <Typography style={{ fontSize: '0.75rem' }}>{relationshipLanguage || type.toString() + ' Object(s)'}</Typography>
+                            </TableCell>
+                            <TableCell style={{ padding: '2px 0px 4px 0px', textAlign: 'center' }}>
+                                <Typography style={{ fontSize: '0.75rem' }}>Object Type</Typography>
+                            </TableCell>
+                            <TableCell style={{ padding: '2px 0px 4px 0px', textAlign: 'center' }}>
+                                <Typography style={{ fontSize: '0.75rem' }}>Identifier</Typography>
+                            </TableCell>
+                            <TableCell style={{ width: '0px', padding: 0 }}>
+                            </TableCell>
+                        </TableRow>
+                    </TableHead>
+                    {hasRelatedObjects && (
+                        <TableBody>
+                            {relatedObjects.map((sourceObject: StateRelatedObject, index: number) => (
+                                <Item
+                                    type={type}
+                                    key={index}
+                                    viewMode={viewMode}
+                                    sourceObject={sourceObject}
+                                    currentObject={currentObject}
+                                    onRemove={onRemove}
+                                    onRemoveConnection={onRemoveConnection}
+                                    systemObjectType={objectType}
+                                    index={index}
+                                    finalIndex={relatedObjects.length - 1}
+                                />
+                            ))}
+                        </TableBody>
+                    )}
+                </Table>
+            </TableContainer>
             <Button className={classes.addButton} disableElevation color='primary' variant='contained' onClick={() => onAdd()} disabled={disabled}>
                 {buttonLabel}
             </Button>
@@ -100,29 +117,6 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
     );
 }
 
-interface ObjectHeader {
-    titles: string[];
-}
-
-export function Header(props: ObjectHeader): React.ReactElement {
-    const { titles } = props;
-    const classes = useStyles(false);
-    const [title1, title2, title3] = titles;
-
-    return (
-        <Box display='flex' flex={1} flexDirection='row' marginBottom={1} width='92%'>
-            <Box display='flex' flex={2}>
-                <Typography className={classes.header}>{title1}</Typography>
-            </Box>
-            <Box display='flex' flex={3}>
-                <Typography className={classes.header}>{title2}</Typography>
-            </Box>
-            <Box display='flex' flex={1}>
-                <Typography className={classes.header}>{title3}</Typography>
-            </Box>
-        </Box>
-    );
-}
 
 interface ItemProps {
     sourceObject: StateRelatedObject;
@@ -132,10 +126,12 @@ interface ItemProps {
     onRemoveConnection?: (idSystemObjectMaster: number, objectTypeMaster: eSystemObjectType, idSystemObjectDerived: number, objectTypeDerived: eSystemObjectType) => any;
     type?: RelatedObjectType;
     systemObjectType?: number;
+    index: number;
+    finalIndex: number;
 }
 
 function Item(props: ItemProps): React.ReactElement {
-    const { sourceObject, onRemove, viewMode = false, currentObject, onRemoveConnection, type, systemObjectType } = props;
+    const { sourceObject, onRemove, viewMode = false, currentObject, onRemoveConnection, type, systemObjectType, index, finalIndex } = props;
     const { idSystemObject, name, identifier, objectType } = sourceObject;
     const classes = useStyles(viewMode);
     let remove;
@@ -162,20 +158,22 @@ function Item(props: ItemProps): React.ReactElement {
     }
 
     return (
-        <Box display='flex' flex={1} flexDirection='row' alignItems='center' pb='10px'>
-            <Box display='flex' flex={2}>
-                <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
-                    <Typography className={clsx(classes.label, classes.labelUnderline)}>{name}</Typography>
+        <TableRow style={{ backgroundColor: index % 2 !== 0 ? 'white' : '#ffffe0' }}>
+            <TableCell style={{ padding: '1px 0px 1px 8px', borderTopLeftRadius: index === 0 ? '5px' : undefined, borderBottomLeftRadius: finalIndex === index ? '5px' : undefined }}>
+                <NewTabLink to={getDetailsUrlForObject(idSystemObject)} className={clsx(classes.label, classes.labelUnderline)} style={{ fontSize: '0.675rem', verticalAlign: 'middle' }}>
+                    {name}
                 </NewTabLink>
-            </Box>
-            <Box display='flex' flex={3}>
-                <Typography className={classes.label}>{identifier}</Typography>
-            </Box>
-            <Box display='flex' flex={1}>
-                <Typography className={classes.label}>{getTermForSystemObjectType(objectType)}</Typography>
-            </Box>
-            <Box width='50px'>{!viewMode && <MdRemoveCircleOutline className={classes.removeIcon} onClick={remove} size={24} />}</Box>
-        </Box>
+            </TableCell>
+            <TableCell style={{ padding: '1px 2px', textAlign: 'center' }}>
+                <Typography className={classes.label} style={{ fontSize: '0.675rem' }}>{getTermForSystemObjectType(objectType)}</Typography>
+            </TableCell>
+            <TableCell style={{ padding: '1px 2px' }}>
+                <Typography className={classes.label} style={{ fontSize: '0.675rem' }}>{identifier}</Typography>
+            </TableCell>
+            <TableCell style={{ padding: '1px 8px 0px 0px', borderTopRightRadius: index === 0 ? '5px' : undefined, borderBottomRightRadius: finalIndex === index ? '5px' : undefined }}>
+                {!viewMode && <MdRemoveCircleOutline className={classes.removeIcon} onClick={remove} size={16} style={{ verticalAlign: 'sub' }} />}
+            </TableCell>
+        </TableRow>
     );
 }
 
