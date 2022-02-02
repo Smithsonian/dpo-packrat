@@ -98,8 +98,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         border: `1px solid ${fade(palette.primary.main, 0.3)}`,
         [breakpoints.down('lg')]: {
             maxWidth: 130,
-            minWidth: 130,
-            fontSize: '0.6rem'
+            minWidth: 130
         }
     },
     options: {

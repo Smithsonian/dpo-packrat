@@ -7,7 +7,6 @@
 import { Box, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
-import DefaultThumbnail from '../../../../assets/images/default-thumbnail.png';
 import VoyagerExplorer from './DetailsTab/VoyagerExplorer';
 import VoyagerStory from './DetailsTab/VoyagerStory';
 import { eSystemObjectType } from '../../../../types/server';
@@ -78,12 +77,21 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
         fetchObjectAssets();
     }, [idSystemObject]);
 
+    const thumbnailContent = thumbnail ? <img className={classes.thumbnail} src={thumbnail} loading='lazy' alt='asset thumbnail' /> : null;
+
+
     return (
         <Box display='flex' flex={1} flexDirection='column' alignItems='start'>
-            {objectType !== eSystemObjectType.eScene && <img className={classes.thumbnail} src={thumbnail || DefaultThumbnail} loading='lazy' alt='asset thumbnail' />}
+            {objectType !== eSystemObjectType.eScene && thumbnailContent}
             {objectType === eSystemObjectType.eScene && rootLink.length > 0 && documentLink.length > 0 && eMode === eVoyagerStoryMode.eViewer && (
                 <React.Fragment>
-                    <VoyagerExplorer root={rootLink} document={documentLink} height='500px' width='100%' />
+                    <VoyagerExplorer
+                        id='Voyager-Explorer'
+                        root={rootLink}
+                        document={documentLink}
+                        height='500px'
+                        width='100%'
+                    />
                     <br />
                     <Button
                         className={classes.editButton}
@@ -97,7 +105,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                 </React.Fragment>
             )}
             {objectType === eSystemObjectType.eScene && rootLink.length > 0 && documentLink.length > 0 && eMode !== eVoyagerStoryMode.eViewer && (
-                <VoyagerStory root={rootLink} document={documentLink} mode={getModeForVoyager(eMode)}
+                <VoyagerStory id='Voyager-Story' root={rootLink} document={documentLink} mode={getModeForVoyager(eMode)}
                     height='500px' width='100%'
                 />
             )}

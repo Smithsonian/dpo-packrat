@@ -14,7 +14,7 @@ import { eSystemObjectType } from '../../types/server';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../utils/repository';
 import NewTabLink from './NewTabLink';
 
-const useStyles = makeStyles(({ palette, breakpoints }) => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         color: palette.primary.dark
@@ -26,16 +26,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         borderRadius: 5,
     },
     label: {
-        [breakpoints.down('lg')]: {
-            fontSize: '0.8em'
-        },
+        fontSize: '0.7rem',
         color: 'white'
     },
     selectIcon: {
         color: Colors.defaults.white,
-        [breakpoints.down('lg')]: {
-            fontSize: '0.8em'
-        }
+        fontSize: '0.7rem'
     },
     menuItem: {
         fontSize: '0.8em'
@@ -67,10 +63,12 @@ function BreadcrumbsView(props: BreadcrumbsViewProps): React.ReactElement {
 const BreadcrumbSelect = withStyles(() => ({
     root: {
         color: Colors.defaults.white,
-        fontSize: '0.8em'
+        fontSize: '0.8em',
+        display: 'flex',
+        alignItems: 'center'
     },
     select: {
-        paddingRight: '0px !important',
+        paddingRight: '0px !important'
     }
 }))(Select);
 

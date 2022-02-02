@@ -10,7 +10,7 @@ import React from 'react';
 const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
         display: 'flex',
-        position: 'absolute',
+        position: 'fixed',
         zIndex: 100,
         backgroundColor: palette.primary.main,
         padding: 10,

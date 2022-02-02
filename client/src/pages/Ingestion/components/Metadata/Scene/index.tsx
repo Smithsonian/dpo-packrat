@@ -195,22 +195,22 @@ function Scene(props: SceneProps): React.ReactElement {
             </Box>
             {!idAsset && (
                 <Fragment>
-                    <Box mb={2}>
+                    <Box mb={2} width='60vw'>
                         <RelatedObjectsList
                             type={RelatedObjectType.Source}
                             relatedObjects={scene.sourceObjects}
                             onAdd={openSourceObjectModal}
                             onRemove={onRemoveSourceObject}
-                            relationshipLanguage='Parent(s)'
+                            relationshipLanguage='Parents'
                         />
                     </Box>
-                    <Box mb={2}>
+                    <Box mb={2} width='60vw'>
                         <RelatedObjectsList
                             type={RelatedObjectType.Derived}
                             relatedObjects={scene.derivedObjects}
                             onAdd={openDerivedObjectModal}
                             onRemove={onRemoveDerivedObject}
-                            relationshipLanguage='Child(ren)'
+                            relationshipLanguage='Children'
                         />
                     </Box>
                     <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />

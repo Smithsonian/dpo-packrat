@@ -165,7 +165,8 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
     return (
         <Box className={classes.AdminSearchFilterContainer}>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
-                <TextField className={classes.searchFilter} placeholder='Search License' type='search' value={searchFilter} id='searchFilter' label='Search Filter' onChange={handleSearchFilterChange} />
+                <label htmlFor='searchFilter' style={{ display: 'none' }}>Search License</label>
+                <TextField className={classes.searchFilter} placeholder='Search License' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
                 <Button className={classes.styledButton} style={{ right: '25px' }} onClick={search}>Search</Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>

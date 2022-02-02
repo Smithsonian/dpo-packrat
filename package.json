@@ -1,6 +1,6 @@
 {
   "name": "dpo-packrat",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "private": true,
   "license": "Apache-2.0",
   "description": "Data Repository and Workflow Management for 3D data captures, models, and scenes",
@@ -50,7 +50,7 @@
     "clean:docker": "docker-compose -f ./conf/docker/docker-compose.dev.yml down && docker system prune -f",
     "generate:server:prisma": "yarn workspace @dpo-packrat/server generate:prisma",
     "postinstall": "lerna run postinstall && yarn install:e2e",
-    "install:e2e": "cd e2e && yarn && cd ..",
+    "install:e2e": "cd e2e && yarn install --frozen-lockfile && cd ..",
     "lint": "yarn eslint --ext .js,.jsx,.ts,.tsx .",
     "lint:fix": "yarn prettier --write . && yarn lint --fix",
     "test": "yarn workspaces run test",

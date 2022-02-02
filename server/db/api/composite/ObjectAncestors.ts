@@ -6,6 +6,7 @@ import * as H from '../../../utils/helpers';
 import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
 import { RepositoryPath } from '../../../types/graphql';
+import * as COMMON from '../../../../client/src/types/server';
 
 type SystemObjectBased =
     | DBAPI.Unit
@@ -58,25 +59,25 @@ export class ObjectAncestors {
             }
         }
 
-        await this.objectToRepositoryPath(this.OG.unit, DBAPI.eSystemObjectType.eUnit, true);
-        await this.objectToRepositoryPath(this.OG.project, DBAPI.eSystemObjectType.eProject, true);
-        await this.objectToRepositoryPath(this.OG.subject, DBAPI.eSystemObjectType.eSubject, true);
-        await this.objectToRepositoryPath(this.OG.item, DBAPI.eSystemObjectType.eItem, true);
+        await this.objectToRepositoryPath(this.OG.unit, COMMON.eSystemObjectType.eUnit, true);
+        await this.objectToRepositoryPath(this.OG.project, COMMON.eSystemObjectType.eProject, true);
+        await this.objectToRepositoryPath(this.OG.subject, COMMON.eSystemObjectType.eSubject, true);
+        await this.objectToRepositoryPath(this.OG.item, COMMON.eSystemObjectType.eItem, true);
 
         // Provide special treatment of capture data, models, and scenes:  mix them together
-        // await this.objectToRepositoryPath(this.OG.captureData, DBAPI.eSystemObjectType.eCaptureData, true);
-        // await this.objectToRepositoryPath(this.OG.model, DBAPI.eSystemObjectType.eModel, true);
-        // await this.objectToRepositoryPath(this.OG.scene, DBAPI.eSystemObjectType.eScene, true);
-        let DPOAncestors: RepositoryPath[] = await this.objectToRepositoryPath(this.OG.captureData, DBAPI.eSystemObjectType.eCaptureData, false);
-        DPOAncestors = DPOAncestors.concat(await this.objectToRepositoryPath(this.OG.model, DBAPI.eSystemObjectType.eModel, false));
-        DPOAncestors = DPOAncestors.concat(await this.objectToRepositoryPath(this.OG.scene, DBAPI.eSystemObjectType.eScene, false));
+        // await this.objectToRepositoryPath(this.OG.captureData, COMMON.eSystemObjectType.eCaptureData, true);
+        // await this.objectToRepositoryPath(this.OG.model, COMMON.eSystemObjectType.eModel, true);
+        // await this.objectToRepositoryPath(this.OG.scene, COMMON.eSystemObjectType.eScene, true);
+        let DPOAncestors: RepositoryPath[] = await this.objectToRepositoryPath(this.OG.captureData, COMMON.eSystemObjectType.eCaptureData, false);
+        DPOAncestors = DPOAncestors.concat(await this.objectToRepositoryPath(this.OG.model, COMMON.eSystemObjectType.eModel, false));
+        DPOAncestors = DPOAncestors.concat(await this.objectToRepositoryPath(this.OG.scene, COMMON.eSystemObjectType.eScene, false));
         if (DPOAncestors.length > 0)
             this.ancestorStack.push(DPOAncestors);
 
-        await this.objectToRepositoryPath(this.OG.intermediaryFile, DBAPI.eSystemObjectType.eIntermediaryFile, true);
-        await this.objectToRepositoryPath(this.OG.projectDocumentation, DBAPI.eSystemObjectType.eProjectDocumentation, true);
-        await this.objectToRepositoryPath(this.OG.actor, DBAPI.eSystemObjectType.eActor, true);
-        await this.objectToRepositoryPath(this.OG.stakeholder, DBAPI.eSystemObjectType.eStakeholder, true);
+        await this.objectToRepositoryPath(this.OG.intermediaryFile, COMMON.eSystemObjectType.eIntermediaryFile, true);
+        await this.objectToRepositoryPath(this.OG.projectDocumentation, COMMON.eSystemObjectType.eProjectDocumentation, true);
+        await this.objectToRepositoryPath(this.OG.actor, COMMON.eSystemObjectType.eActor, true);
+        await this.objectToRepositoryPath(this.OG.stakeholder, COMMON.eSystemObjectType.eStakeholder, true);
 
         // push asset owners onto ancestor stack before assets
         if (this.assetOwnerMap.size > 0) {
@@ -89,8 +90,8 @@ export class ObjectAncestors {
                 this.ancestorStack.push(ancestors);
         }
 
-        await this.objectToRepositoryPath(this.OG.asset, DBAPI.eSystemObjectType.eAsset, true);
-        await this.objectToRepositoryPath(this.OG.assetVersion, DBAPI.eSystemObjectType.eAssetVersion, true);
+        await this.objectToRepositoryPath(this.OG.asset, COMMON.eSystemObjectType.eAsset, true);
+        await this.objectToRepositoryPath(this.OG.assetVersion, COMMON.eSystemObjectType.eAssetVersion, true);
 
         // if we found our object, push it onto our stack at the end
         if (this.objectPath)
@@ -100,7 +101,7 @@ export class ObjectAncestors {
         return true;
     }
 
-    private async objectToRepositoryPath(objects: SystemObjectBased[] | null, eObjectType: DBAPI.eSystemObjectType, pushAncestors: boolean): Promise<RepositoryPath[]> {
+    private async objectToRepositoryPath(objects: SystemObjectBased[] | null, eObjectType: COMMON.eSystemObjectType, pushAncestors: boolean): Promise<RepositoryPath[]> {
         if (objects === null)
             return [];
 
@@ -166,16 +167,16 @@ export class ObjectAncestors {
             return ancestors;
 
         switch (eObjectType) {
-            case DBAPI.eSystemObjectType.eUnit:     this.unit       = ancestors[0]; break;
-            case DBAPI.eSystemObjectType.eProject:  this.project    = ancestors[0]; break;
-            case DBAPI.eSystemObjectType.eSubject:  this.subject    = ancestors[0]; break;
-            case DBAPI.eSystemObjectType.eItem:     this.item       = ancestors[0]; break;
+            case COMMON.eSystemObjectType.eUnit:     this.unit       = ancestors[0]; break;
+            case COMMON.eSystemObjectType.eProject:  this.project    = ancestors[0]; break;
+            case COMMON.eSystemObjectType.eSubject:  this.subject    = ancestors[0]; break;
+            case COMMON.eSystemObjectType.eItem:     this.item       = ancestors[0]; break;
         }
 
         if (pushAncestors)
             this.ancestorStack.push(ancestors);
 
-        // LOG.info(`ObjectAncestors.compute 1b-${DBAPI.eSystemObjectType[eObjectType]} ${ancestors.length}`, LOG.LS.eDB);
+        // LOG.info(`ObjectAncestors.compute 1b-${COMMON.eSystemObjectType[eObjectType]} ${ancestors.length}`, LOG.LS.eDB);
         return ancestors;
     }
 

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../db';
-// import * as H from '../../utils/helpers';
+import * as COMMON from '../../../client/src/types/server';
 import { LicenseCache } from '../../cache';
+// import * as H from '../../utils/helpers';
 // import * as LOG from '../../utils/logger';
 /*
 afterAll(async done => {
@@ -77,10 +78,10 @@ function licenseCacheTestWorker(eMode: eCacheTestMode): void {
         });
 
         test('Cache: LicenseCache.getLicenseByPublishedState ' + description, async () => {
-            expect(await LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadCC0)).toEqual(licenseCC0);
-            expect(await LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewDownloadRestriction)).toEqual(licenseDownload);
-            expect(await LicenseCache.getLicenseByEnum(DBAPI.eLicense.eViewOnly)).toEqual(licenseView);
-            expect(await LicenseCache.getLicenseByEnum(DBAPI.eLicense.eRestricted)).toEqual(licenseRestricted);
+            expect(await LicenseCache.getLicenseByEnum(COMMON.eLicense.eViewDownloadCC0)).toEqual(licenseCC0);
+            expect(await LicenseCache.getLicenseByEnum(COMMON.eLicense.eViewDownloadRestriction)).toEqual(licenseDownload);
+            expect(await LicenseCache.getLicenseByEnum(COMMON.eLicense.eViewOnly)).toEqual(licenseView);
+            expect(await LicenseCache.getLicenseByEnum(COMMON.eLicense.eRestricted)).toEqual(licenseRestricted);
         });
     });
 }

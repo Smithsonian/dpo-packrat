@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "rootDir": ".",
+    "rootDirs": [".", "../client/src/types"],
     "outDir": "build",
     "declaration": true,
     "skipLibCheck": true

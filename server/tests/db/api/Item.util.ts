@@ -1,5 +1,6 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 // import * as LOG from '../../../utils/logger';
 import { createIdentifierForSystemObject } from './Identifier.util';
 import { Item as ItemBase } from '@prisma/client';
@@ -15,7 +16,7 @@ export async function createItemTest(base: ItemBase): Promise<DBAPI.Item> {
 export async function createItemAndIDsForBagitTesting(base: ItemBase): Promise<DBAPI.Item> {
     const item: DBAPI.Item = await createItemTest(base);
 
-    const vIDTypeArk: DBAPI.Vocabulary | null = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eIdentifierIdentifierTypeARK) || null;
+    const vIDTypeArk: DBAPI.Vocabulary | null = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK) || null;
     let itemID1: DBAPI.Identifier | null = null;
     let itemID2: DBAPI.Identifier | null = null;
     let itemID3: DBAPI.Identifier | null = null;

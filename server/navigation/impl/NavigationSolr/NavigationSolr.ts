@@ -6,13 +6,12 @@ import { ClientRequest } from 'http';
 import * as NAV from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
+import * as COMMON from '../../../../client/src/types/server';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
-import { eSystemObjectType } from '../../../db';
 import { SolrClient, eSolrCore } from './SolrClient';
 import { IndexSolr } from './IndexSolr';
 import { Vocabulary } from '../../../types/graphql';
-import { eMetadata } from '../../interface';
 
 interface SolrQueryResult {
     result: any;
@@ -66,7 +65,7 @@ export class NavigationSolr implements NAV.INavigation {
         }
 
         // idRoot: number;                          // idSystemObject of item for which we should get children; 0 means get everything
-        if (filter.idRoot) {                        // objectsToDisplay: eSystemObjectType[];  // objects to display
+        if (filter.idRoot) {                        // objectsToDisplay: COMMON.eSystemObjectType[];  // objects to display
             // if we have no explicit object types to display, show the children
             if (!filter.objectsToDisplay || filter.objectsToDisplay.length == 0)
                 SQ = SQ.matchFilter('HierarchyParentID', filter.idRoot);
@@ -75,10 +74,10 @@ export class NavigationSolr implements NAV.INavigation {
                 SQ = await this.computeFilterParamFromSystemObjectType(SQ, filter.objectsToDisplay, 'CommonObjectType', '||');
             }
         } else {
-            // objectTypes: eSystemObjectType[];       // empty array means give all appropriate children types
-            const objectTypes: eSystemObjectType[] = filter.objectTypes;
+            // objectTypes: COMMON.eSystemObjectType[];       // empty array means give all appropriate children types
+            const objectTypes: COMMON.eSystemObjectType[] = filter.objectTypes;
             if (objectTypes.length == 0 && !filter.search)  // if we have no root specified, and we have no keyword search,
-                objectTypes.push(eSystemObjectType.eUnit);  // then restrict children types to "Units"
+                objectTypes.push(COMMON.eSystemObjectType.eUnit);  // then restrict children types to "Units"
             SQ = await this.computeFilterParamFromSystemObjectType(SQ, objectTypes, 'CommonObjectType', '||');
         }
 
@@ -88,20 +87,20 @@ export class NavigationSolr implements NAV.INavigation {
         // projects: number[];                     // idSystemObject[] for projects filter
         SQ = await this.computeFilterParamFromNumbers(SQ, filter.projects, 'HierarchyProjectID', '||');
 
-        // has: eSystemObjectType[];               // has system object filter
+        // has: COMMON.eSystemObjectType[];               // has system object filter
         SQ = await this.computeFilterParamFromSystemObjectType(SQ, filter.has, 'ChildrenObjectTypes', '&&');
 
-        // missing: eSystemObjectType[];           // missing system object filter
+        // missing: COMMON.eSystemObjectType[];           // missing system object filter
         SQ = await this.computeFilterParamFromSystemObjectType(SQ, filter.missing, '!ChildrenObjectTypes', '&&'); // TODO: does ! work here?
 
         // captureMethod: number[];                // idVocabulary[] for capture method filter
         // variantType: number[];                  // idVocabulary[] for variant type filter
         // modelPurpose: number[];                 // idVocabulary[] for model purpose filter
         // modelFileType: number[];                // idVocabulary[] for model file type filter
-        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.captureMethod, 'ChildrenCaptureMethods');
-        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.variantType, 'ChildrenVariantTypes');
-        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelPurpose, 'ChildrenModelPurposes');
-        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelFileType, 'ChildrenModelFileTypes');
+        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.captureMethod, 'ChildrenCaptureMethods', '||');
+        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.variantType, 'ChildrenVariantTypes', '||');
+        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelPurpose, 'ChildrenModelPurposes', '||');
+        SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelFileType, 'ChildrenModelFileTypes', '||');
 
         // dateCreatedFrom: Date | null;           // Date Created filter
         // dateCreatedTo: Date | null;             // Date Created filter
@@ -119,10 +118,10 @@ export class NavigationSolr implements NAV.INavigation {
                 SQ = SQ.rangeFilter([{ field: 'ChildrenDateCreated', start: fromFilter, end: toFilter }]);
         }
 
-        // metadataColumns: eMetadata[];           // empty array means give no metadata
+        // metadataColumns: COMMON.eMetadata[];           // empty array means give no metadata
         const filterColumns: string[] = ['id', 'CommonObjectType', 'CommonidObject', 'CommonName']; // fetch standard fields // don't need ChildrenID
         for (const metadataColumn of filter.metadataColumns) {
-            const filterColumn: string = eMetadata[metadataColumn];
+            const filterColumn: string = COMMON.eMetadata[metadataColumn];
             if (filterColumn)
                 filterColumns.push(filterColumn.substring(1)); // strip of "e" prefix (eHierarchyUnit -> HierarchyUnit)
             else
@@ -149,14 +148,16 @@ export class NavigationSolr implements NAV.INavigation {
         return true;
     }
 
-    private async computeFilterParamFromSystemObjectType(SQ: solr.Query, systemObjectTypes: eSystemObjectType[], filterSchema: string, operator: string): Promise<solr.Query> {
+    private async computeFilterParamFromSystemObjectType(SQ: solr.Query, systemObjectTypes: COMMON.eSystemObjectType[], filterSchema: string, operator: string): Promise<solr.Query> {
         const filterValueList: string[] | null = await this.transformSystemObjectTypeArrayToStrings(systemObjectTypes);
         return this.computeFilterParamFromStrings(SQ, filterValueList, filterSchema, operator);
     }
 
-    private async computeFilterParamFromVocabIDArray(SQ: solr.Query, vocabFilterIDs: number[], filterSchema: string): Promise<solr.Query> {
+    private async computeFilterParamFromVocabIDArray(SQ: solr.Query, vocabFilterIDs: number[], filterSchema: string, operator?: string | undefined): Promise<solr.Query> {
+        if (operator === undefined)
+            operator = '&&';
         const filterValueList: string[] | null = await this.transformVocabIDArrayToStrings(vocabFilterIDs);
-        return this.computeFilterParamFromStrings(SQ, filterValueList, filterSchema, '&&');
+        return this.computeFilterParamFromStrings(SQ, filterValueList, filterSchema, operator);
     }
 
     private computeFilterParamFromStrings(SQ: solr.Query, filterValueList: string[] | null, filterSchema: string, operator: string): solr.Query  {
@@ -185,7 +186,7 @@ export class NavigationSolr implements NAV.INavigation {
         return SQ.matchFilter(filterSchema, filterParam);
     }
 
-    private async transformSystemObjectTypeArrayToStrings(systemObjectTypes: eSystemObjectType[]): Promise<string[] | null> {
+    private async transformSystemObjectTypeArrayToStrings(systemObjectTypes: COMMON.eSystemObjectType[]): Promise<string[] | null> {
         const termList: string[] = [];
         for (const systemObjectType of systemObjectTypes) {
             const filterValue = DBAPI.SystemObjectTypeToName(systemObjectType);
@@ -260,81 +261,81 @@ export class NavigationSolr implements NAV.INavigation {
         return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
-    private computeNavMetadata(doc: any, metadataColumns: NAV.eMetadata[]): string[] {
+    private computeNavMetadata(doc: any, metadataColumns: COMMON.eMetadata[]): string[] {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eCommonName:                         metadata.push(this.computeMetadataFromString(doc.CommonName)); break;
-                case NAV.eMetadata.eCommonDescription:                  metadata.push(this.computeMetadataFromString(doc.CommonDescription)); break;
-                case NAV.eMetadata.eCommonIdentifier:                   metadata.push(this.computeMetadataFromStringArray(doc.CommonIdentifier)); break;
-                case NAV.eMetadata.eCommonDateCreated:                  metadata.push(this.computeMetadataFromDate(doc.CommonDateCreated)); break;
-                case NAV.eMetadata.eCommonOrganizationName:             metadata.push(this.computeMetadataFromString(doc.CommonOrganizationName)); break;
-                case NAV.eMetadata.eHierarchyUnit:                      metadata.push(this.computeMetadataFromStringArray(doc.HierarchyUnit)); break;
-                case NAV.eMetadata.eHierarchyProject:                   metadata.push(this.computeMetadataFromStringArray(doc.HierarchyProject)); break;
-                case NAV.eMetadata.eHierarchyItem:                      metadata.push(this.computeMetadataFromStringArray(doc.HierarchyItem)); break;
-                case NAV.eMetadata.eHierarchySubject:                   metadata.push(this.computeMetadataFromStringArray(doc.HierarchySubject)); break;
-                case NAV.eMetadata.eUnitARKPrefix:                      metadata.push(this.computeMetadataFromString(doc.UnitARKPrefix)); break;
-                case NAV.eMetadata.eSubjectIdentifierPreferred:         metadata.push(this.computeMetadataFromString(doc.SubjectIdentifierPreferred)); break;
-                case NAV.eMetadata.eItemEntireSubject:                  metadata.push(this.computeMetadataFromBoolean(doc.ItemEntireSubject)); break;
-                case NAV.eMetadata.eCDCaptureMethod:                    metadata.push(this.computeMetadataFromString(doc.CDCaptureMethod)); break;
-                case NAV.eMetadata.eCDDatasetType:                      metadata.push(this.computeMetadataFromString(doc.CDCaptureDatasetType)); break;
-                case NAV.eMetadata.eCDDatasetFieldID:                   metadata.push(this.computeMetadataFromNumber(doc.CDCaptureDatasetFieldID)); break;
-                case NAV.eMetadata.eCDItemPositionType:                 metadata.push(this.computeMetadataFromString(doc.CDItemPositionType)); break;
-                case NAV.eMetadata.eCDItemPositionFieldID:              metadata.push(this.computeMetadataFromNumber(doc.CDItemPositionFieldID)); break;
-                case NAV.eMetadata.eCDItemArrangementFieldID:           metadata.push(this.computeMetadataFromNumber(doc.CDItemArrangementFieldID)); break;
-                case NAV.eMetadata.eCDFocusType:                        metadata.push(this.computeMetadataFromString(doc.CDFocusType)); break;
-                case NAV.eMetadata.eCDLightSourceType:                  metadata.push(this.computeMetadataFromString(doc.CDLightSourceType)); break;
-                case NAV.eMetadata.eCDBackgroundRemovalMethod:          metadata.push(this.computeMetadataFromString(doc.CDBackgroundRemovalMethod)); break;
-                case NAV.eMetadata.eCDClusterType:                      metadata.push(this.computeMetadataFromString(doc.CDClusterType)); break;
-                case NAV.eMetadata.eCDClusterGeometryFieldID:           metadata.push(this.computeMetadataFromNumber(doc.CDClusterGeometryFieldID)); break;
-                case NAV.eMetadata.eCDCameraSettingsUniform:            metadata.push(this.computeMetadataFromBoolean(doc.CDCameraSettingsUniform)); break;
-                case NAV.eMetadata.eCDVariantType:                      metadata.push(this.computeMetadataFromStringArray(doc.CDVariantType)); break;
-                case NAV.eMetadata.eModelCreationMethod:                metadata.push(this.computeMetadataFromString(doc.ModelCreationMethod)); break;
-                case NAV.eMetadata.eModelModality:                      metadata.push(this.computeMetadataFromString(doc.ModelModality)); break;
-                case NAV.eMetadata.eModelUnits:                         metadata.push(this.computeMetadataFromString(doc.ModelUnits)); break;
-                case NAV.eMetadata.eModelPurpose:                       metadata.push(this.computeMetadataFromString(doc.ModelPurpose)); break;
-                case NAV.eMetadata.eModelFileType:                      metadata.push(this.computeMetadataFromStringArray(doc.ModelFileType)); break;
-                case NAV.eMetadata.eModelRoughness:                     metadata.push(this.computeMetadataFromNumberArray(doc.ModelRoughness)); break;
-                case NAV.eMetadata.eModelMetalness:                     metadata.push(this.computeMetadataFromNumberArray(doc.ModelMetalness)); break;
-                case NAV.eMetadata.eModelPointCount:                    metadata.push(this.computeMetadataFromNumberArray(doc.ModelPointCount)); break;
-                case NAV.eMetadata.eModelFaceCount:                     metadata.push(this.computeMetadataFromNumberArray(doc.ModelFaceCount)); break;
-                case NAV.eMetadata.eModelIsWatertight:                  metadata.push(this.computeMetadataFromBooleanArray(doc.ModelIsWatertight)); break;
-                case NAV.eMetadata.eModelHasNormals:                    metadata.push(this.computeMetadataFromBooleanArray(doc.ModelHasNormals)); break;
-                case NAV.eMetadata.eModelHasVertexColor:                metadata.push(this.computeMetadataFromBooleanArray(doc.ModelHasVertexColor)); break;
-                case NAV.eMetadata.eModelHasUVSpace:                    metadata.push(this.computeMetadataFromBooleanArray(doc.ModelHasUVSpace)); break;
-                case NAV.eMetadata.eModelBoundingBoxP1X:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP1X)); break;
-                case NAV.eMetadata.eModelBoundingBoxP1Y:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP1Y)); break;
-                case NAV.eMetadata.eModelBoundingBoxP1Z:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP1Z)); break;
-                case NAV.eMetadata.eModelBoundingBoxP2X:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP2X)); break;
-                case NAV.eMetadata.eModelBoundingBoxP2Y:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP2Y)); break;
-                case NAV.eMetadata.eModelBoundingBoxP2Z:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP2Z)); break;
-                case NAV.eMetadata.eModelUVMapEdgeLength:               metadata.push(this.computeMetadataFromNumberArray(doc.ModelUVMapEdgeLength)); break;
-                case NAV.eMetadata.eModelChannelPosition:               metadata.push(this.computeMetadataFromNumberArray(doc.ModelChannelPosition)); break;
-                case NAV.eMetadata.eModelChannelWidth:                  metadata.push(this.computeMetadataFromNumberArray(doc.ModelChannelWidth)); break;
-                case NAV.eMetadata.eModelUVMapType:                     metadata.push(this.computeMetadataFromStringArray(doc.ModelUVMapType)); break;
-                case NAV.eMetadata.eSceneEdanUUID:                      metadata.push(this.computeMetadataFromBoolean(doc.SceneEdanUUID)); break;
-                case NAV.eMetadata.eScenePosedAndQCd:                   metadata.push(this.computeMetadataFromBoolean(doc.ScenePosedAndQCd)); break;
-                case NAV.eMetadata.eSceneApprovedForPublication:        metadata.push(this.computeMetadataFromBoolean(doc.SceneApprovedForPublication)); break;
-                case NAV.eMetadata.eSceneCountScene:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountScene)); break;
-                case NAV.eMetadata.eSceneCountNode:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountNode)); break;
-                case NAV.eMetadata.eSceneCountCamera:                   metadata.push(this.computeMetadataFromNumber(doc.SceneCountCamera)); break;
-                case NAV.eMetadata.eSceneCountLight:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountLight)); break;
-                case NAV.eMetadata.eSceneCountModel:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountModel)); break;
-                case NAV.eMetadata.eSceneCountMeta:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountMeta)); break;
-                case NAV.eMetadata.eSceneCountSetup:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountSetup)); break;
-                case NAV.eMetadata.eSceneCountTour:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountTour)); break;
-                case NAV.eMetadata.eAssetType:                          metadata.push(this.computeMetadataFromString(doc.AssetType)); break;
-                case NAV.eMetadata.eAVFileName:                         metadata.push(this.computeMetadataFromStringArray(doc.AVFileName)); break;
-                case NAV.eMetadata.eAVFilePath:                         metadata.push(this.computeMetadataFromString(doc.AVFilePath)); break;
-                case NAV.eMetadata.eAVUserCreator:                      metadata.push(this.computeMetadataFromString(doc.AVUserCreator)); break;
-                case NAV.eMetadata.eAVStorageHash:                      metadata.push(this.computeMetadataFromString(doc.AVStorageHash)); break;
-                case NAV.eMetadata.eAVStorageSize:                      metadata.push(this.computeMetadataFromNumber(doc.AVStorageSize)); break;
-                case NAV.eMetadata.eAVIngested:                         metadata.push(this.computeMetadataFromBoolean(doc.AVIngested)); break;
-                case NAV.eMetadata.eAVBulkIngest:                       metadata.push(this.computeMetadataFromBoolean(doc.AVBulkIngest)); break;
-                case NAV.eMetadata.eStakeholderEmailAddress:            metadata.push(this.computeMetadataFromString(doc.StakeholderEmailAddress)); break;
-                case NAV.eMetadata.eStakeholderPhoneNumberMobile:       metadata.push(this.computeMetadataFromString(doc.StakeholderPhoneNumberMobile)); break;
-                case NAV.eMetadata.eStakeholderPhoneNumberOffice:       metadata.push(this.computeMetadataFromString(doc.StakeholderPhoneNumberOffice)); break;
-                case NAV.eMetadata.eStakeholderMailingAddress:          metadata.push(this.computeMetadataFromString(doc.StakeholderMailingAddress)); break;
+                case COMMON.eMetadata.eCommonName:                         metadata.push(this.computeMetadataFromString(doc.CommonName)); break;
+                case COMMON.eMetadata.eCommonDescription:                  metadata.push(this.computeMetadataFromString(doc.CommonDescription)); break;
+                case COMMON.eMetadata.eCommonIdentifier:                   metadata.push(this.computeMetadataFromStringArray(doc.CommonIdentifier)); break;
+                case COMMON.eMetadata.eCommonDateCreated:                  metadata.push(this.computeMetadataFromDate(doc.CommonDateCreated)); break;
+                case COMMON.eMetadata.eCommonOrganizationName:             metadata.push(this.computeMetadataFromString(doc.CommonOrganizationName)); break;
+                case COMMON.eMetadata.eHierarchyUnit:                      metadata.push(this.computeMetadataFromStringArray(doc.HierarchyUnit)); break;
+                case COMMON.eMetadata.eHierarchyProject:                   metadata.push(this.computeMetadataFromStringArray(doc.HierarchyProject)); break;
+                case COMMON.eMetadata.eHierarchyItem:                      metadata.push(this.computeMetadataFromStringArray(doc.HierarchyItem)); break;
+                case COMMON.eMetadata.eHierarchySubject:                   metadata.push(this.computeMetadataFromStringArray(doc.HierarchySubject)); break;
+                case COMMON.eMetadata.eUnitARKPrefix:                      metadata.push(this.computeMetadataFromString(doc.UnitARKPrefix)); break;
+                case COMMON.eMetadata.eSubjectIdentifierPreferred:         metadata.push(this.computeMetadataFromString(doc.SubjectIdentifierPreferred)); break;
+                case COMMON.eMetadata.eItemEntireSubject:                  metadata.push(this.computeMetadataFromBoolean(doc.ItemEntireSubject)); break;
+                case COMMON.eMetadata.eCDCaptureMethod:                    metadata.push(this.computeMetadataFromString(doc.CDCaptureMethod)); break;
+                case COMMON.eMetadata.eCDDatasetType:                      metadata.push(this.computeMetadataFromString(doc.CDCaptureDatasetType)); break;
+                case COMMON.eMetadata.eCDDatasetFieldID:                   metadata.push(this.computeMetadataFromNumber(doc.CDCaptureDatasetFieldID)); break;
+                case COMMON.eMetadata.eCDItemPositionType:                 metadata.push(this.computeMetadataFromString(doc.CDItemPositionType)); break;
+                case COMMON.eMetadata.eCDItemPositionFieldID:              metadata.push(this.computeMetadataFromNumber(doc.CDItemPositionFieldID)); break;
+                case COMMON.eMetadata.eCDItemArrangementFieldID:           metadata.push(this.computeMetadataFromNumber(doc.CDItemArrangementFieldID)); break;
+                case COMMON.eMetadata.eCDFocusType:                        metadata.push(this.computeMetadataFromString(doc.CDFocusType)); break;
+                case COMMON.eMetadata.eCDLightSourceType:                  metadata.push(this.computeMetadataFromString(doc.CDLightSourceType)); break;
+                case COMMON.eMetadata.eCDBackgroundRemovalMethod:          metadata.push(this.computeMetadataFromString(doc.CDBackgroundRemovalMethod)); break;
+                case COMMON.eMetadata.eCDClusterType:                      metadata.push(this.computeMetadataFromString(doc.CDClusterType)); break;
+                case COMMON.eMetadata.eCDClusterGeometryFieldID:           metadata.push(this.computeMetadataFromNumber(doc.CDClusterGeometryFieldID)); break;
+                case COMMON.eMetadata.eCDCameraSettingsUniform:            metadata.push(this.computeMetadataFromBoolean(doc.CDCameraSettingsUniform)); break;
+                case COMMON.eMetadata.eCDVariantType:                      metadata.push(this.computeMetadataFromStringArray(doc.CDVariantType)); break;
+                case COMMON.eMetadata.eModelCreationMethod:                metadata.push(this.computeMetadataFromString(doc.ModelCreationMethod)); break;
+                case COMMON.eMetadata.eModelModality:                      metadata.push(this.computeMetadataFromString(doc.ModelModality)); break;
+                case COMMON.eMetadata.eModelUnits:                         metadata.push(this.computeMetadataFromString(doc.ModelUnits)); break;
+                case COMMON.eMetadata.eModelPurpose:                       metadata.push(this.computeMetadataFromString(doc.ModelPurpose)); break;
+                case COMMON.eMetadata.eModelFileType:                      metadata.push(this.computeMetadataFromStringArray(doc.ModelFileType)); break;
+                case COMMON.eMetadata.eModelRoughness:                     metadata.push(this.computeMetadataFromNumberArray(doc.ModelRoughness)); break;
+                case COMMON.eMetadata.eModelMetalness:                     metadata.push(this.computeMetadataFromNumberArray(doc.ModelMetalness)); break;
+                case COMMON.eMetadata.eModelPointCount:                    metadata.push(this.computeMetadataFromNumberArray(doc.ModelPointCount)); break;
+                case COMMON.eMetadata.eModelFaceCount:                     metadata.push(this.computeMetadataFromNumberArray(doc.ModelFaceCount)); break;
+                case COMMON.eMetadata.eModelIsWatertight:                  metadata.push(this.computeMetadataFromBooleanArray(doc.ModelIsWatertight)); break;
+                case COMMON.eMetadata.eModelHasNormals:                    metadata.push(this.computeMetadataFromBooleanArray(doc.ModelHasNormals)); break;
+                case COMMON.eMetadata.eModelHasVertexColor:                metadata.push(this.computeMetadataFromBooleanArray(doc.ModelHasVertexColor)); break;
+                case COMMON.eMetadata.eModelHasUVSpace:                    metadata.push(this.computeMetadataFromBooleanArray(doc.ModelHasUVSpace)); break;
+                case COMMON.eMetadata.eModelBoundingBoxP1X:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP1X)); break;
+                case COMMON.eMetadata.eModelBoundingBoxP1Y:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP1Y)); break;
+                case COMMON.eMetadata.eModelBoundingBoxP1Z:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP1Z)); break;
+                case COMMON.eMetadata.eModelBoundingBoxP2X:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP2X)); break;
+                case COMMON.eMetadata.eModelBoundingBoxP2Y:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP2Y)); break;
+                case COMMON.eMetadata.eModelBoundingBoxP2Z:                metadata.push(this.computeMetadataFromNumberArray(doc.ModelBoundingBoxP2Z)); break;
+                case COMMON.eMetadata.eModelUVMapEdgeLength:               metadata.push(this.computeMetadataFromNumberArray(doc.ModelUVMapEdgeLength)); break;
+                case COMMON.eMetadata.eModelChannelPosition:               metadata.push(this.computeMetadataFromNumberArray(doc.ModelChannelPosition)); break;
+                case COMMON.eMetadata.eModelChannelWidth:                  metadata.push(this.computeMetadataFromNumberArray(doc.ModelChannelWidth)); break;
+                case COMMON.eMetadata.eModelUVMapType:                     metadata.push(this.computeMetadataFromStringArray(doc.ModelUVMapType)); break;
+                case COMMON.eMetadata.eSceneEdanUUID:                      metadata.push(this.computeMetadataFromBoolean(doc.SceneEdanUUID)); break;
+                case COMMON.eMetadata.eScenePosedAndQCd:                   metadata.push(this.computeMetadataFromBoolean(doc.ScenePosedAndQCd)); break;
+                case COMMON.eMetadata.eSceneApprovedForPublication:        metadata.push(this.computeMetadataFromBoolean(doc.SceneApprovedForPublication)); break;
+                case COMMON.eMetadata.eSceneCountScene:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountScene)); break;
+                case COMMON.eMetadata.eSceneCountNode:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountNode)); break;
+                case COMMON.eMetadata.eSceneCountCamera:                   metadata.push(this.computeMetadataFromNumber(doc.SceneCountCamera)); break;
+                case COMMON.eMetadata.eSceneCountLight:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountLight)); break;
+                case COMMON.eMetadata.eSceneCountModel:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountModel)); break;
+                case COMMON.eMetadata.eSceneCountMeta:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountMeta)); break;
+                case COMMON.eMetadata.eSceneCountSetup:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountSetup)); break;
+                case COMMON.eMetadata.eSceneCountTour:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountTour)); break;
+                case COMMON.eMetadata.eAssetType:                          metadata.push(this.computeMetadataFromString(doc.AssetType)); break;
+                case COMMON.eMetadata.eAVFileName:                         metadata.push(this.computeMetadataFromStringArray(doc.AVFileName)); break;
+                case COMMON.eMetadata.eAVFilePath:                         metadata.push(this.computeMetadataFromString(doc.AVFilePath)); break;
+                case COMMON.eMetadata.eAVUserCreator:                      metadata.push(this.computeMetadataFromString(doc.AVUserCreator)); break;
+                case COMMON.eMetadata.eAVStorageHash:                      metadata.push(this.computeMetadataFromString(doc.AVStorageHash)); break;
+                case COMMON.eMetadata.eAVStorageSize:                      metadata.push(this.computeMetadataFromNumber(doc.AVStorageSize)); break;
+                case COMMON.eMetadata.eAVIngested:                         metadata.push(this.computeMetadataFromBoolean(doc.AVIngested)); break;
+                case COMMON.eMetadata.eAVBulkIngest:                       metadata.push(this.computeMetadataFromBoolean(doc.AVBulkIngest)); break;
+                case COMMON.eMetadata.eStakeholderEmailAddress:            metadata.push(this.computeMetadataFromString(doc.StakeholderEmailAddress)); break;
+                case COMMON.eMetadata.eStakeholderPhoneNumberMobile:       metadata.push(this.computeMetadataFromString(doc.StakeholderPhoneNumberMobile)); break;
+                case COMMON.eMetadata.eStakeholderPhoneNumberOffice:       metadata.push(this.computeMetadataFromString(doc.StakeholderPhoneNumberOffice)); break;
+                case COMMON.eMetadata.eStakeholderMailingAddress:          metadata.push(this.computeMetadataFromString(doc.StakeholderMailingAddress)); break;
                     break;
             }
         }

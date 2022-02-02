@@ -256,7 +256,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 break;
             }
         }
-        set({ search: keyword });
+        set({ search: keyword, loading: true });
         setCookieToState();
         initializeTree();
     },

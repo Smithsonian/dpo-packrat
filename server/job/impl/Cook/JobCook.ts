@@ -12,7 +12,7 @@ import * as H from '../../../utils/helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions, CreateReadStreamOptions } from 'webdav';
 import { Writable, Readable } from 'stream';
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, AxiosError } from 'axios';
 import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
 import * as path from 'path';
 
@@ -171,15 +171,29 @@ export abstract class JobCook<T> extends JobPackrat {
 
                     if (axiosResponse?.status === 201)
                         break; // success, continue
-                    else
-                        LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl} unexpected response ${axiosResponse?.status}`, LOG.LS.eJOB);
-                } catch (error) {
-                    const message: string | null = (error instanceof Error) ? error.message : null;
-                    LOG.info(`JobCook [${this.name()}] creating job via ${requestUrl} failed with error ${message}`, LOG.LS.eJOB);
+                    else {
+                        res.error = `JobCook [${this.name()}] creating job: ${requestUrl} unexpected response ${axiosResponse?.status}`;
+                        LOG.info(res.error, LOG.LS.eJOB);
+                    }
+                } catch (err) {
+                    const message: string | null = (err instanceof Error) ? err.message : null;
+                    // if we cannot connect to Cook, try again:
+                    if (message && message.indexOf('getaddrinfo ENOTFOUND') > -1) {
+                        res= { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(err)}` };
+                        continue;
+                    }
 
-                    res = (message && message.indexOf('getaddrinfo ENOTFOUND') > -1)
-                        ? { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(error)}` }
-                        : { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
+                    const axiosResponse: AxiosResponse<any> | undefined = (err as AxiosError)?.response;
+                    const status: number | undefined = axiosResponse?.status;
+                    const error: string = `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed with error ${message}: ${JSON.stringify(axiosResponse?.data)}`;
+                    res = { success: false, error };
+
+                    // if we receive a 500 status, log this as an error and avoid retrying
+                    if (status === 500) {
+                        LOG.error(error, LOG.LS.eJOB);
+                        return res;
+                    }
+                    LOG.info(error, LOG.LS.eJOB);
                 }
 
                 if (++requestCount >= CookRequestRetryCount) {
