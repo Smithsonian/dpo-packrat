@@ -168,7 +168,8 @@ function AddProjectForm(): React.ReactElement {
                         Unit: unit,
                         Description: description
                     }
-                }
+                },
+                refetchQueries: ['getProjectList']
             });
             if (data?.createProject) {
                 toast.success('Project created successfully');
