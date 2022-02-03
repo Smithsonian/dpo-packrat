@@ -200,7 +200,8 @@ function AdminUnitsView(): React.ReactElement {
                     input: {
                         search: ''
                     }
-                }
+                },
+                fetchPolicy: 'no-cache'
             });
             setUnitList(initialUnitListQuery?.data?.getUnitsFromNameSearch?.Units);
         }
