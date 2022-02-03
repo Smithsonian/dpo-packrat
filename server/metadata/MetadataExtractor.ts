@@ -73,7 +73,10 @@ export class MetadataExtractor {
             return results;
 
         try {
-            const exifModule: ExifModule | null = await this.importModule('./ExtractorImageExiftool.ts');
+            // try to load .ts first, then fall back to .js ... needed for production builds!
+            let exifModule: ExifModule | null = await this.importModule('./ExtractorImageExiftool.ts', false);
+            if (!exifModule)
+                exifModule = await this.importModule('./ExtractorImageExiftool.js', true);
             if (exifModule) {
                 const extractor: IExtractor = new exifModule.ExtractorImageExiftool();
                 results = await extractor.initialize();
@@ -106,12 +109,15 @@ export class MetadataExtractor {
         return results;
     }
 
-    private async importModule(moduleName: string): Promise<ExifModule | null> { // eslint-disable-line @typescript-eslint/no-explicit-any
+    private async importModule(moduleName: string, exceptionsAreErrors: boolean): Promise<ExifModule | null> { // eslint-disable-line @typescript-eslint/no-explicit-any
         try {
             LOG.info(`MetadataExtractor.importModule ${moduleName}`, LOG.LS.eMETA);
             return await import(moduleName);
         } catch (err) {
-            LOG.error(`MetadataExtractor.importModule ${moduleName} FAILED`, LOG.LS.eMETA, err);
+            if (exceptionsAreErrors)
+                LOG.error(`MetadataExtractor.importModule ${moduleName} FAILED`, LOG.LS.eMETA, err);
+            else
+                LOG.info(`MetadataExtractor.importModule ${moduleName} FAILED: ${err}`, LOG.LS.eMETA);
             return null;
         }
     }
