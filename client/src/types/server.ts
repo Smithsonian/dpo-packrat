@@ -43,7 +43,7 @@ export enum eVocabularySetID {
 export enum eVocabularyID {
     eIdentifierIdentifierTypeARK,
     eIdentifierIdentifierTypeDOI,
-    eIdentifierIdentifierTypeUnitCMSID,
+    eIdentifierIdentifierTypeEdanRecordID,
     eAssetAssetTypeBulkIngestion,
     eAssetAssetTypeCaptureDataSetPhotogrammetry,
     eAssetAssetTypeCaptureDataSetDiconde,

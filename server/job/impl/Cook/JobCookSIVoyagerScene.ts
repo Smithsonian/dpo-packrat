@@ -40,6 +40,22 @@ export class JobCookSIVoyagerSceneParameters {
     svxFile?: string | undefined;
     metaDataFile?: string | undefined;
     outputFileBaseName?: string | undefined;
+
+    static async assembleParameters(idModel: number | undefined,
+        sourceMeshFile: string,
+        units: string,
+        sourceDiffuseMapFile: string | undefined = undefined,
+        svxFile: string | undefined = undefined,
+        metaDataFile: string | undefined = undefined,
+        outputFileBaseName: string | undefined = undefined): Promise<JobCookSIVoyagerSceneParameters> {
+
+        const modelSource: DBAPI.Model | null = idModel ? await DBAPI.Model.fetch(idModel) : null;
+        if (!modelSource)
+            return new JobCookSIVoyagerSceneParameters(idModel, sourceMeshFile, units, sourceDiffuseMapFile, svxFile, metaDataFile, outputFileBaseName);
+
+        const parameters: JobCookSIVoyagerSceneParameters = new JobCookSIVoyagerSceneParameters(idModel, sourceMeshFile, units, sourceDiffuseMapFile, svxFile, metaDataFile, outputFileBaseName);
+        return parameters;
+    }
 }
 
 export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParameters> {
@@ -112,15 +128,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         const scene: DBAPI.Scene = createScene ? svx.SvxExtraction.extractScene() : scenes[0];
         let asset: DBAPI.Asset | null = null;
         if (createScene) {
-            if (!await scene.create())
-                return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`);
-
-            // wire ModelSource to Scene
-            const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, scene);
-            if (!SOX)
-                return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Scene ${JSON.stringify(scene, H.Helpers.saferStringify)}: database error`);
-
-            // compute ItemParent of ModelSource; wire ItemParent to Scene
+            // compute ItemParent of ModelSource
             const SOModelSource: DBAPI.SystemObject | null = await modelSource.fetchSystemObject();
             if (!SOModelSource)
                 return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to compute system object from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
@@ -129,6 +137,17 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             if (!await OG.fetch())
                 return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to compute object graph from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
 
+            const sceneName: string = this.computeDefaultSceneName(OG);
+            scene.Name = sceneName;
+            if (!await scene.create())
+                return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`);
+
+            // wire ModelSource to Scene
+            const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, scene);
+            if (!SOX)
+                return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Scene ${JSON.stringify(scene, H.Helpers.saferStringify)}: database error`);
+
+            // wire ItemParent to Scene
             if (OG.item && OG.item.length > 0) {
                 const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(OG.item[0], scene);
                 if (!SOX2)
@@ -339,6 +358,29 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private async findMatchingModel(sceneSource: DBAPI.Scene, automationTag: string): Promise<DBAPI.Model | null> {
         const matches: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(null, sceneSource.idScene, automationTag);
         return matches && matches.length > 0 ? matches[0] : null;
+    }
+
+    private computeDefaultSceneName(OG: DBAPI.ObjectGraph): string {
+        const subjects: DBAPI.Subject[] | null = OG.subject;
+        const items: DBAPI.Item[] | null = OG.item;
+        if (subjects === null || subjects.length === 0 || items === null || items.length === 0)
+            return 'Scene';
+
+        if (items.length === 1) {               // Single item
+            if (items[0].EntireSubject)         // Comprising whole subject?; use "subject name"
+                return subjects[0].Name;
+            else                                // Comprising part of subject; use "subject name: item name"
+                return `${subjects[0].Name}: ${items[0].Name}`;
+        }
+
+        if (subjects.length === 1) {            // Multiple items, single subject, use "subject name: item1 name, item2 name, etc."
+            let name: string = `${subjects[0].Name}:`;
+            for (const item of items)
+                name += ` ${item.Name}`;
+            return name;
+        }
+
+        return 'Scene';                         // Multiple subjects, leave scene untitled
     }
 
     private async logError(errorBase: string): Promise<H.IOResults> {

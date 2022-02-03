@@ -112,9 +112,9 @@ export class VocabularyCache {
             switch (eVocabSetEnum) {
                 case COMMON.eVocabularySetID.eIdentifierIdentifierType: {
                     switch (vocabulary.Term) {
-                        case 'ARK':         eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeARK; break;
-                        case 'DOI':         eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeDOI; break;
-                        case 'Unit CMS ID': eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeUnitCMSID; break;
+                        case 'ARK':             eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeARK; break;
+                        case 'DOI':             eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeDOI; break;
+                        case 'Edan Record ID':  eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID; break;
                     }
                 } break;
 

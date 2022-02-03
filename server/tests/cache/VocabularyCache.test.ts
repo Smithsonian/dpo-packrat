@@ -92,7 +92,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 switch (eVocabID) {
                     case COMMON.eVocabularyID.eIdentifierIdentifierTypeARK: testVocabulary(vocabulary, 'ARK'); break;
                     case COMMON.eVocabularyID.eIdentifierIdentifierTypeDOI: testVocabulary(vocabulary, 'DOI'); break;
-                    case COMMON.eVocabularyID.eIdentifierIdentifierTypeUnitCMSID: testVocabulary(vocabulary, 'Unit CMS ID'); break;
+                    case COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID: testVocabulary(vocabulary, 'Edan Record ID'); break;
 
                     case COMMON.eVocabularyID.eAssetAssetTypeBulkIngestion: testVocabulary(vocabulary, 'Bulk Ingestion'); break;
                     case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry: testVocabulary(vocabulary, 'Capture Data Set: Photogrammetry'); break;
@@ -477,7 +477,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Unknown');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'ARK');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'DOI');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'Unit CMS ID');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'Edan Record ID');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierTypeActor, 'ORCID');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierTypeActor, 'ISNI');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eMetadataMetadataSource, 'Bulk Ingestion');
