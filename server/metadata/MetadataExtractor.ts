@@ -6,6 +6,7 @@ import { IExtractor, IExtractorResults } from './IExtractor';
 
 import { pathExists } from 'fs-extra';
 import { ExtractorImageExifr } from './ExtractorImageExifr';
+import * as path from 'path';
 // import { ExtractorImageExiftool } from './ExtractorImageExiftool'; Loaded dynamically due to install issues with exiftool-vendored when performed in a linux container from a non-linux system (windows or macos)
 type ExifModule = typeof import('./ExtractorImageExiftool');
 
@@ -74,9 +75,9 @@ export class MetadataExtractor {
 
         try {
             // try to load .ts first, then fall back to .js ... needed for production builds!
-            let exifModule: ExifModule | null = await this.importModule('./ExtractorImageExiftool.ts', false);
+            let exifModule: ExifModule | null = await this.importModule(path.join(__dirname, 'ExtractorImageExiftool.ts'), false);
             if (!exifModule)
-                exifModule = await this.importModule('./ExtractorImageExiftool.js', true);
+                exifModule = await this.importModule(path.join(__dirname, 'ExtractorImageExiftool.js'), true);
             if (exifModule) {
                 const extractor: IExtractor = new exifModule.ExtractorImageExiftool();
                 results = await extractor.initialize();
