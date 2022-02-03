@@ -10,7 +10,7 @@ import { toast } from 'react-toastify';
 import { DebounceInput } from 'react-debounce-input';
 import { GetLicenseDocument } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
-import { createLicense, updateLicense } from '../../hooks/useAdminview';
+import { createLicense, updateLicense } from '../../hooks/useAdminView';
 import { toTitleCase } from '../../../../constants/helperfunctions';
 import * as yup from 'yup';
 import { useLicenseStore } from '../../../../store';

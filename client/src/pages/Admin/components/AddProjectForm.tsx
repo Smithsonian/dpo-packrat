@@ -12,7 +12,7 @@ import clsx from 'clsx';
 import { LoadingButton } from '../../../components';
 import { CreateProjectDocument } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
-import { getUnitsList } from '../hooks/useAdminview';
+import { getUnitsList } from '../hooks/useAdminView';
 import { toTitleCase } from '../../../constants/helperfunctions';
 
 const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
@@ -168,7 +168,8 @@ function AddProjectForm(): React.ReactElement {
                         Unit: unit,
                         Description: description
                     }
-                }
+                },
+                refetchQueries: ['getProjectList', 'getIngestionProjectsForSubjects']
             });
             if (data?.createProject) {
                 toast.success('Project created successfully');
