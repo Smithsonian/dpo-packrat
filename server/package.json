@@ -27,8 +27,8 @@
   "scripts": {
     "start": "nodemon --ignore var/ --ignore build/ --ignore coverage/ --ignore node_modules/ --ignore tests/ --exec yarn ts-node index.ts -e ts,js,json,graphql",
     "start:prod": "node build/server/index.js",
-    "build:dev": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/server/",
-    "build:prod": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/server/",
+    "build:dev": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql assets/**/*.* build/server/",
+    "build:prod": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql assets/**/*.* build/server/",
     "clean": "rm -rf node_modules/ build/",
     "generate": "graphql-codegen --config ./graphql/codegen.yml && npx prisma db pull --schema=./db/prisma/schema.prisma && npx prisma generate --schema=./db/prisma/schema.prisma",
     "generate:graphql": "npx graphql-codegen --config ./graphql/codegen.yml",
