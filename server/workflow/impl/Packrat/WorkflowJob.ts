@@ -5,7 +5,7 @@ import * as JOB from '../../../job/interface';
 import * as REP from '../../../report/interface';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import { Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';

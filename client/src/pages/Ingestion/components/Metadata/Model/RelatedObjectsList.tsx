@@ -18,7 +18,7 @@ import { ViewableProps } from '../../../../../types/repository';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
 import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared';
 import { toast } from 'react-toastify';
-import { eSystemObjectType } from '../../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {

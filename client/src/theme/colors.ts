@@ -3,7 +3,7 @@
  *
  * Custom colors used in client.
  */
-import { eSystemObjectType } from '../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 
 type ColorMap = Record<string, string>;
 

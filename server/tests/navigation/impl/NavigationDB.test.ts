@@ -5,7 +5,7 @@ import * as CACHE from '../../../cache';
 import { ObjectIDAndType, SystemObjectBased, SystemObject } from '../../../db';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
 import { NAVIGATION_TYPE } from '../../../config';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 let nav: INavigation | null = null;
 const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();

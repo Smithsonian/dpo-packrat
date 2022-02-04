@@ -12,7 +12,7 @@
 import { Box, Button, Typography, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { NewTabLink, ToolTip } from '../../../../../components';
-import { eSystemObjectType, eIcon, eAssetGridColumnType, eLinkOrigin } from '../../../../../types/server';
+import { eSystemObjectType, eIcon, eAssetGridColumnType, eLinkOrigin } from '@dpo-packrat/common';
 import { getObjectAssets } from '../../../hooks/useDetailsView';
 import { getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';

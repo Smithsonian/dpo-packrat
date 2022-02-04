@@ -121,6 +121,7 @@ function SceneDataForm(props: SceneDataProps): React.ReactElement {
                                 checked={approvedForPublication}
                                 title='approvedForPublication-input'
                                 size='small'
+                                color='primary'
                             />
                         </TableCell>
                     </TableRow>
@@ -139,6 +140,7 @@ function SceneDataForm(props: SceneDataProps): React.ReactElement {
                                     checked={posedAndQCd}
                                     title='posedAndQCd-input'
                                     size='small'
+                                    color='primary'
                                 />
                             </Tooltip>
                         </TableCell>

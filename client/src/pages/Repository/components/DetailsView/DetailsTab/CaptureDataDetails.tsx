@@ -10,7 +10,7 @@ import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableCo
 import React, { useEffect } from 'react';
 import { DateInputField, Loader } from '../../../../../components';
 import { parseFoldersToState, useVocabularyStore } from '../../../../../store';
-import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
+import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from '../../../../Ingestion/components/Metadata/Photogrammetry/AssetContents';
@@ -58,7 +58,6 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     select: {
         height: 24,
-        padding: '0px 10px',
         background: palette.background.paper,
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         borderRadius: 5,
@@ -66,9 +65,9 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontSize: '0.8rem'
     },
     checkbox: {
-        border: '0px',
+        border: 'none !important',
         padding: '0px',
-        height: '16px',
+        height: '18px',
     },
     input: {
         height: 22,
@@ -225,6 +224,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetTypeSelect)}
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'datasetType')) }}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataDatasetType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -277,6 +277,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetFieldSelect)}
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'itemPositionType')) }}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataItemPositionType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -331,6 +332,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetFieldSelect)}
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'focusType')) }}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataFocusType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -349,6 +351,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetFieldSelect)}
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'lightsourceType')) }}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataLightSourceType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -367,6 +370,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetFieldSelect)}
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'backgroundRemovalMethod')) }}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -385,6 +389,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetFieldSelect)}
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'clusterType')) }}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataClusterType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -422,6 +427,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         disabled={disabled}
                                         size='small'
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'cameraSettingUniform')) }}
+                                        color='primary'
                                     />
                                 </TableCell>
                             </TableRow>

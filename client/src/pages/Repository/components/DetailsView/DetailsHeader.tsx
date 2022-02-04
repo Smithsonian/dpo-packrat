@@ -12,7 +12,7 @@ import { DebounceInput } from 'react-debounce-input';
 import { Helmet } from 'react-helmet';
 import { BreadcrumbsView } from '../../../../components';
 import { GetSystemObjectDetailsResult, RepositoryPath } from '../../../../types/graphql';
-import { eSystemObjectType } from '../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { getTermForSystemObjectType, isFieldUpdated } from '../../../../utils/repository';
 
 const useStyles = makeStyles(({ palette }) => ({

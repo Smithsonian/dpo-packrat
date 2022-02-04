@@ -10,7 +10,7 @@ import { withStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, TextArea } from '../../../../../components';
 import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore, useRepositoryStore, useSubjectStore, StateRelatedObject } from '../../../../../store';
-import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
+import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { withDefaultValueNumber, withDefaultValueBoolean } from '../../../../../utils/shared';
 import AssetContents from './AssetContents';
 import Description from './Description';
@@ -237,6 +237,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         onChange={setIdField}
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetTypeSelect)}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataDatasetType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -283,6 +284,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         onChange={setIdField}
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetFieldSelect)}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataItemPositionType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -331,6 +333,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         onChange={setIdField}
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetFieldSelect)}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataFocusType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -347,6 +350,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         onChange={setIdField}
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetFieldSelect)}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataLightSourceType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -363,6 +367,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         onChange={setIdField}
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetFieldSelect)}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -379,6 +384,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         onChange={setIdField}
                                         disableUnderline
                                         className={clsx(classes.select, classes.datasetFieldSelect)}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataClusterType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>

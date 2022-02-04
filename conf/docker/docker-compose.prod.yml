@@ -9,9 +9,6 @@ services:
             context: ../..
             dockerfile: ./conf/docker/proxy-prod.Dockerfile
             target: proxy
-        depends_on:
-            - packrat-client
-            - packrat-server
         ports:
             - $PACKRAT_PROXY_PORT:80
 
@@ -64,7 +61,9 @@ services:
             - PACKRAT_LOG_ROOT=$PACKRAT_LOG_ROOT
             - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
             - PACKRAT_SOLR_PORT=$PACKRAT_SOLR_PORT
-
+            - SHARP_IGNORE_GLOBAL_LIBVIPS=1
+            - npm_config_arch=x64
+            - npm_config_platform=linux
         depends_on:
             - db
 
@@ -88,8 +87,7 @@ services:
         ports:
             - $PACKRAT_SOLR_PORT:8983
         volumes:
-            - ../../server/config/solr/data/packrat:/var/solr/data/packrat
-            - ../../server/config/solr/data/packratMeta:/var/solr/data/packratMeta
+            - ../../server/config/solr/data/:/var/solr/data/
 
 networks:
     default:

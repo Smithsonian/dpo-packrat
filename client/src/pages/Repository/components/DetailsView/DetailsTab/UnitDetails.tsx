@@ -10,7 +10,7 @@ import { /*InputField,*/ Loader } from '../../../../../components';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 import { useDetailTabStore } from '../../../../../store';
-import { eSystemObjectType } from '../../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { DebounceInput } from 'react-debounce-input';
 import clsx from 'clsx';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';

@@ -15,7 +15,6 @@ import FieldType from '../shared/FieldType';
 export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     select: {
         width: ({ selectFitContent }: SelectFieldProps) => selectFitContent ? 'fit-content' : '54%',
-        padding: '0px 10px',
         background: palette.background.paper,
         border: ({ updated }: SelectFieldProps) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
         backgroundColor: ({ updated }: SelectFieldProps) => (updated ? palette.secondary.light : palette.background.paper),
@@ -70,7 +69,7 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
             padding={padding}
             gridGap={gridGap}
         >
-            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline inputProps={{ 'title': `${name} select`, style: { width: '100%' } }}>
+            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline inputProps={{ 'title': `${name} select`, style: { width: '100%' } }} SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}>
                 {options.map(({ idVocabulary, Term }, index) => (
                     <MenuItem key={index} value={idVocabulary}>
                         {Term}

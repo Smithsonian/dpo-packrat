@@ -9,7 +9,7 @@ import * as ZIP from '../../utils/zipStream';
 import * as STORE from '../../storage/interface';
 import { SvxReader } from '../../utils/parser';
 import { IDocument } from '../../types/voyager';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';

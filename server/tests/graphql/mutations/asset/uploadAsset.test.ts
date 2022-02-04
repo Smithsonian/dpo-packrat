@@ -6,7 +6,7 @@ import { UploadAssetInput, UploadStatus } from '../../../../types/graphql';
 import { Context } from '../../../../types/resolvers';
 import { CreateUserInput } from '../../../../types/graphql';
 import * as CACHE from '../../../../cache';
-import * as COMMON from '../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as H from '../../../../utils/helpers';
 import { Config } from '../../../../config';
 

@@ -76,6 +76,13 @@ function createOverrides(): Overrides {
             root: {
                 outline: '0.5px hidden rgba(141, 171, 196, 0.4)'
             }
+        },
+        MuiSelect: {
+            select: {
+                '&:focus': {
+                    backgroundColor: undefined
+                }
+            }
         }
     };
 }

@@ -18,7 +18,8 @@
     border: 0px;
     padding: 0px 0px 0px 6px;
     background: none;
-    width: 100%;
+    width: 93%;
+    height: 23px;
 }
 .react-datepicker__input-container input:focus,
 .react-datepicker-ignore-onclickoutside {
