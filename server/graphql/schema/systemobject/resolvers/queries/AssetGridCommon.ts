@@ -1,4 +1,4 @@
-import * as COMMON from '../../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export type ColumnObject = {
     colName: string;

@@ -8,7 +8,7 @@ import { formatDate } from '../../../../utils/shared';
 import SetIcon from '../../../../assets/images/Workflow_Set_Icon.svg';
 import ReportIcon from '../../../../assets/images/Workflow_Report_Icon.svg';
 import JobIcon from '../../../../assets/images/Workflow_Job_Icon.svg';
-import { eWorkflowListSortColumns } from '../../../../types/server';
+import { eWorkflowListSortColumns } from '@dpo-packrat/common';
 import { ePaginationChange } from '../../../../store';
 import { EmptyTable } from '../../../../components';
 import { truncateWithEllipses } from '../../../../constants/helperfunctions';

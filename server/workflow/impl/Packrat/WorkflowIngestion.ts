@@ -1,7 +1,7 @@
 import * as WF from '../../interface';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 // This Workflow represents an ingestion action, typically initiated by a user.
 // The workflow itself performs no work (ingestion is performed in the graphQl ingestData routine)

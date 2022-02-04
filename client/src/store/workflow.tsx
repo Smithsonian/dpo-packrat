@@ -1,7 +1,7 @@
 import create, { GetState, SetState } from 'zustand';
 import { WorkflowListResult, GetWorkflowListInput } from '../types/graphql';
 import { getWorkflowList } from '../pages/Workflow/hooks/useWorkflow';
-import { eWorkflowListSortColumns } from '../types/server';
+import { eWorkflowListSortColumns } from '@dpo-packrat/common';
 
 export enum ePaginationChange {
     eRowCount,

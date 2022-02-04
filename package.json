@@ -20,6 +20,10 @@
     {
       "name": "Karan Pratap Singh",
       "url": "https://github.com/karanpratapsingh"
+    },
+    {
+      "name": "Hsin Tung",
+      "url": "https://github.com/shintung00"
     }
   ],
   "scripts": {
@@ -42,8 +46,8 @@
     "dev:server": "docker-compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d packrat-server",
     "dev:client": "docker-compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d packrat-client",
     "prod": "docker-compose --env-file .env.prod -p dpo-packrat -f ./conf/docker/docker-compose.prod.yml up -d",
-    "deploy:dev": "sh ./scripts/deploy.sh dev",
-    "deploy:prod": "sh ./scripts/deploy.sh prod",
+    "deploy:dev": "sh ./conf/scripts/deploy.sh dev",
+    "deploy:prod": "sh ./conf/scripts/deploy.sh prod",
     "build:dev": "lerna run build:dev",
     "build:prod": "lerna run build:prod",
     "clean": "lerna run clean && rm -rf node_modules/",
@@ -87,7 +91,8 @@
     ],
     "packages": [
       "client",
-      "server"
+      "server",
+      "common"
     ]
   },
   "volta": {

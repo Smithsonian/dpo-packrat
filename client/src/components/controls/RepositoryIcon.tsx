@@ -4,7 +4,7 @@
  * This component renders the icons for the repository tree view item.
  */
 import React from 'react';
-import { eSystemObjectType } from '../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { getTermForSystemObjectType, getDetailsUrlForObject } from '../../utils/repository';
 
 export interface RepositoryIconProps {

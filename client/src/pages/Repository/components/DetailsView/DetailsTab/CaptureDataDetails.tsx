@@ -10,7 +10,7 @@ import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableCo
 import React, { useEffect } from 'react';
 import { DateInputField, Loader } from '../../../../../components';
 import { parseFoldersToState, useVocabularyStore } from '../../../../../store';
-import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
+import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from '../../../../Ingestion/components/Metadata/Photogrammetry/AssetContents';

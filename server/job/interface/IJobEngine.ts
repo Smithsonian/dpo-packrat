@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IJob } from './IJob';
 import { IReport } from '../../report/interface';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export interface JobCreationParameters {
     idJob: number | null;                   // Job ID              for job to start; either idJob or eJobType needs to be provided
