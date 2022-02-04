@@ -1,9 +1,8 @@
 /* eslint-disable react/jsx-max-props-per-line, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps*/
 
-import { Box, Button, Select, MenuItem } from '@material-ui/core';
+import { Box, Button, Select, MenuItem, Typography, Table, TableBody, TableCell, TableContainer, TableRow } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
-import { FieldType, InputField } from '../../../../components';
 import { useSubjectStore, StateIdentifier, useVocabularyStore, eObjectMetadataType, useObjectMetadataStore } from '../../../../store';
 import SearchList from '../../../Ingestion/components/SubjectItem/SearchList';
 import { RotationOriginInput, RotationQuaternionInput } from '../../../Repository/components/DetailsView/DetailsTab/SubjectDetails';
@@ -16,6 +15,9 @@ import { useHistory } from 'react-router-dom';
 import { CreateSubjectWithIdentifiersInput } from '../../../../types/graphql';
 import { Helmet } from 'react-helmet';
 import MetadataControlTable from '../../../Repository/components/DetailsView/DetailsTab/MetadataControlTable';
+import { DebounceInput } from 'react-debounce-input';
+import { useStyles as useTableStyles, updatedFieldStyling } from '../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
+import clsx from 'clsx';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -75,6 +77,7 @@ export type CoordinateValues = {
 
 function SubjectForm(): React.ReactElement {
     const classes = useStyles();
+    const tableClasses = useTableStyles();
     const history = useHistory();
     const [subjectName, setSubjectName] = useState('');
     const [subjectUnit, setSubjectUnit] = useState(0);
@@ -298,32 +301,104 @@ function SubjectForm(): React.ReactElement {
             </Helmet>
             <Box className={classes.content}>
                 <SearchList EdanOnly />
-                <Box style={{ marginTop: '10px', marginBottom: '10px', width: '600px', backgroundColor: 'rgb(236, 245, 253)' }}>
-                    <InputField viewMode required label='Name' value={subjectName} name='Name' onChange={({ target }) => setSubjectName(target.value)} updated={!validName} valueLeftAligned gridLabel={2} />
-                    <FieldType width='auto' direction='row' label='Unit' required containerProps={{ justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }} valueLeftAligned gridLabel={2}>
-                        <Select value={subjectUnit} onChange={handleUnitSelectChange} error={!validUnit} style={{ height: '21px' }}>
-                            <MenuItem value={0} key={0}>
-                                None
-                            </MenuItem>
-                            {unitList.map(unit => (
-                                <MenuItem value={unit.idUnit} key={unit.idUnit}>
-                                    {unit.Name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FieldType>
-                    <InputField viewMode required type='number' label='Latitude' value={coordinateValues.Latitude} name='Latitude' onChange={handleCoordinateChange} valueLeftAligned gridLabel={2} />
-                    <InputField viewMode required type='number' label='Longitude' value={coordinateValues.Longitude} name='Longitude' onChange={handleCoordinateChange} valueLeftAligned gridLabel={2} />
-                    <InputField viewMode required type='number' label='Altitude' value={coordinateValues.Altitude} name='Altitude' onChange={handleCoordinateChange} valueLeftAligned gridLabel={2} />
-                    <RotationOriginInput TS0={coordinateValues.TS0} TS1={coordinateValues.TS1} TS2={coordinateValues.TS2} onChange={handleCoordinateChange} ignoreUpdate />
-                    <RotationQuaternionInput
-                        R0={coordinateValues.R0}
-                        R1={coordinateValues.R1}
-                        R2={coordinateValues.R2}
-                        R3={coordinateValues.R3}
-                        onChange={handleCoordinateChange}
-                        ignoreUpdate
-                    />
+                <Box style={{ marginTop: '10px', marginBottom: '10px', width: '600px', backgroundColor: 'rgb(236, 245, 253)', paddingTop: '5px', paddingBottom: '5px', borderRadius: '5px' }}>
+                    <TableContainer>
+                        <Table>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Typography className={clsx(tableClasses.labelText)}>Name</Typography>
+                                    </TableCell>
+                                    <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='Name-input'
+                                            value={subjectName}
+                                            type='string'
+                                            name='Name'
+                                            className={tableClasses.input}
+                                            onChange={({ target }) => setSubjectName(target.value)}
+                                            style={{ ...updatedFieldStyling(!validName) }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Typography className={clsx(tableClasses.labelText)}>Unit</Typography>
+                                    </TableCell>
+                                    <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
+                                        <Select value={subjectUnit} onChange={handleUnitSelectChange} error={!validUnit} style={{ height: '18px', fontSize: '0.8rem' }} SelectDisplayProps={{ style: { paddingTop: 0, paddingBottom: 0, paddingLeft: '10px' } }}>
+                                            <MenuItem value={0} key={0}>
+                                                None
+                                            </MenuItem>
+                                            {unitList.map(unit => (
+                                                <MenuItem value={unit.idUnit} key={unit.idUnit}>
+                                                    {unit.Name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Typography className={tableClasses.labelText}>Latitude</Typography>
+                                    </TableCell>
+                                    <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='Latitude-input'
+                                            value={coordinateValues.Latitude || ''}
+                                            type='number'
+                                            name='Latitude'
+                                            onChange={handleCoordinateChange}
+                                            className={tableClasses.input}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Typography className={tableClasses.labelText}>Longitude</Typography>
+                                    </TableCell>
+                                    <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='Longitude-input'
+                                            value={coordinateValues.Longitude || ''}
+                                            type='number'
+                                            name='Longitude'
+                                            onChange={handleCoordinateChange}
+                                            className={tableClasses.input}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Typography className={tableClasses.labelText}>Altitude</Typography>
+                                    </TableCell>
+                                    <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='Altitude-input'
+                                            value={coordinateValues.Altitude || ''}
+                                            type='number'
+                                            name='Altitude'
+                                            onChange={handleCoordinateChange}
+                                            className={tableClasses.input}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <RotationOriginInput TS0={coordinateValues.TS0} TS1={coordinateValues.TS1} TS2={coordinateValues.TS2} onChange={handleCoordinateChange} ignoreUpdate />
+                                <RotationQuaternionInput
+                                    R0={coordinateValues.R0}
+                                    R1={coordinateValues.R1}
+                                    R2={coordinateValues.R2}
+                                    R3={coordinateValues.R3}
+                                    onChange={handleCoordinateChange}
+                                    ignoreUpdate
+                                />
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
                 </Box>
                 <AssetIdentifiers
                     systemCreated={systemCreated}
