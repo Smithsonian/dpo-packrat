@@ -258,6 +258,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             checked={withDefaultValueBoolean(retired, false)}
                             onChange={onRetiredUpdate}
                             {...getUpdatedCheckboxProps(isRetiredUpdated)}
+                            color='primary'
                         />
                     }
                 />

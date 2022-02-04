@@ -91,6 +91,7 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                             disabled={disabled}
                                             size='small'
                                             style={{ ...updatedFieldStyling(isFieldUpdated(ItemDetails, itemData, 'EntireSubject')) }}
+                                            color='primary'
                                         />
                                     </TableCell>
                                 </TableRow>

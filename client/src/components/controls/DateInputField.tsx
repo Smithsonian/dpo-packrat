@@ -17,8 +17,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         background: palette.background.paper,
         border: ({ updated }: DateInputFieldProps) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
         backgroundColor: ({ updated }: DateInputFieldProps) => (updated ? palette.secondary.light : palette.background.paper),
-        paddingLeft: '10px',
-        paddingRight: '10px',
+
         color: Colors.defaults.white,
         marginTop: 0,
         fontFamily: typography.fontFamily,
@@ -27,12 +26,12 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         },
         [breakpoints.down('lg')]: {
             '& > div':  {
-                width: '97px'
+                width: '117px'
             }
         },
         [breakpoints.up('xl')]: {
             '& > div': {
-                width: '114px'
+                width: '134px'
             }
         },
         borderRadius: 5,
@@ -68,7 +67,7 @@ function DateInputField(props: DateInputFieldProps): React.ReactElement {
                 InputProps={{ disableUnderline: true, style: { height: '100%' } }}
                 onChange={onChange}
                 autoOk
-                inputProps={{ style: { alignSelf: 'center' } }}
+                inputProps={{ style: { alignSelf: 'center', paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                 KeyboardButtonProps={{ style: { padding: 0 }, size: 'small' }}
             />
         </MuiPickersUtilsProvider>
