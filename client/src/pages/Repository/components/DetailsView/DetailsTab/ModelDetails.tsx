@@ -240,7 +240,7 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
                     {label}
                 </Typography>
             </div>
-            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline inputProps={{ 'title': `${name} select`, style: { width: '100%' } }} style={{ minWidth: '100%', width: 'fit-content' }}>
+            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline inputProps={{ 'title': `${name} select`, style: { width: '100%' } }} style={{ minWidth: '100%', width: 'fit-content' }} SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}>
                 {options.map(({ idVocabulary, Term }, index) => (
                     <MenuItem key={index} value={idVocabulary}>
                         {Term}
