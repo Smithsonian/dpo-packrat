@@ -74,10 +74,12 @@ export class MetadataExtractor {
             return results;
 
         try {
-            // try to load .ts first, then fall back to .js ... needed for production builds!
-            let exifModule: ExifModule | null = await this.importModule(path.join(__dirname, 'ExtractorImageExiftool.ts'), false);
-            if (!exifModule)
-                exifModule = await this.importModule(path.join(__dirname, 'ExtractorImageExiftool.js'), true);
+            const exifModule: ExifModule | null = await this.importModule(path.join(__dirname, 'ExtractorImageExiftool.ts'), false);
+            // Disabled for now, as importing ExtractorImageExiftool.ts seems to cause the current thread to never complete, or perhaps exit
+            // // try to load .ts first, then fall back to .js ... needed for production builds!
+            // let exifModule: ExifModule | null = await this.importModule(path.join(__dirname, 'ExtractorImageExiftool.ts'), false);
+            // if (!exifModule)
+            //     exifModule = await this.importModule(path.join(__dirname, 'ExtractorImageExiftool.js'), true);
             if (exifModule) {
                 const extractor: IExtractor = new exifModule.ExtractorImageExiftool();
                 results = await extractor.initialize();
@@ -87,7 +89,7 @@ export class MetadataExtractor {
                     return results;
                 }
             }
-            LOG.info(`MetadataExtractor.initializeExtractorImage failed to initialize exiftool: ${results.error}`, LOG.LS.eMETA);
+            LOG.info(`MetadataExtractor.initializeExtractorImage failed to initialize exiftool: ${results.error ?? 'ExtractorImageExiftool import failed'}`, LOG.LS.eMETA);
         } catch (err) {
             LOG.error('MetadataExtractor.initializeExtractorImage failed to initialize exiftool', LOG.LS.eMETA, err);
         }
