@@ -6,7 +6,7 @@ import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import { ObjectGraphDataEntry } from '../../../db';
 import { SolrClient, eSolrCore } from './SolrClient';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export class IndexSolr implements NAV.IIndexer {
     private objectGraphDatabase: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();

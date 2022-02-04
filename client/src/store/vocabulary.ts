@@ -7,7 +7,7 @@ import lodash from 'lodash';
 import create, { GetState, SetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
-import { eVocabularyID, eVocabularySetID } from '../types/server';
+import { eVocabularyID, eVocabularySetID } from '@dpo-packrat/common';
 
 export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
 export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;

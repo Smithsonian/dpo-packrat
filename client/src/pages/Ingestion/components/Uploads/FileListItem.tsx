@@ -92,7 +92,6 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     typeSelect: {
         maxWidth: 250,
         minWidth: 250,
-        padding: '0px 4px',
         borderRadius: 5,
         fontSize: '0.8rem',
         border: `1px solid ${fade(palette.primary.main, 0.3)}`,
@@ -225,13 +224,13 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     // completed list || pending list
     if (idAsset || (uploadPendingList && mode === String(eIngestionMode.eUpdate))) {
         content =  (
-            <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
+            <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}>
                 <MenuItem value={updateWorkflowFileType || type}>Update</MenuItem>
             </Select>
         );
     } else if (idSOAttachment || (uploadPendingList && mode === String(eIngestionMode.eAttach))) {
         content = (
-            <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline>
+            <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}>
                 <MenuItem value={updateWorkflowFileType || type}>Attachment</MenuItem>
             </Select>
         );
@@ -243,6 +242,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                 className={classes.typeSelect}
                 onChange={({ target: { value } }) => onChangeType(id, value as number)}
                 disableUnderline
+                SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}
             >
                 {typeOptions.map((option: VocabularyOption, index) => (
                     <MenuItem key={index} value={option.idVocabulary}>

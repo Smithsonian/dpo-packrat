@@ -16,7 +16,7 @@ import {
     CreateVocabularySetInput
 } from '../../../../types/graphql';
 import { Context } from '../../../../types/resolvers';
-import * as COMMON from '../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import { Asset, AssetVersion } from '@prisma/client';
 import * as DBAPI from '../../../../db';
 

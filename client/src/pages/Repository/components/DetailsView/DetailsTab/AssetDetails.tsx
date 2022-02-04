@@ -8,7 +8,7 @@ import { Box } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { Loader, SelectField } from '../../../../../components';
 import { useVocabularyStore } from '../../../../../store';
-import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
+import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import { DetailComponentProps } from './index';

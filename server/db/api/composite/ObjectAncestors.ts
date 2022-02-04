@@ -6,7 +6,7 @@ import * as H from '../../../utils/helpers';
 import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
 import { RepositoryPath } from '../../../types/graphql';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 type SystemObjectBased =
     | DBAPI.Unit

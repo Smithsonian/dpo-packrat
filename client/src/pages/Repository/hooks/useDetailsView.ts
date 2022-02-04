@@ -33,7 +33,7 @@ import {
     GetEdanUnitsNamedQueryResult,
     GetEdanUnitsNamedDocument,
 } from '../../../types/graphql';
-import { eSystemObjectType, ePublishedState } from '../../../types/server';
+import { eSystemObjectType, ePublishedState } from '@dpo-packrat/common';
 
 export function useObjectDetails(idSystemObject: number): GetSystemObjectDetailsQueryResult {
     return useQuery(GetSystemObjectDetailsDocument, {

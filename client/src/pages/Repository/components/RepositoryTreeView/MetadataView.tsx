@@ -6,7 +6,7 @@
 import lodash from 'lodash';
 import React from 'react';
 import { palette } from '../../../../theme';
-import { eMetadata } from '../../../../types/server';
+import { eMetadata } from '@dpo-packrat/common';
 import { computeMetadataViewWidth, trimmedMetadataField } from '../../../../utils/repository';
 
 export type TreeViewColumn = {
