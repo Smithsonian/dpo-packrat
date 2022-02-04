@@ -3,7 +3,7 @@
  */
 import create, { GetState, SetState } from 'zustand';
 import { useVocabularyStore } from './vocabulary';
-import { eVocabularyID } from '../types/server';
+import { eVocabularyID } from '@dpo-packrat/common';
 import lodash from 'lodash';
 
 type Identifier = {

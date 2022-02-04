@@ -9,7 +9,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import VoyagerExplorer from './DetailsTab/VoyagerExplorer';
 import VoyagerStory from './DetailsTab/VoyagerStory';
-import { eSystemObjectType } from '../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { getObjectAssets } from '../../hooks/useDetailsView';
 import { eVoyagerStoryMode, getRootSceneDownloadUrlForVoyager, getModeForVoyager, getVoyagerStoryUrl } from '../../../../utils/repository';
 import API from '../../../../api';

@@ -13,7 +13,7 @@ import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder
 import { ASL, LocalStore } from '../../../../../utils/localStore';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eEventKey } from '../../../../../event/interface/EventEnums';
-import * as COMMON from '../../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 interface ApolloFile {
     filename: string;

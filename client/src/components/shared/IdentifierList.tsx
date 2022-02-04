@@ -21,8 +21,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     identifierInput: {
         width: '75%',
         border: 'none',
-        padding: '0px 2px',
-        paddingBottom: 5,
+        padding: '5px 2px 5px 2px',
         backgroundColor: 'transparent',
         fontSize: '0.8em',
         fontWeight: typography.fontWeightRegular,
@@ -37,7 +36,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     identifierSelect: {
         width: 'fit-content',
-        padding: '0px 10px',
+        padding: 0,
         marginLeft: 20,
         background: palette.background.paper,
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
@@ -121,7 +120,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                                 placeholder='Add new identifer'
                                 disabled={disabled}
                             />
-                            <Select value={identifierType} className={classes.identifierSelect} name='identifierType' onChange={update} disableUnderline disabled={disabled}>
+                            <Select value={identifierType} className={classes.identifierSelect} name='identifierType' onChange={update} disableUnderline disabled={disabled} SelectDisplayProps={{ style: { paddingLeft: '10px' } }}>
                                 {identifierTypes.map(({ idVocabulary, Term }, index) => (
                                     <MenuItem key={index} value={idVocabulary}>
                                         {Term}

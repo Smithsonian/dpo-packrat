@@ -4,7 +4,7 @@ import * as CACHE from '../../cache';
 import * as COL from '../../collections/interface/';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 /** This class is used to create and update EDANMDM records, translating Packrat Subject data and metadata into the EdanMDMContent format required for EDANMDM records */
 export class PublishSubject {

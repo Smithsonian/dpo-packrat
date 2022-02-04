@@ -25,7 +25,7 @@ import RepositoryTreeHeader from './RepositoryTreeHeader';
 import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
 import InViewTreeItem from './InViewTreeItem';
-import { repositoryRowCount } from '../../../../types/server';
+import { repositoryRowCount } from '@dpo-packrat/common';
 
 const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     container: {

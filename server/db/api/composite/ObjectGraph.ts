@@ -4,7 +4,7 @@ import { Actor, Asset, AssetVersion, CaptureData, Identifier, IntermediaryFile, 
 import * as LOG from '../../../utils/logger';
 import * as L from 'lodash';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export type SystemObjectIDType = {
     idSystemObject: number;

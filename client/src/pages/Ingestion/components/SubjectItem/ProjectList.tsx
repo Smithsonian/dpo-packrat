@@ -12,7 +12,6 @@ import { useProjectStore } from '../../../../store';
 const useStyles = makeStyles(({ palette }) => ({
     projectSelect: {
         width: '100%',
-        padding: '0px 10px',
         backgroundColor: palette.background.paper,
         fontSize: '0.8em'
     }
@@ -35,6 +34,7 @@ function ProjectList(): React.ReactElement {
             renderValue={() => `${selectedProject?.name || 'none'}`}
             onChange={({ target: { value } }) => updateSelectedProject(value as number)}
             disableUnderline
+            SelectDisplayProps={{ style: { paddingLeft: '5px' } }}
         >
             <MenuItem value='none'>none</MenuItem>
             {uniqueSortedProjects.map(({ id, name }, index: number) => <MenuItem key={index} value={id}>{name}</MenuItem>)}
