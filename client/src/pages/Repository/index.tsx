@@ -14,7 +14,7 @@ import { Redirect, useLocation } from 'react-router';
 import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, REPOSITORY_ROUTE, resolveRoute, resolveSubRoute } from '../../constants';
 import { useControlStore, useRepositoryStore } from '../../store';
-import { eMetadata, eSystemObjectType } from '../../types/server';
+import { eMetadata, eSystemObjectType } from '@dpo-packrat/common';
 import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repository';
 import DetailsView from './components/DetailsView';
 import RepositoryFilterView from './components/RepositoryFilterView';

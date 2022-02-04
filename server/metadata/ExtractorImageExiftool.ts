@@ -1,7 +1,7 @@
 import { IExtractor, IExtractorResults } from './IExtractor';
 import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
-import * as COMMON from '../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 import path from 'path';
 import { ExifTool, Tags } from 'exiftool-vendored';

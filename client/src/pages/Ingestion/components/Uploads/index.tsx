@@ -19,7 +19,7 @@ import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, 
 import UploadCompleteList from './UploadCompleteList';
 import UploadFilesPicker from './UploadList';
 import useIngest from '../../hooks/useIngest';
-import { eVocabularySetID } from '../../../../types/server';
+import { eVocabularySetID } from '@dpo-packrat/common';
 import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({

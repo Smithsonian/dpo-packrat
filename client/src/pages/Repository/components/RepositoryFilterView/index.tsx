@@ -17,7 +17,7 @@ import { Loader } from '../../../../components';
 import { useRepositoryStore, useVocabularyStore } from '../../../../store';
 import { Colors, palette } from '../../../../theme';
 import { useGetFilterViewDataQuery } from '../../../../types/graphql';
-import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
+import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
 import FilterDate from './FilterDate';
 import FilterSelect from './FilterSelect';

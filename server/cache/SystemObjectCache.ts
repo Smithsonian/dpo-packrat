@@ -2,7 +2,7 @@ import * as LOG from '../utils/logger';
 import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
 import { SystemObject } from '../db';
-import * as COMMON from '../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export class SystemObjectCache {
     private static singleton: SystemObjectCache | null = null;

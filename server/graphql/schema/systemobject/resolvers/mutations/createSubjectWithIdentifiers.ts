@@ -6,7 +6,7 @@ import * as COL from '../../../../../collections/interface';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 import { VocabularyCache } from '../../../../../cache';
-import * as COMMON from '../../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export default async function createSubjectWithIdentifiers(_: Parent, args: MutationCreateSubjectWithIdentifiersArgs, context: Context): Promise<CreateSubjectWithIdentifiersResult> {
     const {

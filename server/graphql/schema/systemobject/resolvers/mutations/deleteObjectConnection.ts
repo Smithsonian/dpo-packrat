@@ -4,7 +4,7 @@ import * as DBAPI from '../../../../../db';
 import * as LOG from '../../../../../utils/logger';
 import { getRelatedObjects } from '../queries/getSystemObjectDetails';
 import { RelatedObjectType } from '../../../../../types/graphql';
-import * as COMMON from '../../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export default async function deleteObjectConnection(_: Parent, args: MutationDeleteObjectConnectionArgs): Promise<DeleteObjectConnectionResult> {
     const { input: { idSystemObjectMaster, objectTypeMaster, idSystemObjectDerived, objectTypeDerived } } = args;

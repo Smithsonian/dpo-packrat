@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IWorkflow } from './IWorkflow';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export interface WorkflowParameters {
     eWorkflowType: COMMON.eVocabularyID | null; // Workflow type Vocabulary enum for workflow to run
