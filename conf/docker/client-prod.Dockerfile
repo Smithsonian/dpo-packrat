@@ -1,26 +1,23 @@
 FROM node:14.17.1-alpine AS base
-# Add a work directory
+# Add a work directory, copy package.json for caching, copy app files
 WORKDIR /app
-# Copy package.json for caching
 ADD package.json yarn.lock ./
-# Copy app files
 COPY . .
 
-FROM base AS client-builder
 # Remove server from client build
 RUN rm -rf server
-# Install dependencies (production mode) and build
-RUN yarn install --frozen-lockfile && yarn build:prod
 
-# Client's production image
+# Install dependencies (production mode) and build
+RUN mkdir -p /app/node_modules/@dpo-packrat/ && ln -s /app/common /app/node_modules/@dpo-packrat/common
+RUN yarn install --frozen-lockfile
+RUN yarn build:prod
+
+# Client's production image; add a work directory and copy from base
 FROM node:14.17.1-alpine AS client
-# Add a work directory
 WORKDIR /app
-# Copy from client-builder
-COPY --from=client-builder /app/client/build .
-# Expose port(s)
+COPY --from=base /app/client/build .
+
+# Expose port, install static file server, and provide start command on execution
 EXPOSE 3000
-# Install static file server
 RUN npm i -g serve
-# Start on excecution
 CMD serve -s . -l 3000

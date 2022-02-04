@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { PrismaClient, SystemObjectVersion as SystemObjectVersionBase } from '@prisma/client';
 import { SystemObjectVersionAssetVersionXref } from '..';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 // import * as H from '../../utils/helpers';

@@ -1,7 +1,7 @@
 import { GetVocabularyEntriesInput, GetVocabularyEntriesResult } from '../../../../types/graphql';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
-import * as COMMON from '../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 const getVocabularyEntriesTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;

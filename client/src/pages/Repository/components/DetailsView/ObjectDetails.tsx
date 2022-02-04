@@ -16,7 +16,7 @@ import { clearLicenseAssignment, assignLicense, publish } from '../../hooks/useD
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import { LoadingButton } from '../../../../components';
 import { toast } from 'react-toastify';
-import { eSystemObjectType, ePublishedState } from '../../../../types/server';
+import { eSystemObjectType, ePublishedState } from '@dpo-packrat/common';
 
 const useStyles = makeStyles(({ typography, palette }) => ({
     detail: {
@@ -258,6 +258,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             checked={withDefaultValueBoolean(retired, false)}
                             onChange={onRetiredUpdate}
                             {...getUpdatedCheckboxProps(isRetiredUpdated)}
+                            color='primary'
                         />
                     }
                 />

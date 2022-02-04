@@ -10,7 +10,7 @@ import React from 'react';
 import { MdNavigateNext } from 'react-icons/md';
 import { Colors, palette } from '../../theme';
 import { RepositoryPath } from '../../types/graphql';
-import { eSystemObjectType } from '../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../utils/repository';
 import NewTabLink from './NewTabLink';
 

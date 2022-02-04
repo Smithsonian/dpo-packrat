@@ -9,7 +9,7 @@ import React, { useEffect } from 'react';
 import { AssetIdentifiers } from '../../../../../components';
 import { StateIdentifier, useMetadataStore, MetadataType } from '../../../../../store';
 import AttachmentMetadataForm, { metadataRow } from './AttachmentMetadataForm';
-import { eVocabularySetID } from '../../../../../types/server';
+import { eVocabularySetID } from '@dpo-packrat/common';
 
 const useStyles = makeStyles(() => ({
     container: {

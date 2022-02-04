@@ -33,7 +33,6 @@ const useStyles = makeStyles(({ palette }) => ({
         width: 160,
         height: 30,
         marginLeft: 10,
-        padding: '0px 5px',
         fontSize: '0.8em',
         color: palette.primary.dark,
         borderRadius: 5,
@@ -43,7 +42,6 @@ const useStyles = makeStyles(({ palette }) => ({
         width: 223,
         height: 30,
         marginLeft: 10,
-        padding: '0px 5px',
         fontSize: '0.8em',
         color: palette.primary.dark,
         borderRadius: 5,
@@ -178,6 +176,7 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
                 disableUnderline
                 inputProps={inputProps}
                 id={name}
+                SelectDisplayProps={{ style: { paddingLeft: '5px' } }}
             >
                 {options.map(({ label, value }: FilterOption, index) => (
                     <MenuItem key={index} value={value}>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../db';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as H from '../../utils/helpers';
 import { VocabularyCache } from '../../cache';
 import * as LOG from '../../utils/logger';

@@ -16,7 +16,7 @@ import { VocabularyCache } from '../../cache';
 import { ASL, LocalStore } from '../../utils/localStore';
 import { SvxReader } from '../../utils/parser';
 import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
