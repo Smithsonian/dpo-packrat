@@ -10,7 +10,7 @@ import { AssetGridDetailBase } from './AssetGridCommon';
 import { AssetGridDetail } from './AssetGridDetail';
 import { AssetGridDetailCaptureData } from './AssetGridDetailCaptureData';
 import { AssetGridDetailScene } from './AssetGridDetailScene';
-import * as COMMON from '../../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 enum eAssetGridType {
     eStandard,

@@ -1,7 +1,7 @@
 import * as LOG from '../utils/logger';
 import { CacheControl } from './CacheControl';
 import { Vocabulary, VocabularySet, SystemObject } from '../db';
-import * as COMMON from '../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as path from 'path';
 
 export class VocabularyCache {

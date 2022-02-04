@@ -8,7 +8,7 @@ import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repos
 import { extractISOMonthDateYear, updateSystemObjectUploadRedirect, truncateWithEllipses } from '../../../../../constants/helperfunctions';
 import { rollbackSystemObjectVersion, useObjectAssets } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetGrid';
-import { PublishedStateEnumToString, eSystemObjectType } from '../../../../../types/server';
+import { PublishedStateEnumToString, eSystemObjectType } from '@dpo-packrat/common';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { SystemObjectVersion } from '../../../../../types/graphql';
 import { toast } from 'react-toastify';

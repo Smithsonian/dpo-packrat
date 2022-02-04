@@ -13,7 +13,7 @@ import { Typography, Tooltip, TextField } from '@material-ui/core';
 import clsx from 'clsx';
 import { DataGrid, GridColumns } from '@material-ui/data-grid';
 import { useObjectMetadataStore, useVocabularyStore } from '../../../../../store';
-import { eVocabularySetID } from '../../../../../types/server';
+import { eVocabularySetID } from '@dpo-packrat/common';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { makeStyles } from '@material-ui/core/styles';
 import { truncateWithEllipses } from '../../../../../constants';

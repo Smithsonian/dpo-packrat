@@ -10,7 +10,7 @@ import { Box, Button, Table, TableHead, TableRow, TableCell, TableBody, TextFiel
 import { Autocomplete } from '@material-ui/lab';
 import { useObjectMetadataStore, useLicenseStore, MetadataState, eObjectMetadataType, isRequired, noLabel } from '../../../../../store';
 import { Metadata } from '../../../../../types/graphql';
-// import { eVocabularySetID } from '../../../../../types/server';
+// import { eVocabularySetID } from '@dpo-packrat/common';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { useEdanUnitsNamed } from '../../../hooks/useDetailsView';
 import { makeStyles } from '@material-ui/core/styles';

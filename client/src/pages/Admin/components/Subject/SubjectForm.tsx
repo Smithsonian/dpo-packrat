@@ -9,7 +9,7 @@ import { RotationOriginInput, RotationQuaternionInput } from '../../../Repositor
 import { getUnitsList, getUnitFromEdanAbbreviation, createLocation, createSubjectWithIdentifiers } from '../../hooks/useAdminView';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
-import { eVocabularySetID } from '../../../../types/server';
+import { eVocabularySetID } from '@dpo-packrat/common';
 import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
 import { useHistory } from 'react-router-dom';
 import { CreateSubjectWithIdentifiersInput } from '../../../../types/graphql';

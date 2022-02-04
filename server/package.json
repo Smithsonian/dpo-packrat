@@ -20,15 +20,19 @@
     {
       "name": "Karan Pratap Singh",
       "url": "https://github.com/karanpratapsingh"
+    },
+    {
+      "name": "Hsin Tung",
+      "url": "https://github.com/shintung00"
     }
   ],
-  "main": "build/server/index.js",
-  "typings": "build/server/index.d.ts",
+  "main": "build/index.js",
+  "typings": "build/index.d.ts",
   "scripts": {
     "start": "nodemon --ignore var/ --ignore build/ --ignore coverage/ --ignore node_modules/ --ignore tests/ --exec yarn ts-node index.ts -e ts,js,json,graphql",
-    "start:prod": "node build/server/index.js",
-    "build:dev": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/server/",
-    "build:prod": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/server/",
+    "start:prod": "node build/index.js",
+    "build:dev": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql assets/**/*.* build/",
+    "build:prod": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql assets/**/*.* build/",
     "clean": "rm -rf node_modules/ build/",
     "generate": "graphql-codegen --config ./graphql/codegen.yml && npx prisma db pull --schema=./db/prisma/schema.prisma && npx prisma generate --schema=./db/prisma/schema.prisma",
     "generate:graphql": "npx graphql-codegen --config ./graphql/codegen.yml",
@@ -42,6 +46,7 @@
     "reset": "yarn dropdb && yarn initdb && rm -rf var/Storage && curl http://localhost:8983/solr/packrat/update --data \"<delete><query>*:*</query></delete>\" -H \"Content-type:text/xml; charset=utf-8\" && curl http://localhost:8983/solr/packrat/update --data \"<commit/>\" -H \"Content-type:text/xml; charset=utf-8\" && curl http://localhost:8983/solr/packratMeta/update --data \"<delete><query>*:*</query></delete>\" -H \"Content-type:text/xml; charset=utf-8\" && curl http://localhost:8983/solr/packratMeta/update --data \"<commit/>\" -H \"Content-type:text/xml; charset=utf-8\""
   },
   "dependencies": {
+    "@dpo-packrat/common": "0.9.6",
     "ajv": "6.10.2",
     "apollo-server-express": "2.21.1",
     "async-mutex": "0.3.1",

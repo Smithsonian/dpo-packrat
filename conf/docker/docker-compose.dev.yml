@@ -28,7 +28,6 @@ services:
             - NODE_ENV=$NODE_ENV
             - REACT_APP_PACKRAT_SERVER_ENDPOINT=$REACT_APP_PACKRAT_SERVER_ENDPOINT
         volumes:
-            - ../../node_modules:/app/node_modules
             - ../../package.json:/app/package.json
             - ../../client:/app/client
 
@@ -67,9 +66,10 @@ services:
             - PACKRAT_LOG_ROOT=$PACKRAT_LOG_ROOT
             - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
             - PACKRAT_SOLR_PORT=$PACKRAT_SOLR_PORT
-
+            - SHARP_IGNORE_GLOBAL_LIBVIPS=1
+            - npm_config_arch=x64
+            - npm_config_platform=linux
         volumes:
-            - ../../node_modules:/app/node_modules
             - ../../package.json:/app/package.json
             - ../../server:/app/server
         depends_on:

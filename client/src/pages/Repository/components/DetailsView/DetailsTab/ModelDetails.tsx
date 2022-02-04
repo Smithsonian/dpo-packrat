@@ -10,11 +10,10 @@ import { Typography, Box, makeStyles, Select, MenuItem  } from '@material-ui/cor
 import React, { useEffect } from 'react';
 import { DateInputField, Loader, ReadOnlyRow } from '../../../../../components';
 import { useVocabularyStore, useDetailTabStore } from '../../../../../store';
-import { eVocabularySetID } from '../../../../../types/server';
+import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { extractModelConstellation } from '../../../../../constants/helperfunctions';
 import ObjectMeshTable from './../../../../Ingestion/components/Metadata/Model/ObjectMeshTable';
 import { DetailComponentProps } from './index';
-import { eSystemObjectType } from '../../../../../types/server';
 import { useStyles as useSelectStyles, SelectFieldProps } from '../../../../../components/controls/SelectField';
 
 export const useStyles = makeStyles(({ palette }) => ({

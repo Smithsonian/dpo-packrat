@@ -1,5 +1,5 @@
 import * as H from '../utils/helpers';
-import * as COMMON from '../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export interface IExtractorResults extends H.IOResults {
     metadata?: Map<string, string> | undefined; // Map of metadata name -> value

@@ -2,7 +2,7 @@ import { Unit, Project, Subject, Item, SystemObjectIDType, Actor, Asset, AssetVe
     Model, ProjectDocumentation, Scene, Stakeholder, SystemObjectInfo, ObjectIDAndType, SystemObjectIDAndType } from '../..';
 import { ObjectGraphDataEntry, eApplyGraphStateDirection, ObjectGraphState } from './ObjectGraphDataEntry';
 import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';

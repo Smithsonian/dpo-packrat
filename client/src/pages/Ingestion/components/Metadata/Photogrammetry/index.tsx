@@ -10,7 +10,7 @@ import { withStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, TextArea } from '../../../../../components';
 import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore, useRepositoryStore, useSubjectStore, StateRelatedObject } from '../../../../../store';
-import { eVocabularySetID, eSystemObjectType } from '../../../../../types/server';
+import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { withDefaultValueNumber, withDefaultValueBoolean } from '../../../../../utils/shared';
 import AssetContents from './AssetContents';
 import Description from './Description';

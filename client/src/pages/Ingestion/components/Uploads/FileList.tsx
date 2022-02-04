@@ -6,7 +6,7 @@
 import { AnimatePresence } from 'framer-motion';
 import React from 'react';
 import { FileId, FileUploadStatus, IngestionFile, useUploadStore, useVocabularyStore, VocabularyOption } from '../../../../store';
-import { eVocabularySetID } from '../../../../types/server';
+import { eVocabularySetID } from '@dpo-packrat/common';
 import FileListItem from './FileListItem';
 
 interface FileListProps {

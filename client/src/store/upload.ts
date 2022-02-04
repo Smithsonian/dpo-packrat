@@ -8,7 +8,7 @@ import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import path from 'path';
 import { toast } from 'react-toastify';
-import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '../types/server';
+import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '@dpo-packrat/common';
 import { generateFileId } from '../utils/upload';
 import { useVocabularyStore } from './vocabulary';
 import { apolloClient, apolloUploader } from '../graphql';

@@ -16,7 +16,7 @@ import { NewTabLink } from '../../../../../components';
 import { getDetailsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { updateSystemObjectUploadRedirect, ingestSystemObjectUploadRedirect } from '../../../../../constants';
-import { eSystemObjectType } from '../../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { apolloClient } from '../../../../../graphql';
 import { GetModelDocument, GetAssetDetailsForSystemObjectDocument } from '../../../../../types/graphql';
 

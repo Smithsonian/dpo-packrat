@@ -13,7 +13,7 @@ import { resolveSubRoute, ADMIN_ROUTE, ADMIN_ROUTES_TYPE } from '../../../../con
 import { Subject } from '../../../../types/graphql';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet';
-import { eSubjectUnitIdentifierSortColumns } from '../../../../types/server';
+import { eSubjectUnitIdentifierSortColumns } from '@dpo-packrat/common';
 
 const useStyles = makeStyles({
     AdminViewContainer: {
