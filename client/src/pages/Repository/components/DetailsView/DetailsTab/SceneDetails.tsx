@@ -13,7 +13,7 @@ import { apolloClient } from '../../../../../graphql/index';
 import ReferenceModels from '../../../../Ingestion/components/Metadata/Scene/ReferenceModels';
 import { ReadOnlyRow, CheckboxField } from '../../../../../components/index';
 import { useDetailTabStore } from '../../../../../store';
-import { eSystemObjectType } from '../../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {

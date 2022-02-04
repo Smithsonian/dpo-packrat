@@ -12,7 +12,7 @@ import { AssetIdentifiers, DateInputField, /*FieldType, InputField, SelectField,
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
-import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
+import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';

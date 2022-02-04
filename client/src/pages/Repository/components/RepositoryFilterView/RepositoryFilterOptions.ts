@@ -4,7 +4,7 @@
  * Default options for repository filter view.
  */
 import { GetFilterViewDataQuery, Vocabulary } from '../../../../types/graphql';
-import { eMetadata, eSystemObjectType, eVocabularySetID } from '../../../../types/server';
+import { eMetadata, eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import lodash from 'lodash';
 

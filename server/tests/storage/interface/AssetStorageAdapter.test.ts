@@ -3,7 +3,7 @@ import * as STORE from '../../../storage/interface/';
 import * as ST from '../../../storage/impl/LocalStorage/SharedTypes';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 import { IngestMetadata } from '../../../utils/parser';

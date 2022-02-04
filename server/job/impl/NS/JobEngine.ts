@@ -7,7 +7,7 @@ import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import * as REP from '../../../report/interface';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 import * as NS from 'node-schedule';
 

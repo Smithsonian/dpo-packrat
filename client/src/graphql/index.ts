@@ -10,7 +10,7 @@ import { createUploadLink } from 'apollo-upload-client';
 import { apolloFetch } from './utils';
 import { DocumentNode } from 'graphql';
 import { ROUTES } from '../constants';
-import { authenticationFailureMessage } from '../types/server';
+import { authenticationFailureMessage } from '@dpo-packrat/common';
 import API from '../api';
 
 class PRApolloClient extends ApolloClient<NormalizedCacheObject> {

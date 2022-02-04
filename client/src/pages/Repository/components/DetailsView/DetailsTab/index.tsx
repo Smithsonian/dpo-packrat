@@ -29,7 +29,7 @@ import {
     RepositoryPath,
     Metadata
 } from '../../../../../types/graphql';
-import { eSystemObjectType } from '../../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import RelatedObjectsList from '../../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
 import ActorDetails from './ActorDetails';
 import AssetDetails from './AssetDetails';
