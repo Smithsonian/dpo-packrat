@@ -231,7 +231,7 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
             aria-label={`link to view system object of id ${idSystemObject}`}
             style={{ textDecoration: 'none', color: 'black' }}
         >
-            <AiOutlineFileText />
+            <AiOutlineFileText style={{ verticalAlign: 'bottom' }} />
         </a>
     );
 

@@ -67,6 +67,7 @@ function AttachmentMetadataForm(props: AttachmentMetadataProps): React.ReactElem
                     onChange={setNameField}
                     disableUnderline
                     className={clsx(classes.select, classes.datasetFieldSelect)}
+                    color='primary'
                 >
                     {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                 </Select>
