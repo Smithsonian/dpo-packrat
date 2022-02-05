@@ -164,7 +164,7 @@ describe('AssetStorageAdapter Methods', () => {
     test('AssetStorageAdapter.discardAssetVersion', async() => {
         const TestCase2 = await testCommitNewAsset(null, 15000, OHTS.captureData1);
         await testDiscardAssetVersion(TestCase2, true);  // first time should succeed
-        await testDiscardAssetVersion(TestCase2, false); // discard of discarded asset should fail
+        await testDiscardAssetVersion(TestCase2, true);  // discard of discarded asset should also succeed
 
         await testDiscardAssetVersion(TestCase1, false); // discard of ingested asset should fail
     });
@@ -611,11 +611,11 @@ async function testGetAssetVersionContents(TestCase: AssetStorageAdapterTestCase
 }
 
 async function testDiscardAssetVersion(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
-    // LOG.info(`testDiscardAssetVersion ${JSON.stringify(TestCase, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+    LOG.info(`testDiscardAssetVersion ${JSON.stringify(TestCase, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
     for (let index = 0; index < TestCase.assets.length; index++) {
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
-        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
+        LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
 
         if (!ASR.success && expectSuccess)

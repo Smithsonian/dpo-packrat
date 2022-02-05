@@ -51,7 +51,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 4, 'Pattern
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (6, 1, 'None');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (6, 2, 'Clip Black');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (6, 3, 'Clip White');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (6, 4, 'Background Subtraction By Capture Dataset Set');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (6, 4, 'Background Subtraction');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (7, 1, 'None');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (7, 2, 'Array');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (7, 3, 'Spherical Image Station');

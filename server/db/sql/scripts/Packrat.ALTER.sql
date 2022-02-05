@@ -440,3 +440,4 @@ WHERE Term = 'Edan Record ID' AND idVocabularySet = (SELECT idVocabularySet FROM
 
 UPDATE Identifier SET IdentifierValue = CONCAT('edanmdm:', IdentifierValue) WHERE idVIdentifierType = @idVocabEdanRecordID;
 
+UPDATE Vocabulary SET Term = 'Background Subtraction' WHERE Term = 'Background Subtraction By Capture Dataset Set';
