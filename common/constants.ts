@@ -289,12 +289,6 @@ export enum ePublishedState {
     ePublished = 2,                 // 'Published'
 }
 
-export enum eIdentifierIdentifierType {
-    eARK = 79,
-    eDOI = 80,
-    eUnitCMSID = 81
-}
-
 export function LicenseEnumToString(eState: eLicense): string {
     switch (eState) {
         case eLicense.eViewDownloadCC0:         return 'View and Download CC0';
