@@ -734,6 +734,8 @@ export type UpdateSceneMetadata = {
 export type UpdatedAssetVersionMetadata = {
   __typename?: 'UpdatedAssetVersionMetadata';
   idAssetVersion: Scalars['Int'];
+  UpdatedObjectName: Scalars['String'];
+  Item?: Maybe<Item>;
   CaptureDataPhoto?: Maybe<UpdatePhotogrammetryMetadata>;
   Model?: Maybe<UpdateModelMetadata>;
   Scene?: Maybe<UpdateSceneMetadata>;
@@ -3282,8 +3284,11 @@ export type GetUploadedAssetVersionQuery = (
       )> }
     )>, UpdatedAssetVersionMetadata: Array<(
       { __typename?: 'UpdatedAssetVersionMetadata' }
-      & Pick<UpdatedAssetVersionMetadata, 'idAssetVersion'>
-      & { CaptureDataPhoto?: Maybe<(
+      & Pick<UpdatedAssetVersionMetadata, 'idAssetVersion' | 'UpdatedObjectName'>
+      & { Item?: Maybe<(
+        { __typename?: 'Item' }
+        & Pick<Item, 'Name'>
+      )>, CaptureDataPhoto?: Maybe<(
         { __typename?: 'UpdatePhotogrammetryMetadata' }
         & Pick<UpdatePhotogrammetryMetadata, 'name' | 'dateCaptured' | 'datasetType' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId'>
         & { folders: Array<(
@@ -5529,6 +5534,10 @@ export const GetUploadedAssetVersionDocument = gql`
     idAssetVersionsUpdated
     UpdatedAssetVersionMetadata {
       idAssetVersion
+      UpdatedObjectName
+      Item {
+        Name
+      }
       CaptureDataPhoto {
         name
         dateCaptured

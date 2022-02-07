@@ -71,17 +71,24 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
             if (!sortedAssetVersion)
                 return;
 
+            const UpdatedAssetVersionMetadataMap: Map<number, any> = new Map<number, any>();
+            for (const updatedMetadata of UpdatedAssetVersionMetadata) {
+                if (updatedMetadata.idAssetVersion)
+                    UpdatedAssetVersionMetadataMap.set(updatedMetadata.idAssetVersion, updatedMetadata);
+            }
+
             const completedFiles = sortedAssetVersion.map(assetVersion => {
                 const { idAssetVersion } = assetVersion;
                 const id = String(idAssetVersion);
+                const updatedMetadata = UpdatedAssetVersionMetadataMap.get(idAssetVersion);
+                const updateMediaGroup: string | undefined = updatedMetadata && updatedMetadata.Item ? ` for Media Group ${updatedMetadata.Item.Name}` : undefined;
+                const updateContext: string | undefined = updatedMetadata ? `(Updating ${updatedMetadata.UpdatedObjectName}${updateMediaGroup})` : undefined;
 
                 if (fileIds.includes(id))
                     return completed.find(file => file.id === id) || assetVersion;
 
-                let idAsset = null;
-                if (idAssetVersionsUpdatedSet.has(idAssetVersion))
-                    idAsset = assetVersion.Asset.idAsset;
-                return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType, idAsset);
+                const idAsset = idAssetVersionsUpdatedSet.has(idAssetVersion) ? assetVersion.Asset.idAsset : null;
+                return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType, idAsset, updateContext);
             });
 
             loadCompleted(completedFiles, refetch);
