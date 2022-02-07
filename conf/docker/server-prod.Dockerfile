@@ -7,9 +7,8 @@ COPY . .
 # Remove client to prevent duplication
 RUN rm -rf client
 
-# Install perl, needed by exiftool, and git, needed to fetch npm-server-webdav
+# Install git, needed to fetch npm-server-webdav
 RUN apk update
-RUN apk add perl
 RUN apk add git
 
 # Install dependencies and build production
@@ -19,6 +18,11 @@ RUN yarn build:prod
 # Server's production image; add a work directory and copy from base
 FROM node:14.17.1-alpine AS server
 WORKDIR /app
+
+# Install perl, needed by exiftool
+RUN apk update
+RUN apk add perl
+
 COPY --from=base /app/server ./server
 COPY --from=base /app/common ./common
 COPY --from=base /app/node_modules ./node_modules

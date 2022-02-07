@@ -43,7 +43,7 @@ export enum eVocabularySetID {
 export enum eVocabularyID {
     eIdentifierIdentifierTypeARK,
     eIdentifierIdentifierTypeDOI,
-    eIdentifierIdentifierTypeUnitCMSID,
+    eIdentifierIdentifierTypeEdanRecordID,
     eAssetAssetTypeBulkIngestion,
     eAssetAssetTypeCaptureDataSetPhotogrammetry,
     eAssetAssetTypeCaptureDataSetDiconde,
@@ -287,12 +287,6 @@ export enum ePublishedState {
     eNotPublished = 0,              // 'Not Published', default
     eAPIOnly = 1,                   // 'API Only',
     ePublished = 2,                 // 'Published'
-}
-
-export enum eIdentifierIdentifierType {
-    eARK = 79,
-    eDOI = 80,
-    eUnitCMSID = 81
 }
 
 export function LicenseEnumToString(eState: eLicense): string {
