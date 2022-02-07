@@ -130,7 +130,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     let tabPanels: React.ReactNode = null;
     const RelatedTab = (index: number) => (
         <TabPanel value={tab} index={index} id={`tab-${index}`}>
-            <Box style={{ width: '60%', minWidth: '500px' }}>
+            <Box>
                 {assetOwner &&
                 (
                     <Box className={classes.assetOwner}>
