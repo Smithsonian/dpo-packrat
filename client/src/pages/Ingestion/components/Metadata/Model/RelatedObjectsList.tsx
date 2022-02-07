@@ -73,17 +73,17 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
 
     return (
         <Box className={classes.container}>
-            <TableContainer>
+            <TableContainer style={{ width: 'fit-content' }}>
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell style={{ padding: '2px 0px 4px 6px' }}>
+                            <TableCell style={{ padding: '2px 3px 4px 6px', width: 'fit-content' }}>
                                 <Typography style={{ fontSize: '0.75rem' }}>{relationshipLanguage || type.toString() + ' Object(s)'}</Typography>
                             </TableCell>
-                            <TableCell style={{ padding: '2px 0px 4px 0px', textAlign: 'center' }}>
+                            <TableCell style={{ padding: '2px 3px 4px 3px', textAlign: 'center' }}>
                                 <Typography style={{ fontSize: '0.75rem' }}>Object Type</Typography>
                             </TableCell>
-                            <TableCell style={{ padding: '2px 0px 4px 0px', textAlign: 'center' }}>
+                            <TableCell style={{ padding: '2px 3px 4px 3px', textAlign: 'center' }}>
                                 <Typography style={{ fontSize: '0.75rem' }}>Identifier</Typography>
                             </TableCell>
                             <TableCell style={{ width: '0px', padding: 0 }}>
@@ -160,15 +160,15 @@ function Item(props: ItemProps): React.ReactElement {
     return (
         <TableRow style={{ backgroundColor: index % 2 !== 0 ? 'white' : '#ffffe0' }}>
             <TableCell style={{ padding: '1px 0px 1px 8px', borderTopLeftRadius: index === 0 ? '5px' : undefined, borderBottomLeftRadius: finalIndex === index ? '5px' : undefined }}>
-                <NewTabLink to={getDetailsUrlForObject(idSystemObject)} className={clsx(classes.label, classes.labelUnderline)} style={{ fontSize: '0.675rem', verticalAlign: 'middle' }}>
+                <NewTabLink to={getDetailsUrlForObject(idSystemObject)} className={clsx(classes.label, classes.labelUnderline)} style={{ fontSize: '0.8rem', verticalAlign: 'middle', wordBreak: 'break-word' }}>
                     {name}
                 </NewTabLink>
             </TableCell>
             <TableCell style={{ padding: '1px 2px', textAlign: 'center' }}>
-                <Typography className={classes.label} style={{ fontSize: '0.675rem' }}>{getTermForSystemObjectType(objectType)}</Typography>
+                <Typography className={classes.label} style={{ fontSize: '0.8rem' }}>{getTermForSystemObjectType(objectType)}</Typography>
             </TableCell>
             <TableCell style={{ padding: '1px 2px' }}>
-                <Typography className={classes.label} style={{ fontSize: '0.675rem' }}>{identifier}</Typography>
+                <Typography className={classes.label} style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{identifier}</Typography>
             </TableCell>
             <TableCell style={{ padding: '1px 8px 0px 0px', borderTopRightRadius: index === 0 ? '5px' : undefined, borderBottomRightRadius: finalIndex === index ? '5px' : undefined }}>
                 {!viewMode && <MdRemoveCircleOutline className={classes.removeIcon} onClick={remove} size={16} style={{ verticalAlign: 'sub' }} />}
