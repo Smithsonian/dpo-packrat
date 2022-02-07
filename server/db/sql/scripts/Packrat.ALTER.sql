@@ -432,3 +432,12 @@ ALTER TABLE ModelObject ADD COLUMN CountTriangles int(11) DEFAULT NULL;
 
 -- 2022-01-31 Deployed to Staging and Production
 
+-- 2022-02-02
+UPDATE Vocabulary SET Term = 'Edan Record ID' WHERE Term = 'Unit CMS ID';
+
+SELECT idVocabulary INTO @idVocabEdanRecordID FROM Vocabulary 
+WHERE Term = 'Edan Record ID' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
+
+UPDATE Identifier SET IdentifierValue = CONCAT('edanmdm:', IdentifierValue) WHERE idVIdentifierType = @idVocabEdanRecordID;
+
+UPDATE Vocabulary SET Term = 'Background Subtraction' WHERE Term = 'Background Subtraction By Capture Dataset Set';

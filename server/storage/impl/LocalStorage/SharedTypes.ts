@@ -11,6 +11,6 @@ export const OCFLStorageObjectContentFolder: string = 'content';
 export const OCFLStorageObjectInventoryFilename: string = 'inventory.json';
 export const OCFLStorageObjectInventoryDigestFilename: string = 'inventory.json.' + OCFLDigestAlgorithm;
 
-export const OCFLSourceDocsPath: string =  path.join(__dirname, '../../../assets/storage');
+export const OCFLSourceDocsPath: string = path.join(__dirname, '../../../assets/storage');
 
 export const OCFLMetadataFilename: string = '0=metadata.json';
