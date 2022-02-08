@@ -4268,11 +4268,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     });
 
     test('DB Fetch SystemObject: COMMON.LicenseEnumToString', async () => {
-        expect(COMMON.LicenseEnumToString(-1)).toEqual('Restricted');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadCC0)).toEqual('View and Download CC0');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadRestriction)).toEqual('View and Download with usage restrictions');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewOnly)).toEqual('View Only');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eRestricted)).toEqual('Restricted');
+        expect(COMMON.LicenseEnumToString(-1)).toEqual('Restricted, Not Publishable');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadCC0)).toEqual('CC0, Publishable w/ Downloads');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadRestriction)).toEqual('SI ToU, Publishable w/ Downloads');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewOnly)).toEqual('SI ToU, Publishable Only');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eRestricted)).toEqual('Restricted, Not Publishable');
     });
 
     test('DB Fetch SystemObject: COMMON.PublishedStateEnumToString', async () => {
