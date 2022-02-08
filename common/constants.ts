@@ -277,10 +277,10 @@ export enum eSystemObjectType {
 }
 
 export enum eLicense {
-    eViewDownloadCC0 = 1,           // 'View and Download CC0'
-    eViewDownloadRestriction = 2,   // 'View and Download with usage restrictions',
-    eViewOnly = 3,                  // 'View Only',
-    eRestricted = 4,                // 'Restricted', default
+    eViewDownloadCC0 = 1,           // CC0, Publishable w/ Downloads
+    eViewDownloadRestriction = 2,   // SI ToU, Publishable w/ Downloads
+    eViewOnly = 3,                  // SI ToU, Publishable Only
+    eRestricted = 4,                // Restricted, Not Publishable, default
 }
 
 export enum ePublishedState {
@@ -291,11 +291,11 @@ export enum ePublishedState {
 
 export function LicenseEnumToString(eState: eLicense): string {
     switch (eState) {
-        case eLicense.eViewDownloadCC0:         return 'View and Download CC0';
-        case eLicense.eViewDownloadRestriction: return 'View and Download with usage restrictions';
-        case eLicense.eViewOnly:                return 'View Only';
+        case eLicense.eViewDownloadCC0:         return 'CC0, Publishable w/ Downloads';
+        case eLicense.eViewDownloadRestriction: return 'SI ToU, Publishable w/ Downloads';
+        case eLicense.eViewOnly:                return 'SI ToU, Publishable Only';
         default:
-        case eLicense.eRestricted:              return 'Restricted';
+        case eLicense.eRestricted:              return 'Restricted, Not Publishable';
     }
 }
 
