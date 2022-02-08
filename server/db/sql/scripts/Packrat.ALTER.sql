@@ -441,3 +441,9 @@ WHERE Term = 'Edan Record ID' AND idVocabularySet = (SELECT idVocabularySet FROM
 UPDATE Identifier SET IdentifierValue = CONCAT('edanmdm:', IdentifierValue) WHERE idVIdentifierType = @idVocabEdanRecordID;
 
 UPDATE Vocabulary SET Term = 'Background Subtraction' WHERE Term = 'Background Subtraction By Capture Dataset Set';
+
+--2022-02-07
+UPDATE License SET Name = 'CC0, Publishable w/ Downloads', Description = 'CC0, Publishable w/ Downloads' WHERE Name = 'View And Download CC0';
+UPDATE License SET Name = 'SI ToU, Publishable w/ Downloads', Description = 'SI ToU, Publishable w/ Downloads' WHERE Name = 'View With Download Restrictions';
+UPDATE License SET Name = 'SI ToU, Publishable Only', Description = 'SI ToU, Publishable Only' WHERE Name = 'View Only';
+UPDATE License SET Name = 'Restricted, Not Publishable', Description = 'Restricted, Not Publishable' WHERE Name = 'Restricted';

@@ -1335,10 +1335,10 @@ INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term,
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-scene';
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: unwrap';
 
-INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View And Download CC0', 'View And Download CC0', 10);
-INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View With Download Restrictions', 'View With Download Restrictions', 20);
-INSERT INTO License (Name, Description, RestrictLevel) VALUES ('View Only', 'View Only', 30);
-INSERT INTO License (Name, Description, RestrictLevel) VALUES ('Restricted', 'Restricted', 1000);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('CC0, Publishable w/ Downloads', 'CC0, Publishable w/ Downloads', 10);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('SI ToU, Publishable w/ Downloads', 'SI ToU, Publishable w/ Downloads', 20);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('SI ToU, Publishable Only', 'SI ToU, Publishable Only', 30);
+INSERT INTO License (Name, Description, RestrictLevel) VALUES ('Restricted, Not Publishable', 'Restricted, Not Publishable', 1000);
 
 -- Entries for Test code
 INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELECT 'ITEM_GUID_1', @idVocabARK, idSystemObject FROM SystemObject WHERE idItem = (SELECT idItem FROM Item WHERE NAME = '401524 turtle scute');
