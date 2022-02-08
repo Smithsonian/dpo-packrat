@@ -59,7 +59,15 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontWeight: typography.fontWeightMedium,
         color: 'black',
         zIndex: 'inherit',
-        wordBreak: 'break-all'
+        wordBreak: 'break-all',
+    },
+    updateContext: {
+        fontWeight: typography.fontWeightLight,
+        fontStyle: 'italic',
+        color: 'black',
+        zIndex: 'inherit',
+        wordBreak: 'break-all',
+        display: 'flex',
     },
     status: {
         display: 'flex',
@@ -145,6 +153,7 @@ interface FileListItemProps {
     idAsset: number | undefined;
     idSOAttachment: number | undefined;
     uploadPendingList: boolean | undefined;
+    updateContext: string | undefined;
     onSelect: (id: FileId, selected: boolean) => void;
     onUpload: (id: FileId) => void;
     onCancel: (id: FileId) => void;
@@ -169,6 +178,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         idAsset,
         idSOAttachment,
         uploadPendingList,
+        updateContext,
         onChangeType,
         onUpload,
         onCancel,
@@ -262,6 +272,13 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                             {name}
                         </Typography>
                     </Box>
+                    {(updateContext &&
+                        <Box>
+                            <Typography className={classes.updateContext} variant='caption'>
+                                {updateContext}
+                            </Typography>
+                        </Box>
+                    )}
                     <Box display='flex'>
                         <Box className={classes.status}>
                             <Typography className={classes.caption} variant='caption'>

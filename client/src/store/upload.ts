@@ -41,6 +41,7 @@ export type IngestionFile = {
     cancel: (() => void) | null;
     idAsset?: number;
     idSOAttachment?: number;
+    updateContext?: string;
 };
 
 type UploadStore = {
