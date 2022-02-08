@@ -191,4 +191,30 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return false;
         }
     }
+
+    /** Populates identifierSubjectMap with { idSubject, idSystemObject }'s for those identifiers in identifierSubjectMap.keys that are mapped to subjects */
+    static async populateIdentifierSubjectMap(identifierSubjectMap: Map<string, { idSubject: number, idSystemObject: number }>): Promise<boolean> {
+        if (identifierSubjectMap.size === 0)
+            return true;
+        try {
+            const identifierSubjectInfo: { IdentifierValue: string, idSubject: number, idSystemObject: number }[] | null =
+                await DBC.DBConnection.prisma.$queryRaw<{ IdentifierValue: string, idSubject: number, idSystemObject: number }[]>`
+                SELECT ID.IdentifierValue, SO.idSubject, SO.idSystemObject
+                FROM Identifier AS ID
+                JOIN SystemObject AS SO ON (ID.idSystemObject = SO.idSystemObject)
+                WHERE SO.idSubject IS NOT NULL
+                  AND ID.IdentifierValue IN (${Prisma.join([...identifierSubjectMap.keys()])})`; /* istanbul ignore next */
+
+            if (!identifierSubjectInfo) {
+                LOG.error('DBAPI.Subject.populateIdentifierSubjectMap failed', LOG.LS.eDB);
+                return false;
+            }
+            for (const info of identifierSubjectInfo)
+                identifierSubjectMap.set(info.IdentifierValue, { idSubject: info.idSubject, idSystemObject: info.idSystemObject });
+            return true;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Subject.populateIdentifierSubjectMap', LOG.LS.eDB, error);
+            return false;
+        }
+    }
 }
