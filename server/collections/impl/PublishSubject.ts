@@ -156,7 +156,7 @@ export class PublishSubject {
     }
 
     private async handleLicense(licenseText: string): Promise<H.IOResults> {
-        const access: string = (licenseText.toLowerCase() === 'view and download cc0') ? 'CC0' : 'Usage conditions apply';
+        const access: string = (licenseText.toLowerCase() === 'cc0, publishable w/ downloads') ? 'CC0' : 'Usage conditions apply';
         this.edanMDM.descriptiveNonRepeating.metadata_usage!.access = access; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         return PublishSubject.returnResults(true);
     }

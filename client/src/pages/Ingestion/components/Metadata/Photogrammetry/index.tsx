@@ -168,7 +168,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
             </Box>
             {!idAsset && (
                 <React.Fragment>
-                    <Box mb={2} width='52vw'>
+                    <Box mb={2}>
                         <RelatedObjectsList
                             type={RelatedObjectType.Source}
                             relatedObjects={photogrammetry.sourceObjects}
@@ -177,7 +177,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             relationshipLanguage='Parents'
                         />
                     </Box>
-                    <Box mb={2} width='52vw'>
+                    <Box mb={2}>
                         <RelatedObjectsList
                             type={RelatedObjectType.Derived}
                             relatedObjects={photogrammetry.derivedObjects}
