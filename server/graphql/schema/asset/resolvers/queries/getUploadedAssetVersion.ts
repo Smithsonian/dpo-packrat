@@ -1,6 +1,7 @@
-import { GetUploadedAssetVersionResult, UpdatedAssetVersionMetadata, UpdatePhotogrammetryMetadata, UpdateModelMetadata, UpdateSceneMetadata, IngestFolder } from '../../../../../types/graphql';
+import { GetUploadedAssetVersionResult, UpdatedAssetVersionMetadata, UpdatePhotogrammetryMetadata, UpdateModelMetadata, UpdateSceneMetadata, IngestFolder, Item } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
+import * as CACHE from '../../../../../cache';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 
@@ -73,6 +74,18 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
         return null;
     }
 
+    // How do we compute the name of a generic system object?
+    // UpdatedObjectName: String!
+    const UpdatedObjectName: string = await CACHE.SystemObjectCache.getObjectNameByID(asset.idSystemObject) ?? 'UNKNOWN';
+    let Item: Item | undefined = undefined;
+    const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(asset.idSystemObject, DBAPI.eObjectGraphMode.eAncestors);
+    if (await OG.fetch()) {
+        if (OG.item && OG.item.length === 1)
+            Item = OG.item[0];
+    } else
+        LOG.error(`getUploadedAssetVersion failed to retrieve object graph for asset owner ${asset.idSystemObject}`, LOG.LS.eGQL);
+
+
     let CaptureDataPhoto: UpdatePhotogrammetryMetadata | undefined = undefined;
     let Model: UpdateModelMetadata | undefined = undefined;
     let Scene: UpdateSceneMetadata | undefined = undefined;
@@ -125,13 +138,13 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
             posedAndQCd: SOP.Scene.PosedAndQCd
         };
     }
-    if (CaptureDataPhoto || Model || Scene) {
-        return {
-            idAssetVersion,
-            CaptureDataPhoto,
-            Model,
-            Scene
-        };
-    }
-    return null;
+
+    return {
+        idAssetVersion,
+        UpdatedObjectName,
+        Item,
+        CaptureDataPhoto,
+        Model,
+        Scene
+    };
 }

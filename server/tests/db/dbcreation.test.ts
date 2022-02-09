@@ -2974,6 +2974,24 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(subjectFetch).toBeTruthy();
     });
 
+    test('DB Fetch Subject: Subject.populateIdentifierSubjectMap', async () => {
+        const identifierSubjectMap: Map<string, { idSubject: number, idSystemObject: number }> = new Map<string, { idSubject: number, idSystemObject: number }>();
+
+        if (identifierSubjectHookup) {
+            identifierSubjectMap.set(identifierSubjectHookup.IdentifierValue, { idSubject: 0, idSystemObject: 0 });
+            expect(await DBAPI.Subject.populateIdentifierSubjectMap(identifierSubjectMap)).toBeTruthy();
+
+            const identifierInfo = identifierSubjectMap.get(identifierSubjectHookup.IdentifierValue);
+            expect(identifierInfo).toBeTruthy();
+            if (identifierInfo) {
+                if (subject)
+                    expect(identifierInfo.idSubject).toEqual(subject.idSubject);
+                if (systemObjectSubject)
+                    expect(identifierInfo.idSystemObject).toEqual(systemObjectSubject.idSystemObject);
+            }
+        }
+    });
+
     test('DB Fetch By ID: SystemObjectVersion', async () => {
         let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
         if (systemObjectVersion) {
@@ -4250,11 +4268,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     });
 
     test('DB Fetch SystemObject: COMMON.LicenseEnumToString', async () => {
-        expect(COMMON.LicenseEnumToString(-1)).toEqual('Restricted');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadCC0)).toEqual('View and Download CC0');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadRestriction)).toEqual('View and Download with usage restrictions');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewOnly)).toEqual('View Only');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eRestricted)).toEqual('Restricted');
+        expect(COMMON.LicenseEnumToString(-1)).toEqual('Restricted, Not Publishable');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadCC0)).toEqual('CC0, Publishable w/ Downloads');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadRestriction)).toEqual('SI ToU, Publishable w/ Downloads');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewOnly)).toEqual('SI ToU, Publishable Only');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eRestricted)).toEqual('Restricted, Not Publishable');
     });
 
     test('DB Fetch SystemObject: COMMON.PublishedStateEnumToString', async () => {
@@ -7790,6 +7808,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();
         expect(await DBAPI.Subject.clearPreferredIdentifier(0)).toBeFalsy();
+        expect(await DBAPI.Subject.populateIdentifierSubjectMap(new Map<string, { idSubject: number, idSystemObject: number }>())).toBeTruthy();
         expect(await DBAPI.Subject.fetch(0)).toBeNull();
         expect(await DBAPI.Subject.fetchFromUnit(0)).toBeNull();
         expect(await DBAPI.Subject.fetchMasterFromItems([])).toBeNull();

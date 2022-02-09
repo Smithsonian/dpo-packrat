@@ -88,11 +88,12 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     continue;
                 const eVocabID: COMMON.eVocabularyID = (<any>COMMON.eVocabularyID)[sVocabID];
                 const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
+                // LOG.info(`*** sVocab=${sVocabID}, eVocabID=${COMMON.eVocabularyID[eVocabID]}, vocabulary=${JSON.stringify(vocabulary)}`, LOG.LS.eTEST);
 
                 switch (eVocabID) {
                     case COMMON.eVocabularyID.eIdentifierIdentifierTypeARK: testVocabulary(vocabulary, 'ARK'); break;
                     case COMMON.eVocabularyID.eIdentifierIdentifierTypeDOI: testVocabulary(vocabulary, 'DOI'); break;
-                    case COMMON.eVocabularyID.eIdentifierIdentifierTypeUnitCMSID: testVocabulary(vocabulary, 'Unit CMS ID'); break;
+                    case COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID: testVocabulary(vocabulary, 'Edan Record ID'); break;
 
                     case COMMON.eVocabularyID.eAssetAssetTypeBulkIngestion: testVocabulary(vocabulary, 'Bulk Ingestion'); break;
                     case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry: testVocabulary(vocabulary, 'Capture Data Set: Photogrammetry'); break;
@@ -418,7 +419,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'None');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Clip Black');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Clip White');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Background Subtraction By Capture Dataset Set');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Background Subtraction');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataClusterType, 'None');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataClusterType, 'Array');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataClusterType, 'Spherical Image Station');
@@ -477,7 +478,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelMaterialChannelMaterialType, 'Unknown');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'ARK');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'DOI');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'Unit CMS ID');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierType, 'Edan Record ID');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierTypeActor, 'ORCID');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eIdentifierIdentifierTypeActor, 'ISNI');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eMetadataMetadataSource, 'Bulk Ingestion');
@@ -750,8 +751,11 @@ function testVocabulary(vocabulary: DBAPI.Vocabulary | undefined, termExpected: 
 
 async function testVocabularyBySetAndTerm(eVocabSetId: COMMON.eVocabularySetID, term: string, expectSuccess: boolean = true): Promise<void> {
     const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyBySetAndTerm(eVocabSetId, term);
-    if (expectSuccess)
+    if (expectSuccess) {
+        if (vocabulary === undefined)
+            LOG.error(`testVocabularyBySetAndTerm count not find set ${COMMON.eVocabularySetID[eVocabSetId]}, term ${term}`, LOG.LS.eTEST);
         expect(vocabulary).toBeTruthy();
+    }
     if (vocabulary)
         expect(vocabulary.Term).toEqual(term);
 }

@@ -62,10 +62,10 @@ function licenseCacheTestWorker(eMode: eCacheTestMode): void {
                 if (licenseInCache)
                     expect(license).toMatchObject(licenseInCache);
                 switch (license.Name.toLowerCase()) {
-                    case 'view and download cc0':           licenseCC0 = license; break;
-                    case 'view with download restrictions': licenseDownload = license; break;
-                    case 'view only':                       licenseView = license; break;
-                    case 'restricted':                      licenseRestricted = license; break;
+                    case 'cc0, publishable w/ downloads':       licenseCC0 = license; break;
+                    case 'si tou, publishable w/ downloads':    licenseDownload = license; break;
+                    case 'si tou, publishable only':            licenseView = license; break;
+                    case 'restricted, not publishable':         licenseRestricted = license; break;
                 }
             }
 
