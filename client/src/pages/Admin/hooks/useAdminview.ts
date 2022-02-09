@@ -71,7 +71,8 @@ export async function getSubjectList(input: GetSubjectListInput) {
             input: {
                 ...input
             }
-        }
+        },
+        fetchPolicy: 'no-cache'
     });
 }
 
