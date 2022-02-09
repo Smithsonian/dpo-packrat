@@ -121,13 +121,51 @@ function SubjectView(): React.ReactElement {
 
     const fetchSubjectList = async () => {
         setLoading(true);
-        // console.log(`SubjectView.fetchSubjectList ${JSON.stringify(sortState)}`);
         try {
             const getSubjectListInput = {
                 search: searchState.text,
                 idUnit: dropDownState.value,
                 // pageNumber + 1 because Material UI requires starting page === 0
                 pageNumber: paginationState.pageNumber + 1,
+                rowCount: paginationState.rowCount,
+                sortBy: subjectUnitIdentifierStringToEnum(sortState?.sortModel[0]?.field),
+                sortOrder: sortState.sortModel.length > 0 ? (sortState.sortModel[0].sort === 'asc') : true,
+            };
+            const { data } = await getSubjectList(getSubjectListInput);
+            if (data?.getSubjectList.subjects && data?.getSubjectList.subjects.length) {
+                const subjectListWithId = data.getSubjectList.subjects.map(subject => {
+                    const { idSubject, idSystemObject, SubjectName, UnitAbbreviation, IdentifierPublic } = subject;
+                    return {
+                        Name: SubjectName,
+                        idSystemObject,
+                        Identifier: IdentifierPublic,
+                        idSubject,
+                        Unit: UnitAbbreviation,
+                        id: idSubject
+                    };
+                });
+                setSubjectListState(subjectListWithId);
+            } else {
+                setSubjectListState([]);
+            }
+        } catch (error) {
+            toast.error(`Error in fetching subjects. Message: ${error}`);
+        }
+        setLoading(false);
+    };
+
+    const onSearch = async (reset: boolean = false) => {
+        if (reset) {
+            await setSearchState({ ...searchState, text: '' });
+            await setDropDownState({ ...dropDownState, value: 0 });
+        }
+        await setPaginationState({ ...paginationState, pageNumber: 0 });
+        await setLoading(true);
+        try {
+            const getSubjectListInput = {
+                search: reset ? '' : searchState.text,
+                idUnit: reset ? 0 : dropDownState.value,
+                pageNumber: 1,
                 rowCount: paginationState.rowCount,
                 sortBy: subjectUnitIdentifierStringToEnum(sortState?.sortModel[0]?.field),
                 sortOrder: sortState.sortModel.length > 0 ? (sortState.sortModel[0].sort === 'asc') : true,
@@ -184,7 +222,7 @@ function SubjectView(): React.ReactElement {
                 handleDropDownChange={handleDropDownChange}
                 handleSortChange={handleSortChange}
                 handleSearchKeywordChange={handleSearchKeywordChange}
-                handleSearch={fetchSubjectList}
+                handleSearch={onSearch}
                 searchType='Subject'
             />
         </Box>
