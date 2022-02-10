@@ -90,6 +90,7 @@ export const useStyles = makeStyles(({ palette }) => ({
         textDecoration: 'underline'
     },
     tableCell: {
+        padding: '1px 5px 1px 5px'
     }
 }));
 
