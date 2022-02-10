@@ -3,10 +3,13 @@ import { Parent, Context } from '../../../../../types/resolvers';
 import * as COL from '../../../../../collections/interface/';
 import * as LOG from '../../../../../utils/logger';
 import * as DBAPI from '../../../../../db';
+import * as CACHE from '../../../../../cache';
+import * as WF from '../../../../../workflow/interface';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
 import { SystemObjectTypeToName } from '../../../../../db/api/ObjectType';
 import * as H from '../../../../../utils/helpers';
+import { PublishScene } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs, context: Context): Promise<UpdateObjectDetailsResult> {
@@ -56,6 +59,9 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         }
     }
 
+    const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
+    const LicenseOld: DBAPI.License | undefined = LR?.License ?? undefined;
+    let LicenseNew: DBAPI.License | undefined = LicenseOld;
     if (data.License != null) {
         if (data.License > 0) {
             const reassignedLicense: DBAPI.License | null = await DBAPI.License.fetch(data.License);
@@ -64,11 +70,14 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
             if (!await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense))
                 return sendResult(false, `Unable to reassign license for idSystemObject ${idSystemObject} with id ${reassignedLicense.idLicense}; update failed`);
+            LicenseNew = reassignedLicense;
         } else {
             if (!await DBAPI.LicenseManager.clearAssignment(idSystemObject))
                 return sendResult(false, `Unable to clear license with for idSystemObject ${idSystemObject}; update failed`);
+            LicenseNew = undefined;
         }
     }
+    LOG.info(`updateObjectDetails LicenseOld=${H.Helpers.JSONStringify(LicenseOld)}, LicenseNew=${H.Helpers.JSONStringify(LicenseNew)}`, LOG.LS.eGQL);
 
     const metadataRes: H.IOResults = await handleMetadata(idSystemObject, data.Metadata, user);
     if (!metadataRes.success)
@@ -332,6 +341,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (!Scene)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
+            const oldPosedAndQCd: boolean = Scene.PosedAndQCd;
             Scene.Name = data.Name;
             if (data.Scene) {
                 if (typeof data.Scene.PosedAndQCd === 'boolean') Scene.PosedAndQCd = data.Scene.PosedAndQCd;
@@ -339,6 +349,41 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
             if (!await Scene.update())
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+
+            // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
+            const oldDownloadState: boolean = oldPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseOld?.RestrictLevel);
+            const newDownloadState: boolean = Scene.PosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseNew?.RestrictLevel);
+
+            if (oldDownloadState !== newDownloadState) {
+                if (newDownloadState) {
+                    LOG.info(`updateObjectDetails generating downloads for scene ${H.Helpers.JSONStringify(Scene)}`, LOG.LS.eGQL);
+                    // Generate downloads
+                    const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+                    if (!workflowEngine)
+                        return sendResult(false, `Unable to fetch workflow engine for download generation for scene ${idObject}`);
+                    workflowEngine.generateSceneDownloads(Scene.idScene, { idUserInitiator: user?.idUser }); // don't await
+                } else { // Remove downloads
+                    LOG.info(`updateObjectDetails removing downloads for scene ${H.Helpers.JSONStringify(Scene)}`, LOG.LS.eGQL);
+                    // Compute downloads
+                    const DownloadMSXMap: Map<number, DBAPI.ModelSceneXref> | null = await PublishScene.computeDownloadMSXMap(Scene.idScene);
+                    if (!DownloadMSXMap)
+                        return sendResult(false, `Unable to fetch scene downloads for scene ${idObject}`);
+
+                    // For each download, compute assets, and set those to having an asset vresion override of 0, which means do not attach to the cloned system object
+                    const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
+                    for (const idSystemObject of DownloadMSXMap.keys()) {
+                        const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(idSystemObject);
+                        if (!assets)
+                            return sendResult(false, `Unable to fetch assets for idSystemObject ${idSystemObject} for scene ${idObject}`);
+                        for (const asset of assets)
+                            assetVersionOverrideMap.set(asset.idAsset, 0);
+                    }
+
+                    const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, 'Removing Downloads', assetVersionOverrideMap);
+                    if (!SOV)
+                        return sendResult(false, `Unable to clone system object version for idSystemObject ${idSystemObject} for scene ${idObject}`);
+                }
+            }
             break;
         }
         case COMMON.eSystemObjectType.eIntermediaryFile: {

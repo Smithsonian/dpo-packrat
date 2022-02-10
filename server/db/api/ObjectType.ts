@@ -285,6 +285,12 @@ export function LicenseRestrictLevelToPublishedStateEnum(restrictLevel: number):
     return COMMON.ePublishedState.eNotPublished;
 }
 
+export function LicenseAllowsDownloadGeneration(restrictLevel?: number): boolean {
+    if (restrictLevel === undefined)
+        return false;
+    return (restrictLevel <= 20); // "CC0, Publishable w/ Downloads" and "SI ToU, Publishable w/ Downloads"
+}
+
 // Keep this in sync with SQL in WorkflowListResult.search()
 export function convertWorkflowJobRunStatusEnumToString(eStatus: COMMON.eWorkflowJobRunStatus): string {
     switch (eStatus) {
