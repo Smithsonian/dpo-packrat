@@ -4,7 +4,6 @@ import * as COL from '../../../../../collections/interface/';
 import * as LOG from '../../../../../utils/logger';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
-import * as WF from '../../../../../workflow/interface';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
 import { SystemObjectTypeToName } from '../../../../../db/api/ObjectType';
@@ -351,39 +350,10 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
-            const oldDownloadState: boolean = oldPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseOld?.RestrictLevel);
-            const newDownloadState: boolean = Scene.PosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseNew?.RestrictLevel);
-
-            if (oldDownloadState !== newDownloadState) {
-                if (newDownloadState) {
-                    LOG.info(`updateObjectDetails generating downloads for scene ${H.Helpers.JSONStringify(Scene)}`, LOG.LS.eGQL);
-                    // Generate downloads
-                    const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
-                    if (!workflowEngine)
-                        return sendResult(false, `Unable to fetch workflow engine for download generation for scene ${idObject}`);
-                    workflowEngine.generateSceneDownloads(Scene.idScene, { idUserInitiator: user?.idUser }); // don't await
-                } else { // Remove downloads
-                    LOG.info(`updateObjectDetails removing downloads for scene ${H.Helpers.JSONStringify(Scene)}`, LOG.LS.eGQL);
-                    // Compute downloads
-                    const DownloadMSXMap: Map<number, DBAPI.ModelSceneXref> | null = await PublishScene.computeDownloadMSXMap(Scene.idScene);
-                    if (!DownloadMSXMap)
-                        return sendResult(false, `Unable to fetch scene downloads for scene ${idObject}`);
-
-                    // For each download, compute assets, and set those to having an asset vresion override of 0, which means do not attach to the cloned system object
-                    const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
-                    for (const idSystemObject of DownloadMSXMap.keys()) {
-                        const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(idSystemObject);
-                        if (!assets)
-                            return sendResult(false, `Unable to fetch assets for idSystemObject ${idSystemObject} for scene ${idObject}`);
-                        for (const asset of assets)
-                            assetVersionOverrideMap.set(asset.idAsset, 0);
-                    }
-
-                    const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, 'Removing Downloads', assetVersionOverrideMap);
-                    if (!SOV)
-                        return sendResult(false, `Unable to clone system object version for idSystemObject ${idSystemObject} for scene ${idObject}`);
-                }
-            }
+            const res: H.IOResults = await PublishScene.handleSceneUpdates(Scene.idScene, idSystemObject, user?.idUser,
+                oldPosedAndQCd, Scene.PosedAndQCd, LicenseOld, LicenseNew);
+            if (!res.success)
+                return sendResult(false, res.error);
             break;
         }
         case COMMON.eSystemObjectType.eIntermediaryFile: {
