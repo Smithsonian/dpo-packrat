@@ -7,7 +7,7 @@ import { FieldType, InputField } from '../../../../components';
 import { useSubjectStore, StateIdentifier, useVocabularyStore, eObjectMetadataType, useObjectMetadataStore } from '../../../../store';
 import SearchList from '../../../Ingestion/components/SubjectItem/SearchList';
 import { RotationOriginInput, RotationQuaternionInput } from '../../../Repository/components/DetailsView/DetailsTab/SubjectDetails';
-import { getUnitsList, getUnitFromEdanAbbreviation, createLocation, createSubjectWithIdentifiers } from '../../hooks/useAdminview';
+import { getUnitsList, getUnitFromEdanAbbreviation, createLocation, createSubjectWithIdentifiers } from '../../hooks/useAdminView';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
 import { eVocabularySetID } from '../../../../types/server';
