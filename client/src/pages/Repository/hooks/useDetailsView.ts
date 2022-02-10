@@ -63,7 +63,8 @@ export async function getObjectAssets(idSystemObject: number) {
             input: {
                 idSystemObject
             }
-        }
+        },
+        fetchPolicy: 'no-cache'
     });
 }
 
@@ -106,7 +107,7 @@ export async function updateDetailsTabData(
                 data
             }
         },
-        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject', 'getAssetDetailsForSystemObject']
     });
 }
 
@@ -217,7 +218,7 @@ export async function clearLicenseAssignment(idSystemObject: number, clearAll?: 
                 clearAll
             }
         },
-        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject', 'getAssetDetailsForSystemObject']
     });
 }
 
@@ -230,7 +231,7 @@ export async function assignLicense(idSystemObject: number, idLicense: number): 
                 idSystemObject
             }
         },
-        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject', 'getAssetDetailsForSystemObject']
     });
 }
 

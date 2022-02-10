@@ -3,6 +3,7 @@ import * as DBAPI from '../../db';
 import * as LOG from '../logger';
 import * as H from '../helpers';
 import * as SVX from '../../types/voyager';
+import * as THREE from 'three';
 
 /** Create instances using the static SvxExtraction.extract() */
 export class SvxExtraction {
@@ -60,20 +61,67 @@ export class SvxExtraction {
         if (!this.document.models)
             return false;
         this.modelDetails = [];
-        for (const model of this.document.models) {
-            let TS0, TS1, TS2, R0, R1, R2, R3: number | null = null;
-            let BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z: number | null = null;
-            if (model.translation && Array.isArray(model.translation) && model.translation.length >= 3) {
-                TS0 = model.translation[0];
-                TS1 = model.translation[1];
-                TS2 = model.translation[2];
+
+        // extract nodes that correspond to our models, for use in determining tranlation, scale, and rotation
+        const nodeModelMap: Map<number, SVX.INode> = new Map<number, SVX.INode>();
+        if (this.document.nodes) {
+            for (const node of this.document.nodes) {
+                if (node.model !== undefined)
+                    nodeModelMap.set(node.model, node);
             }
-            if (model.rotation && Array.isArray(model.rotation) && model.rotation.length >= 4) {
-                R0 = model.rotation[0];
-                R1 = model.rotation[1];
-                R2 = model.rotation[2];
-                R3 = model.rotation[3];
+        }
+
+        const modelTotal: number = this.document.models.length;
+        for (let modelIndex: number = 0; modelIndex < modelTotal; modelIndex++) {
+            let BoundingBoxP1X: number | null = null;
+            let BoundingBoxP1Y: number | null = null;
+            let BoundingBoxP1Z: number | null = null;
+            let BoundingBoxP2X: number | null = null;
+            let BoundingBoxP2Y: number | null = null;
+            let BoundingBoxP2Z: number | null = null;
+
+            const model = this.document.models[modelIndex];
+
+            const modelMatrix: THREE.Matrix4            = new THREE.Matrix4();
+            const hasModelTranslation: boolean          = (model.translation && Array.isArray(model.translation)  && model.translation.length  >= 3) ?? false;
+            const hasModelRotation: boolean             = (model.rotation    && Array.isArray(model.rotation)     && model.rotation.length     >= 4) ?? false;
+            const modelTranslation: THREE.Vector3       = hasModelTranslation ? new THREE.Vector3().fromArray(model.translation!) : new THREE.Vector3();              // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            const modelRotation: THREE.Quaternion       = hasModelRotation    ? new THREE.Quaternion().fromArray(model.rotation!) : new THREE.Quaternion();           // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            modelMatrix.compose(modelTranslation, modelRotation, new THREE.Vector3().setScalar(1));
+
+            // handle transformations applied at the "node" level for our model ... this can happen if the Voyager Story user edits the settings of a model
+            const node: SVX.INode | undefined = nodeModelMap.get(modelIndex);
+            if (node) {
+                const hasTranslation: boolean           = (node.translation && Array.isArray(node.translation)  && node.translation.length  >= 3) ?? false;
+                const hasRotation: boolean              = (node.rotation    && Array.isArray(node.rotation)     && node.rotation.length     >= 4) ?? false;
+                const hasScale: boolean                 = (node.scale       && Array.isArray(node.scale)        && node.scale.length        >= 3) ?? false;
+
+                const nodeTranslation: THREE.Vector3    = hasTranslation ? new THREE.Vector3().fromArray(node.translation!) : new THREE.Vector3();              // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                const nodeRotation: THREE.Quaternion    = hasRotation    ? new THREE.Quaternion().fromArray(node.rotation!) : new THREE.Quaternion();           // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                const nodeScale: THREE.Vector3          = hasScale       ? new THREE.Vector3().fromArray(node.scale!)       : new THREE.Vector3().setScalar(1); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                const nodeMatrix: THREE.Matrix4 = new THREE.Matrix4();
+                nodeMatrix.compose(nodeTranslation, nodeRotation, nodeScale);
+                modelMatrix.multiply(nodeMatrix);
+                LOG.info(`svxReader.extractModelDetails nodeMatrix=${JSON.stringify(nodeMatrix)}`, LOG.LS.eSYS);
             }
+
+            const finalTranslation: THREE.Vector3   = new THREE.Vector3();
+            const finalRotation: THREE.Quaternion   = new THREE.Quaternion();
+            const finalScale: THREE.Vector3         = new THREE.Vector3().setScalar(1);
+            modelMatrix.decompose(finalTranslation, finalRotation, finalScale);
+            LOG.info(`svxReader.extractModelDetails modelMatrix=${JSON.stringify(modelMatrix)}`, LOG.LS.eSYS);
+
+            const TS0: number = finalTranslation.x;
+            const TS1: number = finalTranslation.y;
+            const TS2: number = finalTranslation.z;
+            const R0: number = finalRotation.x;
+            const R1: number = finalRotation.y;
+            const R2: number = finalRotation.z;
+            const R3: number = finalRotation.w;
+            const S0: number = finalScale.x;
+            const S1: number = finalScale.y;
+            const S2: number = finalScale.z;
+
             if (model.boundingBox) {
                 if (Array.isArray(model.boundingBox.min) && model.boundingBox.min.length >= 3) {
                     BoundingBoxP1X = model.boundingBox.min[0];
@@ -92,7 +140,7 @@ export class SvxExtraction {
                         idModelSceneXref: 0, idModel: 0, idScene: 0, Name: asset.uri, Usage: derivative.usage, Quality: derivative.quality,
                         FileSize: asset.byteSize !== undefined ? BigInt(asset.byteSize) : null, UVResolution: asset.imageSize || null,
                         BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
-                        TS0, TS1, TS2, R0, R1, R2, R3
+                        TS0, TS1, TS2, R0, R1, R2, R3, S0, S1, S2
                     });
 
                     this.modelDetails.push(xref);
@@ -169,6 +217,7 @@ export class SvxReader {
 
     async loadFromJSON(json: string): Promise<H.IOResults> {
         try {
+            // LOG.info(`svxReader.loadFromJSON\n${json}`, LOG.LS.eSYS);
             const obj: any = JSON.parse(json);  // may throw an exception, if json is not valid JSON
             const validRes: H.IOResults = SvxReader.DV.validate(obj);
             if (!validRes.success) {

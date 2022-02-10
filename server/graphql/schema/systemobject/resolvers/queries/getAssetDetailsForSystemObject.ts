@@ -49,6 +49,7 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
         eGridType = eAssetGridType.eScene;
         columns = AssetGridDetailScene.getColumns();
         await extractMetadata(idSystemObject, AssetGridDetailScene.getMetadataColumnNames(), metadataMetaMap);
+        await extractSceneAttachmentMetadata(SO.idScene, metadataMetaMap);
     }
 
     let assetDetailPreferred: AssetGridDetailBase | null = null;
@@ -163,3 +164,51 @@ async function extractMetadata(idSystemObject: number, metadataColumns: string[]
     }
     return true;
 }
+
+async function extractSceneAttachmentMetadata(idScene: number, metadataMetaMap: Map<number, Map<string, string>>): Promise<boolean> {
+    const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(idScene);
+    if (!MSXs) {
+        LOG.error(`getAssetDetailsForSystemObject extractSceneAttachmentMetadata failed to fetch ModelSceneXref for scene ${idScene}`, LOG.LS.eGQL);
+        return false;
+    }
+
+    for (const MSX of MSXs) {
+        const SOIModel: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ idObject: MSX.idModel, eObjectType: COMMON.eSystemObjectType.eModel });
+        if (!SOIModel) {
+            LOG.error(`getAssetDetailsForSystemObject extractSceneAttachmentMetadata failed to fetch system object info for model ${MSX.idModel}`, LOG.LS.eGQL);
+            continue;
+        }
+
+        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(SOIModel.idSystemObject);
+        if (!assetVersions)
+            continue;
+
+        for (const assetVersion of assetVersions) {
+            const SOIAV: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
+            if (!SOIAV) {
+                LOG.error(`getAssetDetailsForSystemObject extractSceneAttachmentMetadata failed to fetch system object info for asset version ${assetVersion.idAssetVersion}`, LOG.LS.eGQL);
+                continue;
+            }
+
+            let metadataMap: Map<string, string> | undefined = metadataMetaMap.get(SOIAV.idSystemObject);
+            if (!metadataMap) {
+                metadataMap = new Map<string, string>();
+                metadataMetaMap.set(SOIAV.idSystemObject, metadataMap);
+            }
+
+            // if (MSX.Usage)
+            //     metadataMap.set('usage', MSX.Usage);
+            if (MSX.Quality)
+                metadataMap.set('quality', MSX.Quality);
+            if (MSX.UVResolution)
+                metadataMap.set('uvresolution', MSX.UVResolution.toString());
+        }
+        // if (MSX.BoundingBoxP1X && MSX.BoundingBoxP1Y && MSX.BoundingBoxP1Z && MSX.BoundingBoxP2X && MSX.BoundingBoxP2Y && MSX.BoundingBoxP2Z)
+        //     metadataMap.set('boundingbox', `(${round(MSX.BoundingBoxP1X)}, ${round(MSX.BoundingBoxP1Y)}, ${round(MSX.BoundingBoxP1Z)}) - (${round(MSX.BoundingBoxP2X)}, ${round(MSX.BoundingBoxP2Y)}, ${round(MSX.BoundingBoxP2Z)})`);
+    }
+    return true;
+}
+
+// function round(num: number): string {
+//     return (Math.ceil(num * 100) / 100).toString();
+// }
