@@ -16,6 +16,10 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
     dateCreated: Date;
     size: string;
 
+    // usage: string | null;
+    quality: string | null;
+    uvResolution: number | null;
+
     isAttachment: boolean | null;
     type: string | null;
     category: string | null;
@@ -35,6 +39,10 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
         this.version = assetVersion.Version;
         this.dateCreated = assetVersion.DateCreated;
         this.size = assetVersion.StorageSize.toString();
+
+        // this.usage = H.Helpers.safeString(metadataMap.get('usage'));
+        this.quality = H.Helpers.safeString(metadataMap.get('quality'));
+        this.uvResolution = H.Helpers.safeNumber(metadataMap.get('uvresolution'));
 
         this.isAttachment = H.Helpers.safeBoolean(metadataMap.get('isattachment'));
         this.type = H.Helpers.safeString(metadataMap.get('type'));
@@ -56,14 +64,18 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
             { colName: 'assetType', colLabel: 'Asset Type', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
             { colName: 'version', colLabel: 'Version', colDisplay: true, colType: COMMON.eAssetGridColumnType.eNumber, colAlign: 'center' },
             { colName: 'dateCreated', colLabel: 'Date Created', colDisplay: true, colType: COMMON.eAssetGridColumnType.eDate, colAlign: 'center' },
-            { colName: 'size', colLabel: 'Size', colDisplay: true, colType: COMMON.eAssetGridColumnType.eFileSize, colAlign: 'center' },
+            { colName: 'size', colLabel: 'Size', colDisplay: true, colType: COMMON.eAssetGridColumnType.eFileSize, colAlign: 'right' },
+
+            // { colName: 'usage', colLabel: 'Usage', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'quality', colLabel: 'Quality', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
+            { colName: 'uvResolution', colLabel: 'UV', colDisplay: true, colType: COMMON.eAssetGridColumnType.eNumber, colAlign: 'center' },
 
             { colName: 'isAttachment', colLabel: 'Att?', colDisplay: true, colType: COMMON.eAssetGridColumnType.eBoolean, colAlign: 'center' },
             { colName: 'type', colLabel: 'Type', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
-            { colName: 'category', colLabel: 'Category', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'category', colLabel: 'Cat', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
             { colName: 'units', colLabel: 'Units', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
-            { colName: 'modelType', colLabel: 'Model Type', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
-            { colName: 'fileType', colLabel: 'File Type', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'modelType', colLabel: 'Model', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
+            { colName: 'fileType', colLabel: 'File', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
             { colName: 'gltfStandardized', colLabel: 'glTF Std', colDisplay: true, colType: COMMON.eAssetGridColumnType.eBoolean, colAlign: 'center' },
             { colName: 'dracoCompressed', colLabel: 'Draco Compr', colDisplay: true, colType: COMMON.eAssetGridColumnType.eBoolean, colAlign: 'center' },
             { colName: 'title', colLabel: 'Title', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
@@ -71,7 +83,7 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
     }
 
     static getMetadataColumnNames(): string[] {
-        return ['isattachment', 'type', 'category', 'units', 'modeltype', 'filetype', 'gltfstandardized', 'dracocompressed', 'title'];
+        return [/* 'usage', */ 'quality', 'uvresolution', 'isattachment', 'type', 'category', 'units', 'modeltype', 'filetype', 'gltfstandardized', 'dracocompressed', 'title'];
     }
 }
 

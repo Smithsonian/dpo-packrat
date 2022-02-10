@@ -10,7 +10,6 @@ import { Loader } from '../../../../../components';
 import { GetSceneDocument } from '../../../../../types/graphql';
 import { DetailComponentProps } from './index';
 import { apolloClient } from '../../../../../graphql/index';
-import ReferenceModels from '../../../../Ingestion/components/Metadata/Scene/ReferenceModels';
 import { ReadOnlyRow, CheckboxField } from '../../../../../components/index';
 import { useDetailTabStore } from '../../../../../store';
 import { eSystemObjectType } from '@dpo-packrat/common';
@@ -87,7 +86,6 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
 
     return (
         <Box>
-            <ReferenceModels referenceModels={SceneDetails.ModelSceneXref} />
             <Box display='flex' flexDirection='column' className={classes.container}>
                 <CheckboxField
                     label='Approved for Publication'

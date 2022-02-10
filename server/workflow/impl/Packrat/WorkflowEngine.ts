@@ -40,6 +40,7 @@ type ComputeSceneInfoResult = {
     assetVersionDiffuse?: DBAPI.AssetVersion | undefined;
     assetVersionMTL?: DBAPI.AssetVersion | undefined;
     scene?: DBAPI.Scene | undefined;
+    licenseResolver?: DBAPI.LicenseResolver | undefined;
 };
 
 export class WorkflowEngine implements WF.IWorkflowEngine {
@@ -125,6 +126,27 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
     }
 
+    async generateSceneDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow[] | null> {
+        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
+        if (!scene) {
+            LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene from idScene ${idScene}`, LOG.LS.eWF);
+            return null;
+        }
+
+        const SOScene: DBAPI.SystemObject | null = await scene.fetchSystemObject();
+        if (!SOScene) {
+            LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene system object from scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
+            return null;
+        }
+
+        const CSIR: ComputeSceneInfoResult = await this.computeSceneInfo(idScene, SOScene.idSystemObject);
+        if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
+            LOG.info(`WorkflowEngine.generateSceneDownloads did not locate a scene with a master model parent ready for download generation for scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
+            return null;
+        }
+        return await this.eventIngestionIngestObjectScene(CSIR, workflowParams, true);
+    }
+
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
         LOG.info(`WorkflowEngine.eventIngestionIngestObject params=${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
         if (!workflowParams || !workflowParams.idSystemObject)
@@ -193,6 +215,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                             CSIR = undefined;
                             continue;
                         }
+
+                        if (!DBAPI.LicenseAllowsDownloadGeneration(CSIR.licenseResolver?.License?.RestrictLevel)) { // we don't have a license resolver, or that license does not allow download generation
+                            LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)} which does not have the needed license for download generation`, LOG.LS.eWF);
+                            CSIR = undefined;
+                            continue;
+                        }
                     }
                     break;
             }
@@ -203,7 +231,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             workflows = workflows.concat(await this.eventIngestionIngestObjectModel(CMIR, workflowParams, assetsIngested) ?? []);
         if (CSIR)
             workflows = workflows.concat(await this.eventIngestionIngestObjectScene(CSIR, workflowParams, assetsIngested) ?? []);
-
         return workflows.length > 0 ? workflows : null;
     }
 
@@ -434,8 +461,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         WFC.workflow = new DBAPI.Workflow({
             idVWorkflowType,
-            idProject: workflowParams.idProject,
-            idUserInitiator: workflowParams.idUserInitiator,
+            idProject: workflowParams.idProject ?? null,
+            idUserInitiator: workflowParams.idUserInitiator ?? null,
             DateInitiated: dtNow,
             DateUpdated: dtNow,
             Parameters: workflowParams.parameters ? JSON.stringify(workflowParams.parameters, H.Helpers.saferStringify) : null,
@@ -456,7 +483,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const workflowStep: DBAPI.WorkflowStep = new DBAPI.WorkflowStep({
             idWorkflow: WFC.workflow.idWorkflow,
             idJobRun: null,
-            idUserOwner: workflowParams.idUserInitiator,
+            idUserOwner: workflowParams.idUserInitiator ?? null,
             idVWorkflowStepType,
             State: COMMON.eWorkflowJobRunStatus.eCreated,
             DateCreated: dtNow,
@@ -622,6 +649,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             LOG.error(`WorkflowEngine.computeSceneInfo unable to compute scene from ${JSON.stringify(idScene)}`, LOG.LS.eWF);
             return { exitEarly: true };
         }
+        const scene: DBAPI.Scene = sceneConstellation.Scene;
+        const licenseResolver: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObjectScene);
+        if (!licenseResolver)
+            LOG.error(`WorkflowEngine.computeSceneInfo unable to compute license resolver for scene system object ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
 
         const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObjectScene);
         if (!assetVersions) {
@@ -659,11 +690,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         for (const SO of SOMasters) {
             if (!SO.idModel)
                 continue;
-            const model: DBAPI.Model | null = await DBAPI.Model.fetch(SO.idModel);
-            if (!model) {
-                LOG.error(`WorkflowEngine.computeSceneInfo unable to compute model from ${JSON.stringify(SO.idModel)}`, LOG.LS.eWF);
-                continue;
-            }
 
             CMIR = await this.computeModelInfo(SO.idModel, SO.idSystemObject);
             if (!CMIR.exitEarly) // found a master model!
@@ -676,8 +702,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { exitEarly: true };
         }
 
-        const retValue = { exitEarly: false, idScene, idModel: CMIR.idModel, idSystemObjectScene, assetSVX, assetVersionGeometry: CMIR.assetVersionGeometry,
-            assetVersionDiffuse: CMIR.assetVersionDiffuse, assetVersionMTL: CMIR.assetVersionMTL, scene: sceneConstellation && sceneConstellation.Scene ? sceneConstellation.Scene : undefined };
+        const retValue = { exitEarly: false, idScene, idModel: CMIR.idModel, idSystemObjectScene,
+            assetSVX, assetVersionGeometry: CMIR.assetVersionGeometry, assetVersionDiffuse: CMIR.assetVersionDiffuse,
+            assetVersionMTL: CMIR.assetVersionMTL, scene, licenseResolver };
         LOG.info(`WorkflowEngine.computeSceneInfo returning ${JSON.stringify(retValue, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         return retValue;
     }
