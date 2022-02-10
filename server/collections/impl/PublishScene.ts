@@ -24,6 +24,13 @@ export type SceneAssetCollector = {
     metadataSet?: DBAPI.Metadata[] | null;
 };
 
+export type SceneUpdateResult = {
+    success: boolean;
+    downloadsGenerated?: boolean;
+    downloadsRemoved?: boolean;
+    error?: string;
+};
+
 export class PublishScene {
     private idSystemObject: number;
     private analyzed: boolean = false;
@@ -277,7 +284,7 @@ export class PublishScene {
 
     static async handleSceneUpdates(idScene: number, idSystemObject: number, idUser: number | undefined,
         oldPosedAndQCd: boolean, newPosedAndQCd: boolean,
-        LicenseOld: DBAPI.License | undefined, LicenseNew: DBAPI.License | undefined): Promise<H.IOResults> {
+        LicenseOld: DBAPI.License | undefined, LicenseNew: DBAPI.License | undefined): Promise<SceneUpdateResult> {
         // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
         const oldDownloadState: boolean = oldPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseOld?.RestrictLevel);
         const newDownloadState: boolean = newPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseNew?.RestrictLevel);
@@ -292,6 +299,7 @@ export class PublishScene {
             if (!workflowEngine)
                 return PublishScene.sendResult(false, `Unable to fetch workflow engine for download generation for scene ${idScene}`);
             workflowEngine.generateSceneDownloads(idScene, { idUserInitiator: idUser }); // don't await
+            return { success: true, downloadsGenerated: true, downloadsRemoved: false };
         } else { // Remove downloads
             LOG.info(`PublishScene.handleSceneUpdates removing downloads for scene ${idScene}`, LOG.LS.eGQL);
             // Compute downloads
@@ -312,8 +320,8 @@ export class PublishScene {
             const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, 'Removing Downloads', assetVersionOverrideMap);
             if (!SOV)
                 return PublishScene.sendResult(false, `Unable to clone system object version for idSystemObject ${idSystemObject} for scene ${idScene}`);
+            return { success: true, downloadsGenerated: false, downloadsRemoved: true };
         }
-        return PublishScene.sendResult(true);
     }
 
     private static sendResult(success: boolean, error?: string): H.IOResults {

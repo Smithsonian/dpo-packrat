@@ -3,8 +3,7 @@ import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as LOG from '../../../../../utils/logger';
-import * as H from '../../../../../utils/helpers';
-import { PublishScene } from '../../../../../collections/impl/PublishScene';
+import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
 
 export default async function clearLicenseAssignment(_: Parent, args: MutationClearLicenseAssignmentArgs, context: Context): Promise<ClearLicenseAssignmentResult> {
@@ -34,10 +33,11 @@ export default async function clearLicenseAssignment(_: Parent, args: MutationCl
             LOG.error(`clearLicenseAssignment unable to load scene with id ${oID.idObject}`, LOG.LS.eGQL);
             return { success: false, message: 'Unable to handle impact of license update' };
         }
-        const res: H.IOResults = await PublishScene.handleSceneUpdates(oID.idObject, idSystemObject, user?.idUser,
+        const res: SceneUpdateResult = await PublishScene.handleSceneUpdates(oID.idObject, idSystemObject, user?.idUser,
             scene.PosedAndQCd, scene.PosedAndQCd, LicenseOld, LicenseNew);
         if (!res.success)
             return { success: false, message: res.error };
+        return { success: true, message: res.downloadsGenerated ? 'Scene downloads are being generated' : res.downloadsRemoved ? 'Scene downloads were removed' : '' };
     }
 
     return { success: true, message: '' };

@@ -8,7 +8,7 @@ import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
 import { SystemObjectTypeToName } from '../../../../../db/api/ObjectType';
 import * as H from '../../../../../utils/helpers';
-import { PublishScene } from '../../../../../collections/impl/PublishScene';
+import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs, context: Context): Promise<UpdateObjectDetailsResult> {
@@ -350,11 +350,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
-            const res: H.IOResults = await PublishScene.handleSceneUpdates(Scene.idScene, idSystemObject, user?.idUser,
+            const res: SceneUpdateResult = await PublishScene.handleSceneUpdates(Scene.idScene, idSystemObject, user?.idUser,
                 oldPosedAndQCd, Scene.PosedAndQCd, LicenseOld, LicenseNew);
             if (!res.success)
                 return sendResult(false, res.error);
-            break;
+            return { success: true, message: res.downloadsGenerated ? 'Scene downloads are being generated' : res.downloadsRemoved ? 'Scene downloads were removed' : '' };
         }
         case COMMON.eSystemObjectType.eIntermediaryFile: {
             const IntermediaryFile = await DBAPI.IntermediaryFile.fetch(idObject);
