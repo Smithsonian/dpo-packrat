@@ -71,9 +71,9 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
     return (
         <table className={classes.container}>
             <thead>
-                <tr style={{ borderBottom: '1px solid grey' }}>
+                <tr style={{ borderBottom: '1px solid grey' }} >
                     {headers.map((header, index: number) => (
-                        <th key={index} align='center' style={{ padding: '0 5px 0 5px' }}>
+                        <th key={index} className={classes.tableCell} align='center' style={{ padding: '0 5px 0 5px' }}>
                             <Typography className={classes.header}>{header}</Typography>
                         </th>
                     ))}
