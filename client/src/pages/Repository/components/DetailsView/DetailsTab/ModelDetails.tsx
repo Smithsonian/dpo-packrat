@@ -10,11 +10,10 @@ import { Typography, Box, makeStyles, Select, MenuItem  } from '@material-ui/cor
 import React, { useEffect } from 'react';
 import { DateInputField, Loader, ReadOnlyRow } from '../../../../../components';
 import { useVocabularyStore, useDetailTabStore } from '../../../../../store';
-import { eVocabularySetID } from '../../../../../types/server';
+import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { extractModelConstellation } from '../../../../../constants/helperfunctions';
 import ObjectMeshTable from './../../../../Ingestion/components/Metadata/Model/ObjectMeshTable';
 import { DetailComponentProps } from './index';
-import { eSystemObjectType } from '../../../../../types/server';
 import { useStyles as useSelectStyles, SelectFieldProps } from '../../../../../components/controls/SelectField';
 
 export const useStyles = makeStyles(({ palette }) => ({
@@ -240,7 +239,7 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
                     {label}
                 </Typography>
             </div>
-            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline inputProps={{ 'title': `${name} select`, style: { width: '100%' } }} style={{ minWidth: '100%', width: 'fit-content' }}>
+            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline inputProps={{ 'title': `${name} select`, style: { width: '100%' } }} style={{ minWidth: '100%', width: 'fit-content' }} SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}>
                 {options.map(({ idVocabulary, Term }, index) => (
                     <MenuItem key={index} value={idVocabulary}>
                         {Term}

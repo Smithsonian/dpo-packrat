@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import * as DBC from '../../connection';
 import * as LOG from '../../../utils/logger';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export class WorkflowListResult {
     idWorkflow: number = 0;

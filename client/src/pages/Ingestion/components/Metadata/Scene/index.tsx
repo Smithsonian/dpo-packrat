@@ -13,7 +13,7 @@ import ReferenceModels from './ReferenceModels';
 import SceneDataForm from './SceneDataForm';
 import { apolloClient } from '../../../../../graphql/index';
 import { GetSceneForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
-import { eSystemObjectType } from '../../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { toast } from 'react-toastify';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
 import ObjectSelectModal from '../Model/ObjectSelectModal';
@@ -195,7 +195,7 @@ function Scene(props: SceneProps): React.ReactElement {
             </Box>
             {!idAsset && (
                 <Fragment>
-                    <Box mb={2} width='60vw'>
+                    <Box mb={2}>
                         <RelatedObjectsList
                             type={RelatedObjectType.Source}
                             relatedObjects={scene.sourceObjects}
@@ -204,7 +204,7 @@ function Scene(props: SceneProps): React.ReactElement {
                             relationshipLanguage='Parents'
                         />
                     </Box>
-                    <Box mb={2} width='60vw'>
+                    <Box mb={2}>
                         <RelatedObjectsList
                             type={RelatedObjectType.Derived}
                             relatedObjects={scene.derivedObjects}

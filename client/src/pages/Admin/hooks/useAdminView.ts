@@ -27,7 +27,8 @@ export async function getUnitsList() {
             input: {
                 search: ''
             }
-        }
+        },
+        fetchPolicy: 'no-cache'
     });
 }
 
@@ -83,7 +84,8 @@ export async function createSubjectWithIdentifiers(input: CreateSubjectWithIdent
             input: {
                 ...input
             }
-        }
+        },
+        refetchQueries: ['getSubjectList']
     });
 }
 

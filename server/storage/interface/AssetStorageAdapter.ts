@@ -16,7 +16,7 @@ import { VocabularyCache } from '../../cache';
 import { ASL, LocalStore } from '../../utils/localStore';
 import { SvxReader } from '../../utils/parser';
 import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
@@ -1301,29 +1301,33 @@ export class AssetStorageAdapter {
     static async discardAssetVersion(assetVersion: DBAPI.AssetVersion): Promise<AssetStorageResult> {
         LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}`, LOG.LS.eSTR);
         // only works for staged versions -- fail if not staged
-        if (assetVersion.Ingested || !assetVersion.StorageKeyStaging)
+        if (assetVersion.Ingested)
             return { asset: null, assetVersion, success: false, error: 'AssetStorageAdapter.discardAssetVersion: Ingested asset versions cannot be discarded' };
 
-        // discard staged asset
-        // Bulk Ingest and Zip files may be referenced by multiple asset versions. To avoid removing the file referenced by these,
-        // we only perform the discard if this is the final non-retired reference
-        const storageKeyStagingCount: number | null = await DBAPI.AssetVersion.countStorageKeyStaging(assetVersion.StorageKeyStaging, false, false);
-        if (storageKeyStagingCount === null) {
-            const error: string = `AssetStorageAdapter.discardAssetVersion call to AssetVersion.countStorageKeyStaging(${assetVersion.StorageKeyStaging}, false, false) failed`;
-            LOG.error(error, LOG.LS.eSTR);
-            return { asset: null, assetVersion, success: false, error };
-        }
-        if (storageKeyStagingCount === 1) {
-            // fetch storage interface
-            const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
-            if (!storage)
-                return { asset: null, assetVersion, success: false, error: 'AssetStorageAdapter.discardAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()' };
+        // this should be true, but a storage failure may result in a cleared StorageKeyStaging for a non-ingested asset version
+        if (assetVersion.StorageKeyStaging) {
+            // discard staged asset
+            // Bulk Ingest and Zip files may be referenced by multiple asset versions. To avoid removing the file referenced by these,
+            // we only perform the discard if this is the final non-retired reference
+            const storageKeyStagingCount: number | null = await DBAPI.AssetVersion.countStorageKeyStaging(assetVersion.StorageKeyStaging, false, false);
+            if (storageKeyStagingCount === null) {
+                const error: string = `AssetStorageAdapter.discardAssetVersion call to AssetVersion.countStorageKeyStaging(${assetVersion.StorageKeyStaging}, false, false) failed`;
+                LOG.error(error, LOG.LS.eSTR);
+                return { asset: null, assetVersion, success: false, error };
+            }
+            if (storageKeyStagingCount === 1) {
+                // fetch storage interface
+                const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
+                if (!storage)
+                    return { asset: null, assetVersion, success: false, error: 'AssetStorageAdapter.discardAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()' };
 
-            const DWSR: STORE.DiscardWriteStreamResult = await storage.discardWriteStream({ storageKey: assetVersion.StorageKeyStaging });
-            if (!DWSR.success)
-                return { asset: null, assetVersion, success: false, error: `AssetStorageAdapter.discardAssetVersion: ${DWSR.error}` };
+                const DWSR: STORE.DiscardWriteStreamResult = await storage.discardWriteStream({ storageKey: assetVersion.StorageKeyStaging });
+                if (!DWSR.success)
+                    return { asset: null, assetVersion, success: false, error: `AssetStorageAdapter.discardAssetVersion: ${DWSR.error}` };
+            } else
+                LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion} skipped IStorage.discardWriteStream as asset reference count is ${storageKeyStagingCount} !== 1`, LOG.LS.eSTR);
         } else
-            LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion} skipped IStorage.discardWriteStream as asset reference count is ${storageKeyStagingCount} !== 1`, LOG.LS.eSTR);
+            LOG.error(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}) was not ingested but had no StorageKeyStaging`, LOG.LS.eSTR);
 
         // retire assetVersion
         if (!await DBAPI.SystemObject.retireSystemObject(assetVersion)) /* istanbul ignore next */

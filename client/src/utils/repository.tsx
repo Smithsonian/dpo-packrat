@@ -20,7 +20,7 @@ import { StateRelatedObject } from '../store';
 import { palette } from '../theme';
 import Colors, { RepositoryColorVariant } from '../theme/colors';
 import { NavigationResultEntry } from '../types/graphql';
-import { eMetadata, eSystemObjectType } from '../types/server';
+import { eMetadata, eSystemObjectType } from '@dpo-packrat/common';
 import { safeDate, convertLocalDateToUTC } from './shared';
 import { ExistingRelationship } from '../types/graphql';
 
@@ -231,7 +231,7 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
             aria-label={`link to view system object of id ${idSystemObject}`}
             style={{ textDecoration: 'none', color: 'black' }}
         >
-            <AiOutlineFileText />
+            <AiOutlineFileText style={{ verticalAlign: 'bottom' }} />
         </a>
     );
 

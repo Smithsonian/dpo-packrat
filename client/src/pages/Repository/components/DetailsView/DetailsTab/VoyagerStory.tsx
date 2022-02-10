@@ -7,6 +7,7 @@
 import * as React from 'react';
 import useScript from '../../../hooks/useScript';
 import '../../../../../global/quill.snow.css';
+import useVoyagerStyling from '../../../hooks/useVoyagerStoryStyling';
 
 declare global {
     namespace JSX {
@@ -28,10 +29,8 @@ type VoyagerStoryProps = {
 function VoyagerStory(props: VoyagerStoryProps): React.ReactElement {
     const { root, document, width, height, mode } = props;
 
-    React.useEffect(() => {
-        require('../../../../../global/voyager-story.min.css');
-    }, []);
 
+    useVoyagerStyling();
     useScript('https://code.jquery.com/pep/0.4.3/pep.min.js');
     useScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/104/three.min.js');
     useScript('https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.js');

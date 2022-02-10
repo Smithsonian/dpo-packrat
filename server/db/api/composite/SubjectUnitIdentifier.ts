@@ -3,7 +3,7 @@ import { Vocabulary } from '../Vocabulary';
 import * as DBC from '../../connection';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export class SubjectUnitIdentifier {
     idSubject!: number;
@@ -15,7 +15,7 @@ export class SubjectUnitIdentifier {
 
     static initialized: boolean = false;
     static idVocabARK: number;
-    static idVocabUnitCMSID: number;
+    static idVocabEdanRecordID: number;
 
     static async fetch(query: string, maxResults: number): Promise<SubjectUnitIdentifier[] | null> {
         if (!query)         // Searches on '' return everything!  Don't allow this due to performance issues
@@ -23,10 +23,10 @@ export class SubjectUnitIdentifier {
 
         try {
             if (!SubjectUnitIdentifier.initialized) {
-                const vocabARK:         Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
-                const vocabUnitCMSID:   Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeUnitCMSID);
+                const vocabARK:             Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
+                const vocabEdanRecordID:    Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
                 SubjectUnitIdentifier.idVocabARK = vocabARK ? vocabARK.idVocabulary : /* istanbul ignore next */ 76;
-                SubjectUnitIdentifier.idVocabUnitCMSID = vocabUnitCMSID ? vocabUnitCMSID.idVocabulary : /* istanbul ignore next */ 77;
+                SubjectUnitIdentifier.idVocabEdanRecordID = vocabEdanRecordID ? vocabEdanRecordID.idVocabulary : /* istanbul ignore next */ 77;
                 SubjectUnitIdentifier.initialized = true;
             }
 
@@ -41,7 +41,7 @@ export class SubjectUnitIdentifier {
                 SELECT idSystemObject
                 FROM Identifier
                 WHERE (idVIdentifierType = ${SubjectUnitIdentifier.idVocabARK} OR
-                       idVIdentifierType = ${SubjectUnitIdentifier.idVocabUnitCMSID})
+                       idVIdentifierType = ${SubjectUnitIdentifier.idVocabEdanRecordID})
                   AND IdentifierValue LIKE ${query}
                   
                 UNION
@@ -64,7 +64,7 @@ export class SubjectUnitIdentifier {
                 SELECT ID.idSystemObject, ID.IdentifierValue
                 FROM Identifier AS ID
                 JOIN _IDMatches AS IDM ON (ID.idSystemObject = IDM.idSystemObject)
-                WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabUnitCMSID}
+                WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabEdanRecordID}
             )
             SELECT DISTINCT S.idSubject, SO.idSystemObject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation', 
                 IDA.IdentifierValue AS 'IdentifierPublic', IDU.IdentifierValue AS 'IdentifierCollection'

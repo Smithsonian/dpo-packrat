@@ -21,6 +21,10 @@ const getUploadedAssetVersion = gql`
             idAssetVersionsUpdated
             UpdatedAssetVersionMetadata {
                 idAssetVersion
+                UpdatedObjectName
+                Item {
+                    Name
+                }
                 CaptureDataPhoto {
                     name
                     dateCaptured

@@ -20,7 +20,6 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     select: {
         height: 24,
-        padding: '0px 10px',
         background: palette.background.paper,
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         borderRadius: 5,
@@ -96,6 +95,7 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
                                             onChange={update}
                                             disableUnderline
                                             className={classes.select}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                         >
                                             {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                         </Select>

@@ -7,7 +7,7 @@ import { AssetVersion, Project, SystemObjectInfo } from '../../../../../db';
 import* as CACHE from '../../../../../cache';
 import { IngestMetadata, BulkIngestReader } from '../../../../../utils/parser';
 import * as LOG from '../../../../../utils/logger';
-import * as COMMON from '../../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export default async function getAssetVersionsDetails(_: Parent, args: QueryGetAssetVersionsDetailsArgs, _context: Context): Promise<GetAssetVersionsDetailsResult> {
     let firstSubject: SubjectUnitIdentifier | null = null;

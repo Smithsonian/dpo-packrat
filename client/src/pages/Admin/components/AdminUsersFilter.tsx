@@ -7,7 +7,7 @@ import { User_Status } from '../../../types/graphql';
 import { useHistory } from 'react-router-dom';
 import Clear from '@material-ui/icons/Clear';
 
-const useStyles = makeStyles(({ typography, palette, breakpoints }) => ({
+const useStyles = makeStyles(({ typography, palette }) => ({
     searchUsersFilterButton: {
         backgroundColor: '#3854d0',
         color: 'white',
@@ -59,13 +59,9 @@ const useStyles = makeStyles(({ typography, palette, breakpoints }) => ({
         width: 'fit-content',
         height: 30,
         marginLeft: 10,
-        padding: '0px 5px',
         color: palette.primary.dark,
         borderRadius: 5,
-        border: `0.5px solid ${palette.primary.contrastText}`,
-        [breakpoints.down('lg')]: {
-            height: 26
-        }
+        border: `0.5px solid ${palette.primary.contrastText}`
     },
     labelSelectContainer: {
         display: 'flex',
@@ -121,6 +117,7 @@ function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActi
                             onChange={handleActiveStatusFilterChange}
                             name='activeStatus'
                             displayEmpty
+                            SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}
                         >
                             <MenuItem value={User_Status.EAll}>All</MenuItem>
                             <MenuItem value={User_Status.EActive}>Active</MenuItem>

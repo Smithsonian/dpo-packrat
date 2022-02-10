@@ -18,7 +18,7 @@ import {
     GetContentsForAssetVersionsDocument,
     Project
 } from '../../types/graphql';
-import { eVocabularySetID } from '../../types/server';
+import { eVocabularySetID } from '@dpo-packrat/common';
 import { StateItem, useItemStore } from '../item';
 import { StateProject, useProjectStore } from '../project';
 import { StateSubject, useSubjectStore } from '../subject';

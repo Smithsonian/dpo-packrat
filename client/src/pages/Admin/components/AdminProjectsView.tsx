@@ -207,7 +207,8 @@ function AdminProjectsView(): React.ReactElement {
                     input: {
                         search: ''
                     }
-                }
+                },
+                fetchPolicy: 'no-cache'
             });
             setProjectList(initialProjectListQuery?.data?.getProjectList?.projects);
         }

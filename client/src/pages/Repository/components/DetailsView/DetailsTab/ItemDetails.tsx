@@ -11,7 +11,7 @@ import { SubjectDetailFields } from '../../../../../types/graphql';
 // import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 import { SubjectFields } from './SubjectDetails';
-import { eSystemObjectType } from '../../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { useDetailTabStore } from '../../../../../store';
 
 export interface ItemDetailFields extends SubjectDetailFields {

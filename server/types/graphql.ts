@@ -731,6 +731,8 @@ export type UpdateSceneMetadata = {
 export type UpdatedAssetVersionMetadata = {
   __typename?: 'UpdatedAssetVersionMetadata';
   idAssetVersion: Scalars['Int'];
+  UpdatedObjectName: Scalars['String'];
+  Item?: Maybe<Item>;
   CaptureDataPhoto?: Maybe<UpdatePhotogrammetryMetadata>;
   Model?: Maybe<UpdateModelMetadata>;
   Scene?: Maybe<UpdateSceneMetadata>;

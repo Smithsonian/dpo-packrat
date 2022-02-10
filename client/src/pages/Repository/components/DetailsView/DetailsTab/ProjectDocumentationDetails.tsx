@@ -7,7 +7,7 @@
 import React, { useEffect } from 'react';
 import { Loader } from '../../../../../components';
 import { DetailComponentProps } from './index';
-import { eSystemObjectType } from '../../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { useDetailTabStore } from '../../../../../store';
 import { Typography, Table, TableBody, TableCell, TableContainer, TableRow, Box } from '@material-ui/core';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';

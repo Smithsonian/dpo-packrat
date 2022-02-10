@@ -6,7 +6,7 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
-import { eMetadata } from '../../../../types/server';
+import { eMetadata } from '@dpo-packrat/common';
 import { getTreeViewColumns } from '../../../../utils/repository';
 import MetadataView from './MetadataView';
 

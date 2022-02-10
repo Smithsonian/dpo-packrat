@@ -148,7 +148,8 @@ function AddUnitForm(): React.ReactElement {
                         Abbreviation: abbreviation,
                         ARKPrefix
                     }
-                }
+                },
+                refetchQueries: ['getUnitsFromNameSearch']
             });
             if (data?.createUnit) {
                 toast.success('Object created successfully');

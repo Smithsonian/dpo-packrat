@@ -332,6 +332,8 @@ type UpdateSceneMetadata {
 
 type UpdatedAssetVersionMetadata {
   idAssetVersion: Int!
+  UpdatedObjectName: String!
+  Item: Item
   CaptureDataPhoto: UpdatePhotogrammetryMetadata
   Model: UpdateModelMetadata
   Scene: UpdateSceneMetadata

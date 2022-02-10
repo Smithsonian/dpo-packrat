@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import lodash from 'lodash';
 import React from 'react';
 import { StateIdentifier, useVocabularyStore } from '../../store';
-import { eVocabularySetID } from '../../types/server';
+import { eVocabularySetID } from '@dpo-packrat/common';
 import FieldType from './FieldType';
 import IdentifierList from './IdentifierList';
 

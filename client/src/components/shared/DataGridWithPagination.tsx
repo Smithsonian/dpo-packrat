@@ -6,7 +6,7 @@ import { DataGrid, GridColumns, GridSortModel, GridSortModelParams, GridPageChan
 import { useHistory } from 'react-router-dom';
 import Clear from '@material-ui/icons/Clear';
 
-const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
+const useStyles = makeStyles(({ palette, typography }) => ({
     Container: {
         display: 'flex',
         flex: 1,
@@ -81,13 +81,9 @@ const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
         width: 'fit-content',
         height: 30,
         marginLeft: 10,
-        padding: '0px 5px',
         color: palette.primary.dark,
         borderRadius: 5,
-        border: `0.5px solid ${palette.primary.contrastText}`,
-        [breakpoints.down('lg')]: {
-            height: 26
-        }
+        border: `0.5px solid ${palette.primary.contrastText}`
     },
     searchFilter: {
         width: '380px'
@@ -226,6 +222,7 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                                     onChange={handleDropDown}
                                     id='searchDropdown'
                                     disableUnderline
+                                    SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}
                                 >
                                     {DropDown.options.map(option => (
                                         <MenuItem value={option.value} key={option.value}>

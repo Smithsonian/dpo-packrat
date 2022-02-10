@@ -2,7 +2,7 @@ import * as LOG from '../utils/logger';
 // import * as H from '../utils/helpers';
 import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
-import * as COMMON from '../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export class LicenseCache {
     private static singleton: LicenseCache | null = null;
@@ -46,10 +46,10 @@ export class LicenseCache {
         for (const license of LicenseFetch) {
             this.licenseMap.set(license.idLicense, license);
             switch (license.Name.toLowerCase()) {
-                case 'view and download cc0':           this.licenseEnumMap.set(COMMON.eLicense.eViewDownloadCC0, license); break;
-                case 'view with download restrictions': this.licenseEnumMap.set(COMMON.eLicense.eViewDownloadRestriction, license); break;
-                case 'view only':                       this.licenseEnumMap.set(COMMON.eLicense.eViewOnly, license); break;
-                case 'restricted':                      this.licenseEnumMap.set(COMMON.eLicense.eRestricted, license); break;
+                case 'cc0, publishable w/ downloads':       this.licenseEnumMap.set(COMMON.eLicense.eViewDownloadCC0, license); break;
+                case 'si tou, publishable w/ downloads':    this.licenseEnumMap.set(COMMON.eLicense.eViewDownloadRestriction, license); break;
+                case 'si tou, publishable only':            this.licenseEnumMap.set(COMMON.eLicense.eViewOnly, license); break;
+                case 'restricted, not publishable':         this.licenseEnumMap.set(COMMON.eLicense.eRestricted, license); break;
             }
         }
         // LOG.info(`LicenseCache publishedStateMap=\n${JSON.stringify(this.publishedStateMap, H.Helpers.saferStringify)}`, LOG.LS.eCACHE);

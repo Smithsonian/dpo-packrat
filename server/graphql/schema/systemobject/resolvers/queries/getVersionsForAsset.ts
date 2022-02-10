@@ -4,7 +4,7 @@ import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as LOG from '../../../../../utils/logger';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
-import * as COMMON from '../../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export default async function getVersionsForAsset(_: Parent, args: QueryGetVersionsForAssetArgs): Promise<GetVersionsForAssetResult> {
     const { input } = args;
