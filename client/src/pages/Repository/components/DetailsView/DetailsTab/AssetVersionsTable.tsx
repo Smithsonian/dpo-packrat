@@ -71,17 +71,12 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
     return (
         <table className={classes.container}>
             <thead>
-                <tr>
+                <tr style={{ borderBottom: '1px solid grey' }}>
                     {headers.map((header, index: number) => (
-                        <th key={index} align='center'>
+                        <th key={index} align='center' style={{ padding: '0 5px 0 5px' }}>
                             <Typography className={classes.header}>{header}</Typography>
                         </th>
                     ))}
-                </tr>
-                <tr>
-                    <td colSpan={headers.length}>
-                        <hr />
-                    </td>
                 </tr>
             </thead>
 
@@ -93,7 +88,7 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                     const comment =
                         version.Comment ? (
                             <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(version.Comment, 1000)} /> }>
-                                {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'center', color: 'black' }} target='_blank' rel='noreferrer noopener'>
+                                {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'end', color: 'black' }} target='_blank' rel='noreferrer noopener'>
                                     <Typography className={clsx(classes.value)}>
                                         {truncateWithEllipses(version.Comment, 30)}
                                     </Typography>
@@ -106,45 +101,45 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                     return (
                         <React.Fragment key={index}>
                             <tr key={index}>
-                                <td>
+                                <td className={classes.tableCell}>
                                     <a
                                         href={getDownloadAssetVersionUrlForObject(serverEndpoint, version.idAssetVersion)}
-                                        style={{ textDecoration: 'none', color: 'black' }}
+                                        style={{ textDecoration: 'none', color: 'black', display: 'flex', alignItems: 'end', justifyContent: 'center' }}
                                     >
                                         <GetAppIcon />
                                     </a>
                                 </td>
-                                <td align='center'>
+                                <td align='center' className={classes.tableCell}>
                                     <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
                                         <Typography className={clsx(classes.value, classes.link)}>{version.version}</Typography>
                                     </NewTabLink>
                                 </td>
-                                <td align='center'>
+                                <td align='center' className={classes.tableCell}>
                                     <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
                                         <Typography className={clsx(classes.value, classes.link)}>{version.name}</Typography>
                                     </NewTabLink>
                                 </td>
-                                <td align='center'>
+                                <td align='center' className={classes.tableCell}>
                                     <Typography className={classes.value}>{version.creator}</Typography>
                                 </td>
-                                <td align='center'>
+                                <td align='center' className={classes.tableCell}>
                                     <Tooltip arrow title={ <ToolTip text={formatDateAndTime(version.dateCreated)} /> }>
                                         <Typography className={classes.value}>{formatDate(version.dateCreated)}</Typography>
                                     </Tooltip>
                                 </td>
-                                <td align='center'>
+                                <td align='center' className={classes.tableCell}>
                                     <Typography className={classes.value}>{formatBytes(version.size)}</Typography>
                                 </td>
-                                <td align='center'>
+                                <td align='center' className={classes.tableCell}>
                                     <CheckboxNoPadding
                                         disabled
                                         checked={version.ingested ?? false}
                                     />
                                 </td>
-                                <td>
+                                <td className={classes.tableCell}>
                                     {comment}
                                 </td>
-                                <td align='center'>
+                                <td align='center' className={classes.tableCell}>
                                     {index >= versions.length - 1 ? null : (
                                         <Typography
                                             style={{ width: 'fit-content', whiteSpace: 'nowrap', color: 'rgb(0,121,196)', cursor: 'pointer' }}
