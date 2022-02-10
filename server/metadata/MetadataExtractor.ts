@@ -1,11 +1,12 @@
 import * as H from '../utils/helpers';
 import * as LOG from '../utils/logger';
 import * as CACHE from '../cache';
-import * as COMMON from '../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import { IExtractor, IExtractorResults } from './IExtractor';
 
 import { pathExists } from 'fs-extra';
 import { ExtractorImageExifr } from './ExtractorImageExifr';
+import * as path from 'path';
 // import { ExtractorImageExiftool } from './ExtractorImageExiftool'; Loaded dynamically due to install issues with exiftool-vendored when performed in a linux container from a non-linux system (windows or macos)
 type ExifModule = typeof import('./ExtractorImageExiftool');
 
@@ -73,7 +74,10 @@ export class MetadataExtractor {
             return results;
 
         try {
-            const exifModule: ExifModule | null = await this.importModule('./ExtractorImageExiftool.ts');
+            // try to load .ts first, then fall back to .js ... needed for production builds!
+            let exifModule: ExifModule | null = await this.importModule(path.join(__dirname, 'ExtractorImageExiftool.ts'), false);
+            if (!exifModule)
+                exifModule = await this.importModule(path.join(__dirname, 'ExtractorImageExiftool.js'), true);
             if (exifModule) {
                 const extractor: IExtractor = new exifModule.ExtractorImageExiftool();
                 results = await extractor.initialize();
@@ -83,7 +87,7 @@ export class MetadataExtractor {
                     return results;
                 }
             }
-            LOG.info(`MetadataExtractor.initializeExtractorImage failed to initialize exiftool: ${results.error}`, LOG.LS.eMETA);
+            LOG.info(`MetadataExtractor.initializeExtractorImage failed to initialize exiftool: ${results.error ?? 'ExtractorImageExiftool import failed'}`, LOG.LS.eMETA);
         } catch (err) {
             LOG.error('MetadataExtractor.initializeExtractorImage failed to initialize exiftool', LOG.LS.eMETA, err);
         }
@@ -106,12 +110,15 @@ export class MetadataExtractor {
         return results;
     }
 
-    private async importModule(moduleName: string): Promise<ExifModule | null> { // eslint-disable-line @typescript-eslint/no-explicit-any
+    private async importModule(moduleName: string, exceptionsAreErrors: boolean): Promise<ExifModule | null> { // eslint-disable-line @typescript-eslint/no-explicit-any
         try {
             LOG.info(`MetadataExtractor.importModule ${moduleName}`, LOG.LS.eMETA);
             return await import(moduleName);
         } catch (err) {
-            LOG.error(`MetadataExtractor.importModule ${moduleName} FAILED`, LOG.LS.eMETA, err);
+            if (exceptionsAreErrors)
+                LOG.error(`MetadataExtractor.importModule ${moduleName} FAILED`, LOG.LS.eMETA, err);
+            else
+                LOG.info(`MetadataExtractor.importModule ${moduleName} FAILED: ${err}`, LOG.LS.eMETA);
             return null;
         }
     }

@@ -32,7 +32,7 @@ import {
     UpdateIdentifier,
     UpdateObjectDetailsDataInput
 } from '../../../../types/graphql';
-import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
+import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
 import { updateDetailsTabData, useObjectDetails, deleteIdentifier, getDetailsTabDataForObject } from '../../hooks/useDetailsView';

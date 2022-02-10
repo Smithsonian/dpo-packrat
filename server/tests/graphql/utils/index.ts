@@ -23,7 +23,7 @@ import {
 } from '../../../types/graphql';
 import { Asset, AssetVersion } from '@prisma/client';
 import { randomStorageKey, nowCleansed } from '../../db/utils';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 class TestSuiteUtils {
     graphQLApi!: GraphQLApi;

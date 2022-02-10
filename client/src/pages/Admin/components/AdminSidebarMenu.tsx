@@ -50,13 +50,11 @@ function AdminSidebarMenuRow({ path, selected }: { path: string; selected: boole
     const classes = useStyles();
 
     return (
-        <MenuItem className={classes.AdminSidebarMenuRow} selected={selected}>
-            <Link style={{ textDecoration: 'none', color: 'rgb(0, 110, 190)', width: '100%', height: '100%', fontSize: '0.875rem' }} to={`/admin/${path}`}>
-                <Typography variant='inherit' noWrap>
-                    {toTitleCase(path)}
-                </Typography>
-            </Link>
-        </MenuItem>
+        <Link style={{ textDecoration: 'none', color: 'rgb(0, 110, 190)', width: '100%', height: '100%', fontSize: '0.875rem' }} to={`/admin/${path}`}>
+            <MenuItem className={classes.AdminSidebarMenuRow} selected={selected}>
+                <Typography noWrap>{toTitleCase(path)}</Typography>
+            </MenuItem>
+        </Link>
     );
 }
 

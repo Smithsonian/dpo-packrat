@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as CACHE from '../../cache';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as LOG from '../../utils/logger';
 import * as META from '../../metadata';
 import * as DBAPI from '../../db';

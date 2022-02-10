@@ -3,7 +3,7 @@
 import * as DBAPI from '../../../../../db';
 import { RouteBuilder } from '../../../../../http/routes/routeBuilder';
 import { AssetGridDetailBase, ColumnObject, LinkObject } from './AssetGridCommon';
-import * as COMMON from '../../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export class AssetGridDetail extends AssetGridDetailBase {
     link: LinkObject;

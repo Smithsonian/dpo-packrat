@@ -22,7 +22,7 @@ import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
 import { PublishScene } from '../../../../../collections/impl/PublishScene';
-import * as COMMON from '../../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 type AssetPair = {
     asset: DBAPI.Asset;

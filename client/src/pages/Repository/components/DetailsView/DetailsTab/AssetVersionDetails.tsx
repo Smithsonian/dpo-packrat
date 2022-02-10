@@ -14,7 +14,7 @@ import { formatBytes } from '../../../../../utils/upload';
 import { DetailComponentProps } from './index';
 import { sharedButtonProps } from '../../../../../utils/shared';
 import { updateSystemObjectUploadRedirect } from '../../../../../constants';
-import { eSystemObjectType } from '../../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { apolloClient } from '../../../../../graphql';
 import { GetAssetDocument } from '../../../../../types/graphql';
 import { useDetailTabStore } from '../../../../../store';

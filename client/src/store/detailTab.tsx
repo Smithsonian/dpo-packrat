@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import create, { GetState, SetState } from 'zustand';
-import { eSystemObjectType } from '../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import {
     CaptureDataDetailFields,
     ProjectDocumentationDetailFields,

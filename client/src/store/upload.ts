@@ -8,7 +8,7 @@ import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import path from 'path';
 import { toast } from 'react-toastify';
-import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '../types/server';
+import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '@dpo-packrat/common';
 import { generateFileId } from '../utils/upload';
 import { useVocabularyStore } from './vocabulary';
 import { apolloClient, apolloUploader } from '../graphql';
@@ -41,6 +41,7 @@ export type IngestionFile = {
     cancel: (() => void) | null;
     idAsset?: number;
     idSOAttachment?: number;
+    updateContext?: string;
 };
 
 type UploadStore = {

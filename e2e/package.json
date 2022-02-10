@@ -1,37 +1,41 @@
 {
-    "name": "@dpo-packrat/e2e",
-    "version": "0.9.6",
-    "private": true,
-    "license": "Apache-2.0",
-    "description": "E2E tests for packrat",
-    "homepage": "https://github.com/Smithsonian/dpo-packrat#readme",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Smithsonian/dpo-packrat.git"
+  "name": "@dpo-packrat/e2e",
+  "version": "0.9.6",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "E2E tests for packrat",
+  "homepage": "https://github.com/Smithsonian/dpo-packrat#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Smithsonian/dpo-packrat.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Smithsonian/dpo-packrat/issues"
+  },
+  "contributors": [
+    {
+      "name": "Jon Tyson",
+      "url": "https://github.com/jahjedtieson"
     },
-    "bugs": {
-        "url": "https://github.com/Smithsonian/dpo-packrat/issues"
+    {
+      "name": "Karan Pratap Singh",
+      "url": "https://github.com/karanpratapsingh"
     },
-    "contributors": [
-        {
-            "name": "Jon Tyson",
-            "url": "https://github.com/jahjedtieson"
-        },
-        {
-            "name": "Karan Pratap Singh",
-            "url": "https://github.com/karanpratapsingh"
-        }
-    ],
-    "scripts": {
-        "test": "jest --passWithNoTests --detectOpenHandles --forceExit"
-    },
-    "devDependencies": {
-        "jest": "26.6.3",
-        "playwright": "1.5.1",
-        "ts-jest": "26.5.4"
-    },
-    "volta": {
-      "node": "14.17.1",
-      "yarn": "1.22.10"
+    {
+      "name": "Hsin Tung",
+      "url": "https://github.com/shintung00"
     }
+  ],
+    "scripts": {
+    "test": "jest --passWithNoTests --detectOpenHandles --forceExit"
+  },
+  "devDependencies": {
+    "jest": "26.6.3",
+    "playwright": "1.5.1",
+    "ts-jest": "26.5.4"
+  },
+  "volta": {
+   "node": "14.17.1",
+   "yarn": "1.22.10"
+  }
 }
