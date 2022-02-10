@@ -8,7 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
-import { getUnitsList, getSubjectList } from '../../hooks/useAdminview';
+import { getUnitsList, getSubjectList } from '../../hooks/useAdminView';
 import { resolveSubRoute, ADMIN_ROUTE, ADMIN_ROUTES_TYPE } from '../../../../constants/routes';
 import { Subject } from '../../../../types/graphql';
 import { toast } from 'react-toastify';
