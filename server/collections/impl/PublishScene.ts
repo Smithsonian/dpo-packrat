@@ -246,10 +246,21 @@ export class PublishScene {
     private async computeMSXMap(): Promise<boolean> {
         if (!this.scene)
             return false;
-        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(this.scene.idScene);
+        const DownloadMSXMap: Map<number, DBAPI.ModelSceneXref> | null = await PublishScene.computeDownloadMSXMap(this.scene.idScene);
+        if (DownloadMSXMap) {
+            this.DownloadMSXMap = DownloadMSXMap;
+            return true;
+        }
+        return false;
+    }
+
+    static async computeDownloadMSXMap(idScene: number): Promise<Map<number, DBAPI.ModelSceneXref> | null> {
+        if (!idScene)
+            return null;
+        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(idScene);
         if (!MSXs) {
-            LOG.error(`PublishScene.computeMSXMap unable to fetch ModelSceneXrefs for scene ${this.scene.idScene}`, LOG.LS.eCOLL);
-            return false;
+            LOG.error(`PublishScene.computeDownloadMSXMap unable to fetch ModelSceneXrefs for scene ${idScene}`, LOG.LS.eCOLL);
+            return null;
         }
 
         const DownloadMSXMap: Map<number, DBAPI.ModelSceneXref> = new Map<number, DBAPI.ModelSceneXref>();
@@ -260,8 +271,7 @@ export class PublishScene {
                     DownloadMSXMap.set(SOI.idSystemObject, MSX);
             }
         }
-        this.DownloadMSXMap = DownloadMSXMap;
-        return true;
+        return DownloadMSXMap;
     }
 
     private async collectAssets(ePublishedStateIntended?: COMMON.ePublishedState): Promise<boolean> {

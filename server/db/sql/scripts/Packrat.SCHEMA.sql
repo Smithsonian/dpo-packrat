@@ -409,6 +409,9 @@ CREATE TABLE IF NOT EXISTS `ModelSceneXref` (
   `R1` double DEFAULT NULL,
   `R2` double DEFAULT NULL,
   `R3` double DEFAULT NULL,
+  `S0` double DEFAULT NULL,
+  `S1` double DEFAULT NULL,
+  `S2` double DEFAULT NULL,
   PRIMARY KEY (`idModelSceneXref`),
   KEY `ModelSceneXref_idModel` (`idModel`),
   KEY `ModelSceneXref_idScene` (`idScene`)

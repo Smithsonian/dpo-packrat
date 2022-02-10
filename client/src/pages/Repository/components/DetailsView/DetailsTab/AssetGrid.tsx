@@ -180,13 +180,9 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                         })
                     }),
                     setCellProps:
-                        colAlign === 'center'
-                            ? () => ({
-                                align: 'center'
-                            })
-                            : () => ({
-                                align: 'left'
-                            })
+                        colAlign === 'center' ? () => ({ align: 'center' }) :
+                            colAlign === 'right'  ? () => ({ align: 'right' }) :
+                                () => ({ align: 'left' })
                 }
             };
 
