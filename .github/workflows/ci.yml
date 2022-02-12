@@ -28,10 +28,10 @@ jobs:
           node-version: 14.17.1
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn
 
       - name: Install E2E dependencies
-        run: cd e2e && yarn install --frozen-lockfile && cd ..
+        run: cd e2e && yarn && cd ..
 
       - name: Check for lint errors
         run: yarn lint
@@ -74,11 +74,11 @@ jobs:
 
       # Install dependencies in CI mode
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn
 
       # Install E2E dependencies in CI mode
       - name: Install E2E dependencies
-        run: cd e2e && yarn install --frozen-lockfile && cd ..
+        run: cd e2e && yarn && cd ..
 
       # Run tests using test DB
       - name: Run Tests
