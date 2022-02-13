@@ -134,6 +134,7 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                                     <CheckboxNoPadding
                                         disabled
                                         checked={version.ingested ?? false}
+                                        color='primary'
                                     />
                                 </td>
                                 <td className={classes.tableCell}>

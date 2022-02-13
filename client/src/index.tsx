@@ -21,7 +21,7 @@ import { Home, Login } from './pages';
 import * as serviceWorker from './serviceWorker';
 import { useUserStore, useVocabularyStore, useLicenseStore, useUsersStore, useObjectMetadataStore } from './store';
 import theme from './theme';
-import { eVocabularySetID } from './types/server';
+import { eVocabularySetID } from '@dpo-packrat/common';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);

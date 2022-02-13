@@ -154,14 +154,14 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                     <ReadOnlyRow label='Bounding Box' />
                                     <ReadOnlyRow
                                         label='Min'
-                                        value={`(${roundToTwoPlaces(modelObject.BoundingBoxP1X)} , ${roundToTwoPlaces(modelObject.BoundingBoxP1Y)} , ${roundToTwoPlaces(
+                                        value={`(${roundToTwoPlaces(modelObject.BoundingBoxP1X)}, ${roundToTwoPlaces(modelObject.BoundingBoxP1Y)}, ${roundToTwoPlaces(
                                             modelObject.BoundingBoxP1Z
                                         )})`}
                                         paddingString='3px 10px 3px 10px'
                                     />
                                     <ReadOnlyRow
                                         label='Max'
-                                        value={`(${roundToTwoPlaces(modelObject.BoundingBoxP2X)} , ${roundToTwoPlaces(modelObject.BoundingBoxP2Y)} , ${roundToTwoPlaces(
+                                        value={`(${roundToTwoPlaces(modelObject.BoundingBoxP2X)}, ${roundToTwoPlaces(modelObject.BoundingBoxP2Y)}, ${roundToTwoPlaces(
                                             modelObject.BoundingBoxP2Z
                                         )})`}
                                         paddingString='3px 10px 3px 10px'

@@ -32,7 +32,7 @@ import {
     UpdateIdentifier,
     UpdateObjectDetailsDataInput
 } from '../../../../types/graphql';
-import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
+import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
 import { updateDetailsTabData, useObjectDetails, deleteIdentifier, getDetailsTabDataForObject } from '../../hooks/useDetailsView';
@@ -460,7 +460,8 @@ function DetailsView(): React.ReactElement {
 
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
-                toast.success('Data saved successfully');
+                const message: string | null | undefined = data?.updateObjectDetails?.message;
+                toast.success(`Data saved successfully${message? ': ' + message : ''}`);
                 return true;
             } else
                 throw new Error(data?.updateObjectDetails?.message ?? '');

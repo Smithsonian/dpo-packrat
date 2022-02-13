@@ -3,7 +3,7 @@ import { Workflow as WorkflowBase } from '@prisma/client';
 import { WorkflowSet, WorkflowStep, WorkflowStepSystemObjectXref } from '..';
 import * as DBC from '../connection';
 import * as CACHE from '../../cache';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as LOG from '../../utils/logger';
 
 export class WorkflowConstellation {

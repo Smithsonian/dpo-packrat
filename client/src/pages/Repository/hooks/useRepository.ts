@@ -7,7 +7,7 @@ import { ApolloQueryResult } from '@apollo/client';
 import { RepositoryFilter } from '..';
 import { apolloClient } from '../../../graphql';
 import { GetObjectChildrenDocument, GetObjectChildrenQuery } from '../../../types/graphql';
-import { repositoryRowCount } from '../../../types/server';
+import { repositoryRowCount } from '@dpo-packrat/common';
 
 function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
     return apolloClient.query({

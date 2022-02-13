@@ -7,7 +7,7 @@ import { WorkflowUpload } from './WorkflowUpload';
 import * as COOK from '../../../job/impl/Cook';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as DBAPI from '../../../db';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import * as H from '../../../utils/helpers';
@@ -40,6 +40,7 @@ type ComputeSceneInfoResult = {
     assetVersionDiffuse?: DBAPI.AssetVersion | undefined;
     assetVersionMTL?: DBAPI.AssetVersion | undefined;
     scene?: DBAPI.Scene | undefined;
+    licenseResolver?: DBAPI.LicenseResolver | undefined;
 };
 
 export class WorkflowEngine implements WF.IWorkflowEngine {
@@ -125,6 +126,27 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
     }
 
+    async generateSceneDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow[] | null> {
+        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
+        if (!scene) {
+            LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene from idScene ${idScene}`, LOG.LS.eWF);
+            return null;
+        }
+
+        const SOScene: DBAPI.SystemObject | null = await scene.fetchSystemObject();
+        if (!SOScene) {
+            LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene system object from scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
+            return null;
+        }
+
+        const CSIR: ComputeSceneInfoResult = await this.computeSceneInfo(idScene, SOScene.idSystemObject);
+        if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
+            LOG.info(`WorkflowEngine.generateSceneDownloads did not locate a scene with a master model parent ready for download generation for scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
+            return null;
+        }
+        return await this.eventIngestionIngestObjectScene(CSIR, workflowParams, true);
+    }
+
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
         LOG.info(`WorkflowEngine.eventIngestionIngestObject params=${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
         if (!workflowParams || !workflowParams.idSystemObject)
@@ -193,6 +215,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                             CSIR = undefined;
                             continue;
                         }
+
+                        if (!DBAPI.LicenseAllowsDownloadGeneration(CSIR.licenseResolver?.License?.RestrictLevel)) { // we don't have a license resolver, or that license does not allow download generation
+                            LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)} which does not have the needed license for download generation`, LOG.LS.eWF);
+                            CSIR = undefined;
+                            continue;
+                        }
                     }
                     break;
             }
@@ -203,7 +231,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             workflows = workflows.concat(await this.eventIngestionIngestObjectModel(CMIR, workflowParams, assetsIngested) ?? []);
         if (CSIR)
             workflows = workflows.concat(await this.eventIngestionIngestObjectScene(CSIR, workflowParams, assetsIngested) ?? []);
-
         return workflows.length > 0 ? workflows : null;
     }
 
@@ -257,24 +284,28 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         // initiate WorkflowJob for cook si-voyager-scene
         if (CMIR.units !== undefined) {
-            const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
-                new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
-                    new COOK.JobCookSIVoyagerSceneParameters(CMIR.idModel, CMIR.assetVersionGeometry.FileName, CMIR.units,
-                    CMIR.assetVersionDiffuse?.FileName, baseName + '.svx.json'));
+            const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CMIR.idModel);
+            if (parameterHelper) {
+                const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
+                    new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
+                        new COOK.JobCookSIVoyagerSceneParameters(parameterHelper, CMIR.assetVersionGeometry.FileName, CMIR.units,
+                        CMIR.assetVersionDiffuse?.FileName, baseName + '.svx.json'));
 
-            const wfParamSIVoyagerScene: WF.WorkflowParameters = {
-                eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
-                idSystemObject,
-                idProject: workflowParams.idProject,
-                idUserInitiator: workflowParams.idUserInitiator,
-                parameters: jobParamSIVoyagerScene,
-            };
+                const wfParamSIVoyagerScene: WF.WorkflowParameters = {
+                    eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
+                    idSystemObject,
+                    idProject: workflowParams.idProject,
+                    idUserInitiator: workflowParams.idUserInitiator,
+                    parameters: jobParamSIVoyagerScene,
+                };
 
-            const wfSIVoyagerScene: WF.IWorkflow | null = await this.create(wfParamSIVoyagerScene);
-            if (wfSIVoyagerScene)
-                workflows.push(wfSIVoyagerScene);
-            else
-                LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIVoyagerScene)}`, LOG.LS.eWF);
+                const wfSIVoyagerScene: WF.IWorkflow | null = await this.create(wfParamSIVoyagerScene);
+                if (wfSIVoyagerScene)
+                    workflows.push(wfSIVoyagerScene);
+                else
+                    LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIVoyagerScene)}`, LOG.LS.eWF);
+            } else
+                LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute parameter info needed by Cook si-voyager-scene workflow from model: ${CMIR.idModel}`, LOG.LS.eWF);
         } else
             LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene for master model with unsupported units ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
 
@@ -430,8 +461,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         WFC.workflow = new DBAPI.Workflow({
             idVWorkflowType,
-            idProject: workflowParams.idProject,
-            idUserInitiator: workflowParams.idUserInitiator,
+            idProject: workflowParams.idProject ?? null,
+            idUserInitiator: workflowParams.idUserInitiator ?? null,
             DateInitiated: dtNow,
             DateUpdated: dtNow,
             Parameters: workflowParams.parameters ? JSON.stringify(workflowParams.parameters, H.Helpers.saferStringify) : null,
@@ -452,7 +483,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const workflowStep: DBAPI.WorkflowStep = new DBAPI.WorkflowStep({
             idWorkflow: WFC.workflow.idWorkflow,
             idJobRun: null,
-            idUserOwner: workflowParams.idUserInitiator,
+            idUserOwner: workflowParams.idUserInitiator ?? null,
             idVWorkflowStepType,
             State: COMMON.eWorkflowJobRunStatus.eCreated,
             DateCreated: dtNow,
@@ -618,6 +649,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             LOG.error(`WorkflowEngine.computeSceneInfo unable to compute scene from ${JSON.stringify(idScene)}`, LOG.LS.eWF);
             return { exitEarly: true };
         }
+        const scene: DBAPI.Scene = sceneConstellation.Scene;
+        const licenseResolver: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObjectScene);
+        if (!licenseResolver)
+            LOG.error(`WorkflowEngine.computeSceneInfo unable to compute license resolver for scene system object ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
 
         const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObjectScene);
         if (!assetVersions) {
@@ -655,11 +690,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         for (const SO of SOMasters) {
             if (!SO.idModel)
                 continue;
-            const model: DBAPI.Model | null = await DBAPI.Model.fetch(SO.idModel);
-            if (!model) {
-                LOG.error(`WorkflowEngine.computeSceneInfo unable to compute model from ${JSON.stringify(SO.idModel)}`, LOG.LS.eWF);
-                continue;
-            }
 
             CMIR = await this.computeModelInfo(SO.idModel, SO.idSystemObject);
             if (!CMIR.exitEarly) // found a master model!
@@ -672,8 +702,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { exitEarly: true };
         }
 
-        const retValue = { exitEarly: false, idScene, idModel: CMIR.idModel, idSystemObjectScene, assetSVX, assetVersionGeometry: CMIR.assetVersionGeometry,
-            assetVersionDiffuse: CMIR.assetVersionDiffuse, assetVersionMTL: CMIR.assetVersionMTL, scene: sceneConstellation && sceneConstellation.Scene ? sceneConstellation.Scene : undefined };
+        const retValue = { exitEarly: false, idScene, idModel: CMIR.idModel, idSystemObjectScene,
+            assetSVX, assetVersionGeometry: CMIR.assetVersionGeometry, assetVersionDiffuse: CMIR.assetVersionDiffuse,
+            assetVersionMTL: CMIR.assetVersionMTL, scene, licenseResolver };
         LOG.info(`WorkflowEngine.computeSceneInfo returning ${JSON.stringify(retValue, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         return retValue;
     }

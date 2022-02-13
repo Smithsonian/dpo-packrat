@@ -12,7 +12,7 @@ import { AssetIdentifiers, DateInputField, /*FieldType, InputField, SelectField,
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
-import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
+import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';
@@ -289,7 +289,7 @@ function Model(props: ModelProps): React.ReactElement {
 
                 {!idAsset && (
                     <React.Fragment>
-                        <Box mb={2} width='52vw'>
+                        <Box mb={2}>
                             <RelatedObjectsList
                                 type={RelatedObjectType.Source}
                                 relatedObjects={model.sourceObjects}
@@ -298,7 +298,7 @@ function Model(props: ModelProps): React.ReactElement {
                                 relationshipLanguage='Parents'
                             />
                         </Box>
-                        <Box mb={2} width='52vw'>
+                        <Box mb={2}>
                             <RelatedObjectsList
                                 type={RelatedObjectType.Derived}
                                 relatedObjects={model.derivedObjects}
@@ -352,6 +352,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                     onChange={setIdField}
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                                 >
                                                     {getEntries(eVocabularySetID.eModelCreationMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
@@ -366,6 +367,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                     onChange={setIdField}
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                                 >
                                                     {getEntries(eVocabularySetID.eModelModality).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
@@ -380,6 +382,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                     onChange={setIdField}
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                                 >
                                                     {getEntries(eVocabularySetID.eModelUnits).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
@@ -394,6 +397,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                     onChange={setIdField}
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                                 >
                                                     {getEntries(eVocabularySetID.eModelPurpose).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
@@ -408,6 +412,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                     onChange={setIdField}
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                                 >
                                                     {getEntries(eVocabularySetID.eModelFileType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>

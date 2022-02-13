@@ -5,7 +5,7 @@ import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as UTIL from './api';
 import { VocabularyCache } from '../../cache';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 afterAll(async done => {
     // await H.Helpers.sleep(4000);
@@ -1342,7 +1342,7 @@ describe('DB Creation Test Suite', () => {
                 idModel: model.idModel,
                 idScene: scene.idScene,
                 Name: 'Test 1', Usage: 'Web3D', Quality: 'High', FileSize: BigInt(1000000), UVResolution: 1000,
-                TS0: 0, TS1: 0, TS2: 0, R0: 0, R1: 0, R2: 0, R3: 0,
+                TS0: 0, TS1: 0, TS2: 0, R0: 0, R1: 0, R2: 0, R3: 0, S0: 0, S1: 0, S2: 0,
                 BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
                 idModelSceneXref: 0
             });
@@ -1359,7 +1359,7 @@ describe('DB Creation Test Suite', () => {
                 idModel: model.idModel,
                 idScene: sceneNulls.idScene,
                 Name: null, Usage: null, Quality: null, FileSize: null, UVResolution: null,
-                TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null,
+                TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null, S0: null, S1: null, S2: null,
                 BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null, BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
                 idModelSceneXref: 0
             });
@@ -2974,6 +2974,24 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(subjectFetch).toBeTruthy();
     });
 
+    test('DB Fetch Subject: Subject.populateIdentifierSubjectMap', async () => {
+        const identifierSubjectMap: Map<string, { idSubject: number, idSystemObject: number }> = new Map<string, { idSubject: number, idSystemObject: number }>();
+
+        if (identifierSubjectHookup) {
+            identifierSubjectMap.set(identifierSubjectHookup.IdentifierValue, { idSubject: 0, idSystemObject: 0 });
+            expect(await DBAPI.Subject.populateIdentifierSubjectMap(identifierSubjectMap)).toBeTruthy();
+
+            const identifierInfo = identifierSubjectMap.get(identifierSubjectHookup.IdentifierValue);
+            expect(identifierInfo).toBeTruthy();
+            if (identifierInfo) {
+                if (subject)
+                    expect(identifierInfo.idSubject).toEqual(subject.idSubject);
+                if (systemObjectSubject)
+                    expect(identifierInfo.idSystemObject).toEqual(systemObjectSubject.idSystemObject);
+            }
+        }
+    });
+
     test('DB Fetch By ID: SystemObjectVersion', async () => {
         let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
         if (systemObjectVersion) {
@@ -4250,11 +4268,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     });
 
     test('DB Fetch SystemObject: COMMON.LicenseEnumToString', async () => {
-        expect(COMMON.LicenseEnumToString(-1)).toEqual('Restricted');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadCC0)).toEqual('View and Download CC0');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadRestriction)).toEqual('View and Download with usage restrictions');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewOnly)).toEqual('View Only');
-        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eRestricted)).toEqual('Restricted');
+        expect(COMMON.LicenseEnumToString(-1)).toEqual('Restricted, Not Publishable');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadCC0)).toEqual('CC0, Publishable w/ Downloads');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadRestriction)).toEqual('SI ToU, Publishable w/ Downloads');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewOnly)).toEqual('SI ToU, Publishable Only');
+        expect(COMMON.LicenseEnumToString(COMMON.eLicense.eRestricted)).toEqual('Restricted, Not Publishable');
     });
 
     test('DB Fetch SystemObject: COMMON.PublishedStateEnumToString', async () => {
@@ -7790,6 +7808,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();
         expect(await DBAPI.Subject.clearPreferredIdentifier(0)).toBeFalsy();
+        expect(await DBAPI.Subject.populateIdentifierSubjectMap(new Map<string, { idSubject: number, idSystemObject: number }>())).toBeTruthy();
         expect(await DBAPI.Subject.fetch(0)).toBeNull();
         expect(await DBAPI.Subject.fetchFromUnit(0)).toBeNull();
         expect(await DBAPI.Subject.fetchMasterFromItems([])).toBeNull();

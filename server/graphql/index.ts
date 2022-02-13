@@ -5,7 +5,7 @@ import GraphQLApi from './api';
 import schema from './schema';
 import { isAuthenticated } from '../http/auth';
 import * as LOG from '../utils/logger';
-import * as COMMON from '../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 const unauthenticatedGQLQueries: Set<string> = new Set<string>([
     'getCurrentUser',

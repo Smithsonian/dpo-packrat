@@ -7,7 +7,7 @@ import * as JOB from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
@@ -16,16 +16,140 @@ import { ASL, LocalStore } from '../../../utils/localStore';
 import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 
 import * as path from 'path';
+import { Readable } from 'stream';
+
+export type JobCookSIVoyagerSceneMetaDataFile = {
+    edanRecordId: string;
+    title: string;
+    sceneTitle?: string | undefined;
+};
+
+export class JobCookSIVoyagerSceneParameterHelper {
+    idModel: number;
+    modelSource: DBAPI.Model;
+    SOModelSource: DBAPI.SystemObject;
+    OG: DBAPI.ObjectGraph;
+    metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile;
+    sceneName: string;
+
+    static initialized: boolean = false;
+    static idVocabEdanRecordID: number;
+
+    constructor(idModel: number, modelSource: DBAPI.Model, SOModelSource: DBAPI.SystemObject, OG: DBAPI.ObjectGraph, metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile, sceneName: string) {
+        this.idModel = idModel;
+        this.modelSource = modelSource;
+        this.SOModelSource = SOModelSource;
+        this.OG = OG;
+        this.metaDataFileJSON = metaDataFileJSON;
+        this.sceneName = sceneName;
+    }
+
+    static async compute(idModel: number | undefined): Promise<JobCookSIVoyagerSceneParameterHelper | null> {
+        if (!JobCookSIVoyagerSceneParameterHelper.initialized) {
+            const vocabEdanRecordID: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
+            JobCookSIVoyagerSceneParameterHelper.idVocabEdanRecordID = vocabEdanRecordID ? vocabEdanRecordID.idVocabulary : /* istanbul ignore next */ 77;
+            JobCookSIVoyagerSceneParameterHelper.initialized = true;
+        }
+
+        const modelSource: DBAPI.Model | null = idModel ? await DBAPI.Model.fetch(idModel) : null;
+        if (!modelSource)
+            return JobCookSIVoyagerSceneParameterHelper.logError(`unable to fetch model with id ${idModel}`);
+
+        // compute ItemParent of ModelSource
+        const SOModelSource: DBAPI.SystemObject | null = await modelSource.fetchSystemObject();
+        if (!SOModelSource)
+            return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute system object from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
+
+        const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(SOModelSource.idSystemObject, DBAPI.eObjectGraphMode.eAncestors);
+        if (!await OG.fetch())
+            return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute object graph from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
+
+        const metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile | null = await JobCookSIVoyagerSceneParameterHelper.computeSceneMetaData(OG);
+        if (!metaDataFileJSON)
+            return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute metadata file JSON from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
+
+        const sceneName: string = metaDataFileJSON.title + (metaDataFileJSON.sceneTitle ? ': ' + metaDataFileJSON.sceneTitle : '');
+        return new JobCookSIVoyagerSceneParameterHelper(idModel ?? 0, modelSource, SOModelSource, OG, metaDataFileJSON, sceneName);
+    }
+
+    private static async computeSceneMetaData(OG: DBAPI.ObjectGraph): Promise<JobCookSIVoyagerSceneMetaDataFile | null> {
+        const subjects: DBAPI.Subject[] | null = OG.subject;
+        if (subjects === null || subjects.length === 0 || subjects.length > 1) { // if we have no subjects or multiple subjects, return default
+            LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute single Subject from OG ${JSON.stringify(OG, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+            return null;
+        }
+
+        // Compute subject's Edan Record ID identifier:
+        const subject: DBAPI.Subject = subjects[0];
+        const SOSubject: DBAPI.SystemObject | null = await subject.fetchSystemObject();
+        if (!SOSubject) {
+            LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute system object for Subject ${JSON.stringify(subject, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+            return null;
+        }
+
+        const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(SOSubject.idSystemObject);
+        if (!identifiers) {
+            LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute identifiers for Subject System Object ${SOSubject.idSystemObject}`, LOG.LS.eJOB);
+            return null;
+        }
+
+        // select first identifier of type Edan Record ID
+        let edanRecordId: string = '';
+        for (const identifier of identifiers) {
+            if (identifier.idVIdentifierType === JobCookSIVoyagerSceneParameterHelper.idVocabEdanRecordID) {
+                edanRecordId = identifier.IdentifierValue;
+                break;
+            }
+        }
+
+        const title: string = subject.Name;
+
+        let sceneTitle: string | undefined = undefined;
+        const items: DBAPI.Item[] | null = OG.item;
+        if (items === null || items.length === 0)
+            return { edanRecordId, title };
+
+        if (items.length === 1) {               // Single item
+            if (items[0].EntireSubject)         // Comprising whole subject?; use "subject name"
+                sceneTitle = undefined;
+            else                                // Comprising part of subject; use "subject name: item name"
+                sceneTitle = items[0].Name;
+        } else {                                // Multiple items, single subject, use "subject name: item1 name, item2 name, etc."
+            sceneTitle = '';
+            let first: boolean = true;
+            for (const item of items) {
+                sceneTitle += `${first ? '' : ', ' }${item.Name}`;
+                first = false;
+            }
+        }
+        return { edanRecordId, title, sceneTitle };
+    }
+
+    private static logError(errorBase: string): null {
+        LOG.error(`JobCookSIVoyagerSceneParameterExtract.compute ${errorBase}`, LOG.LS.eJOB);
+        return null;
+    }
+}
 
 export class JobCookSIVoyagerSceneParameters {
-    constructor(idModel: number | undefined,
+    sourceMeshFile: string;
+    units: string;
+    sourceDiffuseMapFile?: string | undefined;
+    svxFile?: string | undefined;
+    metaDataFile?: string | undefined;
+    outputFileBaseName?: string | undefined;
+
+    // extract and remove these from the parameter object before passing to Cook
+    parameterHelper?: JobCookSIVoyagerSceneParameterHelper;
+
+    constructor(parameterHelper: JobCookSIVoyagerSceneParameterHelper,
         sourceMeshFile: string,
         units: string,
         sourceDiffuseMapFile: string | undefined = undefined,
         svxFile: string | undefined = undefined,
         metaDataFile: string | undefined = undefined,
         outputFileBaseName: string | undefined = undefined) {
-        this.idModel = idModel;
+        this.parameterHelper = parameterHelper;
         this.sourceMeshFile = path.basename(sourceMeshFile);
         this.units = units;
         this.sourceDiffuseMapFile = sourceDiffuseMapFile ? path.basename(sourceDiffuseMapFile) : undefined;
@@ -33,18 +157,11 @@ export class JobCookSIVoyagerSceneParameters {
         this.metaDataFile = metaDataFile ? path.basename(metaDataFile) : undefined;
         this.outputFileBaseName = outputFileBaseName ? path.basename(outputFileBaseName) : undefined;
     }
-    idModel: number | undefined;
-    sourceMeshFile: string;
-    units: string;
-    sourceDiffuseMapFile?: string | undefined;
-    svxFile?: string | undefined;
-    metaDataFile?: string | undefined;
-    outputFileBaseName?: string | undefined;
 }
 
 export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParameters> {
     private parameters: JobCookSIVoyagerSceneParameters;
-    private idModel: number | null;
+    private parameterHelper: JobCookSIVoyagerSceneParameterHelper | null;
     private cleanupCalled: boolean = false;
 
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
@@ -52,11 +169,31 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         super(jobEngine, Config.job.cookClientId, 'si-vogager-scene',
             CookRecipe.getCookRecipeID('si-vogager-scene', '512211e5-f2e8-4723-93e9-e30116c88ab0'),
             null, idAssetVersions, report, dbJobRun);
-        if (parameters.idModel) {
-            this.idModel = parameters.idModel ?? null;
-            delete parameters.idModel; // strip this out, as Cook will choke on it!
+
+        if (parameters.parameterHelper) {
+            this.parameterHelper = parameters.parameterHelper;
+            delete parameters.parameterHelper; // strip this out, as Cook will choke on it!
+
+            // create buffer for metadatafile
+            if (!parameters.metaDataFile) {
+                const metaDataFileID: number = -1;
+                parameters.metaDataFile = 'PackratMetadataFile.json';
+                const buffer: Buffer = Buffer.from(JSON.stringify(this.parameterHelper.metaDataFileJSON));
+
+                const RSRs: STORE.ReadStreamResult[] = [{
+                    readStream: Readable.from(buffer.toString()),
+                    fileName: parameters.metaDataFile,
+                    storageHash: null,
+                    success: true
+                }];
+                this._streamOverrideMap.set(metaDataFileID, RSRs);
+
+                if (!this._idAssetVersions)
+                    this._idAssetVersions = [];
+                this._idAssetVersions.push(metaDataFileID); // special ID for metadataFile
+            }
         } else
-            this.idModel = null;
+            this.parameterHelper = null;
         this.parameters = parameters;
     }
 
@@ -78,9 +215,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     }
 
     private async createSystemObjects(): Promise<H.IOResults> {
-        const modelSource: DBAPI.Model | null = this.idModel ? await DBAPI.Model.fetch(this.idModel) : null;
-        if (!modelSource)
-            return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to compute source model from id ${this.idModel}`);
+        if (!this.parameterHelper)
+            return this.logError('JobCookSIVoyagerScene.createSystemObjects called without needed parameters');
 
         const svxFile: string = this.parameters.svxFile ?? 'scene.svx.json';
         const vScene: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
@@ -103,6 +239,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
         // Look for an existing scene, which is a child of modelSource
         // TODO: what if there are multiple?
+        const modelSource: DBAPI.Model = this.parameterHelper.modelSource;
         const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(modelSource.idModel);
         if (!scenes)
             return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to fetch children scenes of model ${modelSource.idModel}`);
@@ -112,6 +249,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         const scene: DBAPI.Scene = createScene ? svx.SvxExtraction.extractScene() : scenes[0];
         let asset: DBAPI.Asset | null = null;
         if (createScene) {
+            // compute ItemParent of ModelSource
+            scene.Name = this.parameterHelper.sceneName;
             if (!await scene.create())
                 return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`);
 
@@ -120,15 +259,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             if (!SOX)
                 return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Scene ${JSON.stringify(scene, H.Helpers.saferStringify)}: database error`);
 
-            // compute ItemParent of ModelSource; wire ItemParent to Scene
-            const SOModelSource: DBAPI.SystemObject | null = await modelSource.fetchSystemObject();
-            if (!SOModelSource)
-                return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to compute system object from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
-
-            const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(SOModelSource.idSystemObject, DBAPI.eObjectGraphMode.eAncestors);
-            if (!await OG.fetch())
-                return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to compute object graph from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
-
+            // wire ItemParent to Scene
+            const OG: DBAPI.ObjectGraph = this.parameterHelper.OG;
             if (OG.item && OG.item.length > 0) {
                 const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(OG.item[0], scene);
                 if (!SOX2)

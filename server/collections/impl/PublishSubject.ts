@@ -4,7 +4,7 @@ import * as CACHE from '../../cache';
 import * as COL from '../../collections/interface/';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 /** This class is used to create and update EDANMDM records, translating Packrat Subject data and metadata into the EdanMDMContent format required for EDANMDM records */
 export class PublishSubject {
@@ -156,7 +156,7 @@ export class PublishSubject {
     }
 
     private async handleLicense(licenseText: string): Promise<H.IOResults> {
-        const access: string = (licenseText.toLowerCase() === 'view and download cc0') ? 'CC0' : 'Usage conditions apply';
+        const access: string = (licenseText.toLowerCase() === 'cc0, publishable w/ downloads') ? 'CC0' : 'Usage conditions apply';
         this.edanMDM.descriptiveNonRepeating.metadata_usage!.access = access; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         return PublishSubject.returnResults(true);
     }

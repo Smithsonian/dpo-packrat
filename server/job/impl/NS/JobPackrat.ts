@@ -7,7 +7,7 @@ import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import * as NS from 'node-schedule';
 import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export abstract class JobPackrat implements JOB.IJob {
     protected _jobEngine: JOB.IJobEngine;

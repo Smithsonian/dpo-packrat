@@ -1,6 +1,6 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import { ObjectGraphTestSetup } from './ObjectGraph.setup';
 // import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';

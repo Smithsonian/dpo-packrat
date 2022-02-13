@@ -4,7 +4,7 @@ import * as CACHE from '../../cache';
 import * as DBAPI from '../../db';
 // import * as H from '../../utils/helpers';
 import { ObjectIDAndType } from '../../db';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export class NavigationDB implements NAV.INavigation {
     async getObjectChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
