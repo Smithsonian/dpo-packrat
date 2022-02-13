@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-// import { Link } from 'react-router-dom';
-import { Box, TextField, Button, FormControl, Select, MenuItem, InputLabel } from '@material-ui/core';
+import { Box, TextField, Button, FormControl, Select, MenuItem, InputLabel, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { DataGrid, GridColumns, GridSortModel, GridSortModelParams, GridPageChangeParams } from '@material-ui/data-grid';
 import { useHistory } from 'react-router-dom';
+import Clear from '@material-ui/icons/Clear';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     Container: {
@@ -148,8 +148,8 @@ type DataGridWithPaginationProps = {
     handlePaginationChange: (params: GridPageChangeParams) => void;
     handleDropDownChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleSortChange: (params: GridSortModelParams) => void;
-    handleSearchKeywordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    handleSearch: () => void;
+    handleSearchKeywordChange: (value: string) => void;
+    handleSearch: (reset: boolean) => void;
     searchType: string;
 };
 
@@ -199,11 +199,17 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                     <TextField
                         className={classes.searchFilter}
                         placeholder={Search.placeholderText || ''}
-                        type='search'
                         value={Search.text}
                         id='searchFilter'
                         name='searchFilter'
                         onChange={handleSearchKeyword}
+                        InputProps={{
+                            endAdornment: Search.text.length ? (
+                                <IconButton size='small' onClick={async () => await handleSearch(true)}>
+                                    <Clear style={{ height: '16px' }} />
+                                </IconButton>
+                            ) : null
+                        }}
                     />
                     {DropDown && (
                         <Box className={classes.labelSelectContainer}>
@@ -227,7 +233,7 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                             </FormControl>
                         </Box>
                     )}
-                    <Button className={classes.FilterBtn} onClick={handleSearch}>
+                    <Button className={classes.FilterBtn} onClick={async () => await handleSearch(false)}>
                         {Search.btnText || 'Search'}
                     </Button>
                 </Box>
