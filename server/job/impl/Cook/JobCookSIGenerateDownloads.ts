@@ -7,7 +7,7 @@ import * as JOB from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
@@ -276,6 +276,9 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                     R1: MSXSource?.R1 ?? null,
                     R2: MSXSource?.R2 ?? null,
                     R3: MSXSource?.R3 ?? null,
+                    S0: MSXSource?.S0 ?? null,
+                    S1: MSXSource?.S1 ?? null,
+                    S2: MSXSource?.S2 ?? null,
                 });
                 MSXResult = await MSX.create();
             }

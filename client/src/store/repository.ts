@@ -7,7 +7,7 @@ import create, { GetState, SetState } from 'zustand';
 import { RepositoryFilter } from '../pages/Repository';
 import { getObjectChildren, getObjectChildrenForRoot } from '../pages/Repository/hooks/useRepository';
 import { NavigationResultEntry } from '../types/graphql';
-import { eMetadata, eSystemObjectType } from '../types/server';
+import { eMetadata, eSystemObjectType } from '@dpo-packrat/common';
 import { parseRepositoryTreeNodeId, validateArray, getTermForSystemObjectType } from '../utils/repository';
 import { apolloClient } from '../graphql';
 import { GetSystemObjectDetailsDocument } from '../types/graphql';

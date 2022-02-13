@@ -432,3 +432,25 @@ ALTER TABLE ModelObject ADD COLUMN CountTriangles int(11) DEFAULT NULL;
 
 -- 2022-01-31 Deployed to Staging and Production
 
+-- 2022-02-02 Jon
+UPDATE Vocabulary SET Term = 'Edan Record ID' WHERE Term = 'Unit CMS ID';
+
+SELECT idVocabulary INTO @idVocabEdanRecordID FROM Vocabulary 
+WHERE Term = 'Edan Record ID' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
+
+UPDATE Identifier SET IdentifierValue = CONCAT('edanmdm:', IdentifierValue) WHERE idVIdentifierType = @idVocabEdanRecordID;
+
+UPDATE Vocabulary SET Term = 'Background Subtraction' WHERE Term = 'Background Subtraction By Capture Dataset Set';
+
+-- 2022-02-07 Jon
+UPDATE License SET Name = 'CC0, Publishable w/ Downloads', Description = 'CC0, Publishable w/ Downloads' WHERE Name = 'View And Download CC0';
+UPDATE License SET Name = 'SI ToU, Publishable w/ Downloads', Description = 'SI ToU, Publishable w/ Downloads' WHERE Name = 'View With Download Restrictions';
+UPDATE License SET Name = 'SI ToU, Publishable Only', Description = 'SI ToU, Publishable Only' WHERE Name = 'View Only';
+UPDATE License SET Name = 'Restricted, Not Publishable', Description = 'Restricted, Not Publishable' WHERE Name = 'Restricted';
+
+-- 2022-02-08 Deployed to Staging and Production
+
+-- 2022-02-09 Jon
+ALTER TABLE ModelSceneXref ADD COLUMN S0 double DEFAULT NULL;
+ALTER TABLE ModelSceneXref ADD COLUMN S1 double DEFAULT NULL;
+ALTER TABLE ModelSceneXref ADD COLUMN S2 double DEFAULT NULL;

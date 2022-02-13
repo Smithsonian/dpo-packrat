@@ -13,7 +13,7 @@ import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder
 import { ASL, LocalStore } from '../../../../../utils/localStore';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eEventKey } from '../../../../../event/interface/EventEnums';
-import * as COMMON from '../../../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 interface ApolloFile {
     filename: string;
@@ -238,9 +238,8 @@ class UploadAssetWorker extends ResolverBase {
         const wfParams: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeUpload,
             idSystemObject,
-            idProject: null,    // TODO: populate with idProject
+            // idProject: TODO: populate with idProject
             idUserInitiator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
-            parameters: null,
         };
 
         const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);

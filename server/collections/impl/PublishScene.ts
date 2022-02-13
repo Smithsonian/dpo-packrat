@@ -7,9 +7,10 @@ import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ZIP from '../../utils/zipStream';
 import * as STORE from '../../storage/interface';
+import * as WF from '../../workflow/interface';
 import { SvxReader } from '../../utils/parser';
 import { IDocument } from '../../types/voyager';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -21,6 +22,13 @@ export type SceneAssetCollector = {
     model?: DBAPI.Model;
     modelSceneXref?: DBAPI.ModelSceneXref;
     metadataSet?: DBAPI.Metadata[] | null;
+};
+
+export type SceneUpdateResult = {
+    success: boolean;
+    downloadsGenerated?: boolean;
+    downloadsRemoved?: boolean;
+    error?: string;
 };
 
 export class PublishScene {
@@ -246,10 +254,21 @@ export class PublishScene {
     private async computeMSXMap(): Promise<boolean> {
         if (!this.scene)
             return false;
-        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(this.scene.idScene);
+        const DownloadMSXMap: Map<number, DBAPI.ModelSceneXref> | null = await PublishScene.computeDownloadMSXMap(this.scene.idScene);
+        if (DownloadMSXMap) {
+            this.DownloadMSXMap = DownloadMSXMap;
+            return true;
+        }
+        return false;
+    }
+
+    static async computeDownloadMSXMap(idScene: number): Promise<Map<number, DBAPI.ModelSceneXref> | null> {
+        if (!idScene)
+            return null;
+        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(idScene);
         if (!MSXs) {
-            LOG.error(`PublishScene.computeMSXMap unable to fetch ModelSceneXrefs for scene ${this.scene.idScene}`, LOG.LS.eCOLL);
-            return false;
+            LOG.error(`PublishScene.computeDownloadMSXMap unable to fetch ModelSceneXrefs for scene ${idScene}`, LOG.LS.eCOLL);
+            return null;
         }
 
         const DownloadMSXMap: Map<number, DBAPI.ModelSceneXref> = new Map<number, DBAPI.ModelSceneXref>();
@@ -260,8 +279,55 @@ export class PublishScene {
                     DownloadMSXMap.set(SOI.idSystemObject, MSX);
             }
         }
-        this.DownloadMSXMap = DownloadMSXMap;
-        return true;
+        return DownloadMSXMap;
+    }
+
+    static async handleSceneUpdates(idScene: number, idSystemObject: number, idUser: number | undefined,
+        oldPosedAndQCd: boolean, newPosedAndQCd: boolean,
+        LicenseOld: DBAPI.License | undefined, LicenseNew: DBAPI.License | undefined): Promise<SceneUpdateResult> {
+        // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
+        const oldDownloadState: boolean = oldPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseOld?.RestrictLevel);
+        const newDownloadState: boolean = newPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseNew?.RestrictLevel);
+
+        if (oldDownloadState === newDownloadState)
+            return PublishScene.sendResult(true);
+
+        if (newDownloadState) {
+            LOG.info(`PublishScene.handleSceneUpdates generating downloads for scene ${idScene}`, LOG.LS.eGQL);
+            // Generate downloads
+            const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+            if (!workflowEngine)
+                return PublishScene.sendResult(false, `Unable to fetch workflow engine for download generation for scene ${idScene}`);
+            workflowEngine.generateSceneDownloads(idScene, { idUserInitiator: idUser }); // don't await
+            return { success: true, downloadsGenerated: true, downloadsRemoved: false };
+        } else { // Remove downloads
+            LOG.info(`PublishScene.handleSceneUpdates removing downloads for scene ${idScene}`, LOG.LS.eGQL);
+            // Compute downloads
+            const DownloadMSXMap: Map<number, DBAPI.ModelSceneXref> | null = await PublishScene.computeDownloadMSXMap(idScene);
+            if (!DownloadMSXMap)
+                return PublishScene.sendResult(false, `Unable to fetch scene downloads for scene ${idScene}`);
+
+            // For each download, compute assets, and set those to having an asset vresion override of 0, which means do not attach to the cloned system object
+            const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
+            for (const idSystemObject of DownloadMSXMap.keys()) {
+                const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(idSystemObject);
+                if (!assets)
+                    return PublishScene.sendResult(false, `Unable to fetch assets for idSystemObject ${idSystemObject} for scene ${idScene}`);
+                for (const asset of assets)
+                    assetVersionOverrideMap.set(asset.idAsset, 0);
+            }
+
+            const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, 'Removing Downloads', assetVersionOverrideMap);
+            if (!SOV)
+                return PublishScene.sendResult(false, `Unable to clone system object version for idSystemObject ${idSystemObject} for scene ${idScene}`);
+            return { success: true, downloadsGenerated: false, downloadsRemoved: true };
+        }
+    }
+
+    private static sendResult(success: boolean, error?: string): H.IOResults {
+        if (!success)
+            LOG.error(error, LOG.LS.eCOLL);
+        return { success, error };
     }
 
     private async collectAssets(ePublishedStateIntended?: COMMON.ePublishedState): Promise<boolean> {

@@ -16,7 +16,7 @@ import { clearLicenseAssignment, assignLicense, publish } from '../../hooks/useD
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import { LoadingButton } from '../../../../components';
 import { toast } from 'react-toastify';
-import { eSystemObjectType, ePublishedState } from '../../../../types/server';
+import { eSystemObjectType, ePublishedState } from '@dpo-packrat/common';
 
 const useStyles = makeStyles(({ typography, palette }) => ({
     detail: {
@@ -166,7 +166,8 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
 
         const { data } = await clearLicenseAssignment(idSystemObject);
         if (data?.clearLicenseAssignment?.success) {
-            toast.success('License assignment successfully cleared');
+            const message: string | null | undefined = data?.clearLicenseAssignment?.message;
+            toast.success(`License assignment successfully cleared${message ? ': ' + message : ''}`);
         } else {
             toast.error(`License assignment failure: ${data?.clearLicenseAssignment?.message}`);
         }
@@ -180,10 +181,10 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         if (license) {
             const { data } = await assignLicense(idSystemObject, license);
             if (data?.assignLicense?.success) {
-                toast.success('License assignment successfully cleared');
-            } else {
+                const message: string | null | undefined = data?.assignLicense?.message;
+                toast.success(`License assignment successfully assigned${message ? ': ' + message : ''}`);
+            } else
                 toast.error(`License assignment failure: ${data?.assignLicense?.message}`);
-            }
         }
 
         setLoading(false);
@@ -258,6 +259,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             checked={withDefaultValueBoolean(retired, false)}
                             onChange={onRetiredUpdate}
                             {...getUpdatedCheckboxProps(isRetiredUpdated)}
+                            color='primary'
                         />
                     }
                 />

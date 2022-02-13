@@ -1,6 +1,5 @@
-import { eVocabularySetID } from '../../../types/server';
+import { eVocabularySetID, eWorkflowJobRunStatus } from '@dpo-packrat/common';
 import { Vocabulary } from '../../../types/graphql';
-import { eWorkflowJobRunStatus } from '../../../types/server';
 
 export type FilterOption = {
     label: string;

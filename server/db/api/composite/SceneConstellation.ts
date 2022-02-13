@@ -3,7 +3,7 @@ import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 import * as STORE from '../../../storage/interface';
 import * as CACHE from '../../../cache';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import { IZip } from '../../../utils/IZip';
 import { SvxReader } from '../../../utils/parser/svxReader';
 

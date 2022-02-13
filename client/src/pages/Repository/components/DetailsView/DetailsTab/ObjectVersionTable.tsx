@@ -8,7 +8,7 @@ import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repos
 import { extractISOMonthDateYear, updateSystemObjectUploadRedirect, truncateWithEllipses } from '../../../../../constants/helperfunctions';
 import { rollbackSystemObjectVersion, useObjectAssets } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetGrid';
-import { PublishedStateEnumToString, eSystemObjectType } from '../../../../../types/server';
+import { PublishedStateEnumToString, eSystemObjectType } from '@dpo-packrat/common';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { SystemObjectVersion } from '../../../../../types/graphql';
 import { toast } from 'react-toastify';
@@ -24,7 +24,8 @@ interface ObjectVersionsTableProps {
 
 interface headerColumn {
     name: string;
-    width: number | string;
+    width?: number | string;
+    flex?: string;
 }
 
 function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElement {
@@ -35,7 +36,24 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     const [expanded, setExpanded] = useState<number>(-1);
     const [rollbackNotes, setRollbackNotes] = useState<string>('');
 
-    const headers: headerColumn[] = [{ name: 'Date', width: '10%' }, { name: 'Link', width: '5%' }, { name: 'Published State', width: '15%' }, { name: 'Action', width: '10%' }, { name: 'Notes', width: '60%' }];
+    const headers: headerColumn[] = [
+        {
+            name: 'Link',
+            width: '30px',
+        }, {
+            name: 'Date',
+            width: '70px',
+        }, {
+            name: 'Published State',
+            width: '110px',
+        }, {
+            name: 'Action',
+            width: '70px',
+        },{
+            name: 'Notes',
+            flex: '1'
+        }
+    ];
 
 
     const { data } = useObjectAssets(idSystemObject);
@@ -77,9 +95,9 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
         <Box style={{ minWidth: '620px' }}>
             <table className={classes.container} style={{ tableLayout: 'fixed', borderCollapse: 'collapse' }}>
                 <thead>
-                    <tr style={{ width: '100%', borderBottom: '1px solid grey' }}>
-                        {headers.map(({ name, width }, index: number) => (
-                            <th key={index} align='center' style={{ width, padding: 5 }}>
+                    <tr style={{ borderBottom: '1px solid grey' }}>
+                        {headers.map(({ name, width, flex }, index: number) => (
+                            <th key={index} align='center' style={{ width, padding: 5, flex }}>
                                 <Typography className={classes.header}>{name}</Typography>
                             </th>
                         ))}
@@ -107,15 +125,15 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                             <React.Fragment key={index}>
                                 <tr key={index}>
                                     <td align='center' style={{ padding: 0 }}>
-                                        <Typography className={clsx(classes.value)}>{extractISOMonthDateYear(version.DateCreated)}</Typography>
-                                    </td>
-                                    <td align='center' style={{ padding: 0 }}>
                                         <a
                                             href={getDownloadObjectVersionUrlForObject(serverEndpoint, version.idSystemObjectVersion)}
                                             style={{ textDecoration: 'none', color: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                         >
                                             <GetAppIcon />
                                         </a>
+                                    </td>
+                                    <td align='center' style={{ padding: 0 }}>
+                                        <Typography className={clsx(classes.value)}>{extractISOMonthDateYear(version.DateCreated)}</Typography>
                                     </td>
                                     <td align='center' style={{ padding: 0 }}>
                                         <Typography className={clsx(classes.value)}>{PublishedStateEnumToString(version.PublishedState)}</Typography>

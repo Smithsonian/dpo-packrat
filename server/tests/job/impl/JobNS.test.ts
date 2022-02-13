@@ -11,7 +11,7 @@ import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as TESTMODEL from '../../db/composite/Model.setup';
 
 class JobData {
@@ -413,7 +413,7 @@ function testWorkflow(testCase: string, eWorkflowType: COMMON.eVocabularyID, eJo
             return;
 
         LOG.info(`JobNS.test IWorkflow(${testCase}): ${COMMON.eVocabularyID[eWorkflowType]} ${COMMON.eVocabularyID[eJobType]}`, LOG.LS.eTEST);
-        const idSystemObject: number[] | null = (await MTS?.getTestCase(testCase)?.computeSystemObjectIDs()) || null;
+        const idSystemObject: number[] | undefined = (await MTS?.getTestCase(testCase)?.computeSystemObjectIDs()) ?? undefined;
         expect(idSystemObject).toBeTruthy();
 
         const parameters: any = computeWorkflowParameters(testCase, eWorkflowType, eJobType);
@@ -422,8 +422,6 @@ function testWorkflow(testCase: string, eWorkflowType: COMMON.eVocabularyID, eJo
         const WFP: WF.WorkflowParameters = {
             eWorkflowType,
             idSystemObject,
-            idProject: null,
-            idUserInitiator: null,
             parameters,
         };
 

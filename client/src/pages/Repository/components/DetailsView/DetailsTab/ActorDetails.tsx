@@ -9,7 +9,7 @@ import React, { useEffect } from 'react';
 import { Loader } from '../../../../../components';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
-import { eSystemObjectType } from '../../../../../types/server';
+import { eSystemObjectType } from '@dpo-packrat/common';
 import { useDetailTabStore } from '../../../../../store';
 import { DebounceInput } from 'react-debounce-input';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';

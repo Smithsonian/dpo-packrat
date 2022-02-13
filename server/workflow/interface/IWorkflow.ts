@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../db';
 import * as H from '../../utils/helpers';
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export interface WorkflowUpdateResults {
     success: boolean;

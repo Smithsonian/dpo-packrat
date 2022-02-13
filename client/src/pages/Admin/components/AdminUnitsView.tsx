@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Tooltip, TextField, Button } from '@material-ui/core';
+import { Box, Tooltip, TextField, Button, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { DataGrid, GridColumns } from '@material-ui/data-grid';
 import { useLocation } from 'react-router';
@@ -15,6 +15,7 @@ import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
 import { useHistory } from 'react-router-dom';
+import Clear from '@material-ui/icons/Clear';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -175,7 +176,20 @@ function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSear
         <Box className={classes.AdminSearchFilterContainer}>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
                 <label htmlFor='searchFilter' style={{ display: 'none' }}>Search Unit</label>
-                <TextField className={classes.searchFilter} placeholder='Search Unit' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
+                <TextField
+                    className={classes.searchFilter}
+                    placeholder='Search Unit'
+                    value={searchFilter}
+                    id='searchFilter'
+                    onChange={handleSearchFilterChange}
+                    InputProps={{
+                        endAdornment: searchFilter.length ? (
+                            <IconButton size='small' onClick={() => { setSearchFilter(''); queryUnitsByFilter(''); }}>
+                                <Clear style={{ height: '16px' }} />
+                            </IconButton>
+                        ) : null
+                    }}
+                />
                 <Button className={classes.styledButton} style={{ right: '25px' }} onClick={searchUnits}>
                     Search
                 </Button>
@@ -200,7 +214,8 @@ function AdminUnitsView(): React.ReactElement {
                     input: {
                         search: ''
                     }
-                }
+                },
+                fetchPolicy: 'no-cache'
             });
             setUnitList(initialUnitListQuery?.data?.getUnitsFromNameSearch?.Units);
         }

@@ -6,7 +6,7 @@ import { ClientRequest } from 'http';
 import * as NAV from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
-import * as COMMON from '../../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import { SolrClient, eSolrCore } from './SolrClient';

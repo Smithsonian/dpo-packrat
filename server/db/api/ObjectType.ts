@@ -1,4 +1,4 @@
-import * as COMMON from '../../../client/src/types/server';
+import * as COMMON from '@dpo-packrat/common';
 
 export enum eNonSystemObjectType {
     eUnknown = 0,
@@ -283,6 +283,12 @@ export function LicenseRestrictLevelToPublishedStateEnum(restrictLevel: number):
     if (restrictLevel <= 30)
         return COMMON.ePublishedState.ePublished;
     return COMMON.ePublishedState.eNotPublished;
+}
+
+export function LicenseAllowsDownloadGeneration(restrictLevel?: number): boolean {
+    if (restrictLevel === undefined)
+        return false;
+    return (restrictLevel <= 20); // "CC0, Publishable w/ Downloads" and "SI ToU, Publishable w/ Downloads"
 }
 
 // Keep this in sync with SQL in WorkflowListResult.search()
