@@ -1,10 +1,11 @@
 /* eslint-disable camelcase */
 
 import React, { useState } from 'react';
-import { Box, TextField, Button, Select, MenuItem, InputLabel, FormControl } from '@material-ui/core';
+import { Box, TextField, Button, Select, MenuItem, InputLabel, FormControl, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { User_Status } from '../../../types/graphql';
 import { useHistory } from 'react-router-dom';
+import Clear from '@material-ui/icons/Clear';
 
 const useStyles = makeStyles(({ typography, palette }) => ({
     searchUsersFilterButton: {
@@ -94,10 +95,16 @@ function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActi
                 <TextField
                     className={classes.searchFilter}
                     placeholder='Search Packrat User'
-                    type='search'
                     value={searchFilter}
                     id='searchFilter'
                     onChange={handleSearchFilterChange}
+                    InputProps={{
+                        endAdornment: searchFilter.length ? (
+                            <IconButton size='small' onClick={() => { setSearchFilter(''); setActiveStatusFilter(User_Status.EAll); queryUsersByFilter(User_Status.EAll, ''); }}>
+                                <Clear style={{ height: '16px' }} />
+                            </IconButton>
+                        ) : null
+                    }}
                 />
                 <Box className={classes.labelSelectContainer}>
                     <InputLabel htmlFor='activeStatus' className={classes.filterLabel}>Active</InputLabel>

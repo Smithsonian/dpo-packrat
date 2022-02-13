@@ -6,9 +6,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Tooltip, TextField, Button } from '@material-ui/core';
+import { Box, Tooltip, TextField, Button, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { DataGrid, GridColumns /*, GridTripleDotsVerticalIcon*/ } from '@material-ui/data-grid';
+import { DataGrid, GridColumns } from '@material-ui/data-grid';
 import { useLocation } from 'react-router';
 import { GetLicenseListDocument, License } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
@@ -16,6 +16,7 @@ import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcr
 import { useLicenseStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
 import { useHistory } from 'react-router-dom';
+import Clear from '@material-ui/icons/Clear';
 
 const useStyles = makeStyles({
     AdminListContainer: {
@@ -166,7 +167,20 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
         <Box className={classes.AdminSearchFilterContainer}>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
                 <label htmlFor='searchFilter' style={{ display: 'none' }}>Search License</label>
-                <TextField className={classes.searchFilter} placeholder='Search License' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
+                <TextField
+                    className={classes.searchFilter}
+                    placeholder='Search License'
+                    value={searchFilter}
+                    id='searchFilter'
+                    onChange={handleSearchFilterChange}
+                    InputProps={{
+                        endAdornment: searchFilter.length ? (
+                            <IconButton size='small' onClick={() => { setSearchFilter(''); queryByFilter(''); }}>
+                                <Clear style={{ height: '16px' }} />
+                            </IconButton>
+                        ) : null
+                    }}
+                />
                 <Button className={classes.styledButton} style={{ right: '25px' }} onClick={search}>Search</Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>

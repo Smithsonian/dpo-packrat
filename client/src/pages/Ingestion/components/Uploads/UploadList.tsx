@@ -8,7 +8,7 @@
  */
 import { Box, Typography, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useEffect } from 'react';
+import React from 'react';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
 import { useUploadStore } from '../../../../store';
@@ -73,11 +73,6 @@ function UploadList(props: UploadListProps): React.ReactElement {
     const classes = useUploadListStyles();
     const { pending } = useUploadStore();
     const { loading, open } = props;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    useEffect(() => {
-        if (urlParams.has('mode')) open();
-    }, [open]);
 
     return (
         <Box className={classes.container}>
