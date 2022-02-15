@@ -276,6 +276,9 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                     R1: MSXSource?.R1 ?? null,
                     R2: MSXSource?.R2 ?? null,
                     R3: MSXSource?.R3 ?? null,
+                    S0: MSXSource?.S0 ?? null,
+                    S1: MSXSource?.S1 ?? null,
+                    S2: MSXSource?.S2 ?? null,
                 });
                 MSXResult = await MSX.create();
             }

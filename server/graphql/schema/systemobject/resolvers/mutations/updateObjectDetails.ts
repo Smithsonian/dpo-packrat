@@ -3,10 +3,12 @@ import { Parent, Context } from '../../../../../types/resolvers';
 import * as COL from '../../../../../collections/interface/';
 import * as LOG from '../../../../../utils/logger';
 import * as DBAPI from '../../../../../db';
+import * as CACHE from '../../../../../cache';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
 import { SystemObjectTypeToName } from '../../../../../db/api/ObjectType';
 import * as H from '../../../../../utils/helpers';
+import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs, context: Context): Promise<UpdateObjectDetailsResult> {
@@ -56,6 +58,9 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         }
     }
 
+    const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
+    const LicenseOld: DBAPI.License | undefined = LR?.License ?? undefined;
+    let LicenseNew: DBAPI.License | undefined = LicenseOld;
     if (data.License != null) {
         if (data.License > 0) {
             const reassignedLicense: DBAPI.License | null = await DBAPI.License.fetch(data.License);
@@ -64,11 +69,14 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
             if (!await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense))
                 return sendResult(false, `Unable to reassign license for idSystemObject ${idSystemObject} with id ${reassignedLicense.idLicense}; update failed`);
+            LicenseNew = reassignedLicense;
         } else {
             if (!await DBAPI.LicenseManager.clearAssignment(idSystemObject))
                 return sendResult(false, `Unable to clear license with for idSystemObject ${idSystemObject}; update failed`);
+            LicenseNew = undefined;
         }
     }
+    LOG.info(`updateObjectDetails LicenseOld=${H.Helpers.JSONStringify(LicenseOld)}, LicenseNew=${H.Helpers.JSONStringify(LicenseNew)}`, LOG.LS.eGQL);
 
     const metadataRes: H.IOResults = await handleMetadata(idSystemObject, data.Metadata, user);
     if (!metadataRes.success)
@@ -332,6 +340,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (!Scene)
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
+            const oldPosedAndQCd: boolean = Scene.PosedAndQCd;
             Scene.Name = data.Name;
             if (data.Scene) {
                 if (typeof data.Scene.PosedAndQCd === 'boolean') Scene.PosedAndQCd = data.Scene.PosedAndQCd;
@@ -339,7 +348,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
             if (!await Scene.update())
                 return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
-            break;
+
+            // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
+            const res: SceneUpdateResult = await PublishScene.handleSceneUpdates(Scene.idScene, idSystemObject, user?.idUser,
+                oldPosedAndQCd, Scene.PosedAndQCd, LicenseOld, LicenseNew);
+            if (!res.success)
+                return sendResult(false, res.error);
+            return { success: true, message: res.downloadsGenerated ? 'Scene downloads are being generated' : res.downloadsRemoved ? 'Scene downloads were removed' : '' };
         }
         case COMMON.eSystemObjectType.eIntermediaryFile: {
             const IntermediaryFile = await DBAPI.IntermediaryFile.fetch(idObject);

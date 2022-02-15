@@ -1342,7 +1342,7 @@ describe('DB Creation Test Suite', () => {
                 idModel: model.idModel,
                 idScene: scene.idScene,
                 Name: 'Test 1', Usage: 'Web3D', Quality: 'High', FileSize: BigInt(1000000), UVResolution: 1000,
-                TS0: 0, TS1: 0, TS2: 0, R0: 0, R1: 0, R2: 0, R3: 0,
+                TS0: 0, TS1: 0, TS2: 0, R0: 0, R1: 0, R2: 0, R3: 0, S0: 0, S1: 0, S2: 0,
                 BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
                 idModelSceneXref: 0
             });
@@ -1359,7 +1359,7 @@ describe('DB Creation Test Suite', () => {
                 idModel: model.idModel,
                 idScene: sceneNulls.idScene,
                 Name: null, Usage: null, Quality: null, FileSize: null, UVResolution: null,
-                TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null,
+                TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null, S0: null, S1: null, S2: null,
                 BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null, BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
                 idModelSceneXref: 0
             });
