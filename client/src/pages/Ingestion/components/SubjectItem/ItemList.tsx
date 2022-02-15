@@ -102,7 +102,7 @@ function ItemList(): React.ReactElement {
                     className={classes.nameInput}
                     onChange={onUpdateName}
                     debounceTimeout={500}
-                    placeholder='Add new item here'
+                    placeholder='Add new media group here'
                 />
             );
         }
