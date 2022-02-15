@@ -171,7 +171,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 const Item = await DBAPI.Item.fetch(idObject);
                 if (!Item)
-                    return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                    return sendResult(false, `Unable to fetch Media Group with id ${idObject}; update failed`);
 
                 Item.Name = data.Name;
                 if (!isNull(EntireSubject) && !isUndefined(EntireSubject))
@@ -211,13 +211,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     };
                     const GeoLocation = new DBAPI.GeoLocation(GeoLocationInput);
                     if (!await GeoLocation.create())
-                        return sendResult(false, `Unable to create GeoLocation when updating ${SystemObjectTypeToName(objectType)}; update failed`);
+                        return sendResult(false, 'Unable to create GeoLocation when updating Media Group; update failed');
 
                     Item.idGeoLocation = GeoLocation.idGeoLocation;
                 }
 
                 if (!await Item.update())
-                    return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                    return sendResult(false, `Unable to update Media Group with id ${idObject}; update failed`);
             }
             break;
         }

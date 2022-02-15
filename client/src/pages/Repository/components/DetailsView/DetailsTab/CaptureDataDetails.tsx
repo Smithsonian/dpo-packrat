@@ -266,7 +266,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                             </TableRow>
                             <TableRow className={classes.tableRow}>
                                 <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Item Position Type</Typography>
+                                    <Typography className={classes.labelText}>Position Type</Typography>
                                 </TableCell>
                                 <TableCell className={classes.tableCell}>
                                     <Select
@@ -285,7 +285,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                             </TableRow>
                             <TableRow className={classes.tableRow}>
                                 <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Item Position Field ID</Typography>
+                                    <Typography className={classes.labelText}>Position Field ID</Typography>
                                 </TableCell>
                                 <TableCell className={classes.tableCell}>
                                     <DebounceInput
@@ -303,7 +303,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                             </TableRow>
                             <TableRow className={classes.tableRow}>
                                 <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Item Arrangement Field ID</Typography>
+                                    <Typography className={classes.labelText}>Arrangement Field ID</Typography>
                                 </TableCell>
                                 <TableCell className={classes.tableCell}>
                                     <DebounceInput
