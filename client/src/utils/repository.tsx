@@ -44,7 +44,7 @@ export function getTermForSystemObjectType(objectType: eSystemObjectType): strin
         case eSystemObjectType.eUnit:                   return 'Unit';
         case eSystemObjectType.eProject:                return 'Project';
         case eSystemObjectType.eSubject:                return 'Subject';
-        case eSystemObjectType.eItem:                   return 'Item';
+        case eSystemObjectType.eItem:                   return 'Media Group';
         case eSystemObjectType.eCaptureData:            return 'Capture Data';
         case eSystemObjectType.eModel:                  return 'Model';
         case eSystemObjectType.eScene:                  return 'Scene';
@@ -241,7 +241,7 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
         case eSystemObjectType.eProjectDocumentation:   iconProps.overrideText = 'PD'; break;
         case eSystemObjectType.eActor:                  iconProps.overrideText = 'AC'; break;
         case eSystemObjectType.eStakeholder:            iconProps.overrideText = 'ST'; break;
-
+        case eSystemObjectType.eItem:                   iconProps.overrideText = 'MG'; break;
         case eSystemObjectType.eAsset:
         case eSystemObjectType.eAssetVersion:
             return { icon: fileIcon, color };

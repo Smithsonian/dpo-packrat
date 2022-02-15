@@ -42,8 +42,8 @@ function Ingestion(): React.ReactElement {
         if (metadatas.length) {
             if (includeSubjectItem) {
                 updatedOptions.push({
-                    title: 'Subject & Item',
-                    route: INGESTION_ROUTE.ROUTES.SUBJECT_ITEM,
+                    title: 'Subject & Media Group',
+                    route: INGESTION_ROUTE.ROUTES.SUBJECT_MEDIA_GROUP,
                     enabled: false
                 });
             }
@@ -66,13 +66,13 @@ function Ingestion(): React.ReactElement {
         let allowChange: boolean = true;
         const { href: url } = window.location;
 
-        if (url.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM)) {
-            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+        if (url.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP)) {
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
         }
 
         if (url.includes(INGESTION_ROUTES_TYPE.METADATA)) {
             if (url.includes('last=true')) return true;
-            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM);
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP);
         }
 
         if (allowChange) return true;
@@ -98,7 +98,7 @@ function Ingestion(): React.ReactElement {
 
                 <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)} component={Uploads} />
 
-                <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_ITEM)} component={SubjectItem} />
+                <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP)} component={SubjectItem} />
 
                 <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)} component={Metadata} />
             </PrivateRoute>

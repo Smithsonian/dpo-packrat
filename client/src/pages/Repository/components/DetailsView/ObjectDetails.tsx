@@ -220,7 +220,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             {(unit && <Detail idSystemObject={unit?.idSystemObject} label='Unit' value={unit?.name} />)}
             {(project && <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />)}
             {(subject && <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />)}
-            {(item && <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />)}
+            {(item && <Detail idSystemObject={item?.idSystemObject} label='Media Group' value={item?.name} />)}
             {(asset && <Detail idSystemObject={asset?.idSystemObject} label='Asset' value={asset?.name} />)}
             {(objectType === eSystemObjectType.eScene) && (
                 <Detail
