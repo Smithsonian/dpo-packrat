@@ -238,9 +238,8 @@ class UploadAssetWorker extends ResolverBase {
         const wfParams: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeUpload,
             idSystemObject,
-            idProject: null,    // TODO: populate with idProject
+            // idProject: TODO: populate with idProject
             idUserInitiator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
-            parameters: null,
         };
 
         const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);

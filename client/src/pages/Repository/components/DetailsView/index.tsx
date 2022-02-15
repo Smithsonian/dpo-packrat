@@ -460,7 +460,8 @@ function DetailsView(): React.ReactElement {
 
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
-                toast.success('Data saved successfully');
+                const message: string | null | undefined = data?.updateObjectDetails?.message;
+                toast.success(`Data saved successfully${message? ': ' + message : ''}`);
                 return true;
             } else
                 throw new Error(data?.updateObjectDetails?.message ?? '');
