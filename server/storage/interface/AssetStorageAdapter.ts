@@ -595,9 +595,8 @@ export class AssetStorageAdapter {
         };
 
         const workflowParams: WF.WorkflowParameters = {
-            eWorkflowType: null,
             idSystemObject,
-            idProject: null, // TODO: update with project ID
+            // idProject: TODO: update with project ID
             idUserInitiator: idUser,
             parameters
         };
