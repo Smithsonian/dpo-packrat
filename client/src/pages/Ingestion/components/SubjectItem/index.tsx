@@ -99,13 +99,13 @@ function SubjectItem(): React.ReactElement {
         if (!selectedItem) {
             error = true;
             setItemError(true);
-            toast.warn('Please select or provide an item', { autoClose: false });
+            toast.warn('Please select or provide a media group', { autoClose: false });
         }
 
         if (selectedItem?.name.trim() === '') {
             error = true;
             setItemError(true);
-            toast.warn('Please provide a valid name for item', { autoClose: false });
+            toast.warn('Please provide a valid name for media group', { autoClose: false });
         }
 
         if (error) return;
