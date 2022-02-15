@@ -12,7 +12,7 @@ export type WorkflowUtilExtractAssetVersions = {
 };
 
 export class WorkflowUtil {
-    static async extractAssetVersions(idSOs: number[] | null): Promise<WorkflowUtilExtractAssetVersions> {
+    static async extractAssetVersions(idSOs: number[] | undefined): Promise<WorkflowUtilExtractAssetVersions> {
         // confirm that idSystemObject are asset versions; ultimately, we will want to allow a model and/or capture data, depending on the recipe
         if (!idSOs)
             return { success: true, idAssetVersions: null }; // OK to call without objects to act on, at least at this point -- the job itself may complain once started

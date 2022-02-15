@@ -2,6 +2,7 @@
 import { ModelSceneXref as ModelSceneXrefBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 
 export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements ModelSceneXrefBase {
     idModelSceneXref!: number;
@@ -25,6 +26,9 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
     R1!: number | null;
     R2!: number | null;
     R3!: number | null;
+    S0!: number | null;
+    S1!: number | null;
+    S2!: number | null;
 
     constructor(input: ModelSceneXrefBase) {
         super(input);
@@ -39,20 +43,30 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             && this.R0 === MSX.R0
             && this.R1 === MSX.R1
             && this.R2 === MSX.R2
-            && this.R3 === MSX.R3;
+            && this.R3 === MSX.R3
+            && this.S0 === MSX.S0
+            && this.S1 === MSX.S1
+            && this.S2 === MSX.S2;
     }
     /** return true if transform is updated */
     public updateTransformIfNeeded(MSX: ModelSceneXref): boolean {
         let retValue: boolean = false;
-        if (this.TS0 !== MSX.TS0) { this.TS0 = MSX.TS0; retValue = true; }
-        if (this.TS1 !== MSX.TS1) { this.TS1 = MSX.TS1; retValue = true; }
-        if (this.TS2 !== MSX.TS2) { this.TS2 = MSX.TS2; retValue = true; }
-        if (this.R0  !== MSX.R0)  { this.R0  = MSX.R0;  retValue = true; }
-        if (this.R1  !== MSX.R1)  { this.R1  = MSX.R1;  retValue = true; }
-        if (this.R2  !== MSX.R2)  { this.R2  = MSX.R2;  retValue = true; }
-        if (this.R3  !== MSX.R3)  { this.R3  = MSX.R3;  retValue = true; }
+        const logContext: string = `${H.Helpers.JSONStringify(this)} vs incoming ${H.Helpers.JSONStringify(MSX)}`;
+        if (H.Helpers.safeRound(this.TS0) !== H.Helpers.safeRound(MSX.TS0)) { this.TS0 = MSX.TS0; retValue = true; }
+        if (H.Helpers.safeRound(this.TS1) !== H.Helpers.safeRound(MSX.TS1)) { this.TS1 = MSX.TS1; retValue = true; }
+        if (H.Helpers.safeRound(this.TS2) !== H.Helpers.safeRound(MSX.TS2)) { this.TS2 = MSX.TS2; retValue = true; }
+        if (H.Helpers.safeRound(this.R0)  !== H.Helpers.safeRound(MSX.R0))  { this.R0  = MSX.R0;  retValue = true; }
+        if (H.Helpers.safeRound(this.R1)  !== H.Helpers.safeRound(MSX.R1))  { this.R1  = MSX.R1;  retValue = true; }
+        if (H.Helpers.safeRound(this.R2)  !== H.Helpers.safeRound(MSX.R2))  { this.R2  = MSX.R2;  retValue = true; }
+        if (H.Helpers.safeRound(this.R3)  !== H.Helpers.safeRound(MSX.R3))  { this.R3  = MSX.R3;  retValue = true; }
+        if (H.Helpers.safeRound(this.S0)  !== H.Helpers.safeRound(MSX.S0))  { this.S0  = MSX.S0; retValue = true; }
+        if (H.Helpers.safeRound(this.S1)  !== H.Helpers.safeRound(MSX.S1))  { this.S1  = MSX.S1; retValue = true; }
+        if (H.Helpers.safeRound(this.S2)  !== H.Helpers.safeRound(MSX.S2))  { this.S2  = MSX.S2; retValue = true; }
+        if (retValue)
+            LOG.info(`ModelSceneXref.updateTransformIfNeeded UPDATED: ${logContext}`, LOG.LS.eDB);
         return retValue;
     }
+
     public computeModelAutomationTag(): string {
         return `scene-${this.Usage}-${this.Quality}-${this.UVResolution}`;
     }
@@ -61,19 +75,20 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
         try {
             const { idModel, idScene, Name, Usage, Quality, FileSize, UVResolution,
                 BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
-                TS0, TS1, TS2, R0, R1, R2, R3 } = this;
+                TS0, TS1, TS2, R0, R1, R2, R3, S0, S1, S2 } = this;
             ({ idModelSceneXref: this.idModelSceneXref, idModel: this.idModel, idScene: this.idScene, Name: this.Name,
                 Usage: this.Usage, Quality: this.Quality, FileSize: this.FileSize, UVResolution: this.UVResolution,
                 BoundingBoxP1X: this.BoundingBoxP1X, BoundingBoxP1Y: this.BoundingBoxP1Y, BoundingBoxP1Z: this.BoundingBoxP1Z,
                 BoundingBoxP2X: this.BoundingBoxP2X, BoundingBoxP2Y: this.BoundingBoxP2Y, BoundingBoxP2Z: this.BoundingBoxP2Z,
-                TS0: this.TS0, TS1: this.TS1, TS2: this.TS2, R0: this.R0, R1: this.R1, R2: this.R2, R3: this.R3 } =
+                TS0: this.TS0, TS1: this.TS1, TS2: this.TS2, R0: this.R0, R1: this.R1, R2: this.R2, R3: this.R3,
+                S0: this.S0, S1: this.S1, S2: this.S2 } =
                 await DBC.DBConnection.prisma.modelSceneXref.create({
                     data: {
                         Model:  { connect: { idModel }, },
                         Scene:  { connect: { idScene }, },
                         Name, Usage, Quality, FileSize, UVResolution,
                         BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
-                        TS0, TS1, TS2, R0, R1, R2, R3,
+                        TS0, TS1, TS2, R0, R1, R2, R3, S0, S1, S2
                     },
                 }));
             return true;
@@ -87,7 +102,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
         try {
             const { idModelSceneXref, idModel, idScene, Name, Usage, Quality, FileSize, UVResolution,
                 BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
-                TS0, TS1, TS2, R0, R1, R2, R3 } = this;
+                TS0, TS1, TS2, R0, R1, R2, R3, S0, S1, S2 } = this;
             return await DBC.DBConnection.prisma.modelSceneXref.update({
                 where: { idModelSceneXref, },
                 data: {
@@ -95,7 +110,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
                     Scene:  { connect: { idScene }, },
                     Name, Usage, Quality, FileSize, UVResolution,
                     BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
-                    TS0, TS1, TS2, R0, R1, R2, R3,
+                    TS0, TS1, TS2, R0, R1, R2, R3, S0, S1, S2
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {

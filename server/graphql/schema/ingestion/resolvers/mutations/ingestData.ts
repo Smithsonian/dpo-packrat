@@ -1249,8 +1249,10 @@ class IngestDataWorker extends ResolverBase {
                     // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
                     if (!AVInfo.isAttachment && SOBased instanceof DBAPI.Scene) {
                         const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, IAR, idAssetVersion);
-                        if (success && modelTransformUpdated)
+                        if (success && modelTransformUpdated) {
                             transformUpdated = true;
+                            LOG.info(`ingestData set transformUpdated to true from idAssetVersion ${idAssetVersion} for ${JSON.stringify(SOBased, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                        }
                     }
                 }
             }
@@ -1323,9 +1325,8 @@ class IngestDataWorker extends ResolverBase {
             };
 
             const workflowParams: WF.WorkflowParameters = {
-                eWorkflowType: null,
                 idSystemObject,
-                idProject: null, // TODO: update with project ID
+                // idProject: TODO: update with project ID
                 idUserInitiator: user.idUser,
                 parameters
             };
@@ -1774,9 +1775,8 @@ class IngestDataWorker extends ResolverBase {
         const wfParams: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeIngestion,
             idSystemObject,
-            idProject: null,    // TODO: populate with idProject
-            idUserInitiator: this.user?.idUser ?? null,
-            parameters: null,
+            // idProject: TODO: populate with idProject
+            idUserInitiator: this.user?.idUser,
         };
 
         const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
