@@ -81,15 +81,15 @@ export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
     itemPositionFieldId: yup
         .number()
         .nullable(true)
-        .typeError('Item Position Field ID must be a positive integer')
-        .positive('Item Position Field ID must be a positive integer')
-        .max(2147483647, 'Item Position Field ID is too large'),
+        .typeError('Position Field ID must be a positive integer')
+        .positive('Position Field ID must be a positive integer')
+        .max(2147483647, 'Position Field ID is too large'),
     itemArrangementFieldId: yup
         .number()
         .nullable(true)
-        .typeError('Item Arrangement Field ID must be a positive integer')
-        .positive('Item Arrangement Field ID must be a positive integer')
-        .max(2147483647, 'Item Arrangement Field ID is too large'),
+        .typeError('Arrangement Field ID must be a positive integer')
+        .positive('Arrangement Field ID must be a positive integer')
+        .max(2147483647, 'Arrangement Field ID is too large'),
     focusType: yup.number().nullable(true),
     lightsourceType: yup.number().nullable(true),
     backgroundRemovalMethod: yup.number().nullable(true),

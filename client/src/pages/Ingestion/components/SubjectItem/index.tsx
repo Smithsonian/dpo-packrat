@@ -39,8 +39,7 @@ const useStyles = makeStyles(({ palette }) => ({
         marginRight: 20
     },
     fileChip: {
-        marginRight: 10,
-        marginBottom: 5
+        marginRight: 10
     }
 }));
 
@@ -101,13 +100,13 @@ function SubjectItem(): React.ReactElement {
         if (!selectedItem) {
             error = true;
             setItemError(true);
-            toast.warn('Please select or provide an item', { autoClose: false });
+            toast.warn('Please select or provide a media group', { autoClose: false });
         }
 
         if (selectedItem?.name.trim() === '') {
             error = true;
             setItemError(true);
-            toast.warn('Please provide a valid name for item', { autoClose: false });
+            toast.warn('Please provide a valid name for media group', { autoClose: false });
         }
 
         if (error) return;
@@ -145,7 +144,7 @@ function SubjectItem(): React.ReactElement {
             </Helmet>
             <Box className={classes.content}>
                 <Box display='flex' flexDirection='row' alignItems='center' flexWrap='wrap'>
-                    <Typography className={classes.filesLabel}>Select Subject and Item for:</Typography>
+                    <Typography className={classes.filesLabel}>Select Subject and Media Group for:</Typography>
                     {metadatas.map(({ file }, index) => <Chip key={index} className={classes.fileChip} label={file.name} variant='outlined' />)}
                 </Box>
                 <SearchList />
@@ -175,7 +174,7 @@ function SubjectItem(): React.ReactElement {
                     loading={itemsLoading}
                     error={itemError}
                     required
-                    label='Item'
+                    label='Media Group'
                     marginTop={2}
                     padding='10px'
                 >
