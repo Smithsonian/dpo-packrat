@@ -25,7 +25,7 @@ const useStyles = makeStyles(() => ({
 interface SubjectListItemProps {
     id: number;
     arkId: string;
-    collectionId?: string;
+    collectionId: string;
     unit: string;
     name: string;
     selected: boolean;
