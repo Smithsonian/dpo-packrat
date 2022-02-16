@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+
 /**
  * Ingestion
  *
@@ -42,8 +44,8 @@ function Ingestion(): React.ReactElement {
         if (metadatas.length) {
             if (includeSubjectItem) {
                 updatedOptions.push({
-                    title: 'Subject & Item',
-                    route: INGESTION_ROUTE.ROUTES.SUBJECT_ITEM,
+                    title: 'Subject & Media Group',
+                    route: INGESTION_ROUTE.ROUTES.SUBJECT_MEDIA_GROUP,
                     enabled: false
                 });
             }
@@ -62,25 +64,36 @@ function Ingestion(): React.ReactElement {
         setOptions(updatedOptions);
     }, [metadatas, includeSubjectItem]);
 
+    // we want to reset the ingestion workflow state every time we mount/navigate to this component
+    useEffect(() => {
+        ingestionReset(true);
+    }, []);
+
     const routeChangeCheck = ({ pathname }): boolean | string => {
         let allowChange: boolean = true;
         const { href: url } = window.location;
 
-        if (url.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM)) {
-            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+        // reset when we navigate to any other part of the app
+        if (!pathname.includes(HOME_ROUTES.INGESTION)) {
+            allowChange = !(url.includes(INGESTION_ROUTES_TYPE.METADATA) || url.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP) || url.includes(INGESTION_ROUTES_TYPE.UPLOADS));
         }
 
-        if (url.includes(INGESTION_ROUTES_TYPE.METADATA)) {
-            if (url.includes('last=true')) return true;
-            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM);
+        if (url.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP)) {
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+        }
+
+        // handle case of use clicking on side panel options while in ingestion
+        // without this block, router will redirect to uploads without confirming a reset
+        if (pathname === '/ingestion' && (url.includes(INGESTION_ROUTES_TYPE.METADATA) || url.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP) || url.includes(INGESTION_ROUTES_TYPE.UPLOADS))) {
+            allowChange = false;
         }
 
         if (allowChange) return true;
 
-        const isConfirmed = global.confirm('Are you sure you want to go to navigate away? changes might be lost');
+        const isConfirmed = global.confirm('Are you sure you want to go to navigate away? Changes might be lost');
 
         if (isConfirmed) {
-            ingestionReset();
+            ingestionReset(false);
         }
 
         return isConfirmed;
@@ -98,7 +111,7 @@ function Ingestion(): React.ReactElement {
 
                 <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)} component={Uploads} />
 
-                <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_ITEM)} component={SubjectItem} />
+                <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP)} component={SubjectItem} />
 
                 <PrivateRoute exact path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)} component={Metadata} />
             </PrivateRoute>

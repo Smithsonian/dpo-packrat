@@ -146,7 +146,7 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
                 addItems(items);
             }
         } catch (error) {
-            toast.error('Failed to get items for subjects');
+            toast.error('Failed to get media group for subjects');
         }
     },
     reset: () => {
