@@ -177,7 +177,7 @@ function Uploads(): React.ReactElement {
     };
 
     const onIngest = async (): Promise<void> => {
-        const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
+        const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_MEDIA_GROUP);
         try {
             ingestionReset();
             setGettingAssetDetails(true);

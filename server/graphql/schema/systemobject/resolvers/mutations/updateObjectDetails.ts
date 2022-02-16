@@ -179,7 +179,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 const Item = await DBAPI.Item.fetch(idObject);
                 if (!Item)
-                    return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                    return sendResult(false, `Unable to fetch Media Group with id ${idObject}; update failed`);
 
                 Item.Name = data.Name;
                 if (!isNull(EntireSubject) && !isUndefined(EntireSubject))
@@ -219,13 +219,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     };
                     const GeoLocation = new DBAPI.GeoLocation(GeoLocationInput);
                     if (!await GeoLocation.create())
-                        return sendResult(false, `Unable to create GeoLocation when updating ${SystemObjectTypeToName(objectType)}; update failed`);
+                        return sendResult(false, 'Unable to create GeoLocation when updating Media Group; update failed');
 
                     Item.idGeoLocation = GeoLocation.idGeoLocation;
                 }
 
                 if (!await Item.update())
-                    return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                    return sendResult(false, `Unable to update Media Group with id ${idObject}; update failed`);
             }
             break;
         }
@@ -255,8 +255,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 } = data.CaptureData;
 
                 if (datasetFieldId && !H.Helpers.validFieldId(datasetFieldId)) return sendResult(false, 'Dataset Field ID is invalid; update failed');
-                if (itemPositionFieldId && !H.Helpers.validFieldId(itemPositionFieldId)) return sendResult(false, 'Item Position Field ID is invalid; update failed');
-                if (itemArrangementFieldId && !H.Helpers.validFieldId(itemArrangementFieldId)) return sendResult(false, 'Item Arrangement Field ID is invalid; update failed');
+                if (itemPositionFieldId && !H.Helpers.validFieldId(itemPositionFieldId)) return sendResult(false, 'Position Field ID is invalid; update failed');
+                if (itemArrangementFieldId && !H.Helpers.validFieldId(itemArrangementFieldId)) return sendResult(false, 'Arrangement Field ID is invalid; update failed');
                 if (clusterGeometryFieldId && !H.Helpers.validFieldId(clusterGeometryFieldId)) return sendResult(false, 'Cluster Geometry Field ID is invalid; update failed');
 
                 CaptureData.DateCaptured = new Date(dateCaptured);

@@ -136,18 +136,18 @@ class IngestDataWorker extends ResolverBase {
 
             itemDB = await this.fetchOrCreateItem(this.input.item);
             if (!itemDB)
-                return { success: false, message: 'failure to retrieve or create item' };
+                return { success: false, message: 'failure to retrieve or create media group' };
 
             SOI = await CACHE.SystemObjectCache.getSystemFromItem(itemDB);
             path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
             href = H.Helpers.computeHref(path, itemDB.Name);
-            await this.appendToWFReport(`Packrat Item${!this.input.item.id ? ' (created)' : ''}: ${href}`);
+            await this.appendToWFReport(`Packrat Media Group${!this.input.item.id ? ' (created)' : ''}: ${href}`);
 
             // wire projects to item
             if (this.input.project.id) {
                 const projectDB: DBAPI.Project | null = await this.wireProjectToItem(this.input.project.id, itemDB);
                 if (!projectDB)
-                    return { success: false, message: 'failure to wire project to item' };
+                    return { success: false, message: 'failure to wire project to media group' };
 
                 SOI = await CACHE.SystemObjectCache.getSystemFromProject(projectDB);
                 path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
@@ -157,7 +157,7 @@ class IngestDataWorker extends ResolverBase {
 
             // wire subjects to item
             if (!await this.wireSubjectsToItem(subjectsDB, itemDB))
-                return { success: false, message: 'failure to wire subjects to item' };
+                return { success: false, message: 'failure to wire subjects to media group' };
         } else if (this.ingestUpdate)
             await this.appendToWFReport('Ingesting content for updated object');
         else if (this.ingestAttachment)
@@ -220,7 +220,7 @@ class IngestDataWorker extends ResolverBase {
         // wire item to asset-owning objects; do this *after* createModelDerivedObjects
         if (itemDB) {
             if (!await this.wireItemToAssetOwners(itemDB))
-                return { success: false, message: 'failure to wire item to asset owner' };
+                return { success: false, message: 'failure to wire media group to asset owner' };
 
             await this.postItemWiring();
         }
@@ -1507,7 +1507,7 @@ class IngestDataWorker extends ResolverBase {
             }
 
             if (!this.input.item) {
-                const error: string = 'ingestData called with no item';
+                const error: string = 'ingestData called with no media group';
                 LOG.error(error, LOG.LS.eGQL);
                 return { success: false, error };
             }
