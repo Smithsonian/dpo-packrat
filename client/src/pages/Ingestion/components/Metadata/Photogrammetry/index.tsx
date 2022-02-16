@@ -257,170 +257,172 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                 <Box className={classes.fieldTableBoxContainer}>
                     <TableContainer className={classes.fieldTableContainer}>
                         <Table className={classes.table}>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Dataset Field ID</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <DebounceInput
-                                        element='input'
-                                        title='datasetFieldId-input'
-                                        value={photogrammetry.datasetFieldId || ''}
-                                        type='number'
-                                        name='datasetFieldId'
-                                        onChange={setIdField}
-                                        className={clsx(classes.input, classes.datasetFieldInput)}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Position Type</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <Select
-                                        value={withDefaultValueNumber(photogrammetry.itemPositionType, getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType))}
-                                        name='itemPositionType'
-                                        onChange={setIdField}
-                                        disableUnderline
-                                        className={clsx(classes.select, classes.datasetFieldSelect)}
-                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                    >
-                                        {getEntries(eVocabularySetID.eCaptureDataItemPositionType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Position Field ID</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <DebounceInput
-                                        element='input'
-                                        title='itemPositionFieldId-input'
-                                        value={photogrammetry.itemPositionFieldId || ''}
-                                        type='number'
-                                        name='itemPositionFieldId'
-                                        onChange={setIdField}
-                                        className={clsx(classes.input, classes.datasetFieldInput)}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Arrangement Field ID</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <DebounceInput
-                                        element='input'
-                                        title='itemArrangementFieldId-input'
-                                        value={photogrammetry.itemArrangementFieldId || ''}
-                                        type='number'
-                                        name='itemArrangementFieldId'
-                                        onChange={setIdField}
-                                        className={clsx(classes.input, classes.datasetFieldInput)}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Focus Type</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <Select
-                                        value={withDefaultValueNumber(photogrammetry.focusType, getInitialEntry(eVocabularySetID.eCaptureDataFocusType))}
-                                        name='focusType'
-                                        onChange={setIdField}
-                                        disableUnderline
-                                        className={clsx(classes.select, classes.datasetFieldSelect)}
-                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                    >
-                                        {getEntries(eVocabularySetID.eCaptureDataFocusType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Light Source Type</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <Select
-                                        value={withDefaultValueNumber(photogrammetry.lightsourceType, getInitialEntry(eVocabularySetID.eCaptureDataLightSourceType))}
-                                        name='lightsourceType'
-                                        onChange={setIdField}
-                                        disableUnderline
-                                        className={clsx(classes.select, classes.datasetFieldSelect)}
-                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                    >
-                                        {getEntries(eVocabularySetID.eCaptureDataLightSourceType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Background Removal Method</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <Select
-                                        value={withDefaultValueNumber(photogrammetry.backgroundRemovalMethod, getInitialEntry(eVocabularySetID.eCaptureDataBackgroundRemovalMethod))}
-                                        name='backgroundRemovalMethod'
-                                        onChange={setIdField}
-                                        disableUnderline
-                                        className={clsx(classes.select, classes.datasetFieldSelect)}
-                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                    >
-                                        {getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Cluster Type</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <Select
-                                        value={withDefaultValueNumber(photogrammetry.clusterType, getInitialEntry(eVocabularySetID.eCaptureDataClusterType))}
-                                        name='clusterType'
-                                        onChange={setIdField}
-                                        disableUnderline
-                                        className={clsx(classes.select, classes.datasetFieldSelect)}
-                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                    >
-                                        {getEntries(eVocabularySetID.eCaptureDataClusterType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Cluster Geometry Field ID</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <DebounceInput
-                                        element='input'
-                                        title='clusterGeometryFieldId-input'
-                                        value={photogrammetry.clusterGeometryFieldId || ''}
-                                        type='number'
-                                        name='clusterGeometryFieldId'
-                                        onChange={setIdField}
-                                        className={clsx(classes.input, classes.datasetFieldInput)}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow} style={{ height: '26px' }}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Camera Settings Uniform</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <CustomCheckbox
-                                        className={classes.checkbox}
-                                        name='cameraSettingUniform'
-                                        onChange={setCheckboxField}
-                                        checked={withDefaultValueBoolean(photogrammetry.cameraSettingUniform ?? false, false)}
-                                        title='cameraSettingsUniform-input'
-                                        size='small'
-                                    />
-                                </TableCell>
-                            </TableRow>
+                            <TableBody>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography className={classes.labelText}>Dataset Field ID</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='datasetFieldId-input'
+                                            value={photogrammetry.datasetFieldId || ''}
+                                            type='number'
+                                            name='datasetFieldId'
+                                            onChange={setIdField}
+                                            className={clsx(classes.input, classes.datasetFieldInput)}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography className={classes.labelText}>Item Position Type</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <Select
+                                            value={withDefaultValueNumber(photogrammetry.itemPositionType, getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType))}
+                                            name='itemPositionType'
+                                            onChange={setIdField}
+                                            disableUnderline
+                                            className={clsx(classes.select, classes.datasetFieldSelect)}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        >
+                                            {getEntries(eVocabularySetID.eCaptureDataItemPositionType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography className={classes.labelText}>Item Position Field ID</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='itemPositionFieldId-input'
+                                            value={photogrammetry.itemPositionFieldId || ''}
+                                            type='number'
+                                            name='itemPositionFieldId'
+                                            onChange={setIdField}
+                                            className={clsx(classes.input, classes.datasetFieldInput)}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography className={classes.labelText}>Item Arrangement Field ID</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='itemArrangementFieldId-input'
+                                            value={photogrammetry.itemArrangementFieldId || ''}
+                                            type='number'
+                                            name='itemArrangementFieldId'
+                                            onChange={setIdField}
+                                            className={clsx(classes.input, classes.datasetFieldInput)}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography className={classes.labelText}>Focus Type</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <Select
+                                            value={withDefaultValueNumber(photogrammetry.focusType, getInitialEntry(eVocabularySetID.eCaptureDataFocusType))}
+                                            name='focusType'
+                                            onChange={setIdField}
+                                            disableUnderline
+                                            className={clsx(classes.select, classes.datasetFieldSelect)}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        >
+                                            {getEntries(eVocabularySetID.eCaptureDataFocusType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography className={classes.labelText}>Light Source Type</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <Select
+                                            value={withDefaultValueNumber(photogrammetry.lightsourceType, getInitialEntry(eVocabularySetID.eCaptureDataLightSourceType))}
+                                            name='lightsourceType'
+                                            onChange={setIdField}
+                                            disableUnderline
+                                            className={clsx(classes.select, classes.datasetFieldSelect)}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        >
+                                            {getEntries(eVocabularySetID.eCaptureDataLightSourceType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography className={classes.labelText}>Background Removal Method</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <Select
+                                            value={withDefaultValueNumber(photogrammetry.backgroundRemovalMethod, getInitialEntry(eVocabularySetID.eCaptureDataBackgroundRemovalMethod))}
+                                            name='backgroundRemovalMethod'
+                                            onChange={setIdField}
+                                            disableUnderline
+                                            className={clsx(classes.select, classes.datasetFieldSelect)}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        >
+                                            {getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography className={classes.labelText}>Cluster Type</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <Select
+                                            value={withDefaultValueNumber(photogrammetry.clusterType, getInitialEntry(eVocabularySetID.eCaptureDataClusterType))}
+                                            name='clusterType'
+                                            onChange={setIdField}
+                                            disableUnderline
+                                            className={clsx(classes.select, classes.datasetFieldSelect)}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        >
+                                            {getEntries(eVocabularySetID.eCaptureDataClusterType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography className={classes.labelText}>Cluster Geometry Field ID</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='clusterGeometryFieldId-input'
+                                            value={photogrammetry.clusterGeometryFieldId || ''}
+                                            type='number'
+                                            name='clusterGeometryFieldId'
+                                            onChange={setIdField}
+                                            className={clsx(classes.input, classes.datasetFieldInput)}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow} style={{ height: '26px' }}>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography className={classes.labelText}>Camera Settings Uniform</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <CustomCheckbox
+                                            className={classes.checkbox}
+                                            name='cameraSettingUniform'
+                                            onChange={setCheckboxField}
+                                            checked={withDefaultValueBoolean(photogrammetry.cameraSettingUniform ?? false, false)}
+                                            title='cameraSettingsUniform-input'
+                                            size='small'
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
                         </Table>
                     </TableContainer>
                 </Box>

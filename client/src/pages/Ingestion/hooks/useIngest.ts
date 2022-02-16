@@ -49,7 +49,7 @@ type IngestionStartResult = {
 interface UseIngest {
     ingestionStart: () => Promise<IngestionStartResult>;
     ingestionComplete: () => void;
-    ingestionReset: () => void;
+    ingestionReset: (isFullReset?: boolean) => void;
 }
 
 function useIngest(): UseIngest {
@@ -347,8 +347,8 @@ function useIngest(): UseIngest {
         history.push(nextRoute);
     };
 
-    const ingestionReset = (): void => {
-        resetUploads();
+    const ingestionReset = (isFullReset?: boolean): void => {
+        isFullReset && resetUploads();
         resetIngestionState();
     };
 
