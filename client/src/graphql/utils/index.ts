@@ -19,6 +19,7 @@ const parseHeaders = (rawHeaders: any) => {
     return headers;
 };
 
+export const uploadFailureMessage: string = 'Upload cancelled';
 const uploadFetch = (url: string, options: any): any =>
     new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -53,7 +54,7 @@ const uploadFetch = (url: string, options: any): any =>
         }
 
         xhr.onabort = () => {
-            reject(new TypeError('Upload cancelled'));
+            reject(new TypeError(uploadFailureMessage));
         };
 
         options.onCancel(() => {
