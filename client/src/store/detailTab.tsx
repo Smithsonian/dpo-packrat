@@ -617,8 +617,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
 
 const schemaCD = yup.object().shape({
     datasetFieldId: yup.number().positive('Dataset Field ID must be positive').max(2147483647, 'Dataset Field ID is too large').nullable(),
-    itemPositionFieldId: yup.number().positive('Item Position Field ID must be positive').max(2147483647, 'Item Position Field ID is too large').nullable(),
-    itemArrangementFieldId: yup.number().positive('Item Arrangement Field ID must be positive').max(2147483647, 'Item Arrangement Field ID is too large').nullable(),
+    itemPositionFieldId: yup.number().positive('Position Field ID must be positive').max(2147483647, 'Position Field ID is too large').nullable(),
+    itemArrangementFieldId: yup.number().positive('Arrangement Field ID must be positive').max(2147483647, 'Arrangement Field ID is too large').nullable(),
     clusterGeometryFieldId: yup.number().positive('Cluster Geometry Field ID must be positive').max(2147483647, 'Cluster Geometry Field ID is too large').nullable()
 });
 
