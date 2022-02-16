@@ -57,7 +57,7 @@ export class EdanCollection implements COL.ICollection {
             gatherRaw = options.gatherRaw ?? false;
         }
 
-        const params: string                = `q=${escape(query)}${filter}&rows=${rows}&start=${start}`;
+        const params: string                = `q=${encodeURIComponent(query)}${filter}&rows=${rows}&start=${start}`;
         const reqResult: HttpRequestResult  = await this.sendRequest(eAPIType.eEDAN, eHTTPMethod.eGet, path, params);
         let jsonResult: any | null          = null;
         try {
