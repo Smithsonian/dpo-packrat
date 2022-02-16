@@ -16,6 +16,7 @@ import ProjectList from './ProjectList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
 import { Helmet } from 'react-helmet';
+import useIngest from '../../hooks/useIngest';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -57,7 +58,7 @@ function SubjectItem(): React.ReactElement {
     const [projects, projectsLoading, getSelectedProject] = useProjectStore(state => [state.projects, state.loading, state.getSelectedProject]);
     const [itemsLoading, getSelectedItem] = useItemStore(state => [state.loading, state.getSelectedItem]);
     const [metadatas, updateMetadataFolders, getMetadataInfo] = useMetadataStore(state => [state.metadatas, state.updateMetadataFolders, state.getMetadataInfo]);
-
+    const { ingestionReset } = useIngest();
     const selectedItem = getSelectedItem();
 
     useEffect(() => {
@@ -187,6 +188,7 @@ function SubjectItem(): React.ReactElement {
                 rightLabel='Next'
                 leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)}
                 onClickRight={onNext}
+                onClickLeft={() => ingestionReset()}
             />
         </Box>
     );
