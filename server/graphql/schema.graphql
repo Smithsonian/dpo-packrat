@@ -524,6 +524,7 @@ input IngestSubjectInput {
   id: Int
   name: String!
   arkId: String!
+  collectionId: String!
   unit: String!
 }
 
