@@ -57,7 +57,6 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
 class IngestDataWorker extends ResolverBase {
     private input: IngestDataInput;
     private user: User | undefined;
-    private vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
     private ICOL: COL.ICollection | undefined = undefined;
 
     private ingestPhotogrammetry: boolean = false;
@@ -76,6 +75,9 @@ class IngestDataWorker extends ResolverBase {
     private ingestModelMap: Map<number, ModelInfo> = new Map<number, ModelInfo>();                                  // map from idAssetVersion -> model input, JCOutput, idModel
 
     private sceneSOI: DBAPI.SystemObjectInfo | undefined = undefined;
+
+    private static vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabularyEdanRecordID: DBAPI.Vocabulary | undefined = undefined;
 
     constructor(input: IngestDataInput, user: User | undefined) {
         super();
@@ -238,14 +240,25 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async getVocabularyARK(): Promise<DBAPI.Vocabulary | undefined> {
-        if (!this.vocabularyARK) {
-            this.vocabularyARK = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
-            if (!this.vocabularyARK) {
+        if (!IngestDataWorker.vocabularyARK) {
+            IngestDataWorker.vocabularyARK = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
+            if (!IngestDataWorker.vocabularyARK) {
                 LOG.error('ingestData unable to fetch vocabulary for ARK Identifiers', LOG.LS.eGQL);
                 return undefined;
             }
         }
-        return this.vocabularyARK;
+        return IngestDataWorker.vocabularyARK;
+    }
+
+    private async getVocabularyEdanRecordID(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!IngestDataWorker.vocabularyEdanRecordID) {
+            IngestDataWorker.vocabularyEdanRecordID = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
+            if (!IngestDataWorker.vocabularyEdanRecordID) {
+                LOG.error('ingestData unable to fetch vocabulary for Edan Record Identifiers', LOG.LS.eGQL);
+                return undefined;
+            }
+        }
+        return IngestDataWorker.vocabularyEdanRecordID;
     }
 
     private async validateIdentifiers(identifiers: IngestIdentifierInput[] | undefined): Promise<H.IOResults> {
@@ -331,7 +344,7 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async createIdentifier(identifierValue: string, SO: DBAPI.SystemObject | null,
-        idVIdentifierType: number | null, systemGenerated: boolean): Promise<DBAPI.Identifier | null> {
+        idVIdentifierType: number | null, systemGenerated: boolean | null): Promise<DBAPI.Identifier | null> {
         if (!idVIdentifierType) {
             const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
             if (!vocabularyARK)
@@ -346,13 +359,14 @@ class IngestDataWorker extends ResolverBase {
             idIdentifier: 0
         });
 
+        const description: string = systemGenerated === true ? 'system generated' : (systemGenerated === false ? 'user-supplied' : 'system-supplied');
         if (!await identifier.create()) {
             const error: string = `ingestData unable to create identifier record for subject's identifier ${identifierValue}`;
-            await this.appendToWFReport(`Identifier: ${identifierValue} (${systemGenerated ? 'system generated' : 'user-supplied'}) <b>creation failed</b>`);
+            await this.appendToWFReport(`Identifier: ${identifierValue} (${description}) <b>creation failed</b>`);
             LOG.error(error, LOG.LS.eGQL);
             return null;
         }
-        await this.appendToWFReport(`Identifier: ${identifierValue} (${systemGenerated ? 'system generated' : 'user-supplied'})`);
+        await this.appendToWFReport(`Identifier: ${identifierValue} (${description})`);
         return identifier;
     }
 
@@ -374,14 +388,16 @@ class IngestDataWorker extends ResolverBase {
         return units[0];
     }
 
-    private async createSubject(idUnit: number, Name: string, identifier: DBAPI.Identifier | null): Promise<DBAPI.Subject | null> {
+    private async createSubject(idUnit: number, Name: string, identifierArkId: DBAPI.Identifier | null,
+        identifierCollectionId: DBAPI.Identifier | null): Promise<DBAPI.Subject | null> {
         // create the subject
+        const idIdentifierPreferred: number | null = (identifierArkId) ? identifierArkId.idIdentifier : (identifierCollectionId ? identifierCollectionId.idIdentifier : null);
         const subjectDB: DBAPI.Subject = new DBAPI.Subject({
             idUnit,
             idAssetThumbnail: null,
             idGeoLocation: null,
             Name,
-            idIdentifierPreferred: (identifier) ? identifier.idIdentifier : null, // identifierSubjectHookup.idIdentifier,
+            idIdentifierPreferred,
             idSubject: 0
         });
         if (!await subjectDB.create()) {
@@ -391,15 +407,7 @@ class IngestDataWorker extends ResolverBase {
         return subjectDB;
     }
 
-    private async updateSubjectIdentifier(identifier: DBAPI.Identifier | null, subjectDB: DBAPI.Subject): Promise<boolean> {
-        // update identifier with systemobject ID of our subject
-        if (!identifier)
-            return true;
-        const SO: DBAPI.SystemObject | null = await subjectDB.fetchSystemObject();
-        if (!SO) {
-            LOG.error(`ingestData unable to fetch system object for subject record ${JSON.stringify(subjectDB)}`, LOG.LS.eGQL);
-            return false;
-        }
+    private async updateSubjectIdentifier(identifier: DBAPI.Identifier, SO: DBAPI.SystemObject): Promise<boolean> {
         identifier.idSystemObject = SO.idSystemObject;
         if (!await identifier.update()) {
             LOG.error(`ingestData unable to update identifier's idSystemObject ${JSON.stringify(identifier)}`, LOG.LS.eGQL);
@@ -428,26 +436,48 @@ class IngestDataWorker extends ResolverBase {
 
     private async createSubjectAndRelated(subject: IngestSubjectInput, units: DBAPI.Unit[] | null): Promise<DBAPI.Subject | null> {
         // identify Unit; create UnitEdan if needed
+        // LOG.info(`ingestData.createSubjectAndRelated(${H.Helpers.JSONStringify(subject)})`, LOG.LS.eGQL);
         const unit: DBAPI.Unit | null = await this.validateOrCreateUnitEdan(units, subject.unit);
         if (!unit)
             return null;
 
         // create identifier
-        let identifier: DBAPI.Identifier | null = null;
+        let identifierArkId: DBAPI.Identifier | null = null;
         if (subject.arkId) {
-            identifier = await this.createIdentifier(subject.arkId, null, null, true);
-            if (!identifier)
+            const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
+            if (!vocabularyARK)
+                return null;
+            identifierArkId = await this.createIdentifier(subject.arkId, null, vocabularyARK.idVocabulary, null);
+            if (!identifierArkId)
+                return null;
+        }
+
+        let identifierCollectionId: DBAPI.Identifier | null = null;
+        if (subject.collectionId) {
+            const vocabularyEdanRecordID: DBAPI.Vocabulary | undefined = await this.getVocabularyEdanRecordID();
+            if (!vocabularyEdanRecordID)
+                return null;
+
+            const identifier: string = subject.collectionId.toLowerCase().startsWith('edanmdm:') ? subject.collectionId : `edanmdm:${subject.collectionId}`;
+            identifierCollectionId = await this.createIdentifier(identifier, null, vocabularyEdanRecordID.idVocabulary, null);
+            if (!identifierCollectionId)
                 return null;
         }
 
         // create the subject
-        const subjectDB: DBAPI.Subject | null = await this.createSubject(unit.idUnit, subject.name, identifier);
+        const subjectDB: DBAPI.Subject | null = await this.createSubject(unit.idUnit, subject.name, identifierArkId, identifierCollectionId);
         if (!subjectDB)
             return null;
 
-        // update identifier, if it exists with systemobject ID of our subject
-        if (!await this.updateSubjectIdentifier(identifier, subjectDB))
-            return null;
+        // update identifiers with systemobject ID of our subject
+        const SO: DBAPI.SystemObject | null = await subjectDB.fetchSystemObject();
+        if (SO) {
+            if (identifierArkId && !await this.updateSubjectIdentifier(identifierArkId, SO))
+                return null;
+            if (identifierCollectionId && !await this.updateSubjectIdentifier(identifierCollectionId, SO))
+                return null;
+        } else
+            LOG.error(`ingestData unable to fetch system object for subject record ${JSON.stringify(subjectDB)}`, LOG.LS.eGQL);
 
         return subjectDB;
     }
