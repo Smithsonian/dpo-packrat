@@ -7,7 +7,7 @@
 import { ApolloClient, InMemoryCache, NormalizedCacheObject, OperationVariables, MutationOptions, FetchResult, QueryOptions, ApolloQueryResult, ApolloClientOptions, from } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
 import { createUploadLink } from 'apollo-upload-client';
-import { apolloFetch } from './utils';
+import { apolloFetch, uploadFailureMessage } from './utils';
 import { DocumentNode } from 'graphql';
 import { ROUTES } from '../constants';
 import { authenticationFailureMessage } from '@dpo-packrat/common';
@@ -68,7 +68,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         console.log(`[Network error]: ${networkError}`);
         const errMessage: string = networkError.toString();
         if (errMessage !== 'TypeError: Failed to fetch' &&
-            errMessage !== 'TypeError: Upload cancelled') {
+            errMessage !== `TypeError: ${uploadFailureMessage}`) {
             if (!sentToLogin) {
                 global.alert(loginMessage);
                 window.location.href = ROUTES.LOGIN;
