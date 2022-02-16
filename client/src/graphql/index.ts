@@ -66,7 +66,9 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
     if (networkError) {
         console.log(`[Network error]: ${networkError}`);
-        if (networkError.toString() !== 'TypeError: Failed to fetch') {
+        const errMessage: string = networkError.toString();
+        if (errMessage !== 'TypeError: Failed to fetch' &&
+            errMessage !== 'TypeError: Upload cancelled') {
             if (!sentToLogin) {
                 global.alert(loginMessage);
                 window.location.href = ROUTES.LOGIN;
