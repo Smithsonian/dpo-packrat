@@ -938,6 +938,7 @@ export type IngestSubjectInput = {
   id?: Maybe<Scalars['Int']>;
   name: Scalars['String'];
   arkId: Scalars['String'];
+  collectionId: Scalars['String'];
   unit: Scalars['String'];
 };
 

@@ -27,8 +27,7 @@ export type StateSubject = {
     arkId: string;
     unit: string;
     name: string;
-    // collectionId is used as an identifier in admin subject view
-    collectionId?: string;
+    collectionId: string; // collectionId is used as an identifier in admin subject view
 };
 
 type SubjectStore = {

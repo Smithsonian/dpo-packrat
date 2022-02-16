@@ -72,9 +72,10 @@ function useIngest(): UseIngest {
                     idToIdAssetMap.set(id, idAsset);
             });
 
-            const ingestSubjects: IngestSubjectInput[] = subjects.map(({ id, arkId, name, unit }) => ({
+            const ingestSubjects: IngestSubjectInput[] = subjects.map(({ id, arkId, name, unit, collectionId }) => ({
                 id: id || null,
                 arkId,
+                collectionId,
                 name,
                 unit
             }));
