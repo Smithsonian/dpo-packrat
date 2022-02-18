@@ -113,10 +113,10 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                 <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(version.Comment, 1000)} /> }>
                                     {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'center', color: 'black' }} target='_blank' rel='noreferrer noopener'>
                                         <Typography className={clsx(classes.value)}>
-                                            {truncateWithEllipses(version.Comment, 30)}
+                                            {truncateWithEllipses(version.Comment, 50)}
                                         </Typography>
                                     </a> : <Typography className={clsx(classes.value)}>
-                                        {truncateWithEllipses(version.Comment, 30)}
+                                        {truncateWithEllipses(version.Comment, 50)}
                                     </Typography>}
                                 </Tooltip>
                             ) : null;
@@ -150,7 +150,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                             </Typography>
                                         )}
                                     </td>
-                                    <td style={{ padding: 0 }}>
+                                    <td style={{ padding: '0px 5px 0px 0px' }}>
                                         {comment}
                                     </td>
                                 </tr>
