@@ -5,17 +5,19 @@ import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as H from '../../utils/helpers';
+import { BufferStream } from '../../utils/bufferStream';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { ASL, LocalStore } from '../../utils/localStore';
 import { isAuthenticated } from '../auth';
 import { DownloaderParser, DownloaderParserResults } from './DownloaderParser';
 
-import { Readable, Writable, PassThrough /* , Duplex, Transform, TransformOptions, TransformCallback */ } from 'stream';
+import { Readable, Writable } from 'stream';
 
 import { v2 as webdav } from 'webdav-server';
 import mime from 'mime'; // const mime = require('mime-types'); // can't seem to make this work using "import * as mime from 'mime'"; subsequent calls to mime.lookup freeze!
 import path from 'path';
+import { Semaphore, Mutex } from 'async-mutex';
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -176,6 +178,10 @@ class FileSystemResource {
 class WebDAVFileSystem extends webdav.FileSystem {
     resources: Map<string, FileSystemResource>;
     managers: Map<string, WebDAVManagers>;
+    private writeSemaphoreMap: Map<number, Semaphore>;      // idSystemObject -> write Semaphore for that system object
+    private writeSemaphoreCountMap: Map<number, number>;    // idSystemObject -> count of writers
+    private semaphoreMapLock: Mutex;
+
     // private static lockExclusiveWrite: webdav.LockKind = new webdav.LockKind(webdav.LockScope.Exclusive, webdav.LockType.Write, 300);
 
     constructor(WDFS?: WebDAVFileSystem) {
@@ -185,6 +191,9 @@ class WebDAVFileSystem extends webdav.FileSystem {
         this.managers =  WDFS ? WDFS.managers : new Map<string, WebDAVManagers>();
         this.resources.set('/', new FileSystemResource(webdav.ResourceType.Directory, undefined, '/', 0, 0));
         this.managers.set('/', new WebDAVManagers());
+        this.writeSemaphoreMap = new Map<number, Semaphore>();
+        this.writeSemaphoreCountMap = new Map<number, number>();
+        this.semaphoreMapLock = new Mutex();
     }
 
     private getManagers(pathS: string): WebDAVManagers {
@@ -370,7 +379,44 @@ class WebDAVFileSystem extends webdav.FileSystem {
         }
     }
 
-    async _openWriteStream(pathWD: webdav.Path, _info: webdav.OpenWriteStreamInfo, callback: webdav.ReturnCallback<Writable>, callbackComplete: webdav.SimpleCallback): Promise<void> {
+    private async computeWriteLock(idSystemObject: number | null, _pathS: string): Promise<Semaphore | undefined> {
+        if (!idSystemObject)
+            return undefined;
+
+        const releaser = await this.semaphoreMapLock.acquire();
+
+        let writeLock: Semaphore | undefined = this.writeSemaphoreMap.get(idSystemObject);
+        if (writeLock === undefined) {
+            writeLock = new Semaphore(1);
+            this.writeSemaphoreMap.set(idSystemObject, writeLock);
+        }
+
+        const writers: number = (this.writeSemaphoreCountMap.get(idSystemObject) ?? 0) + 1;
+        this.writeSemaphoreCountMap.set(idSystemObject, writers);
+        // LOG.info(`WebDAVFileSystem._openWriteStream(${_pathS}) Record ${writers}`, LOG.LS.eHTTP);
+        releaser();
+        return writeLock;
+    }
+
+    private async releaseWriteLock(idSystemObject: number | null, _pathS: string): Promise<void> {
+        if (!idSystemObject)
+            return;
+
+        const releaser = await this.semaphoreMapLock.acquire();
+
+        const writers: number = (this.writeSemaphoreCountMap.get(idSystemObject) ?? 0);
+        if (writers > 0)
+            this.writeSemaphoreCountMap.set(idSystemObject, writers - 1);
+        // LOG.info(`WebDAVFileSystem._openWriteStream(${_pathS}) Record ${writers - 1}`, LOG.LS.eHTTP);
+
+        if (writers === 1)
+            this.writeSemaphoreMap.delete(idSystemObject);
+
+        releaser();
+    }
+
+    async _openWriteStream(pathWD: webdav.Path, _info: webdav.OpenWriteStreamInfo,
+        callback: webdav.ReturnCallback<Writable>, callbackComplete: webdav.SimpleCallback): Promise<void> {
         try {
             /*
             const lockUUID: string | undefined = await this.setLock<Writable>(pathWD, _info.context, callback);
@@ -429,15 +475,20 @@ class WebDAVFileSystem extends webdav.FileSystem {
 
             const LS: LocalStore = await ASL.getOrCreateStore();
             const idUserCreator: number = LS?.idUser ?? 0;
-            const PT: PassThrough = new PassThrough();
-            // PT.on('pipe', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onPipe for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
-            // PT.on('unpipe', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onUnPipe for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
-            // PT.on('close', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onClose for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
-            PT.on('finish', async () => {
+            const BS: BufferStream = new BufferStream();
+            // BS.on('resume', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onResume for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
+            // BS.on('pause', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onPause for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
+            // BS.on('error', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onError for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
+            // BS.on('end', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onEnd for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
+            // BS.on('pipe', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onPipe for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
+            // BS.on('unpipe', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onUnPipe for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
+            // BS.on('drain', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onDrain for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
+            // BS.on('close', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onClose for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
+            BS.on('finish', async () => {
                 try {
-                    LOG.info(`WebDAVFileSystem._openWriteStream: (W) onFinish for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP);
+                    LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP);
                     const ISI: STORE.IngestStreamOrFileInput = {
-                        readStream: PT,
+                        readStream: BS,
                         localFilePath: null,
                         asset,
                         FileName,
@@ -449,32 +500,22 @@ class WebDAVFileSystem extends webdav.FileSystem {
                         SOBased,
                         Comment: 'Created by WebDAV Save'
                     };
-                    const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
-                    if (!ISR.success)
-                        LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}) (W) onFinish failed to ingest new asset version: ${ISR.error}`, LOG.LS.eHTTP);
 
-                    const assetVersion: DBAPI.AssetVersion | null | undefined = ISR.assetVersion;
-                    if (!assetVersion) {
-                        LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}) (W) onFinish failed to create new asset version`, LOG.LS.eHTTP);
-                        // await this.removeLock(pathWD, info.context, lockUUID);
-                        return;
-                    }
+                    // Serialize access per DP.idSystemObjectV via Semaphore, allowing only 1 ingestion at a time per system object
+                    const writeLock: Semaphore | undefined = await this.computeWriteLock(DP.idSystemObjectV, pathS);
 
-                    // Update WebDAV resource
-                    const utcMS: number = assetVersion.DateCreated.getTime();
-                    let resource: FileSystemResource | undefined = this.getResource(pathS);
-                    if (!resource) {
-                        resource = new FileSystemResource(webdav.ResourceType.File, assetVersion.StorageSize, assetVersion.StorageHash, utcMS, utcMS);
-                        this.resources.set(pathS, resource);
-                    } else {
-                        resource.setSize(assetVersion.StorageSize);
-                        resource.etag = assetVersion.StorageHash;
-                        resource.lastModifiedDate = utcMS;
-                    }
-
-                    // Update WebDAV resource parent
-                    this.addParentResources(pathS, utcMS);
-                    // await this.removeLock(pathWD, info.context, lockUUID);
+                    if (writeLock) {
+                        return await writeLock.runExclusive(async (_value) => {
+                            try {
+                                LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream START`, LOG.LS.eHTTP);
+                                return await this.ingestStream(ISI, pathS);
+                            } finally {
+                                await this.releaseWriteLock(DP.idSystemObjectV, pathS);
+                                LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream END`, LOG.LS.eHTTP);
+                            }
+                        });
+                    } else
+                        return await this.ingestStream(ISI, pathS);
                 } catch (error) {
                     LOG.error(`WebDAVFileSystem._openWriteStream(${pathWD}) (W) onFinish`, LOG.LS.eHTTP, error);
                 } finally {
@@ -482,11 +523,40 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 }
             });
 
-            LOG.info('WebDAVFileSystem._openWriteStream callback()', LOG.LS.eHTTP);
-            callback(undefined, PT);
+            // LOG.info('WebDAVFileSystem._openWriteStream callback()', LOG.LS.eHTTP);
+            callback(undefined, BS);
         } catch (error) {
             LOG.error(`WebDAVFileSystem._openWriteStream(${pathWD})`, LOG.LS.eHTTP, error);
         }
+    }
+
+    private async ingestStream(ISI: STORE.IngestStreamOrFileInput, pathS: string): Promise<void> {
+        const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
+        if (!ISR.success)
+            LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}) (W) onFinish failed to ingest new asset version: ${ISR.error}`, LOG.LS.eHTTP);
+
+        const assetVersion: DBAPI.AssetVersion | null | undefined = ISR.assetVersion;
+        if (!assetVersion) {
+            LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}) (W) onFinish failed to create new asset version`, LOG.LS.eHTTP);
+            // await this.removeLock(pathWD, info.context, lockUUID);
+            return;
+        }
+
+        // Update WebDAV resource
+        const utcMS: number = assetVersion.DateCreated.getTime();
+        let resource: FileSystemResource | undefined = this.getResource(pathS);
+        if (!resource) {
+            resource = new FileSystemResource(webdav.ResourceType.File, assetVersion.StorageSize, assetVersion.StorageHash, utcMS, utcMS);
+            this.resources.set(pathS, resource);
+        } else {
+            resource.setSize(assetVersion.StorageSize);
+            resource.etag = assetVersion.StorageHash;
+            resource.lastModifiedDate = utcMS;
+        }
+
+        // Update WebDAV resource parent
+        this.addParentResources(pathS, utcMS);
+        // await this.removeLock(pathWD, info.context, lockUUID);
     }
 
     _mimeType(pathWD: webdav.Path, _info: webdav.MimeTypeInfo, callback: webdav.ReturnCallback<string>): void {

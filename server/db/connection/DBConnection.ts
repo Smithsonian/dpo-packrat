@@ -44,14 +44,14 @@ export class DBConnection {
     }
 
     private clearPrismaTransaction(transactionNumber?: number | undefined): void {
-        if (!transactionNumber) {
-            const LS: LocalStore | undefined = ASL.getStore();
-            if (!LS || !LS.transactionNumber)
-                return;
-            transactionNumber = LS.transactionNumber;
+        const LS: LocalStore | undefined = ASL.getStore();
+        if (LS) {
+            if (!transactionNumber)
+                transactionNumber = LS.transactionNumber;
             LS.transactionNumber = undefined;
         }
-        this._prismaTransMap.delete(transactionNumber);
+        if (transactionNumber)
+            this._prismaTransMap.delete(transactionNumber);
     }
 
     private async disconnect(): Promise<void> {
