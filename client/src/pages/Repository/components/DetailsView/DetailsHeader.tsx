@@ -20,7 +20,8 @@ const useStyles = makeStyles(({ palette }) => ({
         color: palette.primary.dark
     },
     name: {
-        minWidth: 180,
+        width: '90%',
+        minWidth: 250,
         height: 20,
         padding: '5px 8px',
         borderRadius: 5,
@@ -58,10 +59,10 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
                     {getTermForSystemObjectType(objectType)}
                 </Typography>
             </Box>
-            <Box mr={4}>
+            <Box flex={2}>
                 <DebounceInput title='object name' element='input' disabled={disabled} value={name || ''} className={classes.name} name='name' onChange={onNameUpdate} debounceTimeout={400} />
             </Box>
-            <Box display='flex' flex={1} justifyContent='flex-end'>
+            <Box display='flex' flex={3} justifyContent='flex-end'>
                 {!!path.length && <BreadcrumbsView highlighted items={path} />}
             </Box>
         </Box>

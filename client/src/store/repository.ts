@@ -11,7 +11,6 @@ import { eMetadata, eSystemObjectType } from '@dpo-packrat/common';
 import { parseRepositoryTreeNodeId, validateArray, getTermForSystemObjectType } from '../utils/repository';
 import { apolloClient } from '../graphql';
 import { GetSystemObjectDetailsDocument } from '../types/graphql';
-import { toast } from 'react-toastify';
 import { eRepositoryChipFilterType } from '../pages/Repository/components/RepositoryFilterView/RepositoryFilterOptions';
 
 type RepositoryStore = {
@@ -430,8 +429,6 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             });
             resetRepositoryFilter(false);
             set({ isExpanded: false, idRoot, repositoryBrowserRootName: name, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
-        } else {
-            toast.warn('Subject was not found in database.');
         }
         resetKeywordSearch();
 
