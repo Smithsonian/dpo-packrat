@@ -5,17 +5,10 @@
  * the source objects for a model.
  */
 
-// import {
-//     GetSourceObjectIdentiferDocument,
-//     GetSourceObjectIdentiferInput,
-//     GetSourceObjectIdentiferQuery,
-//     UpdateDerivedObjectsDocument,
-//     UpdateSourceObjectsDocument
-// } from '../../../../../types/graphql';
 import { GetSystemObjectDetailsDocument, ExistingRelationship, RelatedObjectType } from '../../../../../types/graphql';
 import { apolloClient } from '../../../../../graphql';
-import { AppBar, Box, Button, Dialog, Toolbar, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { AppBar, Box, Button, Dialog, Toolbar, Typography, IconButton } from '@material-ui/core';
+import { makeStyles, fade } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { StateRelatedObject } from '../../../../../store';
@@ -24,17 +17,31 @@ import RepositoryFilterView from '../../../../Repository/components/RepositoryFi
 import RepositoryTreeView from '../../../../Repository/components/RepositoryTreeView';
 import { isValidParentChildRelationship } from '../../../../../utils/repository';
 import { useRepositoryStore } from '../../../../../store/repository';
+import CloseIcon from '@material-ui/icons/Close';
+import { DebounceInput } from 'react-debounce-input';
+import { IoIosSearch } from 'react-icons/io';
+import { Colors } from '../../../../../theme';
 
-const useStyles = makeStyles(({ palette, spacing }) => ({
+
+const useStyles = makeStyles(({ palette, spacing, typography }) => ({
     title: {
         marginLeft: spacing(2),
         textAlign: 'center',
-        flex: 1
     },
     appBar: {
-        position: 'relative',
+        position: 'sticky',
         color: palette.background.paper,
-        width: '100%'
+        width: '100%',
+    },
+    toolBar: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        columnGap: '10px'
+    },
+    toolBarControlContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        columnGap: '10px'
     },
     repositoryContainer: {
         display: 'flex',
@@ -44,6 +51,49 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     },
     loader: {
         color: palette.background.paper
+    },
+    searchBtn: {
+        outline: '1px solid white',
+        color: 'white',
+        width: '90px',
+        height: '30px',
+        // border: '1px solid white',
+        '&:focus': {
+            border: '2px solid silver',
+        }
+    },
+    searchBox: {
+        display: 'flex',
+        alignItems: 'center',
+        marginLeft: 10,
+        padding: '5px 10px',
+        width: '40vw',
+        minWidth: '30vw',
+        borderRadius: 5,
+        backgroundColor: fade(Colors.defaults.white, 0.1)
+    },
+    search: {
+        height: 25,
+        flex: 1,
+        fontSize: 14,
+        marginLeft: 5,
+        color: fade(Colors.defaults.white, 0.65),
+        background: 'transparent',
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily,
+        '&::placeholder': {
+            color: fade(Colors.defaults.white, 0.65),
+            fontStyle: 'italic'
+        },
+        '&::-moz-placeholder': {
+            fontStyle: 'italic'
+        },
+        '&:focus': {
+            border: '2px solid silver',
+        },
+        '&:not(:focus)': {
+            borderStyle: 'none'
+        }
     }
 }));
 
@@ -64,6 +114,13 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
     const [selected, setSelected] = useState<StateRelatedObject[]>([]);
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [previouslySelectedObjects, setPreviouslySelectedObjects] = useState<ExistingRelationship[]>([]);
+    const [keyword, updateSearch, getFilterState, updateRepositoryFilter, resetRepositoryFilter] = useRepositoryStore(state => [
+        state.keyword,
+        state.updateSearch,
+        state.getFilterState,
+        state.updateRepositoryFilter,
+        state.resetRepositoryFilter
+    ]);
 
     useEffect(() => {
         const selected = selectedObjects.map(({ idSystemObject, objectType }) => {
@@ -106,6 +163,13 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
         setSelected([]);
         setIsSaving(false);
         resetRepositoryBrowserRoot();
+    };
+
+    const updateRepositorySearch = (): void => {
+        const filterState = getFilterState();
+        filterState.search = filterState.keyword;
+        resetRepositoryFilter();
+        updateRepositoryFilter(filterState);
     };
 
     // onSelect handles selecting of entry
@@ -181,16 +245,42 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
         >
             <Box width='fit-content'>
                 <AppBar className={classes.appBar}>
-                    <Toolbar>
-                        <Button autoFocus color='inherit' onClick={onModalClose}>
-                            Close
-                        </Button>
-                        <Typography variant='h6' className={classes.title}>
-                            Select {props?.relationship === 'Source' ? 'Parents' : 'Children'}
-                        </Typography>
-                        <Button autoFocus color='inherit' onClick={onClick}>
-                            {isSaving ? 'Saving...' : 'Save'}
-                        </Button>
+                    <Toolbar className={classes.toolBar}>
+                        <Box className={classes.toolBarControlContainer}>
+                            <Typography variant='h6' className={classes.title}>
+                                Add {props?.relationship === 'Source' ? 'Parents' : 'Children'}
+                            </Typography>
+                            <Box className={classes.searchBox}>
+                                <IoIosSearch size={20} color={fade(Colors.defaults.white, 0.65)} />
+                                <DebounceInput
+                                    title='Search Repository'
+                                    element='input'
+                                    className={classes.search}
+                                    name='search'
+                                    value={keyword}
+                                    onChange={({ target }) => updateSearch(target.value)}
+                                    onKeyPress={e => {
+                                        if (e.key === 'Enter')
+                                            updateRepositorySearch();
+                                    }}
+                                    forceNotifyByEnter
+                                    debounceTimeout={400}
+                                    placeholder='Search'
+                                />
+                            </Box>
+                            <Button variant='outlined' className={classes.searchBtn} onClick={updateRepositorySearch}>
+                                Search
+                            </Button>
+                        </Box>
+
+                        <Box className={classes.toolBarControlContainer}>
+                            <Button variant='outlined' className={classes.searchBtn} onClick={onClick}>
+                                {isSaving ? 'Saving...' : 'Save'}
+                            </Button>
+                            <IconButton autoFocus color='inherit' onClick={onModalClose} >
+                                <CloseIcon />
+                            </IconButton>
+                        </Box>
                     </Toolbar>
                 </AppBar>
                 <Box className={classes.repositoryContainer}>
