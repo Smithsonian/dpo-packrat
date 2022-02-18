@@ -51,7 +51,6 @@ export const useStyles = makeStyles(({ palette }) => ({
         }
     },
     container: {
-        width: 'fit-content',
         background: palette.secondary.light,
         padding: 5,
         borderRadius: 5,
