@@ -4,7 +4,7 @@ import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, TablePagination, Tooltip } from '@material-ui/core';
 import { useWorkflowStore } from '../../../../store';
-import { formatDate } from '../../../../utils/shared';
+import { formatDateAndTime } from '../../../../utils/shared';
 import SetIcon from '../../../../assets/images/Workflow_Set_Icon.svg';
 import ReportIcon from '../../../../assets/images/Workflow_Report_Icon.svg';
 import JobIcon from '../../../../assets/images/Workflow_Job_Icon.svg';
@@ -254,7 +254,7 @@ function WorkflowList(): React.ReactElement {
             options: {
                 customBodyRender(value) {
                     if (!value) return '';
-                    return formatDate(value);
+                    return formatDateAndTime(value);
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
@@ -266,7 +266,7 @@ function WorkflowList(): React.ReactElement {
             options: {
                 customBodyRender(value) {
                     if (!value) return '';
-                    return formatDate(value);
+                    return formatDateAndTime(value);
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
