@@ -186,6 +186,7 @@ export const defaultSceneFields: SceneFields = {
     EdanUUID: '',
     approvedForPublication: false,
     posedAndQCd: false,
+    canBeQCd: false,
     updateNotes: '',
     idAsset: 0
 };

@@ -84,6 +84,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eScene, name, checked);
     };
 
+    // console.log(`SceneDetails = ${JSON.stringify(SceneDetails)}`);
     return (
         <Box>
             <Box display='flex' flexDirection='column' className={classes.container}>
@@ -101,7 +102,8 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     name='PosedAndQCd'
                     value={SceneDetails.PosedAndQCd}
                     onChange={setCheckboxField}
-                    tooltip={{ title: 'When checked, downloads will be generated if this scene has a master model as a parent, as well as every time the scene is re-posed.', placement: 'left' }}
+                    disabled={!SceneDetails.CanBeQCd}
+                    tooltip={{ title: 'When checked, downloads will be generated if this scene has a master model as a parent, as well as every time the scene is re-posed. This item is disabled if the scene is missing thumbnails (either in the svx.json or among its ingested assets)', placement: 'left' }}
                     required
                     padding='1px 10px'
                 />

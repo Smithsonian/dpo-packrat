@@ -90,6 +90,7 @@ type SceneDetailFields {
     ApprovedForPublication: Boolean
     PublicationApprover: String
     PosedAndQCd: Boolean
+    CanBeQCd: Boolean
     idScene: Int
 }
 
