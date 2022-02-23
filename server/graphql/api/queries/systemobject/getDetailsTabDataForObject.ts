@@ -136,6 +136,7 @@ const getDetailsTabDataForObject = gql`
                 ApprovedForPublication
                 PublicationApprover
                 PosedAndQCd
+                CanBeQCd
                 idScene
             }
             IntermediaryFile {
