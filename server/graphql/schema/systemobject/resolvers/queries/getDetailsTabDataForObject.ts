@@ -12,6 +12,8 @@ import {
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as LOG from '../../../../../utils/logger';
+import * as H from '../../../../../utils/helpers';
+import * as SH from '../../../../../utils/sceneHelpers';
 
 export default async function getDetailsTabDataForObject(_: Parent, args: QueryGetDetailsTabDataForObjectArgs): Promise<GetDetailsTabDataForObjectResult> {
     const { input } = args;
@@ -93,6 +95,9 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 if (!Scene)
                     LOG.error(`getDetailsTabForObject(${systemObject.idSystemObject}) unable to compute Scene details`, LOG.LS.eGQL);
                 const User: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eSceneQCd);
+                const sceneCanBeQCdRes: H.IOResults = await SH.SceneHelpers.sceneCanBeQCd(systemObject.idScene);
+                if (!sceneCanBeQCdRes.success && sceneCanBeQCdRes.error)
+                    LOG.error(`getDetailsTabForObject(${systemObject.idSystemObject}) encountered error during SceneHelpers.sceneCanBeQCd: ${sceneCanBeQCdRes.error}`, LOG.LS.eGQL);
 
                 fields = {
                     ...fields,
@@ -108,6 +113,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                     ApprovedForPublication: Scene?.ApprovedForPublication,
                     PublicationApprover: User?.Name ?? null,
                     PosedAndQCd: Scene?.PosedAndQCd,
+                    CanBeQCd: sceneCanBeQCdRes.success,
                     idScene: systemObject.idScene,
                 };
                 result.Scene = fields;
