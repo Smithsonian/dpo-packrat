@@ -53,15 +53,21 @@ export class SceneHelpers {
 
         if (!svxReader.SvxDocument || !svxReader.SvxDocument.metas)
             return { success: true };
+        let hasImage: boolean = false;
         const missingImageSet: Set<string> = new Set<string>(); // set of metas -> images that are missing from our fileNameMap
         for (const meta of svxReader.SvxDocument.metas) {
             if (meta.images) {
                 for (const image of meta.images) {
                     if (!fileNameSet.has(image.uri.toLowerCase()))
                         missingImageSet.add(image.uri);
+                    else
+                        hasImage = true;
                 }
             }
         }
+
+        if (!hasImage)
+            return SceneHelpers.recordError(`sceneCanBeQCd(${idScene}) no thumbnails detected in scene`);
 
         if (missingImageSet.size === 0)
             return { success: true };
