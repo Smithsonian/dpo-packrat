@@ -1240,6 +1240,8 @@ class IngestDataWorker extends ResolverBase {
                 continue;
             }
 
+            await this.appendToWFReport(`Ingesting ${assetVersionDB.FileName}, size ${assetVersionDB.StorageSize}, hash ${assetVersionDB.StorageHash}`);
+
             // LOG.info(`ingestData.promoteAssetsIntoRepository AssetVersion=${JSON.stringify(assetVersionDB, H.Helpers.saferStringify)}; Asset=${JSON.stringify(assetDB, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
             const opInfo: OperationInfo = {
                 message: AVInfo.Comment ? AVInfo.Comment : 'Ingesting asset',
