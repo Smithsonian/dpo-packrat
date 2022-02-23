@@ -141,7 +141,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eModelUnitsAstronomicalUnit: testVocabulary(vocabulary, 'Astronomical Unit'); break;
 
                     case COMMON.eVocabularyID.eModelPurposeMaster: testVocabulary(vocabulary, 'Master'); break;
-                    case COMMON.eVocabularyID.eModelPurposeWebDelivery: testVocabulary(vocabulary, 'Web Delivery'); break;
+                    case COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel: testVocabulary(vocabulary, 'Voyager Scene Model'); break;
                     case COMMON.eVocabularyID.eModelPurposeDownload: testVocabulary(vocabulary, 'Download'); break;
                     case COMMON.eVocabularyID.eModelPurposeIntermediateProcessingStep: testVocabulary(vocabulary, 'Intermediate Processing Step'); break;
 
@@ -443,7 +443,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Mile');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelUnits, 'Astronomical Unit');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelPurpose, 'Master');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelPurpose, 'Web Delivery');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelPurpose, 'Voyager Scene Model');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelPurpose, 'Download');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelPurpose, 'Intermediate Processing Step');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelFileType, 'obj - Alias Wavefront Object');

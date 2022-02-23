@@ -68,6 +68,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     private idModel: number | null;
     private cleanupCalled: boolean = false;
 
+    private static vocabDownload: DBAPI.Vocabulary | undefined = undefined;
+
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIGenerateDownloadsParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-generate-downloads',
@@ -318,7 +320,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
     private async createModel(Name: string, downloadType: string, modelSource: DBAPI.Model): Promise<DBAPI.Model> {
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
-        const vPurpose: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+        const vPurpose: DBAPI.Vocabulary | undefined = await this.computeVocabDownload();
         return new DBAPI.Model({
             idModel: 0,
             Name,
@@ -332,6 +334,15 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
             AutomationTag: this.computeModelAutomationTag(downloadType), CountTriangles: null
         });
+    }
+
+    private async computeVocabDownload(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!JobCookSIGenerateDownloads.vocabDownload) {
+            JobCookSIGenerateDownloads.vocabDownload = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+            if (!JobCookSIGenerateDownloads.vocabDownload)
+                LOG.error('JobCookSIGenerateDownloads unable to fetch vocabulary for Download Model Purpose', LOG.LS.eGQL);
+        }
+        return JobCookSIGenerateDownloads.vocabDownload;
     }
 
     private async findMatchingModel(modelSource: DBAPI.Model, downloadType: string): Promise<DBAPI.Model | null> {

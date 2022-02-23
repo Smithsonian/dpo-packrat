@@ -164,6 +164,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private parameterHelper: JobCookSIVoyagerSceneParameterHelper | null;
     private cleanupCalled: boolean = false;
 
+    private static vocabVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
+
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIVoyagerSceneParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-vogager-scene',
@@ -429,13 +431,14 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     protected async transformModelSceneXrefIntoModel(MSX: DBAPI.ModelSceneXref, source?: DBAPI.Model | undefined): Promise<DBAPI.Model> {
         const Name: string = MSX.Name ?? '';
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
+        const vPurpose: DBAPI.Vocabulary | undefined = await this.computeVocabVoyagerSceneModel();
         return new DBAPI.Model({
             idModel: 0,
             Name,
             DateCreated: new Date(),
             idVCreationMethod: source?.idVCreationMethod ?? null,
             idVModality: source?.idVModality ?? null,
-            idVPurpose: source?.idVPurpose ?? null, // should this be set to web-delivery?
+            idVPurpose: vPurpose ? vPurpose.idVocabulary : null,
             idVUnits: source?.idVUnits ?? null,
             idVFileType: vFileType ? vFileType.idVocabulary : null,
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
@@ -471,6 +474,15 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private async findMatchingModel(sceneSource: DBAPI.Scene, automationTag: string): Promise<DBAPI.Model | null> {
         const matches: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(null, sceneSource.idScene, automationTag);
         return matches && matches.length > 0 ? matches[0] : null;
+    }
+
+    private async computeVocabVoyagerSceneModel(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!JobCookSIVoyagerScene.vocabVoyagerSceneModel) {
+            JobCookSIVoyagerScene.vocabVoyagerSceneModel = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel);
+            if (!JobCookSIVoyagerScene.vocabVoyagerSceneModel)
+                LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Voyager Scene Model Model Purpose', LOG.LS.eGQL);
+        }
+        return JobCookSIVoyagerScene.vocabVoyagerSceneModel;
     }
 
     private async logError(errorBase: string): Promise<H.IOResults> {
