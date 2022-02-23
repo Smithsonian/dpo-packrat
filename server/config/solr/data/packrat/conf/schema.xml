@@ -170,7 +170,17 @@
     <copyField source="CommonDescription" dest="_text_"/>
     <copyField source="CommonIdentifier" dest="_text_"/>
     <copyField source="CommonOrganizationName" dest="_text_"/>
+    <copyField source="SubjectIdentifierPreferred" dest="_text_"/>
+    <copyField source="ModelMaterialName" dest="_text_"/>
     <copyField source="AVFileName" dest="_text_"/>
+    <copyField source="AVFilePath" dest="_text_"/>
+    <copyField source="AVUserCreator" dest="_text_"/>
+    <copyField source="AVStorageHash" dest="_text_"/>
+    <copyField source="StakeholderEmailAddress" dest="_text_"/>
+    <copyField source="StakeholderPhoneNumberMobile" dest="_text_"/>
+    <copyField source="StakeholderPhoneNumberOffice" dest="_text_"/>
+    <copyField source="StakeholderMailingAddress" dest="_text_"/>
+    <copyField source="SceneEdanUUID" dest="_text_"/>
 
     <!-- Field to use to determine and enforce document uniqueness.
       Unless this field is marked with required="false", it will be a required field
