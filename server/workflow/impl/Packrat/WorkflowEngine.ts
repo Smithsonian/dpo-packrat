@@ -579,6 +579,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         let idAssetDiffuse: number | null | undefined = undefined;
         let assetVersionGeometry: DBAPI.AssetVersion | undefined = undefined;
         let assetVersionDiffuse: DBAPI.AssetVersion | undefined = undefined;
+        let assetVersionDiffuseBackup: DBAPI.AssetVersion | undefined = undefined;
         let assetVersionMTL: DBAPI.AssetVersion | undefined = undefined;
         if (modelConstellation.ModelMaterialChannels) {
             for (const MMC of modelConstellation.ModelMaterialChannels) {
@@ -609,6 +610,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             }
         }
 
+        let UVMapFileCount: number = 0;
         for (const modelAsset of modelConstellation.ModelAssets) {
             if (idAssetDiffuse === modelAsset.Asset.idAsset)
                 assetVersionDiffuse = modelAsset.AssetVersion;
@@ -624,11 +626,20 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         continue;
                     }
                     break;
+                case COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile:
+                    UVMapFileCount++;
+                    assetVersionDiffuseBackup = modelAsset.AssetVersion;
+                    break;
             }
 
             if (!assetVersionMTL && path.extname(modelAsset.AssetName.toLowerCase()) === '.mtl')
                 assetVersionMTL = modelAsset.AssetVersion;
         }
+
+        if (!assetVersionDiffuse &&                             // if we don't have a diffuse texture, and
+            !assetVersionMTL &&                                 // we don't have a MTL file, and
+            UVMapFileCount === 1)                               // we have only one UV Map
+            assetVersionDiffuse = assetVersionDiffuseBackup;    // use our "backup" notion of diffuse texture
 
         const units: string | undefined = await COOK.JobCookSIVoyagerScene.convertModelUnitsVocabToCookUnits(modelConstellation.Model.idVUnits);
         const retValue = { exitEarly: false, idModel, idSystemObjectModel, assetVersionGeometry, assetVersionDiffuse, assetVersionMTL, units };
