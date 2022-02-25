@@ -11,6 +11,7 @@ import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
+import { EdanLicenseInfo } from '../interface';
 
 interface HttpRequestResult {
     output: string;
@@ -160,7 +161,8 @@ export class EdanCollection implements COL.ICollection {
         return this.upsertResource(body, 'createEdan3DPackage');
     }
 
-    async updateEdan3DPackage(url: string, title: string | undefined, sceneContent: COL.Edan3DPackageContent, status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {
+    async updateEdan3DPackage(url: string, title: string | undefined, sceneContent: COL.Edan3DPackageContent,
+        status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {
         const body: any = {
             url,
             title,
@@ -311,6 +313,15 @@ export class EdanCollection implements COL.ICollection {
                 success: false
             };
         }
+    }
+
+    static computeLicenseInfo(licenseText?: string | undefined, licenseCodes?: string | undefined, usageText?: string | undefined): EdanLicenseInfo {
+        const access: string = (licenseText && licenseText.toLowerCase() === 'cc0, publishable w/ downloads') ? 'CC0' : 'Usage conditions apply';
+        return {
+            access,
+            codes: licenseCodes ?? '',
+            text: usageText ?? '',
+        };
     }
     // #endregion
 }
