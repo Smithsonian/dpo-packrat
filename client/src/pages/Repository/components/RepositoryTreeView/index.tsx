@@ -10,9 +10,9 @@ import { makeStyles } from '@material-ui/core/styles';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Loader } from '../../../../components';
-import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore } from '../../../../store';
+import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore, useTreeColumnsStore } from '../../../../store';
 import { NavigationResultEntry } from '../../../../types/graphql';
 import {
     getObjectInterfaceDetails,
@@ -26,6 +26,10 @@ import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
 import InViewTreeItem from './InViewTreeItem';
 import { repositoryRowCount } from '@dpo-packrat/common';
+// import { metadataToDisplayOptions } from '../RepositoryFilterView/RepositoryFilterOptions';
+// import useColumnStyles from '../../hooks/useColumnStyles';
+// import { eMetadata } from '@dpo-packrat/common';
+// import { constant } from 'lodash';
 
 const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     container: {
@@ -47,7 +51,8 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     tree: {
         display: 'flex',
         flexDirection: 'column',
-        flex: 1
+        flex: 1,
+        width: 'fit-content'
     },
     fullWidth: {
         maxWidth: '95.5vw'
@@ -76,7 +81,6 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     },
     label: {
         display: 'flex',
-        width: '30vw',
         alignItems: 'center',
         position: 'sticky',
         left: 45,
@@ -127,6 +131,28 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     }
 }));
 
+const useColumnStyles = makeStyles(() => {
+    // let result = {};
+    // metadataToDisplayOptions.forEach((option) => {
+    //     // console.log('options', option, option?.value)
+    //     result[option?.value] = {
+    //         width: ({ widths }: { [key: string]: string }) => { console.log('widths', widths); return widths?.[option?.value]}  
+    //     }
+    // });
+    // return result;
+    return ({
+        '1': {
+            width: ({ widths }: any) => widths?.[1] 
+        },
+        '6': {
+            width: 700 
+        },
+        '5': {
+            width: ({ widths }: any) => widths?.[5] 
+        }
+    })
+});
+
 
 interface RepositoryTreeViewProps {
     isModal?: boolean;
@@ -145,11 +171,16 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         state.cursors
     ]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
-
+    const [initializeWidths, widths] = useTreeColumnsStore((state) => [state.initializeWidth, state.widths]);
     const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
-
+    console.log('widths', widths);
     const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
+    const columnWidthClasses = useColumnStyles(widths);
+    console.log('columnWidthClasses', columnWidthClasses)
+    useEffect(() => {
+        initializeWidths();
+    }, [tree])
 
     const onNodeToggle = useCallback(
         async (_, nodeIds: string[]) => {
@@ -277,7 +308,6 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     };
 
     let content: React.ReactNode = <Loader maxWidth='85vw' minHeight='40vh' size={20} />;
-
     if (!loading) {
         const children = tree.get(treeRootKey);
         content = (
@@ -292,9 +322,17 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
     return (
         <div className={classes.container} style={fullWidthStyles}>
+            {/* <div className={columnWidthClasses.feet}>Test</div> */}
             {content}
         </div>
     );
 }
 
 export default React.memo(RepositoryTreeView);
+
+// const convertFilterOptionsArrToObject = (options: FilterOption[]): numbers[] => {
+//     let result = [];
+//     options.forEach((option) => {
+//         result[option.value] 
+//     })
+// }
