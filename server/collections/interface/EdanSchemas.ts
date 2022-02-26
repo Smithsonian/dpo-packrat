@@ -27,6 +27,12 @@ export type EdanMedia = {
     }
 };
 
+export type EdanLicenseInfo = {
+    access: string;
+    text: string;
+    codes: string;
+};
+
 export type EdanMDMContent = {
     descriptiveNonRepeating: {
         title: EdanLabelContent;
@@ -95,6 +101,7 @@ export type Edan3DResource = {          // c.f. https://confluence.si.edu/displa
 export type Edan3DPackageContent = {
     document?: IDocument;
     resources?: Edan3DResource[];
+    media_usage?: EdanLicenseInfo;
 };
 
 export type EdanRecord = {
