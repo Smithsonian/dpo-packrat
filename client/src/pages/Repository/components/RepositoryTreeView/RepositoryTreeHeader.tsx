@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+
 /**
  * RepositoryTreeHeader
  *
@@ -73,9 +75,8 @@ const metadataColumns = {};
 for (const col in eMetadata) {
     metadataColumns[eMetadata[col]] =  {
         width: (
-            widths: { [name: string] : string }) => `${widths[eMetadata[col]]}px` || '50px',
-            minWidth: 50
-        }
+            widths: { [name: string]: string }) => `${widths[eMetadata[col]]}px` || '50px',
+    };
 }
 
 const useColumnStyles = makeStyles(() => ({
@@ -91,19 +92,19 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
     const { metadataColumns } = props;
     const [updateWidth, widths, initializeClasses] = useTreeColumnsStore(state => [state.updateWidth, state.widths, state.initializeClasses]);
     const classes = useStyles();
-    const columnClasses = useColumnStyles(widths); 
+    const columnClasses = useColumnStyles(widths);
     const treeColumns = getTreeViewColumns(metadataColumns, true);
-    
+
     useEffect(() => {
         initializeClasses(columnClasses);
         const columnSet = new Set<ResizeObserver>();
-        
+
         // Debouncing the width update makes the transition smoother
         const debounceUpdateWidth = debounce(updateWidth, 5);
         treeColumns.forEach((col) => {
             const target = document.getElementById(`column-${col.label}`);
             if (target) {
-                const columnObersver = new ResizeObserver((e) => {                    
+                const columnObersver = new ResizeObserver((e) => {
                     debounceUpdateWidth(col.metadataColumn as number, String(e[0].contentRect.width));
                 });
                 columnObersver.observe(target);
@@ -113,7 +114,7 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
 
         return () => {
             columnSet.forEach((col) => col.unobserve);
-        }
+        };
     }, []);
 
     return (
