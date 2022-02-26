@@ -11,6 +11,7 @@ import { getTreeViewColumns } from '../../../../utils/repository';
 import MetadataView from './MetadataView';
 import ResizeObserver from 'resize-observer-polyfill';
 import { useTreeColumnsStore } from '../../../../store';
+import { debounce } from 'lodash';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -68,6 +69,19 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     }
 }));
 
+const metadataColumns = {};
+for (const col in eMetadata) {
+    metadataColumns[eMetadata[col]] =  {
+        width: (
+            widths: { [name: string] : string }) => `${widths[eMetadata[col]]}px` || '50px',
+            minWidth: 50
+        }
+}
+
+const useColumnStyles = makeStyles(() => ({
+    ...metadataColumns
+}));
+
 interface RepositoryTreeHeaderProps {
     fullWidth?: boolean;
     metadataColumns: eMetadata[];
@@ -75,20 +89,23 @@ interface RepositoryTreeHeaderProps {
 
 function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElement {
     const { metadataColumns } = props;
+    const [updateWidth, widths, initializeClasses] = useTreeColumnsStore(state => [state.updateWidth, state.widths, state.initializeClasses]);
     const classes = useStyles();
-    const [updateWidth] = useTreeColumnsStore(state => [state.updateWidth]);
-
+    const columnClasses = useColumnStyles(widths); 
     const treeColumns = getTreeViewColumns(metadataColumns, true);
-
-    // this useEffect block observes changes made to header column widths
-    // and cleans it up when we unmount the component
+    
     useEffect(() => {
+        initializeClasses(columnClasses);
         const columnSet = new Set<ResizeObserver>();
-
+        
+        // Debouncing the width update makes the transition smoother
+        const debounceUpdateWidth = debounce(updateWidth, 5);
         treeColumns.forEach((col) => {
-            const target = document.getElementById(`header-${col.label}`);
+            const target = document.getElementById(`column-${col.label}`);
             if (target) {
-                const columnObersver = new ResizeObserver((e) => updateWidth(col.metadataColumn as number, String(e[0].contentRect.width)));
+                const columnObersver = new ResizeObserver((e) => {                    
+                    debounceUpdateWidth(col.metadataColumn as number, String(e[0].contentRect.width));
+                });
                 columnObersver.observe(target);
                 columnSet.add(columnObersver);
             }
