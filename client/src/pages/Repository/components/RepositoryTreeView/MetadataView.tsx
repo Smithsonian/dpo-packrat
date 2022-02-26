@@ -25,7 +25,7 @@ interface MetadataViewProps {
 
 function MetadataView(props: MetadataViewProps): React.ReactElement {
     const { header, treeColumns, options = null, makeStyles } = props;
-    
+
     // Pull the generated MUI classes from TreeColumnsStore and assign the divs the appropriate class based on metadataColumn
     const [classes] = useTreeColumnsStore(state => [state.classes]);
     const renderTreeColumns = (treeColumns: TreeViewColumn[]) => {
@@ -38,7 +38,7 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
                     </span>
                 </div>
             );
-        })
+        });
     };
 
     return (

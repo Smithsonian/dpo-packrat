@@ -4,8 +4,8 @@ import { eMetadata } from '@dpo-packrat/common';
 const COL_WIDTH_COOKIE = 'colWidths';
 
 type TreeColumns = {
-    widths: {};
-    classes: {};
+    widths: { [name: string]: string };
+    classes: { [name: string]: string };
     initializeWidth: () => void;
     initializeClasses: (classes: {[name: string]: string}) => void;
     updateWidth: (colName: eMetadata, width: string) => void;
@@ -39,9 +39,8 @@ export const useTreeColumnsStore = create<TreeColumns>((set: SetState<TreeColumn
 
         // When unmounting the headers, their observed width is 0 so we want to ignore that
         if (newWidth === '0') return;
-        
         if (widths[colName] === newWidth) return;
-        
+
         const newWidths = Object.assign({}, widths);
         newWidths[colName] = newWidth;
         updateCookie(COL_WIDTH_COOKIE, JSON.stringify(newWidths));
@@ -50,6 +49,6 @@ export const useTreeColumnsStore = create<TreeColumns>((set: SetState<TreeColumn
 }));
 
 
-export const updateCookie = (cookieName: string, value: string) => {
+export const updateCookie = (cookieName: string, value: string): void => {
     document.cookie = `${cookieName}=${value};path=/;max-age=630700000`;
-}
+};

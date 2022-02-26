@@ -1,4 +1,5 @@
 /* eslint-disable react/jsx-max-props-per-line */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 /**
  * RepositoryTreeView
@@ -148,9 +149,10 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
     const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
+
     useEffect(() => {
         initializeWidths();
-    }, [tree])
+    }, [tree]);
 
     const onNodeToggle = useCallback(
         async (_, nodeIds: string[]) => {
@@ -269,7 +271,14 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
             // base case
             return (
-                <StyledTreeItem id={`repository row id ${idSystemObject}`} key={idSystemObject} nodeId={nodeId} icon={icon} color={color} label={label}>
+                <StyledTreeItem
+                    id={`repository row id ${idSystemObject}`}
+                    key={idSystemObject}
+                    nodeId={nodeId}
+                    icon={icon}
+                    color={color}
+                    label={label}
+                >
                     {childNodesContent}
                 </StyledTreeItem>
             );
