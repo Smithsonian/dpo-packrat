@@ -5,30 +5,38 @@ const COL_WIDTH_COOKIE = 'colWidths';
 
 type TreeColumns = {
     widths: {};
+    classes: {};
     initializeWidth: () => void;
+    initializeClasses: (classes: {[name: string]: string}) => void;
     updateWidth: (colName: eMetadata, width: string) => void;
 };
 
 export const useTreeColumnsStore = create<TreeColumns>((set: SetState<TreeColumns>, get: GetState<TreeColumns>) => ({
     widths: {},
+    classes: {},
     initializeWidth: () => {
         let colWidthsCookie;
-        // console.log('initializeWidth');
         if ((!document.cookie.length || document.cookie.indexOf(COL_WIDTH_COOKIE) === -1)) {
-            // console.log('resetting cookie');
-            document.cookie = `${COL_WIDTH_COOKIE}={};path=/;max-age=630700000`;
+            const defaultWidths = {};
+            for (const col in eMetadata) {
+                defaultWidths[eMetadata[col]] = '50';
+            }
+            document.cookie = `${COL_WIDTH_COOKIE}=${JSON.stringify(defaultWidths)};path=/;max-age=630700000`;
         }
 
         const cookies = document.cookie.split(';');
         colWidthsCookie = cookies.find(entry => entry.trim().startsWith(COL_WIDTH_COOKIE));
         if (colWidthsCookie) {
             colWidthsCookie = JSON.parse(colWidthsCookie.split('=')[1]);
-            // console.log("colWidthsCookie", colWidthsCookie);
             set({ widths: colWidthsCookie });
         }
     },
+    initializeClasses: (classes) => {
+        set({ classes });
+    },
     updateWidth: (colName: eMetadata, newWidth: string) => {
         const { widths } = get();
+
         // When unmounting the headers, their observed width is 0 so we want to ignore that
         if (newWidth === '0') return;
         

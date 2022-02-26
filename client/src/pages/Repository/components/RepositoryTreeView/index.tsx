@@ -26,10 +26,6 @@ import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
 import InViewTreeItem from './InViewTreeItem';
 import { repositoryRowCount } from '@dpo-packrat/common';
-// import { metadataToDisplayOptions } from '../RepositoryFilterView/RepositoryFilterOptions';
-// import useColumnStyles from '../../hooks/useColumnStyles';
-// import { eMetadata } from '@dpo-packrat/common';
-// import { constant } from 'lodash';
 
 const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     container: {
@@ -131,29 +127,6 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     }
 }));
 
-const useColumnStyles = makeStyles(() => {
-    // let result = {};
-    // metadataToDisplayOptions.forEach((option) => {
-    //     // console.log('options', option, option?.value)
-    //     result[option?.value] = {
-    //         width: ({ widths }: { [key: string]: string }) => { console.log('widths', widths); return widths?.[option?.value]}  
-    //     }
-    // });
-    // return result;
-    return ({
-        '1': {
-            width: ({ widths }: any) => widths?.[1] 
-        },
-        '6': {
-            width: 700 
-        },
-        '5': {
-            width: ({ widths }: any) => widths?.[5] 
-        }
-    })
-});
-
-
 interface RepositoryTreeViewProps {
     isModal?: boolean;
     selectedItems?: StateRelatedObject[];
@@ -171,13 +144,10 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         state.cursors
     ]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
-    const [initializeWidths, widths] = useTreeColumnsStore((state) => [state.initializeWidth, state.widths]);
+    const [initializeWidths] = useTreeColumnsStore((state) => [state.initializeWidth]);
     const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
-    console.log('widths', widths);
     const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
-    const columnWidthClasses = useColumnStyles(widths);
-    console.log('columnWidthClasses', columnWidthClasses)
     useEffect(() => {
         initializeWidths();
     }, [tree])
@@ -197,7 +167,6 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
     // recursive
     const renderTree = (children: NavigationResultEntry[] | undefined, isChild?: boolean, parentNodeId?: string) => {
-        // console.log(`renderTree: ${children?.length} total`, children);
 
         if (!children) return null;
         return children.map((child: NavigationResultEntry, index: number) => {
@@ -322,17 +291,9 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
     return (
         <div className={classes.container} style={fullWidthStyles}>
-            {/* <div className={columnWidthClasses.feet}>Test</div> */}
             {content}
         </div>
     );
 }
 
 export default React.memo(RepositoryTreeView);
-
-// const convertFilterOptionsArrToObject = (options: FilterOption[]): numbers[] => {
-//     let result = [];
-//     options.forEach((option) => {
-//         result[option.value] 
-//     })
-// }

@@ -5,9 +5,8 @@
  */
 import lodash from 'lodash';
 import React from 'react';
-import { palette } from '../../../../theme';
 import { eMetadata } from '@dpo-packrat/common';
-import { /*computeMetadataViewWidth,*/ trimmedMetadataField } from '../../../../utils/repository';
+import { trimmedMetadataField } from '../../../../utils/repository';
 import { useTreeColumnsStore } from '../../../../store';
 import clsx from 'clsx';
 
@@ -26,14 +25,14 @@ interface MetadataViewProps {
 
 function MetadataView(props: MetadataViewProps): React.ReactElement {
     const { header, treeColumns, options = null, makeStyles } = props;
-    const [widths] = useTreeColumnsStore(state => [state.widths]);
-
+    
+    // Pull the generated MUI classes from TreeColumnsStore and assign the divs the appropriate class based on metadataColumn
+    const [classes] = useTreeColumnsStore(state => [state.classes]);
     const renderTreeColumns = (treeColumns: TreeViewColumn[]) => {
         return treeColumns.map((treeColumn: TreeViewColumn, index: number) => {
             const { label, metadataColumn } = treeColumn;
-            const width = `${widths[metadataColumn]}px`;
             return (
-                <div key={index} className={clsx(makeStyles?.column, makeStyles?.placeholder)} id={`header-${label}`} style={{ width, minWidth: '50px', color: palette.primary.dark, fontSize: undefined }}>
+                <div key={index} className={clsx(makeStyles?.column, classes?.[metadataColumn])} id={`column-${label}`}>
                     <span className={makeStyles?.text} title={header ? undefined : label} data-tooltip-position='bottom'>
                         {trimmedMetadataField(label, 14, 7)}
                     </span>
