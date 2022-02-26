@@ -11,9 +11,11 @@ import * as WF from '../../workflow/interface';
 import { SvxReader } from '../../utils/parser';
 import { IDocument } from '../../types/voyager';
 import * as COMMON from '@dpo-packrat/common';
+import { EdanCollection } from './EdanCollection';
 
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import lodash from 'lodash';
 
 export type SceneAssetCollector = {
     idSystemObject: number;
@@ -105,20 +107,24 @@ export class PublishScene {
             return false;
 
         // update SystemObjectVersion.PublishedState
-        if (!await this.updatePublishedState(ePublishedStateIntended))
+        const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(this.idSystemObject);
+        if (!await this.updatePublishedState(LR, ePublishedStateIntended))
             return false;
+        const media_usage: COL.EdanLicenseInfo = EdanCollection.computeLicenseInfo(LR?.License?.Name); // eslint-disable-line camelcase
 
         const { status, publicSearch, downloads } = this.computeEdanSearchFlags(edanRecord, ePublishedStateIntended);
         const haveDownloads: boolean = (this.edan3DResourceList.length > 0);
-        const updatePackage: boolean = haveDownloads        // we have downloads, or
-            || (status !== edanRecord.status)               // publication status changed
-            || (publicSearch !== edanRecord.publicSearch);  // public search changed
+        const updatePackage: boolean = haveDownloads                                // we have downloads, or
+            || (status !== edanRecord.status)                                       // publication status changed
+            || (publicSearch !== edanRecord.publicSearch)                           // public search changed
+            || (!lodash.isEqual(media_usage, edanRecord.content['media_usage']));   // license has changed
 
         // update EDAN 3D Package if we have downloads and/or if our published state has changed
         if (this.svxDocument && updatePackage) {
             const E3DPackage: COL.Edan3DPackageContent = { ...edanRecord.content };
             E3DPackage.document = this.svxDocument;
             E3DPackage.resources = (downloads && haveDownloads) ? this.edan3DResourceList : [];
+            E3DPackage.media_usage = media_usage; // eslint-disable-line camelcase
 
             LOG.info(`PublishScene.publish updating ${edanRecord.url}`, LOG.LS.eCOLL);
             edanRecord = await ICol.updateEdan3DPackage(edanRecord.url, edanRecord.title, E3DPackage, status, publicSearch);
@@ -666,12 +672,11 @@ export class PublishScene {
         return { filename, url, type, title, name, attributes, category };
     }
 
-    private async updatePublishedState(ePublishedStateIntended: COMMON.ePublishedState): Promise<boolean> {
+    private async updatePublishedState(LR: DBAPI.LicenseResolver | undefined, ePublishedStateIntended: COMMON.ePublishedState): Promise<boolean> {
         if (!this.systemObjectVersion)
             return false;
 
         // Determine if licensing prevents publishing
-        const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(this.idSystemObject);
         if (LR && LR.License &&
             DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) === COMMON.ePublishedState.eNotPublished)
             ePublishedStateIntended = COMMON.ePublishedState.eNotPublished;
