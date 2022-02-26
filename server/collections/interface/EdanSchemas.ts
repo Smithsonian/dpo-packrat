@@ -93,7 +93,7 @@ export type Edan3DResource = {          // c.f. https://confluence.si.edu/displa
 };
 
 export type Edan3DPackageContent = {
-    document: IDocument;
+    document?: IDocument;
     resources?: Edan3DResource[];
 };
 
