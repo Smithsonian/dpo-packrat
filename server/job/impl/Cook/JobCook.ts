@@ -340,6 +340,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     // in this case, the override stream is for the model geometry file
                     let RSRs: STORE.ReadStreamResult[] | undefined = this._streamOverrideMap.get(idAssetVersion);
                     if (!RSRs) {
+                        // LOG.info(`JobCook [${this.name()}] JobCook.stageFiles found no stream override for idAssetVersion ${idAssetVersion} among ${this._streamOverrideMap.size} overrides`, LOG.LS.eJOB);
                         RSRs = [];
                         RSRs.push(await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion));
                     }

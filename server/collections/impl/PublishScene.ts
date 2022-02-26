@@ -98,6 +98,7 @@ export class PublishScene {
             return false;
         }
         LOG.info(`PublishScene.publish ${edanRecord.url} succeeded with Edan status ${edanRecord.status}, publicSearch ${edanRecord.publicSearch}`, LOG.LS.eCOLL);
+        // LOG.info(`PublishScene.publish ${edanRecord.url} succeeded with Edan status ${edanRecord.status}, publicSearch ${edanRecord.publicSearch}:\n${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eCOLL);
 
         // stage downloads
         if (!await this.stageDownloads() || !this.edan3DResourceList)
@@ -115,17 +116,17 @@ export class PublishScene {
 
         // update EDAN 3D Package if we have downloads and/or if our published state has changed
         if (this.svxDocument && updatePackage) {
-            const E3DPackage: COL.Edan3DPackageContent = {
-                document: this.svxDocument,
-                resources: (downloads && haveDownloads) ? this.edan3DResourceList : undefined
-            };
+            const E3DPackage: COL.Edan3DPackageContent = { ...edanRecord.content };
+            E3DPackage.document = this.svxDocument;
+            E3DPackage.resources = (downloads && haveDownloads) ? this.edan3DResourceList : [];
 
             LOG.info(`PublishScene.publish updating ${edanRecord.url}`, LOG.LS.eCOLL);
-            edanRecord = await ICol.updateEdan3DPackage(edanRecord.url, E3DPackage, status, publicSearch);
+            edanRecord = await ICol.updateEdan3DPackage(edanRecord.url, edanRecord.title, E3DPackage, status, publicSearch);
             if (!edanRecord) {
                 LOG.error('PublishScene.publish Edan3DPackage update failed', LOG.LS.eCOLL);
                 return false;
             }
+            // LOG.info(`PublishScene.publish updated ${edanRecord.url}:\n${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eCOLL);
         }
 
         LOG.info(`PublishScene.publish UUID ${this.scene.EdanUUID}, status ${status}, publicSearch ${publicSearch}, downloads ${downloads}, has downloads ${haveDownloads}`, LOG.LS.eCOLL);
