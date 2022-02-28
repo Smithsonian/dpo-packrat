@@ -161,8 +161,8 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                                         </td>
                                         <td colSpan={3} align='left'>
                                             <Box>
-                                                <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5, marginRight: '4px' }} variant='contained' color='primary'>Rollback</Button>
-                                                <Button onClick={cancel} className={classes.btn} style={{ padding: 0 }} variant='contained' color='primary'>Cancel</Button>
+                                                <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5, marginRight: '4px' }} variant='contained' color='primary' disableElevation>Rollback</Button>
+                                                <Button onClick={cancel} className={classes.btn} style={{ padding: 0 }} variant='contained' color='primary' disableElevation>Cancel</Button>
                                             </Box>
                                         </td>
                                     </tr>

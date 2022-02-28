@@ -257,15 +257,15 @@ function LicenseForm(): React.ReactElement {
             </Box>
             <Box className={classes.ButtonGroup}>
                 {create ? (
-                    <Button className={classes.btn} onClick={onCreateLicense} disableElevation>
+                    <Button className={classes.btn} onClick={onCreateLicense} disableElevation variant='contained'>
                         Create
                     </Button>
                 ) : (
-                    <Button className={classes.btn} onClick={onUpdateLicense} disableElevation>
+                    <Button className={classes.btn} onClick={onUpdateLicense} disableElevation variant='contained'>
                         Update
                     </Button>
                 )}
-                <Button variant='contained' className={classes.btn} onClick={() => history.push('/admin/licenses')}>
+                <Button variant='contained' disableElevation className={classes.btn} onClick={() => history.push('/admin/licenses')}>
                     Cancel
                 </Button>
             </Box>

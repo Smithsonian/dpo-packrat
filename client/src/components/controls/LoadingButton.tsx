@@ -27,7 +27,12 @@ function LoadingButton(props: LoadingButtonProps): React.ReactElement {
     // console.log(`LoadingButton className=${className}, loading=${loading}`);
 
     return (
-        <Button className={clsx(classes.button, className)} variant='contained' color='primary' disabled={loading}
+        <Button
+            className={clsx(classes.button, className)}
+            variant='contained'
+            color='primary'
+            disabled={loading}
+            disableElevation
             {...rest}
         >
             {!loading && props.children}

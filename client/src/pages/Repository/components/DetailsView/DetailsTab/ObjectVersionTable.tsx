@@ -161,8 +161,8 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                                 <Box display='flex' style={{ width: '90%', alignItems: 'center', columnGap: '10px' }}>
                                                     <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} placeholder='Please provide rollback notes...' rows='4' />
                                                     <Box style={{ columnGap: '3px', display: 'flex' }}>
-                                                        <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5 }} variant='contained' color='primary'>Rollback</Button>
-                                                        <Button onClick={cancel} className={classes.btn} style={{ padding: 0 }} variant='contained' color='primary'>Cancel</Button>
+                                                        <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5 }} variant='contained' disableElevation color='primary'>Rollback</Button>
+                                                        <Button onClick={cancel} className={classes.btn} style={{ padding: 0 }} variant='contained' disableElevation color='primary'>Cancel</Button>
                                                     </Box>
                                                 </Box>
                                             </td>
@@ -185,7 +185,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                     )}
                 </tbody>
             </table>
-            <Button className={classes.btn} variant='contained' color='primary' style={{ width: 'fit-content' }} onClick={redirect}>
+            <Button className={classes.btn} variant='contained' disableElevation color='primary' style={{ width: 'fit-content' }} onClick={redirect}>
                 Add Version
             </Button>
         </Box>
