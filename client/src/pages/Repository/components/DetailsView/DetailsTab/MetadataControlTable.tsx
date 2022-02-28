@@ -110,7 +110,15 @@ function MetadataControlTable(props: MetadataControlTableProps): React.ReactElem
 
     return (
         <React.Fragment>
-            <Button className={classes.btn} variant='contained' color='primary' onClick={() => createMetadata()}>Add Field</Button>
+            <Button
+                className={classes.btn}
+                variant='contained'
+                color='primary'
+                disableElevation
+                onClick={() => createMetadata()}
+            >
+                Add Field
+            </Button>
             {
                 metadata.length > 0 ? (
                     <Box className={classes.container}>

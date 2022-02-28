@@ -24,7 +24,6 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         width: 80,
         fontSize: '0.8em',
         color: '#FFFFFF',
-        backgroundColor: '#0079C4',
         outline: '2px hidden #8DABC4',
         '& :focus': {
             outline: '2px solid #8DABC4',
@@ -100,6 +99,8 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
                         <Button
                             className={classes.addIdentifierButton}
                             variant='contained'
+                            color='primary'
+                            disableElevation
                             onClick={() => {
                                 addIdentifer(getEntries(eVocabularySetID.eIdentifierIdentifierType)[0].idVocabulary);
                             }}
