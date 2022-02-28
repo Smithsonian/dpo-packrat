@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+
 /**
  * RepositoryTreeHeader
  *
@@ -5,16 +7,18 @@
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { eMetadata } from '@dpo-packrat/common';
 import { getTreeViewColumns } from '../../../../utils/repository';
 import MetadataView from './MetadataView';
+import ResizeObserver from 'resize-observer-polyfill';
+import { useTreeColumnsStore } from '../../../../store';
+import { debounce } from 'lodash';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
         display: 'flex',
         alignItems: 'center',
-        minHeight: 50,
         height: 'fit-content',
         backgroundColor: palette.primary.light,
         borderRadius: 5,
@@ -58,13 +62,25 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontSize: typography.pxToRem(14),
         color: palette.primary.dark,
         fontWeight: typography.fontWeightRegular,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-
+        overflow: 'auto',
+        textOverflow: 'ellipsis',
+        resize: 'horizontal'
     },
     text: {
         fontSize: '0.9em',
     }
+}));
+
+const metadataColumns = {};
+for (const col in eMetadata) {
+    metadataColumns[eMetadata[col]] =  {
+        width: (
+            widths: { [name: string]: string }) => `${widths[eMetadata[col]]}px` || '50px',
+    };
+}
+
+const useColumnStyles = makeStyles(() => ({
+    ...metadataColumns
 }));
 
 interface RepositoryTreeHeaderProps {
@@ -74,9 +90,32 @@ interface RepositoryTreeHeaderProps {
 
 function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElement {
     const { metadataColumns } = props;
+    const [updateWidth, widths, initializeClasses] = useTreeColumnsStore(state => [state.updateWidth, state.widths, state.initializeClasses]);
     const classes = useStyles();
-
+    const columnClasses = useColumnStyles(widths);
     const treeColumns = getTreeViewColumns(metadataColumns, true);
+
+    useEffect(() => {
+        initializeClasses(columnClasses);
+        const columnSet = new Set<ResizeObserver>();
+
+        // Debouncing the width update makes the transition smoother
+        const debounceUpdateWidth = debounce(updateWidth, 5);
+        treeColumns.forEach((col) => {
+            const target = document.getElementById(`column-${col.label}`);
+            if (target) {
+                const columnObersver = new ResizeObserver((e) => {
+                    debounceUpdateWidth(col.metadataColumn as number, String(e[0].contentRect.width));
+                });
+                columnObersver.observe(target);
+                columnSet.add(columnObersver);
+            }
+        });
+
+        return () => {
+            columnSet.forEach((col) => col.unobserve);
+        };
+    }, []);
 
     return (
         <Box className={classes.container}>
