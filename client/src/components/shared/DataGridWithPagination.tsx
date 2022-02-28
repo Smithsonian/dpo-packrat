@@ -233,13 +233,13 @@ function DataGridWithPagination(props: DataGridWithPaginationProps): React.React
                             </FormControl>
                         </Box>
                     )}
-                    <Button className={classes.FilterBtn} onClick={async () => await handleSearch(false)}>
+                    <Button className={classes.FilterBtn} onClick={async () => await handleSearch(false)} variant='contained' disableElevation>
                         {Search.btnText || 'Search'}
                     </Button>
                 </Box>
                 {LinkBtn && (
                     <Box className={classes.searchFilterSettingsContainer2}>
-                        <Button className={classes.FilterBtn} onClick={() => history.push(LinkBtn.link)}>{LinkBtn.btnText || 'Create'}</Button>
+                        <Button className={classes.FilterBtn} onClick={() => history.push(LinkBtn.link)} variant='contained' disableElevation>{LinkBtn.btnText || 'Create'}</Button>
                     </Box>
                 )}
             </Box>
