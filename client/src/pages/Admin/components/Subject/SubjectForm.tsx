@@ -413,7 +413,7 @@ function SubjectForm(): React.ReactElement {
                 <Box mb={3}>
                     <MetadataControlTable type={eObjectMetadataType.eSubjectCreation} metadataData={[]} />
                 </Box>
-                <Button className={classes.btn} onClick={onCreateSubject}>
+                <Button className={classes.btn} onClick={onCreateSubject} variant='contained' disableElevation>
                     Create
                 </Button>
             </Box>

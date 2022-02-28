@@ -181,10 +181,10 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
                         ) : null
                     }}
                 />
-                <Button className={classes.styledButton} style={{ right: '25px' }} onClick={search}>Search</Button>
+                <Button className={classes.styledButton} style={{ right: '25px' }} onClick={search} variant='contained' disableElevation>Search</Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Button className={classes.styledButton} onClick={() => history.push('/admin/licenses/create')}>Create</Button>
+                <Button className={classes.styledButton} onClick={() => history.push('/admin/licenses/create')} variant='contained' disableElevation>Create</Button>
             </Box>
         </Box>
     );
