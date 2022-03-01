@@ -159,6 +159,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const idUserCreator: number = LS?.idUser ?? 0;
 
         for (const [downloadType, downloadFile] of downloadMap) {
+            LOG.info(`JobCookSIGenerateDownloads processing download ${downloadFile} of type ${downloadType}`, LOG.LS.eJOB);
             const RSR: STORE.ReadStreamResult = await this.fetchFile(downloadFile);
             if (!RSR.success || !RSR.readStream) {
                 LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to fetch stream for generated download ${downloadFile}: ${RSR.error}`, LOG.LS.eJOB);
@@ -223,7 +224,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 allowZipCracking: false,
                 idUserCreator,
                 SOBased: model,
-                Comment: 'Created by Cook si-generate-downloads'
+                Comment: 'Created by Cook si-generate-downloads',
+                doNotUpdateParentVersion: true // we create a new system object version below
             };
             const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
             if (!ISR.success) {
