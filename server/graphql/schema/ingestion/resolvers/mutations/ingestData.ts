@@ -873,14 +873,10 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async createSceneObjects(scene: IngestSceneInput): Promise<{ success: boolean, transformUpdated?: boolean | undefined }> {
-        const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion, scene.directory);
-        if (!sceneConstellation || !sceneConstellation.Scene)
-            return { success: false };
-
         // Examine scene.idAsset; if Asset.idVAssetType -> scene then
         // Lookup SystemObject from Asset.idSystemObject; if idScene is not null, then use that idScene
         const updateMode: boolean = (scene.idAsset != null && scene.idAsset > 0);
-        let sceneDB: DBAPI.Scene | null = sceneConstellation.Scene;
+        let sceneDB: DBAPI.Scene | null = null;
         if (updateMode) {
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(scene.idAsset!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!asset) {
@@ -904,6 +900,14 @@ class IngestDataWorker extends ResolverBase {
                 }
             }
         }
+
+        const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion, scene.directory, sceneDB ? sceneDB.idScene : undefined);
+        if (!sceneConstellation || !sceneConstellation.Scene)
+            return { success: false };
+
+        if (sceneDB === null)
+            sceneDB = sceneConstellation.Scene;
+
 
         sceneDB.Name = scene.name;
         sceneDB.ApprovedForPublication = scene.approvedForPublication;

@@ -11,6 +11,9 @@ export class SceneConstellation {
     Scene: Scene | null;
     ModelSceneXref: ModelSceneXref[] | null;
 
+    private static vocabAssetTypeModel: Vocabulary | undefined = undefined;
+    private static vocabAssetTypeModelGeometryFile: Vocabulary | undefined = undefined;
+
     private constructor(Scene: Scene, ModelSceneXref: ModelSceneXref[] | null) {
         this.Scene = Scene;
         this.ModelSceneXref = ModelSceneXref;
@@ -30,7 +33,7 @@ export class SceneConstellation {
         return new SceneConstellation(scene, modelSceneXref);
     }
 
-    static async fetchFromAssetVersion(idAssetVersion: number, directory?: string | undefined): Promise<SceneConstellation | null> {
+    static async fetchFromAssetVersion(idAssetVersion: number, directory?: string | undefined, idScene?: number | undefined): Promise<SceneConstellation | null> {
         LOG.info(`SceneConstellation.fetchFromAssetVersion(${idAssetVersion}, ${directory})`, LOG.LS.eDB);
         let zip: IZip | null = null;
         let isBagit: boolean = false;
@@ -79,13 +82,29 @@ export class SceneConstellation {
                 return null;
             }
 
+            // If we have a source scene, compute a mapping of model names to idModels, so we can specify the correct ModelSceneXref below
+            const modelExistingNameMap: Map<string | null, number> = new Map<string | null, number>();
+            if (idScene) {
+                const modelSceneXrefs: ModelSceneXref[] | null = await ModelSceneXref.fetchFromScene(idScene);
+                if (modelSceneXrefs) {
+                    for (const MSX of modelSceneXrefs) {
+                        const model: Model | null = await Model.fetch(MSX.idModel);
+                        if (model)
+                            modelExistingNameMap.set(MSX.Name, model.idModel);
+                        else
+                            LOG.error(`SceneConstellation.fetchFromAssetVersion unable to read idModel ${MSX.idModel} referenced in ModelSceneXref ${H.Helpers.JSONStringify(MSX)}`, LOG.LS.eDB);
+                    }
+                } else
+                    LOG.error(`SceneConstellation.fetchFromAssetVersion unable to read original ModelSceneXref from idScene ${idScene} for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
+            }
+
             const scene: Scene = svx.SvxExtraction.extractScene();
 
             let modelSceneXrefs: ModelSceneXref[] | null = null;
             if (svx.SvxExtraction.modelDetails) {
                 modelSceneXrefs = [];
-                const v1: Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
-                const v2: Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+                const v1: Vocabulary | undefined = await SceneConstellation.computeVocabAssetTypeModel();
+                const v2: Vocabulary | undefined = await SceneConstellation.computeVocabAssetTypeModelGeometryFile();
                 const idVAssetType1: number | undefined = v1?.idVocabulary;
                 const idVAssetType2: number | undefined = v2?.idVocabulary;
                 if (!idVAssetType1 || !idVAssetType2) {
@@ -104,12 +123,17 @@ export class SceneConstellation {
                         }
                     }
 
-                    // Otherwise, look for an existing, matching model using AssetVersion.FileName === MSX.Name and
-                    // Asset.idVAssetType IN [Model, ModelGeometryFile]
-                    const models: Model[] | null = (MSX.Name) ?
-                        await Model.fetchByFileNameAndAssetType(MSX.Name, [idVAssetType1, idVAssetType2]) : null;
-                    if (models && models.length > 0)
-                        MSX.idModel = models[0].idModel;
+                    let idModel: number | undefined = modelExistingNameMap.get(MSX.Name);
+                    if (!idModel) {
+                        // Otherwise, look for an existing, matching model using AssetVersion.FileName === MSX.Name and
+                        // Asset.idVAssetType IN [Model, ModelGeometryFile]
+                        const models: Model[] | null = (MSX.Name) ?
+                            await Model.fetchByFileNameAndAssetType(MSX.Name, [idVAssetType1, idVAssetType2]) : null;
+                        if (models && models.length > 0)
+                            idModel = models[0].idModel;
+                    }
+                    if (idModel)
+                        MSX.idModel = idModel;
                     modelSceneXrefs.push(MSX);
                 }
             }
@@ -133,5 +157,23 @@ export class SceneConstellation {
             if (fileName.includes(directory))
                 retValue.push(fileName);
         return retValue;
+    }
+
+    private static async computeVocabAssetTypeModel(): Promise<Vocabulary | undefined> {
+        if (!SceneConstellation.vocabAssetTypeModel) {
+            SceneConstellation.vocabAssetTypeModel = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
+            if (!SceneConstellation.vocabAssetTypeModel)
+                LOG.error('SceneConstellation unable to fetch vocabulary for Asset Type Model', LOG.LS.eDB);
+        }
+        return SceneConstellation.vocabAssetTypeModel;
+    }
+
+    private static async computeVocabAssetTypeModelGeometryFile(): Promise<Vocabulary | undefined> {
+        if (!SceneConstellation.vocabAssetTypeModelGeometryFile) {
+            SceneConstellation.vocabAssetTypeModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+            if (!SceneConstellation.vocabAssetTypeModelGeometryFile)
+                LOG.error('SceneConstellation unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eDB);
+        }
+        return SceneConstellation.vocabAssetTypeModelGeometryFile;
     }
 }
