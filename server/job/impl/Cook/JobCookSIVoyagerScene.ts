@@ -393,7 +393,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                         allowZipCracking: false,
                         idUserCreator,
                         SOBased: model,
-                        Comment: 'Created by Cook si-voyager-scene'
+                        Comment: 'Created by Cook si-voyager-scene',
+                        doNotUpdateParentVersion: true // if needed, we update the existing system object version below
                     };
                     ISR = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISIModel);
                     if (!ISR.success)
