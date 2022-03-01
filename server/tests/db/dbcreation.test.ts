@@ -5108,13 +5108,6 @@ describe('DB Fetch Special Test Suite', () => {
             expect(modelFetch.length).toEqual(0);
     });
 
-    test('DB Fetch Special: Model.fetchByFileNameSizeAndAssetType', async () => {
-        const modelFetch: DBAPI.Model[] | null = await DBAPI.Model.fetchByFileNameSizeAndAssetType('zzzOBVIOUSLY_INVALID_NAMEzzz', BigInt(100), [0]);
-        expect(modelFetch).toBeTruthy();
-        if (modelFetch)
-            expect(modelFetch.length).toEqual(0);
-    });
-
     test('DB Fetch Special: Model.fetchChildrenModels', async () => {
         const modelFetch1: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(-1, null, 'zzzOBVIOUSLY_INVALID_NAMEzzz');
         expect(modelFetch1).toBeTruthy();
