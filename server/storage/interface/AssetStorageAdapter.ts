@@ -38,6 +38,7 @@ export type IngestAssetInput = {
     opInfo: STORE.OperationInfo;
     Comment: string | null;                     // Optional comment used to create new system object version
     doNotSendIngestionEvent?: boolean | undefined;
+    doNotUpdateParentVersion?: boolean | undefined;
 };
 
 export type IngestAssetResult = {
@@ -101,6 +102,7 @@ export type IngestStreamOrFileInput = {
     idUserCreator: number;
     SOBased: DBAPI.SystemObjectBased;
     Comment: string | null;
+    doNotUpdateParentVersion?: boolean | undefined;
 };
 
 export type IngestStreamOrFileResult = {
@@ -415,7 +417,7 @@ export class AssetStorageAdapter {
     }
 
     static async ingestAsset(ingestAssetInput: IngestAssetInput): Promise<IngestAssetResult> {
-        const { SOBased, idSystemObject, Comment } = ingestAssetInput;
+        const { SOBased, idSystemObject, Comment, doNotUpdateParentVersion } = ingestAssetInput;
         if (!idSystemObject && !SOBased) {
             const error: string = 'ingestAsset called without system object information';
             LOG.error(error, LOG.LS.eSTR);
@@ -453,20 +455,22 @@ export class AssetStorageAdapter {
         }
         IAR.systemObjectVersion = SOV;
 
-        // Complex system object version patch up step here
-        // Scenes own Models, Models own Assets; those assets are *also* part of the scene's system object version
-        // So, when we update a model-owned asset, we also need to add a new system object version for that scene!
-        if (IAR.affectedSystemObjectIds && IAR.affectedSystemObjectIds.size > 0) {
-            LOG.info(`AssetStorageAdapter.ingestAsset found affectedSystemObjectIds for ${ingestAssetInput.idSystemObject}: ${JSON.stringify(IAR.affectedSystemObjectIds, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
-            for (const idSystemObject of IAR.affectedSystemObjectIds) {
-                if (idSystemObject !== ingestAssetInput.idSystemObject) { // we've already updated ingestAssetInput.idSystemObject above
-                    const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, Comment, assetVersionOverrideMap, IAR.assetsUnzipped);
-                    if (!SOV)
-                        LOG.error(`AssetStorageAdapter.ingestAsset failed to create new SystemObjectVersion for ${idSystemObject}`, LOG.LS.eSTR);
+        if (doNotUpdateParentVersion !== true) {
+            // Complex system object version patch up step here
+            // Scenes own Models, Models own Assets; those assets are *also* part of the scene's system object version
+            // So, when we update a model-owned asset, we also need to add a new system object version for that scene!
+            if (IAR.affectedSystemObjectIds && IAR.affectedSystemObjectIds.size > 0) {
+                LOG.info(`AssetStorageAdapter.ingestAsset found affectedSystemObjectIds for ${ingestAssetInput.idSystemObject}: ${JSON.stringify(IAR.affectedSystemObjectIds, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                for (const idSystemObject of IAR.affectedSystemObjectIds) {
+                    if (idSystemObject !== ingestAssetInput.idSystemObject) { // we've already updated ingestAssetInput.idSystemObject above
+                        const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, Comment, assetVersionOverrideMap, IAR.assetsUnzipped);
+                        if (!SOV)
+                            LOG.error(`AssetStorageAdapter.ingestAsset failed to create new SystemObjectVersion for ${idSystemObject}`, LOG.LS.eSTR);
+                    }
                 }
-            }
-        } else
-            LOG.info(`AssetStorageAdapter.ingestAsset found no affectedSystemObjectIds for ${ingestAssetInput.idSystemObject}`, LOG.LS.eSTR);
+            } else
+                LOG.info(`AssetStorageAdapter.ingestAsset found no affectedSystemObjectIds for ${ingestAssetInput.idSystemObject}`, LOG.LS.eSTR);
+        }
 
         return IAR;
     }
@@ -1055,7 +1059,8 @@ export class AssetStorageAdapter {
             SOBased: ISI.SOBased,
             idSystemObject: null,
             opInfo,
-            Comment: ISI.Comment
+            Comment: ISI.Comment,
+            doNotUpdateParentVersion: ISI.doNotUpdateParentVersion
         };
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
