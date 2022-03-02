@@ -108,10 +108,8 @@ type Mutation {
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
   createGeoLocation(input: CreateGeoLocationInput!): CreateGeoLocationResult!
-  createItem(input: CreateItemInput!): CreateItemResult!
   createLicense(input: CreateLicenseInput!): CreateLicenseResult!
   createProject(input: CreateProjectInput!): CreateProjectResult!
-  createScene(input: CreateSceneInput!): CreateSceneResult!
   createSubject(input: CreateSubjectInput!): CreateSubjectResult!
   createSubjectWithIdentifiers(input: CreateSubjectWithIdentifiersInput!): CreateSubjectWithIdentifiersResult!
   createUnit(input: CreateUnitInput!): CreateUnitResult!
@@ -971,26 +969,6 @@ type GetFilterViewDataResult {
   projects: [Project!]!
 }
 
-input CreateSceneInput {
-  Subtitle: String!
-  idAssetThumbnail: Int
-  CountScene: Int
-  CountNode: Int
-  CountCamera: Int
-  CountLight: Int
-  CountModel: Int
-  CountMeta: Int
-  CountSetup: Int
-  CountTour: Int
-  EdanUUID: String
-  ApprovedForPublication: Boolean!
-  PosedAndQCd: Boolean!
-}
-
-type CreateSceneResult {
-  Scene: Scene
-}
-
 input GetSceneInput {
   idScene: Int!
 }
@@ -1661,17 +1639,6 @@ input CreateSubjectInput {
 
 type CreateSubjectResult {
   Subject: Subject
-}
-
-input CreateItemInput {
-  Subtitle: String!
-  EntireSubject: Boolean!
-  idAssetThumbnail: Int
-  idGeoLocation: Int
-}
-
-type CreateItemResult {
-  Item: Item
 }
 
 input CreateGeoLocationInput {
