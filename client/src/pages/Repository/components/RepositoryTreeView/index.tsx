@@ -29,6 +29,8 @@ import InViewTreeItem from './InViewTreeItem';
 import { repositoryRowCount } from '@dpo-packrat/common';
 import clsx from 'clsx';
 
+const repositoryRowPrefetchThreshold = 75;
+
 const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     container: {
         display: 'flex',
@@ -138,12 +140,13 @@ interface RepositoryTreeViewProps {
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { isModal = false, selectedItems = [], onSelect, onUnSelect } = props;
-    const [tree, getChildren, getMoreRoot, getMoreChildren, cursors] = useRepositoryStore(state => [
+    const [tree, getChildren, getMoreRoot, getMoreChildren, cursors, loadingMore] = useRepositoryStore(state => [
         state.tree,
         state.getChildren,
         state.getMoreRoot,
         state.getMoreChildren,
-        state.cursors
+        state.cursors,
+        state.loadingMore
     ]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
     const [initializeWidths] = useTreeColumnsStore((state) => [state.initializeWidth]);
@@ -231,7 +234,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             );
 
             // non-root case for end of list
-            if ((index + 1) % repositoryRowCount === 0 && index + 1 === children.length && isChild) {
+            if ((index + 1 + repositoryRowPrefetchThreshold) % repositoryRowCount === 0 && index + 1 + repositoryRowPrefetchThreshold === children.length && isChild) {
                 return (
                     <InViewTreeItem
                         id={`repository row id ${idSystemObject}`}
@@ -255,7 +258,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             }
 
             // root case for end of list
-            if ((index + 1) % repositoryRowCount === 0 && index + 1 === children.length) {
+            if ((index + 1 + repositoryRowPrefetchThreshold) % repositoryRowCount === 0 && index + 1 + repositoryRowPrefetchThreshold === children.length) {
                 return (
                     <InViewTreeItem
                         id={`repository row id ${idSystemObject}`}
@@ -266,7 +269,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                         label={label}
                         childNodesContent={childNodesContent}
                         triggerOnce
-                        onView={async () => getMoreRoot()}
+                        onView={async () => await getMoreRoot()}
                     />
                 );
             }
@@ -294,6 +297,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             <TreeView className={classes.tree} defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />} onNodeToggle={onNodeToggle}>
                 <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />
                 {renderTree(children)}
+                {loadingMore && <TreeLabelLoading />}
             </TreeView>
         );
     }
