@@ -341,10 +341,8 @@ export type Mutation = {
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
   createGeoLocation: CreateGeoLocationResult;
-  createItem: CreateItemResult;
   createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
-  createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
   createSubjectWithIdentifiers: CreateSubjectWithIdentifiersResult;
   createUnit: CreateUnitResult;
@@ -393,11 +391,6 @@ export type MutationCreateGeoLocationArgs = {
 };
 
 
-export type MutationCreateItemArgs = {
-  input: CreateItemInput;
-};
-
-
 export type MutationCreateLicenseArgs = {
   input: CreateLicenseInput;
 };
@@ -405,11 +398,6 @@ export type MutationCreateLicenseArgs = {
 
 export type MutationCreateProjectArgs = {
   input: CreateProjectInput;
-};
-
-
-export type MutationCreateSceneArgs = {
-  input: CreateSceneInput;
 };
 
 
@@ -1410,27 +1398,6 @@ export type GetFilterViewDataResult = {
   projects: Array<Project>;
 };
 
-export type CreateSceneInput = {
-  Subtitle: Scalars['String'];
-  idAssetThumbnail?: Maybe<Scalars['Int']>;
-  CountScene?: Maybe<Scalars['Int']>;
-  CountNode?: Maybe<Scalars['Int']>;
-  CountCamera?: Maybe<Scalars['Int']>;
-  CountLight?: Maybe<Scalars['Int']>;
-  CountModel?: Maybe<Scalars['Int']>;
-  CountMeta?: Maybe<Scalars['Int']>;
-  CountSetup?: Maybe<Scalars['Int']>;
-  CountTour?: Maybe<Scalars['Int']>;
-  EdanUUID?: Maybe<Scalars['String']>;
-  ApprovedForPublication: Scalars['Boolean'];
-  PosedAndQCd: Scalars['Boolean'];
-};
-
-export type CreateSceneResult = {
-  __typename?: 'CreateSceneResult';
-  Scene?: Maybe<Scene>;
-};
-
 export type GetSceneInput = {
   idScene: Scalars['Int'];
 };
@@ -2145,18 +2112,6 @@ export type CreateSubjectInput = {
 export type CreateSubjectResult = {
   __typename?: 'CreateSubjectResult';
   Subject?: Maybe<Subject>;
-};
-
-export type CreateItemInput = {
-  Subtitle: Scalars['String'];
-  EntireSubject: Scalars['Boolean'];
-  idAssetThumbnail?: Maybe<Scalars['Int']>;
-  idGeoLocation?: Maybe<Scalars['Int']>;
-};
-
-export type CreateItemResult = {
-  __typename?: 'CreateItemResult';
-  Item?: Maybe<Item>;
 };
 
 export type CreateGeoLocationInput = {

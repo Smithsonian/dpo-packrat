@@ -344,10 +344,8 @@ export type Mutation = {
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
   createGeoLocation: CreateGeoLocationResult;
-  createItem: CreateItemResult;
   createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
-  createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
   createSubjectWithIdentifiers: CreateSubjectWithIdentifiersResult;
   createUnit: CreateUnitResult;
@@ -396,11 +394,6 @@ export type MutationCreateGeoLocationArgs = {
 };
 
 
-export type MutationCreateItemArgs = {
-  input: CreateItemInput;
-};
-
-
 export type MutationCreateLicenseArgs = {
   input: CreateLicenseInput;
 };
@@ -408,11 +401,6 @@ export type MutationCreateLicenseArgs = {
 
 export type MutationCreateProjectArgs = {
   input: CreateProjectInput;
-};
-
-
-export type MutationCreateSceneArgs = {
-  input: CreateSceneInput;
 };
 
 
@@ -1413,27 +1401,6 @@ export type GetFilterViewDataResult = {
   projects: Array<Project>;
 };
 
-export type CreateSceneInput = {
-  Subtitle: Scalars['String'];
-  idAssetThumbnail?: Maybe<Scalars['Int']>;
-  CountScene?: Maybe<Scalars['Int']>;
-  CountNode?: Maybe<Scalars['Int']>;
-  CountCamera?: Maybe<Scalars['Int']>;
-  CountLight?: Maybe<Scalars['Int']>;
-  CountModel?: Maybe<Scalars['Int']>;
-  CountMeta?: Maybe<Scalars['Int']>;
-  CountSetup?: Maybe<Scalars['Int']>;
-  CountTour?: Maybe<Scalars['Int']>;
-  EdanUUID?: Maybe<Scalars['String']>;
-  ApprovedForPublication: Scalars['Boolean'];
-  PosedAndQCd: Scalars['Boolean'];
-};
-
-export type CreateSceneResult = {
-  __typename?: 'CreateSceneResult';
-  Scene?: Maybe<Scene>;
-};
-
 export type GetSceneInput = {
   idScene: Scalars['Int'];
 };
@@ -2150,18 +2117,6 @@ export type CreateSubjectResult = {
   Subject?: Maybe<Subject>;
 };
 
-export type CreateItemInput = {
-  Subtitle: Scalars['String'];
-  EntireSubject: Scalars['Boolean'];
-  idAssetThumbnail?: Maybe<Scalars['Int']>;
-  idGeoLocation?: Maybe<Scalars['Int']>;
-};
-
-export type CreateItemResult = {
-  __typename?: 'CreateItemResult';
-  Item?: Maybe<Item>;
-};
-
 export type CreateGeoLocationInput = {
   Latitude?: Maybe<Scalars['Int']>;
   Longitude?: Maybe<Scalars['Int']>;
@@ -2849,22 +2804,6 @@ export type UpdateLicenseMutation = (
   ) }
 );
 
-export type CreateSceneMutationVariables = Exact<{
-  input: CreateSceneInput;
-}>;
-
-
-export type CreateSceneMutation = (
-  { __typename?: 'Mutation' }
-  & { createScene: (
-    { __typename?: 'CreateSceneResult' }
-    & { Scene?: Maybe<(
-      { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene'>
-    )> }
-  ) }
-);
-
 export type CreateSubjectWithIdentifiersMutationVariables = Exact<{
   input: CreateSubjectWithIdentifiersInput;
 }>;
@@ -2994,22 +2933,6 @@ export type CreateGeoLocationMutation = (
     & { GeoLocation?: Maybe<(
       { __typename?: 'GeoLocation' }
       & Pick<GeoLocation, 'idGeoLocation'>
-    )> }
-  ) }
-);
-
-export type CreateItemMutationVariables = Exact<{
-  input: CreateItemInput;
-}>;
-
-
-export type CreateItemMutation = (
-  { __typename?: 'Mutation' }
-  & { createItem: (
-    { __typename?: 'CreateItemResult' }
-    & { Item?: Maybe<(
-      { __typename?: 'Item' }
-      & Pick<Item, 'idItem'>
     )> }
   ) }
 );
@@ -4517,41 +4440,6 @@ export function useUpdateLicenseMutation(baseOptions?: Apollo.MutationHookOption
 export type UpdateLicenseMutationHookResult = ReturnType<typeof useUpdateLicenseMutation>;
 export type UpdateLicenseMutationResult = Apollo.MutationResult<UpdateLicenseMutation>;
 export type UpdateLicenseMutationOptions = Apollo.BaseMutationOptions<UpdateLicenseMutation, UpdateLicenseMutationVariables>;
-export const CreateSceneDocument = gql`
-    mutation createScene($input: CreateSceneInput!) {
-  createScene(input: $input) {
-    Scene {
-      idScene
-    }
-  }
-}
-    `;
-export type CreateSceneMutationFn = Apollo.MutationFunction<CreateSceneMutation, CreateSceneMutationVariables>;
-
-/**
- * __useCreateSceneMutation__
- *
- * To run a mutation, you first call `useCreateSceneMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateSceneMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createSceneMutation, { data, loading, error }] = useCreateSceneMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useCreateSceneMutation(baseOptions?: Apollo.MutationHookOptions<CreateSceneMutation, CreateSceneMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateSceneMutation, CreateSceneMutationVariables>(CreateSceneDocument, options);
-      }
-export type CreateSceneMutationHookResult = ReturnType<typeof useCreateSceneMutation>;
-export type CreateSceneMutationResult = Apollo.MutationResult<CreateSceneMutation>;
-export type CreateSceneMutationOptions = Apollo.BaseMutationOptions<CreateSceneMutation, CreateSceneMutationVariables>;
 export const CreateSubjectWithIdentifiersDocument = gql`
     mutation createSubjectWithIdentifiers($input: CreateSubjectWithIdentifiersInput!) {
   createSubjectWithIdentifiers(input: $input) {
@@ -4894,41 +4782,6 @@ export function useCreateGeoLocationMutation(baseOptions?: Apollo.MutationHookOp
 export type CreateGeoLocationMutationHookResult = ReturnType<typeof useCreateGeoLocationMutation>;
 export type CreateGeoLocationMutationResult = Apollo.MutationResult<CreateGeoLocationMutation>;
 export type CreateGeoLocationMutationOptions = Apollo.BaseMutationOptions<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>;
-export const CreateItemDocument = gql`
-    mutation createItem($input: CreateItemInput!) {
-  createItem(input: $input) {
-    Item {
-      idItem
-    }
-  }
-}
-    `;
-export type CreateItemMutationFn = Apollo.MutationFunction<CreateItemMutation, CreateItemMutationVariables>;
-
-/**
- * __useCreateItemMutation__
- *
- * To run a mutation, you first call `useCreateItemMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateItemMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createItemMutation, { data, loading, error }] = useCreateItemMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useCreateItemMutation(baseOptions?: Apollo.MutationHookOptions<CreateItemMutation, CreateItemMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateItemMutation, CreateItemMutationVariables>(CreateItemDocument, options);
-      }
-export type CreateItemMutationHookResult = ReturnType<typeof useCreateItemMutation>;
-export type CreateItemMutationResult = Apollo.MutationResult<CreateItemMutation>;
-export type CreateItemMutationOptions = Apollo.BaseMutationOptions<CreateItemMutation, CreateItemMutationVariables>;
 export const CreateProjectDocument = gql`
     mutation createProject($input: CreateProjectInput!) {
   createProject(input: $input) {

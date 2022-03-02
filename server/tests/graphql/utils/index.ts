@@ -13,9 +13,7 @@ import {
     CreateVocabularyInput,
     CreateUnitInput,
     CreateSubjectInput,
-    CreateItemInput,
     CreateProjectInput,
-    CreateSceneInput,
     CreateCaptureDataInput,
     CreateCaptureDataPhotoInput,
     VocabularyEntry,
@@ -82,26 +80,11 @@ class TestSuiteUtils {
         };
     };
 
-    createItemInput = (): CreateItemInput => {
-        return {
-            Subtitle: 'Test Item',
-            EntireSubject: true
-        };
-    };
-
     createProjectInput = (): CreateProjectInput => {
         return {
             Name: 'Test Name',
             Unit: 1,
             Description: 'Test Description'
-        };
-    };
-
-    createSceneInput = (): CreateSceneInput => {
-        return {
-            Subtitle: 'Test Scene',
-            ApprovedForPublication: true,
-            PosedAndQCd: true
         };
     };
 
