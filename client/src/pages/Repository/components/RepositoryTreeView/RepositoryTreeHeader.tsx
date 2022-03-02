@@ -81,7 +81,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 const metadataColumns = {
     [SO_NAME_COLUMN_HEADER]: {
         width:  ( widths: { [name: string]: string }) => `${widths[SO_NAME_COLUMN_HEADER]}px` || '150px'
-}};
+    }
+};
 for (const col in eMetadata) {
     metadataColumns[eMetadata[col]] =  {
         width: (
