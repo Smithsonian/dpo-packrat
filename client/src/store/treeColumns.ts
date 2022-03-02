@@ -8,7 +8,7 @@ type TreeColumns = {
     classes: { [name: string]: string };
     initializeWidth: () => void;
     initializeClasses: (classes: {[name: string]: string}) => void;
-    updateWidth: (colName: eMetadata, width: string) => void;
+    updateWidth: (colName: eMetadata | string, width: string) => void;
 };
 
 export const useTreeColumnsStore = create<TreeColumns>((set: SetState<TreeColumns>, get: GetState<TreeColumns>) => ({
@@ -21,6 +21,7 @@ export const useTreeColumnsStore = create<TreeColumns>((set: SetState<TreeColumn
             for (const col in eMetadata) {
                 defaultWidths[eMetadata[col]] = '50';
             }
+            defaultWidths['object-name'] = '150';
             document.cookie = `${COL_WIDTH_COOKIE}=${JSON.stringify(defaultWidths)};path=/;max-age=630700000`;
         }
 
@@ -34,7 +35,7 @@ export const useTreeColumnsStore = create<TreeColumns>((set: SetState<TreeColumn
     initializeClasses: (classes) => {
         set({ classes });
     },
-    updateWidth: (colName: eMetadata, newWidth: string) => {
+    updateWidth: (colName: eMetadata | string, newWidth: string) => {
         const { widths } = get();
 
         // When unmounting the headers, their observed width is 0 so we want to ignore that
