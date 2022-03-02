@@ -11,7 +11,7 @@ import clsx from 'clsx';
 import lodash from 'lodash';
 import React, { useMemo, useState, useEffect } from 'react';
 import { FaCheckCircle, FaRegCircle } from 'react-icons/fa';
-import { Progress } from '../../../../components';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import { palette } from '../../../../theme';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
 import MetadataView, { TreeViewColumn } from './MetadataView';
@@ -101,17 +101,7 @@ export function TreeLabelLoading(): React.ReactElement {
     const classes = useLabelStyle();
     return (
         <div className={classes.container}>
-            <Progress className={classes.stickyItem} size={15} />
-        </div>
-    );
-}
-
-
-export function TreeLabelEllipsis(): React.ReactElement {
-    const classes = useLabelStyle();
-    return (
-        <div className={classes.container}>
-            <span title='possibly more results'>...</span>
+            <AiOutlineLoading3Quarters className={classes.stickyItem} size={15} style={{ color: '#0079C4' }} />
         </div>
     );
 }
