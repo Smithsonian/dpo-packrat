@@ -44,18 +44,12 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         [breakpoints.down('lg')]: {
             padding: '4px 8px'
         },
-        backgroundColor: 'transparent !important',
-        '&:hover': {
-            backgroundColor: 'transparent'
-        }
+        backgroundColor: 'transparent !important'
     },
     content: {
         backgroundColor: ({ color }: StyledTreeItemProps) => color,
         borderRadius: 5,
-        transition: 'all 200ms ease',
-        '&:hover': {
-            transform: 'scale(1.01)'
-        }
+        transition: 'all 200ms ease'
     },
     selected: {
         backgroundColor: 'transparent'

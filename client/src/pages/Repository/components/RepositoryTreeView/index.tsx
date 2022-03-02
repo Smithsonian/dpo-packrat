@@ -27,6 +27,7 @@ import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
 import InViewTreeItem from './InViewTreeItem';
 import { repositoryRowCount } from '@dpo-packrat/common';
+import clsx from 'clsx';
 
 const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     container: {
@@ -84,7 +85,7 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         [breakpoints.down('lg')]: {
             left: 30
         },
-        flex: 0.9
+        flex: 1
     },
     labelText: {
         color: 'rgb(44,64,90)',
@@ -92,7 +93,7 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        width: '60%',
+        wordBreak: 'break-all',
         zIndex: 10,
         fontSize: '0.9em'
     },
@@ -146,6 +147,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     ]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
     const [initializeWidths] = useTreeColumnsStore((state) => [state.initializeWidth]);
+    const { classes: widthClasses } = useTreeColumnsStore();
     const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
     const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
@@ -224,7 +226,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                     objectType={objectType}
                     color={color}
                     treeColumns={treeColumns}
-                    makeStyles={{ container: classes.treeLabelContainer, label: classes.label, labelText: classes.labelText, column: classes.column, text: classes.text, options: classes.options, option: classes.option, link: classes.link }}
+                    makeStyles={{ container: classes.treeLabelContainer, label: clsx(classes.label, widthClasses['object-name']), labelText: classes.labelText, column: classes.column, text: classes.text, options: classes.options, option: classes.option, link: classes.link }}
                 />
             );
 
