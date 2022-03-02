@@ -424,6 +424,7 @@ describe('DB Creation Test Suite', () => {
         if (assetThumbnail)
             scene = await UTIL.createSceneTest({
                 Name: 'Test Scene',
+                Title: '',
                 idAssetThumbnail: assetThumbnail.idAsset,
                 CountScene: 0,
                 CountNode: 0,
@@ -444,6 +445,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Scene With Nulls', async () => {
         sceneNulls = await UTIL.createSceneTest({
             Name: 'Test Scene',
+            Title: '',
             idAssetThumbnail: null,
             CountScene: 0,
             CountNode: 0,
@@ -922,6 +924,7 @@ describe('DB Creation Test Suite', () => {
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idGeoLocation: geoLocation.idGeoLocation,
                 Name: 'Test Item',
+                Title: '',
                 EntireSubject: true,
                 idItem: 0
             });
@@ -933,6 +936,7 @@ describe('DB Creation Test Suite', () => {
             idAssetThumbnail: null,
             idGeoLocation: null,
             Name: 'Test Item Nulls',
+            Title: '',
             EntireSubject: false,
             idItem: 0
         });
@@ -1079,6 +1083,7 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary && assetThumbnail)
             model = await UTIL.createModelTest({
                 Name: 'Test Model',
+                Title: '',
                 DateCreated: UTIL.nowCleansed(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 idVModality: vocabulary.idVocabulary,
@@ -1096,6 +1101,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Model With Nulls', async () => {
         modelNulls = await UTIL.createModelTest({
             Name: 'Test Model with Nulls',
+            Title: '',
             DateCreated: UTIL.nowCleansed(),
             idVCreationMethod: null,
             idVModality: null,
@@ -5061,6 +5067,7 @@ describe('DB Fetch Special Test Suite', () => {
     test('DB Fetch Special: Model.cloneData', async () => {
         const modelClone: DBAPI.Model = await UTIL.createModelTest({
             Name: 'Test Model with Nulls',
+            Title: '',
             DateCreated: UTIL.nowCleansed(),
             idVCreationMethod: null,
             idVModality: null,

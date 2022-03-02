@@ -84,7 +84,7 @@ class TestSuiteUtils {
 
     createItemInput = (): CreateItemInput => {
         return {
-            Name: 'Test Item',
+            Subtitle: 'Test Item',
             EntireSubject: true
         };
     };
@@ -99,7 +99,7 @@ class TestSuiteUtils {
 
     createSceneInput = (): CreateSceneInput => {
         return {
-            Name: 'Test Scene',
+            Subtitle: 'Test Scene',
             ApprovedForPublication: true,
             PosedAndQCd: true
         };

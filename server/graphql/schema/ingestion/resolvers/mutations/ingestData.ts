@@ -519,8 +519,9 @@ class IngestDataWorker extends ResolverBase {
             itemDB = new DBAPI.Item({
                 idAssetThumbnail: null,
                 idGeoLocation: null,
-                Name: item.name,
+                Name: item.subtitle, // FIXME: compute name here
                 EntireSubject: item.entireSubject,
+                Title: item.subtitle,
                 idItem: 0
             });
 
@@ -760,7 +761,8 @@ class IngestDataWorker extends ResolverBase {
             cloned = true;
         }
 
-        modelDB.Name = model.name;
+        modelDB.Name = model.subtitle; // FIXME: compute name here
+        modelDB.Title = model.subtitle;
         modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCreated) || new Date();
         modelDB.idVCreationMethod = model.creationMethod;
         modelDB.idVModality = model.modality;
@@ -909,7 +911,8 @@ class IngestDataWorker extends ResolverBase {
             sceneDB = sceneConstellation.Scene;
 
 
-        sceneDB.Name = scene.name;
+        sceneDB.Name = scene.subtitle; // FIXME: compute name here
+        sceneDB.Title = scene.subtitle;
         sceneDB.ApprovedForPublication = scene.approvedForPublication;
         sceneDB.PosedAndQCd = scene.posedAndQCd;
         LOG.info(`ingestData createSceneObjects, updateMode=${updateMode}, sceneDB=${JSON.stringify(sceneDB, H.Helpers.saferStringify)}, sceneConstellation=${JSON.stringify(sceneConstellation, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
@@ -1771,6 +1774,7 @@ class IngestDataWorker extends ResolverBase {
         return new DBAPI.Model({
             idModel: 0,
             Name,
+            Title: '', // FIXME: compute name and title here
             DateCreated: new Date(),
             idVCreationMethod: null,
             idVModality: null,

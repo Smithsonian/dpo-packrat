@@ -27,6 +27,7 @@ export class SvxExtraction {
 
         return new DBAPI.Scene({
             Name,
+            Title: '', // FIXME
             idAssetThumbnail: null,
             CountScene: this.sceneCount,
             CountNode: this.nodeCount,

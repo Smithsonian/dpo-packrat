@@ -4,13 +4,14 @@ import * as DBAPI from '../../../../../db';
 
 export default async function createScene(_: Parent, args: MutationCreateSceneArgs): Promise<CreateSceneResult> {
     const { input } = args;
-    const { Name, idAssetThumbnail, CountScene, CountNode, CountCamera,
+    const { Subtitle, idAssetThumbnail, CountScene, CountNode, CountCamera,
         CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID,
         ApprovedForPublication, PosedAndQCd } = input;
 
-    const sceneArgs = {
+    const Scene = new DBAPI.Scene({
         idScene: 0,
-        Name,
+        Name: Subtitle, // FIXME
+        Title: Subtitle,
         idAssetThumbnail: idAssetThumbnail || null,
         CountScene: CountScene || null,
         CountNode: CountNode || null,
@@ -23,9 +24,7 @@ export default async function createScene(_: Parent, args: MutationCreateSceneAr
         EdanUUID: EdanUUID || null,
         ApprovedForPublication,
         PosedAndQCd,
-    };
-
-    const Scene = new DBAPI.Scene(sceneArgs);
+    });
     await Scene.create();
 
     return { Scene };
