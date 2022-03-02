@@ -106,7 +106,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         const item: IngestItemInput = {
                             id: null,
-                            name: 'custom item',
+                            subtitle: 'custom item',
                             entireSubject: true
                         };
 

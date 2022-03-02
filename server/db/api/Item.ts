@@ -10,6 +10,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
     idGeoLocation!: number | null;
     Name!: string;
     EntireSubject!: boolean;
+    Title!: string | null;
 
     constructor(input: ItemBase) {
         super(input);
@@ -25,13 +26,14 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             idGeoLocation: item.idGeoLocation,
             Name: item.Name,
             EntireSubject: (item.EntireSubject ? true : false), // we're expecting Prisma to send values like 0 and 1
+            Title: item.Title,
         });
     }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idAssetThumbnail, idGeoLocation, Name, EntireSubject } = this;
-            ({ idItem: this.idItem, EntireSubject: this.EntireSubject, idAssetThumbnail: this.idAssetThumbnail,
+            const { idAssetThumbnail, idGeoLocation, Name, EntireSubject, Title } = this;
+            ({ idItem: this.idItem, EntireSubject: this.EntireSubject, Title: this.Title, idAssetThumbnail: this.idAssetThumbnail,
                 idGeoLocation: this.idGeoLocation, Name: this.Name } =
                 await DBC.DBConnection.prisma.item.create({
                     data: {
@@ -39,6 +41,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                         GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
                         Name,
                         EntireSubject,
+                        Title,
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
@@ -51,7 +54,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idItem, idAssetThumbnail, idGeoLocation, Name, EntireSubject } = this;
+            const { idItem, idAssetThumbnail, idGeoLocation, Name, EntireSubject, Title } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.item.update({
                 where: { idItem, },
                 data: {
@@ -59,6 +62,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                     GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : { disconnect: true, },
                     Name,
                     EntireSubject,
+                    Title,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

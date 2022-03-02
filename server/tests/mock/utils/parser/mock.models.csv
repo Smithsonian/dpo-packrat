@@ -1,2 +1,2 @@
-subject_guid,subject_name,unit_guid,unit_name,item_guid,item_name,entire_subject,name,date_created,creation_method,modality,units,purpose,directory_path
-edanmdm:nmnheducation_10841877,Atlantic Hawksbill Sea Turtle,ISN:0000000123642127,NMNH,,Top and Bottom,1,test model,4/28/2019,scan_to_mesh,mesh,millimeter,master,model
+subject_guid,subject_name,unit_guid,unit_name,item_guid,item_name,item_subtitle,entire_subject,name,model_subtitle,date_created,creation_method,modality,units,purpose,directory_path
+edanmdm:nmnheducation_10841877,Atlantic Hawksbill Sea Turtle,ISN:0000000123642127,NMNH,,Top and Bottom,,1,test model,,4/28/2019,scan_to_mesh,mesh,millimeter,master,model

@@ -88,6 +88,7 @@ describe('AssetStorageAdapter Init', () => {
             idAssetThumbnail: null,
             idGeoLocation: null,
             Name: 'BagitTestingItem',
+            Title: '',
             EntireSubject: true,
             idItem: 0
         });

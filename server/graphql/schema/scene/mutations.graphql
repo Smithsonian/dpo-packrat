@@ -3,7 +3,7 @@ type Mutation {
 }
 
 input CreateSceneInput {
-    Name: String!
+    Subtitle: String!
     idAssetThumbnail: Int
     CountScene: Int
     CountNode: Int

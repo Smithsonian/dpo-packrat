@@ -4,17 +4,16 @@ import * as DBAPI from '../../../../../db';
 
 export default async function createItem(_: Parent, args: MutationCreateItemArgs): Promise<CreateItemResult> {
     const { input } = args;
-    const { idAssetThumbnail, idGeoLocation, Name, EntireSubject } = input;
+    const { idAssetThumbnail, idGeoLocation, Subtitle, EntireSubject } = input;
 
-    const itemArgs = {
+    const Item = new DBAPI.Item({
         idItem: 0,
         idAssetThumbnail: idAssetThumbnail || null,
         idGeoLocation: idGeoLocation || null,
-        Name,
+        Name: Subtitle, // FIXME
+        Title: Subtitle,
         EntireSubject
-    };
-
-    const Item = new DBAPI.Item(itemArgs);
+    });
     await Item.create();
 
     return { Item };

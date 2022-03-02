@@ -88,8 +88,8 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
         });
 
         test('Cache: SystemObjectCache Cache Misses ' + description, async () => {
-            const item1: DBAPI.Item = await createItemTest({ idItem: 0, idAssetThumbnail: null, idGeoLocation: null, Name: 'SystemObjectCacheTest 1', EntireSubject: true });
-            const item2: DBAPI.Item = await createItemTest({ idItem: 0, idAssetThumbnail: null, idGeoLocation: null, Name: 'SystemObjectCacheTest 2', EntireSubject: true });
+            const item1: DBAPI.Item = await createItemTest({ idItem: 0, idAssetThumbnail: null, idGeoLocation: null, Name: 'SystemObjectCacheTest 1', Title: '', EntireSubject: true });
+            const item2: DBAPI.Item = await createItemTest({ idItem: 0, idAssetThumbnail: null, idGeoLocation: null, Name: 'SystemObjectCacheTest 2', Title: '', EntireSubject: true });
             expect(item1.idItem).toBeGreaterThan(0);
             expect(item2.idItem).toBeGreaterThan(0);
 

@@ -327,6 +327,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         return new DBAPI.Model({
             idModel: 0,
             Name,
+            Title: '', // FIXME
             DateCreated: new Date(),
             idVCreationMethod: modelSource.idVCreationMethod,
             idVModality: modelSource.idVModality,

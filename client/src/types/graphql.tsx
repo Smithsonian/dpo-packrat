@@ -619,6 +619,7 @@ export type IngestModel = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
+  subtitle: Scalars['String'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -658,6 +659,7 @@ export type IngestScene = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
+  subtitle: Scalars['String'];
   approvedForPublication: Scalars['Boolean'];
   posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
@@ -952,7 +954,7 @@ export type IngestProjectInput = {
 
 export type IngestItemInput = {
   id?: Maybe<Scalars['Int']>;
-  name: Scalars['String'];
+  subtitle: Scalars['String'];
   entireSubject: Scalars['Boolean'];
 };
 
@@ -1004,7 +1006,7 @@ export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
-  name: Scalars['String'];
+  subtitle: Scalars['String'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -1022,7 +1024,7 @@ export type IngestSceneInput = {
   idAssetVersion: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
-  name: Scalars['String'];
+  subtitle: Scalars['String'];
   approvedForPublication: Scalars['Boolean'];
   posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
@@ -1412,7 +1414,7 @@ export type GetFilterViewDataResult = {
 };
 
 export type CreateSceneInput = {
-  Name: Scalars['String'];
+  Subtitle: Scalars['String'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   CountScene?: Maybe<Scalars['Int']>;
   CountNode?: Maybe<Scalars['Int']>;
@@ -2149,7 +2151,7 @@ export type CreateSubjectResult = {
 };
 
 export type CreateItemInput = {
-  Name: Scalars['String'];
+  Subtitle: Scalars['String'];
   EntireSubject: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   idGeoLocation?: Maybe<Scalars['Int']>;

@@ -99,7 +99,7 @@ function useIngest(): UseIngest {
 
             const ingestItem: IngestItemInput = {
                 id: ingestItemId,
-                name: item.name,
+                subtitle: item.name, // FIXME -- make sure to pass just the subtitle here!
                 entireSubject: item.entireSubject
             };
 
@@ -206,7 +206,7 @@ function useIngest(): UseIngest {
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const modelData: IngestModelInput = {
-                        name,
+                        subtitle: name, // FIXME -- make sure to pass just the subtitle here!
                         idAssetVersion: parseFileId(file.id),
                         dateCreated,
                         identifiers: ingestIdentifiers,
@@ -240,7 +240,7 @@ function useIngest(): UseIngest {
                         idAssetVersion: parseFileId(file.id),
                         identifiers: ingestIdentifiers,
                         systemCreated,
-                        name,
+                        subtitle: name, // FIXME -- make sure to pass just the subtitle here!
                         approvedForPublication,
                         posedAndQCd,
                         directory,
