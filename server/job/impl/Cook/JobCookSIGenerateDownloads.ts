@@ -69,6 +69,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     private cleanupCalled: boolean = false;
 
     private static vocabDownload: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabModelGeometryFile: DBAPI.Vocabulary | undefined = undefined;
 
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIGenerateDownloadsParameters, dbJobRun: DBAPI.JobRun) {
@@ -135,8 +136,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             return { success: false, error };
         }
 
-        const vModel: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
-        if (!vModel) {
+        const vModelGeometryFile: DBAPI.Vocabulary | undefined = await this.computeVocabModelGeometryFile();
+        if (!vModelGeometryFile) {
             const error: string = 'JobCookSIGenerateDownloads.createSystemObjects unable to calculate vocabulary needed to ingest generated downloads';
             LOG.error(error, LOG.LS.eJOB);
             return { success: false, error };
@@ -220,7 +221,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 FileName: downloadFile,
                 FilePath: '',
                 idAssetGroup: 0,
-                idVAssetType: vModel.idVocabulary,
+                idVAssetType: vModelGeometryFile.idVocabulary,
                 allowZipCracking: false,
                 idUserCreator,
                 SOBased: model,
@@ -345,6 +346,15 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 LOG.error('JobCookSIGenerateDownloads unable to fetch vocabulary for Download Model Purpose', LOG.LS.eGQL);
         }
         return JobCookSIGenerateDownloads.vocabDownload;
+    }
+
+    private async computeVocabModelGeometryFile(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!JobCookSIGenerateDownloads.vocabModelGeometryFile) {
+            JobCookSIGenerateDownloads.vocabModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+            if (!JobCookSIGenerateDownloads.vocabModelGeometryFile)
+                LOG.error('JobCookSIGenerateDownloads unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eGQL);
+        }
+        return JobCookSIGenerateDownloads.vocabModelGeometryFile;
     }
 
     private async findMatchingModel(modelSource: DBAPI.Model, downloadType: string): Promise<DBAPI.Model | null> {

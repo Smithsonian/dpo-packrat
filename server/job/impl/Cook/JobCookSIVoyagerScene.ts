@@ -165,6 +165,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private cleanupCalled: boolean = false;
 
     private static vocabVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabAssetTypeScene: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabAssetTypeModelGeometryFile: DBAPI.Vocabulary | undefined = undefined;
 
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIVoyagerSceneParameters, dbJobRun: DBAPI.JobRun) {
@@ -221,8 +223,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             return this.logError('JobCookSIVoyagerScene.createSystemObjects called without needed parameters');
 
         const svxFile: string = this.parameters.svxFile ?? 'scene.svx.json';
-        const vScene: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
-        const vModel: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+        const vScene: DBAPI.Vocabulary | undefined = await this.computeVocabAssetTypeScene();
+        const vModel: DBAPI.Vocabulary | undefined = await this.computeVocabAssetTypeModelGeometryFile();
         if (!vScene || !vModel)
             return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to calculate vocabulary needed to ingest scene file ${svxFile}`);
 
@@ -484,6 +486,24 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Voyager Scene Model Model Purpose', LOG.LS.eGQL);
         }
         return JobCookSIVoyagerScene.vocabVoyagerSceneModel;
+    }
+
+    private async computeVocabAssetTypeScene(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!JobCookSIVoyagerScene.vocabAssetTypeScene) {
+            JobCookSIVoyagerScene.vocabAssetTypeScene = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
+            if (!JobCookSIVoyagerScene.vocabAssetTypeScene)
+                LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Asset Type Scene', LOG.LS.eGQL);
+        }
+        return JobCookSIVoyagerScene.vocabAssetTypeScene;
+    }
+
+    private async computeVocabAssetTypeModelGeometryFile(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile) {
+            JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+            if (!JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile)
+                LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eGQL);
+        }
+        return JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile;
     }
 
     private async logError(errorBase: string): Promise<H.IOResults> {
