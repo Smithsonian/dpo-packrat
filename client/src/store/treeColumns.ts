@@ -1,6 +1,20 @@
 import create, { GetState, SetState } from 'zustand';
 import { eMetadata } from '@dpo-packrat/common';
 
+/*
+    Tree Column Store
+    This store manages the state and cookies for rendering repository tree view columns
+
+    The workflow of initializing and adjusting width:
+        -RepositoryTreeView initializes default or exisiting width of each column and sets it to state
+        -RepositoryTreeHeader has a metadataColumns object that is responsible for handling
+        each "class" (i.e. column) and gives it a function to dynamically change the width
+        based on the widths state object
+            -Once there's a useColumnStyles object, it's saved to the state store for later references
+            -Creates ResizeObersvers to listen to resizes in each column and handles it using updateWidth
+        -MetadataView and TreeLabel can now reference the classes to access the column style
+*/
+
 const COL_WIDTH_COOKIE = 'colWidths';
 
 type TreeColumns = {
