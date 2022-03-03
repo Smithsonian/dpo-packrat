@@ -6,7 +6,6 @@
 import lodash from 'lodash';
 import React from 'react';
 import { eMetadata } from '@dpo-packrat/common';
-import { trimmedMetadataField } from '../../../../utils/repository';
 import { useTreeColumnsStore } from '../../../../store';
 import clsx from 'clsx';
 
@@ -34,7 +33,7 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
             return (
                 <div key={index} className={clsx(makeStyles?.column, classes?.[metadataColumn])} id={`column-${label}`}>
                     <span className={makeStyles?.text} title={header ? undefined : label} data-tooltip-position='bottom'>
-                        {trimmedMetadataField(label, 14, 7)}
+                        {label}
                     </span>
                 </div>
             );
