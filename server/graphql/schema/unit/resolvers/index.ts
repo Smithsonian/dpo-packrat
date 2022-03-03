@@ -15,6 +15,7 @@ import createSubject from './mutations/createSubject';
 import searchIngestionSubjects from './queries/searchIngestionSubjects';
 import getIngestionProjectsForSubjects from './queries/getIngestionProjectsForSubjects';
 import getIngestionItemsForSubjects from './queries/getIngestionItemsForSubjects';
+import getIngestionItems from './queries/getIngestionItems';
 import getSubjectsForUnit from './queries/getSubjectsForUnit';
 import getItemsForSubject from './queries/getItemsForSubject';
 import getObjectsForItem from './queries/getObjectsForItem';
@@ -33,6 +34,7 @@ const resolvers = {
         searchIngestionSubjects,
         getIngestionProjectsForSubjects,
         getIngestionItemsForSubjects,
+        getIngestionItems,
         getSubjectsForUnit,
         getItemsForSubject,
         getObjectsForItem,

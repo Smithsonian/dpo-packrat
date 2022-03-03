@@ -33,6 +33,7 @@ export type Query = {
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
   getEdanUnitsNamed: GetEdanUnitsNamedResult;
   getFilterViewData: GetFilterViewDataResult;
+  getIngestionItems: GetIngestionItemsResult;
   getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
   getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
   getIntermediaryFile: GetIntermediaryFileResult;
@@ -116,6 +117,11 @@ export type QueryGetContentsForAssetVersionsArgs = {
 
 export type QueryGetDetailsTabDataForObjectArgs = {
   input: GetDetailsTabDataForObjectInput;
+};
+
+
+export type QueryGetIngestionItemsArgs = {
+  input: GetIngestionItemsInput;
 };
 
 
@@ -2207,6 +2213,24 @@ export type GetIngestionProjectsForSubjectsResult = {
   Default: Scalars['Boolean'];
 };
 
+export type IngestionItem = {
+  __typename?: 'IngestionItem';
+  idItem: Scalars['Int'];
+  EntireSubject: Scalars['Boolean'];
+  MediaGroupName: Scalars['String'];
+  idProject: Scalars['Int'];
+  ProjectName: Scalars['String'];
+};
+
+export type GetIngestionItemsInput = {
+  idSubjects: Array<Scalars['Int']>;
+};
+
+export type GetIngestionItemsResult = {
+  __typename?: 'GetIngestionItemsResult';
+  IngestionItem?: Maybe<Array<IngestionItem>>;
+};
+
 export type GetUnitInput = {
   idUnit: Scalars['Int'];
 };
@@ -3726,6 +3750,22 @@ export type GetEdanUnitsNamedQuery = (
     & { UnitEdan?: Maybe<Array<(
       { __typename?: 'UnitEdan' }
       & Pick<UnitEdan, 'idUnitEdan' | 'Name' | 'Abbreviation' | 'idUnit'>
+    )>> }
+  ) }
+);
+
+export type GetIngestionItemsQueryVariables = Exact<{
+  input: GetIngestionItemsInput;
+}>;
+
+
+export type GetIngestionItemsQuery = (
+  { __typename?: 'Query' }
+  & { getIngestionItems: (
+    { __typename?: 'GetIngestionItemsResult' }
+    & { IngestionItem?: Maybe<Array<(
+      { __typename?: 'IngestionItem' }
+      & Pick<IngestionItem, 'idItem' | 'EntireSubject' | 'MediaGroupName' | 'idProject' | 'ProjectName'>
     )>> }
   ) }
 );
@@ -6680,6 +6720,47 @@ export function useGetEdanUnitsNamedLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type GetEdanUnitsNamedQueryHookResult = ReturnType<typeof useGetEdanUnitsNamedQuery>;
 export type GetEdanUnitsNamedLazyQueryHookResult = ReturnType<typeof useGetEdanUnitsNamedLazyQuery>;
 export type GetEdanUnitsNamedQueryResult = Apollo.QueryResult<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>;
+export const GetIngestionItemsDocument = gql`
+    query getIngestionItems($input: GetIngestionItemsInput!) {
+  getIngestionItems(input: $input) {
+    IngestionItem {
+      idItem
+      EntireSubject
+      MediaGroupName
+      idProject
+      ProjectName
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetIngestionItemsQuery__
+ *
+ * To run a query within a React component, call `useGetIngestionItemsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetIngestionItemsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetIngestionItemsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetIngestionItemsQuery(baseOptions: Apollo.QueryHookOptions<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>(GetIngestionItemsDocument, options);
+      }
+export function useGetIngestionItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>(GetIngestionItemsDocument, options);
+        }
+export type GetIngestionItemsQueryHookResult = ReturnType<typeof useGetIngestionItemsQuery>;
+export type GetIngestionItemsLazyQueryHookResult = ReturnType<typeof useGetIngestionItemsLazyQuery>;
+export type GetIngestionItemsQueryResult = Apollo.QueryResult<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>;
 export const GetIngestionItemsForSubjectsDocument = gql`
     query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
   getIngestionItemsForSubjects(input: $input) {

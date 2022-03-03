@@ -4299,6 +4299,18 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(1000)).toEqual(COMMON.ePublishedState.eNotPublished);
     });
 
+    test('DB Fetch SystemObject: LicenseAllowsDownloadGeneration', async () => {
+        expect(DBAPI.LicenseAllowsDownloadGeneration(undefined)).toEqual(false);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(-1)).toEqual(true);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(10)).toEqual(true);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(15)).toEqual(true);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(20)).toEqual(true);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(25)).toEqual(false);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(30)).toEqual(false);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(35)).toEqual(false);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(1000)).toEqual(false);
+    });
+
     test('DB Fetch SystemObject: SystemObjectTypeToName', async () => {
         expect(DBAPI.SystemObjectTypeToName(null)).toEqual('Unknown');
         expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eUnit)).toEqual('Unit');
@@ -4905,6 +4917,19 @@ describe('DB Fetch Special Test Suite', () => {
         expect(itemFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Item.fetchRelatedItemsAndProjects', async () => {
+        let itemAndProjectFetch: DBAPI.ItemAndProject[] | null = null;
+        if (itemNulls) {
+            itemAndProjectFetch = await DBAPI.Item.fetchRelatedItemsAndProjects([itemNulls.idItem]);
+            if (itemAndProjectFetch) {
+                expect(itemAndProjectFetch.length).toEqual(1);
+                if (itemAndProjectFetch.length > 1 && project)
+                    expect(itemAndProjectFetch[0].idProject).toEqual(project.idProject);
+            }
+        }
+        expect(itemAndProjectFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: Item.fetchMasterFromScenes', async () => {
         let itemFetch: DBAPI.Item[] | null = null;
         if (scene && sceneNulls) {
@@ -5334,6 +5359,18 @@ describe('DB Fetch Special Test Suite', () => {
             modelSceneXrefClone = new DBAPI.ModelSceneXref(modelSceneXref);
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeTruthy();
             expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeFalsy();
+
+            modelSceneXrefClone.S2 = (modelSceneXref.S2 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
+            modelSceneXrefClone.S1 = (modelSceneXref.S1 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
+            modelSceneXrefClone.S0 = (modelSceneXref.S0 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
 
             modelSceneXrefClone.R3 = (modelSceneXref.R3 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
@@ -7741,6 +7778,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Item.fetchMasterFromModels([])).toBeNull();
         expect(await DBAPI.Item.fetchMasterFromScenes([])).toBeNull();
         expect(await DBAPI.Item.fetchMasterFromIntermediaryFiles([])).toBeNull();
+        expect(await DBAPI.Item.fetchRelatedItemsAndProjects([])).toBeNull();
         expect(await DBAPI.Job.fetch(0)).toBeNull();
         expect(await DBAPI.Job.fetchByType(0)).toBeNull();
         expect(await DBAPI.JobRun.fetch(0)).toBeNull();
