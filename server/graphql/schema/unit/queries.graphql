@@ -5,6 +5,7 @@ type Query {
     searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
     getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
     getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
+    getIngestionItems(input: GetIngestionItemsInput!): GetIngestionItemsResult!
     getUnit(input: GetUnitInput!): GetUnitResult!
     getProject(input: GetProjectInput!): GetProjectResult!
     getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
@@ -78,6 +79,22 @@ input GetIngestionProjectsForSubjectsInput {
 type GetIngestionProjectsForSubjectsResult {
     Project: [Project!]!
     Default: Boolean!
+}
+
+type IngestionItem {
+    idItem: Int!
+    EntireSubject: Boolean!
+    MediaGroupName: String!
+    idProject: Int!
+    ProjectName: String!
+}
+
+input GetIngestionItemsInput {
+    idSubjects: [Int!]!
+}
+
+type GetIngestionItemsResult {
+    IngestionItem: [IngestionItem!]
 }
 
 input GetUnitInput {

@@ -30,6 +30,7 @@ export type Query = {
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
   getEdanUnitsNamed: GetEdanUnitsNamedResult;
   getFilterViewData: GetFilterViewDataResult;
+  getIngestionItems: GetIngestionItemsResult;
   getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
   getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
   getIntermediaryFile: GetIntermediaryFileResult;
@@ -113,6 +114,11 @@ export type QueryGetContentsForAssetVersionsArgs = {
 
 export type QueryGetDetailsTabDataForObjectArgs = {
   input: GetDetailsTabDataForObjectInput;
+};
+
+
+export type QueryGetIngestionItemsArgs = {
+  input: GetIngestionItemsInput;
 };
 
 
@@ -2202,6 +2208,24 @@ export type GetIngestionProjectsForSubjectsResult = {
   __typename?: 'GetIngestionProjectsForSubjectsResult';
   Project: Array<Project>;
   Default: Scalars['Boolean'];
+};
+
+export type IngestionItem = {
+  __typename?: 'IngestionItem';
+  idItem: Scalars['Int'];
+  EntireSubject: Scalars['Boolean'];
+  MediaGroupName: Scalars['String'];
+  idProject: Scalars['Int'];
+  ProjectName: Scalars['String'];
+};
+
+export type GetIngestionItemsInput = {
+  idSubjects: Array<Scalars['Int']>;
+};
+
+export type GetIngestionItemsResult = {
+  __typename?: 'GetIngestionItemsResult';
+  IngestionItem?: Maybe<Array<IngestionItem>>;
 };
 
 export type GetUnitInput = {

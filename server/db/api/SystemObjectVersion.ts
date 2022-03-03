@@ -201,6 +201,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             // Create new xref records for these asset versions:
             let success: boolean = true;
             for (const idAssetVersion of assetVersionMap.values()) {
+                /* istanbul ignore else */
                 if (idAssetVersion) {
                     const SOVAVX: SystemObjectVersionAssetVersionXref = new SystemObjectVersionAssetVersionXref({
                         idSystemObjectVersionAssetVersionXref: 0,
