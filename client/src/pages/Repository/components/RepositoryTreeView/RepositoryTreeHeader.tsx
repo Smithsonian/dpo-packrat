@@ -29,6 +29,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         position: 'sticky',
         top: 0,
         zIndex: 20,
+        paddingRight: 5,
         [breakpoints.down('lg')]: {
             minHeight: 40
         }
@@ -80,13 +81,13 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 
 const metadataColumns = {
     [SO_NAME_COLUMN_HEADER]: {
-        width:  ( widths: { [name: string]: string }) => `${widths[SO_NAME_COLUMN_HEADER]}px` || '150px'
+        width:  ( widths: { [name: string]: string }) => `${widths[SO_NAME_COLUMN_HEADER]}px` ?? '150px'
     }
 };
 for (const col in eMetadata) {
     metadataColumns[eMetadata[col]] =  {
         width: (
-            widths: { [name: string]: string }) => `${widths[eMetadata[col]]}px` || '50px'
+            widths: { [name: string]: string }) => `${widths[eMetadata[col]]}px` ?? '50px'
     };
 }
 
@@ -122,7 +123,7 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
             const target = document.getElementById(`column-${col.label}`);
             if (target) {
                 const columnObersver = new ResizeObserver((e) => {
-                    updateWidth(col.metadataColumn as number, String(e[0].contentRect.width));
+                    debounceUpdateWidth(col.metadataColumn as number, String(e[0].contentRect.width));
                 });
                 columnObersver.observe(target);
                 columnSet.add(columnObersver);

@@ -49,6 +49,19 @@ const useStyles = makeStyles(({ palette }) => ({
     addButton: {
         ...sharedButtonProps,
         marginTop: 10
+    },
+    nameCell: {
+        padding: '1px 0px 1px 8px'
+    },
+    objectTypeCell: {
+        padding: '1px 4px 1px 8px',
+        textAlign: 'center'
+    },
+    identifierCell: {
+        padding: '1px 0px 1px 4px'
+    },
+    removeBtnCell: {
+        padding: '1px 8px 0px 0px',
     }
 }));
 
@@ -73,7 +86,7 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
 
     return (
         <Box className={classes.container}>
-            <TableContainer style={{ width: 'fit-content' }}>
+            <TableContainer style={{ width: 'fit-content', minWidth: '400px' }}>
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -159,18 +172,18 @@ function Item(props: ItemProps): React.ReactElement {
 
     return (
         <TableRow style={{ backgroundColor: index % 2 !== 0 ? 'white' : '#ffffe0' }}>
-            <TableCell style={{ padding: '1px 0px 1px 8px', borderTopLeftRadius: index === 0 ? '5px' : undefined, borderBottomLeftRadius: finalIndex === index ? '5px' : undefined }}>
+            <TableCell className={classes.nameCell} style={{ borderTopLeftRadius: index === 0 ? '5px' : undefined, borderBottomLeftRadius: finalIndex === index ? '5px' : undefined }}>
                 <NewTabLink to={getDetailsUrlForObject(idSystemObject)} className={clsx(classes.label, classes.labelUnderline)} style={{ fontSize: '0.8rem', verticalAlign: 'middle', wordBreak: 'break-word' }}>
                     {name}
                 </NewTabLink>
             </TableCell>
-            <TableCell style={{ padding: '1px 2px', textAlign: 'center' }}>
+            <TableCell className={classes.objectTypeCell}>
                 <Typography className={classes.label} style={{ fontSize: '0.8rem' }}>{getTermForSystemObjectType(objectType)}</Typography>
             </TableCell>
-            <TableCell style={{ padding: '1px 2px' }}>
+            <TableCell className={classes.identifierCell}>
                 <Typography className={classes.label} style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{identifier}</Typography>
             </TableCell>
-            <TableCell style={{ padding: '1px 8px 0px 0px', borderTopRightRadius: index === 0 ? '5px' : undefined, borderBottomRightRadius: finalIndex === index ? '5px' : undefined }}>
+            <TableCell className={classes.removeBtnCell} style={{ borderTopRightRadius: index === 0 ? '5px' : undefined, borderBottomRightRadius: finalIndex === index ? '5px' : undefined }}>
                 {!viewMode && <MdRemoveCircleOutline className={classes.removeIcon} onClick={remove} size={16} style={{ verticalAlign: 'sub' }} />}
             </TableCell>
         </TableRow>
