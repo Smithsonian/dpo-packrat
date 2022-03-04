@@ -1719,6 +1719,7 @@ export type RollbackSystemObjectVersionResult = {
 export type RollbackSystemObjectVersionInput = {
   idSystemObjectVersion: Scalars['Int'];
   rollbackNotes: Scalars['String'];
+  time: Scalars['String'];
 };
 
 export type CreateSubjectWithIdentifiersResult = {

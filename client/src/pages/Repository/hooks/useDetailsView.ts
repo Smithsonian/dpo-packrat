@@ -171,13 +171,14 @@ export async function deleteIdentifier(idIdentifier: number) {
     });
 }
 
-export async function rollbackSystemObjectVersion(idSystemObjectVersion: number, rollbackNotes: string) {
+export async function rollbackSystemObjectVersion(idSystemObjectVersion: number, rollbackNotes: string, time: string) {
     return await apolloClient.mutate({
         mutation: RollbackSystemObjectVersionDocument,
         variables: {
             input: {
                 idSystemObjectVersion,
-                rollbackNotes
+                rollbackNotes,
+                time
             }
         },
         refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
