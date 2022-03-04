@@ -55,7 +55,6 @@ export const useTreeColumnsStore = create<TreeColumns>((set: SetState<TreeColumn
         // When unmounting the headers, their observed width is 0 so we want to ignore that
         if (newWidth === '0') return;
         if (widths[colName] === newWidth) return;
-
         const newWidths = Object.assign({}, widths);
         newWidths[colName] = newWidth;
         updateCookie(COL_WIDTH_COOKIE, JSON.stringify(newWidths));
