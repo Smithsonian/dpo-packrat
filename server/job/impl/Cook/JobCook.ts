@@ -17,7 +17,7 @@ import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } 
 import * as path from 'path';
 
 const CookWebDAVSimultaneousTransfers: number = 2;
-const CookRequestRetryCount: number = 30;
+const CookRequestRetryCount: number = 5;
 const CookWebDAVTransmitRetryCount: number = 5;
 const CookWebDAVStatRetryCount: number = 100;
 const CookRetryDelay: number = 5000;
@@ -179,21 +179,20 @@ export abstract class JobCook<T> extends JobPackrat {
                     const message: string | null = (err instanceof Error) ? err.message : null;
                     // if we cannot connect to Cook, try again:
                     if (message && message.indexOf('getaddrinfo ENOTFOUND') > -1) {
-                        res= { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(err)}` };
-                        continue;
-                    }
+                        res = { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(err)}` };
+                    } else {
+                        const axiosResponse: AxiosResponse<any> | undefined = (err as AxiosError)?.response;
+                        const status: number | undefined = axiosResponse?.status;
+                        const error: string = `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed with error ${message}: ${JSON.stringify(axiosResponse?.data)}`;
+                        res = { success: false, error };
 
-                    const axiosResponse: AxiosResponse<any> | undefined = (err as AxiosError)?.response;
-                    const status: number | undefined = axiosResponse?.status;
-                    const error: string = `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed with error ${message}: ${JSON.stringify(axiosResponse?.data)}`;
-                    res = { success: false, error };
-
-                    // if we receive a 500 status, log this as an error and avoid retrying
-                    if (status === 500) {
-                        LOG.error(error, LOG.LS.eJOB);
-                        return res;
+                        // if we receive a 500 status, log this as an error and avoid retrying
+                        if (status === 500) {
+                            LOG.error(error, LOG.LS.eJOB);
+                            return res;
+                        }
+                        LOG.info(error, LOG.LS.eJOB);
                     }
-                    LOG.info(error, LOG.LS.eJOB);
                 }
 
                 if (++requestCount >= CookRequestRetryCount) {

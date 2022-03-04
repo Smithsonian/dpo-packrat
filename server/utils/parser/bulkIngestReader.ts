@@ -291,7 +291,8 @@ export class BulkIngestReader {
                 EntireSubject: bagitItem.entire_subject != 0,
                 idAssetThumbnail!: null,
                 idGeoLocation!: null,
-                Name: bagitItem.item_name
+                Name: bagitItem.item_name,
+                Title: bagitItem.item_subtitle,
             });
 
         // try to load from guid as a item identifier
@@ -416,6 +417,7 @@ export class BulkIngestReader {
         return {
             idAssetVersion: 0,
             name: bagitModel.name,
+            subtitle: bagitModel.model_subtitle,
             dateCreated: bagitModel.date_created,
             creationMethod,
             modality,
@@ -435,6 +437,7 @@ export class BulkIngestReader {
             idAssetVersion: 0,
             systemCreated: true,
             name: bagitScene.name,
+            subtitle: bagitScene.scene_subtitle,
             approvedForPublication: bagitScene.approved_for_publication !== 'false' && bagitScene.approved_for_publication !== '0',
             posedAndQCd: bagitScene.posed_and_qcd !== 'false' && bagitScene.posed_and_qcd !== '0',
             directory: bagitScene.directory_path,

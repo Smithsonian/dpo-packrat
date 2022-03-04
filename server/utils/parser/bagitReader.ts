@@ -424,7 +424,7 @@ export class BagitReader implements IZip {
                     return hashResults;
 
                 if (hashResults.hash != hash)
-                    return { success: false, error: `Invalid Bagit: invalid manifest ${algorithm} hash for ${fileName}` };
+                    return { success: false, error: `Invalid Bagit: invalid manifest ${algorithm} hash (${hashResults.hash}) for ${fileName} (expected ${hash})` };
             }
 
             const prefixedFileName: string = this.prefixedFilename(fileName); /* istanbul ignore next */
