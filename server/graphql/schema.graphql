@@ -12,6 +12,7 @@ type Query {
   getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
   getEdanUnitsNamed: GetEdanUnitsNamedResult!
   getFilterViewData: GetFilterViewDataResult!
+  getIngestTitle(input: GetIngestTitleInput!): GetIngestTitleResult!
   getIngestionItems(input: GetIngestionItemsInput!): GetIngestionItemsResult!
   getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
@@ -660,6 +661,21 @@ input AreCameraSettingsUniformInput {
 
 type AreCameraSettingsUniformResult {
   isUniform: Boolean!
+}
+
+type IngestTitle {
+  title: String!
+  forced: Boolean!
+  subtitle: [String]
+}
+
+input GetIngestTitleInput {
+  item: IngestItemInput
+  sourceObjects: [RelatedObjectInput!]
+}
+
+type GetIngestTitleResult {
+  ingestTitle: IngestTitle
 }
 
 input CreateLicenseInput {

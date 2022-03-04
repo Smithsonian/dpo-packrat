@@ -438,7 +438,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         return new DBAPI.Model({
             idModel: 0,
             Name,
-            Title: '',
+            Title: source?.Title ?? '',
             DateCreated: new Date(),
             idVCreationMethod: source?.idVCreationMethod ?? null,
             idVModality: source?.idVModality ?? null,
