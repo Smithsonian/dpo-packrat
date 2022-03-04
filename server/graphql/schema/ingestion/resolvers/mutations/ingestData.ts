@@ -22,6 +22,7 @@ import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
 import { PublishScene } from '../../../../../collections/impl/PublishScene';
+import { NameHelpers, ModelHierarchy } from '../../../../../utils/nameHelpers';
 import * as COMMON from '@dpo-packrat/common';
 
 type AssetPair = {
@@ -106,6 +107,7 @@ class IngestDataWorker extends ResolverBase {
         this.workflowHelper = await this.createWorkflow(); // do this *after* this.validateInput, and *before* returning from validation failure
         if (!results.success) return { success: results.success, message: results.error };
 
+        const subjectsDB: DBAPI.Subject[] = [];
         let itemDB: DBAPI.Item | null = null;
         if (this.ingestNew) {
             await this.appendToWFReport('Ingesting content for new object');
@@ -115,7 +117,6 @@ class IngestDataWorker extends ResolverBase {
             let href: string = '';
 
             // retrieve/create subjects; if creating subjects, create related objects (Identifiers, possibly UnitEdan records, though unlikely)
-            const subjectsDB: DBAPI.Subject[] = [];
             for (const subject of this.input.subjects) {
                 // fetch our understanding of EDAN's unit information:
                 const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(subject.unit);
@@ -137,7 +138,7 @@ class IngestDataWorker extends ResolverBase {
                 subjectsDB.push(subjectDB);
             }
 
-            itemDB = await this.fetchOrCreateItem(this.input.item);
+            itemDB = await this.fetchOrCreateItem(this.input.item, subjectsDB);
             if (!itemDB)
                 return { success: false, message: 'failure to retrieve or create media group' };
 
@@ -175,7 +176,7 @@ class IngestDataWorker extends ResolverBase {
 
         if (this.ingestModel) {
             for (const model of this.input.model) {
-                if (!await this.createModelObjects(model))
+                if (!await this.createModelObjects(model, itemDB, subjectsDB))
                     return { success: false, message: 'failure to create model object' };
             }
         }
@@ -509,7 +510,7 @@ class IngestDataWorker extends ResolverBase {
         return projectDB;
     }
 
-    private async fetchOrCreateItem(item: IngestItemInput): Promise<DBAPI.Item | null> {
+    private async fetchOrCreateItem(item: IngestItemInput, subjectsDB: DBAPI.Subject[]): Promise<DBAPI.Item | null> {
         let itemDB: DBAPI.Item | null;
         if (item.id) {
             itemDB = await DBAPI.Item.fetch(item.id);
@@ -519,7 +520,7 @@ class IngestDataWorker extends ResolverBase {
             itemDB = new DBAPI.Item({
                 idAssetThumbnail: null,
                 idGeoLocation: null,
-                Name: item.subtitle, // FIXME: compute name here
+                Name: NameHelpers.mediaGroupDisplayName(item.subtitle, subjectsDB),
                 EntireSubject: item.entireSubject,
                 Title: item.subtitle,
                 idItem: 0
@@ -716,7 +717,7 @@ class IngestDataWorker extends ResolverBase {
         return res;
     }
 
-    private async createModelObjects(model: IngestModelInput): Promise<boolean> {
+    private async createModelObjects(model: IngestModelInput, itemDB: DBAPI.Item | null, subjectsDB: DBAPI.Subject[]): Promise<boolean> {
         const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(model.idAssetVersion);
         if (!JCOutput || !JCOutput.success || !JCOutput.modelConstellation || !JCOutput.modelConstellation.Model) {
             LOG.error(`ingestData createModelObjects failed to extract JobCookSIPackratInspectOutput from idAssetVersion ${model.idAssetVersion}`, LOG.LS.eGQL);
@@ -761,7 +762,7 @@ class IngestDataWorker extends ResolverBase {
             cloned = true;
         }
 
-        modelDB.Name = model.subtitle; // FIXME: compute name here
+        modelDB.Name = itemDB ? NameHelpers.modelDisplayName(model.subtitle, itemDB, subjectsDB) : model.subtitle;
         modelDB.Title = model.subtitle;
         modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCreated) || new Date();
         modelDB.idVCreationMethod = model.creationMethod;
@@ -910,8 +911,8 @@ class IngestDataWorker extends ResolverBase {
         if (sceneDB === null)
             sceneDB = sceneConstellation.Scene;
 
-
-        sceneDB.Name = scene.subtitle; // FIXME: compute name here
+        const MHs: ModelHierarchy[] | null = await NameHelpers.computeModelHierarchiesFromSourceObjects(scene.sourceObjects);
+        sceneDB.Name = MHs ? NameHelpers.sceneDisplayName(scene.subtitle, MHs) : scene.subtitle;
         sceneDB.Title = scene.subtitle;
         sceneDB.ApprovedForPublication = scene.approvedForPublication;
         sceneDB.PosedAndQCd = scene.posedAndQCd;
@@ -1774,7 +1775,7 @@ class IngestDataWorker extends ResolverBase {
         return new DBAPI.Model({
             idModel: 0,
             Name,
-            Title: '', // FIXME: compute name and title here
+            Title: '',
             DateCreated: new Date(),
             idVCreationMethod: null,
             idVModality: null,
@@ -1788,6 +1789,8 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private extractModelMetrics(model: DBAPI.Model, modelMetrics: DBAPI.Model): void {
+        if (!model.Title)
+            model.Title = modelMetrics.Title;
         model.CountAnimations = modelMetrics.CountAnimations;
         model.CountCameras = modelMetrics.CountCameras;
         model.CountFaces = modelMetrics.CountFaces;

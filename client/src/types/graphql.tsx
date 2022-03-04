@@ -33,6 +33,7 @@ export type Query = {
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
   getEdanUnitsNamed: GetEdanUnitsNamedResult;
   getFilterViewData: GetFilterViewDataResult;
+  getIngestTitle: GetIngestTitleResult;
   getIngestionItems: GetIngestionItemsResult;
   getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
   getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
@@ -117,6 +118,11 @@ export type QueryGetContentsForAssetVersionsArgs = {
 
 export type QueryGetDetailsTabDataForObjectArgs = {
   input: GetDetailsTabDataForObjectInput;
+};
+
+
+export type QueryGetIngestTitleArgs = {
+  input: GetIngestTitleInput;
 };
 
 
@@ -1074,6 +1080,23 @@ export type AreCameraSettingsUniformInput = {
 export type AreCameraSettingsUniformResult = {
   __typename?: 'AreCameraSettingsUniformResult';
   isUniform: Scalars['Boolean'];
+};
+
+export type IngestTitle = {
+  __typename?: 'IngestTitle';
+  title: Scalars['String'];
+  forced: Scalars['Boolean'];
+  subtitle?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+export type GetIngestTitleInput = {
+  item?: Maybe<IngestItemInput>;
+  sourceObjects?: Maybe<Array<RelatedObjectInput>>;
+};
+
+export type GetIngestTitleResult = {
+  __typename?: 'GetIngestTitleResult';
+  ingestTitle?: Maybe<IngestTitle>;
 };
 
 export type CreateLicenseInput = {
@@ -3304,6 +3327,22 @@ export type AreCameraSettingsUniformQuery = (
   & { areCameraSettingsUniform: (
     { __typename?: 'AreCameraSettingsUniformResult' }
     & Pick<AreCameraSettingsUniformResult, 'isUniform'>
+  ) }
+);
+
+export type GetIngestTitleQueryVariables = Exact<{
+  input: GetIngestTitleInput;
+}>;
+
+
+export type GetIngestTitleQuery = (
+  { __typename?: 'Query' }
+  & { getIngestTitle: (
+    { __typename?: 'GetIngestTitleResult' }
+    & { ingestTitle?: Maybe<(
+      { __typename?: 'IngestTitle' }
+      & Pick<IngestTitle, 'title' | 'forced' | 'subtitle'>
+    )> }
   ) }
 );
 
@@ -5624,6 +5663,45 @@ export function useAreCameraSettingsUniformLazyQuery(baseOptions?: Apollo.LazyQu
 export type AreCameraSettingsUniformQueryHookResult = ReturnType<typeof useAreCameraSettingsUniformQuery>;
 export type AreCameraSettingsUniformLazyQueryHookResult = ReturnType<typeof useAreCameraSettingsUniformLazyQuery>;
 export type AreCameraSettingsUniformQueryResult = Apollo.QueryResult<AreCameraSettingsUniformQuery, AreCameraSettingsUniformQueryVariables>;
+export const GetIngestTitleDocument = gql`
+    query getIngestTitle($input: GetIngestTitleInput!) {
+  getIngestTitle(input: $input) {
+    ingestTitle {
+      title
+      forced
+      subtitle
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetIngestTitleQuery__
+ *
+ * To run a query within a React component, call `useGetIngestTitleQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetIngestTitleQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetIngestTitleQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetIngestTitleQuery(baseOptions: Apollo.QueryHookOptions<GetIngestTitleQuery, GetIngestTitleQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetIngestTitleQuery, GetIngestTitleQueryVariables>(GetIngestTitleDocument, options);
+      }
+export function useGetIngestTitleLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIngestTitleQuery, GetIngestTitleQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetIngestTitleQuery, GetIngestTitleQueryVariables>(GetIngestTitleDocument, options);
+        }
+export type GetIngestTitleQueryHookResult = ReturnType<typeof useGetIngestTitleQuery>;
+export type GetIngestTitleLazyQueryHookResult = ReturnType<typeof useGetIngestTitleLazyQuery>;
+export type GetIngestTitleQueryResult = Apollo.QueryResult<GetIngestTitleQuery, GetIngestTitleQueryVariables>;
 export const GetLicenseDocument = gql`
     query getLicense($input: GetLicenseInput!) {
   getLicense(input: $input) {

@@ -1,5 +1,6 @@
 type Query {
     areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
+    getIngestTitle(input: GetIngestTitleInput!): GetIngestTitleResult!
 }
 
 input AreCameraSettingsUniformInput {
@@ -8,4 +9,19 @@ input AreCameraSettingsUniformInput {
 
 type AreCameraSettingsUniformResult {
     isUniform: Boolean!
+}
+
+type IngestTitle {
+    title: String!
+    forced: Boolean!
+    subtitle: [String]
+}
+
+input GetIngestTitleInput {
+    item: IngestItemInput
+    sourceObjects: [RelatedObjectInput!]
+}
+
+type GetIngestTitleResult {
+    ingestTitle: IngestTitle
 }

@@ -30,6 +30,7 @@ export type Query = {
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
   getEdanUnitsNamed: GetEdanUnitsNamedResult;
   getFilterViewData: GetFilterViewDataResult;
+  getIngestTitle: GetIngestTitleResult;
   getIngestionItems: GetIngestionItemsResult;
   getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
   getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
@@ -114,6 +115,11 @@ export type QueryGetContentsForAssetVersionsArgs = {
 
 export type QueryGetDetailsTabDataForObjectArgs = {
   input: GetDetailsTabDataForObjectInput;
+};
+
+
+export type QueryGetIngestTitleArgs = {
+  input: GetIngestTitleInput;
 };
 
 
@@ -1071,6 +1077,23 @@ export type AreCameraSettingsUniformInput = {
 export type AreCameraSettingsUniformResult = {
   __typename?: 'AreCameraSettingsUniformResult';
   isUniform: Scalars['Boolean'];
+};
+
+export type IngestTitle = {
+  __typename?: 'IngestTitle';
+  title: Scalars['String'];
+  forced: Scalars['Boolean'];
+  subtitle?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+export type GetIngestTitleInput = {
+  item?: Maybe<IngestItemInput>;
+  sourceObjects?: Maybe<Array<RelatedObjectInput>>;
+};
+
+export type GetIngestTitleResult = {
+  __typename?: 'GetIngestTitleResult';
+  ingestTitle?: Maybe<IngestTitle>;
 };
 
 export type CreateLicenseInput = {
