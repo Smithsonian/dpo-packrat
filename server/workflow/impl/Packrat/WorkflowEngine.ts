@@ -9,6 +9,7 @@ import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as DBAPI from '../../../db';
+import { NameHelpers, ModelHierarchy, UNKNOWN_NAME } from '../../../utils/nameHelpers';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import * as H from '../../../utils/helpers';
 import path from 'path';
@@ -280,7 +281,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idSystemObject.push(SOMTL.idSystemObject);
 
         const workflows: WF.IWorkflow[] = [];
-        const baseName: string = path.parse(CMIR.assetVersionGeometry.FileName).name;
+        const { sceneBaseName, modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CMIR.idModel, CMIR.assetVersionGeometry.FileName);
 
         // initiate WorkflowJob for cook si-voyager-scene
         if (CMIR.units !== undefined) {
@@ -289,7 +290,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
                     new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
                         new COOK.JobCookSIVoyagerSceneParameters(parameterHelper, CMIR.assetVersionGeometry.FileName, CMIR.units,
-                        CMIR.assetVersionDiffuse?.FileName, baseName + '.svx.json'));
+                        CMIR.assetVersionDiffuse?.FileName, sceneBaseName + '.svx.json', undefined, sceneBaseName));
 
                 const wfParamSIVoyagerScene: WF.WorkflowParameters = {
                     eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
@@ -344,7 +345,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
                     new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
                         new COOK.JobCookSIGenerateDownloadsParameters(SO.idScene, CMIR.idModel, CMIR.assetVersionGeometry.FileName,
-                            sceneAssetVersion.FileName, CMIR.assetVersionDiffuse?.FileName, CMIR.assetVersionMTL?.FileName, baseName));
+                            sceneAssetVersion.FileName, CMIR.assetVersionDiffuse?.FileName, CMIR.assetVersionMTL?.FileName, modelBaseName));
 
                 const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
                     eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
@@ -399,11 +400,11 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idSystemObject.push(SOMTL.idSystemObject);
 
         // initiate WorkflowJob for cook si-generate-download
-        const baseName: string = path.parse(CSIR.assetVersionGeometry.FileName).name;
+        const { modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
         const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
             new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
                 new COOK.JobCookSIGenerateDownloadsParameters(CSIR.idScene, CSIR.idModel, CSIR.assetVersionGeometry.FileName,
-                    CSIR.assetSVX.FileName, CSIR.assetVersionDiffuse?.FileName, CSIR.assetVersionMTL?.FileName, baseName));
+                    CSIR.assetSVX.FileName, CSIR.assetVersionDiffuse?.FileName, CSIR.assetVersionMTL?.FileName, modelBaseName));
 
         const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
@@ -418,6 +419,33 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return [workflow];
         LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to create Cook si-generate-downloads workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
         return null;
+    }
+
+    private static async computeSceneAndModelBaseNames(idModel: number | undefined, defaultFileName: string): Promise<{ sceneBaseName: string, modelBaseName: string}> {
+        let modelSource: DBAPI.Model | null = null;
+        if (idModel) {
+            modelSource = await DBAPI.Model.fetch(idModel);
+            if (!modelSource)
+                LOG.error(`WorkflowEngine.computeSceneAndModelBaseNames unable to compute Model from idModel ${idModel}`, LOG.LS.eWF);
+        }
+
+        let sceneBaseName: string | null = null;
+        if (modelSource) {
+            const MH: ModelHierarchy | null = await NameHelpers.computeModelHierarchy(modelSource);
+            if (MH) {
+                sceneBaseName = NameHelpers.sceneDisplayName('', [MH]); // '' means we don't have a subtitle provided by the user
+                if (sceneBaseName === UNKNOWN_NAME)
+                    sceneBaseName = null;
+            } else
+                LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to load model hierarchy from Model ${H.Helpers.JSONStringify(modelSource)}`, LOG.LS.eWF);
+        }
+
+        if (!sceneBaseName)
+            sceneBaseName = path.parse(defaultFileName).name;
+        sceneBaseName = NameHelpers.sanitizeFileName(sceneBaseName);
+
+        const modelBaseName: string = modelSource ? NameHelpers.sanitizeFileName(modelSource.Name) : sceneBaseName;
+        return { modelBaseName, sceneBaseName };
     }
 
     static async computeWorkflowIDFromEnum(eVocabEnum: COMMON.eVocabularyID, eVocabSetEnum: COMMON.eVocabularySetID): Promise<number | undefined> {
