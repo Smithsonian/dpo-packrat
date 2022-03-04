@@ -211,7 +211,7 @@ export class DownloaderParser {
                 return { success: true, assetVersions }; // await this.emitDownloadZip(assetVersions);
 
             // otherwise, find the specified asset by path
-            const pathToMatch: string = this.systemObjectPath.toLowerCase();
+            const pathToMatch: string = decodeURIComponent(this.systemObjectPath.toLowerCase());
             let assetVersionMatch: DBAPI.AssetVersion | null = null;
             for (const assetVersion of assetVersions) {
                 const pathAssetVersion: string = ((assetVersion.FilePath !== '' && assetVersion.FilePath !== '.') ? `/${assetVersion.FilePath}` : '') + `/${assetVersion.FileName}`;

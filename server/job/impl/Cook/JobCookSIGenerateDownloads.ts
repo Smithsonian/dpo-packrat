@@ -68,6 +68,9 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     private idModel: number | null;
     private cleanupCalled: boolean = false;
 
+    private static vocabDownload: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabModelGeometryFile: DBAPI.Vocabulary | undefined = undefined;
+
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIGenerateDownloadsParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-generate-downloads',
@@ -133,8 +136,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             return { success: false, error };
         }
 
-        const vModel: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
-        if (!vModel) {
+        const vModelGeometryFile: DBAPI.Vocabulary | undefined = await this.computeVocabModelGeometryFile();
+        if (!vModelGeometryFile) {
             const error: string = 'JobCookSIGenerateDownloads.createSystemObjects unable to calculate vocabulary needed to ingest generated downloads';
             LOG.error(error, LOG.LS.eJOB);
             return { success: false, error };
@@ -157,6 +160,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const idUserCreator: number = LS?.idUser ?? 0;
 
         for (const [downloadType, downloadFile] of downloadMap) {
+            LOG.info(`JobCookSIGenerateDownloads processing download ${downloadFile} of type ${downloadType}`, LOG.LS.eJOB);
             const RSR: STORE.ReadStreamResult = await this.fetchFile(downloadFile);
             if (!RSR.success || !RSR.readStream) {
                 LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to fetch stream for generated download ${downloadFile}: ${RSR.error}`, LOG.LS.eJOB);
@@ -217,11 +221,12 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 FileName: downloadFile,
                 FilePath: '',
                 idAssetGroup: 0,
-                idVAssetType: vModel.idVocabulary,
+                idVAssetType: vModelGeometryFile.idVocabulary,
                 allowZipCracking: false,
                 idUserCreator,
                 SOBased: model,
-                Comment: 'Created by Cook si-generate-downloads'
+                Comment: 'Created by Cook si-generate-downloads',
+                doNotUpdateParentVersion: true // we create a new system object version below
             };
             const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
             if (!ISR.success) {
@@ -318,7 +323,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
     private async createModel(Name: string, downloadType: string, modelSource: DBAPI.Model): Promise<DBAPI.Model> {
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
-        const vPurpose: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+        const vPurpose: DBAPI.Vocabulary | undefined = await this.computeVocabDownload();
         return new DBAPI.Model({
             idModel: 0,
             Name,
@@ -332,6 +337,24 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
             AutomationTag: this.computeModelAutomationTag(downloadType), CountTriangles: null
         });
+    }
+
+    private async computeVocabDownload(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!JobCookSIGenerateDownloads.vocabDownload) {
+            JobCookSIGenerateDownloads.vocabDownload = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+            if (!JobCookSIGenerateDownloads.vocabDownload)
+                LOG.error('JobCookSIGenerateDownloads unable to fetch vocabulary for Download Model Purpose', LOG.LS.eGQL);
+        }
+        return JobCookSIGenerateDownloads.vocabDownload;
+    }
+
+    private async computeVocabModelGeometryFile(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!JobCookSIGenerateDownloads.vocabModelGeometryFile) {
+            JobCookSIGenerateDownloads.vocabModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+            if (!JobCookSIGenerateDownloads.vocabModelGeometryFile)
+                LOG.error('JobCookSIGenerateDownloads unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eGQL);
+        }
+        return JobCookSIGenerateDownloads.vocabModelGeometryFile;
     }
 
     private async findMatchingModel(modelSource: DBAPI.Model, downloadType: string): Promise<DBAPI.Model | null> {

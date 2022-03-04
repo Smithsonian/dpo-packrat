@@ -376,12 +376,12 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                             Download All
                         </Button>
                     )}
-                    <Button className={classes.btn} variant='contained' color='primary' style={{ marginLeft: '2px' }} onClick={redirect}>
+                    <Button className={classes.btn} disableElevation variant='contained' color='primary' style={{ marginLeft: '2px' }} onClick={redirect}>
                         Add Version
                     </Button>
                 </Box>
                 <Box display='flex' flexDirection='row' alignItems='center' style={{ alignSelf: 'flex-end' }}>
-                    { systemObjectType === eSystemObjectType.eScene && (<Button className={classes.btn} variant='contained' color='primary' onClick={addAttachment}>Add Attachment</Button>) }
+                    { systemObjectType === eSystemObjectType.eScene && (<Button className={classes.btn} disableElevation variant='contained' color='primary' onClick={addAttachment}>Add Attachment</Button>) }
                 </Box>
             </Box>
         </React.Fragment>

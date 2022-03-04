@@ -454,3 +454,6 @@ UPDATE License SET Name = 'Restricted, Not Publishable', Description = 'Restrict
 ALTER TABLE ModelSceneXref ADD COLUMN S0 double DEFAULT NULL;
 ALTER TABLE ModelSceneXref ADD COLUMN S1 double DEFAULT NULL;
 ALTER TABLE ModelSceneXref ADD COLUMN S2 double DEFAULT NULL;
+
+-- 2022-02-23 Jon
+UPDATE Vocabulary SET Term = 'Voyager Scene Model' WHERE Term = 'Web Delivery';

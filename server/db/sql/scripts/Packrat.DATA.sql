@@ -75,7 +75,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (11, 8, 'Yard')
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (11, 9, 'Mile');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (11, 10, 'Astronomical Unit');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (12, 1, 'Master');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (12, 2, 'Web Delivery');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (12, 2, 'Voyager Scene Model');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (12, 3, 'Download');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (12, 4, 'Intermediate Processing Step');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (13, 1, 'obj - Alias Wavefront Object');

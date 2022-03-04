@@ -78,6 +78,7 @@ class IngestDataWorker extends ResolverBase {
 
     private static vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
     private static vocabularyEdanRecordID: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabularyPurposeVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
 
     constructor(input: IngestDataInput, user: User | undefined) {
         super();
@@ -259,6 +260,17 @@ class IngestDataWorker extends ResolverBase {
             }
         }
         return IngestDataWorker.vocabularyEdanRecordID;
+    }
+
+    private async getVocabularyVoyagerSceneModel(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!IngestDataWorker.vocabularyPurposeVoyagerSceneModel) {
+            IngestDataWorker.vocabularyPurposeVoyagerSceneModel = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel);
+            if (!IngestDataWorker.vocabularyPurposeVoyagerSceneModel) {
+                LOG.error('ingestData unable to fetch vocabulary for Voyager Scene Model Model Purpose', LOG.LS.eGQL);
+                return undefined;
+            }
+        }
+        return IngestDataWorker.vocabularyPurposeVoyagerSceneModel;
     }
 
     private async validateIdentifiers(identifiers: IngestIdentifierInput[] | undefined): Promise<H.IOResults> {
@@ -861,14 +873,10 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async createSceneObjects(scene: IngestSceneInput): Promise<{ success: boolean, transformUpdated?: boolean | undefined }> {
-        const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion, scene.directory);
-        if (!sceneConstellation || !sceneConstellation.Scene)
-            return { success: false };
-
         // Examine scene.idAsset; if Asset.idVAssetType -> scene then
         // Lookup SystemObject from Asset.idSystemObject; if idScene is not null, then use that idScene
         const updateMode: boolean = (scene.idAsset != null && scene.idAsset > 0);
-        let sceneDB: DBAPI.Scene | null = sceneConstellation.Scene;
+        let sceneDB: DBAPI.Scene | null = null;
         if (updateMode) {
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(scene.idAsset!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!asset) {
@@ -892,6 +900,14 @@ class IngestDataWorker extends ResolverBase {
                 }
             }
         }
+
+        const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion, scene.directory, sceneDB ? sceneDB.idScene : undefined);
+        if (!sceneConstellation || !sceneConstellation.Scene)
+            return { success: false };
+
+        if (sceneDB === null)
+            sceneDB = sceneConstellation.Scene;
+
 
         sceneDB.Name = scene.name;
         sceneDB.ApprovedForPublication = scene.approvedForPublication;
@@ -1239,6 +1255,8 @@ class IngestDataWorker extends ResolverBase {
                 ingestResMap.set(idAssetVersion, null);
                 continue;
             }
+
+            await this.appendToWFReport(`Ingesting ${assetVersionDB.FileName}, size ${assetVersionDB.StorageSize}, hash ${assetVersionDB.StorageHash}`);
 
             // LOG.info(`ingestData.promoteAssetsIntoRepository AssetVersion=${JSON.stringify(assetVersionDB, H.Helpers.saferStringify)}; Asset=${JSON.stringify(assetDB, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
             const opInfo: OperationInfo = {
@@ -1749,7 +1767,7 @@ class IngestDataWorker extends ResolverBase {
     private async transformModelSceneXrefIntoModel(MSX: DBAPI.ModelSceneXref): Promise<DBAPI.Model> {
         const Name: string = MSX.Name ?? '';
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
-        const vPurpose: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeWebDelivery);
+        const vPurpose: DBAPI.Vocabulary | undefined = await this.getVocabularyVoyagerSceneModel();
         return new DBAPI.Model({
             idModel: 0,
             Name,

@@ -183,12 +183,12 @@ function AdminProjectsFilter({ queryProjectsByFilter }: { queryProjectsByFilter:
                         ) : null
                     }}
                 />
-                <Button className={classes.styledButton} style={{ right: '25px' }} onClick={searchProjects}>
+                <Button className={classes.styledButton} style={{ right: '25px' }} onClick={searchProjects} variant='contained' disableElevation>
                     Search
                 </Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Button className={classes.styledButton} onClick={() => history.push('/admin/projects/create')}>Create</Button>
+                <Button className={classes.styledButton} onClick={() => history.push('/admin/projects/create')} variant='contained' disableElevation>Create</Button>
             </Box>
         </Box>
     );

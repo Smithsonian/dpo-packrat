@@ -1466,6 +1466,7 @@ export type Scene = {
   EdanUUID?: Maybe<Scalars['String']>;
   ApprovedForPublication: Scalars['Boolean'];
   PosedAndQCd: Scalars['Boolean'];
+  CanBeQCd?: Maybe<Scalars['Boolean']>;
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1843,6 +1844,7 @@ export type SceneDetailFields = {
   ApprovedForPublication?: Maybe<Scalars['Boolean']>;
   PublicationApprover?: Maybe<Scalars['String']>;
   PosedAndQCd?: Maybe<Scalars['Boolean']>;
+  CanBeQCd?: Maybe<Scalars['Boolean']>;
   idScene?: Maybe<Scalars['Int']>;
 };
 
@@ -3539,7 +3541,7 @@ export type GetSceneQuery = (
     { __typename?: 'GetSceneResult' }
     & { Scene?: Maybe<(
       { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'EdanUUID' | 'ApprovedForPublication' | 'PosedAndQCd'>
+      & Pick<Scene, 'idScene' | 'Name' | 'CountCamera' | 'CountScene' | 'CountNode' | 'CountLight' | 'CountModel' | 'CountMeta' | 'CountSetup' | 'CountTour' | 'EdanUUID' | 'ApprovedForPublication' | 'PosedAndQCd' | 'CanBeQCd'>
       & { ModelSceneXref?: Maybe<Array<Maybe<(
         { __typename?: 'ModelSceneXref' }
         & Pick<ModelSceneXref, 'idModelSceneXref' | 'idModel' | 'idScene' | 'Name' | 'Usage' | 'Quality' | 'FileSize' | 'UVResolution' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z'>
@@ -3646,7 +3648,7 @@ export type GetDetailsTabDataForObjectQuery = (
       )>> }
     )>, Scene?: Maybe<(
       { __typename?: 'SceneDetailFields' }
-      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'EdanUUID' | 'ApprovedForPublication' | 'PublicationApprover' | 'PosedAndQCd' | 'idScene'>
+      & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'EdanUUID' | 'ApprovedForPublication' | 'PublicationApprover' | 'PosedAndQCd' | 'CanBeQCd' | 'idScene'>
     )>, IntermediaryFile?: Maybe<(
       { __typename?: 'IntermediaryFileDetailFields' }
       & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>
@@ -6133,6 +6135,7 @@ export const GetSceneDocument = gql`
       EdanUUID
       ApprovedForPublication
       PosedAndQCd
+      CanBeQCd
       ModelSceneXref {
         idModelSceneXref
         idModel
@@ -6433,6 +6436,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       ApprovedForPublication
       PublicationApprover
       PosedAndQCd
+      CanBeQCd
       idScene
     }
     IntermediaryFile {

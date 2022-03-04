@@ -1020,6 +1020,7 @@ type Scene {
   EdanUUID: String
   ApprovedForPublication: Boolean!
   PosedAndQCd: Boolean!
+  CanBeQCd: Boolean
   AssetThumbnail: Asset
   ModelSceneXref: [ModelSceneXref]
   SystemObject: SystemObject
@@ -1380,6 +1381,7 @@ type SceneDetailFields {
   ApprovedForPublication: Boolean
   PublicationApprover: String
   PosedAndQCd: Boolean
+  CanBeQCd: Boolean
   idScene: Int
 }
 

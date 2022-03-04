@@ -97,8 +97,10 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                         className={classes.editButton}
                         variant='contained'
                         color='primary'
+                        disableElevation
                         href={getVoyagerStoryUrl(serverEndpoint, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eEdit)}
-                        target='_blank' rel='noopener noreferrer'
+                        target='_blank'
+                        rel='noopener noreferrer'
                     >
                         Edit
                     </Button>
