@@ -131,7 +131,7 @@ export class NameHelpers {
 
     private static computeModelHierarchyInfo(modelHierarchies: ModelHierarchy[]): { title: string | null, subtitle: (string | null)[] } {
         let subject: DBAPI.Subject | null | undefined = undefined;
-        const subtitle: (string | null)[] = [];
+        const subtitleSet: Set<string> = new Set<string>();
         for (const modelHierarchy of modelHierarchies) {
             if (!modelHierarchy.subjects)
                 subject = null;
@@ -139,12 +139,21 @@ export class NameHelpers {
                 subject = null;
             else if (subject === undefined)
                 subject = modelHierarchy.subjects[0];
-            else if (subject !== modelHierarchy.subjects[0])
+            else if (subject?.idSubject !== modelHierarchy.subjects[0].idSubject)
                 subject = null;
 
             if (modelHierarchy.item && modelHierarchy.item.Title)
-                subtitle.push(modelHierarchy.item.Title);
+                subtitleSet.add(modelHierarchy.item.Title);
+            // LOG.info(`NameHelpers.computeModelHierarchyInfo ${H.Helpers.JSONStringify(modelHierarchies)} -> ${H.Helpers.JSONStringify(subject)}, subtitle=${H.Helpers.JSONStringify(subtitleSet)}`, LOG.LS.eSYS);
         }
+
+        const subtitle: (string | null)[] = [];
+        if (subject !== null) {
+            subtitle.push([...subtitleSet].join(', '));
+            subtitle.push('<None>');
+            subtitle.push(null);
+        } else
+            subtitle.push(null);
         return { title: subject?.Name ?? null, subtitle };
     }
 
