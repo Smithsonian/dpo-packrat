@@ -339,7 +339,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                 <React.Fragment>
                     <TabPanel value={tab} index={0} id='tab-0'>
                         <AssetVersionsTable idSystemObject={idSystemObject} />
-                        <Button className={classes.updateButton} variant='contained' color='primary' style={{ width: 'fit-content' }} onClick={redirect}>
+                        <Button className={classes.updateButton} variant='contained' disableElevation color='primary' style={{ width: 'fit-content' }} onClick={redirect}>
                             Add Version
                         </Button>
                     </TabPanel>

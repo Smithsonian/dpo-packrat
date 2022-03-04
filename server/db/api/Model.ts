@@ -205,24 +205,6 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         }
     }
 
-    static async fetchByFileNameSizeAndAssetType(FileName: string, StorageSize: BigInt, idVAssetTypes: number[]): Promise<Model[] | null> {
-        try {
-            return DBC.CopyArray<ModelBase, Model>(
-                await DBC.DBConnection.prisma.$queryRaw<Model[]>`
-                SELECT DISTINCT M.*
-                FROM Model AS M
-                JOIN SystemObject AS SOM ON (M.idModel = SOM.idModel)
-                JOIN Asset AS ASS ON (SOM.idSystemObject = ASS.idSystemObject)
-                JOIN AssetVersion AS ASV ON (ASS.idAsset = ASV.idAsset)
-                WHERE ASV.FileName = ${FileName}
-                  AND ASV.StorageSize = ${StorageSize}
-                  AND ASS.idVAssetType IN (${Prisma.join(idVAssetTypes)})`, Model);
-        } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.fetchByFileNameSizeAndAssetType', LOG.LS.eDB, error);
-            return null;
-        }
-    }
-
     /** fetches models which are chilren of either the specified idModelParent or idSceneParent, and have matching AutomationTag values */
     static async fetchChildrenModels(idModelParent: number | null, idSceneParent: number | null, AutomationTag: string): Promise<Model[] | null> {
         try {

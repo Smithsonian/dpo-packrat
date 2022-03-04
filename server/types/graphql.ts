@@ -1463,6 +1463,7 @@ export type Scene = {
   EdanUUID?: Maybe<Scalars['String']>;
   ApprovedForPublication: Scalars['Boolean'];
   PosedAndQCd: Scalars['Boolean'];
+  CanBeQCd?: Maybe<Scalars['Boolean']>;
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1840,6 +1841,7 @@ export type SceneDetailFields = {
   ApprovedForPublication?: Maybe<Scalars['Boolean']>;
   PublicationApprover?: Maybe<Scalars['String']>;
   PosedAndQCd?: Maybe<Scalars['Boolean']>;
+  CanBeQCd?: Maybe<Scalars['Boolean']>;
   idScene?: Maybe<Scalars['Int']>;
 };
 

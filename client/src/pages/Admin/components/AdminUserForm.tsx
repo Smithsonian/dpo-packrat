@@ -365,15 +365,15 @@ function AdminUserForm(): React.ReactElement {
             </Box>
             <Box className={classes.AdminUserFormButtonGroup}>
                 {create ? (
-                    <Button variant='contained' className={classes.searchUsersFilterButton} onClick={createNewUser}>
+                    <Button variant='contained' className={classes.searchUsersFilterButton} onClick={createNewUser} disableElevation>
                         Create
                     </Button>
                 ) : (
-                    <Button variant='contained' className={classes.searchUsersFilterButton} onClick={updateExistingUser}>
+                    <Button variant='contained' className={classes.searchUsersFilterButton} onClick={updateExistingUser} disableElevation>
                         Update
                     </Button>
                 )}
-                <Button variant='contained' className={classes.searchUsersFilterButton} onClick={() => history.push('/admin/users')}>
+                <Button variant='contained' className={classes.searchUsersFilterButton} onClick={() => history.push('/admin/users')} disableElevation>
                     Cancel
                 </Button>
             </Box>

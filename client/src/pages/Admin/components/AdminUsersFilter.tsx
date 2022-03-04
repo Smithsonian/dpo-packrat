@@ -125,12 +125,18 @@ function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActi
                         </Select>
                     </FormControl>
                 </Box>
-                <Button className={classes.searchUsersFilterButton} style={{ right: '25px' }} onClick={searchUsers}>
+                <Button
+                    className={classes.searchUsersFilterButton}
+                    style={{ right: '25px' }}
+                    onClick={searchUsers}
+                    variant='contained'
+                    disableElevation
+                >
                     Search
                 </Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Button className={classes.searchUsersFilterButton} onClick={() => history.push('/admin/users/create')}>Create</Button>
+                <Button className={classes.searchUsersFilterButton} onClick={() => history.push('/admin/users/create')} variant='contained' disableElevation>Create</Button>
             </Box>
         </Box>
     );
