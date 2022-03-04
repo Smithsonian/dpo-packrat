@@ -1267,6 +1267,7 @@ type RollbackSystemObjectVersionResult {
 input RollbackSystemObjectVersionInput {
   idSystemObjectVersion: Int!
   rollbackNotes: String!
+  time: String!
 }
 
 type CreateSubjectWithIdentifiersResult {
