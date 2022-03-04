@@ -25,6 +25,12 @@ interface AssetVersionsTableProps {
     idSystemObject: number;
 }
 
+interface headerColumn {
+    name: string;
+    width?: number | string;
+    flex?: string;
+}
+
 const CheckboxNoPadding = withStyles({
     root: {
         border: '0px',
@@ -39,8 +45,37 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
     const { data, loading } = useObjectVersions(idSystemObject);
     const [expanded, setExpanded] = useState<number>(-1);
     const [rollbackNotes, setRollbackNotes] = useState<string>('');
+    const headers: headerColumn[] = [
+        {
+            name: 'Link',
+            width: '30px',
+        }, {
+            name: 'Version',
+            width: '70px',
+        }, {
+            name: 'Name',
+            width: '180px'
+        }, {
+            name: 'Creator',
+            width: '70px',
+        }, {
+            name: 'Date Created',
+            width: '100px'
+        }, {
+            name: 'Size',
+            width: '70px'
+        }, {
+            name: 'Ingested',
+            width: '70px'
+        }, {
+            name: 'Notes',
+            flex: '1'
+        }, {
+            name: 'Action',
+            width: '70px'
+        }
 
-    const headers: string[] = ['Link', 'Version', 'Name', 'Creator', 'Date Created', 'Size', 'Ingested', 'Notes', 'Action'];
+    ];
 
     if (!data || loading)
         return <EmptyTable />;
@@ -69,121 +104,124 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
     const { versions } = data.getVersionsForAsset;
 
     return (
-        <table className={classes.container}>
-            <thead>
-                <tr style={{ borderBottom: '1px solid grey' }} >
-                    {headers.map((header, index: number) => (
-                        <th key={index} className={classes.tableCell} align='center' style={{ padding: '0 5px 0 5px' }}>
-                            <Typography className={classes.header}>{header}</Typography>
-                        </th>
-                    ))}
-                </tr>
-            </thead>
-
-            <tbody>
-                {versions.map((version: StateDetailVersion, index: number) => {
-                    const rollback = () => onRollback(version.idAssetVersion);
-                    const cancel = () => onExpand(index);
-
-                    const comment =
-                        version.Comment ? (
-                            <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(version.Comment, 1000)} /> }>
-                                {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'end', color: 'black' }} target='_blank' rel='noreferrer noopener'>
-                                    <Typography className={clsx(classes.value)}>
-                                        {truncateWithEllipses(version.Comment, 30)}
-                                    </Typography>
-                                </a> : <Typography className={clsx(classes.value)}>
-                                    {truncateWithEllipses(version.Comment, 30)}
-                                </Typography>}
-                            </Tooltip>
-                        ) : null;
-
-                    return (
-                        <React.Fragment key={index}>
-                            <tr key={index}>
-                                <td className={classes.tableCell}>
-                                    <a
-                                        href={getDownloadAssetVersionUrlForObject(serverEndpoint, version.idAssetVersion)}
-                                        style={{ textDecoration: 'none', color: 'black', display: 'flex', alignItems: 'end', justifyContent: 'center' }}
-                                    >
-                                        <GetAppIcon />
-                                    </a>
-                                </td>
-                                <td align='center' className={classes.tableCell}>
-                                    <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
-                                        <Typography className={clsx(classes.value, classes.link)}>{version.version}</Typography>
-                                    </NewTabLink>
-                                </td>
-                                <td align='center' className={classes.tableCell}>
-                                    <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
-                                        <Typography className={clsx(classes.value, classes.link)}>{version.name}</Typography>
-                                    </NewTabLink>
-                                </td>
-                                <td align='center' className={classes.tableCell}>
-                                    <Typography className={classes.value}>{version.creator}</Typography>
-                                </td>
-                                <td align='center' className={classes.tableCell}>
-                                    <Tooltip arrow title={ <ToolTip text={formatDateAndTime(version.dateCreated)} /> }>
-                                        <Typography className={classes.value}>{formatDate(version.dateCreated)}</Typography>
-                                    </Tooltip>
-                                </td>
-                                <td align='center' className={classes.tableCell}>
-                                    <Typography className={classes.value}>{formatBytes(version.size)}</Typography>
-                                </td>
-                                <td align='center' className={classes.tableCell}>
-                                    <CheckboxNoPadding
-                                        disabled
-                                        checked={version.ingested ?? false}
-                                        color='primary'
-                                    />
-                                </td>
-                                <td className={classes.tableCell}>
-                                    {comment}
-                                </td>
-                                <td align='center' className={classes.tableCell}>
-                                    {index >= versions.length - 1 ? null : (
-                                        <Typography
-                                            style={{ width: 'fit-content', whiteSpace: 'nowrap', color: 'rgb(0,121,196)', cursor: 'pointer' }}
-                                            onClick={() => onExpand(index)}
-                                            className={clsx(classes.value)}
-                                        >
-                                            Rollback
-                                            {expanded === index ? <MdExpandLess /> : <MdExpandMore />}
-                                        </Typography>
-                                    )}
-                                </td>
-                            </tr>
-                            {
-                                expanded === index ? (
-                                    <tr>
-                                        <td colSpan={4} align='center'>
-                                            <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} placeholder='Please provide rollback notes...' rows='4' />
-                                        </td>
-                                        <td colSpan={3} align='left'>
-                                            <Box>
-                                                <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5, marginRight: '4px' }} variant='contained' color='primary'>Rollback</Button>
-                                                <Button onClick={cancel} className={classes.btn} style={{ padding: 0 }} variant='contained' color='primary'>Cancel</Button>
-                                            </Box>
-                                        </td>
-                                    </tr>
-                                ) : null
-                            }
-                        </React.Fragment>
-                    );
-                })}
-                {!versions.length && (
-                    <tr>
-                        <td colSpan={headers.length}>
-                            <Box my={2}>
-                                <Typography align='center' className={classes.value}>
-                                    No versions found
-                                </Typography>
-                            </Box>
-                        </td>
+        <Box style={{ minWidth: '850px' }}>
+            <table className={clsx(classes.container, classes.fixedTable)}>
+                <thead>
+                    <tr style={{ borderBottom: '1px solid grey' }} >
+                        {headers.map(({ name, width, flex }, index: number) => (
+                            <th key={index} className={classes.tableCell} align='center' style={{ padding: '0 5px 0 5px', width, flex }}>
+                                <Typography className={classes.header}>{name}</Typography>
+                            </th>
+                        ))}
                     </tr>
-                )}
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                    {versions.map((version: StateDetailVersion, index: number) => {
+                        const rollback = () => onRollback(version.idAssetVersion);
+                        const cancel = () => onExpand(index);
+
+                        const comment =
+                            version.Comment ? (
+                                <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(version.Comment, 1000)} /> } placement='left' >
+                                    {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'end', color: 'black' }} target='_blank' rel='noreferrer noopener'>
+                                        <Typography className={clsx(classes.value)} style={{ display: 'initial' }}>
+                                            {version.Comment}
+                                        </Typography>
+                                    </a> : <Typography className={clsx(classes.value)} style={{ display: 'initial' }}>
+                                        {version.Comment}
+                                    </Typography>}
+                                </Tooltip>
+                            ) : null;
+
+                        return (
+                            <React.Fragment key={index}>
+                                <tr key={index}>
+                                    <td className={classes.tableCell}>
+                                        <a
+                                            href={getDownloadAssetVersionUrlForObject(serverEndpoint, version.idAssetVersion)}
+                                            className={classes.downloadIconLink}
+                                        >
+                                            <GetAppIcon />
+                                        </a>
+                                    </td>
+                                    <td align='center' className={classes.tableCell}>
+                                        <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
+                                            <Typography className={clsx(classes.value, classes.link)}>{version.version}</Typography>
+                                        </NewTabLink>
+                                    </td>
+                                    <td align='center' className={clsx(classes.tableCell, classes.ellipsisCell)}>
+                                        <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
+                                            <Tooltip arrow title={version.name} placement='left'>
+                                                <Typography className={clsx(classes.value, classes.link)} style={{ display: 'initial' }}>{version.name}</Typography>    
+                                            </Tooltip>
+                                        </NewTabLink>
+                                    </td>
+                                    <td align='center' className={classes.tableCell}>
+                                        <Typography className={classes.value}>{version.creator}</Typography>
+                                    </td>
+                                    <td align='center' className={classes.tableCell}>
+                                        <Tooltip arrow title={ <ToolTip text={formatDateAndTime(version.dateCreated)} /> }>
+                                            <Typography className={classes.value}>{formatDate(version.dateCreated)}</Typography>
+                                        </Tooltip>
+                                    </td>
+                                    <td align='center' className={classes.tableCell}>
+                                        <Typography className={classes.value}>{formatBytes(version.size)}</Typography>
+                                    </td>
+                                    <td align='center' className={classes.tableCell}>
+                                        <CheckboxNoPadding
+                                            disabled
+                                            checked={version.ingested ?? false}
+                                            color='primary'
+                                        />
+                                    </td>
+                                    <td className={clsx(classes.tableCell, classes.ellipsisCell)}>
+                                        {comment}
+                                    </td>
+                                    <td align='center' className={classes.tableCell}>
+                                        {index >= versions.length - 1 ? null : (
+                                            <Typography
+                                                onClick={() => onExpand(index)}
+                                                className={clsx(classes.value, classes.rollbackText)}
+                                            >
+                                                Rollback
+                                                {expanded === index ? <MdExpandLess /> : <MdExpandMore />}
+                                            </Typography>
+                                        )}
+                                    </td>
+                                </tr>
+                                {
+                                    expanded === index ? (
+                                        <tr>
+                                            <td colSpan={9} align='center'>
+                                                <Box className={classes.rollbackContainer}>
+                                                    <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} placeholder='Please provide rollback notes...' rows='4' />
+                                                    <Box style={{ columnGap: '3px', display: 'flex' }}>
+                                                        <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5, marginRight: '4px' }} variant='contained' color='primary'>Rollback</Button>
+                                                        <Button onClick={cancel} className={classes.btn} style={{ padding: 0 }} variant='contained' color='primary'>Cancel</Button>
+                                                    </Box>
+                                                </Box>
+                                            </td>
+                                        </tr>
+                                    ) : null
+                                }
+                            </React.Fragment>
+                        );
+                    })}
+                    {!versions.length && (
+                        <tr>
+                            <td colSpan={headers.length}>
+                                <Box my={2}>
+                                    <Typography align='center' className={classes.value}>
+                                        No versions found
+                                    </Typography>
+                                </Box>
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </Box>
     );
 }
 

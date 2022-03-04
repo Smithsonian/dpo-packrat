@@ -90,6 +90,35 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     tableCell: {
         padding: '1px 5px 1px 5px'
+    },
+    rollbackContainer: {
+        display: 'flex',
+        width: '90%',
+        alignItems: 'center',
+        columnGap: '10px'
+    },
+    ellipsisCell: {
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+    },
+    fixedTable: {
+        tableLayout: 'fixed',
+        borderCollapse: 'collapse',
+        width: '100%'
+    },
+    downloadIconLink: {
+        textDecoration: 'none',
+        color: 'black',
+        display: 'flex',
+        alignItems: 'end',
+        justifyContent: 'center'
+    },
+    rollbackText: {
+        width: 'fit-content',
+        whiteSpace: 'nowrap',
+        color: 'rgb(0,121,196)',
+        cursor: 'pointer'
     }
 }));
 
