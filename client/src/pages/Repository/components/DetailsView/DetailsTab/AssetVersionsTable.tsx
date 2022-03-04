@@ -126,10 +126,10 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                                 <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(version.Comment, 1000)} /> } placement='left' >
                                     {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'end', color: 'black' }} target='_blank' rel='noreferrer noopener'>
                                         <Typography className={clsx(classes.value)} style={{ display: 'initial' }}>
-                                            {version.Comment}
+                                            {truncateWithEllipses(version.Comment, 1000)}
                                         </Typography>
                                     </a> : <Typography className={clsx(classes.value)} style={{ display: 'initial' }}>
-                                        {version.Comment}
+                                        {truncateWithEllipses(version.Comment, 1000)}
                                     </Typography>}
                                 </Tooltip>
                             ) : null;
@@ -153,7 +153,7 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                                     <td align='center' className={clsx(classes.tableCell, classes.ellipsisCell)}>
                                         <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
                                             <Tooltip arrow title={version.name} placement='left'>
-                                                <Typography className={clsx(classes.value, classes.link)} style={{ display: 'initial' }}>{version.name}</Typography>    
+                                                <Typography className={clsx(classes.value, classes.link)} style={{ display: 'initial' }}>{version.name}</Typography>
                                             </Tooltip>
                                         </NewTabLink>
                                     </td>
