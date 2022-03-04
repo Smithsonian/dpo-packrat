@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import React, { useState } from 'react';
 import { EmptyTable, TextArea, ToolTip } from '../../../../../components';
 import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repository';
-import { extractISOMonthDateYear, updateSystemObjectUploadRedirect, truncateWithEllipses } from '../../../../../constants/helperfunctions';
+import { updateSystemObjectUploadRedirect, truncateWithEllipses } from '../../../../../constants/helperfunctions';
 import { rollbackSystemObjectVersion, useObjectAssets } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetGrid';
 import { PublishedStateEnumToString, eSystemObjectType } from '@dpo-packrat/common';
@@ -15,6 +15,7 @@ import { toast } from 'react-toastify';
 import { useHistory } from 'react-router-dom';
 import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 import API from '../../../../../api';
+import { formatDateAndTime } from '../../../../../utils/shared';
 
 interface ObjectVersionsTableProps {
     idSystemObject: number;
@@ -35,21 +36,20 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
     const history = useHistory();
     const [expanded, setExpanded] = useState<number>(-1);
     const [rollbackNotes, setRollbackNotes] = useState<string>('');
-
     const headers: headerColumn[] = [
         {
             name: 'Link',
             width: '30px',
         }, {
             name: 'Date',
-            width: '70px',
+            width: '140px',
         }, {
             name: 'Published State',
             width: '110px',
         }, {
             name: 'Action',
             width: '70px',
-        },{
+        }, {
             name: 'Notes',
             flex: '1'
         }
@@ -57,16 +57,15 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
 
 
     const { data } = useObjectAssets(idSystemObject);
-
     if (!objectVersions)
         return <EmptyTable />;
 
-    const onRollback = async (idSystemObjectVersion: number) => {
+    const onRollback = async (idSystemObjectVersion: number, time: string) => {
         if (rollbackNotes.length < 1) {
             toast.error('Please provide rollback notes');
             return;
         }
-        const { data } = await rollbackSystemObjectVersion(idSystemObjectVersion, rollbackNotes);
+        const { data } = await rollbackSystemObjectVersion(idSystemObjectVersion, rollbackNotes, formatDateAndTime(time));
         if (data.rollbackSystemObjectVersion.success) {
             toast.success(`Successfully rolled back to to ${idSystemObjectVersion}!`);
             setRollbackNotes('');
@@ -93,7 +92,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
 
     return (
         <Box style={{ minWidth: '620px' }}>
-            <table className={classes.container} style={{ tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+            <table className={clsx(classes.container, classes.fixedTable)}>
                 <thead>
                     <tr style={{ borderBottom: '1px solid grey' }}>
                         {headers.map(({ name, width, flex }, index: number) => (
@@ -106,17 +105,17 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
 
                 <tbody>
                     {objectVersions.map((version, index) =>  {
-                        const rollback = () => onRollback(version.idSystemObjectVersion);
+                        const rollback = () => onRollback(version.idSystemObjectVersion, version.DateCreated);
                         const cancel = () => onExpand(index);
                         const comment =
                             version.Comment ? (
-                                <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(version.Comment, 1000)} /> }>
-                                    {version.CommentLink ? <a href={version.CommentLink} style={{ display: 'flex', justifyContent: 'center', color: 'black' }} target='_blank' rel='noreferrer noopener'>
-                                        <Typography className={clsx(classes.value)}>
-                                            {truncateWithEllipses(version.Comment, 50)}
+                                <Tooltip arrow title={ <ToolTip text={truncateWithEllipses(version.Comment, 1000)} /> } placement='left'>
+                                    {version.CommentLink ? <a href={version.CommentLink} style={{ color: 'black' }} target='_blank' rel='noreferrer noopener'>
+                                        <Typography className={clsx(classes.value)} style={{ display: 'initial' }}>
+                                            {truncateWithEllipses(version.Comment, 1000)}
                                         </Typography>
-                                    </a> : <Typography className={clsx(classes.value)}>
-                                        {truncateWithEllipses(version.Comment, 50)}
+                                    </a> : <Typography className={clsx(classes.value)} style={{ display: 'initial' }}>
+                                        {truncateWithEllipses(version.Comment, 1000)}
                                     </Typography>}
                                 </Tooltip>
                             ) : null;
@@ -127,13 +126,13 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                     <td align='center' style={{ padding: 0 }}>
                                         <a
                                             href={getDownloadObjectVersionUrlForObject(serverEndpoint, version.idSystemObjectVersion)}
-                                            style={{ textDecoration: 'none', color: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            className={classes.downloadIconLink}
                                         >
                                             <GetAppIcon />
                                         </a>
                                     </td>
                                     <td align='center' style={{ padding: 0 }}>
-                                        <Typography className={clsx(classes.value)}>{extractISOMonthDateYear(version.DateCreated)}</Typography>
+                                        <Typography className={clsx(classes.value)}>{formatDateAndTime(version.DateCreated)}</Typography>
                                     </td>
                                     <td align='center' style={{ padding: 0 }}>
                                         <Typography className={clsx(classes.value)}>{PublishedStateEnumToString(version.PublishedState)}</Typography>
@@ -141,24 +140,23 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                                     <td align='center' style={{ padding: 0 }}>
                                         {index >= objectVersions.length - 1 ? null : (
                                             <Typography
-                                                style={{ width: 'fit-content', whiteSpace: 'nowrap', color: 'rgb(0,121,196)', cursor: 'pointer' }}
                                                 onClick={() => onExpand(index)}
-                                                className={clsx(classes.value)}
+                                                className={clsx(classes.value, classes.rollbackText)}
                                             >
                                                 Rollback
                                                 {expanded === index ? <MdExpandLess /> : <MdExpandMore />}
                                             </Typography>
                                         )}
                                     </td>
-                                    <td style={{ padding: '0px 5px 0px 0px' }}>
+                                    <td className={classes.ellipsisCell} style={{ padding: '0px 5px 0px 0px' }}>
                                         {comment}
                                     </td>
                                 </tr>
                                 {
                                     expanded === index ? (
                                         <tr>
-                                            <td style={{ width: '60%' }} colSpan={5} align='center'>
-                                                <Box display='flex' style={{ width: '90%', alignItems: 'center', columnGap: '10px' }}>
+                                            <td align='center' colSpan={5}>
+                                                <Box className={classes.rollbackContainer}>
                                                     <TextArea value={rollbackNotes} name='rollbackNotes' onChange={(e) => setRollbackNotes(e.target.value)} placeholder='Please provide rollback notes...' rows='4' />
                                                     <Box style={{ columnGap: '3px', display: 'flex' }}>
                                                         <Button onClick={rollback} className={classes.btn} style={{ padding: 2.5 }} variant='contained' disableElevation color='primary'>Rollback</Button>
