@@ -33,6 +33,8 @@ export type Query = {
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
   getEdanUnitsNamed: GetEdanUnitsNamedResult;
   getFilterViewData: GetFilterViewDataResult;
+  getIngestTitle: GetIngestTitleResult;
+  getIngestionItems: GetIngestionItemsResult;
   getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
   getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
   getIntermediaryFile: GetIntermediaryFileResult;
@@ -116,6 +118,16 @@ export type QueryGetContentsForAssetVersionsArgs = {
 
 export type QueryGetDetailsTabDataForObjectArgs = {
   input: GetDetailsTabDataForObjectInput;
+};
+
+
+export type QueryGetIngestTitleArgs = {
+  input: GetIngestTitleInput;
+};
+
+
+export type QueryGetIngestionItemsArgs = {
+  input: GetIngestionItemsInput;
 };
 
 
@@ -344,10 +356,8 @@ export type Mutation = {
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
   createGeoLocation: CreateGeoLocationResult;
-  createItem: CreateItemResult;
   createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
-  createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
   createSubjectWithIdentifiers: CreateSubjectWithIdentifiersResult;
   createUnit: CreateUnitResult;
@@ -396,11 +406,6 @@ export type MutationCreateGeoLocationArgs = {
 };
 
 
-export type MutationCreateItemArgs = {
-  input: CreateItemInput;
-};
-
-
 export type MutationCreateLicenseArgs = {
   input: CreateLicenseInput;
 };
@@ -408,11 +413,6 @@ export type MutationCreateLicenseArgs = {
 
 export type MutationCreateProjectArgs = {
   input: CreateProjectInput;
-};
-
-
-export type MutationCreateSceneArgs = {
-  input: CreateSceneInput;
 };
 
 
@@ -619,6 +619,7 @@ export type IngestModel = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
+  subtitle: Scalars['String'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -658,6 +659,7 @@ export type IngestScene = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
+  subtitle: Scalars['String'];
   approvedForPublication: Scalars['Boolean'];
   posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
@@ -952,7 +954,7 @@ export type IngestProjectInput = {
 
 export type IngestItemInput = {
   id?: Maybe<Scalars['Int']>;
-  name: Scalars['String'];
+  subtitle: Scalars['String'];
   entireSubject: Scalars['Boolean'];
 };
 
@@ -1004,7 +1006,7 @@ export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
-  name: Scalars['String'];
+  subtitle: Scalars['String'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -1022,7 +1024,7 @@ export type IngestSceneInput = {
   idAssetVersion: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
-  name: Scalars['String'];
+  subtitle: Scalars['String'];
   approvedForPublication: Scalars['Boolean'];
   posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
@@ -1078,6 +1080,23 @@ export type AreCameraSettingsUniformInput = {
 export type AreCameraSettingsUniformResult = {
   __typename?: 'AreCameraSettingsUniformResult';
   isUniform: Scalars['Boolean'];
+};
+
+export type IngestTitle = {
+  __typename?: 'IngestTitle';
+  title: Scalars['String'];
+  forced: Scalars['Boolean'];
+  subtitle?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+export type GetIngestTitleInput = {
+  item?: Maybe<IngestItemInput>;
+  sourceObjects?: Maybe<Array<RelatedObjectInput>>;
+};
+
+export type GetIngestTitleResult = {
+  __typename?: 'GetIngestTitleResult';
+  ingestTitle?: Maybe<IngestTitle>;
 };
 
 export type CreateLicenseInput = {
@@ -1409,27 +1428,6 @@ export type GetFilterViewDataResult = {
   __typename?: 'GetFilterViewDataResult';
   units: Array<Unit>;
   projects: Array<Project>;
-};
-
-export type CreateSceneInput = {
-  Name: Scalars['String'];
-  idAssetThumbnail?: Maybe<Scalars['Int']>;
-  CountScene?: Maybe<Scalars['Int']>;
-  CountNode?: Maybe<Scalars['Int']>;
-  CountCamera?: Maybe<Scalars['Int']>;
-  CountLight?: Maybe<Scalars['Int']>;
-  CountModel?: Maybe<Scalars['Int']>;
-  CountMeta?: Maybe<Scalars['Int']>;
-  CountSetup?: Maybe<Scalars['Int']>;
-  CountTour?: Maybe<Scalars['Int']>;
-  EdanUUID?: Maybe<Scalars['String']>;
-  ApprovedForPublication: Scalars['Boolean'];
-  PosedAndQCd: Scalars['Boolean'];
-};
-
-export type CreateSceneResult = {
-  __typename?: 'CreateSceneResult';
-  Scene?: Maybe<Scene>;
 };
 
 export type GetSceneInput = {
@@ -2149,18 +2147,6 @@ export type CreateSubjectResult = {
   Subject?: Maybe<Subject>;
 };
 
-export type CreateItemInput = {
-  Name: Scalars['String'];
-  EntireSubject: Scalars['Boolean'];
-  idAssetThumbnail?: Maybe<Scalars['Int']>;
-  idGeoLocation?: Maybe<Scalars['Int']>;
-};
-
-export type CreateItemResult = {
-  __typename?: 'CreateItemResult';
-  Item?: Maybe<Item>;
-};
-
 export type CreateGeoLocationInput = {
   Latitude?: Maybe<Scalars['Int']>;
   Longitude?: Maybe<Scalars['Int']>;
@@ -2249,6 +2235,24 @@ export type GetIngestionProjectsForSubjectsResult = {
   __typename?: 'GetIngestionProjectsForSubjectsResult';
   Project: Array<Project>;
   Default: Scalars['Boolean'];
+};
+
+export type IngestionItem = {
+  __typename?: 'IngestionItem';
+  idItem: Scalars['Int'];
+  EntireSubject: Scalars['Boolean'];
+  MediaGroupName: Scalars['String'];
+  idProject: Scalars['Int'];
+  ProjectName: Scalars['String'];
+};
+
+export type GetIngestionItemsInput = {
+  idSubjects: Array<Scalars['Int']>;
+};
+
+export type GetIngestionItemsResult = {
+  __typename?: 'GetIngestionItemsResult';
+  IngestionItem?: Maybe<Array<IngestionItem>>;
 };
 
 export type GetUnitInput = {
@@ -2848,22 +2852,6 @@ export type UpdateLicenseMutation = (
   ) }
 );
 
-export type CreateSceneMutationVariables = Exact<{
-  input: CreateSceneInput;
-}>;
-
-
-export type CreateSceneMutation = (
-  { __typename?: 'Mutation' }
-  & { createScene: (
-    { __typename?: 'CreateSceneResult' }
-    & { Scene?: Maybe<(
-      { __typename?: 'Scene' }
-      & Pick<Scene, 'idScene'>
-    )> }
-  ) }
-);
-
 export type CreateSubjectWithIdentifiersMutationVariables = Exact<{
   input: CreateSubjectWithIdentifiersInput;
 }>;
@@ -2993,22 +2981,6 @@ export type CreateGeoLocationMutation = (
     & { GeoLocation?: Maybe<(
       { __typename?: 'GeoLocation' }
       & Pick<GeoLocation, 'idGeoLocation'>
-    )> }
-  ) }
-);
-
-export type CreateItemMutationVariables = Exact<{
-  input: CreateItemInput;
-}>;
-
-
-export type CreateItemMutation = (
-  { __typename?: 'Mutation' }
-  & { createItem: (
-    { __typename?: 'CreateItemResult' }
-    & { Item?: Maybe<(
-      { __typename?: 'Item' }
-      & Pick<Item, 'idItem'>
     )> }
   ) }
 );
@@ -3356,6 +3328,22 @@ export type AreCameraSettingsUniformQuery = (
   & { areCameraSettingsUniform: (
     { __typename?: 'AreCameraSettingsUniformResult' }
     & Pick<AreCameraSettingsUniformResult, 'isUniform'>
+  ) }
+);
+
+export type GetIngestTitleQueryVariables = Exact<{
+  input: GetIngestTitleInput;
+}>;
+
+
+export type GetIngestTitleQuery = (
+  { __typename?: 'Query' }
+  & { getIngestTitle: (
+    { __typename?: 'GetIngestTitleResult' }
+    & { ingestTitle?: Maybe<(
+      { __typename?: 'IngestTitle' }
+      & Pick<IngestTitle, 'title' | 'forced' | 'subtitle'>
+    )> }
   ) }
 );
 
@@ -3802,6 +3790,22 @@ export type GetEdanUnitsNamedQuery = (
     & { UnitEdan?: Maybe<Array<(
       { __typename?: 'UnitEdan' }
       & Pick<UnitEdan, 'idUnitEdan' | 'Name' | 'Abbreviation' | 'idUnit'>
+    )>> }
+  ) }
+);
+
+export type GetIngestionItemsQueryVariables = Exact<{
+  input: GetIngestionItemsInput;
+}>;
+
+
+export type GetIngestionItemsQuery = (
+  { __typename?: 'Query' }
+  & { getIngestionItems: (
+    { __typename?: 'GetIngestionItemsResult' }
+    & { IngestionItem?: Maybe<Array<(
+      { __typename?: 'IngestionItem' }
+      & Pick<IngestionItem, 'idItem' | 'EntireSubject' | 'MediaGroupName' | 'idProject' | 'ProjectName'>
     )>> }
   ) }
 );
@@ -4516,41 +4520,6 @@ export function useUpdateLicenseMutation(baseOptions?: Apollo.MutationHookOption
 export type UpdateLicenseMutationHookResult = ReturnType<typeof useUpdateLicenseMutation>;
 export type UpdateLicenseMutationResult = Apollo.MutationResult<UpdateLicenseMutation>;
 export type UpdateLicenseMutationOptions = Apollo.BaseMutationOptions<UpdateLicenseMutation, UpdateLicenseMutationVariables>;
-export const CreateSceneDocument = gql`
-    mutation createScene($input: CreateSceneInput!) {
-  createScene(input: $input) {
-    Scene {
-      idScene
-    }
-  }
-}
-    `;
-export type CreateSceneMutationFn = Apollo.MutationFunction<CreateSceneMutation, CreateSceneMutationVariables>;
-
-/**
- * __useCreateSceneMutation__
- *
- * To run a mutation, you first call `useCreateSceneMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateSceneMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createSceneMutation, { data, loading, error }] = useCreateSceneMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useCreateSceneMutation(baseOptions?: Apollo.MutationHookOptions<CreateSceneMutation, CreateSceneMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateSceneMutation, CreateSceneMutationVariables>(CreateSceneDocument, options);
-      }
-export type CreateSceneMutationHookResult = ReturnType<typeof useCreateSceneMutation>;
-export type CreateSceneMutationResult = Apollo.MutationResult<CreateSceneMutation>;
-export type CreateSceneMutationOptions = Apollo.BaseMutationOptions<CreateSceneMutation, CreateSceneMutationVariables>;
 export const CreateSubjectWithIdentifiersDocument = gql`
     mutation createSubjectWithIdentifiers($input: CreateSubjectWithIdentifiersInput!) {
   createSubjectWithIdentifiers(input: $input) {
@@ -4893,41 +4862,6 @@ export function useCreateGeoLocationMutation(baseOptions?: Apollo.MutationHookOp
 export type CreateGeoLocationMutationHookResult = ReturnType<typeof useCreateGeoLocationMutation>;
 export type CreateGeoLocationMutationResult = Apollo.MutationResult<CreateGeoLocationMutation>;
 export type CreateGeoLocationMutationOptions = Apollo.BaseMutationOptions<CreateGeoLocationMutation, CreateGeoLocationMutationVariables>;
-export const CreateItemDocument = gql`
-    mutation createItem($input: CreateItemInput!) {
-  createItem(input: $input) {
-    Item {
-      idItem
-    }
-  }
-}
-    `;
-export type CreateItemMutationFn = Apollo.MutationFunction<CreateItemMutation, CreateItemMutationVariables>;
-
-/**
- * __useCreateItemMutation__
- *
- * To run a mutation, you first call `useCreateItemMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateItemMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createItemMutation, { data, loading, error }] = useCreateItemMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useCreateItemMutation(baseOptions?: Apollo.MutationHookOptions<CreateItemMutation, CreateItemMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateItemMutation, CreateItemMutationVariables>(CreateItemDocument, options);
-      }
-export type CreateItemMutationHookResult = ReturnType<typeof useCreateItemMutation>;
-export type CreateItemMutationResult = Apollo.MutationResult<CreateItemMutation>;
-export type CreateItemMutationOptions = Apollo.BaseMutationOptions<CreateItemMutation, CreateItemMutationVariables>;
 export const CreateProjectDocument = gql`
     mutation createProject($input: CreateProjectInput!) {
   createProject(input: $input) {
@@ -5730,6 +5664,45 @@ export function useAreCameraSettingsUniformLazyQuery(baseOptions?: Apollo.LazyQu
 export type AreCameraSettingsUniformQueryHookResult = ReturnType<typeof useAreCameraSettingsUniformQuery>;
 export type AreCameraSettingsUniformLazyQueryHookResult = ReturnType<typeof useAreCameraSettingsUniformLazyQuery>;
 export type AreCameraSettingsUniformQueryResult = Apollo.QueryResult<AreCameraSettingsUniformQuery, AreCameraSettingsUniformQueryVariables>;
+export const GetIngestTitleDocument = gql`
+    query getIngestTitle($input: GetIngestTitleInput!) {
+  getIngestTitle(input: $input) {
+    ingestTitle {
+      title
+      forced
+      subtitle
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetIngestTitleQuery__
+ *
+ * To run a query within a React component, call `useGetIngestTitleQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetIngestTitleQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetIngestTitleQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetIngestTitleQuery(baseOptions: Apollo.QueryHookOptions<GetIngestTitleQuery, GetIngestTitleQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetIngestTitleQuery, GetIngestTitleQueryVariables>(GetIngestTitleDocument, options);
+      }
+export function useGetIngestTitleLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIngestTitleQuery, GetIngestTitleQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetIngestTitleQuery, GetIngestTitleQueryVariables>(GetIngestTitleDocument, options);
+        }
+export type GetIngestTitleQueryHookResult = ReturnType<typeof useGetIngestTitleQuery>;
+export type GetIngestTitleLazyQueryHookResult = ReturnType<typeof useGetIngestTitleLazyQuery>;
+export type GetIngestTitleQueryResult = Apollo.QueryResult<GetIngestTitleQuery, GetIngestTitleQueryVariables>;
 export const GetLicenseDocument = gql`
     query getLicense($input: GetLicenseInput!) {
   getLicense(input: $input) {
@@ -6826,6 +6799,47 @@ export function useGetEdanUnitsNamedLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type GetEdanUnitsNamedQueryHookResult = ReturnType<typeof useGetEdanUnitsNamedQuery>;
 export type GetEdanUnitsNamedLazyQueryHookResult = ReturnType<typeof useGetEdanUnitsNamedLazyQuery>;
 export type GetEdanUnitsNamedQueryResult = Apollo.QueryResult<GetEdanUnitsNamedQuery, GetEdanUnitsNamedQueryVariables>;
+export const GetIngestionItemsDocument = gql`
+    query getIngestionItems($input: GetIngestionItemsInput!) {
+  getIngestionItems(input: $input) {
+    IngestionItem {
+      idItem
+      EntireSubject
+      MediaGroupName
+      idProject
+      ProjectName
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetIngestionItemsQuery__
+ *
+ * To run a query within a React component, call `useGetIngestionItemsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetIngestionItemsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetIngestionItemsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetIngestionItemsQuery(baseOptions: Apollo.QueryHookOptions<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>(GetIngestionItemsDocument, options);
+      }
+export function useGetIngestionItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>(GetIngestionItemsDocument, options);
+        }
+export type GetIngestionItemsQueryHookResult = ReturnType<typeof useGetIngestionItemsQuery>;
+export type GetIngestionItemsLazyQueryHookResult = ReturnType<typeof useGetIngestionItemsLazyQuery>;
+export type GetIngestionItemsQueryResult = Apollo.QueryResult<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>;
 export const GetIngestionItemsForSubjectsDocument = gql`
     query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
   getIngestionItemsForSubjects(input: $input) {

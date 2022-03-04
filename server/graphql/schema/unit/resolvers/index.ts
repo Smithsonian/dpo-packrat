@@ -12,10 +12,10 @@ import getItem from './queries/getItem';
 import createUnit from './mutations/createUnit';
 import createProject from './mutations/createProject';
 import createSubject from './mutations/createSubject';
-import createItem from './mutations/createItem';
 import searchIngestionSubjects from './queries/searchIngestionSubjects';
 import getIngestionProjectsForSubjects from './queries/getIngestionProjectsForSubjects';
 import getIngestionItemsForSubjects from './queries/getIngestionItemsForSubjects';
+import getIngestionItems from './queries/getIngestionItems';
 import getSubjectsForUnit from './queries/getSubjectsForUnit';
 import getItemsForSubject from './queries/getItemsForSubject';
 import getObjectsForItem from './queries/getObjectsForItem';
@@ -34,6 +34,7 @@ const resolvers = {
         searchIngestionSubjects,
         getIngestionProjectsForSubjects,
         getIngestionItemsForSubjects,
+        getIngestionItems,
         getSubjectsForUnit,
         getItemsForSubject,
         getObjectsForItem,
@@ -46,7 +47,6 @@ const resolvers = {
         createUnit,
         createProject,
         createSubject,
-        createItem,
         createGeoLocation
     },
     Unit,

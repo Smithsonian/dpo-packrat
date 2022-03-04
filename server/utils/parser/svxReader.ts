@@ -19,14 +19,33 @@ export class SvxExtraction {
     tourCount: number = 0;
 
     extractScene(): DBAPI.Scene {
+        // first, attempt to extract Name and Title from metas -> collection -> title, sceneTitle
         let Name: string = '';
-        if (this.document.scene !== undefined &&                    // we have a specific scene index
-            this.document.scenes &&                                 // we have a list of scenes
-            (this.document.scenes.length > this.document.scene))    // we have that specific scene
-            Name = this.document.scenes[this.document.scene].name ?? '';
+        let Title: string = '';
+        if (this.document.metas !== undefined) {
+            for (const meta of this.document.metas) {
+                if (meta.collection) {
+                    if (Name === '' && meta.collection['title'])
+                        Name = meta.collection['title'];
+                    if (Title === '' && meta.collection['sceneTitle'])
+                        Title = meta.collection['sceneTitle'];
+                    if (Name && Title)
+                        break;
+                }
+            }
+        }
+
+        // if we didn't get a name, try again from scenes -> name
+        if (Name === '') {
+            if (this.document.scene !== undefined &&                    // we have a specific scene index
+                this.document.scenes &&                                 // we have a list of scenes
+                (this.document.scenes.length > this.document.scene))    // we have that specific scene
+                Name = this.document.scenes[this.document.scene].name ?? '';
+        }
 
         return new DBAPI.Scene({
             Name,
+            Title,
             idAssetThumbnail: null,
             CountScene: this.sceneCount,
             CountNode: this.nodeCount,
