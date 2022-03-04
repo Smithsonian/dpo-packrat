@@ -112,14 +112,16 @@ export class JobCookSIVoyagerSceneParameterHelper {
         if (items.length === 1) {               // Single item
             if (items[0].EntireSubject)         // Comprising whole subject?; use "subject name"
                 sceneTitle = undefined;
-            else                                // Comprising part of subject; use "subject name: item name"
-                sceneTitle = items[0].Name;
+            else                                // Comprising part of subject; use "subject name: item title"
+                sceneTitle = items[0].Title ?? '';
         } else {                                // Multiple items, single subject, use "subject name: item1 name, item2 name, etc."
             sceneTitle = '';
             let first: boolean = true;
             for (const item of items) {
-                sceneTitle += `${first ? '' : ', ' }${item.Name}`;
-                first = false;
+                if (item.Title) {
+                    sceneTitle += `${first ? '' : ', ' }${item.Title}`;
+                    first = false;
+                }
             }
         }
         return { edanRecordId, title, sceneTitle };

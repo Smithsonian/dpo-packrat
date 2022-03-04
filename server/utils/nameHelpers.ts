@@ -4,8 +4,9 @@ import * as CACHE from '../cache';
 import * as H from './helpers';
 import * as LOG from './logger';
 import * as COMMON from '@dpo-packrat/common';
+import sanitize from 'sanitize-filename';
 
-const UNKNOWN_NAME: string = '<UNKNOWN>';
+export const UNKNOWN_NAME: string = '<UNKNOWN>';
 
 /** Encapsulates a model and its parent media group(s) and subject(s) */
 export type ModelHierarchy = {
@@ -40,6 +41,10 @@ export class NameHelpers {
 
     static sceneBaseFileName(scene: DBAPI.Scene): string {
         return scene.Name;
+    }
+
+    static sanitizeFileName(fileName: string): string {
+        return sanitize(fileName.replace(/:/g, '-').replace(/ /g, '_'), { replacement: '_' });
     }
 
     static modelTitleOptions(item: DBAPI.Item): IngestTitle {
