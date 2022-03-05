@@ -17,6 +17,8 @@ import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 
 import * as path from 'path';
 import { Readable } from 'stream';
+import { ModelHierarchy, NameHelpers } from '../../../utils/nameHelpers';
+import { IngestTitle } from '../../../types/graphql';
 
 export type JobCookSIVoyagerSceneMetaDataFile = {
     edanRecordId: string;
@@ -64,7 +66,7 @@ export class JobCookSIVoyagerSceneParameterHelper {
         if (!await OG.fetch())
             return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute object graph from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
 
-        const metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile | null = await JobCookSIVoyagerSceneParameterHelper.computeSceneMetaData(OG);
+        const metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile | null = await JobCookSIVoyagerSceneParameterHelper.computeSceneMetaData(OG, modelSource);
         if (!metaDataFileJSON)
             return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute metadata file JSON from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
 
@@ -72,7 +74,7 @@ export class JobCookSIVoyagerSceneParameterHelper {
         return new JobCookSIVoyagerSceneParameterHelper(idModel ?? 0, modelSource, SOModelSource, OG, metaDataFileJSON, sceneName);
     }
 
-    private static async computeSceneMetaData(OG: DBAPI.ObjectGraph): Promise<JobCookSIVoyagerSceneMetaDataFile | null> {
+    private static async computeSceneMetaData(OG: DBAPI.ObjectGraph, modelSource: DBAPI.Model): Promise<JobCookSIVoyagerSceneMetaDataFile | null> {
         const subjects: DBAPI.Subject[] | null = OG.subject;
         if (subjects === null || subjects.length === 0 || subjects.length > 1) { // if we have no subjects or multiple subjects, return default
             LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute single Subject from OG ${JSON.stringify(OG, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
@@ -102,29 +104,14 @@ export class JobCookSIVoyagerSceneParameterHelper {
             }
         }
 
-        const title: string = subject.Name;
-
-        let sceneTitle: string | undefined = undefined;
-        const items: DBAPI.Item[] | null = OG.item;
-        if (items === null || items.length === 0)
-            return { edanRecordId, title };
-
-        if (items.length === 1) {               // Single item
-            if (items[0].EntireSubject)         // Comprising whole subject?; use "subject name"
-                sceneTitle = undefined;
-            else                                // Comprising part of subject; use "subject name: item title"
-                sceneTitle = items[0].Title ?? '';
-        } else {                                // Multiple items, single subject, use "subject name: item1 name, item2 name, etc."
-            sceneTitle = '';
-            let first: boolean = true;
-            for (const item of items) {
-                if (item.Title) {
-                    sceneTitle += `${first ? '' : ', ' }${item.Title}`;
-                    first = false;
-                }
-            }
+        const MH: ModelHierarchy | null = await NameHelpers.computeModelHierarchy(modelSource);
+        if (!MH) {
+            LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute model hierarchy from model ${H.Helpers.JSONStringify(modelSource)}`, LOG.LS.eJOB);
+            return null;
         }
-        return { edanRecordId, title, sceneTitle };
+        const IngestTitle: IngestTitle = NameHelpers.sceneTitleOptions([MH]);
+        const sceneTitle: string | undefined = IngestTitle.subtitle && IngestTitle.subtitle.length === 1 ? IngestTitle.subtitle[0] ?? undefined : undefined;
+        return { edanRecordId, title: IngestTitle.title, sceneTitle };
     }
 
     private static logError(errorBase: string): null {
