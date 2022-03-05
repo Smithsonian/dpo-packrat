@@ -273,6 +273,7 @@ model Item {
   idGeoLocation    Int?
   Name             String        @mariasql.VarChar(255)
   EntireSubject    Boolean
+  Title            String?       @mariasql.VarChar(255)
   Asset            Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_item_asset1")
   GeoLocation      GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation], onDelete: NoAction, onUpdate: NoAction, map: "fk_item_geolocation1")
   SystemObject     SystemObject?
@@ -384,6 +385,7 @@ model Model {
   IsDracoCompressed                              Boolean?
   AutomationTag                                  String?                 @mariasql.VarChar(256)
   CountTriangles                                 Int?
+  Title                                          String?                 @mariasql.VarChar(255)
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_asset1")
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary?             @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary1")
   Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary?             @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary5")
@@ -537,6 +539,9 @@ model ModelSceneXref {
   R1               Float?
   R2               Float?
   R3               Float?
+  S0               Float?
+  S1               Float?
+  S2               Float?
   Model            Model   @relation(fields: [idModel], references: [idModel], onDelete: NoAction, onUpdate: NoAction, map: "fk_modelscenexref_model1")
   Scene            Scene   @relation(fields: [idScene], references: [idScene], onDelete: NoAction, onUpdate: NoAction, map: "fk_modelscenexref_scene1")
 
@@ -579,6 +584,7 @@ model Scene {
   EdanUUID               String?          @mariasql.VarChar(64)
   PosedAndQCd            Boolean
   ApprovedForPublication Boolean
+  Title                  String?          @mariasql.VarChar(255)
   Asset                  Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_scene_asset1")
   ModelSceneXref         ModelSceneXref[]
   SystemObject           SystemObject?

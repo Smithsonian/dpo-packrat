@@ -166,7 +166,8 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
 
         const { data } = await clearLicenseAssignment(idSystemObject);
         if (data?.clearLicenseAssignment?.success) {
-            toast.success('License assignment successfully cleared');
+            const message: string | null | undefined = data?.clearLicenseAssignment?.message;
+            toast.success(`License assignment successfully cleared${message ? ': ' + message : ''}`);
         } else {
             toast.error(`License assignment failure: ${data?.clearLicenseAssignment?.message}`);
         }
@@ -180,10 +181,10 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         if (license) {
             const { data } = await assignLicense(idSystemObject, license);
             if (data?.assignLicense?.success) {
-                toast.success('License assignment successfully cleared');
-            } else {
+                const message: string | null | undefined = data?.assignLicense?.message;
+                toast.success(`License assignment successfully assigned${message ? ': ' + message : ''}`);
+            } else
                 toast.error(`License assignment failure: ${data?.assignLicense?.message}`);
-            }
         }
 
         setLoading(false);
@@ -220,7 +221,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             {(unit && <Detail idSystemObject={unit?.idSystemObject} label='Unit' value={unit?.name} />)}
             {(project && <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />)}
             {(subject && <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />)}
-            {(item && <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />)}
+            {(item && <Detail idSystemObject={item?.idSystemObject} label='Media Group' value={item?.name} />)}
             {(asset && <Detail idSystemObject={asset?.idSystemObject} label='Asset' value={asset?.name} />)}
             {(objectType === eSystemObjectType.eScene) && (
                 <Detail

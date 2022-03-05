@@ -116,6 +116,7 @@ async function persistExtractions(extractor: META.MetadataExtractor): Promise<bo
         idAssetThumbnail: null,
         idGeoLocation: null,
         Name: `Test Item ${++itemNumber}`,
+        Title: '',
         EntireSubject: true,
         idItem: 0
     });

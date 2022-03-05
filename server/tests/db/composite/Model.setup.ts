@@ -277,6 +277,7 @@ export class ModelTestSetup {
                     CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
                     CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
                     CountTriangles: 0,
+                    Title: '',
                     idModel: 0
                 });
             } else {

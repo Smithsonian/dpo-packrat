@@ -17,6 +17,7 @@ const getScene = gql`
                 EdanUUID
                 ApprovedForPublication
                 PosedAndQCd
+                CanBeQCd
                 ModelSceneXref {
                     idModelSceneXref
                     idModel

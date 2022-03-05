@@ -452,32 +452,60 @@ describe('Utils: Helpers', () => {
         expect(H.Helpers.safeDate(dateVal.toUTCString())).toEqual(dateVal2);
     });
 
+    test('Utils: Helpers.safeRound', async () => {
+        expect(H.Helpers.safeRound(1.0)).toEqual(1.0);
+        expect(H.Helpers.safeRound(0.999999999999)).toEqual(1.0);
+        expect(H.Helpers.safeRound(0.9999, 5)).toEqual(0.9999);
+        expect(H.Helpers.safeRound(0.9999, 4)).toEqual(0.9999);
+        expect(H.Helpers.safeRound(0.9999, 3)).toEqual(1.0);
+        expect(H.Helpers.safeRound(null)).toBeNull();
+    });
+
+    test('Utils: Helpers.validFieldId', async () => {
+        expect(H.Helpers.validFieldId('a')).toBeFalsy();
+        expect(H.Helpers.validFieldId(null)).toBeFalsy();
+        expect(H.Helpers.validFieldId(-1)).toBeFalsy();
+        expect(H.Helpers.validFieldId(0)).toBeFalsy();
+        expect(H.Helpers.validFieldId(2147483648)).toBeFalsy();
+        expect(H.Helpers.validFieldId(2147483649)).toBeFalsy();
+        expect(H.Helpers.validFieldId(1)).toBeTruthy();
+        expect(H.Helpers.validFieldId(2147483647)).toBeTruthy();
+    });
+
     test('Utils: Helpers.stringify*', async () => {
         type testType = {
             map: Map<number, number>,
+            set: Set<number>,
             bigint: BigInt,
             string: string,
             number: number,
             boolean: boolean,
+            null: null,
             valueOrig: number,
         };
 
         const testData: testType = {
             map: new Map<number, number>(),
+            set: new Set<number>(),
             bigint: BigInt(999999999999999),
             string: 'string',
             number: 50,
             boolean: false,
+            null: null,
             valueOrig: 39
         };
 
         const output1: string = JSON.stringify(testData, H.Helpers.saferStringify);
-        LOG.info(`output: ${output1}`, LOG.LS.eTEST);
-        expect(output1).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"valueOrig":39}');
+        // LOG.info(`output: ${output1}`, LOG.LS.eTEST);
+        expect(output1).toEqual('{"map":[],"set":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"null":null,"valueOrig":39}');
 
         const output2: string = JSON.stringify(testData, H.Helpers.stringifyDatabaseRow);
-        LOG.info(`output: ${output2}`, LOG.LS.eTEST);
-        expect(output2).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false}');
+        // LOG.info(`output: ${output2}`, LOG.LS.eTEST);
+        expect(output2).toEqual('{"map":[],"set":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"null":null}');
+
+        const output3: string = H.Helpers.JSONStringify(testData);
+        // LOG.info(`output: ${output3}`, LOG.LS.eTEST);
+        expect(output3).toEqual('{"map":[],"set":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"null":null,"valueOrig":39}');
     });
 
     test('Utils: escapeHTMLEntity', async () => {

@@ -586,6 +586,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         // LOG.info(`JobCookPackratInspect createModel ${fileName} -> ${JSON.stringify(vFileType)}`, LOG.LS.eJOB);
         return new DBAPI.Model({
             Name: fileName || '',
+            Title: '', // FIXME
             DateCreated: dateCreated || new Date(),
             idVCreationMethod: 0,
             idVModality: 0,
@@ -709,9 +710,11 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     private async testForZipOrStream(): Promise<boolean> {
         if (!this._idAssetVersions || this._idAssetVersions.length == 0)
             return false;
+        // LOG.info(`JobCookSIPackratInspect.testForZipOrStream AssetVersion IDs ${H.Helpers.JSONStringify(this._idAssetVersions)}`, LOG.LS.eJOB);
 
         // if we've been handed a stream to act on it ... do so!
         if (this.sourceMeshStream) {
+            // LOG.info('JobCookSIPackratInspect.testForZipOrStream processing stream', LOG.LS.eJOB);
             const RSRs: STORE.ReadStreamResult[] = [{
                 readStream: this.sourceMeshStream,
                 fileName: this.parameters.sourceMeshFile,
@@ -722,19 +725,23 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             return true;
         }
 
-        if (path.extname(this.parameters.sourceMeshFile).toLowerCase() !== '.zip')
+        // LOG.info(`JobCookSIPackratInspect.testForZipOrStream parameters ${H.Helpers.JSONStringify(this.parameters)}`, LOG.LS.eJOB);
+        if (path.extname(this.parameters.sourceMeshFile).toLowerCase() !== '.zip') {
+            // LOG.info('JobCookSIPackratInspect.testForZipOrStream processing non-zip file', LOG.LS.eJOB);
             return false;
+        }
 
+        // LOG.info('JobCookSIPackratInspect.testForZipOrStream processing zip file', LOG.LS.eJOB);
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(this._idAssetVersions[0]);
         if (!RSR.success || !RSR.readStream) {
-            LOG.error(`JobCookSIPackratInspect.testForZip unable to read asset version ${this._idAssetVersions[0]}: ${RSR.error}`, LOG.LS.eJOB);
+            LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to read asset version ${this._idAssetVersions[0]}: ${RSR.error}`, LOG.LS.eJOB);
             return false;
         }
 
         const ZS: ZipStream = new ZipStream(RSR.readStream);
         const zipRes: H.IOResults = await ZS.load();
         if (!zipRes.success) {
-            LOG.error(`JobCookSIPackratInspect.testForZip unable to read asset version ${this._idAssetVersions[0]}: ${zipRes.error}`, LOG.LS.eJOB);
+            LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to read asset version ${this._idAssetVersions[0]}: ${zipRes.error}`, LOG.LS.eJOB);
             return false;
         }
 
@@ -744,6 +751,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         for (const file of files) {
             const eVocabID: COMMON.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
             const extension: string = path.extname(file).toLowerCase() || file.toLowerCase();
+            // LOG.info(`JobCookSIPackratInspect.testForZipOrStream consdiering zip file entry ${file}, extension ${extension}, VocabID ${eVocabID ? COMMON.eVocabularyID[eVocabID] : 'undefined'}`, LOG.LS.eJOB);
 
             // for the time being, only handle model geometry files, OBJ .mtl files, and GLTF .bin files
             if (eVocabID === undefined && extension !== '.mtl' && extension !== '.bin')
@@ -751,10 +759,11 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
             const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(file);
             if (!readStream) {
-                LOG.error(`JobCookSIPackratInspect.testForZip unable to fetch read steram for ${file} in zip of idAssetVersion ${this._idAssetVersions[0]}`, LOG.LS.eJOB);
+                LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to fetch read steram for ${file} in zip of idAssetVersion ${this._idAssetVersions[0]}`, LOG.LS.eJOB);
                 return false;
             }
 
+            LOG.info(`JobCookSIPackratInspect.testForZipOrStream creating stream override for zip file entry ${file}`, LOG.LS.eJOB);
             RSRs.push({
                 readStream,
                 fileName: file,
@@ -771,10 +780,11 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             this.parameters.sourceMeshFile = sourceMeshFile;
             this._dbJobRun.Parameters = JSON.stringify(this.parameters, H.Helpers.saferStringify);
             if (!await this._dbJobRun.update())
-                LOG.error(`JobCookSIPackratInspect.testForZip failed to update JobRun.parameters for ${JSON.stringify(this._dbJobRun, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                LOG.error(`JobCookSIPackratInspect.testForZipOrStream failed to update JobRun.parameters for ${JSON.stringify(this._dbJobRun, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
         }
 
         if (RSRs.length > 0) {
+            // LOG.info(`JobCookSIPackratInspect.testForZipOrStream recording ${RSRs.length} stream overrides for idAssetVersion ${this._idAssetVersions[0]}`, LOG.LS.eJOB);
             this._streamOverrideMap.set(this._idAssetVersions[0], RSRs);
             return true;
         }

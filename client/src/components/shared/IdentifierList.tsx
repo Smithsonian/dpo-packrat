@@ -154,10 +154,10 @@ function Header(): React.ReactElement {
         <Box display='flex' flex={1} mb={1}>
             <Box display='flex' style={{ width: 40 }}></Box>
             <Box display='flex' flex={1}>
-                <Typography className={classes.header}>Identifer</Typography>
+                <Typography className={classes.header}>Identifier</Typography>
             </Box>
             <Box display='flex' style={{ width: 140 }}>
-                <Typography className={classes.header}>Identifer Type</Typography>
+                <Typography className={classes.header}>Identifier Type</Typography>
             </Box>
         </Box>
     );

@@ -12,6 +12,8 @@ type Query {
   getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
   getEdanUnitsNamed: GetEdanUnitsNamedResult!
   getFilterViewData: GetFilterViewDataResult!
+  getIngestTitle(input: GetIngestTitleInput!): GetIngestTitleResult!
+  getIngestionItems(input: GetIngestionItemsInput!): GetIngestionItemsResult!
   getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
@@ -108,10 +110,8 @@ type Mutation {
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
   createGeoLocation(input: CreateGeoLocationInput!): CreateGeoLocationResult!
-  createItem(input: CreateItemInput!): CreateItemResult!
   createLicense(input: CreateLicenseInput!): CreateLicenseResult!
   createProject(input: CreateProjectInput!): CreateProjectResult!
-  createScene(input: CreateSceneInput!): CreateSceneResult!
   createSubject(input: CreateSubjectInput!): CreateSubjectResult!
   createSubjectWithIdentifiers(input: CreateSubjectWithIdentifiersInput!): CreateSubjectWithIdentifiersResult!
   createUnit(input: CreateUnitInput!): CreateUnitResult!
@@ -226,6 +226,7 @@ type IngestModel {
   idAssetVersion: Int!
   systemCreated: Boolean!
   name: String!
+  subtitle: String!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
@@ -263,6 +264,7 @@ type IngestScene {
   idAssetVersion: Int!
   systemCreated: Boolean!
   name: String!
+  subtitle: String!
   approvedForPublication: Boolean!
   posedAndQCd: Boolean!
   directory: String!
@@ -524,6 +526,7 @@ input IngestSubjectInput {
   id: Int
   name: String!
   arkId: String!
+  collectionId: String!
   unit: String!
 }
 
@@ -534,7 +537,7 @@ input IngestProjectInput {
 
 input IngestItemInput {
   id: Int
-  name: String!
+  subtitle: String!
   entireSubject: Boolean!
 }
 
@@ -586,7 +589,7 @@ input IngestModelInput {
   idAssetVersion: Int!
   idAsset: Int
   systemCreated: Boolean!
-  name: String!
+  subtitle: String!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
@@ -604,7 +607,7 @@ input IngestSceneInput {
   idAssetVersion: Int!
   idAsset: Int
   systemCreated: Boolean!
-  name: String!
+  subtitle: String!
   approvedForPublication: Boolean!
   posedAndQCd: Boolean!
   directory: String!
@@ -658,6 +661,21 @@ input AreCameraSettingsUniformInput {
 
 type AreCameraSettingsUniformResult {
   isUniform: Boolean!
+}
+
+type IngestTitle {
+  title: String!
+  forced: Boolean!
+  subtitle: [String]
+}
+
+input GetIngestTitleInput {
+  item: IngestItemInput
+  sourceObjects: [RelatedObjectInput!]
+}
+
+type GetIngestTitleResult {
+  ingestTitle: IngestTitle
 }
 
 input CreateLicenseInput {
@@ -968,26 +986,6 @@ type GetFilterViewDataResult {
   projects: [Project!]!
 }
 
-input CreateSceneInput {
-  Name: String!
-  idAssetThumbnail: Int
-  CountScene: Int
-  CountNode: Int
-  CountCamera: Int
-  CountLight: Int
-  CountModel: Int
-  CountMeta: Int
-  CountSetup: Int
-  CountTour: Int
-  EdanUUID: String
-  ApprovedForPublication: Boolean!
-  PosedAndQCd: Boolean!
-}
-
-type CreateSceneResult {
-  Scene: Scene
-}
-
 input GetSceneInput {
   idScene: Int!
 }
@@ -1019,6 +1017,7 @@ type Scene {
   EdanUUID: String
   ApprovedForPublication: Boolean!
   PosedAndQCd: Boolean!
+  CanBeQCd: Boolean
   AssetThumbnail: Asset
   ModelSceneXref: [ModelSceneXref]
   SystemObject: SystemObject
@@ -1265,6 +1264,7 @@ type RollbackSystemObjectVersionResult {
 input RollbackSystemObjectVersionInput {
   idSystemObjectVersion: Int!
   rollbackNotes: String!
+  time: String!
 }
 
 type CreateSubjectWithIdentifiersResult {
@@ -1378,6 +1378,7 @@ type SceneDetailFields {
   ApprovedForPublication: Boolean
   PublicationApprover: String
   PosedAndQCd: Boolean
+  CanBeQCd: Boolean
   idScene: Int
 }
 
@@ -1658,17 +1659,6 @@ type CreateSubjectResult {
   Subject: Subject
 }
 
-input CreateItemInput {
-  Name: String!
-  EntireSubject: Boolean!
-  idAssetThumbnail: Int
-  idGeoLocation: Int
-}
-
-type CreateItemResult {
-  Item: Item
-}
-
 input CreateGeoLocationInput {
   Latitude: Int
   Longitude: Int
@@ -1749,6 +1739,22 @@ input GetIngestionProjectsForSubjectsInput {
 type GetIngestionProjectsForSubjectsResult {
   Project: [Project!]!
   Default: Boolean!
+}
+
+type IngestionItem {
+  idItem: Int!
+  EntireSubject: Boolean!
+  MediaGroupName: String!
+  idProject: Int!
+  ProjectName: String!
+}
+
+input GetIngestionItemsInput {
+  idSubjects: [Int!]!
+}
+
+type GetIngestionItemsResult {
+  IngestionItem: [IngestionItem!]
 }
 
 input GetUnitInput {

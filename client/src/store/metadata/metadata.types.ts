@@ -120,6 +120,7 @@ export type SceneFields = {
     EdanUUID: string;
     approvedForPublication: boolean;
     posedAndQCd: boolean;
+    canBeQCd: boolean;
     idAsset?: number;
     updateNotes?: string;
 };

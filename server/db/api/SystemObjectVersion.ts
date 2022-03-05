@@ -131,7 +131,8 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
      * otherwise, we clone the latest SystemObjectVersion for idSystemObject.
      * We make a copy of the SystemObjectVersion, and if !assetsUnzipped, its related SystemObjectVersionAssetVersionXref records.
      * The published state of the clone is set to COMMON.ePublishedState.eNotPublished. An optional assetVersionOverrideMap may
-     * be supplied; this mapping from idAsset to idAssetVersion can be used to override the cloned xref records.
+     * be supplied; this mapping from idAsset to idAssetVersion can be used to override the cloned xref records. Pass in a 0
+     * for idAssetVersion to remove the asset from the clone.
      * Returns the newly created SystemObjectVersion or null if failure */
     static async cloneObjectAndXrefs(idSystemObject: number, idSystemObjectVersion: number | null, Comment: string | null,
         assetVersionOverrideMap?: Map<number, number> | undefined, assetsUnzipped?: boolean | undefined): Promise<SystemObjectVersion | null> {
@@ -200,12 +201,15 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             // Create new xref records for these asset versions:
             let success: boolean = true;
             for (const idAssetVersion of assetVersionMap.values()) {
-                const SOVAVX: SystemObjectVersionAssetVersionXref = new SystemObjectVersionAssetVersionXref({
-                    idSystemObjectVersionAssetVersionXref: 0,
-                    idSystemObjectVersion: SOV.idSystemObjectVersion,
-                    idAssetVersion
-                });
-                success = await SOVAVX.create() && success;
+                /* istanbul ignore else */
+                if (idAssetVersion) {
+                    const SOVAVX: SystemObjectVersionAssetVersionXref = new SystemObjectVersionAssetVersionXref({
+                        idSystemObjectVersionAssetVersionXref: 0,
+                        idSystemObjectVersion: SOV.idSystemObjectVersion,
+                        idAssetVersion
+                    });
+                    success = await SOVAVX.create() && success;
+                }
                 // LOG.info(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans(${idSystemObject}, ${idSystemObjectVersion}) created ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)})`, LOG.LS.eDB);
             } /* istanbul ignore next */
 

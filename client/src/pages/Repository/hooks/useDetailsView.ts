@@ -63,7 +63,8 @@ export async function getObjectAssets(idSystemObject: number) {
             input: {
                 idSystemObject
             }
-        }
+        },
+        fetchPolicy: 'no-cache'
     });
 }
 
@@ -106,7 +107,7 @@ export async function updateDetailsTabData(
                 data
             }
         },
-        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject', 'getAssetDetailsForSystemObject']
     });
 }
 
@@ -170,13 +171,14 @@ export async function deleteIdentifier(idIdentifier: number) {
     });
 }
 
-export async function rollbackSystemObjectVersion(idSystemObjectVersion: number, rollbackNotes: string) {
+export async function rollbackSystemObjectVersion(idSystemObjectVersion: number, rollbackNotes: string, time: string) {
     return await apolloClient.mutate({
         mutation: RollbackSystemObjectVersionDocument,
         variables: {
             input: {
                 idSystemObjectVersion,
-                rollbackNotes
+                rollbackNotes,
+                time
             }
         },
         refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
@@ -217,7 +219,7 @@ export async function clearLicenseAssignment(idSystemObject: number, clearAll?: 
                 clearAll
             }
         },
-        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject', 'getAssetDetailsForSystemObject']
     });
 }
 
@@ -230,7 +232,7 @@ export async function assignLicense(idSystemObject: number, idLicense: number): 
                 idSystemObject
             }
         },
-        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject', 'getAssetDetailsForSystemObject']
     });
 }
 

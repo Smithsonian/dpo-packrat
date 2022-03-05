@@ -145,7 +145,7 @@ function SubjectForm(): React.ReactElement {
                 if (arkId) {
                     newIdentifiers.push({
                         id: newIdentifiers.length,
-                        identifier: arkId || '',
+                        identifier: arkId,
                         identifierType: getEntries(eVocabularySetID.eIdentifierIdentifierType)[0].idVocabulary,
                         idIdentifier: 0
                     });
@@ -154,7 +154,7 @@ function SubjectForm(): React.ReactElement {
                 if (collectionId) {
                     newIdentifiers.push({
                         id: newIdentifiers.length,
-                        identifier: collectionId || '',
+                        identifier: collectionId,
                         identifierType: getEntries(eVocabularySetID.eIdentifierIdentifierType)[2].idVocabulary,
                         idIdentifier: 0
                     });
@@ -413,7 +413,7 @@ function SubjectForm(): React.ReactElement {
                 <Box mb={3}>
                     <MetadataControlTable type={eObjectMetadataType.eSubjectCreation} metadataData={[]} />
                 </Box>
-                <Button className={classes.btn} onClick={onCreateSubject}>
+                <Button className={classes.btn} onClick={onCreateSubject} variant='contained' disableElevation>
                     Create
                 </Button>
             </Box>

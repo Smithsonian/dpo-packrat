@@ -11,7 +11,6 @@ import { eMetadata, eSystemObjectType } from '@dpo-packrat/common';
 import { parseRepositoryTreeNodeId, validateArray, getTermForSystemObjectType } from '../utils/repository';
 import { apolloClient } from '../graphql';
 import { GetSystemObjectDetailsDocument } from '../types/graphql';
-import { toast } from 'react-toastify';
 import { eRepositoryChipFilterType } from '../pages/Repository/components/RepositoryFilterView/RepositoryFilterOptions';
 
 type RepositoryStore = {
@@ -21,6 +20,7 @@ type RepositoryStore = {
     tree: Map<string, NavigationResultEntry[]>;
     cursors: Map<string, string>;
     loading: boolean;
+    loadingMore: boolean;
     updateSearch: (value: string) => void;
     toggleFilter: () => void;
     repositoryRootType: eSystemObjectType[];
@@ -66,6 +66,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
     cursors: new Map<string, string>(),
     loading: true,
+    // this state is used to determine whether we render a loading icon at the bottom of the tree view
+    loadingMore: false,
     repositoryRootType: [],
     objectsToDisplay: [],
     metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
@@ -119,6 +121,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     getMoreRoot: async (): Promise<void> => {
         const { tree, cursors, getFilterState } = get();
+        set({ loadingMore: true });
         const filter = getFilterState();
         const rootCursor = cursors.get('root');
         if (rootCursor) {
@@ -142,6 +145,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const updatedTree = new Map([entry]);
             set({ tree: updatedTree, loading: false });
         }
+        set({ loadingMore: false });
     },
     getChildren: async (nodeId: string): Promise<void> => {
         const { tree, getFilterState, cursors } = get();
@@ -164,6 +168,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     getMoreChildren: async (nodeId: string, cursorMark: string): Promise<void> => {
         const { tree, cursors, getFilterState } = get();
+        set({ loadingMore: true });
         const filter = getFilterState();
         const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
         if (cursorMark) filter.cursorMark = cursorMark;
@@ -174,7 +179,6 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
             const previousEntries = updatedTree.get(nodeId) || [];
             updatedTree.set(nodeId, [...previousEntries, ...entries]);
-            console.log(`getMoreChildren: ${updatedTree.size}`);
             set({ tree: updatedTree });
             if (cursorMark) {
                 const newCursors = cursors;
@@ -186,6 +190,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 set({ cursors: newCursors });
             }
         }
+        set({ loadingMore: false });
     },
     removeChipOption: (id: number, type: eRepositoryChipFilterType): void => {
         const { units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType, setCookieToState, initializeTree, keyword } = get();
@@ -430,8 +435,6 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             });
             resetRepositoryFilter(false);
             set({ isExpanded: false, idRoot, repositoryBrowserRootName: name, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
-        } else {
-            toast.warn('Subject was not found in database.');
         }
         resetKeywordSearch();
 

@@ -197,7 +197,7 @@ export class VocabularyCache {
                 case COMMON.eVocabularySetID.eModelPurpose: {
                     switch (vocabulary.Term) {
                         case 'Master':                          eVocabEnum = COMMON.eVocabularyID.eModelPurposeMaster; break;
-                        case 'Web Delivery':                    eVocabEnum = COMMON.eVocabularyID.eModelPurposeWebDelivery; break;
+                        case 'Voyager Scene Model':             eVocabEnum = COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel; break;
                         case 'Download':                        eVocabEnum = COMMON.eVocabularyID.eModelPurposeDownload; break;
                         case 'Intermediate Processing Step':    eVocabEnum = COMMON.eVocabularyID.eModelPurposeIntermediateProcessingStep; break;
                     }

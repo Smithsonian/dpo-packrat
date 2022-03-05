@@ -45,7 +45,7 @@ function SearchList(props: SearchListProps): React.ReactElement {
     const { EdanOnly } = props;
     const classes = useStyles();
     const [query, setQuery] = useState('');
-    const [searchSubject, { data, called, loading, error }] = useLazyQuery(SearchIngestionSubjectsDocument);
+    const [searchSubject, { data, called, loading, error }] = useLazyQuery(SearchIngestionSubjectsDocument, { fetchPolicy: 'no-cache' });
 
     const [subjects, setSubjects] = useState<StateSubject[]>([]);
 
@@ -60,10 +60,10 @@ function SearchList(props: SearchListProps): React.ReactElement {
     }, [called, data, loading, error]);
 
     const onSearch = (): void => {
-        if (loading) return;
+        if (loading)
+            return;
 
         const trimmedQuery = query.trim();
-
         if (trimmedQuery === '') {
             toast.warn('Search query should not be empty');
             return;
@@ -71,14 +71,13 @@ function SearchList(props: SearchListProps): React.ReactElement {
 
         const variables: any = { input: { query: trimmedQuery } }; // eslint-disable-line @typescript-eslint/no-explicit-any
         variables.input.EdanOnly = EdanOnly;
+
         searchSubject({ variables });
     };
 
     let content: React.ReactNode = null;
-
-    if (subjects.length) {
+    if (subjects.length)
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
-    }
 
     return (
         <FieldType required={false} label='Search for Subject' marginTop={2} padding='10px'>

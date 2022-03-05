@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+
 /**
  * RepositoryTreeHeader
  *
@@ -5,16 +7,21 @@
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { eMetadata } from '@dpo-packrat/common';
 import { getTreeViewColumns } from '../../../../utils/repository';
 import MetadataView from './MetadataView';
+import ResizeObserver from 'resize-observer-polyfill';
+import { useTreeColumnsStore } from '../../../../store';
+import { debounce } from 'lodash';
+import clsx from 'clsx';
+
+const SO_NAME_COLUMN_HEADER = 'object-name';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
         display: 'flex',
         alignItems: 'center',
-        minHeight: 50,
         height: 'fit-content',
         backgroundColor: palette.primary.light,
         borderRadius: 5,
@@ -22,6 +29,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         position: 'sticky',
         top: 0,
         zIndex: 20,
+        paddingRight: 5,
         [breakpoints.down('lg')]: {
             minHeight: 40
         }
@@ -34,19 +42,20 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         color: palette.primary.dark,
         fontSize: typography.pxToRem(15),
         fontWeight: typography.fontWeightRegular,
-        width: 'calc(30vw + 25px)',
-        flex: 0.9
+        flex: 1,
     },
     treeViewText: {
         left: 20,
-        height: 20,
+        height: '0.9rem',
         paddingLeft: 20,
-        width: '60%',
         backgroundColor: palette.primary.light,
         [breakpoints.down('lg')]: {
             paddingLeft: 10,
             left: 10,
-        }
+        },
+        resize: 'horizontal',
+        overflow: 'hidden',
+        minWidth: '150px'
     },
     metadata: {
         display: 'flex'
@@ -59,12 +68,31 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         color: palette.primary.dark,
         fontWeight: typography.fontWeightRegular,
         overflow: 'hidden',
-        textOverflow: 'ellipsis'
-
+        resize: 'horizontal',
+        minWidth: 50
     },
     text: {
         fontSize: '0.9em',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
     }
+}));
+
+const metadataColumns = {
+    [SO_NAME_COLUMN_HEADER]: {
+        width:  ( widths: { [name: string]: string }) => `${widths[SO_NAME_COLUMN_HEADER]}px` ?? '150px'
+    }
+};
+for (const col in eMetadata) {
+    metadataColumns[eMetadata[col]] =  {
+        width: (
+            widths: { [name: string]: string }) => `${widths[eMetadata[col]]}px` ?? '50px'
+    };
+}
+
+const useColumnStyles = makeStyles(() => ({
+    ...metadataColumns
 }));
 
 interface RepositoryTreeHeaderProps {
@@ -74,14 +102,43 @@ interface RepositoryTreeHeaderProps {
 
 function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElement {
     const { metadataColumns } = props;
+    const [updateWidth, widths, initializeClasses] = useTreeColumnsStore(state => [state.updateWidth, state.widths, state.initializeClasses]);
     const classes = useStyles();
-
+    const columnClasses = useColumnStyles(widths);
     const treeColumns = getTreeViewColumns(metadataColumns, true);
+
+    useEffect(() => {
+        initializeClasses(columnClasses);
+        const columnSet = new Set<ResizeObserver>();
+
+        // Debouncing the width update makes the transition smoother
+        const debounceUpdateWidth = debounce(updateWidth, 5);
+        const nameHeader = document.getElementById(SO_NAME_COLUMN_HEADER);
+        const columnObersver = new ResizeObserver((e) => {
+            debounceUpdateWidth(SO_NAME_COLUMN_HEADER, String(e[0].contentRect.width));
+        });
+        if (nameHeader)
+            columnObersver.observe(nameHeader);
+        treeColumns.forEach((col) => {
+            const target = document.getElementById(`column-${col.label}`);
+            if (target) {
+                const columnObersver = new ResizeObserver((e) => {
+                    debounceUpdateWidth(col.metadataColumn as number, String(e[0].contentRect.width));
+                });
+                columnObersver.observe(target);
+                columnSet.add(columnObersver);
+            }
+        });
+
+        return () => {
+            columnSet.forEach((col) => col.unobserve);
+        };
+    }, []);
 
     return (
         <Box className={classes.container}>
             <Box className={classes.treeView}>
-                <Box className={classes.treeViewText} />
+                <Box className={clsx(classes.treeViewText, columnClasses[SO_NAME_COLUMN_HEADER])} id={SO_NAME_COLUMN_HEADER} />
             </Box>
             <MetadataView header treeColumns={treeColumns} makeStyles={{ text: classes.text, column: classes.column }} />
         </Box>

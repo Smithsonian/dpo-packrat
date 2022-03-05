@@ -206,6 +206,7 @@ CREATE TABLE IF NOT EXISTS `Item` (
   `idGeoLocation` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
   `EntireSubject` boolean NOT NULL,
+  `Title` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`idItem`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -293,6 +294,7 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `IsDracoCompressed` boolean NULL,
   `AutomationTag` varchar(256) NULL,
   `CountTriangles` int(11) DEFAULT NULL,
+  `Title` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -409,6 +411,9 @@ CREATE TABLE IF NOT EXISTS `ModelSceneXref` (
   `R1` double DEFAULT NULL,
   `R2` double DEFAULT NULL,
   `R3` double DEFAULT NULL,
+  `S0` double DEFAULT NULL,
+  `S1` double DEFAULT NULL,
+  `S2` double DEFAULT NULL,
   PRIMARY KEY (`idModelSceneXref`),
   KEY `ModelSceneXref_idModel` (`idModel`),
   KEY `ModelSceneXref_idScene` (`idScene`)
@@ -444,6 +449,7 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `EdanUUID` varchar(64) NULL,
   `PosedAndQCd` boolean NOT NULL,
   `ApprovedForPublication` boolean NOT NULL,
+  `Title` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

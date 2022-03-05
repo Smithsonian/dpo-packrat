@@ -254,11 +254,29 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                 disableUnderline
                 SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}
             >
-                {typeOptions.map((option: VocabularyOption, index) => (
-                    <MenuItem key={index} value={option.idVocabulary}>
-                        {option.Term}
-                    </MenuItem>
-                ))}
+                {typeOptions.map(function (option: VocabularyOption, index) {
+                    // Silence unsupported types:
+                    switch (option.Term.toLowerCase()) {
+                        case 'capture data set: diconde':
+                        case 'capture data set: dicom':
+                        case 'capture data set: laser line':
+                        case 'capture data set: spherical laser':
+                        case 'capture data set: structured light':
+                        case 'capture data set: other':
+                        case 'capture data file':
+                        case 'model geometry file':
+                        case 'model uv map file':
+                        case 'intermediary file':
+                        case 'attachment':
+                            return null;
+                    }
+                    return (
+                        <MenuItem key={index} value={option.idVocabulary}>
+                            {option.Term}
+                        </MenuItem>
+                    );
+                }
+                )}
             </Select>
         );
     }

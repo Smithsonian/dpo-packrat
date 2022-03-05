@@ -30,6 +30,8 @@ export type Query = {
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
   getEdanUnitsNamed: GetEdanUnitsNamedResult;
   getFilterViewData: GetFilterViewDataResult;
+  getIngestTitle: GetIngestTitleResult;
+  getIngestionItems: GetIngestionItemsResult;
   getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
   getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
   getIntermediaryFile: GetIntermediaryFileResult;
@@ -113,6 +115,16 @@ export type QueryGetContentsForAssetVersionsArgs = {
 
 export type QueryGetDetailsTabDataForObjectArgs = {
   input: GetDetailsTabDataForObjectInput;
+};
+
+
+export type QueryGetIngestTitleArgs = {
+  input: GetIngestTitleInput;
+};
+
+
+export type QueryGetIngestionItemsArgs = {
+  input: GetIngestionItemsInput;
 };
 
 
@@ -341,10 +353,8 @@ export type Mutation = {
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
   createGeoLocation: CreateGeoLocationResult;
-  createItem: CreateItemResult;
   createLicense: CreateLicenseResult;
   createProject: CreateProjectResult;
-  createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
   createSubjectWithIdentifiers: CreateSubjectWithIdentifiersResult;
   createUnit: CreateUnitResult;
@@ -393,11 +403,6 @@ export type MutationCreateGeoLocationArgs = {
 };
 
 
-export type MutationCreateItemArgs = {
-  input: CreateItemInput;
-};
-
-
 export type MutationCreateLicenseArgs = {
   input: CreateLicenseInput;
 };
@@ -405,11 +410,6 @@ export type MutationCreateLicenseArgs = {
 
 export type MutationCreateProjectArgs = {
   input: CreateProjectInput;
-};
-
-
-export type MutationCreateSceneArgs = {
-  input: CreateSceneInput;
 };
 
 
@@ -616,6 +616,7 @@ export type IngestModel = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
+  subtitle: Scalars['String'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -655,6 +656,7 @@ export type IngestScene = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
+  subtitle: Scalars['String'];
   approvedForPublication: Scalars['Boolean'];
   posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
@@ -938,6 +940,7 @@ export type IngestSubjectInput = {
   id?: Maybe<Scalars['Int']>;
   name: Scalars['String'];
   arkId: Scalars['String'];
+  collectionId: Scalars['String'];
   unit: Scalars['String'];
 };
 
@@ -948,7 +951,7 @@ export type IngestProjectInput = {
 
 export type IngestItemInput = {
   id?: Maybe<Scalars['Int']>;
-  name: Scalars['String'];
+  subtitle: Scalars['String'];
   entireSubject: Scalars['Boolean'];
 };
 
@@ -1000,7 +1003,7 @@ export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
-  name: Scalars['String'];
+  subtitle: Scalars['String'];
   creationMethod: Scalars['Int'];
   modality: Scalars['Int'];
   purpose: Scalars['Int'];
@@ -1018,7 +1021,7 @@ export type IngestSceneInput = {
   idAssetVersion: Scalars['Int'];
   idAsset?: Maybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
-  name: Scalars['String'];
+  subtitle: Scalars['String'];
   approvedForPublication: Scalars['Boolean'];
   posedAndQCd: Scalars['Boolean'];
   directory: Scalars['String'];
@@ -1074,6 +1077,23 @@ export type AreCameraSettingsUniformInput = {
 export type AreCameraSettingsUniformResult = {
   __typename?: 'AreCameraSettingsUniformResult';
   isUniform: Scalars['Boolean'];
+};
+
+export type IngestTitle = {
+  __typename?: 'IngestTitle';
+  title: Scalars['String'];
+  forced: Scalars['Boolean'];
+  subtitle?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+export type GetIngestTitleInput = {
+  item?: Maybe<IngestItemInput>;
+  sourceObjects?: Maybe<Array<RelatedObjectInput>>;
+};
+
+export type GetIngestTitleResult = {
+  __typename?: 'GetIngestTitleResult';
+  ingestTitle?: Maybe<IngestTitle>;
 };
 
 export type CreateLicenseInput = {
@@ -1407,27 +1427,6 @@ export type GetFilterViewDataResult = {
   projects: Array<Project>;
 };
 
-export type CreateSceneInput = {
-  Name: Scalars['String'];
-  idAssetThumbnail?: Maybe<Scalars['Int']>;
-  CountScene?: Maybe<Scalars['Int']>;
-  CountNode?: Maybe<Scalars['Int']>;
-  CountCamera?: Maybe<Scalars['Int']>;
-  CountLight?: Maybe<Scalars['Int']>;
-  CountModel?: Maybe<Scalars['Int']>;
-  CountMeta?: Maybe<Scalars['Int']>;
-  CountSetup?: Maybe<Scalars['Int']>;
-  CountTour?: Maybe<Scalars['Int']>;
-  EdanUUID?: Maybe<Scalars['String']>;
-  ApprovedForPublication: Scalars['Boolean'];
-  PosedAndQCd: Scalars['Boolean'];
-};
-
-export type CreateSceneResult = {
-  __typename?: 'CreateSceneResult';
-  Scene?: Maybe<Scene>;
-};
-
 export type GetSceneInput = {
   idScene: Scalars['Int'];
 };
@@ -1462,6 +1461,7 @@ export type Scene = {
   EdanUUID?: Maybe<Scalars['String']>;
   ApprovedForPublication: Scalars['Boolean'];
   PosedAndQCd: Scalars['Boolean'];
+  CanBeQCd?: Maybe<Scalars['Boolean']>;
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1718,6 +1718,7 @@ export type RollbackSystemObjectVersionResult = {
 export type RollbackSystemObjectVersionInput = {
   idSystemObjectVersion: Scalars['Int'];
   rollbackNotes: Scalars['String'];
+  time: Scalars['String'];
 };
 
 export type CreateSubjectWithIdentifiersResult = {
@@ -1838,6 +1839,7 @@ export type SceneDetailFields = {
   ApprovedForPublication?: Maybe<Scalars['Boolean']>;
   PublicationApprover?: Maybe<Scalars['String']>;
   PosedAndQCd?: Maybe<Scalars['Boolean']>;
+  CanBeQCd?: Maybe<Scalars['Boolean']>;
   idScene?: Maybe<Scalars['Int']>;
 };
 
@@ -2142,18 +2144,6 @@ export type CreateSubjectResult = {
   Subject?: Maybe<Subject>;
 };
 
-export type CreateItemInput = {
-  Name: Scalars['String'];
-  EntireSubject: Scalars['Boolean'];
-  idAssetThumbnail?: Maybe<Scalars['Int']>;
-  idGeoLocation?: Maybe<Scalars['Int']>;
-};
-
-export type CreateItemResult = {
-  __typename?: 'CreateItemResult';
-  Item?: Maybe<Item>;
-};
-
 export type CreateGeoLocationInput = {
   Latitude?: Maybe<Scalars['Int']>;
   Longitude?: Maybe<Scalars['Int']>;
@@ -2242,6 +2232,24 @@ export type GetIngestionProjectsForSubjectsResult = {
   __typename?: 'GetIngestionProjectsForSubjectsResult';
   Project: Array<Project>;
   Default: Scalars['Boolean'];
+};
+
+export type IngestionItem = {
+  __typename?: 'IngestionItem';
+  idItem: Scalars['Int'];
+  EntireSubject: Scalars['Boolean'];
+  MediaGroupName: Scalars['String'];
+  idProject: Scalars['Int'];
+  ProjectName: Scalars['String'];
+};
+
+export type GetIngestionItemsInput = {
+  idSubjects: Array<Scalars['Int']>;
+};
+
+export type GetIngestionItemsResult = {
+  __typename?: 'GetIngestionItemsResult';
+  IngestionItem?: Maybe<Array<IngestionItem>>;
 };
 
 export type GetUnitInput = {

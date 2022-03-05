@@ -48,7 +48,8 @@ export interface ICollection {
     publish(idSystemObject: number, ePublishState: number): Promise<boolean>;
     createEdanMDM(edanmdm: EdanMDMContent, status: number, publicSearch: boolean): Promise<EdanRecord | null>;
     createEdan3DPackage(path: string, sceneFile?: string | undefined): Promise<EdanRecord | null>;
-    updateEdan3DPackage(url: string, sceneContent: Edan3DPackageContent, status: number, publicSearch: boolean): Promise<EdanRecord | null>;
+    updateEdan3DPackage(url: string, title: string | undefined, sceneContent: Edan3DPackageContent,
+        status: number, publicSearch: boolean): Promise<EdanRecord | null>;
 
     /** Identifier services */
     /** Pass in a null shoulder to use the system shoulder */
