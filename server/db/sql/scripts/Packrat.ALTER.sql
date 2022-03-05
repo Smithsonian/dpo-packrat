@@ -462,3 +462,5 @@ UPDATE Vocabulary SET Term = 'Voyager Scene Model' WHERE Term = 'Web Delivery';
 ALTER TABLE Item ADD COLUMN Title VARCHAR(255) DEFAULT NULL;
 ALTER TABLE Model ADD COLUMN Title VARCHAR(255) DEFAULT NULL;
 ALTER TABLE Scene ADD COLUMN Title VARCHAR(255) DEFAULT NULL;
+
+-- 2022-03-04 Deployed to Staging and Production
