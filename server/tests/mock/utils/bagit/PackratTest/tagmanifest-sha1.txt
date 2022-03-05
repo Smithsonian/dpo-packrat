@@ -1,5 +1,5 @@
 da39a3ee5e6b4b0d3255bfef95601890afd80709 bag-info.txt
 a7b95616bf7307fc398baeb04ce60a88ed370f51 bagit.txt
 1ac3df9ab3046a75136d03acb70d5e69a3e23855 manifest-sha1.txt
-0027ad46eca9eb116934b5bbb9fade72b77eed38 capture_data_photo.csv
+3038dcf5799963c40b20084e0e006609d26500dc capture_data_photo.csv
 

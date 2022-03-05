@@ -5,9 +5,9 @@
  */
 import lodash from 'lodash';
 import React from 'react';
-import { palette } from '../../../../theme';
 import { eMetadata } from '@dpo-packrat/common';
-import { computeMetadataViewWidth, trimmedMetadataField } from '../../../../utils/repository';
+import { useTreeColumnsStore } from '../../../../store';
+import clsx from 'clsx';
 
 export type TreeViewColumn = {
     metadataColumn: eMetadata;
@@ -25,24 +25,23 @@ interface MetadataViewProps {
 function MetadataView(props: MetadataViewProps): React.ReactElement {
     const { header, treeColumns, options = null, makeStyles } = props;
 
-    const width = computeMetadataViewWidth(treeColumns);
-
-    const renderTreeColumns = (treeColumns: TreeViewColumn[]) =>
-        treeColumns.map((treeColumn: TreeViewColumn, index: number) => {
-            const { label, size } = treeColumn;
-            const width = `${size}vw`;
-
+    // Pull the generated MUI classes from TreeColumnsStore and assign the divs the appropriate class based on metadataColumn
+    const [classes] = useTreeColumnsStore(state => [state.classes]);
+    const renderTreeColumns = (treeColumns: TreeViewColumn[]) => {
+        return treeColumns.map((treeColumn: TreeViewColumn, index: number) => {
+            const { label, metadataColumn } = treeColumn;
             return (
-                <div key={index} className={makeStyles?.column} style={{ width, color: palette.primary.dark, fontSize: undefined }}>
+                <div key={index} className={clsx(makeStyles?.column, classes?.[metadataColumn])} id={`column-${label}`}>
                     <span className={makeStyles?.text} title={header ? undefined : label} data-tooltip-position='bottom'>
-                        {trimmedMetadataField(label, 14, 7)}
+                        {label}
                     </span>
                 </div>
             );
         });
+    };
 
     return (
-        <div style={{ width, display: 'flex' }}>
+        <div style={{ display: 'flex' }}>
             {options}
             {renderTreeColumns(treeColumns)}
         </div>

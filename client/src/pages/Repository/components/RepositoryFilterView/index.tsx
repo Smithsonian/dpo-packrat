@@ -108,7 +108,8 @@ const StyledChip = withStyles(({ palette }) => ({
     outlined: {
         height: 30,
         fontSize: '0.75em',
-        border: `0.5px solid ${palette.primary.contrastText}`
+        border: `0.5px solid ${palette.primary.contrastText}`,
+        backgroundColor: '#FDF1AA'
     }
 }))(Chip);
 

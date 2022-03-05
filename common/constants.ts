@@ -86,7 +86,7 @@ export enum eVocabularyID {
     eModelUnitsMile,
     eModelUnitsAstronomicalUnit,
     eModelPurposeMaster,
-    eModelPurposeWebDelivery,
+    eModelPurposeVoyagerSceneModel,
     eModelPurposeDownload,
     eModelPurposeIntermediateProcessingStep,
     eModelFileTypeobj,

@@ -17,6 +17,8 @@ import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 
 import * as path from 'path';
 import { Readable } from 'stream';
+import { ModelHierarchy, NameHelpers } from '../../../utils/nameHelpers';
+import { IngestTitle } from '../../../types/graphql';
 
 export type JobCookSIVoyagerSceneMetaDataFile = {
     edanRecordId: string;
@@ -64,7 +66,7 @@ export class JobCookSIVoyagerSceneParameterHelper {
         if (!await OG.fetch())
             return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute object graph from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
 
-        const metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile | null = await JobCookSIVoyagerSceneParameterHelper.computeSceneMetaData(OG);
+        const metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile | null = await JobCookSIVoyagerSceneParameterHelper.computeSceneMetaData(OG, modelSource);
         if (!metaDataFileJSON)
             return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute metadata file JSON from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
 
@@ -72,7 +74,7 @@ export class JobCookSIVoyagerSceneParameterHelper {
         return new JobCookSIVoyagerSceneParameterHelper(idModel ?? 0, modelSource, SOModelSource, OG, metaDataFileJSON, sceneName);
     }
 
-    private static async computeSceneMetaData(OG: DBAPI.ObjectGraph): Promise<JobCookSIVoyagerSceneMetaDataFile | null> {
+    private static async computeSceneMetaData(OG: DBAPI.ObjectGraph, modelSource: DBAPI.Model): Promise<JobCookSIVoyagerSceneMetaDataFile | null> {
         const subjects: DBAPI.Subject[] | null = OG.subject;
         if (subjects === null || subjects.length === 0 || subjects.length > 1) { // if we have no subjects or multiple subjects, return default
             LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute single Subject from OG ${JSON.stringify(OG, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
@@ -102,27 +104,14 @@ export class JobCookSIVoyagerSceneParameterHelper {
             }
         }
 
-        const title: string = subject.Name;
-
-        let sceneTitle: string | undefined = undefined;
-        const items: DBAPI.Item[] | null = OG.item;
-        if (items === null || items.length === 0)
-            return { edanRecordId, title };
-
-        if (items.length === 1) {               // Single item
-            if (items[0].EntireSubject)         // Comprising whole subject?; use "subject name"
-                sceneTitle = undefined;
-            else                                // Comprising part of subject; use "subject name: item name"
-                sceneTitle = items[0].Name;
-        } else {                                // Multiple items, single subject, use "subject name: item1 name, item2 name, etc."
-            sceneTitle = '';
-            let first: boolean = true;
-            for (const item of items) {
-                sceneTitle += `${first ? '' : ', ' }${item.Name}`;
-                first = false;
-            }
+        const MH: ModelHierarchy | null = await NameHelpers.computeModelHierarchy(modelSource);
+        if (!MH) {
+            LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute model hierarchy from model ${H.Helpers.JSONStringify(modelSource)}`, LOG.LS.eJOB);
+            return null;
         }
-        return { edanRecordId, title, sceneTitle };
+        const IngestTitle: IngestTitle = NameHelpers.sceneTitleOptions([MH]);
+        const sceneTitle: string | undefined = IngestTitle.subtitle && IngestTitle.subtitle.length === 1 ? IngestTitle.subtitle[0] ?? undefined : undefined;
+        return { edanRecordId, title: IngestTitle.title, sceneTitle };
     }
 
     private static logError(errorBase: string): null {
@@ -163,6 +152,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private parameters: JobCookSIVoyagerSceneParameters;
     private parameterHelper: JobCookSIVoyagerSceneParameterHelper | null;
     private cleanupCalled: boolean = false;
+
+    private static vocabVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabAssetTypeScene: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabAssetTypeModelGeometryFile: DBAPI.Vocabulary | undefined = undefined;
 
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIVoyagerSceneParameters, dbJobRun: DBAPI.JobRun) {
@@ -219,8 +212,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             return this.logError('JobCookSIVoyagerScene.createSystemObjects called without needed parameters');
 
         const svxFile: string = this.parameters.svxFile ?? 'scene.svx.json';
-        const vScene: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
-        const vModel: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+        const vScene: DBAPI.Vocabulary | undefined = await this.computeVocabAssetTypeScene();
+        const vModel: DBAPI.Vocabulary | undefined = await this.computeVocabAssetTypeModelGeometryFile();
         if (!vScene || !vModel)
             return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to calculate vocabulary needed to ingest scene file ${svxFile}`);
 
@@ -391,7 +384,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                         allowZipCracking: false,
                         idUserCreator,
                         SOBased: model,
-                        Comment: 'Created by Cook si-voyager-scene'
+                        Comment: 'Created by Cook si-voyager-scene',
+                        doNotUpdateParentVersion: true // if needed, we update the existing system object version below
                     };
                     ISR = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISIModel);
                     if (!ISR.success)
@@ -429,13 +423,15 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     protected async transformModelSceneXrefIntoModel(MSX: DBAPI.ModelSceneXref, source?: DBAPI.Model | undefined): Promise<DBAPI.Model> {
         const Name: string = MSX.Name ?? '';
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
+        const vPurpose: DBAPI.Vocabulary | undefined = await this.computeVocabVoyagerSceneModel();
         return new DBAPI.Model({
             idModel: 0,
             Name,
+            Title: source?.Title ?? '',
             DateCreated: new Date(),
             idVCreationMethod: source?.idVCreationMethod ?? null,
             idVModality: source?.idVModality ?? null,
-            idVPurpose: source?.idVPurpose ?? null, // should this be set to web-delivery?
+            idVPurpose: vPurpose ? vPurpose.idVocabulary : null,
             idVUnits: source?.idVUnits ?? null,
             idVFileType: vFileType ? vFileType.idVocabulary : null,
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
@@ -471,6 +467,33 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private async findMatchingModel(sceneSource: DBAPI.Scene, automationTag: string): Promise<DBAPI.Model | null> {
         const matches: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(null, sceneSource.idScene, automationTag);
         return matches && matches.length > 0 ? matches[0] : null;
+    }
+
+    private async computeVocabVoyagerSceneModel(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!JobCookSIVoyagerScene.vocabVoyagerSceneModel) {
+            JobCookSIVoyagerScene.vocabVoyagerSceneModel = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel);
+            if (!JobCookSIVoyagerScene.vocabVoyagerSceneModel)
+                LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Voyager Scene Model Model Purpose', LOG.LS.eGQL);
+        }
+        return JobCookSIVoyagerScene.vocabVoyagerSceneModel;
+    }
+
+    private async computeVocabAssetTypeScene(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!JobCookSIVoyagerScene.vocabAssetTypeScene) {
+            JobCookSIVoyagerScene.vocabAssetTypeScene = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
+            if (!JobCookSIVoyagerScene.vocabAssetTypeScene)
+                LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Asset Type Scene', LOG.LS.eGQL);
+        }
+        return JobCookSIVoyagerScene.vocabAssetTypeScene;
+    }
+
+    private async computeVocabAssetTypeModelGeometryFile(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile) {
+            JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+            if (!JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile)
+                LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eGQL);
+        }
+        return JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile;
     }
 
     private async logError(errorBase: string): Promise<H.IOResults> {

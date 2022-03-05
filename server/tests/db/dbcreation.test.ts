@@ -424,6 +424,7 @@ describe('DB Creation Test Suite', () => {
         if (assetThumbnail)
             scene = await UTIL.createSceneTest({
                 Name: 'Test Scene',
+                Title: '',
                 idAssetThumbnail: assetThumbnail.idAsset,
                 CountScene: 0,
                 CountNode: 0,
@@ -444,6 +445,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Scene With Nulls', async () => {
         sceneNulls = await UTIL.createSceneTest({
             Name: 'Test Scene',
+            Title: '',
             idAssetThumbnail: null,
             CountScene: 0,
             CountNode: 0,
@@ -922,6 +924,7 @@ describe('DB Creation Test Suite', () => {
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idGeoLocation: geoLocation.idGeoLocation,
                 Name: 'Test Item',
+                Title: '',
                 EntireSubject: true,
                 idItem: 0
             });
@@ -933,6 +936,7 @@ describe('DB Creation Test Suite', () => {
             idAssetThumbnail: null,
             idGeoLocation: null,
             Name: 'Test Item Nulls',
+            Title: '',
             EntireSubject: false,
             idItem: 0
         });
@@ -1079,6 +1083,7 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary && assetThumbnail)
             model = await UTIL.createModelTest({
                 Name: 'Test Model',
+                Title: '',
                 DateCreated: UTIL.nowCleansed(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 idVModality: vocabulary.idVocabulary,
@@ -1096,6 +1101,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Model With Nulls', async () => {
         modelNulls = await UTIL.createModelTest({
             Name: 'Test Model with Nulls',
+            Title: '',
             DateCreated: UTIL.nowCleansed(),
             idVCreationMethod: null,
             idVModality: null,
@@ -1342,7 +1348,7 @@ describe('DB Creation Test Suite', () => {
                 idModel: model.idModel,
                 idScene: scene.idScene,
                 Name: 'Test 1', Usage: 'Web3D', Quality: 'High', FileSize: BigInt(1000000), UVResolution: 1000,
-                TS0: 0, TS1: 0, TS2: 0, R0: 0, R1: 0, R2: 0, R3: 0,
+                TS0: 0, TS1: 0, TS2: 0, R0: 0, R1: 0, R2: 0, R3: 0, S0: 0, S1: 0, S2: 0,
                 BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
                 idModelSceneXref: 0
             });
@@ -1359,7 +1365,7 @@ describe('DB Creation Test Suite', () => {
                 idModel: model.idModel,
                 idScene: sceneNulls.idScene,
                 Name: null, Usage: null, Quality: null, FileSize: null, UVResolution: null,
-                TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null,
+                TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null, S0: null, S1: null, S2: null,
                 BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null, BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
                 idModelSceneXref: 0
             });
@@ -4293,6 +4299,18 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.LicenseRestrictLevelToPublishedStateEnum(1000)).toEqual(COMMON.ePublishedState.eNotPublished);
     });
 
+    test('DB Fetch SystemObject: LicenseAllowsDownloadGeneration', async () => {
+        expect(DBAPI.LicenseAllowsDownloadGeneration(undefined)).toEqual(false);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(-1)).toEqual(true);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(10)).toEqual(true);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(15)).toEqual(true);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(20)).toEqual(true);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(25)).toEqual(false);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(30)).toEqual(false);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(35)).toEqual(false);
+        expect(DBAPI.LicenseAllowsDownloadGeneration(1000)).toEqual(false);
+    });
+
     test('DB Fetch SystemObject: SystemObjectTypeToName', async () => {
         expect(DBAPI.SystemObjectTypeToName(null)).toEqual('Unknown');
         expect(DBAPI.SystemObjectTypeToName(COMMON.eSystemObjectType.eUnit)).toEqual('Unit');
@@ -4899,6 +4917,19 @@ describe('DB Fetch Special Test Suite', () => {
         expect(itemFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Item.fetchRelatedItemsAndProjects', async () => {
+        let itemAndProjectFetch: DBAPI.ItemAndProject[] | null = null;
+        if (itemNulls) {
+            itemAndProjectFetch = await DBAPI.Item.fetchRelatedItemsAndProjects([itemNulls.idItem]);
+            if (itemAndProjectFetch) {
+                expect(itemAndProjectFetch.length).toEqual(1);
+                if (itemAndProjectFetch.length > 1 && project)
+                    expect(itemAndProjectFetch[0].idProject).toEqual(project.idProject);
+            }
+        }
+        expect(itemAndProjectFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: Item.fetchMasterFromScenes', async () => {
         let itemFetch: DBAPI.Item[] | null = null;
         if (scene && sceneNulls) {
@@ -5061,6 +5092,7 @@ describe('DB Fetch Special Test Suite', () => {
     test('DB Fetch Special: Model.cloneData', async () => {
         const modelClone: DBAPI.Model = await UTIL.createModelTest({
             Name: 'Test Model with Nulls',
+            Title: '',
             DateCreated: UTIL.nowCleansed(),
             idVCreationMethod: null,
             idVModality: null,
@@ -5103,13 +5135,6 @@ describe('DB Fetch Special Test Suite', () => {
 
     test('DB Fetch Special: Model.fetchByFileNameAndAssetType', async () => {
         const modelFetch: DBAPI.Model[] | null = await DBAPI.Model.fetchByFileNameAndAssetType('zzzOBVIOUSLY_INVALID_NAMEzzz', [0]);
-        expect(modelFetch).toBeTruthy();
-        if (modelFetch)
-            expect(modelFetch.length).toEqual(0);
-    });
-
-    test('DB Fetch Special: Model.fetchByFileNameSizeAndAssetType', async () => {
-        const modelFetch: DBAPI.Model[] | null = await DBAPI.Model.fetchByFileNameSizeAndAssetType('zzzOBVIOUSLY_INVALID_NAMEzzz', BigInt(100), [0]);
         expect(modelFetch).toBeTruthy();
         if (modelFetch)
             expect(modelFetch.length).toEqual(0);
@@ -5334,6 +5359,18 @@ describe('DB Fetch Special Test Suite', () => {
             modelSceneXrefClone = new DBAPI.ModelSceneXref(modelSceneXref);
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeTruthy();
             expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeFalsy();
+
+            modelSceneXrefClone.S2 = (modelSceneXref.S2 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
+            modelSceneXrefClone.S1 = (modelSceneXref.S1 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+
+            modelSceneXrefClone.S0 = (modelSceneXref.S0 ?? 0) + 1;
+            expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
+            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
 
             modelSceneXrefClone.R3 = (modelSceneXref.R3 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
@@ -7741,6 +7778,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Item.fetchMasterFromModels([])).toBeNull();
         expect(await DBAPI.Item.fetchMasterFromScenes([])).toBeNull();
         expect(await DBAPI.Item.fetchMasterFromIntermediaryFiles([])).toBeNull();
+        expect(await DBAPI.Item.fetchRelatedItemsAndProjects([])).toBeNull();
         expect(await DBAPI.Job.fetch(0)).toBeNull();
         expect(await DBAPI.Job.fetchByType(0)).toBeNull();
         expect(await DBAPI.JobRun.fetch(0)).toBeNull();

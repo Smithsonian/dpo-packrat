@@ -22,6 +22,7 @@ import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
 import { PublishScene } from '../../../../../collections/impl/PublishScene';
+import { NameHelpers, ModelHierarchy } from '../../../../../utils/nameHelpers';
 import * as COMMON from '@dpo-packrat/common';
 
 type AssetPair = {
@@ -57,7 +58,6 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
 class IngestDataWorker extends ResolverBase {
     private input: IngestDataInput;
     private user: User | undefined;
-    private vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
     private ICOL: COL.ICollection | undefined = undefined;
 
     private ingestPhotogrammetry: boolean = false;
@@ -76,6 +76,10 @@ class IngestDataWorker extends ResolverBase {
     private ingestModelMap: Map<number, ModelInfo> = new Map<number, ModelInfo>();                                  // map from idAssetVersion -> model input, JCOutput, idModel
 
     private sceneSOI: DBAPI.SystemObjectInfo | undefined = undefined;
+
+    private static vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabularyEdanRecordID: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabularyPurposeVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
 
     constructor(input: IngestDataInput, user: User | undefined) {
         super();
@@ -103,6 +107,7 @@ class IngestDataWorker extends ResolverBase {
         this.workflowHelper = await this.createWorkflow(); // do this *after* this.validateInput, and *before* returning from validation failure
         if (!results.success) return { success: results.success, message: results.error };
 
+        const subjectsDB: DBAPI.Subject[] = [];
         let itemDB: DBAPI.Item | null = null;
         if (this.ingestNew) {
             await this.appendToWFReport('Ingesting content for new object');
@@ -112,7 +117,6 @@ class IngestDataWorker extends ResolverBase {
             let href: string = '';
 
             // retrieve/create subjects; if creating subjects, create related objects (Identifiers, possibly UnitEdan records, though unlikely)
-            const subjectsDB: DBAPI.Subject[] = [];
             for (const subject of this.input.subjects) {
                 // fetch our understanding of EDAN's unit information:
                 const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(subject.unit);
@@ -134,20 +138,20 @@ class IngestDataWorker extends ResolverBase {
                 subjectsDB.push(subjectDB);
             }
 
-            itemDB = await this.fetchOrCreateItem(this.input.item);
+            itemDB = await this.fetchOrCreateItem(this.input.item, subjectsDB);
             if (!itemDB)
-                return { success: false, message: 'failure to retrieve or create item' };
+                return { success: false, message: 'failure to retrieve or create media group' };
 
             SOI = await CACHE.SystemObjectCache.getSystemFromItem(itemDB);
             path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
             href = H.Helpers.computeHref(path, itemDB.Name);
-            await this.appendToWFReport(`Packrat Item${!this.input.item.id ? ' (created)' : ''}: ${href}`);
+            await this.appendToWFReport(`Packrat Media Group${!this.input.item.id ? ' (created)' : ''}: ${href}`);
 
             // wire projects to item
             if (this.input.project.id) {
                 const projectDB: DBAPI.Project | null = await this.wireProjectToItem(this.input.project.id, itemDB);
                 if (!projectDB)
-                    return { success: false, message: 'failure to wire project to item' };
+                    return { success: false, message: 'failure to wire project to media group' };
 
                 SOI = await CACHE.SystemObjectCache.getSystemFromProject(projectDB);
                 path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
@@ -157,7 +161,7 @@ class IngestDataWorker extends ResolverBase {
 
             // wire subjects to item
             if (!await this.wireSubjectsToItem(subjectsDB, itemDB))
-                return { success: false, message: 'failure to wire subjects to item' };
+                return { success: false, message: 'failure to wire subjects to media group' };
         } else if (this.ingestUpdate)
             await this.appendToWFReport('Ingesting content for updated object');
         else if (this.ingestAttachment)
@@ -172,7 +176,7 @@ class IngestDataWorker extends ResolverBase {
 
         if (this.ingestModel) {
             for (const model of this.input.model) {
-                if (!await this.createModelObjects(model))
+                if (!await this.createModelObjects(model, itemDB, subjectsDB))
                     return { success: false, message: 'failure to create model object' };
             }
         }
@@ -220,7 +224,7 @@ class IngestDataWorker extends ResolverBase {
         // wire item to asset-owning objects; do this *after* createModelDerivedObjects
         if (itemDB) {
             if (!await this.wireItemToAssetOwners(itemDB))
-                return { success: false, message: 'failure to wire item to asset owner' };
+                return { success: false, message: 'failure to wire media group to asset owner' };
 
             await this.postItemWiring();
         }
@@ -238,14 +242,36 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async getVocabularyARK(): Promise<DBAPI.Vocabulary | undefined> {
-        if (!this.vocabularyARK) {
-            this.vocabularyARK = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
-            if (!this.vocabularyARK) {
+        if (!IngestDataWorker.vocabularyARK) {
+            IngestDataWorker.vocabularyARK = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
+            if (!IngestDataWorker.vocabularyARK) {
                 LOG.error('ingestData unable to fetch vocabulary for ARK Identifiers', LOG.LS.eGQL);
                 return undefined;
             }
         }
-        return this.vocabularyARK;
+        return IngestDataWorker.vocabularyARK;
+    }
+
+    private async getVocabularyEdanRecordID(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!IngestDataWorker.vocabularyEdanRecordID) {
+            IngestDataWorker.vocabularyEdanRecordID = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
+            if (!IngestDataWorker.vocabularyEdanRecordID) {
+                LOG.error('ingestData unable to fetch vocabulary for Edan Record Identifiers', LOG.LS.eGQL);
+                return undefined;
+            }
+        }
+        return IngestDataWorker.vocabularyEdanRecordID;
+    }
+
+    private async getVocabularyVoyagerSceneModel(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!IngestDataWorker.vocabularyPurposeVoyagerSceneModel) {
+            IngestDataWorker.vocabularyPurposeVoyagerSceneModel = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel);
+            if (!IngestDataWorker.vocabularyPurposeVoyagerSceneModel) {
+                LOG.error('ingestData unable to fetch vocabulary for Voyager Scene Model Model Purpose', LOG.LS.eGQL);
+                return undefined;
+            }
+        }
+        return IngestDataWorker.vocabularyPurposeVoyagerSceneModel;
     }
 
     private async validateIdentifiers(identifiers: IngestIdentifierInput[] | undefined): Promise<H.IOResults> {
@@ -331,7 +357,7 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async createIdentifier(identifierValue: string, SO: DBAPI.SystemObject | null,
-        idVIdentifierType: number | null, systemGenerated: boolean): Promise<DBAPI.Identifier | null> {
+        idVIdentifierType: number | null, systemGenerated: boolean | null): Promise<DBAPI.Identifier | null> {
         if (!idVIdentifierType) {
             const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
             if (!vocabularyARK)
@@ -346,13 +372,14 @@ class IngestDataWorker extends ResolverBase {
             idIdentifier: 0
         });
 
+        const description: string = systemGenerated === true ? 'system generated' : (systemGenerated === false ? 'user-supplied' : 'system-supplied');
         if (!await identifier.create()) {
             const error: string = `ingestData unable to create identifier record for subject's identifier ${identifierValue}`;
-            await this.appendToWFReport(`Identifier: ${identifierValue} (${systemGenerated ? 'system generated' : 'user-supplied'}) <b>creation failed</b>`);
+            await this.appendToWFReport(`Identifier: ${identifierValue} (${description}) <b>creation failed</b>`);
             LOG.error(error, LOG.LS.eGQL);
             return null;
         }
-        await this.appendToWFReport(`Identifier: ${identifierValue} (${systemGenerated ? 'system generated' : 'user-supplied'})`);
+        await this.appendToWFReport(`Identifier: ${identifierValue} (${description})`);
         return identifier;
     }
 
@@ -374,14 +401,16 @@ class IngestDataWorker extends ResolverBase {
         return units[0];
     }
 
-    private async createSubject(idUnit: number, Name: string, identifier: DBAPI.Identifier | null): Promise<DBAPI.Subject | null> {
+    private async createSubject(idUnit: number, Name: string, identifierArkId: DBAPI.Identifier | null,
+        identifierCollectionId: DBAPI.Identifier | null): Promise<DBAPI.Subject | null> {
         // create the subject
+        const idIdentifierPreferred: number | null = (identifierArkId) ? identifierArkId.idIdentifier : (identifierCollectionId ? identifierCollectionId.idIdentifier : null);
         const subjectDB: DBAPI.Subject = new DBAPI.Subject({
             idUnit,
             idAssetThumbnail: null,
             idGeoLocation: null,
             Name,
-            idIdentifierPreferred: (identifier) ? identifier.idIdentifier : null, // identifierSubjectHookup.idIdentifier,
+            idIdentifierPreferred,
             idSubject: 0
         });
         if (!await subjectDB.create()) {
@@ -391,15 +420,7 @@ class IngestDataWorker extends ResolverBase {
         return subjectDB;
     }
 
-    private async updateSubjectIdentifier(identifier: DBAPI.Identifier | null, subjectDB: DBAPI.Subject): Promise<boolean> {
-        // update identifier with systemobject ID of our subject
-        if (!identifier)
-            return true;
-        const SO: DBAPI.SystemObject | null = await subjectDB.fetchSystemObject();
-        if (!SO) {
-            LOG.error(`ingestData unable to fetch system object for subject record ${JSON.stringify(subjectDB)}`, LOG.LS.eGQL);
-            return false;
-        }
+    private async updateSubjectIdentifier(identifier: DBAPI.Identifier, SO: DBAPI.SystemObject): Promise<boolean> {
         identifier.idSystemObject = SO.idSystemObject;
         if (!await identifier.update()) {
             LOG.error(`ingestData unable to update identifier's idSystemObject ${JSON.stringify(identifier)}`, LOG.LS.eGQL);
@@ -428,26 +449,48 @@ class IngestDataWorker extends ResolverBase {
 
     private async createSubjectAndRelated(subject: IngestSubjectInput, units: DBAPI.Unit[] | null): Promise<DBAPI.Subject | null> {
         // identify Unit; create UnitEdan if needed
+        // LOG.info(`ingestData.createSubjectAndRelated(${H.Helpers.JSONStringify(subject)})`, LOG.LS.eGQL);
         const unit: DBAPI.Unit | null = await this.validateOrCreateUnitEdan(units, subject.unit);
         if (!unit)
             return null;
 
         // create identifier
-        let identifier: DBAPI.Identifier | null = null;
+        let identifierArkId: DBAPI.Identifier | null = null;
         if (subject.arkId) {
-            identifier = await this.createIdentifier(subject.arkId, null, null, true);
-            if (!identifier)
+            const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
+            if (!vocabularyARK)
+                return null;
+            identifierArkId = await this.createIdentifier(subject.arkId, null, vocabularyARK.idVocabulary, null);
+            if (!identifierArkId)
+                return null;
+        }
+
+        let identifierCollectionId: DBAPI.Identifier | null = null;
+        if (subject.collectionId) {
+            const vocabularyEdanRecordID: DBAPI.Vocabulary | undefined = await this.getVocabularyEdanRecordID();
+            if (!vocabularyEdanRecordID)
+                return null;
+
+            const identifier: string = subject.collectionId.toLowerCase().startsWith('edanmdm:') ? subject.collectionId : `edanmdm:${subject.collectionId}`;
+            identifierCollectionId = await this.createIdentifier(identifier, null, vocabularyEdanRecordID.idVocabulary, null);
+            if (!identifierCollectionId)
                 return null;
         }
 
         // create the subject
-        const subjectDB: DBAPI.Subject | null = await this.createSubject(unit.idUnit, subject.name, identifier);
+        const subjectDB: DBAPI.Subject | null = await this.createSubject(unit.idUnit, subject.name, identifierArkId, identifierCollectionId);
         if (!subjectDB)
             return null;
 
-        // update identifier, if it exists with systemobject ID of our subject
-        if (!await this.updateSubjectIdentifier(identifier, subjectDB))
-            return null;
+        // update identifiers with systemobject ID of our subject
+        const SO: DBAPI.SystemObject | null = await subjectDB.fetchSystemObject();
+        if (SO) {
+            if (identifierArkId && !await this.updateSubjectIdentifier(identifierArkId, SO))
+                return null;
+            if (identifierCollectionId && !await this.updateSubjectIdentifier(identifierCollectionId, SO))
+                return null;
+        } else
+            LOG.error(`ingestData unable to fetch system object for subject record ${JSON.stringify(subjectDB)}`, LOG.LS.eGQL);
 
         return subjectDB;
     }
@@ -467,7 +510,7 @@ class IngestDataWorker extends ResolverBase {
         return projectDB;
     }
 
-    private async fetchOrCreateItem(item: IngestItemInput): Promise<DBAPI.Item | null> {
+    private async fetchOrCreateItem(item: IngestItemInput, subjectsDB: DBAPI.Subject[]): Promise<DBAPI.Item | null> {
         let itemDB: DBAPI.Item | null;
         if (item.id) {
             itemDB = await DBAPI.Item.fetch(item.id);
@@ -477,8 +520,9 @@ class IngestDataWorker extends ResolverBase {
             itemDB = new DBAPI.Item({
                 idAssetThumbnail: null,
                 idGeoLocation: null,
-                Name: item.name,
+                Name: NameHelpers.mediaGroupDisplayName(item.subtitle, subjectsDB),
                 EntireSubject: item.entireSubject,
+                Title: item.subtitle,
                 idItem: 0
             });
 
@@ -673,7 +717,7 @@ class IngestDataWorker extends ResolverBase {
         return res;
     }
 
-    private async createModelObjects(model: IngestModelInput): Promise<boolean> {
+    private async createModelObjects(model: IngestModelInput, itemDB: DBAPI.Item | null, subjectsDB: DBAPI.Subject[]): Promise<boolean> {
         const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(model.idAssetVersion);
         if (!JCOutput || !JCOutput.success || !JCOutput.modelConstellation || !JCOutput.modelConstellation.Model) {
             LOG.error(`ingestData createModelObjects failed to extract JobCookSIPackratInspectOutput from idAssetVersion ${model.idAssetVersion}`, LOG.LS.eGQL);
@@ -718,7 +762,8 @@ class IngestDataWorker extends ResolverBase {
             cloned = true;
         }
 
-        modelDB.Name = model.name;
+        modelDB.Name = itemDB ? NameHelpers.modelDisplayName(model.subtitle, itemDB, subjectsDB) : model.subtitle;
+        modelDB.Title = model.subtitle;
         modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCreated) || new Date();
         modelDB.idVCreationMethod = model.creationMethod;
         modelDB.idVModality = model.modality;
@@ -831,14 +876,10 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async createSceneObjects(scene: IngestSceneInput): Promise<{ success: boolean, transformUpdated?: boolean | undefined }> {
-        const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion, scene.directory);
-        if (!sceneConstellation || !sceneConstellation.Scene)
-            return { success: false };
-
         // Examine scene.idAsset; if Asset.idVAssetType -> scene then
         // Lookup SystemObject from Asset.idSystemObject; if idScene is not null, then use that idScene
         const updateMode: boolean = (scene.idAsset != null && scene.idAsset > 0);
-        let sceneDB: DBAPI.Scene | null = sceneConstellation.Scene;
+        let sceneDB: DBAPI.Scene | null = null;
         if (updateMode) {
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(scene.idAsset!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!asset) {
@@ -863,7 +904,16 @@ class IngestDataWorker extends ResolverBase {
             }
         }
 
-        sceneDB.Name = scene.name;
+        const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromAssetVersion(scene.idAssetVersion, scene.directory, sceneDB ? sceneDB.idScene : undefined);
+        if (!sceneConstellation || !sceneConstellation.Scene)
+            return { success: false };
+
+        if (sceneDB === null)
+            sceneDB = sceneConstellation.Scene;
+
+        const MHs: ModelHierarchy[] | null = await NameHelpers.computeModelHierarchiesFromSourceObjects(scene.sourceObjects);
+        sceneDB.Name = MHs ? NameHelpers.sceneDisplayName(scene.subtitle, MHs) : scene.subtitle;
+        sceneDB.Title = scene.subtitle;
         sceneDB.ApprovedForPublication = scene.approvedForPublication;
         sceneDB.PosedAndQCd = scene.posedAndQCd;
         LOG.info(`ingestData createSceneObjects, updateMode=${updateMode}, sceneDB=${JSON.stringify(sceneDB, H.Helpers.saferStringify)}, sceneConstellation=${JSON.stringify(sceneConstellation, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
@@ -1210,6 +1260,8 @@ class IngestDataWorker extends ResolverBase {
                 continue;
             }
 
+            await this.appendToWFReport(`Ingesting ${assetVersionDB.FileName}, size ${assetVersionDB.StorageSize}, hash ${assetVersionDB.StorageHash}`);
+
             // LOG.info(`ingestData.promoteAssetsIntoRepository AssetVersion=${JSON.stringify(assetVersionDB, H.Helpers.saferStringify)}; Asset=${JSON.stringify(assetDB, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
             const opInfo: OperationInfo = {
                 message: AVInfo.Comment ? AVInfo.Comment : 'Ingesting asset',
@@ -1249,8 +1301,10 @@ class IngestDataWorker extends ResolverBase {
                     // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
                     if (!AVInfo.isAttachment && SOBased instanceof DBAPI.Scene) {
                         const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, IAR, idAssetVersion);
-                        if (success && modelTransformUpdated)
+                        if (success && modelTransformUpdated) {
                             transformUpdated = true;
+                            LOG.info(`ingestData set transformUpdated to true from idAssetVersion ${idAssetVersion} for ${JSON.stringify(SOBased, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                        }
                     }
                 }
             }
@@ -1323,9 +1377,8 @@ class IngestDataWorker extends ResolverBase {
             };
 
             const workflowParams: WF.WorkflowParameters = {
-                eWorkflowType: null,
                 idSystemObject,
-                idProject: null, // TODO: update with project ID
+                // idProject: TODO: update with project ID
                 idUserInitiator: user.idUser,
                 parameters
             };
@@ -1506,7 +1559,7 @@ class IngestDataWorker extends ResolverBase {
             }
 
             if (!this.input.item) {
-                const error: string = 'ingestData called with no item';
+                const error: string = 'ingestData called with no media group';
                 LOG.error(error, LOG.LS.eGQL);
                 return { success: false, error };
             }
@@ -1718,10 +1771,11 @@ class IngestDataWorker extends ResolverBase {
     private async transformModelSceneXrefIntoModel(MSX: DBAPI.ModelSceneXref): Promise<DBAPI.Model> {
         const Name: string = MSX.Name ?? '';
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
-        const vPurpose: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeWebDelivery);
+        const vPurpose: DBAPI.Vocabulary | undefined = await this.getVocabularyVoyagerSceneModel();
         return new DBAPI.Model({
             idModel: 0,
             Name,
+            Title: '',
             DateCreated: new Date(),
             idVCreationMethod: null,
             idVModality: null,
@@ -1735,6 +1789,8 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private extractModelMetrics(model: DBAPI.Model, modelMetrics: DBAPI.Model): void {
+        if (!model.Title)
+            model.Title = modelMetrics.Title;
         model.CountAnimations = modelMetrics.CountAnimations;
         model.CountCameras = modelMetrics.CountCameras;
         model.CountFaces = modelMetrics.CountFaces;
@@ -1774,9 +1830,8 @@ class IngestDataWorker extends ResolverBase {
         const wfParams: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeIngestion,
             idSystemObject,
-            idProject: null,    // TODO: populate with idProject
-            idUserInitiator: this.user?.idUser ?? null,
-            parameters: null,
+            // idProject: TODO: populate with idProject
+            idUserInitiator: this.user?.idUser,
         };
 
         const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);

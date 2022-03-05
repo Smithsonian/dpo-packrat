@@ -3,6 +3,9 @@ import { Item as ItemBase, SystemObject as SystemObjectBase, Prisma } from '@pri
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import { Merge } from '../../utils/types';
+
+export type ItemAndProject = Merge<Item, { idProject: number, ProjectName: string }>;
 
 export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObjectBased {
     idItem!: number;
@@ -10,6 +13,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
     idGeoLocation!: number | null;
     Name!: string;
     EntireSubject!: boolean;
+    Title!: string | null;
 
     constructor(input: ItemBase) {
         super(input);
@@ -25,13 +29,14 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             idGeoLocation: item.idGeoLocation,
             Name: item.Name,
             EntireSubject: (item.EntireSubject ? true : false), // we're expecting Prisma to send values like 0 and 1
+            Title: item.Title,
         });
     }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idAssetThumbnail, idGeoLocation, Name, EntireSubject } = this;
-            ({ idItem: this.idItem, EntireSubject: this.EntireSubject, idAssetThumbnail: this.idAssetThumbnail,
+            const { idAssetThumbnail, idGeoLocation, Name, EntireSubject, Title } = this;
+            ({ idItem: this.idItem, EntireSubject: this.EntireSubject, Title: this.Title, idAssetThumbnail: this.idAssetThumbnail,
                 idGeoLocation: this.idGeoLocation, Name: this.Name } =
                 await DBC.DBConnection.prisma.item.create({
                     data: {
@@ -39,6 +44,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                         GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
                         Name,
                         EntireSubject,
+                        Title,
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
@@ -51,7 +57,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idItem, idAssetThumbnail, idGeoLocation, Name, EntireSubject } = this;
+            const { idItem, idAssetThumbnail, idGeoLocation, Name, EntireSubject, Title } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.item.update({
                 where: { idItem, },
                 data: {
@@ -59,6 +65,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                     GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : { disconnect: true, },
                     Name,
                     EntireSubject,
+                    Title,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -334,6 +341,28 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             return res;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Item.fetchMasterFromIntermediaryFiles', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes an array of { Item.*, Project.idProject, Project.Name as ProjectName } of items that are connected to any of the specified projects:
+     * @param idItems Array of Item.idItem
+     */
+    static async fetchRelatedItemsAndProjects(idItems: number[]): Promise<ItemAndProject[] | null> {
+        if (!idItems || idItems.length == 0)
+            return null;
+        try {
+            return await DBC.DBConnection.prisma.$queryRaw<ItemAndProject[]>`
+                SELECT DISTINCT I.*, P.idProject, P.Name AS 'ProjectName'
+                FROM Item AS I
+                JOIN SystemObject AS SOI ON (I.idItem = SOI.idItem)
+                JOIN SystemObjectXref AS SOX ON (SOI.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOP ON (SOX.idSystemObjectMaster = SOP.idSystemObject)
+                JOIN Project AS P ON (SOP.idProject = P.idProject)
+                WHERE I.idItem IN (${Prisma.join(idItems)})`;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Item.fetchRelatedItemsAndProjects', LOG.LS.eDB, error);
             return null;
         }
     }

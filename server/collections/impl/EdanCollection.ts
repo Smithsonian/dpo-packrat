@@ -11,6 +11,7 @@ import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
+import { EdanLicenseInfo } from '../interface';
 
 interface HttpRequestResult {
     output: string;
@@ -57,7 +58,7 @@ export class EdanCollection implements COL.ICollection {
             gatherRaw = options.gatherRaw ?? false;
         }
 
-        const params: string                = `q=${escape(query)}${filter}&rows=${rows}&start=${start}`;
+        const params: string                = `q=${encodeURIComponent(query)}${filter}&rows=${rows}&start=${start}`;
         const reqResult: HttpRequestResult  = await this.sendRequest(eAPIType.eEDAN, eHTTPMethod.eGet, path, params);
         let jsonResult: any | null          = null;
         try {
@@ -160,9 +161,11 @@ export class EdanCollection implements COL.ICollection {
         return this.upsertResource(body, 'createEdan3DPackage');
     }
 
-    async updateEdan3DPackage(url: string, sceneContent: COL.Edan3DPackageContent, status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {
+    async updateEdan3DPackage(url: string, title: string | undefined, sceneContent: COL.Edan3DPackageContent,
+        status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {
         const body: any = {
             url,
+            title,
             status,
             publicSearch,
             type: '3d_package',
@@ -177,7 +180,7 @@ export class EdanCollection implements COL.ICollection {
         // LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         LOG.info('EdanCollection.upsertContent', LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertContent', '', JSON.stringify(body), 'application/json');
-        // LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}: ${reqResult.output}`, LOG.LS.eCOLL);
+        // LOG.info(`EdanCollection.upsertContent:\n${JSON.stringify(body)}\n${reqResult.output}`, LOG.LS.eCOLL);
         if (!reqResult.success) {
             LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
             return null;
@@ -195,7 +198,7 @@ export class EdanCollection implements COL.ICollection {
     private async upsertResource(body: any, caller: string): Promise<COL.EdanRecord | null> {
         LOG.info(`EdanCollection.upsertResource: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertResource', '', JSON.stringify(body), 'application/json');
-        // LOG.info(`EdanCollection.upsertResource: ${JSON.stringify(body)}: ${reqResult.output}`, LOG.LS.eCOLL);
+        // LOG.info(`EdanCollection.upsertResource:\n${JSON.stringify(body)}:\n${reqResult.output}`, LOG.LS.eCOLL);
         if (!reqResult.success) {
             LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
             return null;
@@ -310,6 +313,15 @@ export class EdanCollection implements COL.ICollection {
                 success: false
             };
         }
+    }
+
+    static computeLicenseInfo(licenseText?: string | undefined, licenseCodes?: string | undefined, usageText?: string | undefined): EdanLicenseInfo {
+        const access: string = (licenseText && licenseText.toLowerCase() === 'cc0, publishable w/ downloads') ? 'CC0' : 'Usage conditions apply';
+        return {
+            access,
+            codes: licenseCodes ?? '',
+            text: usageText ?? '',
+        };
     }
     // #endregion
 }

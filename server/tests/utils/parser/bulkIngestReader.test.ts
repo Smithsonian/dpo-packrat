@@ -83,6 +83,7 @@ describe('BulkIngestReader Setup', () => {
             idAssetThumbnail: null,
             idGeoLocation: null,
             Name: 'BagitTestingItem',
+            Title: '',
             EntireSubject: true,
             idItem: 0
         });

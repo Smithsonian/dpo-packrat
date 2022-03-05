@@ -9,6 +9,7 @@ import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as DBAPI from '../../../db';
+import { NameHelpers, ModelHierarchy, UNKNOWN_NAME } from '../../../utils/nameHelpers';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import * as H from '../../../utils/helpers';
 import path from 'path';
@@ -40,6 +41,7 @@ type ComputeSceneInfoResult = {
     assetVersionDiffuse?: DBAPI.AssetVersion | undefined;
     assetVersionMTL?: DBAPI.AssetVersion | undefined;
     scene?: DBAPI.Scene | undefined;
+    licenseResolver?: DBAPI.LicenseResolver | undefined;
 };
 
 export class WorkflowEngine implements WF.IWorkflowEngine {
@@ -125,6 +127,27 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
     }
 
+    async generateSceneDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow[] | null> {
+        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
+        if (!scene) {
+            LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene from idScene ${idScene}`, LOG.LS.eWF);
+            return null;
+        }
+
+        const SOScene: DBAPI.SystemObject | null = await scene.fetchSystemObject();
+        if (!SOScene) {
+            LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene system object from scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
+            return null;
+        }
+
+        const CSIR: ComputeSceneInfoResult = await this.computeSceneInfo(idScene, SOScene.idSystemObject);
+        if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
+            LOG.info(`WorkflowEngine.generateSceneDownloads did not locate a scene with a master model parent ready for download generation for scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
+            return null;
+        }
+        return await this.eventIngestionIngestObjectScene(CSIR, workflowParams, true);
+    }
+
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
         LOG.info(`WorkflowEngine.eventIngestionIngestObject params=${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
         if (!workflowParams || !workflowParams.idSystemObject)
@@ -193,6 +216,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                             CSIR = undefined;
                             continue;
                         }
+
+                        if (!DBAPI.LicenseAllowsDownloadGeneration(CSIR.licenseResolver?.License?.RestrictLevel)) { // we don't have a license resolver, or that license does not allow download generation
+                            LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)} which does not have the needed license for download generation`, LOG.LS.eWF);
+                            CSIR = undefined;
+                            continue;
+                        }
                     }
                     break;
             }
@@ -203,7 +232,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             workflows = workflows.concat(await this.eventIngestionIngestObjectModel(CMIR, workflowParams, assetsIngested) ?? []);
         if (CSIR)
             workflows = workflows.concat(await this.eventIngestionIngestObjectScene(CSIR, workflowParams, assetsIngested) ?? []);
-
         return workflows.length > 0 ? workflows : null;
     }
 
@@ -253,7 +281,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idSystemObject.push(SOMTL.idSystemObject);
 
         const workflows: WF.IWorkflow[] = [];
-        const baseName: string = path.parse(CMIR.assetVersionGeometry.FileName).name;
+        const { sceneBaseName, modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CMIR.idModel, CMIR.assetVersionGeometry.FileName);
 
         // initiate WorkflowJob for cook si-voyager-scene
         if (CMIR.units !== undefined) {
@@ -262,7 +290,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
                     new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
                         new COOK.JobCookSIVoyagerSceneParameters(parameterHelper, CMIR.assetVersionGeometry.FileName, CMIR.units,
-                        CMIR.assetVersionDiffuse?.FileName, baseName + '.svx.json'));
+                        CMIR.assetVersionDiffuse?.FileName, sceneBaseName + '.svx.json', undefined, sceneBaseName));
 
                 const wfParamSIVoyagerScene: WF.WorkflowParameters = {
                     eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
@@ -317,7 +345,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
                     new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
                         new COOK.JobCookSIGenerateDownloadsParameters(SO.idScene, CMIR.idModel, CMIR.assetVersionGeometry.FileName,
-                            sceneAssetVersion.FileName, CMIR.assetVersionDiffuse?.FileName, CMIR.assetVersionMTL?.FileName, baseName));
+                            sceneAssetVersion.FileName, CMIR.assetVersionDiffuse?.FileName, CMIR.assetVersionMTL?.FileName, modelBaseName));
 
                 const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
                     eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
@@ -372,11 +400,11 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idSystemObject.push(SOMTL.idSystemObject);
 
         // initiate WorkflowJob for cook si-generate-download
-        const baseName: string = path.parse(CSIR.assetVersionGeometry.FileName).name;
+        const { modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
         const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
             new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
                 new COOK.JobCookSIGenerateDownloadsParameters(CSIR.idScene, CSIR.idModel, CSIR.assetVersionGeometry.FileName,
-                    CSIR.assetSVX.FileName, CSIR.assetVersionDiffuse?.FileName, CSIR.assetVersionMTL?.FileName, baseName));
+                    CSIR.assetSVX.FileName, CSIR.assetVersionDiffuse?.FileName, CSIR.assetVersionMTL?.FileName, modelBaseName));
 
         const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
@@ -391,6 +419,33 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return [workflow];
         LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to create Cook si-generate-downloads workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
         return null;
+    }
+
+    private static async computeSceneAndModelBaseNames(idModel: number | undefined, defaultFileName: string): Promise<{ sceneBaseName: string, modelBaseName: string}> {
+        let modelSource: DBAPI.Model | null = null;
+        if (idModel) {
+            modelSource = await DBAPI.Model.fetch(idModel);
+            if (!modelSource)
+                LOG.error(`WorkflowEngine.computeSceneAndModelBaseNames unable to compute Model from idModel ${idModel}`, LOG.LS.eWF);
+        }
+
+        let sceneBaseName: string | null = null;
+        if (modelSource) {
+            const MH: ModelHierarchy | null = await NameHelpers.computeModelHierarchy(modelSource);
+            if (MH) {
+                sceneBaseName = NameHelpers.sceneDisplayName('', [MH]); // '' means we don't have a subtitle provided by the user
+                if (sceneBaseName === UNKNOWN_NAME)
+                    sceneBaseName = null;
+            } else
+                LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to load model hierarchy from Model ${H.Helpers.JSONStringify(modelSource)}`, LOG.LS.eWF);
+        }
+
+        if (!sceneBaseName)
+            sceneBaseName = path.parse(defaultFileName).name;
+        sceneBaseName = NameHelpers.sanitizeFileName(sceneBaseName);
+
+        const modelBaseName: string = modelSource ? NameHelpers.sanitizeFileName(modelSource.Name) : sceneBaseName;
+        return { modelBaseName, sceneBaseName };
     }
 
     static async computeWorkflowIDFromEnum(eVocabEnum: COMMON.eVocabularyID, eVocabSetEnum: COMMON.eVocabularySetID): Promise<number | undefined> {
@@ -434,8 +489,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         WFC.workflow = new DBAPI.Workflow({
             idVWorkflowType,
-            idProject: workflowParams.idProject,
-            idUserInitiator: workflowParams.idUserInitiator,
+            idProject: workflowParams.idProject ?? null,
+            idUserInitiator: workflowParams.idUserInitiator ?? null,
             DateInitiated: dtNow,
             DateUpdated: dtNow,
             Parameters: workflowParams.parameters ? JSON.stringify(workflowParams.parameters, H.Helpers.saferStringify) : null,
@@ -456,7 +511,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const workflowStep: DBAPI.WorkflowStep = new DBAPI.WorkflowStep({
             idWorkflow: WFC.workflow.idWorkflow,
             idJobRun: null,
-            idUserOwner: workflowParams.idUserInitiator,
+            idUserOwner: workflowParams.idUserInitiator ?? null,
             idVWorkflowStepType,
             State: COMMON.eWorkflowJobRunStatus.eCreated,
             DateCreated: dtNow,
@@ -552,6 +607,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         let idAssetDiffuse: number | null | undefined = undefined;
         let assetVersionGeometry: DBAPI.AssetVersion | undefined = undefined;
         let assetVersionDiffuse: DBAPI.AssetVersion | undefined = undefined;
+        let assetVersionDiffuseBackup: DBAPI.AssetVersion | undefined = undefined;
         let assetVersionMTL: DBAPI.AssetVersion | undefined = undefined;
         if (modelConstellation.ModelMaterialChannels) {
             for (const MMC of modelConstellation.ModelMaterialChannels) {
@@ -582,6 +638,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             }
         }
 
+        let UVMapFileCount: number = 0;
         for (const modelAsset of modelConstellation.ModelAssets) {
             if (idAssetDiffuse === modelAsset.Asset.idAsset)
                 assetVersionDiffuse = modelAsset.AssetVersion;
@@ -597,11 +654,20 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         continue;
                     }
                     break;
+                case COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile:
+                    UVMapFileCount++;
+                    assetVersionDiffuseBackup = modelAsset.AssetVersion;
+                    break;
             }
 
             if (!assetVersionMTL && path.extname(modelAsset.AssetName.toLowerCase()) === '.mtl')
                 assetVersionMTL = modelAsset.AssetVersion;
         }
+
+        if (!assetVersionDiffuse &&                             // if we don't have a diffuse texture, and
+            !assetVersionMTL &&                                 // we don't have a MTL file, and
+            UVMapFileCount === 1)                               // we have only one UV Map
+            assetVersionDiffuse = assetVersionDiffuseBackup;    // use our "backup" notion of diffuse texture
 
         const units: string | undefined = await COOK.JobCookSIVoyagerScene.convertModelUnitsVocabToCookUnits(modelConstellation.Model.idVUnits);
         const retValue = { exitEarly: false, idModel, idSystemObjectModel, assetVersionGeometry, assetVersionDiffuse, assetVersionMTL, units };
@@ -622,6 +688,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             LOG.error(`WorkflowEngine.computeSceneInfo unable to compute scene from ${JSON.stringify(idScene)}`, LOG.LS.eWF);
             return { exitEarly: true };
         }
+        const scene: DBAPI.Scene = sceneConstellation.Scene;
+        const licenseResolver: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObjectScene);
+        if (!licenseResolver)
+            LOG.error(`WorkflowEngine.computeSceneInfo unable to compute license resolver for scene system object ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
 
         const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObjectScene);
         if (!assetVersions) {
@@ -659,11 +729,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         for (const SO of SOMasters) {
             if (!SO.idModel)
                 continue;
-            const model: DBAPI.Model | null = await DBAPI.Model.fetch(SO.idModel);
-            if (!model) {
-                LOG.error(`WorkflowEngine.computeSceneInfo unable to compute model from ${JSON.stringify(SO.idModel)}`, LOG.LS.eWF);
-                continue;
-            }
 
             CMIR = await this.computeModelInfo(SO.idModel, SO.idSystemObject);
             if (!CMIR.exitEarly) // found a master model!
@@ -676,8 +741,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { exitEarly: true };
         }
 
-        const retValue = { exitEarly: false, idScene, idModel: CMIR.idModel, idSystemObjectScene, assetSVX, assetVersionGeometry: CMIR.assetVersionGeometry,
-            assetVersionDiffuse: CMIR.assetVersionDiffuse, assetVersionMTL: CMIR.assetVersionMTL, scene: sceneConstellation && sceneConstellation.Scene ? sceneConstellation.Scene : undefined };
+        const retValue = { exitEarly: false, idScene, idModel: CMIR.idModel, idSystemObjectScene,
+            assetSVX, assetVersionGeometry: CMIR.assetVersionGeometry, assetVersionDiffuse: CMIR.assetVersionDiffuse,
+            assetVersionMTL: CMIR.assetVersionMTL, scene, licenseResolver };
         LOG.info(`WorkflowEngine.computeSceneInfo returning ${JSON.stringify(retValue, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         return retValue;
     }

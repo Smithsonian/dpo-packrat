@@ -132,7 +132,7 @@ export const attachSystemObjectUploadRedirect = (idSystemObject: number, ObjectT
     return `/ingestion/uploads?idSOAttachment=${idSystemObject}&fileType=${ObjectType}&mode=${eIngestionMode.eAttach}`;
 };
 
-export const truncateWithEllipses = (text: string, max: number) => text.substr(0, max - 1) + (text.length > max ? ' ...' : '');
+export const truncateWithEllipses = (text: string, max: number) => text.slice(0, max - 1) + (text.length > max ? ' ...' : '');
 
 export function getDownloadSiteMapXMLLink(serverEndPoint: string | undefined): string {
     return `${serverEndPoint}/download/sitemap.xml`;

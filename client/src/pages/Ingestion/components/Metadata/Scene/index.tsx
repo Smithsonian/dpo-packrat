@@ -76,6 +76,7 @@ function Scene(props: SceneProps): React.ReactElement {
         EdanUUID: '',
         ApprovedForPublication: false,
         PosedAndQCd: false,
+        CanBeQCd: false,
         UpdateNotes: ''
     });
     const [modalOpen, setModalOpen] = useState(false);
@@ -223,6 +224,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 name={scene.name}
                 approvedForPublication={scene.approvedForPublication}
                 posedAndQCd={scene.posedAndQCd}
+                canBeQCd={scene.canBeQCd}
                 EdanUUID={scene.EdanUUID}
             />
 

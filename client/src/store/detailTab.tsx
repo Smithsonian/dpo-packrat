@@ -56,6 +56,7 @@ export interface SceneDetailsType {
     ApprovedForPublication: boolean;
     PublicationApprover: string | null;
     PosedAndQCd: boolean;
+    CanBeQCd: boolean;
     ModelSceneXref: any[];
 }
 
@@ -165,6 +166,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         ApprovedForPublication: false,
         PublicationApprover: null,
         PosedAndQCd: false,
+        CanBeQCd: false,
         ModelSceneXref: [
             {
                 BoundingBoxP1X: 0,
@@ -477,11 +479,12 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
 
         if (objectType === eSystemObjectType.eScene) {
             const {
-                Scene: { ApprovedForPublication, PublicationApprover, PosedAndQCd, EdanUUID }
+                Scene: { ApprovedForPublication, PublicationApprover, PosedAndQCd, CanBeQCd, EdanUUID }
             } = getDetailsTabDataForObject;
             updateDetailField(eSystemObjectType.eScene, 'ApprovedForPublication', ApprovedForPublication);
             updateDetailField(eSystemObjectType.eScene, 'PublicationApprover', PublicationApprover);
             updateDetailField(eSystemObjectType.eScene, 'PosedAndQCd', PosedAndQCd);
+            updateDetailField(eSystemObjectType.eScene, 'CanBeQCd', CanBeQCd);
             updateDetailField(eSystemObjectType.eScene, 'EdanUUID', EdanUUID);
         }
 
@@ -617,8 +620,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
 
 const schemaCD = yup.object().shape({
     datasetFieldId: yup.number().positive('Dataset Field ID must be positive').max(2147483647, 'Dataset Field ID is too large').nullable(),
-    itemPositionFieldId: yup.number().positive('Item Position Field ID must be positive').max(2147483647, 'Item Position Field ID is too large').nullable(),
-    itemArrangementFieldId: yup.number().positive('Item Arrangement Field ID must be positive').max(2147483647, 'Item Arrangement Field ID is too large').nullable(),
+    itemPositionFieldId: yup.number().positive('Position Field ID must be positive').max(2147483647, 'Position Field ID is too large').nullable(),
+    itemArrangementFieldId: yup.number().positive('Arrangement Field ID must be positive').max(2147483647, 'Arrangement Field ID is too large').nullable(),
     clusterGeometryFieldId: yup.number().positive('Cluster Geometry Field ID must be positive').max(2147483647, 'Cluster Geometry Field ID is too large').nullable()
 });
 

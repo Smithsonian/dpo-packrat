@@ -122,7 +122,7 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
                     gridValue={5}
                 />
             </Box>
-            <Button className={classes.button} variant='contained' color='primary' style={{ width: 'fit-content', marginTop: '7px' }} onClick={redirect}>
+            <Button className={classes.button} variant='contained' disableElevation color='primary' style={{ width: 'fit-content', marginTop: '7px' }} onClick={redirect}>
                 Add Version
             </Button>
         </Box>

@@ -41,7 +41,9 @@ export const useStyles = makeStyles(({ palette }) => ({
         borderBottomRightRadius: '5px',
         // need to specify top radius in table container AND MuiToolbar override
         borderTopRightRadius: '5px',
-        borderTopLeftRadius: '5px'
+        borderTopLeftRadius: '5px',
+        width: 'fit-content',
+        minWidth: '400px'
     },
     centeredTableHead: {
         '& > span': {
@@ -49,11 +51,11 @@ export const useStyles = makeStyles(({ palette }) => ({
         }
     },
     container: {
-        width: '100%',
         background: palette.secondary.light,
         padding: 5,
         borderRadius: 5,
-        marginBottom: 7
+        marginBottom: 7,
+        borderCollapse: 'collapse'
     },
     header: {
         fontSize: '0.9em',
@@ -85,6 +87,38 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     link: {
         textDecoration: 'underline'
+    },
+    tableCell: {
+        padding: '1px 5px 1px 5px'
+    },
+    rollbackContainer: {
+        display: 'flex',
+        width: '90%',
+        alignItems: 'center',
+        columnGap: '10px'
+    },
+    ellipsisCell: {
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+    },
+    fixedTable: {
+        tableLayout: 'fixed',
+        borderCollapse: 'collapse',
+        width: '100%'
+    },
+    downloadIconLink: {
+        textDecoration: 'none',
+        color: 'black',
+        display: 'flex',
+        alignItems: 'end',
+        justifyContent: 'center'
+    },
+    rollbackText: {
+        width: 'fit-content',
+        whiteSpace: 'nowrap',
+        color: 'rgb(0,121,196)',
+        cursor: 'pointer'
     }
 }));
 
@@ -100,9 +134,9 @@ const getMuiTheme = () =>
                 root: {
                     backgroundColor: '#FFFCD1',
                     height: 'fit-content',
-                    padding: '0px',
+                    padding: '0px 0px 0px 5px',
                     margin: '1px',
-                    fontSize: '0.8em'
+                    fontSize: '0.8em',
                 },
                 body: { color: '#2C405A', borderBottomColor: '#FFFCD1', align: 'center' }
             },
@@ -180,13 +214,9 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                         })
                     }),
                     setCellProps:
-                        colAlign === 'center'
-                            ? () => ({
-                                align: 'center'
-                            })
-                            : () => ({
-                                align: 'left'
-                            })
+                        colAlign === 'center' ? () => ({ align: 'center' }) :
+                            colAlign === 'right'  ? () => ({ align: 'right' }) :
+                                () => ({ align: 'left' })
                 }
             };
 
@@ -346,12 +376,12 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                             Download All
                         </Button>
                     )}
-                    <Button className={classes.btn} variant='contained' color='primary' style={{ marginLeft: '2px' }} onClick={redirect}>
+                    <Button className={classes.btn} disableElevation variant='contained' color='primary' style={{ marginLeft: '2px' }} onClick={redirect}>
                         Add Version
                     </Button>
                 </Box>
                 <Box display='flex' flexDirection='row' alignItems='center' style={{ alignSelf: 'flex-end' }}>
-                    { systemObjectType === eSystemObjectType.eScene && (<Button className={classes.btn} variant='contained' color='primary' onClick={addAttachment}>Add Attachment</Button>) }
+                    { systemObjectType === eSystemObjectType.eScene && (<Button className={classes.btn} disableElevation variant='contained' color='primary' onClick={addAttachment}>Add Attachment</Button>) }
                 </Box>
             </Box>
         </React.Fragment>

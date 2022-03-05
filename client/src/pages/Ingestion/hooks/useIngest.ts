@@ -49,7 +49,7 @@ type IngestionStartResult = {
 interface UseIngest {
     ingestionStart: () => Promise<IngestionStartResult>;
     ingestionComplete: () => void;
-    ingestionReset: () => void;
+    ingestionReset: (isFullReset?: boolean) => void;
 }
 
 function useIngest(): UseIngest {
@@ -72,9 +72,10 @@ function useIngest(): UseIngest {
                     idToIdAssetMap.set(id, idAsset);
             });
 
-            const ingestSubjects: IngestSubjectInput[] = subjects.map(({ id, arkId, name, unit }) => ({
+            const ingestSubjects: IngestSubjectInput[] = subjects.map(({ id, arkId, name, unit, collectionId }) => ({
                 id: id || null,
                 arkId,
+                collectionId,
                 name,
                 unit
             }));
@@ -98,7 +99,7 @@ function useIngest(): UseIngest {
 
             const ingestItem: IngestItemInput = {
                 id: ingestItemId,
-                name: item.name,
+                subtitle: item.name, // FIXME -- make sure to pass just the subtitle here!
                 entireSubject: item.entireSubject
             };
 
@@ -205,7 +206,7 @@ function useIngest(): UseIngest {
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const modelData: IngestModelInput = {
-                        name,
+                        subtitle: name, // FIXME -- make sure to pass just the subtitle here!
                         idAssetVersion: parseFileId(file.id),
                         dateCreated,
                         identifiers: ingestIdentifiers,
@@ -239,7 +240,7 @@ function useIngest(): UseIngest {
                         idAssetVersion: parseFileId(file.id),
                         identifiers: ingestIdentifiers,
                         systemCreated,
-                        name,
+                        subtitle: name, // FIXME -- make sure to pass just the subtitle here!
                         approvedForPublication,
                         posedAndQCd,
                         directory,
@@ -347,8 +348,8 @@ function useIngest(): UseIngest {
         history.push(nextRoute);
     };
 
-    const ingestionReset = (): void => {
-        resetUploads();
+    const ingestionReset = (isFullReset?: boolean): void => {
+        isFullReset && resetUploads();
         resetIngestionState();
     };
 

@@ -46,14 +46,10 @@ import {
     CreateCaptureDataResult,
     CreateCaptureDataPhotoInput,
     CreateCaptureDataPhotoResult,
-    CreateSceneInput,
-    CreateSceneResult,
     CreateUnitInput,
     CreateUnitResult,
     CreateProjectInput,
     CreateProjectResult,
-    CreateItemInput,
-    CreateItemResult,
     CreateSubjectInput,
     CreateSubjectResult,
     CreateVocabularyInput,
@@ -164,10 +160,8 @@ import getProjectList from './queries/systemobject/getProjectList';
 import createUser from './mutations/user/createUser';
 import createCaptureData from './mutations/capturedata/createCaptureData';
 import createCaptureDataPhoto from './mutations/capturedata/createCaptureDataPhoto';
-import createScene from './mutations/scene/createScene';
 import createUnit from './mutations/unit/createUnit';
 import createProject from './mutations/unit/createProject';
-import createItem from './mutations/unit/createItem';
 import createSubject from './mutations/unit/createSubject';
 import createVocabulary from './mutations/vocabulary/createVocabulary';
 import createVocabularySet from './mutations/vocabulary/createVocabularySet';
@@ -200,10 +194,8 @@ const allQueries = {
     createUser,
     createCaptureData,
     createCaptureDataPhoto,
-    createScene,
     createUnit,
     createProject,
-    createItem,
     createSubject,
     createVocabulary,
     createVocabularySet,
@@ -393,16 +385,6 @@ class GraphQLApi {
 
     async getScene(input: GetSceneInput, context?: Context): Promise<GetSceneResult> {
         const operationName = 'getScene';
-        const variables = { input };
-        return this.graphqlRequest({
-            operationName,
-            variables,
-            context
-        });
-    }
-
-    async createScene(input: CreateSceneInput, context?: Context): Promise<CreateSceneResult> {
-        const operationName = 'createScene';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
@@ -683,16 +665,6 @@ class GraphQLApi {
 
     async getItem(input: GetItemInput, context?: Context): Promise<GetItemResult> {
         const operationName = 'getItem';
-        const variables = { input };
-        return this.graphqlRequest({
-            operationName,
-            variables,
-            context
-        });
-    }
-
-    async createItem(input: CreateItemInput, context?: Context): Promise<CreateItemResult> {
-        const operationName = 'createItem';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

@@ -87,7 +87,7 @@ function Uploads(): React.ReactElement {
         state.getMetadataInfo,
         state.getMetadatas
     ]);
-    const { ingestionStart, ingestionComplete } = useIngest();
+    const { ingestionStart, ingestionComplete, ingestionReset } = useIngest();
     const assetTypes = getEntries(eVocabularySetID.eAssetAssetType);
     let idVAssetType: number;
     const urlParams = new URLSearchParams(window.location.search);
@@ -177,8 +177,9 @@ function Uploads(): React.ReactElement {
     };
 
     const onIngest = async (): Promise<void> => {
-        const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
+        const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_MEDIA_GROUP);
         try {
+            ingestionReset();
             setGettingAssetDetails(true);
             // console.log(`Uploads.onIngest updatedAssetVersionMetadata=${JSON.stringify(updatedAssetVersionMetadata)}`);
             const data = await updateMetadataSteps(updatedAssetVersionMetadata);

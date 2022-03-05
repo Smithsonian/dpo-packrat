@@ -101,7 +101,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 WHERE SOI.idItem IS NOT NULL
                   AND SOS.idSubject IN (${Prisma.join(idSubjects)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.PRoject.fetchMasterFromSubjects', LOG.LS.eDB, error);
+            LOG.error('DBAPI.Project.fetchMasterFromSubjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -125,7 +125,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObject AS SOS ON (SOX.idSystemObjectDerived = SOS.idSystemObject)
                 WHERE SOS.idStakeholder IN (${Prisma.join(idStakeholders)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.PRoject.fetchMasterFromSubjects', LOG.LS.eDB, error);
+            LOG.error('DBAPI.Project.fetchMasterFromSubjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -145,7 +145,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN ProjectDocumentation AS PD ON (PD.idProject = P.idProject)
                 WHERE PD.idProjectDocumentation IN (${Prisma.join(idProjectDocumentations)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.PRoject.fetchMasterFromProjectDocumentations', LOG.LS.eDB, error);
+            LOG.error('DBAPI.Project.fetchMasterFromProjectDocumentations', LOG.LS.eDB, error);
             return null;
         }
     }

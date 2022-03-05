@@ -6,6 +6,7 @@ input IngestSubjectInput {
     id: Int
     name: String!
     arkId: String!
+    collectionId: String!
     unit: String!
 }
 
@@ -16,7 +17,7 @@ input IngestProjectInput {
 
 input IngestItemInput {
     id: Int
-    name: String!
+    subtitle: String!
     entireSubject: Boolean!
 }
 
@@ -68,7 +69,7 @@ input IngestModelInput {
     idAssetVersion: Int!
     idAsset: Int
     systemCreated: Boolean!
-    name: String!
+    subtitle: String!
     creationMethod: Int!
     modality: Int!
     purpose: Int!
@@ -86,7 +87,7 @@ input IngestSceneInput {
     idAssetVersion: Int!
     idAsset: Int
     systemCreated: Boolean!
-    name: String!
+    subtitle: String!
     approvedForPublication: Boolean!
     posedAndQCd: Boolean!
     directory: String!

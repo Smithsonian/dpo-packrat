@@ -81,12 +81,13 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         if (!SubjectUnitIdentifier.length) done();
 
-                        const { idSubject, SubjectName, IdentifierPublic, UnitAbbreviation } = SubjectUnitIdentifier[0];
+                        const { idSubject, SubjectName, IdentifierPublic, IdentifierCollection, UnitAbbreviation } = SubjectUnitIdentifier[0];
 
                         const subject: IngestSubjectInput = {
                             id: idSubject,
                             name: SubjectName,
-                            arkId: IdentifierPublic || '',
+                            arkId: IdentifierPublic ?? '',
+                            collectionId: IdentifierCollection ?? '',
                             unit: UnitAbbreviation
                         };
 
@@ -105,7 +106,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         const item: IngestItemInput = {
                             id: null,
-                            name: 'custom item',
+                            subtitle: 'custom item',
                             entireSubject: true
                         };
 

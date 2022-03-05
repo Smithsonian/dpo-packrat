@@ -453,6 +453,16 @@ export class Helpers {
         return isNaN(timestamp) ? null : new Date(timestamp);
     }
 
+    static safeRound(input: number | null, precision: number = 10): number | null {
+        if (input === null)
+            return null;
+        return parseFloat(input.toFixed(precision));
+    }
+
+    static JSONStringify(obj: any): string {
+        return JSON.stringify(obj, Helpers.saferStringify);
+    }
+
     /** Stringifies Maps and BigInts */
     static saferStringify(key: any, value: any): any {
         key;
