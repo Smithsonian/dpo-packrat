@@ -1936,10 +1936,10 @@ export type GetSystemObjectDetailsResult = {
   derivedObjects: Array<RelatedObject>;
   objectVersions: Array<SystemObjectVersion>;
   metadata: Array<Metadata>;
-  unit?: Maybe<RepositoryPath>;
-  project?: Maybe<RepositoryPath>;
-  subject?: Maybe<RepositoryPath>;
-  item?: Maybe<RepositoryPath>;
+  unit?: Maybe<Array<RepositoryPath>>;
+  project?: Maybe<Array<RepositoryPath>>;
+  subject?: Maybe<Array<RepositoryPath>>;
+  item?: Maybe<Array<RepositoryPath>>;
   asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
@@ -3724,19 +3724,19 @@ export type GetSystemObjectDetailsQuery = (
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
-    )>, unit?: Maybe<(
+    )>, unit?: Maybe<Array<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
-    )>, project?: Maybe<(
+    )>>, project?: Maybe<Array<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
-    )>, subject?: Maybe<(
+    )>>, subject?: Maybe<Array<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
-    )>, item?: Maybe<(
+    )>>, item?: Maybe<Array<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
-    )>, asset?: Maybe<(
+    )>>, asset?: Maybe<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
     )>, assetOwner?: Maybe<(
