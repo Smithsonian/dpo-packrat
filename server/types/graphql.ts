@@ -1933,10 +1933,10 @@ export type GetSystemObjectDetailsResult = {
   derivedObjects: Array<RelatedObject>;
   objectVersions: Array<SystemObjectVersion>;
   metadata: Array<Metadata>;
-  unit?: Maybe<RepositoryPath>;
-  project?: Maybe<RepositoryPath>;
-  subject?: Maybe<RepositoryPath>;
-  item?: Maybe<RepositoryPath>;
+  unit?: Maybe<Array<RepositoryPath>>;
+  project?: Maybe<Array<RepositoryPath>>;
+  subject?: Maybe<Array<RepositoryPath>>;
+  item?: Maybe<Array<RepositoryPath>>;
   asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   license?: Maybe<License>;
@@ -2444,7 +2444,7 @@ export type GetCurrentUserResult = {
 };
 
 export type GetUserInput = {
-  idUser: Scalars['Int'];
+  idUser?: Maybe<Scalars['Int']>;
 };
 
 export type GetUserResult = {

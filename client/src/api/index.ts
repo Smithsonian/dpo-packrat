@@ -46,8 +46,10 @@ export default class API {
 
     static serverEndpoint(): string {
         // If we're accessing Packrat via Telework, hard-code server path to the server directory of the host root
-        if (window.location.hostname === 'packrat-telework.si.edu')
-            return 'https://packrat-telework.si.edu/server';
+        switch (window.location.hostname.toLowerCase()) {
+            case 'packrat-telework.si.edu':         return 'https://packrat-telework.si.edu/server';        // production
+            case 'packrat-test-telework.si.edu':    return 'https://packrat-test-telework.si.edu/server';   // staging
+        }
 
         const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
         if (!REACT_APP_PACKRAT_SERVER_ENDPOINT)

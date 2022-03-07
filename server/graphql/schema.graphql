@@ -1463,10 +1463,10 @@ type GetSystemObjectDetailsResult {
   derivedObjects: [RelatedObject!]!
   objectVersions: [SystemObjectVersion!]!
   metadata: [Metadata!]!
-  unit: RepositoryPath
-  project: RepositoryPath
-  subject: RepositoryPath
-  item: RepositoryPath
+  unit: [RepositoryPath!]
+  project: [RepositoryPath!]
+  subject: [RepositoryPath!]
+  item: [RepositoryPath!]
   asset: RepositoryPath
   assetOwner: RepositoryPath
   license: License
@@ -1931,7 +1931,7 @@ type GetCurrentUserResult {
 }
 
 input GetUserInput {
-  idUser: Int!
+  idUser: Int
 }
 
 type GetUserResult {
