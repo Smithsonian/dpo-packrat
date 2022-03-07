@@ -6,6 +6,6 @@ export default async function getUser(_: Parent, args: QueryGetUserArgs): Promis
     const { input } = args;
     const { idUser } = input;
 
-    const User = await DBAPI.User.fetch(idUser);
+    const User = idUser ? await DBAPI.User.fetch(idUser) : null;
     return { User };
 }

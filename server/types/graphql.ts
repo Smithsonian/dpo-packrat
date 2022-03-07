@@ -2444,7 +2444,7 @@ export type GetCurrentUserResult = {
 };
 
 export type GetUserInput = {
-  idUser: Scalars['Int'];
+  idUser?: Maybe<Scalars['Int']>;
 };
 
 export type GetUserResult = {
