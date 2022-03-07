@@ -222,7 +222,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             {project && (<Detail label='Project' paths={project} />)}
             {subject && (<Detail label='Subject' paths={subject} />)}
             {item && (<Detail label='Media Group' paths={item} />)}
-            {(asset && <Detail idSystemObject={asset?.idSystemObject} label='Asset' value={asset?.name} />)}
+            {(asset && objectType !== eSystemObjectType.eAsset && <Detail idSystemObject={asset?.idSystemObject} label='Asset' value={asset?.name} />)}
             {(objectType === eSystemObjectType.eScene) && (
                 <Detail
                     label='Publish State'
