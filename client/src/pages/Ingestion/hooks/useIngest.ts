@@ -99,7 +99,7 @@ function useIngest(): UseIngest {
 
             const ingestItem: IngestItemInput = {
                 id: ingestItemId,
-                subtitle: item.name, // FIXME -- make sure to pass just the subtitle here!
+                subtitle: '', // FIXME -- make sure to pass just the subtitle here! Previously, was item.name
                 entireSubject: item.entireSubject
             };
 
@@ -181,7 +181,6 @@ function useIngest(): UseIngest {
                     const {
                         identifiers,
                         systemCreated,
-                        name,
                         creationMethod,
                         modality,
                         units,
@@ -206,7 +205,7 @@ function useIngest(): UseIngest {
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const modelData: IngestModelInput = {
-                        subtitle: name, // FIXME -- make sure to pass just the subtitle here!
+                        subtitle: '', // FIXME -- make sure to pass just the subtitle here! Previously, was model.name
                         idAssetVersion: parseFileId(file.id),
                         dateCreated,
                         identifiers: ingestIdentifiers,
@@ -232,7 +231,7 @@ function useIngest(): UseIngest {
                 }
 
                 if (isScene) {
-                    const { identifiers, systemCreated, approvedForPublication, posedAndQCd, name, directory, sourceObjects,
+                    const { identifiers, systemCreated, approvedForPublication, posedAndQCd, directory, sourceObjects,
                         derivedObjects, updateNotes } = scene;
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
@@ -240,7 +239,7 @@ function useIngest(): UseIngest {
                         idAssetVersion: parseFileId(file.id),
                         identifiers: ingestIdentifiers,
                         systemCreated,
-                        subtitle: name, // FIXME -- make sure to pass just the subtitle here!
+                        subtitle: '', // FIXME -- make sure to pass just the subtitle here! Previously, was scene.name
                         approvedForPublication,
                         posedAndQCd,
                         directory,
