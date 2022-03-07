@@ -33,7 +33,7 @@ const useStyles = makeStyles(({ typography, palette }) => ({
     },
     value: {
         color: palette.primary.dark,
-        textDecoration: ({ clickable = true, value }: DetailProps) => (clickable && value ? 'underline' : undefined)
+        textDecoration: ({ clickable = true, value, paths }: DetailProps) => (clickable && (value || paths) ? 'underline' : undefined)
     }
 }));
 
@@ -88,10 +88,10 @@ const CheckboxNoPadding = withStyles({
 })(Checkbox);
 
 interface ObjectDetailsProps {
-    unit?: RepositoryPath | null;
-    project?: RepositoryPath | null;
-    subject?: RepositoryPath | null;
-    item?: RepositoryPath | null;
+    unit?: RepositoryPath[] | null;
+    project?: RepositoryPath[] | null;
+    subject?: RepositoryPath[] | null;
+    item?: RepositoryPath[] | null;
     asset?: RepositoryPath | null;
     disabled: boolean;
     publishedState: string;
@@ -218,10 +218,10 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
 
     return (
         <Box display='flex' flex={2} flexDirection='column'>
-            {(unit && <Detail idSystemObject={unit?.idSystemObject} label='Unit' value={unit?.name} />)}
-            {(project && <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />)}
-            {(subject && <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />)}
-            {(item && <Detail idSystemObject={item?.idSystemObject} label='Media Group' value={item?.name} />)}
+            {unit && (<Detail label='Unit' paths={unit} />)}
+            {project && (<Detail label='Project' paths={project} />)}
+            {subject && (<Detail label='Subject' paths={subject} />)}
+            {item && (<Detail label='Media Group' paths={item} />)}
             {(asset && <Detail idSystemObject={asset?.idSystemObject} label='Asset' value={asset?.name} />)}
             {(objectType === eSystemObjectType.eScene) && (
                 <Detail
@@ -313,16 +313,26 @@ interface DetailProps {
     valueComponent?: React.ReactNode;
     clickable?: boolean;
     name?: string;
+    paths?: RepositoryPath[]
 }
 
 function Detail(props: DetailProps): React.ReactElement {
-    const { idSystemObject, label, value, valueComponent, clickable = true, name } = props;
+    const { idSystemObject, label, value, valueComponent, clickable = true, name, paths } = props;
     const classes = useStyles(props);
 
-    let content: React.ReactNode = <Typography className={classes.value}>{value || '-'}</Typography>;
-
-    if (clickable && idSystemObject) {
-        content = <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>{content}</NewTabLink>;
+    let content: React.ReactNode = null;
+    if (value) {
+        content = <Typography className={classes.value}>{value || '-'}</Typography>;
+        if (clickable && idSystemObject)
+            content = <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>{content}</NewTabLink>;
+    } else if (paths) {
+        content = <React.Fragment>{paths.map((path, index) => {
+            const ciInnner: React.ReactNode = <Typography className={classes.value}>{path.name || '-'}</Typography>;
+            const ciOuter: React.ReactNode = (clickable && path.idSystemObject)
+                ? <NewTabLink to={getDetailsUrlForObject(path.idSystemObject)}>{ciInnner}</NewTabLink>
+                : ciInnner;
+            return [(index) ? (<Typography className={classes.value} key={`comma${path.idSystemObject}`}>,&nbsp;</Typography>) : null, ciOuter];
+        })}</React.Fragment>;
     }
 
     return (

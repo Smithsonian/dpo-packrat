@@ -29,10 +29,10 @@ export class ObjectAncestors {
     OG: ObjectGraph;
     OGDB: ObjectGraphDatabase;
 
-    unit: RepositoryPath | null = null;
-    project: RepositoryPath | null = null;
-    subject: RepositoryPath | null = null;
-    item: RepositoryPath | null = null;
+    unit: RepositoryPath[] | null = null;
+    project: RepositoryPath[] | null = null;
+    subject: RepositoryPath[] | null = null;
+    item: RepositoryPath[] | null = null;
     ancestorStack: RepositoryPath[][] = [];
 
     private handledMap: Map<number, RepositoryPath> = new Map<number, RepositoryPath>();
@@ -167,10 +167,10 @@ export class ObjectAncestors {
             return ancestors;
 
         switch (eObjectType) {
-            case COMMON.eSystemObjectType.eUnit:     this.unit       = ancestors[0]; break;
-            case COMMON.eSystemObjectType.eProject:  this.project    = ancestors[0]; break;
-            case COMMON.eSystemObjectType.eSubject:  this.subject    = ancestors[0]; break;
-            case COMMON.eSystemObjectType.eItem:     this.item       = ancestors[0]; break;
+            case COMMON.eSystemObjectType.eUnit: this.unit = ancestors; break;
+            case COMMON.eSystemObjectType.eProject: this.project = ancestors; break;
+            case COMMON.eSystemObjectType.eSubject: this.subject= ancestors; break;
+            case COMMON.eSystemObjectType.eItem: this.item = ancestors; break;
         }
 
         if (pushAncestors)
