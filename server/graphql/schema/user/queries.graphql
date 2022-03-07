@@ -9,7 +9,7 @@ type GetCurrentUserResult {
 }
 
 input GetUserInput {
-    idUser: Int!
+    idUser: Int
 }
 
 type GetUserResult {
