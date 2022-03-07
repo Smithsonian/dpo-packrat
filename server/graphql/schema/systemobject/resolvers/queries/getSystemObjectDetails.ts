@@ -192,10 +192,10 @@ async function getIngestIdentifiers(idSystemObject: number): Promise<IngestIdent
 type GetObjectAncestorsResult = {
     success: boolean;
     error?: string;
-    unit?: RepositoryPath | null;
-    project?: RepositoryPath | null;
-    subject?: RepositoryPath | null;
-    item?: RepositoryPath | null;
+    unit?: RepositoryPath[] | null;
+    project?: RepositoryPath[] | null;
+    subject?: RepositoryPath[] | null;
+    item?: RepositoryPath[] | null;
     objectAncestors: RepositoryPath[][];
     OGDB?: DBAPI.ObjectGraphDatabase;
 };
