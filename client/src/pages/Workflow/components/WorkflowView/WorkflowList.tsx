@@ -165,7 +165,7 @@ function WorkflowList(): React.ReactElement {
         elevation: 0,
         viewColumns: false,
         rowsPerPage: rowCount,
-        rowsPerPageOptions: [10, 25, 100],
+        rowsPerPageOptions: [50, 100],
         sortOrder: { name: workflowListSortEnumToString(sortBy), direction: sortOrder ? 'asc' : 'desc' },
         onColumnSortChange: (changedColumn: string, direction: string) => paginationUpdateAndRefetchList(ePaginationChange.eSort, null, changedColumn, direction),
         customTableBodyFooterRender: function Pagination() {
@@ -180,6 +180,7 @@ function WorkflowList(): React.ReactElement {
                             onChangePage={(_e, currentPage) => paginationUpdateAndRefetchList(ePaginationChange.ePage, currentPage, null, null)}
                             backIconButtonProps={{ className: classes.footerBtn }}
                             nextIconButtonProps={{ className: classes.footerBtn }}
+                            rowsPerPageOptions={[50, 100]}
                         />
                     </tr>
                 </tfoot>
