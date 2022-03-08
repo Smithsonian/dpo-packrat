@@ -73,9 +73,9 @@ function Ingestion(): React.ReactElement {
         let allowChange: boolean = true;
         const { href: url } = window.location;
 
-        // reset when we navigate to any other part of the app
+        // reset when we navigate to any other part of the app from subject/item or metadata
         if (!pathname.includes(HOME_ROUTES.INGESTION)) {
-            allowChange = !(url.includes(INGESTION_ROUTES_TYPE.METADATA) || url.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP) || url.includes(INGESTION_ROUTES_TYPE.UPLOADS));
+            allowChange = !(url.includes(INGESTION_ROUTES_TYPE.METADATA) || url.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP));
         }
 
         if (url.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP)) {
