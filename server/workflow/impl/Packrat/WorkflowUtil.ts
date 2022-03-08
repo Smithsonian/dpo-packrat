@@ -1,8 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types, no-constant-condition */
+import * as WF from '../../interface';
+import { WorkflowJobParameters } from './WorkflowJob';
+import * as COOK from '../../../job/impl/Cook';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
+import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
+import { JobCookSIPackratInspectOutput } from '../../../job/impl/Cook';
 
 export type WorkflowUtilExtractAssetVersions = {
     success: boolean;
@@ -34,5 +39,82 @@ export class WorkflowUtil {
             systemObjectAssetVersionMap.set(idSystemObject, OID.idObject);
         }
         return { success: true, idAssetVersions, systemObjectAssetVersionMap };
+    }
+
+    static async computeModelMetrics(fileName: string,
+        idModel: number | undefined,
+        idSystemObjectModel: number | undefined,
+        idSystemObjectAssetVersion: number | undefined,
+        readStream: NodeJS.ReadableStream | undefined, idProject: number | undefined, idUserInitiator: number | undefined): Promise<H.IOResults> {
+        LOG.info(`WorkflowUtil.computeModelMetrics (${fileName}, idModel ${idModel}, idSystemObjectModel ${idSystemObjectModel}, idSystemObjectAssetVersion ${idSystemObjectAssetVersion})`, LOG.LS.eWF);
+
+        const parameters: WorkflowJobParameters =
+            new WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect,
+                new COOK.JobCookSIPackratInspectParameters(fileName, undefined, readStream));
+
+        if (!idModel && !idSystemObjectModel && !idSystemObjectAssetVersion)
+            return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} called without identifiers` };
+
+        // compute array of idSystemObjects for the asset versions of the specified model/system object of a model/system object of an asset version
+        const idSystemObject: number[] = [];
+        const idAssetVersions: number[] = [];
+        if (idSystemObjectAssetVersion)
+            idSystemObject.push(idSystemObjectAssetVersion);
+        else {
+            if (!idSystemObjectModel) {
+                const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel ?? 0);
+                if (!model)
+                    return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} unable to load model from ${idModel}` };
+                const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
+                if (!modelSO)
+                    return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} unable to load model system object from ${H.Helpers.JSONStringify(model)}` };
+                idSystemObjectModel = modelSO.idSystemObject;
+            }
+
+            const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObjectModel);
+            if (!assetVersions)
+                return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} unable to load asset versions from ${idSystemObjectModel}` };
+            for (const assetVersion of assetVersions) {
+                const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
+                if (!SOI)
+                    return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} unable to fetch system object info from ${H.Helpers.JSONStringify(assetVersion)}` };
+                idSystemObject.push(SOI.idSystemObject);
+                idAssetVersions.push(assetVersion.idAssetVersion);
+            }
+        }
+
+        const wfParams: WF.WorkflowParameters = {
+            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
+            idSystemObject,
+            idProject,
+            idUserInitiator,
+            parameters,
+        };
+
+        const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+        if (!workflowEngine)
+            return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}` };
+
+        const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
+        if (!workflow)
+            return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}` };
+
+        const results = await workflow.waitForCompletion(3600000);
+        if (!results.success)
+            return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} post-upload workflow error: ${results.error}` };
+
+        // persist extracted metrics, if we have a source model
+        if (idModel) {
+            for (const idAssetVersion of idAssetVersions) {
+                const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion);
+                if (JCOutput) {
+                    LOG.info(`WorkflowUtil.computeModelMetrics ${fileName} persisting metrics for model ${idModel}`, LOG.LS.eWF);
+                    const results: H.IOResults = await JCOutput.persist(idModel);
+                    if (!results.success)
+                        return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} post-upload workflow error: ${results.error}` };
+                }
+            }
+        }
+        return { success: true };
     }
 }
