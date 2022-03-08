@@ -99,9 +99,9 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
     /** Persists subobjects found in JobCookSIPackratInspectOutput's ModelConstellation.
      * @param idModel If idModel > 0, we update that model; otherwise we create one
-     * @param assetMap Map of asset filename -> idAsset; assets referenced but missing in this map will cause an error
+     * @param assetMap Map of asset filename -> idAsset; if supplied, assets referenced but missing in this map will cause an error
      */
-    async persist(idModel: number, assetMap: Map<string, number>): Promise<H.IOResults> {
+    async persist(idModel: number, assetMap?: Map<string, number> | undefined): Promise<H.IOResults> {
         if (!this.modelConstellation || !this.modelConstellation.Model || !this.modelConstellation.ModelObjects) {
             const error: string = 'Invalid JobCookSIPackratInspectOutput';
             LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
@@ -117,7 +117,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         const origModelConstellation: DBAPI.ModelConstellation | null = (idModel > 0) ? await DBAPI.ModelConstellation.fetch(idModel) : null;
 
         // map and validate assets:
-        if (this.modelConstellation.ModelAssets) {
+        if (assetMap && this.modelConstellation.ModelAssets) {
             for (const modelAsset of this.modelConstellation.ModelAssets) {
                 const fileName: string = modelAsset.Asset.FileName.trim();
                 let mappedId: number | undefined = assetMap.get(fileName);

@@ -1,7 +1,5 @@
 import * as WF from '../../interface';
 import { WorkflowUtil, WorkflowUtilExtractAssetVersions } from './WorkflowUtil';
-import { WorkflowJobParameters } from './WorkflowJob';
-import * as COOK from '../../../job/impl/Cook';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
@@ -206,34 +204,12 @@ export class WorkflowUpload implements WF.IWorkflow {
                 return { success: true };
         }
 
-        // initiate WorkflowJob for cook si-packrat-inspect
-        const parameters: WorkflowJobParameters =
-            new WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect,
-                new COOK.JobCookSIPackratInspectParameters(fileName /* assetVersion.FileName */, undefined, !fromZip ? undefined : readStream));
-
-        const wfParams: WF.WorkflowParameters = {
-            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
-            idSystemObject: [idSystemObject],
-            idProject: this.workflowParams.idProject,
-            idUserInitiator: this.workflowParams.idUserInitiator,
-            parameters,
-        };
-
-        const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
-        if (!workflowEngine)
-            return this.handleError(`WorkflowUpload.validateFile ${fileName} unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}`);
-
-        const workflow = await workflowEngine.create(wfParams);
-        if (!workflow)
-            return this.handleError(`WorkflowUpload.validateFile ${fileName} unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}`);
-
-        const results = await workflow.waitForCompletion(3600000);
-        if (results.success) {
-            this.appendToWFReport(`Upload validated ${fileName}`);
-            return results;
-        } else {
-            return this.handleError(`WorkflowUpload.validateFile ${fileName} post-upload workflow error: ${results.error}`);
-        }
+        const results: H.IOResults = await WorkflowUtil.computeModelMetrics(fileName, undefined, undefined, idSystemObject,
+            !fromZip ? undefined : readStream, this.workflowParams.idProject, this.workflowParams.idUserInitiator);
+        if (!results.success)
+            return this.handleError(results.error ?? '');
+        this.appendToWFReport(`Upload validated ${fileName}`);
+        return results;
     }
 
     private async testIfModel(fileName: string, asset: DBAPI.Asset): Promise<boolean> {

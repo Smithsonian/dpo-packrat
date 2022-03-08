@@ -4,6 +4,7 @@ import { CookRecipe } from './CookRecipe';
 import { Config } from '../../../config';
 
 import * as JOB from '../../interface';
+import { WorkflowUtil } from '../../../workflow/impl/Packrat/WorkflowUtil';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
@@ -408,6 +409,14 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                         if (!SOVAVX)
                             LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable create/update SystemObjectVersionAssetVersionXref for ${JSON.stringify(SOV, H.Helpers.saferStringify)}, ${JSON.stringify(ISR.assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
                     }
+
+                    // run si-packrat-inspect on this model
+                    const results: H.IOResults = await WorkflowUtil.computeModelMetrics(FileName, model.idModel, undefined, undefined,
+                        undefined, undefined /* FIXME */, idUserCreator);
+                    if (results.success)
+                        this.appendToReportAndLog(`JobCookSIVoyagerScene extracted model metrics for ${FileName}`);
+                    else if (results.error)
+                        this.logError(results.error);
                 } else
                     LOG.error(`JobCookSIVoyagerScene.createSystemObjects skipping unnamed model ${JSON.stringify(MSX)}`, LOG.LS.eJOB);
             }
