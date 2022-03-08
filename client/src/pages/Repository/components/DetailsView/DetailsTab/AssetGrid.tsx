@@ -134,7 +134,7 @@ const getMuiTheme = () =>
                 root: {
                     backgroundColor: '#FFFCD1',
                     height: 'fit-content',
-                    padding: '0px 0px 0px 5px',
+                    padding: '0px 3px',
                     margin: '1px',
                     fontSize: '0.8em',
                 },
@@ -351,6 +351,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         fixedHeader: false,
         pagination: false,
         elevation: 0,
+        viewColumns: false,
         onViewColumnsChange: toggleColumn
     };
 
