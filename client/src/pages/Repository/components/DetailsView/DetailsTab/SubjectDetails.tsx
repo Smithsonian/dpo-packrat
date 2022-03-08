@@ -96,62 +96,68 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                     </TableCell>
                                 </TableRow>
                             }
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Latitude</Typography>
-                                </TableCell>
-                                <TableCell className={clsx(classes.tableCell, classes.valueText)}>
-                                    <DebounceInput
-                                        element='input'
-                                        title='Latitude-input'
-                                        disabled={disabled}
-                                        value={details.Latitude || ''}
-                                        type='number'
-                                        name='Latitude'
-                                        onChange={onChange}
-                                        className={clsx(classes.input, classes.datasetFieldInput)}
-                                        style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Latitude')) }}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Longitude</Typography>
-                                </TableCell>
-                                <TableCell className={clsx(classes.tableCell, classes.valueText)}>
-                                    <DebounceInput
-                                        element='input'
-                                        title='Longitude-input'
-                                        disabled={disabled}
-                                        value={details.Longitude || ''}
-                                        type='number'
-                                        name='Longitude'
-                                        onChange={onChange}
-                                        className={clsx(classes.input, classes.datasetFieldInput)}
-                                        style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Longitude')) }}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={classes.tableCell}>
-                                    <Typography className={classes.labelText}>Altitude</Typography>
-                                </TableCell>
-                                <TableCell className={clsx(classes.tableCell, classes.valueText)}>
-                                    <DebounceInput
-                                        element='input'
-                                        title='Altitude-input'
-                                        disabled={disabled}
-                                        value={details.Altitude || ''}
-                                        type='number'
-                                        name='Altitude'
-                                        onChange={onChange}
-                                        className={clsx(classes.input, classes.datasetFieldInput)}
-                                        style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Altitude')) }}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <RotationOriginInput originalFields={originalFields} TS0={details.TS0} TS1={details.TS1} TS2={details.TS2} onChange={onChange} />
-                            <RotationQuaternionInput originalFields={originalFields} R0={details.R0} R1={details.R1} R2={details.R2} R3={details.R3} onChange={onChange} />
+                            {
+                                isItemView ? null : (
+                                    <>
+                                        <TableRow className={classes.tableRow}>
+                                            <TableCell className={classes.tableCell}>
+                                                <Typography className={classes.labelText}>Latitude</Typography>
+                                            </TableCell>
+                                            <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                                                <DebounceInput
+                                                    element='input'
+                                                    title='Latitude-input'
+                                                    disabled={disabled}
+                                                    value={details.Latitude || ''}
+                                                    type='number'
+                                                    name='Latitude'
+                                                    onChange={onChange}
+                                                    className={clsx(classes.input, classes.datasetFieldInput)}
+                                                    style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Latitude')) }}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow className={classes.tableRow}>
+                                            <TableCell className={classes.tableCell}>
+                                                <Typography className={classes.labelText}>Longitude</Typography>
+                                            </TableCell>
+                                            <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                                                <DebounceInput
+                                                    element='input'
+                                                    title='Longitude-input'
+                                                    disabled={disabled}
+                                                    value={details.Longitude || ''}
+                                                    type='number'
+                                                    name='Longitude'
+                                                    onChange={onChange}
+                                                    className={clsx(classes.input, classes.datasetFieldInput)}
+                                                    style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Longitude')) }}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow className={classes.tableRow}>
+                                            <TableCell className={classes.tableCell}>
+                                                <Typography className={classes.labelText}>Altitude</Typography>
+                                            </TableCell>
+                                            <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                                                <DebounceInput
+                                                    element='input'
+                                                    title='Altitude-input'
+                                                    disabled={disabled}
+                                                    value={details.Altitude || ''}
+                                                    type='number'
+                                                    name='Altitude'
+                                                    onChange={onChange}
+                                                    className={clsx(classes.input, classes.datasetFieldInput)}
+                                                    style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Altitude')) }}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                        <RotationOriginInput originalFields={originalFields} TS0={details.TS0} TS1={details.TS1} TS2={details.TS2} onChange={onChange} />
+                                        <RotationQuaternionInput originalFields={originalFields} R0={details.R0} R1={details.R1} R2={details.R2} R3={details.R3} onChange={onChange} />
+                                    </>
+                                )
+                            }
                         </TableBody>
                     </Table>
                 </TableContainer>

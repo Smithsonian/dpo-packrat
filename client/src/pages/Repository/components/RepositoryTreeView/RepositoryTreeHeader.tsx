@@ -13,7 +13,6 @@ import { getTreeViewColumns } from '../../../../utils/repository';
 import MetadataView from './MetadataView';
 import ResizeObserver from 'resize-observer-polyfill';
 import { useTreeColumnsStore } from '../../../../store';
-import { debounce } from 'lodash';
 import clsx from 'clsx';
 
 const SO_NAME_COLUMN_HEADER = 'object-name';
@@ -112,10 +111,9 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
         const columnSet = new Set<ResizeObserver>();
 
         // Debouncing the width update makes the transition smoother
-        const debounceUpdateWidth = debounce(updateWidth, 5);
         const nameHeader = document.getElementById(SO_NAME_COLUMN_HEADER);
         const columnObersver = new ResizeObserver((e) => {
-            debounceUpdateWidth(SO_NAME_COLUMN_HEADER, String(e[0].contentRect.width));
+            updateWidth(SO_NAME_COLUMN_HEADER, String(e[0].contentRect.width));
         });
         if (nameHeader)
             columnObersver.observe(nameHeader);
@@ -123,7 +121,7 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
             const target = document.getElementById(`column-${col.label}`);
             if (target) {
                 const columnObersver = new ResizeObserver((e) => {
-                    debounceUpdateWidth(col.metadataColumn as number, String(e[0].contentRect.width));
+                    updateWidth(col.metadataColumn as number, String(e[0].contentRect.width));
                 });
                 columnObersver.observe(target);
                 columnSet.add(columnObersver);

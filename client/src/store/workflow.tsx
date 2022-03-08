@@ -43,7 +43,7 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
     dateFrom: null,
     dateTo: null,
     pageNumber: 0,
-    rowCount: 10,
+    rowCount: 50,
     sortBy: eWorkflowListSortColumns.eStart,
     sortOrder: false,
     loading: false,
