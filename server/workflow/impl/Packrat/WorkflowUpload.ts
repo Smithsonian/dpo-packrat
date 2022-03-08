@@ -195,20 +195,11 @@ export class WorkflowUpload implements WF.IWorkflow {
     }
 
     private async validateFileModel(fileName: string, readStream: NodeJS.ReadableStream, fromZip: boolean, idSystemObject: number): Promise<H.IOResults> {
-        switch (path.extname(fileName).toLowerCase()) {
-            case '.usda':
-            case '.usdc':
-            case '.usdz':
-            case '.wrl':
-                this.appendToWFReport(`Upload validation skipped for model ${fileName} (not yet supported by Cook's si-packrat-inspect recipe)`);
-                return { success: true };
-        }
-
         const results: H.IOResults = await WorkflowUtil.computeModelMetrics(fileName, undefined, undefined, idSystemObject,
             !fromZip ? undefined : readStream, this.workflowParams.idProject, this.workflowParams.idUserInitiator);
         if (!results.success)
             return this.handleError(results.error ?? '');
-        this.appendToWFReport(`Upload validated ${fileName}`);
+        this.appendToWFReport(`Upload validated ${fileName}${results.error ? ': ' + results.error : ''}`);
         return results;
     }
 

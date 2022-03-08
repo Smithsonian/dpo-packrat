@@ -8,6 +8,7 @@ import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
 import { JobCookSIPackratInspectOutput } from '../../../job/impl/Cook';
+import * as path from 'path';
 
 export type WorkflowUtilExtractAssetVersions = {
     success: boolean;
@@ -47,6 +48,14 @@ export class WorkflowUtil {
         idSystemObjectAssetVersion: number | undefined,
         readStream: NodeJS.ReadableStream | undefined, idProject: number | undefined, idUserInitiator: number | undefined): Promise<H.IOResults> {
         LOG.info(`WorkflowUtil.computeModelMetrics (${fileName}, idModel ${idModel}, idSystemObjectModel ${idSystemObjectModel}, idSystemObjectAssetVersion ${idSystemObjectAssetVersion})`, LOG.LS.eWF);
+
+        switch (path.extname(fileName).toLowerCase()) {
+            case '.usda':
+            case '.usdc':
+            case '.usdz':
+            case '.wrl':
+                return { success: true, error: `Model ${fileName} skipped (not yet supported by Cook's si-packrat-inspect recipe)` };
+        }
 
         const parameters: WorkflowJobParameters =
             new WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect,
