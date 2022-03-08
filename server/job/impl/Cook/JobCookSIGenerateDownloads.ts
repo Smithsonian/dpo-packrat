@@ -4,6 +4,7 @@ import { CookRecipe } from './CookRecipe';
 import { Config } from '../../../config';
 
 import * as JOB from '../../interface';
+import { WorkflowUtil } from '../../../workflow/impl/Packrat/WorkflowUtil';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
@@ -264,6 +265,16 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
             if (!MSXResult)
                 return this.logError(`createSystemObjects unable to create/update ModelSceneXref ${JSON.stringify(MSX, H.Helpers.saferStringify)}`);
+
+            // run si-packrat-inspect on this model
+            if (idSystemObjectModel) {
+                const results: H.IOResults = await WorkflowUtil.computeModelMetrics(model.Name, model.idModel, idSystemObjectModel, undefined,
+                    undefined, undefined /* FIXME */, idUserCreator);
+                if (results.success)
+                    this.appendToReportAndLog(`JobCookSIGenerateDownloads extracted model metrics for ${model.Name}`);
+                else if (results.error)
+                    this.logError(results.error);
+            }
         }
 
         // Clone scene's systemObjectVersion, using the assetVersionOverrideMap populated with new/updated assets
