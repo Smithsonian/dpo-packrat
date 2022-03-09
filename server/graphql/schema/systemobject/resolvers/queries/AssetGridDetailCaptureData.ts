@@ -11,6 +11,7 @@ export class AssetGridDetailCaptureData extends AssetGridDetailBase {
     name: LinkObject;
     variant: string | null;
     version: number;
+    hash: string;
     size: string;
     dateCreated: Date;
     iso: number | null;
@@ -25,6 +26,7 @@ export class AssetGridDetailCaptureData extends AssetGridDetailBase {
         this.name = { label: assetVersion.FileName, path: `${RouteBuilder.RepositoryDetails(idSystemObject)}`, icon: null, origin: COMMON.eLinkOrigin.eClient };
         this.variant = H.Helpers.safeString(metadataMap.get('variant'));
         this.version = assetVersion.Version;
+        this.hash = assetVersion.StorageHash;
         this.size = assetVersion.StorageSize.toString();
         this.dateCreated = assetVersion.DateCreated;
 
@@ -40,6 +42,7 @@ export class AssetGridDetailCaptureData extends AssetGridDetailBase {
             { colName: 'link', colLabel: 'Link', colDisplay: true, colType: COMMON.eAssetGridColumnType.eHyperLink, colAlign: 'center' },
             { colName: 'name', colLabel: 'Name', colDisplay: true, colType: COMMON.eAssetGridColumnType.eHyperLink, colAlign: 'left' },
             { colName: 'variant', colLabel: 'Variant', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
+            { colName: 'hash', colLabel: 'Hash', colDisplay: true, colType: COMMON.eAssetGridColumnType.eTruncate, colAlign: 'left' },
             { colName: 'size', colLabel: 'Size', colDisplay: true, colType: COMMON.eAssetGridColumnType.eFileSize, colAlign: 'left' },
             { colName: 'imageHeight', colLabel: 'Height', colDisplay: true, colType: COMMON.eAssetGridColumnType.eNumber, colAlign: 'center' },
             { colName: 'imageWidth', colLabel: 'Width', colDisplay: true, colType: COMMON.eAssetGridColumnType.eNumber, colAlign: 'center' },
