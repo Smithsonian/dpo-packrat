@@ -15,6 +15,7 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
     version: number;
     dateCreated: Date;
     size: string;
+    hash: string;
 
     // usage: string | null;
     quality: string | null;
@@ -38,8 +39,8 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
         this.assetType = vocabulary.Term;
         this.version = assetVersion.Version;
         this.dateCreated = assetVersion.DateCreated;
+        this.hash = assetVersion.StorageHash;
         this.size = assetVersion.StorageSize.toString();
-
         // this.usage = H.Helpers.safeString(metadataMap.get('usage'));
         this.quality = H.Helpers.safeString(metadataMap.get('quality'));
         this.uvResolution = H.Helpers.safeNumber(metadataMap.get('uvresolution'));
@@ -64,8 +65,8 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
             { colName: 'assetType', colLabel: 'Asset Type', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
             { colName: 'version', colLabel: 'Version', colDisplay: true, colType: COMMON.eAssetGridColumnType.eNumber, colAlign: 'center' },
             { colName: 'dateCreated', colLabel: 'Date Created', colDisplay: true, colType: COMMON.eAssetGridColumnType.eDate, colAlign: 'center' },
+            { colName: 'hash', colLabel: 'Hash', colDisplay: true, colType: COMMON.eAssetGridColumnType.eTruncate, colAlign: 'right' },
             { colName: 'size', colLabel: 'Size', colDisplay: true, colType: COMMON.eAssetGridColumnType.eFileSize, colAlign: 'right' },
-
             // { colName: 'usage', colLabel: 'Usage', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
             { colName: 'quality', colLabel: 'Quality', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
             { colName: 'uvResolution', colLabel: 'UV', colDisplay: true, colType: COMMON.eAssetGridColumnType.eNumber, colAlign: 'center' },

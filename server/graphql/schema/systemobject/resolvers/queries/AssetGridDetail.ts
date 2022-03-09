@@ -12,6 +12,7 @@ export class AssetGridDetail extends AssetGridDetailBase {
     assetType: string;
     version: number;
     dateCreated: Date;
+    hash: string;
     size: string;
 
     constructor(_asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, vocabulary: DBAPI.Vocabulary) {
@@ -22,6 +23,7 @@ export class AssetGridDetail extends AssetGridDetailBase {
         this.assetType = vocabulary.Term;
         this.version = assetVersion.Version;
         this.dateCreated = assetVersion.DateCreated;
+        this.hash = assetVersion.StorageHash;
         this.size = assetVersion.StorageSize.toString();
     }
 
@@ -33,7 +35,8 @@ export class AssetGridDetail extends AssetGridDetailBase {
             { colName: 'assetType', colLabel: 'Asset Type', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
             { colName: 'version', colLabel: 'Version', colDisplay: true, colType: COMMON.eAssetGridColumnType.eNumber, colAlign: 'center' },
             { colName: 'dateCreated', colLabel: 'Date Created', colDisplay: true, colType: COMMON.eAssetGridColumnType.eDate, colAlign: 'center' },
-            { colName: 'size', colLabel: 'Size', colDisplay: true, colType: COMMON.eAssetGridColumnType.eFileSize, colAlign: 'center' }
+            { colName: 'hash', colLabel: 'Hash', colDisplay: true, colType: COMMON.eAssetGridColumnType.eTruncate, colAlign: 'center' },
+            { colName: 'size', colLabel: 'Size', colDisplay: true, colType: COMMON.eAssetGridColumnType.eFileSize, colAlign: 'center' },
         ];
     }
 }

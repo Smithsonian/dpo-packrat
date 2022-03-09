@@ -5,10 +5,10 @@
  *
  * This component renders details tab for AssetVersion specific details used in DetailsTab component.
  */
-import { Box, makeStyles, Typography, Button } from '@material-ui/core';
+import { Box, makeStyles, Typography, Button, Table, TableBody, TableCell, TableContainer, TableRow, Checkbox } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import { CheckboxField, InputField, FieldType, Loader } from '../../../../../components';
+import { Loader } from '../../../../../components';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { DetailComponentProps } from './index';
@@ -18,8 +18,10 @@ import { eSystemObjectType } from '@dpo-packrat/common';
 import { apolloClient } from '../../../../../graphql';
 import { GetAssetDocument } from '../../../../../types/graphql';
 import { useDetailTabStore } from '../../../../../store';
+import { DebounceInput } from 'react-debounce-input';
+import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
 
-export const useStyles = makeStyles(() => ({
+export const useAVDetailsStyles = makeStyles(() => ({
     value: {
         fontSize: '0.8em',
         color: 'black',
@@ -31,9 +33,9 @@ export const useStyles = makeStyles(() => ({
 }));
 
 function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
-    const classes = useStyles();
+    const AVclasses = useAVDetailsStyles();
+    const tableClasses = useStyles();
     const { data, loading, onUpdateDetail, objectType } = props;
-    const { disabled } = props;
     const history = useHistory();
     const [AssetVersionDetails, updateDetailField] = useDetailTabStore(state => [state.AssetVersionDetails, state.updateDetailField]);
 
@@ -50,15 +52,7 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eAssetVersion, name, value);
     };
 
-    const setCheckboxField = ({ target }): void => {
-        const { name, checked } = target;
-        updateDetailField(eSystemObjectType.eAssetVersion, name, checked);
-    };
-
-    const rowFieldProps = { alignItems: 'center', style: { borderRadius: 0 } };
-
     const assetVersionData = data.getDetailsTabDataForObject?.AssetVersion;
-
     let redirect = () => {};
     if (assetVersionData) {
         // redirect function fetches assetType so that uploads remembers the assetType for uploads
@@ -80,49 +74,88 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
 
     return (
         <Box>
-            <Box style={{ backgroundColor: 'rgb(236, 245, 253)' }}>
-                <FieldType required label='Version' direction='row' containerProps={rowFieldProps} width='auto' valueLeftAligned gridLabel={2} gridValue={5} padding='3px 10px'>
-                    <Typography className={classes.value}>{AssetVersionDetails.Version}</Typography>
-                </FieldType>
-                <InputField
-                    viewMode
-                    required
-                    updated={isFieldUpdated(AssetVersionDetails, assetVersionData, 'FilePath')}
-                    disabled={disabled}
-                    label='File Path'
-                    value={assetVersionData?.FilePath}
-                    name='FilePath'
-                    onChange={onSetField}
-                    valueLeftAligned
-                    gridLabel={2}
-                    gridValue={5}
-                    padding='3px 10px'
-                />
-                <FieldType required label='Creator' direction='row' containerProps={rowFieldProps} width='auto' valueLeftAligned gridLabel={2} gridValue={5} padding='3px 10px'>
-                    <Typography className={classes.value}>{AssetVersionDetails.Creator}</Typography>
-                </FieldType>
-                <FieldType required label='Date Created' direction='row' containerProps={rowFieldProps} width='auto' valueLeftAligned gridLabel={2} gridValue={5} padding='3px 10px'>
-                    <Typography className={classes.value}>{AssetVersionDetails.DateCreated}</Typography>
-                </FieldType>
-                <FieldType required label='Storage Size' direction='row' containerProps={rowFieldProps} width='auto' valueLeftAligned gridLabel={2} gridValue={5} padding='3px 10px'>
-                    <Typography className={classes.value}>{formatBytes(AssetVersionDetails.StorageSize ?? 0)}</Typography>
-                </FieldType>
-
-                <CheckboxField
-                    viewMode
-                    required
-                    updated={isFieldUpdated(AssetVersionDetails, assetVersionData, 'Ingested')}
-                    disabled
-                    name='Ingested'
-                    label='Ingested'
-                    value={AssetVersionDetails.Ingested ?? false}
-                    onChange={setCheckboxField}
-                    valueLeftAligned
-                    gridLabel={2}
-                    gridValue={5}
-                />
-            </Box>
-            <Button className={classes.button} variant='contained' disableElevation color='primary' style={{ width: 'fit-content', marginTop: '7px' }} onClick={redirect}>
+            <TableContainer className={tableClasses.captureMethodTableContainer}>
+                <Table className={tableClasses.table}>
+                    <TableBody>
+                        <TableRow className={tableClasses.tableRow}>
+                            <TableCell className={tableClasses.tableCell}>
+                                <Typography className={tableClasses.labelText}>Version</Typography>
+                            </TableCell>
+                            <TableCell className={tableClasses.tableCell}>
+                                <span className={tableClasses.valueText} style={{ paddingLeft: 10 }}>
+                                    {AssetVersionDetails.Version}
+                                </span>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow className={tableClasses.tableRow}>
+                            <TableCell className={tableClasses.tableCell}>
+                                <Typography className={tableClasses.labelText}>File Path</Typography>
+                            </TableCell>
+                            <TableCell className={tableClasses.tableCell}>
+                                <DebounceInput
+                                    element='input'
+                                    title='FilePath'
+                                    value={assetVersionData?.FilePath || ''}
+                                    className={tableClasses.input}
+                                    name='FilePath'
+                                    onChange={onSetField}
+                                    debounceTimeout={400}
+                                    style={{ width: '300px', height: 18, ...updatedFieldStyling(isFieldUpdated(AssetVersionDetails, assetVersionData, 'FilePath'))}}
+                                />
+                            </TableCell>
+                        </TableRow>
+                        <TableRow className={tableClasses.tableRow}>
+                            <TableCell className={tableClasses.tableCell}>
+                                <Typography className={tableClasses.labelText}>Creator</Typography>
+                            </TableCell>
+                            <TableCell className={tableClasses.tableCell}>
+                                <span className={tableClasses.valueText} style={{ paddingLeft: 10 }}>
+                                    {AssetVersionDetails.Creator}
+                                </span>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow className={tableClasses.tableRow}>
+                            <TableCell className={tableClasses.tableCell}>
+                                <Typography className={tableClasses.labelText}>Date Created</Typography>
+                            </TableCell>
+                            <TableCell className={tableClasses.tableCell}>
+                                <span className={tableClasses.valueText} style={{ paddingLeft: 10 }}>
+                                    {AssetVersionDetails.DateCreated}
+                                </span>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow className={tableClasses.tableRow}>
+                            <TableCell className={tableClasses.tableCell}>
+                                <Typography className={tableClasses.labelText}>Storage Hash</Typography>
+                            </TableCell>
+                            <TableCell className={tableClasses.tableCell}>
+                                <span className={tableClasses.valueText} style={{ height: 'fit-content', minHeight: 20, paddingLeft: 10, display: 'flex', alignItems: 'center' }}>
+                                    {AssetVersionDetails.StorageHash}
+                                </span>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow className={tableClasses.tableRow}>
+                            <TableCell className={tableClasses.tableCell}>
+                                <Typography className={tableClasses.labelText}>Storage Size</Typography>
+                            </TableCell>
+                            <TableCell className={tableClasses.tableCell}>
+                                <span className={tableClasses.valueText} style={{ paddingLeft: 10 }}>
+                                    {formatBytes(AssetVersionDetails.StorageSize ?? 0)}
+                                </span>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow className={tableClasses.tableRow}>
+                            <TableCell className={tableClasses.tableCell}>
+                                <Typography className={tableClasses.labelText}>Ingested</Typography>
+                            </TableCell>
+                            <TableCell className={tableClasses.tableCell}>
+                                <Checkbox className={tableClasses.checkbox} disabled name='Ingested' title='Ingested-Checkbox' checked={AssetVersionDetails?.Ingested ?? false} size='small' style={{ paddingLeft: 10 }} />
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </TableContainer>
+            <Button className={AVclasses.button} variant='contained' disableElevation color='primary' style={{ width: 'fit-content', marginTop: '7px' }} onClick={redirect}>
                 Add Version
             </Button>
         </Box>

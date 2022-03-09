@@ -1589,6 +1589,7 @@ export type AssetVersionDetailFieldsInput = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
   StorageSize?: Maybe<Scalars['BigInt']>;
+  StorageHash?: Maybe<Scalars['String']>;
 };
 
 export type ActorDetailFieldsInput = {
@@ -1871,6 +1872,7 @@ export type AssetVersionDetailFields = {
   AssetVersion?: Maybe<AssetVersion>;
   idAsset?: Maybe<Scalars['Int']>;
   idAssetVersion?: Maybe<Scalars['Int']>;
+  StorageHash?: Maybe<Scalars['String']>;
 };
 
 export type ActorDetailFields = {
@@ -1986,6 +1988,7 @@ export type DetailVersion = {
   creator: Scalars['String'];
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
+  hash: Scalars['String'];
   ingested: Scalars['Boolean'];
   Comment?: Maybe<Scalars['String']>;
   CommentLink?: Maybe<Scalars['String']>;

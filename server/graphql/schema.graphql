@@ -1142,6 +1142,7 @@ input AssetVersionDetailFieldsInput {
   Ingested: Boolean
   Version: Int
   StorageSize: BigInt
+  StorageHash: String
 }
 
 input ActorDetailFieldsInput {
@@ -1406,6 +1407,7 @@ type AssetVersionDetailFields {
   AssetVersion: AssetVersion
   idAsset: Int
   idAssetVersion: Int
+  StorageHash: String
 }
 
 type ActorDetailFields {
@@ -1511,6 +1513,7 @@ type DetailVersion {
   creator: String!
   dateCreated: DateTime!
   size: BigInt!
+  hash: String!
   ingested: Boolean!
   Comment: String
   CommentLink: String
