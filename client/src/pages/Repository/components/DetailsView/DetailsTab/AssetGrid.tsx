@@ -316,7 +316,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                                 </Tooltip>
                             );
                         }
-                    }
+                    };
                     break;
             }
             result.push(gridColumnObject);

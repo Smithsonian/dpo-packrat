@@ -100,7 +100,7 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
                                     name='FilePath'
                                     onChange={onSetField}
                                     debounceTimeout={400}
-                                    style={{ width: '300px', height: 18, ...updatedFieldStyling(isFieldUpdated(AssetVersionDetails, assetVersionData, 'FilePath'))}}
+                                    style={{ width: '300px', height: 18, ...updatedFieldStyling(isFieldUpdated(AssetVersionDetails, assetVersionData, 'FilePath')) }}
                                 />
                             </TableCell>
                         </TableRow>
