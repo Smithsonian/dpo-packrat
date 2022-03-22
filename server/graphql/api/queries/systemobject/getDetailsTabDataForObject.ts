@@ -158,6 +158,7 @@ const getDetailsTabDataForObject = gql`
                 idAsset
                 idAssetVersion
                 FilePath
+                StorageHash
             }
             Actor {
                 OrganizationName

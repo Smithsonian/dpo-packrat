@@ -1592,6 +1592,7 @@ export type AssetVersionDetailFieldsInput = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
   StorageSize?: Maybe<Scalars['BigInt']>;
+  StorageHash?: Maybe<Scalars['String']>;
 };
 
 export type ActorDetailFieldsInput = {
@@ -1874,6 +1875,7 @@ export type AssetVersionDetailFields = {
   AssetVersion?: Maybe<AssetVersion>;
   idAsset?: Maybe<Scalars['Int']>;
   idAssetVersion?: Maybe<Scalars['Int']>;
+  StorageHash?: Maybe<Scalars['String']>;
 };
 
 export type ActorDetailFields = {
@@ -1989,6 +1991,7 @@ export type DetailVersion = {
   creator: Scalars['String'];
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
+  hash: Scalars['String'];
   ingested: Scalars['Boolean'];
   Comment?: Maybe<Scalars['String']>;
   CommentLink?: Maybe<Scalars['String']>;
@@ -3648,7 +3651,7 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<AssetDetailFields, 'AssetType' | 'idAsset'>
     )>, AssetVersion?: Maybe<(
       { __typename?: 'AssetVersionDetailFields' }
-      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion' | 'FilePath'>
+      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion' | 'FilePath' | 'StorageHash'>
     )>, Actor?: Maybe<(
       { __typename?: 'ActorDetailFields' }
       & Pick<ActorDetailFields, 'OrganizationName'>
@@ -3775,7 +3778,7 @@ export type GetVersionsForAssetQuery = (
     { __typename?: 'GetVersionsForAssetResult' }
     & { versions: Array<(
       { __typename?: 'DetailVersion' }
-      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested' | 'Comment' | 'CommentLink'>
+      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'hash' | 'ingested' | 'Comment' | 'CommentLink'>
     )> }
   ) }
 );
@@ -6431,6 +6434,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       idAsset
       idAssetVersion
       FilePath
+      StorageHash
     }
     Actor {
       OrganizationName
@@ -6725,6 +6729,7 @@ export const GetVersionsForAssetDocument = gql`
       creator
       dateCreated
       size
+      hash
       ingested
       Comment
       CommentLink
