@@ -162,6 +162,7 @@ type GetSystemObjectDetailsResult {
     idSystemObject: Int!
     idObject: Int!
     name: String!
+    subTitle: String
     retired: Boolean!
     objectType: Int!
     allowed: Boolean!
