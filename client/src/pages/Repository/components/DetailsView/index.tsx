@@ -144,7 +144,6 @@ function DetailsView(): React.ReactElement {
     useEffect(() => {
         if (data && !loading) {
             const { name, retired, license, metadata } = data.getSystemObjectDetails;
-            console.log('metadata', metadata);
             setDetails({ name, retired, idLicense: license?.idLicense || 0 });
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
             if (objectType === eSystemObjectType.eSubject) {
@@ -455,7 +454,6 @@ function DetailsView(): React.ReactElement {
             }
 
             const metadata = getAllMetadataEntries().filter(entry => entry.Name);
-            // console.log('metadata', metadata);
             updatedData.Metadata = metadata;
 
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
