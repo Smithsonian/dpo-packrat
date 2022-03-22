@@ -1616,6 +1616,7 @@ export type MetadataInput = {
 
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
+  Subtitle?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
   License?: Maybe<Scalars['Int']>;
   Unit?: Maybe<UnitDetailFieldsInput>;
@@ -1925,6 +1926,7 @@ export type GetSystemObjectDetailsResult = {
   idSystemObject: Scalars['Int'];
   idObject: Scalars['Int'];
   name: Scalars['String'];
+  subTitle?: Maybe<Scalars['String']>;
   retired: Scalars['Boolean'];
   objectType: Scalars['Int'];
   allowed: Scalars['Boolean'];
