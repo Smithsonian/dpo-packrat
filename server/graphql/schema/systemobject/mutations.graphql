@@ -132,6 +132,7 @@ input MetadataInput {
 
 input UpdateObjectDetailsDataInput {
     Name: String
+    Subtitle: String
     Retired: Boolean
     License: Int
     Unit: UnitDetailFieldsInput

@@ -1166,6 +1166,7 @@ input MetadataInput {
 
 input UpdateObjectDetailsDataInput {
   Name: String
+  Subtitle: String
   Retired: Boolean
   License: Int
   Unit: UnitDetailFieldsInput
@@ -1452,6 +1453,7 @@ type GetSystemObjectDetailsResult {
   idSystemObject: Int!
   idObject: Int!
   name: String!
+  subTitle: String
   retired: Boolean!
   objectType: Int!
   allowed: Boolean!
