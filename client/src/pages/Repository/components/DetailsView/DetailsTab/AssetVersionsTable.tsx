@@ -17,7 +17,7 @@ import { useObjectVersions, rollbackAssetVersion } from '../../../hooks/useDetai
 import { useStyles } from './AssetGrid';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import API from '../../../../../api';
-import { truncateWithEllipses } from '../../../../../constants/helperfunctions';
+import { truncateWithEllipses, truncateMiddleWithEllipses } from '../../../../../constants/helperfunctions';
 import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 import { toast } from 'react-toastify';
 
@@ -61,6 +61,9 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
         }, {
             name: 'Date Created',
             width: '100px'
+        }, {
+            name: 'Hash',
+            width: '120px'
         }, {
             name: 'Size',
             width: '70px'
@@ -163,6 +166,11 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                                     <td align='center' className={classes.tableCell}>
                                         <Tooltip arrow title={ <ToolTip text={formatDateAndTime(version.dateCreated)} /> }>
                                             <Typography className={classes.value}>{formatDate(version.dateCreated)}</Typography>
+                                        </Tooltip>
+                                    </td>
+                                    <td align='center' className={classes.tableCell}>
+                                        <Tooltip arrow title={ <ToolTip text={version.hash} /> }>
+                                            <Typography className={classes.value}>{truncateMiddleWithEllipses(version.hash, 6, 7)}</Typography>
                                         </Tooltip>
                                     </td>
                                     <td align='center' className={classes.tableCell}>

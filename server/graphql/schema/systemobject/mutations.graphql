@@ -108,6 +108,7 @@ input AssetVersionDetailFieldsInput {
     Ingested: Boolean
     Version: Int
     StorageSize: BigInt
+    StorageHash: String
 }
 
 input ActorDetailFieldsInput {

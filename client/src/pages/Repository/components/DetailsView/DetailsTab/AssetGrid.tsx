@@ -26,6 +26,7 @@ import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import { DataTableOptions } from '../../../../../types/component';
 import API from '../../../../../api';
+import { truncateMiddleWithEllipses } from '../../../../../constants';
 
 export const useStyles = makeStyles(({ palette }) => ({
     btn: {
@@ -73,7 +74,7 @@ export const useStyles = makeStyles(({ palette }) => ({
         paddingBottom: 5
     },
     date: {
-        fontSize: '0.9em',
+        fontSize: '0.8rem',
         color: palette.primary.dark
     },
     empty: {
@@ -302,8 +303,22 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                             );
                         }
                     };
+                    break;
+                case eAssetGridColumnType.eTruncate:
+                    gridColumnObject.options = {
+                        ...gridColumnObject.options,
+                        customBodyRender(value) {
+                            return (
+                                <Tooltip arrow title={ <ToolTip text={value} /> }>
+                                    <Typography className={classes.date}>
+                                        {truncateMiddleWithEllipses(value, 6, 7)}
+                                    </Typography>
+                                </Tooltip>
+                            );
+                        }
+                    };
+                    break;
             }
-
             result.push(gridColumnObject);
         });
         return result;
@@ -351,7 +366,6 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         fixedHeader: false,
         pagination: false,
         elevation: 0,
-        viewColumns: false,
         onViewColumnsChange: toggleColumn
     };
 
