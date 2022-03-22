@@ -505,13 +505,15 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
 
         if (objectType === eSystemObjectType.eAssetVersion) {
             const {
-                AssetVersion: { Version, Creator, DateCreated, StorageSize, Ingested }
+                AssetVersion: { Version, Creator, DateCreated, StorageHash, StorageSize, Ingested, FilePath }
             } = getDetailsTabDataForObject;
             updateDetailField(eSystemObjectType.eAssetVersion, 'Version', Version);
             updateDetailField(eSystemObjectType.eAssetVersion, 'Creator', Creator);
             updateDetailField(eSystemObjectType.eAssetVersion, 'DateCreated', DateCreated);
             updateDetailField(eSystemObjectType.eAssetVersion, 'StorageSize', StorageSize);
             updateDetailField(eSystemObjectType.eAssetVersion, 'Ingested', Ingested);
+            updateDetailField(eSystemObjectType.eAssetVersion, 'StorageHash', StorageHash);
+            updateDetailField(eSystemObjectType.eAssetVersion, 'FilePath', FilePath);
         }
 
         if (objectType === eSystemObjectType.eActor) {
