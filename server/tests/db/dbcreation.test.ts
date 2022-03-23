@@ -5355,51 +5355,130 @@ describe('DB Fetch Special Test Suite', () => {
 
     test('DB Update: ModelSceneXref.isTransformMatching', async () => {
         let modelSceneXrefClone: DBAPI.ModelSceneXref | null = null;
+        let transformUpdated: boolean = false;
+        let updated: boolean = false;
         if (modelSceneXref) {
             modelSceneXrefClone = new DBAPI.ModelSceneXref(modelSceneXref);
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeTruthy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeFalsy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeFalsy();
 
             modelSceneXrefClone.S2 = (modelSceneXref.S2 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeTruthy();
+            expect(updated).toBeTruthy();
 
             modelSceneXrefClone.S1 = (modelSceneXref.S1 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeTruthy();
+            expect(updated).toBeTruthy();
 
             modelSceneXrefClone.S0 = (modelSceneXref.S0 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeTruthy();
+            expect(updated).toBeTruthy();
 
             modelSceneXrefClone.R3 = (modelSceneXref.R3 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeTruthy();
+            expect(updated).toBeTruthy();
 
             modelSceneXrefClone.R2 = (modelSceneXref.R2 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeTruthy();
+            expect(updated).toBeTruthy();
 
             modelSceneXrefClone.R1 = (modelSceneXref.R1 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeTruthy();
+            expect(updated).toBeTruthy();
 
             modelSceneXrefClone.R0 = (modelSceneXref.R0 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeTruthy();
+            expect(updated).toBeTruthy();
 
             modelSceneXrefClone.TS2 = (modelSceneXref.TS2 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeTruthy();
+            expect(updated).toBeTruthy();
 
             modelSceneXrefClone.TS1 = (modelSceneXref.TS1 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeTruthy();
+            expect(updated).toBeTruthy();
 
             modelSceneXrefClone.TS0 = (modelSceneXref.TS0 ?? 0) + 1;
             expect(modelSceneXrefClone.isTransformMatching(modelSceneXref)).toBeFalsy();
-            expect(modelSceneXrefClone.updateTransformIfNeeded(modelSceneXref)).toBeTruthy();
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeTruthy();
+            expect(updated).toBeTruthy();
             // LOG.info(`clone = ${JSON.stringify(modelSceneXrefClone, H.Helpers.saferStringify)} vs ${JSON.stringify(modelSceneXref, H.Helpers.saferStringify)}}`, LOG.LS.eTEST);
+
+            modelSceneXrefClone.BoundingBoxP2Z = (modelSceneXref.BoundingBoxP2Z ?? 0) + 1;
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
+
+            modelSceneXrefClone.BoundingBoxP2Y = (modelSceneXref.BoundingBoxP2Y ?? 0) + 1;
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
+
+            modelSceneXrefClone.BoundingBoxP2X = (modelSceneXref.BoundingBoxP2X ?? 0) + 1;
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
+
+            modelSceneXrefClone.BoundingBoxP1Z = (modelSceneXref.BoundingBoxP1Z ?? 0) + 1;
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
+
+            modelSceneXrefClone.BoundingBoxP1Y = (modelSceneXref.BoundingBoxP1Y ?? 0) + 1;
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
+
+            modelSceneXrefClone.BoundingBoxP1X = (modelSceneXref.BoundingBoxP1X ?? 0) + 1;
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
+
+            modelSceneXrefClone.UVResolution = (modelSceneXref.UVResolution ?? 0) + 1;
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
+
+            modelSceneXrefClone.FileSize = (modelSceneXref.FileSize ?? BigInt(0)) + BigInt(1);
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
+
+            modelSceneXrefClone.Quality = (modelSceneXref.Quality ?? '') + 'abba';
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
+
+            modelSceneXrefClone.Usage = (modelSceneXref.Usage ?? '') + 'abba';
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
+
+            modelSceneXrefClone.Name = (modelSceneXref.Name ?? '') + 'abba';
+            ({ transformUpdated, updated } = modelSceneXrefClone.updateIfNeeded(modelSceneXref));
+            expect(transformUpdated).toBeFalsy();
+            expect(updated).toBeTruthy();
 
             const modelAutomationTag: string = modelSceneXrefClone.computeModelAutomationTag();
             expect(modelAutomationTag.includes(modelSceneXrefClone.Usage ?? '')).toBeTruthy();
