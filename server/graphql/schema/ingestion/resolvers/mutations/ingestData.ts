@@ -104,9 +104,10 @@ class IngestDataWorker extends ResolverBase {
         LOG.info(`ingestData: input=${JSON.stringify(this.input, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
 
         const results: H.IOResults = await this.validateInput();
-        this.workflowHelper = await this.createWorkflow(); // do this *after* this.validateInput, and *before* returning from validation failure
-        if (!results.success) return { success: results.success, message: results.error };
+        if (!results.success)
+            return { success: results.success, message: results.error };
 
+        this.workflowHelper = await this.createWorkflow(); // do this *after* this.validateInput, and *after* returning from validation failure, to avoid creating ingestion workflows that failed due to validation issues
         const subjectsDB: DBAPI.Subject[] = [];
         let itemDB: DBAPI.Item | null = null;
         if (this.ingestNew) {
