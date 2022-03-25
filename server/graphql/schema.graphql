@@ -1040,9 +1040,18 @@ type IntermediaryFile {
   SystemObject: SystemObject
 }
 
+type SvxNonModelAsset {
+  uri: String!
+  type: String!
+  description: String
+  size: Int
+  idAssetVersion: Int
+}
+
 type SceneConstellation {
   Scene: Scene
   ModelSceneXref: [ModelSceneXref]
+  SvxNonModelAssets: [SvxNonModelAsset!]
 }
 
 input UpdateObjectDetailsInput {

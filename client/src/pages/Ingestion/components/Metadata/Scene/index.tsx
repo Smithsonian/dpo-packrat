@@ -10,6 +10,7 @@ import { AssetIdentifiers } from '../../../../../components';
 import { StateIdentifier, useMetadataStore, StateRelatedObject, useRepositoryStore, useSubjectStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import ReferenceModels from './ReferenceModels';
+import NonModelAssets from './NonModelAssets';
 import SceneDataForm from './SceneDataForm';
 import { apolloClient } from '../../../../../graphql/index';
 import { GetSceneForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
@@ -60,6 +61,18 @@ function Scene(props: SceneProps): React.ReactElement {
             idScene: 0
         }
     ]);
+
+    // state responsible for non-model assets
+    const [nonModelAssets, setNonModelAssets] = useState([
+        {
+            uri: '',
+            type: '',
+            description: undefined,
+            size: undefined,
+            idAssetVersion: undefined,
+        }
+    ]);
+
     // state responsible for SceneDataForm
     const [sceneData, setSceneData] = useState({
         idScene: 0,
@@ -101,11 +114,18 @@ function Scene(props: SceneProps): React.ReactElement {
                     }
                 }
             });
+            // console.log(`Scene Metadata MSX: ${JSON.stringify(data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref)}`);
+            // console.log(`Scene Metadata Non-Model-Assets: ${JSON.stringify(data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets)}`);
             setReferenceModels(data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref);
+            setNonModelAssets(data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets);
             setSceneData(data.getSceneForAssetVersion?.SceneConstellation?.Scene);
-            const invalidMetadataStep = data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref.some(reference => reference.idModel === 0);
+
+            const missingModels = data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref.some(reference => reference.idModel === 0);
+            const missingNonModelAssets = data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets.some(reference => (reference.idAssetVersion ?? 0) === 0);
+            const invalidMetadataStep: boolean = missingModels || missingNonModelAssets;
             setInvalidMetadataStep(invalidMetadataStep);
-            if (invalidMetadataStep) toast.warning('Unable to ingest scene because reference models cannot be found', { autoClose: false });
+            if (invalidMetadataStep)
+                toast.warning('Unable to ingest scene because some or all referenced assets cannot be found', { autoClose: false });
         }
 
         fetchSceneConstellation();
@@ -215,6 +235,7 @@ function Scene(props: SceneProps): React.ReactElement {
                         />
                     </Box>
                     <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
+                    <NonModelAssets nonModelAssets={nonModelAssets} idAssetVersion={Number(idAssetVersion)} />
                 </Fragment>
             )}
             <SceneDataForm
