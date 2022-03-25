@@ -3,6 +3,7 @@ import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as NAV from '../../../../../navigation/interface';
 import * as LOG from '../../../../../utils/logger';
+// import * as H from '../../../../../utils/helpers';
 import { ColumnDefinition, GetAssetDetailsForSystemObjectResult, QueryGetAssetDetailsForSystemObjectArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import { VocabularyCache } from '../../../../../cache';
@@ -167,6 +168,7 @@ async function extractMetadata(idSystemObject: number, metadataColumns: string[]
 
 async function extractSceneAttachmentMetadata(idScene: number, metadataMetaMap: Map<number, Map<string, string>>): Promise<boolean> {
     const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(idScene);
+    // LOG.info(`getAssetDetailsForSystemObject MSXs ${H.Helpers.JSONStringify(MSXs)}`, LOG.LS.eGQL);
     if (!MSXs) {
         LOG.error(`getAssetDetailsForSystemObject extractSceneAttachmentMetadata failed to fetch ModelSceneXref for scene ${idScene}`, LOG.LS.eGQL);
         return false;
@@ -202,13 +204,14 @@ async function extractSceneAttachmentMetadata(idScene: number, metadataMetaMap: 
                 metadataMap.set('quality', MSX.Quality);
             if (MSX.UVResolution)
                 metadataMap.set('uvresolution', MSX.UVResolution.toString());
+            if (MSX.BoundingBoxP1X && MSX.BoundingBoxP1Y && MSX.BoundingBoxP1Z && MSX.BoundingBoxP2X && MSX.BoundingBoxP2Y && MSX.BoundingBoxP2Z)
+                metadataMap.set('boundingbox', `(${round(MSX.BoundingBoxP1X)}, ${round(MSX.BoundingBoxP1Y)}, ${round(MSX.BoundingBoxP1Z)}) - (${round(MSX.BoundingBoxP2X)}, ${round(MSX.BoundingBoxP2Y)}, ${round(MSX.BoundingBoxP2Z)})`);
+            // LOG.info(`getAssetDetailsForSystemObject metadataMap[${SOIAV.idSystemObject}]=${H.Helpers.JSONStringify(metadataMap)}`, LOG.LS.eGQL);
         }
-        // if (MSX.BoundingBoxP1X && MSX.BoundingBoxP1Y && MSX.BoundingBoxP1Z && MSX.BoundingBoxP2X && MSX.BoundingBoxP2Y && MSX.BoundingBoxP2Z)
-        //     metadataMap.set('boundingbox', `(${round(MSX.BoundingBoxP1X)}, ${round(MSX.BoundingBoxP1Y)}, ${round(MSX.BoundingBoxP1Z)}) - (${round(MSX.BoundingBoxP2X)}, ${round(MSX.BoundingBoxP2Y)}, ${round(MSX.BoundingBoxP2Z)})`);
     }
     return true;
 }
 
-// function round(num: number): string {
-//     return (Math.ceil(num * 100) / 100).toString();
-// }
+function round(num: number): string {
+    return (Math.ceil(num * 100) / 100).toString();
+}

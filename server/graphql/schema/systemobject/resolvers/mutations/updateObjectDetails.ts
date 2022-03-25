@@ -181,7 +181,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (!Item)
                     return sendResult(false, `Unable to fetch Media Group with id ${idObject}; update failed`);
 
-                Item.Name = computeNewName(Item.Name, Item.Title, data.Subtitle); // do this before updating .Title
+                Item.Name = (data.Name && !data.Subtitle) ? data.Name : computeNewName(Item.Name, Item.Title, data.Subtitle); // do this before updating .Title
                 Item.Title = data.Subtitle ?? null;
 
                 if (!isNull(EntireSubject) && !isUndefined(EntireSubject))
@@ -323,7 +323,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     ModelFileType
                 } = data.Model;
 
-                Model.Name = computeNewName(Model.Name, Model.Title, data.Subtitle); // do this before updating .Title
+                Model.Name = (data.Name && !data.Subtitle) ? data.Name : computeNewName(Model.Name, Model.Title, data.Subtitle); // do this before updating .Title
                 Model.Title = data.Subtitle ?? null;
 
                 if (CreationMethod) Model.idVCreationMethod = CreationMethod;
@@ -345,7 +345,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
             const oldPosedAndQCd: boolean = Scene.PosedAndQCd;
 
-            Scene.Name = computeNewName(Scene.Name, Scene.Title, data.Subtitle); // do this before updated .Title
+            Scene.Name = (data.Name && !data.Subtitle) ? data.Name : computeNewName(Scene.Name, Scene.Title, data.Subtitle); // do this before updated .Title
             Scene.Title = data.Subtitle ?? null;
 
             if (data.Scene) {
@@ -520,6 +520,9 @@ export async function handleMetadata(idSystemObject: number, metadatas: Metadata
 }
 
 function computeNewName(oldName: string, oldTitle: string | null, newTitle: string | null | undefined): string {
-    return ((!oldTitle) ? oldName : oldName.replace(`: ${oldTitle}`, '')) // strip off old title
-        + (newTitle) ? `: ${newTitle}` : '';
+    const oldBaseName: string = (!oldTitle) ? oldName : oldName.replace(`: ${oldTitle}`, ''); // strip off old title
+    const newName: string = oldBaseName + ((newTitle) ? `: ${newTitle}` : '');
+    // LOG.info(`updateObjectDetails computeNewName(${oldName}, ${oldTitle}, ${newTitle}) = ${newName} (oldBaseName = ${oldBaseName})`, LOG.LS.eGQL);
+
+    return newName;
 }
