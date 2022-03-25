@@ -20,6 +20,7 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
     // usage: string | null;
     quality: string | null;
     uvResolution: number | null;
+    boundingBox: string | null;
 
     isAttachment: boolean | null;
     type: string | null;
@@ -44,6 +45,7 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
         // this.usage = H.Helpers.safeString(metadataMap.get('usage'));
         this.quality = H.Helpers.safeString(metadataMap.get('quality'));
         this.uvResolution = H.Helpers.safeNumber(metadataMap.get('uvresolution'));
+        this.boundingBox = H.Helpers.safeString(metadataMap.get('boundingbox'));
 
         this.isAttachment = H.Helpers.safeBoolean(metadataMap.get('isattachment'));
         this.type = H.Helpers.safeString(metadataMap.get('type'));
@@ -70,6 +72,7 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
             // { colName: 'usage', colLabel: 'Usage', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
             { colName: 'quality', colLabel: 'Quality', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
             { colName: 'uvResolution', colLabel: 'UV', colDisplay: true, colType: COMMON.eAssetGridColumnType.eNumber, colAlign: 'center' },
+            { colName: 'boundingBox', colLabel: 'Bounding Box', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
 
             { colName: 'isAttachment', colLabel: 'Att?', colDisplay: true, colType: COMMON.eAssetGridColumnType.eBoolean, colAlign: 'center' },
             { colName: 'type', colLabel: 'Type', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
@@ -84,7 +87,7 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
     }
 
     static getMetadataColumnNames(): string[] {
-        return [/* 'usage', */ 'quality', 'uvresolution', 'isattachment', 'type', 'category', 'units', 'modeltype', 'filetype', 'gltfstandardized', 'dracocompressed', 'title'];
+        return [/* 'usage', */ 'quality', 'uvresolution', 'boundingbox', 'isattachment', 'type', 'category', 'units', 'modeltype', 'filetype', 'gltfstandardized', 'dracocompressed', 'title'];
     }
 }
 
