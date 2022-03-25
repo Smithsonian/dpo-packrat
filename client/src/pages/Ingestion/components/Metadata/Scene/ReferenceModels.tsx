@@ -125,25 +125,25 @@ function Header(): React.ReactElement {
 
     return (
         <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
-            <Box display='flex' flex={3.5}>
-                <Typography className={classes.header}>Reference Models</Typography>
+            <Box display='flex' flex={2.5}>
+                <Typography className={classes.header}>Referenced Models</Typography>
             </Box>
-            <Box display='flex' flex={0.75}>
+            <Box display='flex' flex={0.75} justifyContent='center'>
                 <Typography className={classes.header}>Usage</Typography>
             </Box>
-            <Box display='flex' flex={0.75}>
+            <Box display='flex' flex={0.75} justifyContent='center'>
                 <Typography className={classes.header}>Quality</Typography>
             </Box>
-            <Box display='flex' flex={0.75}>
+            <Box display='flex' flex={0.75} justifyContent='center'>
                 <Typography className={classes.header}>File Size</Typography>
             </Box>
-            <Box display='flex' flex={1} justifyContent='center'>
-                <Typography className={classes.header}>UV Resolution</Typography>
+            <Box display='flex' flex={0.5} justifyContent='center'>
+                <Typography className={classes.header}>UV</Typography>
             </Box>
-            <Box display='flex' flex={2.5} justifyContent='center'>
+            <Box display='flex' flex={3} justifyContent='center'>
                 <Typography className={classes.header}>Bounding Box</Typography>
             </Box>
-            <Box display='flex' flex={0.5}>
+            <Box display='flex' flex={1} justifyContent='center'>
                 <Typography className={classes.header}>Action</Typography>
             </Box>
         </Box>
@@ -187,6 +187,7 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
         getModelDetails();
     }, [idAsset, idAssetVersion, idModel, idSystemObject]);
 
+    const isModelInUpload = idModel === -1;
     const isModelInSystem = idModel > 0;
 
     let boundingBox: string = '';
@@ -197,13 +198,14 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
 
     return (
         <Box display='flex' flex={1} flexDirection='row' px={1} marginBottom={1}>
-            <Box display='flex' flex={3}>
-                {isModelInSystem && idSystemObject && (
+            <Box display='flex' flex={2.5}>
+                {isModelInUpload && <Typography className={classes.label}>{Name}</Typography>}
+                {!isModelInUpload && isModelInSystem && idSystemObject && (
                     <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
                         <Typography className={clsx(classes.label, classes.labelUnderline)}>{Name}</Typography>
                     </NewTabLink>
                 )}
-                {!isModelInSystem && <Typography className={clsx(classes.label, classes.labelItalics)}>{Name}</Typography>}
+                {!isModelInUpload && !isModelInSystem && <Typography className={clsx(classes.label, classes.labelItalics)}>{Name}</Typography>}
             </Box>
 
             <Box display='flex' flex={0.75} justifyContent='center'>
@@ -219,16 +221,19 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
             <Box display='flex' flex={0.5} justifyContent='center'>
                 <Typography className={classes.label}>{UVResolution}</Typography>
             </Box>
-            <Box display='flex' flex={2.5} justifyContent='center'>
+            <Box display='flex' flex={3} justifyContent='center'>
                 <Typography className={classes.label}>{boundingBox}</Typography>
             </Box>
-            <Box display='flex' flex={0.5} justifyContent='center'>
-                {!isModelInSystem && (
+            <Box display='flex' flex={1} justifyContent='center'>
+                {isModelInUpload && (
+                    <Typography className={clsx(classes.label, classes.labelItalics)}>(uploaded)</Typography>
+                )}
+                {!isModelInUpload && !isModelInSystem && (
                     <Typography className={clsx(classes.label, classes.labelUnderline)}>
                         <NewTabLink to={ingestSystemObjectUploadRedirect(Name)}>Ingest</NewTabLink>
                     </Typography>
                 )}
-                {isModelInSystem && (
+                {!isModelInUpload && isModelInSystem && (
                     <Typography className={clsx(classes.label, classes.labelUnderline)}>
                         <NewTabLink to={updateSystemObjectUploadRedirect(idAsset, idAssetVersion, eSystemObjectType.eModel, assetType)}>Update</NewTabLink>
                     </Typography>
@@ -241,7 +246,7 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
 function Empty(): React.ReactElement {
     const classes = useStyles();
 
-    return <Typography className={classes.empty}>No reference model(s) found</Typography>;
+    return <Typography className={classes.empty}>No referenced models found</Typography>;
 }
 
 export default ReferenceModels;

@@ -1489,10 +1489,20 @@ export type IntermediaryFile = {
   SystemObject?: Maybe<SystemObject>;
 };
 
+export type SvxNonModelAsset = {
+  __typename?: 'SvxNonModelAsset';
+  uri: Scalars['String'];
+  type: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  size?: Maybe<Scalars['Int']>;
+  idAssetVersion?: Maybe<Scalars['Int']>;
+};
+
 export type SceneConstellation = {
   __typename?: 'SceneConstellation';
   Scene?: Maybe<Scene>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
+  SvxNonModelAssets?: Maybe<Array<SvxNonModelAsset>>;
 };
 
 export type UpdateObjectDetailsInput = {
@@ -3568,7 +3578,10 @@ export type GetSceneForAssetVersionQuery = (
             & Pick<SystemObject, 'idSystemObject' | 'idAsset'>
           )> }
         )> }
-      )>>> }
+      )>>>, SvxNonModelAssets?: Maybe<Array<(
+        { __typename?: 'SvxNonModelAsset' }
+        & Pick<SvxNonModelAsset, 'uri' | 'type' | 'description' | 'size' | 'idAssetVersion'>
+      )>> }
     )> }
   ) }
 );
@@ -6203,6 +6216,13 @@ export const GetSceneForAssetVersionDocument = gql`
             idAsset
           }
         }
+      }
+      SvxNonModelAssets {
+        uri
+        type
+        description
+        size
+        idAssetVersion
       }
     }
   }

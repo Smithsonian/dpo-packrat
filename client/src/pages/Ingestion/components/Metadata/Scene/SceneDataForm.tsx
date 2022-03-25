@@ -141,7 +141,6 @@ function SceneDataForm(props: SceneDataProps): React.ReactElement {
                                     onChange={setCheckboxField}
                                     checked={posedAndQCd}
                                     disabled={!canBeQCd}
-                                    title='posedAndQCd-input'
                                     size='small'
                                     color='primary'
                                 />
