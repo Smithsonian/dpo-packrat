@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Metadata - Scene
  *
@@ -116,12 +117,15 @@ function Scene(props: SceneProps): React.ReactElement {
             });
             // console.log(`Scene Metadata MSX: ${JSON.stringify(data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref)}`);
             // console.log(`Scene Metadata Non-Model-Assets: ${JSON.stringify(data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets)}`);
-            setReferenceModels(data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref);
-            setNonModelAssets(data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets);
+            const ModelSceneXref: any = data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref;
+            const SvxNonModelAssets: any = data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets;
+
+            setReferenceModels(ModelSceneXref);
+            setNonModelAssets(SvxNonModelAssets);
             setSceneData(data.getSceneForAssetVersion?.SceneConstellation?.Scene);
 
-            const missingModels = data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref.some(reference => reference.idModel === 0);
-            const missingNonModelAssets = data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets.some(reference => (reference.idAssetVersion ?? 0) === 0);
+            const missingModels: boolean = ModelSceneXref ? ModelSceneXref.some(reference => reference.idModel === 0) : false;
+            const missingNonModelAssets: boolean = SvxNonModelAssets ? SvxNonModelAssets.some(reference => (reference.idAssetVersion ?? 0) === 0) : false;
             const invalidMetadataStep: boolean = missingModels || missingNonModelAssets;
             setInvalidMetadataStep(invalidMetadataStep);
             if (invalidMetadataStep)
