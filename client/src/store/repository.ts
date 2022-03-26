@@ -456,7 +456,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         console.log('idSystemObject', idSystemObject);
         const { getFilterState } = get();
         const filter = getFilterState();
-        const { data, error } = await getObjectChildrenForRoot(filter, 1);
+        const { data, error } = await getObjectChildrenForRoot(filter, idSystemObject);
 
         // set root to 0 for testing
         // const { data, error } = await getObjectChildrenForRoot(filter, 0);
