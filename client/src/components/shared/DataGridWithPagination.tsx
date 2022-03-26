@@ -13,12 +13,10 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         flexDirection: 'column',
         overflow: 'auto',
         maxHeight: 'calc(100vh - 60px)',
-        paddingLeft: '1%',
-        width: '1200px',
-        margin: '0 auto'
+        width: '1200px'
     },
     DataGridContainer: {
-        marginTop: '2%',
+        marginTop: '20px',
         width: '1000px',
         padding: '20px',
         height: 'calc(100% - 120px)',
@@ -49,11 +47,9 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     searchFilterContainer: {
         display: 'flex',
         justifyContent: 'space-around',
-        height: '70px',
         width: 'fit-content',
         backgroundColor: '#FFFCD1',
-        paddingLeft: '20px',
-        paddingRight: '20px'
+        padding: '15px 20px'
     },
     searchFilterSettingsContainer: {
         display: 'flex',

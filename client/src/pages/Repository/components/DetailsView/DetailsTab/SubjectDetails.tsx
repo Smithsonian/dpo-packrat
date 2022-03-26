@@ -49,6 +49,7 @@ interface SubjectFieldsProps extends SubjectDetailFields {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     isItemView?: boolean;
     setCheckboxField?: (event) => void;
+    // TOFIX?
     ItemDetails?: any;
     itemData?: any;
 }
@@ -76,26 +77,52 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                 <TableContainer style={{ width: 'fit-content', paddingTop: '5px', paddingBottom: '5px' }}>
                     <Table className={classes.table}>
                         <TableBody>
-                            {(isItemView && setCheckboxField && ItemDetails && itemData) &&
-                                <TableRow>
-                                    <TableCell className={classes.tableCell}>
-                                        <Typography className={classes.labelText}>Entire Subject</Typography>
-                                    </TableCell>
-                                    <TableCell className={classes.tableCell} style={{ verticalAlign: 'middle' }}>
-                                        <Checkbox
-                                            className={classes.checkbox}
-                                            name='EntireSubject'
-                                            onChange={setCheckboxField}
-                                            checked={ItemDetails?.EntireSubject}
-                                            title='EntireSubject-input'
-                                            disabled={disabled}
-                                            size='small'
-                                            style={{ ...updatedFieldStyling(isFieldUpdated(ItemDetails, itemData, 'EntireSubject')) }}
-                                            color='primary'
-                                        />
-                                    </TableCell>
-                                </TableRow>
-                            }
+                            {(isItemView && setCheckboxField && ItemDetails && itemData) && (
+                                <React.Fragment>
+                                    <TableRow>
+                                        <TableCell className={classes.tableCell}>
+                                            <Typography className={classes.labelText}>Subtitle</Typography>
+                                        </TableCell>
+                                        <TableCell className={classes.tableCell}>
+                                            <DebounceInput 
+                                                element='input'
+                                                title='Subtitle-input'
+                                                value=''
+                                                type='string'
+                                                name='Subtitle'
+                                                onChange={onChange}
+                                                className={clsx(classes.input, classes.datasetFieldInput)}
+                                                style={{
+                                                    height: 22,
+                                                    fontSize: '0.8rem',
+                                                    padding: '0px 10px',
+                                                    borderRadius: 5,
+                                                    border: '1px solid rgba(141, 171, 196, 0.4)',
+                                                    ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Subtitle'))
+                                                }}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className={classes.tableCell}>
+                                            <Typography className={classes.labelText}>Entire Subject</Typography>
+                                        </TableCell>
+                                        <TableCell className={classes.tableCell} style={{ verticalAlign: 'middle' }}>
+                                            <Checkbox
+                                                className={classes.checkbox}
+                                                name='EntireSubject'
+                                                onChange={setCheckboxField}
+                                                checked={ItemDetails?.EntireSubject}
+                                                title='EntireSubject-input'
+                                                disabled={disabled}
+                                                size='small'
+                                                style={{ ...updatedFieldStyling(isFieldUpdated(ItemDetails, itemData, 'EntireSubject')) }}
+                                                color='primary'
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                </React.Fragment>
+                            )}
                             {
                                 isItemView ? null : (
                                     <>

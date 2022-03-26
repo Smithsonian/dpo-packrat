@@ -169,7 +169,7 @@ function AddProjectForm(): React.ReactElement {
                         Description: description
                     }
                 },
-                refetchQueries: ['getProjectList', 'getIngestionProjectsForSubjects']
+                refetchQueries: ['getProjectList']
             });
             if (data?.createProject) {
                 toast.success('Project created successfully');

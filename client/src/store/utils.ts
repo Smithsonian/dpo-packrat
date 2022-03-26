@@ -3,10 +3,9 @@
  *
  * These are store specific utilities.
  */
-import { AssetVersion, IngestFolder, IngestIdentifier, Item, Project, SubjectUnitIdentifier, Vocabulary } from '../types/graphql';
-import { StateItem } from './item';
-import { StateFolder, StateIdentifier } from './metadata';
-import { StateProject } from './project';
+import { AssetVersion, IngestFolder, IngestIdentifier, Item, Project, SubjectUnitIdentifier, Vocabulary, IngestionItem, IngestTitle } from '../types/graphql';
+import { StateItem, StateProject } from './item';
+import { StateFolder, StateIdentifier, SubtitleFields, eSubtitleOption } from './metadata';
 import { StateSubject } from './subject';
 import { FileId, FileUploadStatus, IngestionFile } from './upload';
 
@@ -33,13 +32,29 @@ export function isNewItem(id: string): boolean {
 export function parseItemToState(item: Item, selected: boolean, position: number): StateItem {
     const { idItem, Name, EntireSubject } = item;
     const id = idItem || `${position}-new-item`;
-
+    console.log('item', item);
     return {
         id: String(id),
         entireSubject: EntireSubject,
-        name: Name,
-        selected
+        subtitle: Name,
+        selected,
+        // TODO
+        idProject: 0,
+        projectName: ''
     };
+}
+
+export function parseIngestionItemToState(ingestionItem: IngestionItem): StateItem {
+    const { idItem, EntireSubject, MediaGroupName, idProject, ProjectName } = ingestionItem;
+    console.log('ingestionItem', ingestionItem);
+    return {
+        id: String(idItem),
+        subtitle: MediaGroupName,
+        entireSubject: EntireSubject,
+        selected: false,
+        idProject,
+        projectName: ProjectName
+    }
 }
 
 export function parseProjectToState(project: Project, selected: boolean): StateProject {
@@ -99,4 +114,33 @@ export function parseFoldersToState(folders: IngestFolder[]): StateFolder[] {
     }));
 
     return stateFolders;
+}
+
+export function parseSubtitlesToState(titles: IngestTitle): SubtitleFields {
+    const { forced, subtitle } = titles;
+    const result: SubtitleFields = [];
+    // If forced, user is required to use the value from subtitle
+    if (forced && subtitle) {
+        result.push({ value: subtitle[0] as string, selected: true, subtitleOption: eSubtitleOption.eForced, id: 0 })
+        return result;
+    }
+
+    if (subtitle) {
+        subtitle.forEach((subtitleVal, key) => {
+            // Supply "None" as an option
+            if (subtitleVal === '<None>') {
+                result.push({ value: '', selected: false, subtitleOption: eSubtitleOption.eNone, id: key });
+            }
+            // User Input
+            if (subtitleVal === null) {
+                result.push({ value: '', selected: true, subtitleOption: eSubtitleOption.eInput, id: key });
+            }
+            // Inherited Value
+            if (subtitleVal && subtitleVal !== '<None>' && subtitleVal.length) {
+                result.push({ value: subtitleVal, selected: false, subtitleOption: eSubtitleOption.eInherit, id: key });
+            }
+        });
+    }
+
+    return result;
 }

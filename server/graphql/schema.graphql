@@ -14,8 +14,6 @@ type Query {
   getFilterViewData: GetFilterViewDataResult!
   getIngestTitle(input: GetIngestTitleInput!): GetIngestTitleResult!
   getIngestionItems(input: GetIngestionItemsInput!): GetIngestionItemsResult!
-  getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
-  getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
   getItem(input: GetItemInput!): GetItemResult!
   getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
@@ -1725,23 +1723,6 @@ input SearchIngestionSubjectsInput {
 
 type SearchIngestionSubjectsResult {
   SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
-}
-
-input GetIngestionItemsForSubjectsInput {
-  idSubjects: [Int!]!
-}
-
-type GetIngestionItemsForSubjectsResult {
-  Item: [Item!]!
-}
-
-input GetIngestionProjectsForSubjectsInput {
-  idSubjects: [Int!]!
-}
-
-type GetIngestionProjectsForSubjectsResult {
-  Project: [Project!]!
-  Default: Boolean!
 }
 
 type IngestionItem {

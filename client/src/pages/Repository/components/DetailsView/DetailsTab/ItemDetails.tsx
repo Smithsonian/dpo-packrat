@@ -6,9 +6,8 @@
  */
 import { Box } from '@material-ui/core';
 import React, { useEffect } from 'react';
-import { /*CheckboxField,*/ Loader } from '../../../../../components';
+import { Loader } from '../../../../../components';
 import { SubjectDetailFields } from '../../../../../types/graphql';
-// import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 import { SubjectFields } from './SubjectDetails';
 import { eSystemObjectType } from '@dpo-packrat/common';

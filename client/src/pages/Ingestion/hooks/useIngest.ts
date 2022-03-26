@@ -16,10 +16,8 @@ import {
     StateFolder,
     StateIdentifier,
     StateItem,
-    StateProject,
     useItemStore,
     useMetadataStore,
-    useProjectStore,
     useSubjectStore,
     useUploadStore,
     useVocabularyStore
@@ -55,7 +53,6 @@ interface UseIngest {
 function useIngest(): UseIngest {
     const [removeSelectedUploads, resetUploads, getSelectedFiles, completed] = useUploadStore(state => [state.removeSelectedUploads, state.reset, state.getSelectedFiles, state.completed]);
     const [subjects, resetSubjects] = useSubjectStore(state => [state.subjects, state.reset]);
-    const [getSelectedProject, resetProjects] = useProjectStore(state => [state.getSelectedProject, state.reset]);
     const [getSelectedItem, resetItems] = useItemStore(state => [state.getSelectedItem, state.reset]);
     const [metadatas, getSelectedIdentifiers, resetMetadatas, getMetadatas] = useMetadataStore(state => [state.metadatas, state.getSelectedIdentifiers, state.reset, state.getMetadatas]);
     const getAssetType = useVocabularyStore(state => state.getAssetType);
@@ -80,14 +77,7 @@ function useIngest(): UseIngest {
                 unit
             }));
 
-            const project: StateProject = getSelectedProject() || { id: 0, name: '', selected: false };
-
-            const ingestProject: IngestProjectInput = {
-                id: project.id,
-                name: project.name
-            };
-
-            const item: StateItem = getSelectedItem() || { id: '', entireSubject: false, selected: false, name: '' };
+            const item: StateItem = getSelectedItem() || { id: '', entireSubject: false, selected: false, subtitle: '', idProject: -1, projectName: '' };
 
             const isDefaultItem = item.id === defaultItem.id;
 
@@ -99,8 +89,13 @@ function useIngest(): UseIngest {
 
             const ingestItem: IngestItemInput = {
                 id: ingestItemId,
-                subtitle: '', // FIXME -- make sure to pass just the subtitle here! Previously, was item.name
-                entireSubject: item.entireSubject
+                subtitle: item.subtitle,
+                entireSubject: item.entireSubject as boolean
+            };
+
+            const ingestProject: IngestProjectInput = {
+                id: item.idProject,
+                name: item.projectName
             };
 
             const ingestPhotogrammetry: IngestPhotogrammetryInput[] = [];
@@ -189,7 +184,8 @@ function useIngest(): UseIngest {
                         directory,
                         sourceObjects,
                         derivedObjects,
-                        updateNotes
+                        updateNotes,
+                        subtitles
                     } = model;
 
                     let {
@@ -203,9 +199,9 @@ function useIngest(): UseIngest {
                     }
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-
+                    const selectedSubtitle = subtitles.find(subtitle => subtitle.selected);
                     const modelData: IngestModelInput = {
-                        subtitle: '', // FIXME -- make sure to pass just the subtitle here! Previously, was model.name
+                        subtitle: selectedSubtitle?.value as string,
                         idAssetVersion: parseFileId(file.id),
                         dateCreated,
                         identifiers: ingestIdentifiers,
@@ -232,14 +228,14 @@ function useIngest(): UseIngest {
 
                 if (isScene) {
                     const { identifiers, systemCreated, approvedForPublication, posedAndQCd, directory, sourceObjects,
-                        derivedObjects, updateNotes } = scene;
+                        derivedObjects, updateNotes, subtitles } = scene;
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-
+                    const selectedSubtitle = subtitles.find(subtitle => subtitle.selected);
                     const sceneData: IngestSceneInput = {
                         idAssetVersion: parseFileId(file.id),
                         identifiers: ingestIdentifiers,
                         systemCreated,
-                        subtitle: '', // FIXME -- make sure to pass just the subtitle here! Previously, was scene.name
+                        subtitle: selectedSubtitle?.value as string,
                         approvedForPublication,
                         posedAndQCd,
                         directory,
@@ -335,7 +331,6 @@ function useIngest(): UseIngest {
 
     const resetIngestionState = () => {
         resetSubjects();
-        resetProjects();
         resetItems();
         resetMetadatas();
     };

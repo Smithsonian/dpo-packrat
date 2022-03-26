@@ -4,7 +4,7 @@ import * as DBAPI from '../../../../../db';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 
-export default async function getIngestionItemsForSubjects(_: Parent, args: QueryGetIngestionItemsArgs): Promise<GetIngestionItemsResult> {
+export default async function getIngestionItems(_: Parent, args: QueryGetIngestionItemsArgs): Promise<GetIngestionItemsResult> {
     const { input } = args;
     const { idSubjects } = input;
 
