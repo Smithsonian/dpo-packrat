@@ -41,7 +41,7 @@ interface InputFieldProps extends ViewableProps {
     padding?: string;
     inputHeight?: string;
     gridGap?: string;
-    containerStyle?: any;
+    containerStyle?: React.CSSProperties;
 }
 
 function InputField(props: InputFieldProps): React.ReactElement {

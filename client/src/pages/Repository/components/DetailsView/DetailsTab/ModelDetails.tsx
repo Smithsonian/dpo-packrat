@@ -101,7 +101,6 @@ export const useStyles = makeStyles(({ palette, typography }) => ({
         fontSize: '0.8em',
         height: 3
     }
-    
 }));
 
 function ModelDetails(props: DetailComponentProps): React.ReactElement {

@@ -31,11 +31,11 @@ export enum eSubtitleOption {
 }
 
 export type SubtitleFields = {
-        value: string,
-        selected: boolean,
-        subtitleOption: eSubtitleOption,
-        id: number
-    }[]
+    value: string,
+    selected: boolean,
+    subtitleOption: eSubtitleOption,
+    id: number
+}[];
 
 export type MetadataInfo = {
     metadata: StateMetadata;

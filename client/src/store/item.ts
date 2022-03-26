@@ -24,7 +24,7 @@ export type StateItem = {
     selected: boolean;
     idProject: number;
     projectName: string;
-}
+};
 
 export type StateProject = {
     id: number;
@@ -74,23 +74,23 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
         const { items } = get();
         const currentDefaultItem = lodash.find(items, { id: defaultItem.id });
 
-            if (!fetchedItems.length)
-                return;
-            
-            const newItemSelected = lodash.find(fetchedItems, { selected: true });
+        if (!fetchedItems.length)
+            return;
 
-            if (!newItemSelected)
-                fetchedItems[0].selected = true;
+        const newItemSelected = lodash.find(fetchedItems, { selected: true });
 
-            if (currentDefaultItem)
-                currentDefaultItem.selected = false;
-            
-            const newItems: StateItem[] = [...fetchedItems];
-            if (currentDefaultItem)
-                newItems.push(currentDefaultItem);
+        if (!newItemSelected)
+            fetchedItems[0].selected = true;
+
+        if (currentDefaultItem)
+            currentDefaultItem.selected = false;
+
+        const newItems: StateItem[] = [...fetchedItems];
+        if (currentDefaultItem)
+            newItems.push(currentDefaultItem);
 
 
-            set({ items: newItems, loading: false });
+        set({ items: newItems, loading: false });
     },
     addNewItem: async () => {
         const { items, newItem } = get();
@@ -117,17 +117,17 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
         newItemCopy.selected = true;
         set({ hasNewItem: true, items: itemsCopy, newItem: newItemCopy });
     },
-  
+
     updateNewItemEntireSubject: (entireSubject: boolean) => {
         const { newItem } = get();
         const newItemCopy = lodash.cloneDeep(newItem);
-        set({ newItem: { ...newItemCopy, entireSubject }});
+        set({ newItem: { ...newItemCopy, entireSubject } });
     },
     updateNewItemSubtitle: (event: React.ChangeEvent<HTMLInputElement>) => {
         const { newItem } = get();
 
         const { target: { value: subtitle } } = event;
-        set({ newItem: { ...newItem, subtitle }})
+        set({ newItem: { ...newItem, subtitle } });
     },
     updateNewItemProject: (idProject: number) => {
         const { newItem, projectList } = get();
@@ -152,9 +152,9 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
             return {
                 ...item,
                 selected: id === item.id ? !item.selected : false
-            }
-        })
-        set({ newItem, items: updatedItems })
+            };
+        });
+        set({ newItem, items: updatedItems });
     },
     loadingItems: (): void => {
         set({ loading: true });
@@ -170,7 +170,7 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
                 },
                 fetchPolicy: 'no-cache'
             });
-            const { data: { getIngestionItems: { IngestionItem }} } = ingestionItemQuery;
+            const { data: { getIngestionItems: { IngestionItem } } } = ingestionItemQuery;
             const ingestionItemState = IngestionItem?.map(item => parseIngestionItemToState(item));
             set({ items: ingestionItemState });
         } catch (error) {

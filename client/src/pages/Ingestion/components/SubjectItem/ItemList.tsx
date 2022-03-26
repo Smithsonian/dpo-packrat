@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * ItemList
  *
@@ -113,7 +115,19 @@ function ItemList(): React.ReactElement {
                 </TableHead>
                 <TableBody className={classes.body}>
                     {(items && items.length > 0) && items.map(getItemsList)}
-                    {hasNewItem ? <ItemListNewItem item={newItem} onUpdateEntireSubject={updateNewItemEntireSubject} onUpdateName={updateNewItemSubtitle} onUpdateSelected={updateSelectedItem} onUpdateProject={updateNewItemProject} projects={projectList} hasMultipleSubjects={subjects.length > 1} /> : <ItemListEmptyItem onAddItem={addNewItem} />}
+                    {hasNewItem ? (
+                        <ItemListNewItem
+                            item={newItem}
+                            onUpdateEntireSubject={updateNewItemEntireSubject}
+                            onUpdateName={updateNewItemSubtitle}
+                            onUpdateSelected={updateSelectedItem}
+                            onUpdateProject={updateNewItemProject}
+                            projects={projectList}
+                            hasMultipleSubjects={subjects.length > 1}
+                        />
+                    ) : (
+                        <ItemListEmptyItem onAddItem={addNewItem} />
+                    )}
                 </TableBody>
             </Table>
         </TableContainer>
@@ -177,7 +191,7 @@ function ItemListEmptyItem(props: ItemListEmptyItemProps) {
             <TableCell>
                 <span className={classes.emptyList}>Add new media group here</span>
             </TableCell>
-            <TableCell style={cellStyle} align='center'></TableCell>
+            <TableCell></TableCell>
             <TableCell></TableCell>
         </TableRow>
     );
@@ -222,30 +236,34 @@ function ItemListNewItem(props: ItemListNewItemProps) {
                 </Select>
             </TableCell>
             <TableCell style={cellStyle} align='center'>
-                {hasMultipleSubjects ? <Typography>No</Typography> : <Select
-                    value={entireSubject === null ? -1 : !entireSubject ? 0 : 1}
-                    disabled={idProject < 0}
-                    className={classes.projectSelect}
-                    renderValue={() => entireSubject === null ? 'Yes/No' : !entireSubject ? 'No' : 'Yes'}
-                    disableUnderline
-                    style={{ width: 'fit-content' }}
-                    onChange={(e) => onUpdateEntireSubject(Number(e.target.value) > 0 ? true : false) }
-                >
-                    <MenuItem value={-1} disabled><em>Yes/No</em></MenuItem>
-                    <MenuItem value={0}>No</MenuItem>
-                    <MenuItem value={1}>Yes</MenuItem>
-                </Select>}
-                
+                {hasMultipleSubjects ? (
+                    <Typography>No</Typography>
+                ) : (
+                    <Select
+                        value={entireSubject === null ? -1 : !entireSubject ? 0 : 1}
+                        disabled={idProject < 0}
+                        className={classes.projectSelect}
+                        renderValue={() => entireSubject === null ? 'Yes/No' : !entireSubject ? 'No' : 'Yes'}
+                        disableUnderline
+                        style={{ width: 'fit-content' }}
+                        onChange={(e) => onUpdateEntireSubject(Number(e.target.value) > 0 ? true : false) }
+                    >
+                        <MenuItem value={-1} disabled><em>Yes/No</em></MenuItem>
+                        <MenuItem value={0}>No</MenuItem>
+                        <MenuItem value={1}>Yes</MenuItem>
+                    </Select>
+                )}
             </TableCell>
             <TableCell>
-                {(idProject > -1) && (<DebounceInput
-                    value={subtitle}
-                    className={classes.nameInput}
-                    onChange={onUpdateName}
-                    debounceTimeout={500}
-                    placeholder={`Add subtitle ${hasMultipleSubjects || !entireSubject ? '[required]' : '[optional]'}`}
-                />)}
-                
+                {(idProject > -1) && (
+                    <DebounceInput
+                        value={subtitle}
+                        className={classes.nameInput}
+                        onChange={onUpdateName}
+                        debounceTimeout={500}
+                        placeholder={`Add subtitle ${hasMultipleSubjects || !entireSubject ? '[required]' : '[optional]'}`}
+                    />
+                )}
             </TableCell>
         </TableRow>
     );

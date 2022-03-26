@@ -105,7 +105,7 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                             <Typography className={classes.labelText}>Subtitle</Typography>
                                         </TableCell>
                                         <TableCell className={classes.tableCell}>
-                                            <DebounceInput 
+                                            <DebounceInput
                                                 element='input'
                                                 title='Subtitle-input'
                                                 value={subtitle}

@@ -157,8 +157,8 @@ export class NameHelpers {
             const mergedSubtitle: string = [...subtitleSet].join(', ');
             if (mergedSubtitle)
                 subtitle.push(mergedSubtitle);
-                subtitle.push('<None>');
-                subtitle.push(null);
+            subtitle.push('<None>');
+            subtitle.push(null);
         } else
             subtitle.push(null);
         return { title: subject?.Name ?? null, subtitle };

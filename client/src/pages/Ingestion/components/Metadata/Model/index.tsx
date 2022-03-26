@@ -276,7 +276,7 @@ function Model(props: ModelProps): React.ReactElement {
                 value: subtitle.value,
                 subtitleOption: subtitle.subtitleOption,
                 selected: id === subtitle.id
-            }
+            };
         });
         updateMetadataField(metadataIndex, 'subtitles', updatedSubtitles, MetadataType.model);
         // console.log('id', id, updatedSubtitles);
@@ -346,17 +346,17 @@ function Model(props: ModelProps): React.ReactElement {
                     <Box className={classes.captionContainer}>
                         <Typography variant='caption'>Model</Typography>
                     </Box>
-                        {!idAsset && (
-                            <Box mb={1.25}>
-                                <SubtitleControl
-                                    subtitles={model.subtitles}
-                                    objectName={model.name}
-                                    onSelectSubtitle={onSelectSubtitle}
-                                    onUpdateCustomSubtitle={onUpdateCustomSubtitle}
-                                    hasPrimaryTheme={false}
-                                />
-                            </Box>
-                        )}
+                    {!idAsset && (
+                        <Box mb={1.25}>
+                            <SubtitleControl
+                                subtitles={model.subtitles}
+                                objectName={model.name}
+                                onSelectSubtitle={onSelectSubtitle}
+                                onUpdateCustomSubtitle={onUpdateCustomSubtitle}
+                                hasPrimaryTheme={false}
+                            />
+                        </Box>
+                    )}
                     <Box className={classes.modelMetricsAndForm}>
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
                             <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ backgroundColor: 'rgb(255, 252, 209', paddingTop: '10px' }}>
