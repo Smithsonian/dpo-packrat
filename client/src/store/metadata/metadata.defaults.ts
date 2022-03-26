@@ -32,7 +32,7 @@ const subtitleSchema = yup.object().shape({
     selected: yup.boolean().required(),
     subtitleOption: yup.number().required(),
     id: yup.number()
-})
+});
 
 const identifierValidation = {
     test: array => array.length && array.every(identifier => identifier.identifier.length),
@@ -47,7 +47,7 @@ const identifiersWhenValidation = {
 const hasModelSourcesValidation = {
     test: array => array.length && array.some(source => source.objectType === eSystemObjectType.eModel),
     message: 'Should provide at least 1 model parent for scene ingestion'
-}
+};
 
 const notesWhenUpdate = {
     is: value => value > 0,
@@ -59,8 +59,7 @@ const selectedSubtitleValidation = {
         const selectedSubtitle = array.find(subtitle => subtitle.selected);
         if (!selectedSubtitle) return false;
         if (selectedSubtitle.subtitleOption !== eSubtitleOption.eNone)
-            return !!selectedSubtitle.value
-        
+            return !!selectedSubtitle.value;
         return true;
     },
     message: 'Should provide a valid subtitle/name for ingestion'

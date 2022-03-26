@@ -181,7 +181,7 @@ function Scene(props: SceneProps): React.ReactElement {
         const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
         updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.scene);
 
-        const { data: { getIngestTitle: { ingestTitle }}}: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
+        const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
             query: GetIngestTitleDocument,
             variables: {
                 input: {
@@ -190,10 +190,10 @@ function Scene(props: SceneProps): React.ReactElement {
             },
             fetchPolicy: 'no-cache'
         });
-        
+
         if (!ingestTitle) {
             toast.error('Failed to fetch titles for ingestion items');
-            return
+            return;
         }
         const subtitleState = parseSubtitlesToState(ingestTitle);
         updateMetadataField(metadataIndex, 'subtitles', subtitleState, MetadataType.scene);
@@ -215,9 +215,9 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const onSelectedObjects = async (newSourceObjects: StateRelatedObject[]) => {
         updateMetadataField(metadataIndex, objectRelationship === RelatedObjectType.Source ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.scene);
-        
+
         if (objectRelationship === RelatedObjectType.Source) {
-            const { data: { getIngestTitle: { ingestTitle }}}: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
+            const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
                 query: GetIngestTitleDocument,
                 variables: {
                     input: {
@@ -226,15 +226,15 @@ function Scene(props: SceneProps): React.ReactElement {
                 },
                 fetchPolicy: 'no-cache'
             });
-            
+
             if (!ingestTitle) {
                 toast.error('Failed to fetch titles for ingestion items');
-                return
+                return;
             }
             const subtitleState = parseSubtitlesToState(ingestTitle);
             updateMetadataField(metadataIndex, 'subtitles', subtitleState, MetadataType.scene);
             updateMetadataField(metadataIndex, 'name', ingestTitle.title, MetadataType.scene);
-        }      
+        }
 
         onModalClose();
     };
@@ -246,7 +246,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 value: subtitle.value,
                 subtitleOption: subtitle.subtitleOption,
                 selected: id === subtitle.id
-            }
+            };
         });
         updateMetadataField(metadataIndex, 'subtitles', updatedSubtitles, MetadataType.scene);
     };

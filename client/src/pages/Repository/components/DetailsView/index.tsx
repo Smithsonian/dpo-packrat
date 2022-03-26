@@ -273,7 +273,7 @@ function DetailsView(): React.ReactElement {
         setDetails(details => ({ ...details, subtitle: target.value }));
         updatedDataFields.Subtitle = target.value;
         setUpdatedData(updatedDataFields);
-    }
+    };
 
     const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
         // console.log('onUpdateDetail', objectType, data);

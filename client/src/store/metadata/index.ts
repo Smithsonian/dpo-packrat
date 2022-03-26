@@ -413,7 +413,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         const selectedItem = getSelectedItem();
 
         try {
-            const { data: { getIngestTitle: { ingestTitle }}}: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
+            const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
                 query: GetIngestTitleDocument,
                 variables: {
                     input: {
@@ -425,10 +425,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     }
                 }
             });
-            
+
             if (!ingestTitle) {
                 toast.error('Failed to fetch titles for ingestion items');
-                return
+                return;
             }
             // console.log('ingestTitle', ingestTitle);
             const metadatasCopy = lodash.cloneDeep(metadatas);
@@ -439,14 +439,14 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     metadata.model.subtitles = subtitleState;
                     metadata.model.name = ingestTitle.title;
                 }
-            })
+            });
 
             // console.log('metadatasCopy', metadatasCopy);
             set({ metadatas: metadatasCopy });
         } catch (error) {
             toast.error(`Failed to fetch titles for ingestion items ${error}`);
         }
-        
+
     },
     getInitialStateFolders: (folders: string[]): StateFolder[] => {
         const { getInitialEntry, getEntries } = useVocabularyStore.getState();

@@ -54,7 +54,7 @@ export function parseIngestionItemToState(ingestionItem: IngestionItem): StateIt
         selected: false,
         idProject,
         projectName: ProjectName
-    }
+    };
 }
 
 export function parseProjectToState(project: Project, selected: boolean): StateProject {
@@ -121,7 +121,7 @@ export function parseSubtitlesToState(titles: IngestTitle): SubtitleFields {
     const result: SubtitleFields = [];
     // If forced, user is required to use the value from subtitle
     if (forced && subtitle) {
-        result.push({ value: subtitle[0] as string, selected: true, subtitleOption: eSubtitleOption.eForced, id: 0 })
+        result.push({ value: subtitle[0] as string, selected: true, subtitleOption: eSubtitleOption.eForced, id: 0 });
         return result;
     }
 

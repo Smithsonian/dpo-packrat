@@ -88,7 +88,6 @@ function SceneDataForm(props: SceneDataProps): React.ReactElement {
         <TableContainer component={Paper} elevation={0} className={classes.tableContainer}>
             <Table>
                 <TableBody className={classes.tableBody}>
-                    
                     <TableRow className={clsx(classes.blueRow, classes.tableRow)}>
                         <TableCell className={classes.tableCell}>
                             <Typography className={classes.text} variant='caption'>

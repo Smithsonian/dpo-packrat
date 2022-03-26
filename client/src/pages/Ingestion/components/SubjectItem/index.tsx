@@ -75,7 +75,7 @@ function SubjectItem(): React.ReactElement {
         toast.dismiss();
         let error: boolean = false;
         // Note: we only want certain warnings to flag if we have missing fields after selecting an new item
-        let isItemSelected = !!selectedItem;
+        const isItemSelected = !!selectedItem;
 
         if (!subjects.length) {
             error = true;

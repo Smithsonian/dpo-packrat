@@ -20,7 +20,7 @@ export interface ItemDetailFields extends SubjectDetailFields {
 function ItemDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType, subtitle, onSubtitleUpdate } = props;
     const [ItemDetails, updateDetailField] = useDetailTabStore(state => [state.ItemDetails, state.updateDetailField]);
-    
+
     useEffect(() => {
         onUpdateDetail(objectType, ItemDetails);
     }, [ItemDetails]);

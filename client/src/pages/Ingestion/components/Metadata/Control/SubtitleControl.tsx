@@ -1,6 +1,6 @@
 import React from 'react';
 import { SubtitleFields, eSubtitleOption } from '../../../../../store/metadata/metadata.types';
-import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, fade } from '@material-ui/core'
+import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, fade } from '@material-ui/core';
 import { RiCheckboxBlankCircleLine, RiRecordCircleFill } from 'react-icons/ri';
 import { grey } from '@material-ui/core/colors';
 import { palette } from '../../../../../theme';
@@ -8,7 +8,7 @@ import { DebounceInput } from 'react-debounce-input';
 import clsx from 'clsx';
 
 interface SubtitleControlProps {
-    subtitles: SubtitleFields; 
+    subtitles: SubtitleFields;
     objectName: string;
     onSelectSubtitle: (id: number) => void;
     onUpdateCustomSubtitle: (event: React.ChangeEvent<HTMLInputElement>, id: number) => void;
@@ -50,7 +50,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     text: {
         fontSize: '0.75rem'
     }
-}))
+}));
 
 function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
     const { objectName, subtitles, onUpdateCustomSubtitle, onSelectSubtitle, hasPrimaryTheme } = props;
@@ -118,10 +118,12 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                                     <div className={classes.optionContainer} key={key}>
                                         {!selected && <RiCheckboxBlankCircleLine className={classes.selected} onClick={() => onSelectSubtitle(id)} size={18} color={grey[400]} />}
                                         {selected && <RiRecordCircleFill className={classes.selected} onClick={() => onSelectSubtitle(id)} size={18} color={palette.primary.main} />}
-                                        {
-                                            subtitleOption === eSubtitleOption.eInherit ? <Typography className={classes.text}>{value}</Typography>
-                                            : subtitleOption === eSubtitleOption.eNone ? <Typography className={classes.text}>None</Typography>
-                                            : <DebounceInput
+                                        {subtitleOption === eSubtitleOption.eInherit ? (
+                                            <Typography className={classes.text}>{value}</Typography>
+                                        ) : subtitleOption === eSubtitleOption.eNone ? (
+                                            <Typography className={classes.text}>None</Typography>
+                                        ) : (
+                                            <DebounceInput
                                                 onChange={(e) => onUpdateCustomSubtitle(e, id)}
                                                 element='input'
                                                 value={value}
@@ -129,7 +131,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                                                 debounceTimeout={400}
                                                 title={`subtitle-input-${value}`}
                                             />
-                                        }
+                                        )}
                                     </div>
                                 ))
                             }
@@ -140,7 +142,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
         );
 
         return <React.Fragment>{options}</React.Fragment>;
-    }
+    };
 
     return (
         <Box className={classes.container}>
