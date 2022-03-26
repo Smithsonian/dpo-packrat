@@ -24,6 +24,7 @@ import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSy
 import { PublishScene } from '../../../../../collections/impl/PublishScene';
 import { NameHelpers, ModelHierarchy } from '../../../../../utils/nameHelpers';
 import * as COMMON from '@dpo-packrat/common';
+import { eSystemObjectType } from '@dpo-packrat/common';
 
 type AssetPair = {
     asset: DBAPI.Asset;
@@ -1476,6 +1477,8 @@ class IngestDataWorker extends ResolverBase {
         if (this.ingestScene) {
             for (const scene of this.input.scene) {
                 // add validation in this area while we iterate through the objects
+                if (!scene.sourceObjects || !scene.sourceObjects.length || !scene.sourceObjects.some(sourceObj => sourceObj.objectType === eSystemObjectType.eModel))
+                    return { success: false, error: 'Scene ingestion must have at least 1 source object of type model' };
                 if (scene.sourceObjects && scene.sourceObjects.length) {
                     for (const sourceObject of scene.sourceObjects) {
                         if (!isValidParentChildRelationship(sourceObject.objectType, COMMON.eSystemObjectType.eScene, scene.sourceObjects, [], true)) {

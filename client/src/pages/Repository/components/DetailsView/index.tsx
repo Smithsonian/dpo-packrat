@@ -472,12 +472,14 @@ function DetailsView(): React.ReactElement {
         }
     };
 
+    const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
+
     return (
         <Box className={classes.container}>
             <DetailsHeader
                 originalFields={data.getSystemObjectDetails}
                 name={details.name}
-                disabled={disabled}
+                disabled={disabled || immutableNameTypes.has(objectType)}
                 objectType={objectType}
                 path={objectAncestors}
                 onNameUpdate={onNameUpdate}

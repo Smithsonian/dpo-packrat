@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Box, Checkbox, Tooltip, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper } from '@material-ui/core';
-import { DebounceInput } from 'react-debounce-input';
 import { makeStyles, fade } from '@material-ui/core/styles';
 import clsx from 'clsx';
 
@@ -70,18 +69,16 @@ interface SceneData {
 
 interface SceneDataProps {
     sceneData: SceneData;
-    name: string;
     EdanUUID: string;
     approvedForPublication: boolean;
     posedAndQCd: boolean;
     canBeQCd: boolean;
     idAssetVersion?: number;
-    setNameField: ({ target }: { target: EventTarget }) => void;
     setCheckboxField: ({ target }: { target: EventTarget }) => void;
 }
 
 function SceneDataForm(props: SceneDataProps): React.ReactElement {
-    const { sceneData, setCheckboxField, setNameField, name, approvedForPublication, posedAndQCd, canBeQCd, EdanUUID } = props;
+    const { sceneData, setCheckboxField, approvedForPublication, posedAndQCd, canBeQCd, EdanUUID } = props;
     const classes = useStyles();
     if (!sceneData)
         return <Box></Box>;
@@ -91,24 +88,7 @@ function SceneDataForm(props: SceneDataProps): React.ReactElement {
         <TableContainer component={Paper} elevation={0} className={classes.tableContainer}>
             <Table>
                 <TableBody className={classes.tableBody}>
-                    <TableRow className={clsx(classes.blueRow, classes.tableRow)}>
-                        <TableCell className={classes.tableCell} style={{ paddingTop: '5px', borderTopLeftRadius: '5px' }}>
-                            <Typography className={classes.text} variant='caption'>
-                                Name
-                            </Typography>
-                        </TableCell>
-                        <TableCell className={classes.tableCell} style={{ paddingTop: '5px', borderTopRightRadius: '5px' }}>
-                            <DebounceInput
-                                element='input'
-                                title='sceneName-input'
-                                value={name || ''}
-                                type='string'
-                                name='name'
-                                onChange={setNameField}
-                                className={classes.input}
-                            />
-                        </TableCell>
-                    </TableRow>
+                    
                     <TableRow className={clsx(classes.blueRow, classes.tableRow)}>
                         <TableCell className={classes.tableCell}>
                             <Typography className={classes.text} variant='caption'>
@@ -141,7 +121,6 @@ function SceneDataForm(props: SceneDataProps): React.ReactElement {
                                     onChange={setCheckboxField}
                                     checked={posedAndQCd}
                                     disabled={!canBeQCd}
-                                    title='posedAndQCd-input'
                                     size='small'
                                     color='primary'
                                 />

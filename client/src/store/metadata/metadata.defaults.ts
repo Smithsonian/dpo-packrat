@@ -4,7 +4,10 @@
  * Default field definitions for the metadata store.
  */
 import * as yup from 'yup';
-import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields, SceneAttachmentFields } from './metadata.types';
+import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields, SceneAttachmentFields, eSubtitleOption } from './metadata.types';
+import { eSystemObjectType } from '@dpo-packrat/common';
+
+const MAX_INTEGER = 2147483647;
 
 const identifierWhenSelectedValidation = {
     is: true,
@@ -24,6 +27,13 @@ const folderSchema = yup.object().shape({
     variantType: yup.number().nullable(true)
 });
 
+const subtitleSchema = yup.object().shape({
+    value: yup.string(),
+    selected: yup.boolean().required(),
+    subtitleOption: yup.number().required(),
+    id: yup.number()
+})
+
 const identifierValidation = {
     test: array => array.length && array.every(identifier => identifier.identifier.length),
     message: 'Should provide at least 1 identifier with valid identifier ID'
@@ -34,9 +44,25 @@ const identifiersWhenValidation = {
     then: yup.array().of(identifierSchema).test(identifierValidation)
 };
 
+const hasModelSourcesValidation = {
+    test: array => array.length && array.some(source => source.objectType === eSystemObjectType.eModel),
+    message: 'Should provide at least 1 model parent for scene ingestion'
+}
+
 const notesWhenUpdate = {
     is: value => value > 0,
     then: yup.string().required()
+};
+
+const selectedSubtitleValidation = {
+    test: array => {
+        const selectedSubtitle = array.find(subtitle => subtitle.selected);
+        if (selectedSubtitle.subtitleOption !== eSubtitleOption.eNone)
+            return !!selectedSubtitle.value
+        
+        return true;
+    },
+    message: 'Should provide a valid subtitle/name for ingestion'
 };
 
 export const defaultPhotogrammetryFields: PhotogrammetryFields = {
@@ -76,20 +102,20 @@ export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
         .nullable(true)
         .typeError('Dataset Field ID must be a positive integer')
         .positive('Dataset Field ID must be a positive integer')
-        .max(2147483647, 'Dataset Field ID is too large'),
+        .max(MAX_INTEGER, 'Dataset Field ID is too large'),
     itemPositionType: yup.number().nullable(true),
     itemPositionFieldId: yup
         .number()
         .nullable(true)
         .typeError('Position Field ID must be a positive integer')
         .positive('Position Field ID must be a positive integer')
-        .max(2147483647, 'Position Field ID is too large'),
+        .max(MAX_INTEGER, 'Position Field ID is too large'),
     itemArrangementFieldId: yup
         .number()
         .nullable(true)
         .typeError('Arrangement Field ID must be a positive integer')
         .positive('Arrangement Field ID must be a positive integer')
-        .max(2147483647, 'Arrangement Field ID is too large'),
+        .max(MAX_INTEGER, 'Arrangement Field ID is too large'),
     focusType: yup.number().nullable(true),
     lightsourceType: yup.number().nullable(true),
     backgroundRemovalMethod: yup.number().nullable(true),
@@ -99,7 +125,7 @@ export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
         .nullable(true)
         .typeError('Cluster Geometry Field ID must be a positive integer')
         .positive('Cluster Geometry Field ID must be a positive integer')
-        .max(2147483647, 'Cluster Geometry Field ID is too large'),
+        .max(MAX_INTEGER, 'Cluster Geometry Field ID is too large'),
     cameraSettingUniform: yup.boolean().required(),
     directory: yup.string(),
     updateNotes: yup.string().when('idAsset', notesWhenUpdate)
@@ -136,7 +162,18 @@ export const defaultModelFields: ModelFields = {
     modelFileType: null,
     directory: '',
     updateNotes: '',
-    idAsset: 0
+    idAsset: 0,
+    subtitles: [{
+        value: '',
+        selected: true,
+        subtitleOption: eSubtitleOption.eInput,
+        id: 1
+    }, {
+        value: '',
+        selected: false,
+        subtitleOption: eSubtitleOption.eNone,
+        id: 0
+    }]
 };
 
 export const modelFieldsSchemaUpdate = yup.object().shape({
@@ -173,6 +210,7 @@ export const modelFieldsSchemaUpdate = yup.object().shape({
 
 export const modelFieldsSchema = modelFieldsSchemaUpdate.shape({
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
+    subtitles: yup.array().of(subtitleSchema).test(selectedSubtitleValidation)
 });
 
 export const defaultSceneFields: SceneFields = {
@@ -188,7 +226,13 @@ export const defaultSceneFields: SceneFields = {
     posedAndQCd: false,
     canBeQCd: false,
     updateNotes: '',
-    idAsset: 0
+    idAsset: 0,
+    subtitles: [{
+        value: '',
+        selected: true,
+        subtitleOption: eSubtitleOption.eInput,
+        id: 0
+    }]
 };
 
 export const referenceModelSchema = yup.object().shape({
@@ -214,8 +258,9 @@ export const sceneFieldsSchemaUpdate = yup.object().shape({
 
 export const sceneFieldsSchema = sceneFieldsSchemaUpdate.shape({
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
+    sourceObjects: yup.array().of(sourceObjectSchema).test(hasModelSourcesValidation),
+    subtitles: yup.array().of(subtitleSchema).test(selectedSubtitleValidation)
 });
-
 
 export const defaultOtherFields: OtherFields = {
     systemCreated: true,

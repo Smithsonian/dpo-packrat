@@ -19,8 +19,6 @@ import getUnitTest from './queries/unit/getUnit.test';
 import getVocabularyTest from './queries/vocabulary/getVocabulary.test';
 import getWorkflowTest from './queries/workflow/getWorkflow.test';
 import getVocabularyEntriesTest from './queries/vocabulary/getVocabularyEntries.test';
-import getIngestionItemsForSubjectsTest from './queries/unit/getIngestionItemsForSubjects.test';
-import getIngestionProjectsForSubjectsTest from './queries/unit/getIngestionProjectsForSubjects.test';
 import searchIngestionSubjectsTest from './queries/unit/searchIngestionSubjects.test';
 import areCameraSettingsUniformTest from './queries/ingestion/areCameraSettingsUniform.test';
 import getContentsForAssetVersionsTest from './queries/asset/getContentsForAssetVersions.test';
@@ -68,8 +66,6 @@ describe('GraphQL Test Suite', () => {
     getVocabularyTest(utils);
     getWorkflowTest(utils);
     getVocabularyEntriesTest(utils);
-    getIngestionItemsForSubjectsTest(utils);
-    getIngestionProjectsForSubjectsTest(utils);
     searchIngestionSubjectsTest(utils);
     areCameraSettingsUniformTest(utils);
     getContentsForAssetVersionsTest(utils);

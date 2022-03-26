@@ -61,10 +61,6 @@ import {
     CreateVocabularySetResult,
     SearchIngestionSubjectsInput,
     SearchIngestionSubjectsResult,
-    GetIngestionItemsForSubjectsInput,
-    GetIngestionItemsForSubjectsResult,
-    GetIngestionProjectsForSubjectsInput,
-    GetIngestionProjectsForSubjectsResult,
     GetVocabularyEntriesInput,
     GetVocabularyEntriesResult,
     GetContentsForAssetVersionsInput,
@@ -110,7 +106,9 @@ import {
     GetUnitsFromNameSearchResult,
     GetUnitsFromNameSearchInput,
     GetProjectListResult,
-    GetProjectListInput
+    GetProjectListInput,
+    GetIngestionItemsInput,
+    GetIngestionItemsResult
 } from '../../types/graphql';
 
 // Queries
@@ -133,8 +131,6 @@ import getWorkflow from './queries/workflow/getWorkflow';
 import getWorkflowList from './queries/workflow/getWorkflowList';
 import getUploadedAssetVersion from './queries/asset/getUploadedAssetVersion';
 import searchIngestionSubjects from './queries/unit/searchIngestionSubjects';
-import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSubjects';
-import getIngestionProjectsForSubjects from './queries/unit/getIngestionProjectsForSubjects';
 import getVocabularyEntries from './queries/vocabulary/getVocabularyEntries';
 import getContentsForAssetVersions from './queries/asset/getContentsForAssetVersions';
 import getModelConstellationForAssetVersion from './queries/asset/getModelConstellationForAssetVersion';
@@ -202,8 +198,6 @@ const allQueries = {
     uploadAsset,
     getUploadedAssetVersion,
     searchIngestionSubjects,
-    getIngestionItemsForSubjects,
-    getIngestionProjectsForSubjects,
     getVocabularyEntries,
     getContentsForAssetVersions,
     getModelConstellationForAssetVersion,
@@ -395,26 +389,6 @@ class GraphQLApi {
 
     async searchIngestionSubjects(input: SearchIngestionSubjectsInput, context?: Context): Promise<SearchIngestionSubjectsResult> {
         const operationName = 'searchIngestionSubjects';
-        const variables = { input };
-        return this.graphqlRequest({
-            operationName,
-            variables,
-            context
-        });
-    }
-
-    async getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput, context?: Context): Promise<GetIngestionItemsForSubjectsResult> {
-        const operationName = 'getIngestionItemsForSubjects';
-        const variables = { input };
-        return this.graphqlRequest({
-            operationName,
-            variables,
-            context
-        });
-    }
-
-    async getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput, context?: Context): Promise<GetIngestionProjectsForSubjectsResult> {
-        const operationName = 'getIngestionProjectsForSubjects';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
@@ -781,6 +755,16 @@ class GraphQLApi {
             variables,
             context
         });
+    }
+
+    async getIngestionItems(input: GetIngestionItemsInput, context?: Context): Promise<GetIngestionItemsResult> {
+        const operationName = 'getIngestionItems';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        })
     }
 
     private async graphqlRequest({ query, variables, context, operationName }: GraphQLRequest): Promise<any> {

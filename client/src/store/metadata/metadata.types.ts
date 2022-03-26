@@ -23,6 +23,20 @@ export enum MetadataType {
     sceneAttachment = 'sceneAttachment'
 }
 
+export enum eSubtitleOption {
+    eInherit,
+    eNone,
+    eInput,
+    eForced,
+}
+
+export type SubtitleFields = {
+        value: string,
+        selected: boolean,
+        subtitleOption: eSubtitleOption,
+        id: number
+    }[]
+
 export type MetadataInfo = {
     metadata: StateMetadata;
     readonly metadataIndex: number;
@@ -45,7 +59,7 @@ export type FieldErrors = {
     };
 };
 
-export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateRelatedObject[];
+export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateRelatedObject[] | SubtitleFields;
 
 export type MetadataUpdate = {
     valid: boolean;
@@ -107,6 +121,7 @@ export type ModelFields = {
     directory: string;
     idAsset?: number;
     updateNotes?: string;
+    subtitles: SubtitleFields;
 };
 
 export type SceneFields = {
@@ -123,6 +138,7 @@ export type SceneFields = {
     canBeQCd: boolean;
     idAsset?: number;
     updateNotes?: string;
+    subtitles: SubtitleFields;
 };
 
 export type OtherFields = {
