@@ -1477,10 +1477,20 @@ export type IntermediaryFile = {
   SystemObject?: Maybe<SystemObject>;
 };
 
+export type SvxNonModelAsset = {
+  __typename?: 'SvxNonModelAsset';
+  uri: Scalars['String'];
+  type: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  size?: Maybe<Scalars['Int']>;
+  idAssetVersion?: Maybe<Scalars['Int']>;
+};
+
 export type SceneConstellation = {
   __typename?: 'SceneConstellation';
   Scene?: Maybe<Scene>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
+  SvxNonModelAssets?: Maybe<Array<SvxNonModelAsset>>;
 };
 
 export type UpdateObjectDetailsInput = {
@@ -1604,6 +1614,7 @@ export type MetadataInput = {
 
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
+  Subtitle?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
   License?: Maybe<Scalars['Int']>;
   Unit?: Maybe<UnitDetailFieldsInput>;
@@ -1913,6 +1924,7 @@ export type GetSystemObjectDetailsResult = {
   idSystemObject: Scalars['Int'];
   idObject: Scalars['Int'];
   name: Scalars['String'];
+  subTitle?: Maybe<Scalars['String']>;
   retired: Scalars['Boolean'];
   objectType: Scalars['Int'];
   allowed: Scalars['Boolean'];
@@ -3535,7 +3547,10 @@ export type GetSceneForAssetVersionQuery = (
             & Pick<SystemObject, 'idSystemObject' | 'idAsset'>
           )> }
         )> }
-      )>>> }
+      )>>>, SvxNonModelAssets?: Maybe<Array<(
+        { __typename?: 'SvxNonModelAsset' }
+        & Pick<SvxNonModelAsset, 'uri' | 'type' | 'description' | 'size' | 'idAssetVersion'>
+      )>> }
     )> }
   ) }
 );
@@ -6137,6 +6152,13 @@ export const GetSceneForAssetVersionDocument = gql`
             idAsset
           }
         }
+      }
+      SvxNonModelAssets {
+        uri
+        type
+        description
+        size
+        idAssetVersion
       }
     }
   }

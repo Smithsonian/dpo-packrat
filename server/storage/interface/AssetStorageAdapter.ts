@@ -682,13 +682,16 @@ export class AssetStorageAdapter {
                 const MSXSource: DBAPI.ModelSceneXref | null = (MSXSources && MSXSources.length > 0) ? MSXSources[0] : null;
                 if (MSXSource) {
                     LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest found existing ModelSceneXref=${JSON.stringify(MSXSource, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
-                    if (MSXSource.updateTransformIfNeeded(MSX)) {
+                    const { transformUpdated: transformUpdatedLocal, updated } = MSXSource.updateIfNeeded(MSX);
+
+                    if (updated) {
                         if (!await MSXSource.update()) {
                             LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to update ModelSceneXref ${JSON.stringify(MSXSource, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
                             success = false;
                         }
-                        transformUpdated = true;
                     }
+                    if (transformUpdatedLocal)
+                        transformUpdated = true;
                 } else {
                     // Could not find the ModelSceneXref
                     transformUpdated = true;
