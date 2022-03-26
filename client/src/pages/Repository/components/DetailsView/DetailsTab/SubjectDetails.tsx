@@ -49,15 +49,35 @@ interface SubjectFieldsProps extends SubjectDetailFields {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     isItemView?: boolean;
     setCheckboxField?: (event) => void;
-    // TOFIX?
     ItemDetails?: any;
     itemData?: any;
+    subtitle?: string;
+    onSubtitleUpdate?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
-    const { originalFields, Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3, disabled, onChange, isItemView = false, setCheckboxField, ItemDetails, itemData } = props;
+    const {
+        originalFields,
+        Latitude,
+        Longitude,
+        Altitude,
+        TS0,
+        TS1,
+        TS2,
+        R0,
+        R1,
+        R2,
+        R3,
+        disabled,
+        onChange,
+        isItemView = false,
+        setCheckboxField,
+        ItemDetails,
+        itemData,
+        subtitle,
+        onSubtitleUpdate
+    } = props;
     const classes = useStyles();
-
     const details = {
         Latitude,
         Longitude,
@@ -68,7 +88,8 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
         R0,
         R1,
         R2,
-        R3
+        R3,
+        subtitle
     };
 
     return (
@@ -87,10 +108,10 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                             <DebounceInput 
                                                 element='input'
                                                 title='Subtitle-input'
-                                                value=''
+                                                value={subtitle}
                                                 type='string'
                                                 name='Subtitle'
-                                                onChange={onChange}
+                                                onChange={onSubtitleUpdate as (event: React.ChangeEvent<HTMLInputElement>) => void}
                                                 className={clsx(classes.input, classes.datasetFieldInput)}
                                                 style={{
                                                     height: 22,

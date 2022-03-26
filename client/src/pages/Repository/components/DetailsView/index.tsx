@@ -13,7 +13,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType } from '../../../../store';
+import { useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -75,6 +75,7 @@ type DetailsFields = {
     name?: string;
     retired?: boolean;
     idLicense?: number;
+    subtitle?: string;
 };
 
 
@@ -143,8 +144,8 @@ function DetailsView(): React.ReactElement {
 
     useEffect(() => {
         if (data && !loading) {
-            const { name, retired, license, metadata } = data.getSystemObjectDetails;
-            setDetails({ name, retired, idLicense: license?.idLicense || 0 });
+            const { name, retired, license, metadata, subTitle } = data.getSystemObjectDetails;
+            setDetails({ name, retired, idLicense: license?.idLicense || 0, subtitle: subTitle ?? '' });
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
             if (objectType === eSystemObjectType.eSubject) {
                 initializeMetadata(eObjectMetadataType.eSubjectView, metadata); // comment me out!
@@ -267,6 +268,13 @@ function DetailsView(): React.ReactElement {
         setUpdatedData(updatedDataFields);
     };
 
+    const onSubtitleUpdate = ({ target }): void => {
+        const updatedDataFields: UpdateObjectDetailsDataInput = { ...updatedData };
+        setDetails(details => ({ ...details, subtitle: target.value }));
+        updatedDataFields.Subtitle = target.value;
+        setUpdatedData(updatedDataFields);
+    }
+
     const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
         // console.log('onUpdateDetail', objectType, data);
         const updatedDataFields: UpdateObjectDetailsDataInput = {
@@ -352,6 +360,14 @@ function DetailsView(): React.ReactElement {
             return false;
         }
 
+        if (objectType === eSystemObjectType.eItem && typeof updatedData.Item?.EntireSubject === 'boolean' && !updatedData.Item.EntireSubject) {
+            if (!updatedData.Subtitle || !updatedData.Subtitle.length) {
+                toast.error('Subtitle required because Entire Subject is not checked');
+                setIsUpdatingData(false);
+                return false;
+            }
+        }
+
         // Create another validation here to make sure that the appropriate SO types are being checked
         const errors = await getDetailsViewFieldErrors(updatedData, objectType);
         if (errors.length) {
@@ -361,8 +377,6 @@ function DetailsView(): React.ReactElement {
         }
 
         try {
-            // TODO: Model, Scene, and CD are currently updating in a way that
-            // requires the fields to be populated.
             if (objectType === eSystemObjectType.eModel) {
                 const ModelDetails = getDetail(objectType) as ModelDetailsType;
                 const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
@@ -455,7 +469,6 @@ function DetailsView(): React.ReactElement {
 
             const metadata = getAllMetadataEntries().filter(entry => entry.Name);
             updatedData.Metadata = metadata;
-
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
                 const message: string | null | undefined = data?.updateObjectDetails?.message;
@@ -542,6 +555,8 @@ function DetailsView(): React.ReactElement {
                     onAddSourceObject={onAddSourceObject}
                     onAddDerivedObject={onAddDerivedObject}
                     onUpdateDetail={onUpdateDetail}
+                    onSubtitleUpdate={onSubtitleUpdate}
+                    subtitle={details?.subtitle}
                     objectVersions={objectVersions}
                     detailQuery={detailQuery}
                     metadata={metadata}

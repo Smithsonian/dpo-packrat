@@ -82,6 +82,8 @@ const useStyles = makeStyles(({ palette }) => ({
 export interface DetailComponentProps extends GetDetailsTabDataForObjectQueryResult {
     disabled: boolean;
     objectType: number;
+    subtitle: string;
+    onSubtitleUpdate: (e) => void;
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
 }
 
@@ -109,13 +111,30 @@ type DetailsTabParams = {
     onAddSourceObject: () => void;
     onAddDerivedObject: () => void;
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
+    onSubtitleUpdate: (e) => void;
+    subtitle?: string;
     objectVersions: SystemObjectVersion[];
     detailQuery: any;
     metadata: Metadata[]
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
-    const { disabled, idSystemObject, objectType, assetOwner, sourceObjects, derivedObjects, onAddSourceObject, onAddDerivedObject, onUpdateDetail, objectVersions, detailQuery, metadata } = props;
+    const {
+        disabled,
+        idSystemObject,
+        objectType,
+        assetOwner,
+        sourceObjects,
+        derivedObjects,
+        onAddSourceObject,
+        onAddDerivedObject,
+        onUpdateDetail,
+        onSubtitleUpdate,
+        subtitle,
+        objectVersions,
+        detailQuery,
+        metadata
+    } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
     const history = useHistory();
@@ -193,7 +212,9 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     const sharedProps = {
         onUpdateDetail,
         objectType,
-        disabled
+        disabled,
+        onSubtitleUpdate,
+        subtitle
     };
 
     const detailsProps = {

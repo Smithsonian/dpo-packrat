@@ -6,7 +6,7 @@
  *
  * This component renders details tab for Model specific details used in DetailsTab component.
  */
-import { Typography, Box, makeStyles, Select, MenuItem  } from '@material-ui/core';
+import { Typography, Box, makeStyles, Select, MenuItem, fade } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { DateInputField, Loader, ReadOnlyRow } from '../../../../../components';
 import { useVocabularyStore, useDetailTabStore } from '../../../../../store';
@@ -15,8 +15,9 @@ import { extractModelConstellation } from '../../../../../constants/helperfuncti
 import ObjectMeshTable from './../../../../Ingestion/components/Metadata/Model/ObjectMeshTable';
 import { DetailComponentProps } from './index';
 import { useStyles as useSelectStyles, SelectFieldProps } from '../../../../../components/controls/SelectField';
+import { DebounceInput } from 'react-debounce-input';
 
-export const useStyles = makeStyles(({ palette }) => ({
+export const useStyles = makeStyles(({ palette, typography }) => ({
     value: {
         fontSize: '0.8em',
         color: palette.primary.dark
@@ -88,12 +89,24 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     label: {
         color: 'auto'
+    },
+    input: {
+        width: 'fit-content',
+        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
+        backgroundColor: palette.background.paper,
+        padding: 9,
+        borderRadius: 5,
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily,
+        fontSize: '0.8em',
+        height: 3
     }
+    
 }));
 
 function ModelDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
-    const { data, loading, onUpdateDetail, objectType } = props;
+    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate } = props;
 
     const { ingestionModel, modelObjects } = extractModelConstellation(data?.getDetailsTabDataForObject?.Model);
     const [ModelDetails, updateDetailField] = useDetailTabStore(state => [state.ModelDetails, state.updateDetailField]);
@@ -133,6 +146,16 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
 
                 <Box className={classes.modelMetricsAndForm}>
                     <Box display='flex' flexDirection='column' className={classes.dataEntry}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px' }}>
+                            <div style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>
+                                <Typography className={classes.label} variant='caption'>
+                                    Subtitle
+                                </Typography>
+                            </div>
+                            <div style={{ gridColumnStart: 2, gridColumnEnd: 3 }}>
+                                <DebounceInput value={subtitle} onChange={onSubtitleUpdate} className={classes.input} />
+                            </div>
+                        </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px' }}>
                             <div style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>
                                 <Typography className={classes.label} variant='caption'>

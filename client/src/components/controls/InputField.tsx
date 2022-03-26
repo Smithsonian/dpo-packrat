@@ -41,13 +41,14 @@ interface InputFieldProps extends ViewableProps {
     padding?: string;
     inputHeight?: string;
     gridGap?: string;
+    containerStyle?: any;
 }
 
 function InputField(props: InputFieldProps): React.ReactElement {
-    const { label, name, value, onChange, type, required = false, viewMode = false, disabled = false, valueLeftAligned = false, gridLabel, gridValue, padding, gridGap } = props;
+    const { label, name, value, onChange, type, required = false, viewMode = false, disabled = false, valueLeftAligned = false, gridLabel, gridValue, padding, gridGap, containerStyle } = props;
     const classes = useStyles(props);
 
-    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
+    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0, ...containerStyle } };
 
     return (
         <FieldType

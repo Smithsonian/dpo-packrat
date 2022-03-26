@@ -57,6 +57,7 @@ const notesWhenUpdate = {
 const selectedSubtitleValidation = {
     test: array => {
         const selectedSubtitle = array.find(subtitle => subtitle.selected);
+        if (!selectedSubtitle) return false;
         if (selectedSubtitle.subtitleOption !== eSubtitleOption.eNone)
             return !!selectedSubtitle.value
         
