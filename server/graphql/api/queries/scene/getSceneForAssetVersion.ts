@@ -42,6 +42,13 @@ const getSceneForAssetVersion = gql`
                         }
                     }
                 }
+                SvxNonModelAssets {
+                    uri
+                    type
+                    description
+                    size
+                    idAssetVersion
+                }
             }
         }
     }

@@ -181,7 +181,9 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (!Item)
                     return sendResult(false, `Unable to fetch Media Group with id ${idObject}; update failed`);
 
-                Item.Name = data.Name;
+                Item.Name = (data.Name && !data.Subtitle) ? data.Name : computeNewName(Item.Name, Item.Title, data.Subtitle); // do this before updating .Title
+                Item.Title = data.Subtitle ?? null;
+
                 if (!isNull(EntireSubject) && !isUndefined(EntireSubject))
                     Item.EntireSubject = EntireSubject;
 
@@ -313,7 +315,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
                 const {
-                    Name,
                     DateCreated,
                     CreationMethod,
                     Modality,
@@ -322,7 +323,9 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     ModelFileType
                 } = data.Model;
 
-                if (Name) Model.Name = Name;
+                Model.Name = (data.Name && !data.Subtitle) ? data.Name : computeNewName(Model.Name, Model.Title, data.Subtitle); // do this before updating .Title
+                Model.Title = data.Subtitle ?? null;
+
                 if (CreationMethod) Model.idVCreationMethod = CreationMethod;
                 if (Modality) Model.idVModality = Modality;
                 if (Purpose) Model.idVPurpose = Purpose;
@@ -341,7 +344,10 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             const oldPosedAndQCd: boolean = Scene.PosedAndQCd;
-            Scene.Name = data.Name;
+
+            Scene.Name = (data.Name && !data.Subtitle) ? data.Name : computeNewName(Scene.Name, Scene.Title, data.Subtitle); // do this before updated .Title
+            Scene.Title = data.Subtitle ?? null;
+
             if (data.Scene) {
                 if (typeof data.Scene.PosedAndQCd === 'boolean') Scene.PosedAndQCd = data.Scene.PosedAndQCd;
                 if (typeof data.Scene.ApprovedForPublication === 'boolean') Scene.ApprovedForPublication = data.Scene.ApprovedForPublication;
@@ -511,4 +517,12 @@ export async function handleMetadata(idSystemObject: number, metadatas: Metadata
         }
     }
     return { success: true };
+}
+
+function computeNewName(oldName: string, oldTitle: string | null, newTitle: string | null | undefined): string {
+    const oldBaseName: string = (!oldTitle) ? oldName : oldName.replace(`: ${oldTitle}`, ''); // strip off old title
+    const newName: string = oldBaseName + ((newTitle) ? `: ${newTitle}` : '');
+    // LOG.info(`updateObjectDetails computeNewName(${oldName}, ${oldTitle}, ${newTitle}) = ${newName} (oldBaseName = ${oldBaseName})`, LOG.LS.eGQL);
+
+    return newName;
 }
