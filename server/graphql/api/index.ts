@@ -151,6 +151,7 @@ import getFilterViewData from './queries/repository/getFilterViewData';
 import getAllUsers from './queries/user/getAllUsers';
 import getUnitsFromNameSearch from './queries/unit/getUnitsFromNameSearch';
 import getProjectList from './queries/systemobject/getProjectList';
+import getIngestionItems from './queries/unit/getIngestionItems';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -221,7 +222,8 @@ const allQueries = {
     getAllUsers,
     updateUser,
     getUnitsFromNameSearch,
-    getProjectList
+    getProjectList,
+    getIngestionItems
 };
 
 type GraphQLRequest = {
