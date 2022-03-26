@@ -3707,7 +3707,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInheritance'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'subTitle' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInheritance'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -6561,6 +6561,7 @@ export const GetSystemObjectDetailsDocument = gql`
     idSystemObject
     idObject
     name
+    subTitle
     retired
     objectType
     allowed
