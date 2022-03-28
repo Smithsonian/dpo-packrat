@@ -185,7 +185,7 @@ function Scene(props: SceneProps): React.ReactElement {
             query: GetIngestTitleDocument,
             variables: {
                 input: {
-                    sourceObjects: scene.sourceObjects
+                    sourceObjects: updatedSourceObjects
                 }
             },
             fetchPolicy: 'no-cache'
@@ -221,7 +221,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 query: GetIngestTitleDocument,
                 variables: {
                     input: {
-                        sourceObjects: scene.sourceObjects
+                        sourceObjects: newSourceObjects
                     }
                 },
                 fetchPolicy: 'no-cache'
@@ -308,6 +308,8 @@ function Scene(props: SceneProps): React.ReactElement {
                         />
                     </Box>
                     <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
+                    <NonModelAssets nonModelAssets={nonModelAssets} idAssetVersion={Number(idAssetVersion)} />
+
                     <Box mb={1.25}>
                         <SubtitleControl
                             subtitles={scene.subtitles}
@@ -317,7 +319,6 @@ function Scene(props: SceneProps): React.ReactElement {
                             hasPrimaryTheme
                         />
                     </Box>
-                    <NonModelAssets nonModelAssets={nonModelAssets} idAssetVersion={Number(idAssetVersion)} />
                 </Fragment>
             )}
             <SceneDataForm

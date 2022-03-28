@@ -172,8 +172,6 @@ function Model(props: ModelProps): React.ReactElement {
                 // console.log(`modelConstellation=${JSON.stringify(modelConstellation)}`);
                 const { ingestionModel, modelObjects, assets } = extractModelConstellation(modelConstellation);
                 // if we're not in update mode, set the name:
-                if (!idAsset)
-                    updateMetadataField(metadataIndex, 'name', modelConstellation.Model.Name, MetadataType.model);
 
                 // handles 0 and non-numeric idVFileTypes
                 if (modelConstellation.Model.idVFileType)
@@ -279,7 +277,6 @@ function Model(props: ModelProps): React.ReactElement {
             };
         });
         updateMetadataField(metadataIndex, 'subtitles', updatedSubtitles, MetadataType.model);
-        // console.log('id', id, updatedSubtitles);
     };
 
     const onUpdateCustomSubtitle = (event: React.ChangeEvent<HTMLInputElement>, id: number) => {
@@ -293,7 +290,6 @@ function Model(props: ModelProps): React.ReactElement {
 
         targetSubtitle.value = event.target.value;
         updateMetadataField(metadataIndex, 'subtitles', subtitlesCopy, MetadataType.model);
-        // console.log('event', event.target.value, id);
     };
 
     return (
