@@ -117,7 +117,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                                 sortedSubtitles.map(({ selected, value, id, subtitleOption }, key) => (
                                     <div className={classes.optionContainer} key={key}>
                                         {!selected && <RiCheckboxBlankCircleLine className={classes.selected} onClick={() => onSelectSubtitle(id)} size={18} color={grey[400]} />}
-                                        {selected && <RiRecordCircleFill className={classes.selected} onClick={() => onSelectSubtitle(id)} size={18} color={palette.primary.main} />}                                        
+                                        {selected && <RiRecordCircleFill className={classes.selected} onClick={() => onSelectSubtitle(id)} size={18} color={palette.primary.main} />}
                                         {subtitleOption === eSubtitleOption.eNone && <Typography className={classes.text}>None</Typography>}
                                         {subtitleOption === eSubtitleOption.eInherit && <Typography className={classes.text}>{value.length ? value : 'None'}</Typography>}
                                         {subtitleOption === eSubtitleOption.eInput && (
