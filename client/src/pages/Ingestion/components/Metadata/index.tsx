@@ -29,7 +29,8 @@ import {
     useItemStore,
     useMetadataStore,
     useVocabularyStore,
-    useUploadStore
+    useUploadStore,
+    useSubjectStore
 } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
 import Model from './Model';
@@ -237,8 +238,8 @@ interface BreadcrumbsHeaderProps {
 
 function BreadcrumbsHeader(props: BreadcrumbsHeaderProps) {
     const classes = useStyles();
+    const [subjects] = useSubjectStore(state => [state.subjects]);
     const { projectName, item, metadata, customBreadcrumbs, customBreadcrumbsArr } = props;
-
     let content: React.ReactNode;
 
     if (customBreadcrumbs && customBreadcrumbsArr?.length) {
@@ -256,8 +257,8 @@ function BreadcrumbsHeader(props: BreadcrumbsHeaderProps) {
         content = (
             <Breadcrumbs className={classes.breadcrumbs} separator={<MdNavigateNext color='inherit' size={20} />}>
                 <Typography color='inherit'>Specify metadata for: Project: {projectName}</Typography>
-                <Typography color='inherit'>Media Group: {item?.subtitle}</Typography>
-                <Typography color='inherit'>{metadata.file.name}</Typography>
+                <Typography color='inherit'>Media Group: {subjects.length > 1 ? item?.subtitle : item?.id === 'default' ? `${subjects?.[0]?.name}${item?.subtitle ? `: ${item?.subtitle}` : ''}` : subjects?.[0]?.name}</Typography>
+                <Typography color='inherit'>{metadata?.file?.name}</Typography>
             </Breadcrumbs>
         );
     }
