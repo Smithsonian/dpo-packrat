@@ -61,6 +61,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
 
 
     const renderSubtitleOptions = (subtitles: SubtitleFields): React.ReactElement => {
+        console.log('subtitles', subtitles,'objectName', objectName);
         // Case: forced
         if (subtitles.some(option => option.subtitleOption === eSubtitleOption.eForced))
             return (
@@ -74,7 +75,39 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                 </TableRow>
             );
 
-        // Case: Name input only
+        // Case: optional subtitle
+        if (objectName && subtitles.length === 1 && subtitles.find(option => option.subtitleOption === eSubtitleOption.eInput)) {
+            const { id, value } = subtitles[0];
+            return (
+                <>
+                <TableRow>
+                    <TableCell className={clsx(classes.labelCell, classes.cell)}>
+                        <Typography className={classes.text}>Name:</Typography>
+                    </TableCell>
+                    <TableCell className={classes.cell}>
+                        <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
+                    </TableCell>
+                </TableRow>
+                <TableRow>
+                    <TableCell className={clsx(classes.labelCell, classes.cell)}>
+                        <Typography className={classes.text}>Subtitle:</Typography>
+                    </TableCell>
+                    <TableCell className={classes.cell}>
+                        <DebounceInput
+                            onChange={(e) => onUpdateCustomSubtitle(e, id)}
+                            element='input'
+                            value={value}
+                            className={classes.input}
+                            debounceTimeout={400}
+                            title={`subtitle-input-${value}`}
+                        />
+                    </TableCell>
+                </TableRow>
+            </>
+            );
+        }
+
+        // Case: mandatory name input
         if (subtitles.length === 1 && subtitles.find(option => option.subtitleOption === eSubtitleOption.eInput)) {
             const { id, value } = subtitles[0];
             return (
