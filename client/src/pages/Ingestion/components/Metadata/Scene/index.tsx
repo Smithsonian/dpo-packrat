@@ -14,12 +14,17 @@ import ReferenceModels from './ReferenceModels';
 import NonModelAssets from './NonModelAssets';
 import SceneDataForm from './SceneDataForm';
 import { apolloClient } from '../../../../../graphql/index';
-import { GetSceneForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
+import { GetSceneForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery, GetIngestTitleDocument, GetIngestTitleQuery } from '../../../../../types/graphql';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { toast } from 'react-toastify';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
 import ObjectSelectModal from '../Model/ObjectSelectModal';
 import { TextArea } from '../../../../../components';
+// import clsx from 'clsx';
+import lodash from 'lodash';
+import SubtitleControl from '../Control/SubtitleControl';
+import { ApolloQueryResult } from '@apollo/client';
+import { parseSubtitlesToState } from '../../../../../store/utils';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -171,10 +176,28 @@ function Scene(props: SceneProps): React.ReactElement {
         await setModalOpen(true);
     };
 
-    const onRemoveSourceObject = (idSystemObject: number): void => {
+    const onRemoveSourceObject = async (idSystemObject: number): Promise<void> => {
         const { sourceObjects } = scene;
         const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
         updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.scene);
+
+        const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
+            query: GetIngestTitleDocument,
+            variables: {
+                input: {
+                    sourceObjects: scene.sourceObjects
+                }
+            },
+            fetchPolicy: 'no-cache'
+        });
+
+        if (!ingestTitle) {
+            toast.error('Failed to fetch titles for ingestion items');
+            return;
+        }
+        const subtitleState = parseSubtitlesToState(ingestTitle);
+        updateMetadataField(metadataIndex, 'subtitles', subtitleState, MetadataType.scene);
+        updateMetadataField(metadataIndex, 'name', ingestTitle.title, MetadataType.scene);
     };
 
     const onRemoveDerivedObject = (idSystemObject: number): void => {
@@ -190,9 +213,55 @@ function Scene(props: SceneProps): React.ReactElement {
         resetRepositoryBrowserRoot();
     };
 
-    const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
+    const onSelectedObjects = async (newSourceObjects: StateRelatedObject[]) => {
         updateMetadataField(metadataIndex, objectRelationship === RelatedObjectType.Source ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.scene);
+
+        if (objectRelationship === RelatedObjectType.Source) {
+            const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
+                query: GetIngestTitleDocument,
+                variables: {
+                    input: {
+                        sourceObjects: scene.sourceObjects
+                    }
+                },
+                fetchPolicy: 'no-cache'
+            });
+
+            if (!ingestTitle) {
+                toast.error('Failed to fetch titles for ingestion items');
+                return;
+            }
+            const subtitleState = parseSubtitlesToState(ingestTitle);
+            updateMetadataField(metadataIndex, 'subtitles', subtitleState, MetadataType.scene);
+            updateMetadataField(metadataIndex, 'name', ingestTitle.title, MetadataType.scene);
+        }
+
         onModalClose();
+    };
+
+    const onSelectSubtitle = (id: number) => {
+        const updatedSubtitles = scene.subtitles.map((subtitle) => {
+            return {
+                id: subtitle.id,
+                value: subtitle.value,
+                subtitleOption: subtitle.subtitleOption,
+                selected: id === subtitle.id
+            };
+        });
+        updateMetadataField(metadataIndex, 'subtitles', updatedSubtitles, MetadataType.scene);
+    };
+
+    const onUpdateCustomSubtitle = (event: React.ChangeEvent<HTMLInputElement>, id: number) => {
+        const subtitlesCopy = lodash.cloneDeep(scene.subtitles);
+        const targetSubtitle = subtitlesCopy.find(subtitle => subtitle.id === id);
+
+        if (!targetSubtitle) {
+            toast.warn('Something went wrong with updating the subtitle. Please try again');
+            return;
+        }
+
+        targetSubtitle.value = event.target.value;
+        updateMetadataField(metadataIndex, 'subtitles', subtitlesCopy, MetadataType.scene);
     };
 
     return (
@@ -240,13 +309,21 @@ function Scene(props: SceneProps): React.ReactElement {
                     </Box>
                     <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
                     <NonModelAssets nonModelAssets={nonModelAssets} idAssetVersion={Number(idAssetVersion)} />
+
+                    <Box mb={1.25}>
+                        <SubtitleControl
+                            subtitles={scene.subtitles}
+                            objectName={scene.name}
+                            onSelectSubtitle={onSelectSubtitle}
+                            onUpdateCustomSubtitle={onUpdateCustomSubtitle}
+                            hasPrimaryTheme
+                        />
+                    </Box>
                 </Fragment>
             )}
             <SceneDataForm
                 sceneData={sceneData}
                 setCheckboxField={setCheckboxField}
-                setNameField={setNameField}
-                name={scene.name}
                 approvedForPublication={scene.approvedForPublication}
                 posedAndQCd={scene.posedAndQCd}
                 canBeQCd={scene.canBeQCd}

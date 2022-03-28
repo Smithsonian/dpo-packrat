@@ -10,7 +10,7 @@ import { Loader } from '../../../../../components';
 import { GetSceneDocument } from '../../../../../types/graphql';
 import { DetailComponentProps } from './index';
 import { apolloClient } from '../../../../../graphql/index';
-import { ReadOnlyRow, CheckboxField } from '../../../../../components/index';
+import { ReadOnlyRow, CheckboxField, InputField } from '../../../../../components/index';
 import { useDetailTabStore } from '../../../../../store';
 import { eSystemObjectType } from '@dpo-packrat/common';
 
@@ -36,7 +36,7 @@ export const useStyles = makeStyles(({ palette }) => ({
 function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const isMounted = useRef(false);
-    const { data, loading, onUpdateDetail, objectType } = props;
+    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate } = props;
     const [SceneDetails, updateDetailField] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField]);
 
     useEffect(() => {
@@ -84,18 +84,26 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eScene, name, checked);
     };
 
-    // console.log(`SceneDetails = ${JSON.stringify(SceneDetails)}`);
     return (
         <Box>
             <Box display='flex' flexDirection='column' className={classes.container}>
+                <InputField
+                    value={subtitle}
+                    onChange={onSubtitleUpdate}
+                    label='Subtitle'
+                    name='Subtitle'
+                    required
+                    padding='3px 10px 1px 10px'
+                    containerStyle={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', paddingTop: '4px' }}
+                />
                 <CheckboxField
                     label='Approved for Publication'
                     name='ApprovedForPublication'
                     value={SceneDetails.ApprovedForPublication}
                     onChange={setCheckboxField}
                     required
-                    padding='3px 10px 1px 10px'
-                    containerStyle={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', paddingTop: '5px' }}
+                    padding='1px 10px'
+                    containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
                 />
                 <CheckboxField
                     label="Posed and QC'd"
@@ -106,6 +114,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     tooltip={{ title: 'When checked, downloads will be generated if this scene has a master model as a parent, as well as every time the scene is re-posed. This item is disabled if the scene is missing thumbnails (either in the svx.json or among its ingested assets)', placement: 'left' }}
                     required
                     padding='1px 10px'
+                    containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
                 />
                 <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} paddingString='1px 10px' />
                 <ReadOnlyRow label='Scene Count' value={SceneDetails.CountScene} padding={10} paddingString='1px 10px' />

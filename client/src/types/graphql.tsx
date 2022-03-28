@@ -35,8 +35,6 @@ export type Query = {
   getFilterViewData: GetFilterViewDataResult;
   getIngestTitle: GetIngestTitleResult;
   getIngestionItems: GetIngestionItemsResult;
-  getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
-  getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
   getIntermediaryFile: GetIntermediaryFileResult;
   getItem: GetItemResult;
   getItemsForSubject: GetItemsForSubjectResult;
@@ -128,16 +126,6 @@ export type QueryGetIngestTitleArgs = {
 
 export type QueryGetIngestionItemsArgs = {
   input: GetIngestionItemsInput;
-};
-
-
-export type QueryGetIngestionItemsForSubjectsArgs = {
-  input: GetIngestionItemsForSubjectsInput;
-};
-
-
-export type QueryGetIngestionProjectsForSubjectsArgs = {
-  input: GetIngestionProjectsForSubjectsInput;
 };
 
 
@@ -2233,25 +2221,6 @@ export type SearchIngestionSubjectsResult = {
   SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
 };
 
-export type GetIngestionItemsForSubjectsInput = {
-  idSubjects: Array<Scalars['Int']>;
-};
-
-export type GetIngestionItemsForSubjectsResult = {
-  __typename?: 'GetIngestionItemsForSubjectsResult';
-  Item: Array<Item>;
-};
-
-export type GetIngestionProjectsForSubjectsInput = {
-  idSubjects: Array<Scalars['Int']>;
-};
-
-export type GetIngestionProjectsForSubjectsResult = {
-  __typename?: 'GetIngestionProjectsForSubjectsResult';
-  Project: Array<Project>;
-  Default: Scalars['Boolean'];
-};
-
 export type IngestionItem = {
   __typename?: 'IngestionItem';
   idItem: Scalars['Int'];
@@ -3738,7 +3707,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInheritance'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'subTitle' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInheritance'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3825,39 +3794,6 @@ export type GetIngestionItemsQuery = (
       { __typename?: 'IngestionItem' }
       & Pick<IngestionItem, 'idItem' | 'EntireSubject' | 'MediaGroupName' | 'idProject' | 'ProjectName'>
     )>> }
-  ) }
-);
-
-export type GetIngestionItemsForSubjectsQueryVariables = Exact<{
-  input: GetIngestionItemsForSubjectsInput;
-}>;
-
-
-export type GetIngestionItemsForSubjectsQuery = (
-  { __typename?: 'Query' }
-  & { getIngestionItemsForSubjects: (
-    { __typename?: 'GetIngestionItemsForSubjectsResult' }
-    & { Item: Array<(
-      { __typename?: 'Item' }
-      & Pick<Item, 'idItem' | 'EntireSubject' | 'Name'>
-    )> }
-  ) }
-);
-
-export type GetIngestionProjectsForSubjectsQueryVariables = Exact<{
-  input: GetIngestionProjectsForSubjectsInput;
-}>;
-
-
-export type GetIngestionProjectsForSubjectsQuery = (
-  { __typename?: 'Query' }
-  & { getIngestionProjectsForSubjects: (
-    { __typename?: 'GetIngestionProjectsForSubjectsResult' }
-    & Pick<GetIngestionProjectsForSubjectsResult, 'Default'>
-    & { Project: Array<(
-      { __typename?: 'Project' }
-      & Pick<Project, 'idProject' | 'Name'>
-    )> }
   ) }
 );
 
@@ -6625,6 +6561,7 @@ export const GetSystemObjectDetailsDocument = gql`
     idSystemObject
     idObject
     name
+    subTitle
     retired
     objectType
     allowed
@@ -6867,84 +6804,6 @@ export function useGetIngestionItemsLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type GetIngestionItemsQueryHookResult = ReturnType<typeof useGetIngestionItemsQuery>;
 export type GetIngestionItemsLazyQueryHookResult = ReturnType<typeof useGetIngestionItemsLazyQuery>;
 export type GetIngestionItemsQueryResult = Apollo.QueryResult<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>;
-export const GetIngestionItemsForSubjectsDocument = gql`
-    query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
-  getIngestionItemsForSubjects(input: $input) {
-    Item {
-      idItem
-      EntireSubject
-      Name
-    }
-  }
-}
-    `;
-
-/**
- * __useGetIngestionItemsForSubjectsQuery__
- *
- * To run a query within a React component, call `useGetIngestionItemsForSubjectsQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetIngestionItemsForSubjectsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetIngestionItemsForSubjectsQuery({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useGetIngestionItemsForSubjectsQuery(baseOptions: Apollo.QueryHookOptions<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>(GetIngestionItemsForSubjectsDocument, options);
-      }
-export function useGetIngestionItemsForSubjectsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>(GetIngestionItemsForSubjectsDocument, options);
-        }
-export type GetIngestionItemsForSubjectsQueryHookResult = ReturnType<typeof useGetIngestionItemsForSubjectsQuery>;
-export type GetIngestionItemsForSubjectsLazyQueryHookResult = ReturnType<typeof useGetIngestionItemsForSubjectsLazyQuery>;
-export type GetIngestionItemsForSubjectsQueryResult = Apollo.QueryResult<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>;
-export const GetIngestionProjectsForSubjectsDocument = gql`
-    query getIngestionProjectsForSubjects($input: GetIngestionProjectsForSubjectsInput!) {
-  getIngestionProjectsForSubjects(input: $input) {
-    Project {
-      idProject
-      Name
-    }
-    Default
-  }
-}
-    `;
-
-/**
- * __useGetIngestionProjectsForSubjectsQuery__
- *
- * To run a query within a React component, call `useGetIngestionProjectsForSubjectsQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetIngestionProjectsForSubjectsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetIngestionProjectsForSubjectsQuery({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useGetIngestionProjectsForSubjectsQuery(baseOptions: Apollo.QueryHookOptions<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>(GetIngestionProjectsForSubjectsDocument, options);
-      }
-export function useGetIngestionProjectsForSubjectsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>(GetIngestionProjectsForSubjectsDocument, options);
-        }
-export type GetIngestionProjectsForSubjectsQueryHookResult = ReturnType<typeof useGetIngestionProjectsForSubjectsQuery>;
-export type GetIngestionProjectsForSubjectsLazyQueryHookResult = ReturnType<typeof useGetIngestionProjectsForSubjectsLazyQuery>;
-export type GetIngestionProjectsForSubjectsQueryResult = Apollo.QueryResult<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>;
 export const GetItemDocument = gql`
     query getItem($input: GetItemInput!) {
   getItem(input: $input) {

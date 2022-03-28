@@ -3,8 +3,6 @@ type Query {
     getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
     getObjectsForItem(input: GetObjectsForItemInput!): GetObjectsForItemResult!
     searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
-    getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
-    getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
     getIngestionItems(input: GetIngestionItemsInput!): GetIngestionItemsResult!
     getUnit(input: GetUnitInput!): GetUnitResult!
     getProject(input: GetProjectInput!): GetProjectResult!
@@ -62,23 +60,6 @@ input SearchIngestionSubjectsInput {
 
 type SearchIngestionSubjectsResult {
     SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
-}
-
-input GetIngestionItemsForSubjectsInput {
-    idSubjects: [Int!]!
-}
-
-type GetIngestionItemsForSubjectsResult {
-    Item: [Item!]!
-}
-
-input GetIngestionProjectsForSubjectsInput {
-    idSubjects: [Int!]!
-}
-
-type GetIngestionProjectsForSubjectsResult {
-    Project: [Project!]!
-    Default: Boolean!
 }
 
 type IngestionItem {

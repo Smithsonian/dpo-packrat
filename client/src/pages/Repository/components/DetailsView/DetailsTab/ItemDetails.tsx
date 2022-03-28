@@ -6,9 +6,8 @@
  */
 import { Box } from '@material-ui/core';
 import React, { useEffect } from 'react';
-import { /*CheckboxField,*/ Loader } from '../../../../../components';
+import { Loader } from '../../../../../components';
 import { SubjectDetailFields } from '../../../../../types/graphql';
-// import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 import { SubjectFields } from './SubjectDetails';
 import { eSystemObjectType } from '@dpo-packrat/common';
@@ -19,7 +18,7 @@ export interface ItemDetailFields extends SubjectDetailFields {
 }
 
 function ItemDetails(props: DetailComponentProps): React.ReactElement {
-    const { data, loading, disabled, onUpdateDetail, objectType } = props;
+    const { data, loading, disabled, onUpdateDetail, objectType, subtitle, onSubtitleUpdate } = props;
     const [ItemDetails, updateDetailField] = useDetailTabStore(state => [state.ItemDetails, state.updateDetailField]);
 
     useEffect(() => {
@@ -50,6 +49,8 @@ function ItemDetails(props: DetailComponentProps): React.ReactElement {
                 originalFields={itemData}
                 disabled={disabled}
                 onChange={onSetField}
+                subtitle={subtitle}
+                onSubtitleUpdate={onSubtitleUpdate}
                 isItemView
                 setCheckboxField={setCheckboxField}
                 ItemDetails={ItemDetails}

@@ -32,8 +32,6 @@ export type Query = {
   getFilterViewData: GetFilterViewDataResult;
   getIngestTitle: GetIngestTitleResult;
   getIngestionItems: GetIngestionItemsResult;
-  getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
-  getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
   getIntermediaryFile: GetIntermediaryFileResult;
   getItem: GetItemResult;
   getItemsForSubject: GetItemsForSubjectResult;
@@ -125,16 +123,6 @@ export type QueryGetIngestTitleArgs = {
 
 export type QueryGetIngestionItemsArgs = {
   input: GetIngestionItemsInput;
-};
-
-
-export type QueryGetIngestionItemsForSubjectsArgs = {
-  input: GetIngestionItemsForSubjectsInput;
-};
-
-
-export type QueryGetIngestionProjectsForSubjectsArgs = {
-  input: GetIngestionProjectsForSubjectsInput;
 };
 
 
@@ -2228,25 +2216,6 @@ export type SearchIngestionSubjectsInput = {
 export type SearchIngestionSubjectsResult = {
   __typename?: 'SearchIngestionSubjectsResult';
   SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
-};
-
-export type GetIngestionItemsForSubjectsInput = {
-  idSubjects: Array<Scalars['Int']>;
-};
-
-export type GetIngestionItemsForSubjectsResult = {
-  __typename?: 'GetIngestionItemsForSubjectsResult';
-  Item: Array<Item>;
-};
-
-export type GetIngestionProjectsForSubjectsInput = {
-  idSubjects: Array<Scalars['Int']>;
-};
-
-export type GetIngestionProjectsForSubjectsResult = {
-  __typename?: 'GetIngestionProjectsForSubjectsResult';
-  Project: Array<Project>;
-  Default: Scalars['Boolean'];
 };
 
 export type IngestionItem = {
