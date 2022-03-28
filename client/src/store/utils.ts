@@ -32,7 +32,6 @@ export function isNewItem(id: string): boolean {
 export function parseItemToState(item: Item, selected: boolean, position: number): StateItem {
     const { idItem, Name, EntireSubject } = item;
     const id = idItem || `${position}-new-item`;
-    console.log('item', item);
     return {
         id: String(id),
         entireSubject: EntireSubject,
@@ -46,7 +45,6 @@ export function parseItemToState(item: Item, selected: boolean, position: number
 
 export function parseIngestionItemToState(ingestionItem: IngestionItem): StateItem {
     const { idItem, EntireSubject, MediaGroupName, idProject, ProjectName } = ingestionItem;
-    console.log('ingestionItem', ingestionItem);
     return {
         id: String(idItem),
         subtitle: MediaGroupName,
@@ -136,9 +134,10 @@ export function parseSubtitlesToState(titles: IngestTitle): SubtitleFields {
                 result.push({ value: '', selected: true, subtitleOption: eSubtitleOption.eInput, id: key });
             }
             // Inherited Value
-            if (subtitleVal && subtitleVal !== '<None>' && subtitleVal.length) {
+            if (subtitleVal && subtitleVal !== '<None>') {
                 result.push({ value: subtitleVal, selected: false, subtitleOption: eSubtitleOption.eInherit, id: key });
             }
+
         });
     }
 

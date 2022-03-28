@@ -308,6 +308,9 @@ function Scene(props: SceneProps): React.ReactElement {
                         />
                     </Box>
                     <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
+                    
+                    <NonModelAssets nonModelAssets={nonModelAssets} idAssetVersion={Number(idAssetVersion)} />
+
                     <Box mb={1.25}>
                         <SubtitleControl
                             subtitles={scene.subtitles}
@@ -317,7 +320,6 @@ function Scene(props: SceneProps): React.ReactElement {
                             hasPrimaryTheme
                         />
                     </Box>
-                    <NonModelAssets nonModelAssets={nonModelAssets} idAssetVersion={Number(idAssetVersion)} />
                 </Fragment>
             )}
             <SceneDataForm

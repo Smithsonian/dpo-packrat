@@ -120,7 +120,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                                         {selected && <RiRecordCircleFill className={classes.selected} onClick={() => onSelectSubtitle(id)} size={18} color={palette.primary.main} />}
                                         {subtitleOption === eSubtitleOption.eInherit ? (
                                             <Typography className={classes.text}>{value}</Typography>
-                                        ) : subtitleOption === eSubtitleOption.eNone ? (
+                                        ) : (subtitleOption === eSubtitleOption.eNone || value === '') ? (
                                             <Typography className={classes.text}>None</Typography>
                                         ) : (
                                             <DebounceInput
