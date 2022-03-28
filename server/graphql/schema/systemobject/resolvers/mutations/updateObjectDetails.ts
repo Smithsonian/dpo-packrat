@@ -181,7 +181,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (!Item)
                     return sendResult(false, `Unable to fetch Media Group with id ${idObject}; update failed`);
 
-                Item.Name = (data.Name && !data.Subtitle) ? data.Name : computeNewName(Item.Name, Item.Title, data.Subtitle); // do this before updating .Title
+                const namedWithoutSubtitle: boolean = (data.Name != null && data.Subtitle == null);
+                Item.Name = namedWithoutSubtitle ? data.Name : computeNewName(Item.Name, Item.Title, data.Subtitle); // do this before updating .Title
                 Item.Title = data.Subtitle ?? null;
 
                 if (!isNull(EntireSubject) && !isUndefined(EntireSubject))
@@ -323,7 +324,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     ModelFileType
                 } = data.Model;
 
-                Model.Name = (data.Name && !data.Subtitle) ? data.Name : computeNewName(Model.Name, Model.Title, data.Subtitle); // do this before updating .Title
+                const namedWithoutSubtitle: boolean = (data.Name != null && data.Subtitle == null);
+                Model.Name = namedWithoutSubtitle ? data.Name : computeNewName(Model.Name, Model.Title, data.Subtitle); // do this before updating .Title
                 Model.Title = data.Subtitle ?? null;
 
                 if (CreationMethod) Model.idVCreationMethod = CreationMethod;
@@ -345,7 +347,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
             const oldPosedAndQCd: boolean = Scene.PosedAndQCd;
 
-            Scene.Name = (data.Name && !data.Subtitle) ? data.Name : computeNewName(Scene.Name, Scene.Title, data.Subtitle); // do this before updated .Title
+            const namedWithoutSubtitle: boolean = (data.Name != null && data.Subtitle == null);
+            Scene.Name = namedWithoutSubtitle ? data.Name : computeNewName(Scene.Name, Scene.Title, data.Subtitle); // do this before updated .Title
             Scene.Title = data.Subtitle ?? null;
 
             if (data.Scene) {
