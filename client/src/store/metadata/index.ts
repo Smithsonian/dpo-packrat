@@ -419,7 +419,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         item: {
                             id: Number(selectedItem?.id),
                             subtitle: selectedItem?.subtitle,
-                            entireSubject: selectedItem?.entireSubject
+                            entireSubject: selectedItem?.entireSubject,
                         }
                     }
                 }
@@ -429,7 +429,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 toast.error('Failed to fetch titles for ingestion items');
                 return;
             }
-            // console.log('ingestTitle', ingestTitle);
+            console.log('selectedItem', selectedItem);
+            console.log('ingestTitle', ingestTitle);
             const metadatasCopy = lodash.cloneDeep(metadatas);
             const subtitleState = parseSubtitlesToState(ingestTitle);
 
