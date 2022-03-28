@@ -51,12 +51,33 @@ interface SubjectFieldsProps extends SubjectDetailFields {
     setCheckboxField?: (event) => void;
     ItemDetails?: any;
     itemData?: any;
+    subtitle?: string;
+    onSubtitleUpdate?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
-    const { originalFields, Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3, disabled, onChange, isItemView = false, setCheckboxField, ItemDetails, itemData } = props;
+    const {
+        originalFields,
+        Latitude,
+        Longitude,
+        Altitude,
+        TS0,
+        TS1,
+        TS2,
+        R0,
+        R1,
+        R2,
+        R3,
+        disabled,
+        onChange,
+        isItemView = false,
+        setCheckboxField,
+        ItemDetails,
+        itemData,
+        subtitle,
+        onSubtitleUpdate
+    } = props;
     const classes = useStyles();
-
     const details = {
         Latitude,
         Longitude,
@@ -67,7 +88,8 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
         R0,
         R1,
         R2,
-        R3
+        R3,
+        subtitle
     };
 
     return (
@@ -76,26 +98,52 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                 <TableContainer style={{ width: 'fit-content', paddingTop: '5px', paddingBottom: '5px' }}>
                     <Table className={classes.table}>
                         <TableBody>
-                            {(isItemView && setCheckboxField && ItemDetails && itemData) &&
-                                <TableRow>
-                                    <TableCell className={classes.tableCell}>
-                                        <Typography className={classes.labelText}>Entire Subject</Typography>
-                                    </TableCell>
-                                    <TableCell className={classes.tableCell} style={{ verticalAlign: 'middle' }}>
-                                        <Checkbox
-                                            className={classes.checkbox}
-                                            name='EntireSubject'
-                                            onChange={setCheckboxField}
-                                            checked={ItemDetails?.EntireSubject}
-                                            title='EntireSubject-input'
-                                            disabled={disabled}
-                                            size='small'
-                                            style={{ ...updatedFieldStyling(isFieldUpdated(ItemDetails, itemData, 'EntireSubject')) }}
-                                            color='primary'
-                                        />
-                                    </TableCell>
-                                </TableRow>
-                            }
+                            {(isItemView && setCheckboxField && ItemDetails && itemData) && (
+                                <React.Fragment>
+                                    <TableRow>
+                                        <TableCell className={classes.tableCell}>
+                                            <Typography className={classes.labelText}>Subtitle</Typography>
+                                        </TableCell>
+                                        <TableCell className={classes.tableCell}>
+                                            <DebounceInput
+                                                element='input'
+                                                title='Subtitle-input'
+                                                value={subtitle}
+                                                type='string'
+                                                name='Subtitle'
+                                                onChange={onSubtitleUpdate as (event: React.ChangeEvent<HTMLInputElement>) => void}
+                                                className={clsx(classes.input, classes.datasetFieldInput)}
+                                                style={{
+                                                    height: 22,
+                                                    fontSize: '0.8rem',
+                                                    padding: '0px 10px',
+                                                    borderRadius: 5,
+                                                    border: '1px solid rgba(141, 171, 196, 0.4)',
+                                                    ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Subtitle'))
+                                                }}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className={classes.tableCell}>
+                                            <Typography className={classes.labelText}>Entire Subject</Typography>
+                                        </TableCell>
+                                        <TableCell className={classes.tableCell} style={{ verticalAlign: 'middle' }}>
+                                            <Checkbox
+                                                className={classes.checkbox}
+                                                name='EntireSubject'
+                                                onChange={setCheckboxField}
+                                                checked={ItemDetails?.EntireSubject}
+                                                title='EntireSubject-input'
+                                                disabled={disabled}
+                                                size='small'
+                                                style={{ ...updatedFieldStyling(isFieldUpdated(ItemDetails, itemData, 'EntireSubject')) }}
+                                                color='primary'
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                </React.Fragment>
+                            )}
                             {
                                 isItemView ? null : (
                                     <>

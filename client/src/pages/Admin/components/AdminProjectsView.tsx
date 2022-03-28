@@ -19,7 +19,7 @@ import Clear from '@material-ui/icons/Clear';
 
 const useStyles = makeStyles({
     AdminListContainer: {
-        marginTop: '2%',
+        marginTop: '20px',
         width: '450px',
         padding: '20px',
         height: 'calc(100% - 120px)',
@@ -71,11 +71,9 @@ const useStyles = makeStyles({
     AdminSearchFilterContainer: {
         display: 'flex',
         justifyContent: 'space-around',
-        height: '70px',
         width: '600px',
         backgroundColor: '#FFFCD1',
-        paddingLeft: '20px',
-        paddingRight: '20px'
+        padding: '15px 20px'
     },
     AdminUsersSearchFilterSettingsContainer: {
         display: 'flex',

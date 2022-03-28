@@ -6,6 +6,7 @@ const getSystemObjectDetails = gql`
             idSystemObject
             idObject
             name
+            subTitle
             retired
             objectType
             allowed

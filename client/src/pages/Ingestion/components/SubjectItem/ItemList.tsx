@@ -1,17 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * ItemList
  *
  * This component renders item list used in SubjectItem component.
  */
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Select, MenuItem, Typography } from '@material-ui/core';
 import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
-import { MdCheckBox, MdCheckBoxOutlineBlank } from 'react-icons/md';
 import { RiCheckboxBlankCircleLine, RiRecordCircleFill } from 'react-icons/ri';
-import { defaultItem, StateItem, useItemStore } from '../../../../store';
+import { BsPlusCircle } from 'react-icons/bs';
+import { StateItem, useItemStore, useSubjectStore } from '../../../../store';
 import { palette } from '../../../../theme';
+import lodash from 'lodash';
 
 const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => ({
     container: {
@@ -47,7 +50,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         border: 'none',
         outline: 'none',
         padding: '0px 2px',
-        fontSize: '1em',
+        fontSize: '0.75rem',
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         '&:focus': {
@@ -59,82 +62,72 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         '&::-moz-placeholder': {
             fontStyle: 'italic'
         }
+    },
+    projectSelect: {
+        width: '100%',
+        height: 'fit-content',
+        backgroundColor: palette.background.paper,
+        fontSize: '0.75rem'
+    },
+    text: {
+        fontSize: '0.75rem',
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily
     }
 }));
 
 function ItemList(): React.ReactElement {
     const classes = useStyles();
-    const [items, updateItem] = useItemStore(state => [state.items, state.updateItem]);
-
+    const [items, hasNewItem, newItem, addNewItem, projectList, updateNewItemSubtitle, updateNewItemEntireSubject, updateNewItemProject, updateSelectedItem] = useItemStore(state => [state.items, /*state.updateItem,*/ state.hasNewItem, state.newItem, state.addNewItem, state.projectList, state.updateNewItemSubtitle, state.updateNewItemEntireSubject, state.updateNewItemProject, state.updateSelectedItem]);
+    const [subjects] = useSubjectStore(state => [state.subjects]);
     const selectableHeaderStyle = {
         width: 100
     };
 
     const getItemsList = (item: StateItem, index: number) => {
-        const { id, selected, name, entireSubject } = item;
-        const isDefaultItem = id === defaultItem.id;
-
-        let content: React.ReactNode = (
-            <React.Fragment>
-                {name}
-            </React.Fragment>
-        );
-
-        const onUpdateSelected = (selected: boolean) => {
-            updateItem({ ...item, selected });
-        };
-
-        const onUpdateEntireSubject = (entireSubject: boolean) => {
-            updateItem({ ...item, entireSubject });
-        };
-
-        const onUpdateName = (event: React.ChangeEvent<HTMLInputElement>) => {
-            const { target } = event;
-            const name = target.value;
-
-            updateItem({ ...item, name });
-        };
-
-        if (isDefaultItem) {
-            content = (
-                <DebounceInput
-                    value={name}
-                    className={classes.nameInput}
-                    onChange={onUpdateName}
-                    debounceTimeout={500}
-                    placeholder='Add new media group here'
-                />
-            );
-        }
+        const { id, selected, subtitle, entireSubject, projectName } = item;
 
         return (
             <ItemListItem
                 key={index}
-                isDefaultItem={isDefaultItem}
-                onUpdateSelected={onUpdateSelected}
-                onUpdateEntireSubject={onUpdateEntireSubject}
+                subtitle={subtitle}
                 selected={selected}
-                entireSubject={entireSubject}
-            >
-                <TableCell align='left'>
-                    {content}
-                </TableCell>
-            </ItemListItem >
+                entireSubject={entireSubject as boolean}
+                projectName={projectName}
+                onUpdateSelected={updateSelectedItem}
+                id={id}
+            />
         );
     };
 
+
     return (
         <TableContainer className={classes.container}>
-            <Table>
+            <Table style={{ tableLayout: 'fixed' }}>
                 <TableHead>
                     <TableRow>
                         <TableCell className={classes.headerText} style={selectableHeaderStyle} align='center'>Selected</TableCell>
-                        <TableCell className={classes.headerText} align='left'>Name</TableCell>
+                        <TableCell className={classes.headerText} align='left'>Project</TableCell>
                         <TableCell className={classes.headerText} style={selectableHeaderStyle} align='center'>Full Subject?</TableCell>
+                        <TableCell className={classes.headerText} align='left'>Subtitle</TableCell>
+
                     </TableRow>
                 </TableHead>
                 <TableBody className={classes.body}>
-                    {items.map(getItemsList)}
+                    {(items && items.length > 0) && items.map(getItemsList)}
+                    {hasNewItem ? (
+                        <ItemListNewItem
+                            item={newItem}
+                            onUpdateEntireSubject={updateNewItemEntireSubject}
+                            onUpdateName={updateNewItemSubtitle}
+                            onUpdateSelected={updateSelectedItem}
+                            onUpdateProject={updateNewItemProject}
+                            projects={projectList}
+                            hasMultipleSubjects={subjects.length > 1}
+                        />
+                    ) : (
+                        <ItemListEmptyItem onAddItem={addNewItem} />
+                    )}
                 </TableBody>
             </Table>
         </TableContainer>
@@ -142,17 +135,18 @@ function ItemList(): React.ReactElement {
 }
 
 interface ItemListItemProps {
-    isDefaultItem: boolean;
     selected: boolean;
     entireSubject: boolean;
-    onUpdateSelected: (selected: boolean) => void;
-    onUpdateEntireSubject: (entireSubject: boolean) => void;
+    subtitle: string;
     children?: React.ReactNode;
+    projectName: string;
+    id: string;
+    onUpdateSelected: (id: string) => void;
 }
 
 function ItemListItem(props: ItemListItemProps) {
     const classes = useStyles();
-    const { isDefaultItem, selected, onUpdateSelected, onUpdateEntireSubject, entireSubject, children } = props;
+    const { selected, subtitle, entireSubject, projectName, onUpdateSelected, id } = props;
 
     const cellStyle = {
         width: 100,
@@ -161,17 +155,115 @@ function ItemListItem(props: ItemListItemProps) {
     return (
         <TableRow>
             <TableCell style={cellStyle} align='center'>
-                {!selected && <RiCheckboxBlankCircleLine className={classes.selected} onClick={() => onUpdateSelected(true)} size={20} color={grey[400]} />}
-                {selected && <RiRecordCircleFill className={classes.selected} onClick={() => onUpdateSelected(false)} size={20} color={palette.primary.main} />}
+                {!selected && <RiCheckboxBlankCircleLine className={classes.selected} onClick={() => onUpdateSelected(id)} size={20} color={grey[400]} />}
+                {selected && <RiRecordCircleFill className={classes.selected} onClick={() => onUpdateSelected(id)} size={20} color={palette.primary.main} />}
             </TableCell>
-            {children}
+            <TableCell>
+                <Typography className={classes.text}>{projectName}</Typography>
+            </TableCell>
             <TableCell style={cellStyle} align='center'>
-                {isDefaultItem ? (
-                    <>
-                        {!entireSubject && <MdCheckBoxOutlineBlank className={classes.selected} onClick={() => onUpdateEntireSubject(true)} size={20} color={grey[500]} />}
-                        {entireSubject && <MdCheckBox className={classes.selected} onClick={() => onUpdateEntireSubject(false)} size={20} color={palette.primary.main} />}
-                    </>
-                ) : entireSubject ? 'Yes' : 'No'}
+                <Typography className={classes.text}>{entireSubject ? 'Yes' : 'No'}</Typography>
+            </TableCell>
+            <TableCell>
+                <Typography className={classes.text}>{subtitle.length ? subtitle : 'None'}</Typography>
+            </TableCell>
+        </TableRow>
+    );
+}
+
+interface ItemListEmptyItemProps {
+    onAddItem: () => void;
+}
+
+function ItemListEmptyItem(props: ItemListEmptyItemProps) {
+    const classes = useStyles();
+    const { onAddItem } = props;
+
+    const cellStyle = {
+        width: 100,
+    };
+
+    return (
+        <TableRow>
+            <TableCell style={cellStyle} align='center'>
+                <BsPlusCircle className={classes.selected} onClick={onAddItem} size={17} color={palette.primary.main} />
+            </TableCell>
+            <TableCell>
+                <span className={classes.emptyList}>Add new media group here</span>
+            </TableCell>
+            <TableCell></TableCell>
+            <TableCell></TableCell>
+        </TableRow>
+    );
+}
+
+interface ItemListNewItemProps {
+    item: StateItem;
+    onUpdateSelected: (id: string) => void;
+    onUpdateEntireSubject: (entire: boolean) => void;
+    onUpdateName: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    onUpdateProject: (idProject: number) => void;
+    hasMultipleSubjects: boolean;
+    projects: any[];
+}
+
+function ItemListNewItem(props: ItemListNewItemProps) {
+    const { item: { subtitle, entireSubject, idProject, projectName, id, selected }, onUpdateEntireSubject, onUpdateName, onUpdateProject, onUpdateSelected, projects, hasMultipleSubjects } = props;
+    const classes = useStyles();
+
+    const uniqueSortedProjects = lodash.uniqBy(lodash.orderBy(projects, 'Name', 'asc'), 'Name');
+
+    const cellStyle = {
+        width: 100,
+    };
+
+    return (
+        <TableRow>
+            <TableCell style={cellStyle} align='center'>
+                {!selected && <RiCheckboxBlankCircleLine className={classes.selected} onClick={() => onUpdateSelected(id)} size={20} color={grey[400]} />}
+                {selected && <RiRecordCircleFill className={classes.selected} onClick={() => onUpdateSelected(id)} size={20} color={palette.primary.main} />}
+            </TableCell>
+            <TableCell>
+                <Select
+                    value={idProject}
+                    className={classes.projectSelect}
+                    renderValue={() => `${projectName || 'None'}`}
+                    onChange={({ target: { value } }) => onUpdateProject(value as number)}
+                    disableUnderline
+                >
+                    <MenuItem value={-1} disabled>None</MenuItem>
+                    {uniqueSortedProjects.map(({ idProject, Name }, index: number) => <MenuItem key={index} value={idProject}>{Name}</MenuItem>)}
+                </Select>
+            </TableCell>
+            <TableCell style={cellStyle} align='center'>
+                {hasMultipleSubjects ? (
+                    <Typography>No</Typography>
+                ) : (
+                    <Select
+                        value={entireSubject === null ? -1 : !entireSubject ? 0 : 1}
+                        disabled={idProject < 0}
+                        className={classes.projectSelect}
+                        renderValue={() => entireSubject === null ? 'Yes/No' : !entireSubject ? 'No' : 'Yes'}
+                        disableUnderline
+                        style={{ width: 'fit-content' }}
+                        onChange={(e) => onUpdateEntireSubject(Number(e.target.value) > 0 ? true : false) }
+                    >
+                        <MenuItem value={-1} disabled><em>Yes/No</em></MenuItem>
+                        <MenuItem value={0}>No</MenuItem>
+                        <MenuItem value={1}>Yes</MenuItem>
+                    </Select>
+                )}
+            </TableCell>
+            <TableCell>
+                {(idProject > -1) && (
+                    <DebounceInput
+                        value={subtitle}
+                        className={classes.nameInput}
+                        onChange={onUpdateName}
+                        debounceTimeout={500}
+                        placeholder={`Add subtitle ${hasMultipleSubjects || !entireSubject ? '[required]' : '[optional]'}`}
+                    />
+                )}
             </TableCell>
         </TableRow>
     );
