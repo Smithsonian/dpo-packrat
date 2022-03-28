@@ -185,7 +185,7 @@ function Scene(props: SceneProps): React.ReactElement {
             query: GetIngestTitleDocument,
             variables: {
                 input: {
-                    sourceObjects: scene.sourceObjects
+                    sourceObjects: updatedSourceObjects
                 }
             },
             fetchPolicy: 'no-cache'
@@ -221,7 +221,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 query: GetIngestTitleDocument,
                 variables: {
                     input: {
-                        sourceObjects: scene.sourceObjects
+                        sourceObjects: newSourceObjects
                     }
                 },
                 fetchPolicy: 'no-cache'
