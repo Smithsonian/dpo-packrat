@@ -177,7 +177,6 @@ export const defaultModelFields: ModelFields = {
 };
 
 export const modelFieldsSchemaUpdate = yup.object().shape({
-    name: yup.string().min(1, 'Name must have at least one character').required('Name is required'),
     systemCreated: yup.boolean().required(),
     uvMaps: yup.array().of(uvMapSchema),
     sourceObjects: yup.array().of(sourceObjectSchema),
