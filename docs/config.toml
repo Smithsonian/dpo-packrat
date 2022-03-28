@@ -1,0 +1,7 @@
+baseURL = "https://smithsonian.github.io/dpo-packrat"
+languageCode = "en-us"
+title = "Packrat Documentation"
+
+pygmentsCodeFences = true
+pygmentsCodefencesGuessSyntax = true
+pygmentsUseClasses = true
