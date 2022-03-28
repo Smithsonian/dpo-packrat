@@ -31,7 +31,7 @@ export default async function getIngestionItems(_: Parent, args: QueryGetIngesti
         IngestionItem.push({
             idItem: itemAndProject.idItem,
             EntireSubject: itemAndProject.EntireSubject ?? true,
-            MediaGroupName: itemAndProject.Title ?? itemAndProject.Name ?? '',
+            MediaGroupName: itemAndProject.Name ?? '',
             idProject: itemAndProject.idProject,
             ProjectName: itemAndProject.ProjectName ?? 'Unknown',
         });

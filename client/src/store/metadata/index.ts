@@ -386,7 +386,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     },
     updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => {
         const { metadatas } = get();
-
         if (!(name in metadatas[metadataIndex][metadataType])) {
             toast.error(`Field ${name} doesn't exist on a ${metadataType} asset`);
             return;

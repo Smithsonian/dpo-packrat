@@ -118,11 +118,9 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                                     <div className={classes.optionContainer} key={key}>
                                         {!selected && <RiCheckboxBlankCircleLine className={classes.selected} onClick={() => onSelectSubtitle(id)} size={18} color={grey[400]} />}
                                         {selected && <RiRecordCircleFill className={classes.selected} onClick={() => onSelectSubtitle(id)} size={18} color={palette.primary.main} />}
-                                        {subtitleOption === eSubtitleOption.eInherit ? (
-                                            <Typography className={classes.text}>{value}</Typography>
-                                        ) : subtitleOption === eSubtitleOption.eNone ? (
-                                            <Typography className={classes.text}>None</Typography>
-                                        ) : (
+                                        {subtitleOption === eSubtitleOption.eNone && <Typography className={classes.text}>None</Typography>}
+                                        {subtitleOption === eSubtitleOption.eInherit && <Typography className={classes.text}>{value.length ? value : 'None'}</Typography>}
+                                        {subtitleOption === eSubtitleOption.eInput && (
                                             <DebounceInput
                                                 onChange={(e) => onUpdateCustomSubtitle(e, id)}
                                                 element='input'
