@@ -17,6 +17,7 @@ input IngestProjectInput {
 
 input IngestItemInput {
     id: Int
+    name: String
     subtitle: String!
     entireSubject: Boolean!
 }

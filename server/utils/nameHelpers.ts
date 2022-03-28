@@ -50,9 +50,11 @@ export class NameHelpers {
     static modelTitleOptions(item: DBAPI.Item): IngestTitle {
         const title: string = (item.Title) ? item.Name.replace(`: ${item.Title}`, '') : item.Name; // base title is the item's display name, with its subtitle removed, if any
         const subtitle: (string | null)[] = [];
-        subtitle.push(item.Title);  // user can select the default item subtitle.
-        if (item.Title !== null)    // if we record an entry with a real or empty subtitle,
-            subtitle.push(null);    // provide an entry with null subtitle, indicating the user can enter one
+        subtitle.push(item.Title);      // user can select the default item subtitle.
+        if (item.Title)                 // if we record an entry with a realsubtitle,
+            subtitle.push('<None>');    // allow user to pick "None"
+        if (item.Title !== null)        // if we record an entry with a real or empty subtitle,
+            subtitle.push(null);        // provide an entry with null subtitle, indicating the user can enter one
         return { title, forced: false, subtitle };
     }
 
