@@ -50,7 +50,7 @@
     "deploy:prod": "sh ./conf/scripts/deploy.sh prod",
     "build:dev": "lerna run build:dev",
     "build:prod": "lerna run build:prod",
-    "clean": "lerna run clean && rm -rf node_modules/",
+    "clean": "lerna run clean && rm -rf node_modules/ && rm -rf docs/public && rm docs/.hugo_build.lock",
     "clean:docker": "docker-compose -f ./conf/docker/docker-compose.dev.yml down && docker system prune -f",
     "generate:server:prisma": "yarn workspace @dpo-packrat/server generate:prisma",
     "postinstall": "lerna run postinstall && yarn install:e2e",
@@ -58,7 +58,9 @@
     "lint": "yarn eslint --ext .js,.jsx,.ts,.tsx .",
     "lint:fix": "yarn prettier --write . && yarn lint --fix",
     "test": "yarn workspaces run test",
-    "test:e2e": "cd e2e && yarn test"
+    "test:e2e": "cd e2e && yarn test",
+    "docs": "cd docs && rm -rf public && hugo",
+    "docs:clean": "rm -rf docs/public && rm docs/.hugo_build.lock"
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "4.1.0",
