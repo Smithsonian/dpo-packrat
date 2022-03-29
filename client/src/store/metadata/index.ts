@@ -409,17 +409,32 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     initializeSubtitlesForModels: async (): Promise<void> => {
         const { metadatas } = get();
         const { getSelectedItem } = useItemStore.getState();
+        const { subjects } = useSubjectStore.getState();
         const selectedItem = getSelectedItem();
 
         try {
+            const { subtitle, name } = calculateNameAndSubtitle(selectedItem as StateItem, subjects);
+            // const subtitle = Number(selectedItem?.id) > 0 ? selectedItem?.subtitle : subjects.length > 1 ? selectedItem?.subtitle : `${subjects[0].name}` + (selectedItem?.subtitle.length ? selectedItem?.subtitle : '');
+            
+            console.log('subtitle', subtitle, 'name', name);
             const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
                 query: GetIngestTitleDocument,
                 variables: {
                     input: {
                         item: {
-                            id: Number(selectedItem?.id),
-                            subtitle: selectedItem?.subtitle,
+                            id: Number(selectedItem?.id) || -1,
+                            /*
+                                if there is a valid itemId (existing subject)
+                                    -subtitle = selectedItem.subtitle
+                                if there isn't (new subject)
+                                    if there are 2+ subjects
+                                        -subtitle = subtitle
+                                    if there is 1 subject
+                                        -subtitle = subjectname + subtitle
+                            */
+                            subtitle,
                             entireSubject: selectedItem?.entireSubject,
+                            name
                         }
                     }
                 }
@@ -430,6 +445,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 return;
             }
             console.log('selectedItem', selectedItem);
+            console.log('ingestTitleInput', {id: Number(selectedItem?.id) || -1, subtitle, name, entireSubject: selectedItem?.entireSubject });
             console.log('ingestTitle', ingestTitle);
             const metadatasCopy = lodash.cloneDeep(metadatas);
             const subtitleState = parseSubtitlesToState(ingestTitle);
@@ -562,3 +578,20 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 export * from './metadata.defaults';
 export * from './metadata.types';
 
+const calculateNameAndSubtitle = (selectedItem: StateItem, subjects: StateSubject[]) => {
+    let subtitle = '';
+    let name = '';
+
+    if (Number(selectedItem?.id) > 0) {
+        name = selectedItem?.subtitle;
+    } else {
+        if (subjects.length > 1) {
+            name = selectedItem?.subtitle;
+        } else {
+            name = subjects?.[0]?.name;
+            subtitle = selectedItem?.subtitle;
+        }
+    }
+
+    return { subtitle, name }
+}

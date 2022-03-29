@@ -89,8 +89,9 @@ function useIngest(): UseIngest {
 
             const ingestItem: IngestItemInput = {
                 id: ingestItemId,
-                subtitle: item.subtitle,
-                entireSubject: item.entireSubject as boolean
+                subtitle: subjects && subjects.length > 1 ? '' : item.subtitle,
+                entireSubject: item.entireSubject as boolean,
+                name: subjects && subjects.length > 1 ? item.subtitle : subjects && subjects.length === 1 ? subjects[0].name : ''
             };
 
             const ingestProject: IngestProjectInput = {
@@ -305,7 +306,7 @@ function useIngest(): UseIngest {
                 other: ingestOther,
                 sceneAttachment: ingestSceneAttachment
             };
-            // console.log(`** IngestDataInput ${input}`);
+            // console.log(`** IngestDataInput`, input);
 
             const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
                 mutation: IngestDataDocument,
