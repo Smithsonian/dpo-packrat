@@ -25,7 +25,8 @@ export class NameHelpers {
     static modelDisplayName(modelSubtitle: string, item: DBAPI.Item, subjects: DBAPI.Subject[]): string {
         if (subjects.length !== 1)
             return modelSubtitle ?? item.Title ?? UNKNOWN_NAME;
-        return modelSubtitle ? `${item.Name}: ${modelSubtitle}` : item.Name;
+        const itemBaseName: string = NameHelpers.computeBaseTitle(item.Name, item.Title);
+        return modelSubtitle ? `${itemBaseName}: ${modelSubtitle}` : itemBaseName;
     }
 
     static sceneDisplayName(sceneSubtitle: string, modelHierarchies: ModelHierarchy[]): string {
@@ -47,8 +48,12 @@ export class NameHelpers {
         return sanitize(fileName.replace(/:/g, '-').replace(/ /g, '_'), { replacement: '_' });
     }
 
+    static computeBaseTitle(name: string, subtitle: string | undefined | null): string {
+        return (subtitle) ? name.replace(`: ${subtitle}`, '') : name; // base title is the display name, with its subtitle removed, if any
+    }
+
     static modelTitleOptions(item: DBAPI.Item): IngestTitle {
-        const title: string = (item.Title) ? item.Name.replace(`: ${item.Title}`, '') : item.Name; // base title is the item's display name, with its subtitle removed, if any
+        const title: string = NameHelpers.computeBaseTitle(item.Name, item.Title);
         const subtitle: (string | null)[] = [];
         subtitle.push(item.Title);      // user can select the default item subtitle.
         if (item.Title !== '')
