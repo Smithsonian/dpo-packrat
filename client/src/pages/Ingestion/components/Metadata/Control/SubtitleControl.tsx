@@ -80,30 +80,30 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
             const { id, value } = subtitles[0];
             return (
                 <>
-                <TableRow>
-                    <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                        <Typography className={classes.text}>Name:</Typography>
-                    </TableCell>
-                    <TableCell className={classes.cell} style={{ height: 24 }}>
-                        <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
-                    </TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                        <Typography className={classes.text}>Subtitle:</Typography>
-                    </TableCell>
-                    <TableCell className={classes.cell} style={{ height: 24 }}>
-                        <DebounceInput
-                            onChange={(e) => onUpdateCustomSubtitle(e, id)}
-                            element='input'
-                            value={value}
-                            className={classes.input}
-                            debounceTimeout={400}
-                            title={`subtitle-input-${value}`}
-                        />
-                    </TableCell>
-                </TableRow>
-            </>
+                    <TableRow>
+                        <TableCell className={clsx(classes.labelCell, classes.cell)}>
+                            <Typography className={classes.text}>Name:</Typography>
+                        </TableCell>
+                        <TableCell className={classes.cell} style={{ height: 24 }}>
+                            <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className={clsx(classes.labelCell, classes.cell)}>
+                            <Typography className={classes.text}>Subtitle:</Typography>
+                        </TableCell>
+                        <TableCell className={classes.cell} style={{ height: 24 }}>
+                            <DebounceInput
+                                onChange={(e) => onUpdateCustomSubtitle(e, id)}
+                                element='input'
+                                value={value}
+                                className={classes.input}
+                                debounceTimeout={400}
+                                title={`subtitle-input-${value}`}
+                            />
+                        </TableCell>
+                    </TableRow>
+                </>
             );
         }
 
