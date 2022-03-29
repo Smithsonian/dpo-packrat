@@ -16,9 +16,9 @@ export type ModelHierarchy = {
 };
 
 export class NameHelpers {
-    static mediaGroupDisplayName(itemSubtitle: string | null, subjects: DBAPI.Subject[]): string {
+    static mediaGroupDisplayName(itemName: string | undefined | null, itemSubtitle: string | null, subjects: DBAPI.Subject[]): string {
         if (subjects.length !== 1)
-            return itemSubtitle ?? UNKNOWN_NAME;
+            return itemName ?? UNKNOWN_NAME;
         return itemSubtitle ? `${subjects[0].Name}: ${itemSubtitle}` : subjects[0].Name;
     }
 
@@ -51,7 +51,7 @@ export class NameHelpers {
         const title: string = (item.Title) ? item.Name.replace(`: ${item.Title}`, '') : item.Name; // base title is the item's display name, with its subtitle removed, if any
         const subtitle: (string | null)[] = [];
         subtitle.push(item.Title);      // user can select the default item subtitle.
-        if (item.Title)                 // if we record an entry with a realsubtitle,
+        if (item.Title !== '')
             subtitle.push('<None>');    // allow user to pick "None"
         if (item.Title !== null)        // if we record an entry with a real or empty subtitle,
             subtitle.push(null);        // provide an entry with null subtitle, indicating the user can enter one

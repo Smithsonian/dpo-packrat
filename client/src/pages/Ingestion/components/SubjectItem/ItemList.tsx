@@ -234,7 +234,7 @@ function ItemListNewItem(props: ItemListNewItemProps) {
             </TableCell>
             <TableCell style={cellStyle} align='center'>
                 {hasMultipleSubjects ? (
-                    <Typography>No</Typography>
+                    <Typography style={{ fontSize: '0.75rem' }}>No</Typography>
                 ) : (
                     <Select
                         value={entireSubject === null ? -1 : !entireSubject ? 0 : 1}
