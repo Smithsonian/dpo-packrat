@@ -189,11 +189,16 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
     const [assetColumns, setAssetColumns] = useState<any>([]);
     const [assetRows, setAssetRows] = useState<any[]>([]);
 
+    const cookieName = `${systemObjectType}AssetColumns`;
+
     useEffect(() => {
         const initializeColumnsAndRows = async () => {
             const { data: { getAssetDetailsForSystemObject: { columns, assetDetailRows } } } = await getObjectAssets(idSystemObject);
+            if (!document.cookie.length || document.cookie.indexOf(cookieName) === -1)
+                initializeAssetGridColumnCookie(cookieName, columns);
 
-            const formattedColumns = columns.length > 0 ? formatToDataTableColumns(columns, classes) : [];
+            const columnsToDisplay = getColumnsObjectByName(cookieName);
+            const formattedColumns = columns.length > 0 ? formatToDataTableColumns(columns, classes, columnsToDisplay) : [];
             setAssetColumns(formattedColumns);
             setAssetRows(assetDetailRows);
         };
@@ -201,14 +206,31 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         initializeColumnsAndRows();
     }, []);
 
-    const formatToDataTableColumns = (fields: any[], classes): any[] => {
+    const initializeAssetGridColumnCookie = (cookieName, columns) => {
+        const columnsToDisplay = {};
+        columns.forEach(column => columnsToDisplay[column.colName] = column.colDisplay);
+        document.cookie = `${cookieName}=${JSON.stringify(columnsToDisplay)};path=/;max-age=630700000`;
+    };
+
+    const getColumnsObjectByName = (cookieName) => {
+        let assetColumnsDisplay;
+        assetColumnsDisplay = document.cookie.split(';');
+        assetColumnsDisplay = assetColumnsDisplay.find(entry => entry.trim().startsWith(cookieName));
+        if (assetColumnsDisplay)
+            assetColumnsDisplay = JSON.parse(assetColumnsDisplay.split('=')[1]);
+        if (typeof assetColumnsDisplay === 'object')
+            return assetColumnsDisplay;
+        return false;
+    }
+
+    const formatToDataTableColumns = (fields: any[], classes, displayHash): any[] => {
         const result: any[] = [];
-        fields.forEach(async ({ colName, colType, colDisplay, colLabel, colAlign }) => {
+        fields.forEach(async ({ colName, colType, colLabel, colAlign }) => {
             const gridColumnObject: any = {
                 name: colName,
                 label: colLabel,
                 options: {
-                    display: colDisplay,
+                    display: displayHash[colName] as boolean,
                     setCellHeaderProps: () => ({
                         className: clsx({
                             [classes.centeredTableHead]: true
@@ -333,9 +355,12 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
 
     const toggleColumn = (changedColumn: string, _action: string) => {
         const assetColumnsCopy = [...assetColumns];
-        const column = assetColumnsCopy.find(col => col.field === changedColumn);
+        const column = assetColumnsCopy.find(col => col.name === changedColumn);
         if (column) {
-            column.options.hide = !column.options.hide;
+            const columns = getColumnsObjectByName(cookieName);
+            columns[changedColumn] = !columns[changedColumn];
+            document.cookie = `${cookieName}=${JSON.stringify(columns)};path=/;max-age=630700000`;
+            column.options.display = !column.options.display;
             setAssetColumns(assetColumnsCopy);
         }
     };
