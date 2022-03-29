@@ -58,7 +58,7 @@ const selectedSubtitleValidation = {
     test: array => {
         const selectedSubtitle = array.find(subtitle => subtitle.selected);
         if (!selectedSubtitle) return false;
-        if (selectedSubtitle.subtitleOption !== eSubtitleOption.eNone)
+        if (selectedSubtitle.subtitleOption === eSubtitleOption.eInput)
             return !!selectedSubtitle.value;
         return true;
     },

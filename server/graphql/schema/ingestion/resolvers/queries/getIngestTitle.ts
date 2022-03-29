@@ -19,9 +19,9 @@ export default async function getIngestTitle(_: Parent, args: QueryGetIngestTitl
                 idItem: 0,
                 idAssetThumbnail: null,
                 idGeoLocation: null,
-                Name: item.subtitle,
+                Name: item.name + ((item.subtitle) ? `: ${item.subtitle}` : ''),
                 EntireSubject: item.entireSubject,
-                Title: null,
+                Title: item.subtitle,
             });
         }
         const ingestTitle: IngestTitle = NameHelpers.modelTitleOptions(itemDB);

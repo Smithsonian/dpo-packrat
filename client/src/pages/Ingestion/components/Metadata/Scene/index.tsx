@@ -185,7 +185,7 @@ function Scene(props: SceneProps): React.ReactElement {
             query: GetIngestTitleDocument,
             variables: {
                 input: {
-                    sourceObjects: scene.sourceObjects
+                    sourceObjects: updatedSourceObjects
                 }
             },
             fetchPolicy: 'no-cache'
@@ -195,6 +195,8 @@ function Scene(props: SceneProps): React.ReactElement {
             toast.error('Failed to fetch titles for ingestion items');
             return;
         }
+        // console.log('ingestTitle', ingestTitle);
+        // console.log('sourceObjects', updatedSourceObjects);
         const subtitleState = parseSubtitlesToState(ingestTitle);
         updateMetadataField(metadataIndex, 'subtitles', subtitleState, MetadataType.scene);
         updateMetadataField(metadataIndex, 'name', ingestTitle.title, MetadataType.scene);
@@ -221,7 +223,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 query: GetIngestTitleDocument,
                 variables: {
                     input: {
-                        sourceObjects: scene.sourceObjects
+                        sourceObjects: newSourceObjects
                     }
                 },
                 fetchPolicy: 'no-cache'
@@ -231,6 +233,9 @@ function Scene(props: SceneProps): React.ReactElement {
                 toast.error('Failed to fetch titles for ingestion items');
                 return;
             }
+
+            // console.log('ingestTitle', ingestTitle);
+            // console.log('sourceObjects', newSourceObjects);
             const subtitleState = parseSubtitlesToState(ingestTitle);
             updateMetadataField(metadataIndex, 'subtitles', subtitleState, MetadataType.scene);
             updateMetadataField(metadataIndex, 'name', ingestTitle.title, MetadataType.scene);

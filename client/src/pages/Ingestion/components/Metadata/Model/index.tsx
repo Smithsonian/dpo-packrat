@@ -358,7 +358,6 @@ function Model(props: ModelProps): React.ReactElement {
                             <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ backgroundColor: 'rgb(255, 252, 209', paddingTop: '10px' }}>
                                 <Table className={tableClasses.table}>
                                     <TableBody>
-
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.dateCreated || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Date Created</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>

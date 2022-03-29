@@ -134,7 +134,7 @@ export function parseSubtitlesToState(titles: IngestTitle): SubtitleFields {
                 result.push({ value: '', selected: true, subtitleOption: eSubtitleOption.eInput, id: key });
             }
             // Inherited Value
-            if (subtitleVal && subtitleVal !== '<None>') {
+            if (typeof subtitleVal === 'string' && subtitleVal !== '<None>') {
                 result.push({ value: subtitleVal, selected: false, subtitleOption: eSubtitleOption.eInherit, id: key });
             }
 
