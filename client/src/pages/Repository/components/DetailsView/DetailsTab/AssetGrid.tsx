@@ -221,7 +221,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         if (typeof assetColumnsDisplay === 'object')
             return assetColumnsDisplay;
         return false;
-    }
+    };
 
     const formatToDataTableColumns = (fields: any[], classes, displayHash): any[] => {
         const result: any[] = [];
