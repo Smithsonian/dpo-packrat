@@ -424,7 +424,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     setDefaultIngestionFilters: async (systemObjectType: eSystemObjectType, idRoot: number | undefined): Promise<void> => {
         const { resetKeywordSearch, resetRepositoryFilter, getChildrenForIngestion } = get();
-        if (idRoot !== undefined) {
+        // allows for scene ingestion to search without being rooted
+        if (idRoot !== undefined && systemObjectType !== eSystemObjectType.eScene) {
             const { data: { getSystemObjectDetails: { name, objectType } } } = await apolloClient.query({
                 query: GetSystemObjectDetailsDocument,
                 variables: {

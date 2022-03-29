@@ -10,6 +10,7 @@ import { SystemObjectTypeToName } from '../../../../../db/api/ObjectType';
 import * as H from '../../../../../utils/helpers';
 import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
+import { NameHelpers } from '../../../../../utils/nameHelpers';
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs, context: Context): Promise<UpdateObjectDetailsResult> {
     const { input } = args;
@@ -523,7 +524,7 @@ export async function handleMetadata(idSystemObject: number, metadatas: Metadata
 }
 
 function computeNewName(oldName: string, oldTitle: string | null, newTitle: string | null | undefined): string {
-    const oldBaseName: string = (!oldTitle) ? oldName : oldName.replace(`: ${oldTitle}`, ''); // strip off old title
+    const oldBaseName: string = NameHelpers.computeBaseTitle(oldName, oldTitle);
     const newName: string = oldBaseName + ((newTitle) ? `: ${newTitle}` : '');
     // LOG.info(`updateObjectDetails computeNewName(${oldName}, ${oldTitle}, ${newTitle}) = ${newName} (oldBaseName = ${oldBaseName})`, LOG.LS.eGQL);
 
