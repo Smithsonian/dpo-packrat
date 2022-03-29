@@ -14,8 +14,6 @@ type Query {
   getFilterViewData: GetFilterViewDataResult!
   getIngestTitle(input: GetIngestTitleInput!): GetIngestTitleResult!
   getIngestionItems(input: GetIngestionItemsInput!): GetIngestionItemsResult!
-  getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
-  getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
   getItem(input: GetItemInput!): GetItemResult!
   getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
@@ -537,6 +535,7 @@ input IngestProjectInput {
 
 input IngestItemInput {
   id: Int
+  name: String
   subtitle: String!
   entireSubject: Boolean!
 }
@@ -1040,9 +1039,18 @@ type IntermediaryFile {
   SystemObject: SystemObject
 }
 
+type SvxNonModelAsset {
+  uri: String!
+  type: String!
+  description: String
+  size: Int
+  idAssetVersion: Int
+}
+
 type SceneConstellation {
   Scene: Scene
   ModelSceneXref: [ModelSceneXref]
+  SvxNonModelAssets: [SvxNonModelAsset!]
 }
 
 input UpdateObjectDetailsInput {
@@ -1142,6 +1150,7 @@ input AssetVersionDetailFieldsInput {
   Ingested: Boolean
   Version: Int
   StorageSize: BigInt
+  StorageHash: String
 }
 
 input ActorDetailFieldsInput {
@@ -1165,6 +1174,7 @@ input MetadataInput {
 
 input UpdateObjectDetailsDataInput {
   Name: String
+  Subtitle: String
   Retired: Boolean
   License: Int
   Unit: UnitDetailFieldsInput
@@ -1406,6 +1416,7 @@ type AssetVersionDetailFields {
   AssetVersion: AssetVersion
   idAsset: Int
   idAssetVersion: Int
+  StorageHash: String
 }
 
 type ActorDetailFields {
@@ -1450,6 +1461,7 @@ type GetSystemObjectDetailsResult {
   idSystemObject: Int!
   idObject: Int!
   name: String!
+  subTitle: String
   retired: Boolean!
   objectType: Int!
   allowed: Boolean!
@@ -1511,6 +1523,7 @@ type DetailVersion {
   creator: String!
   dateCreated: DateTime!
   size: BigInt!
+  hash: String!
   ingested: Boolean!
   Comment: String
   CommentLink: String
@@ -1722,23 +1735,6 @@ input SearchIngestionSubjectsInput {
 
 type SearchIngestionSubjectsResult {
   SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
-}
-
-input GetIngestionItemsForSubjectsInput {
-  idSubjects: [Int!]!
-}
-
-type GetIngestionItemsForSubjectsResult {
-  Item: [Item!]!
-}
-
-input GetIngestionProjectsForSubjectsInput {
-  idSubjects: [Int!]!
-}
-
-type GetIngestionProjectsForSubjectsResult {
-  Project: [Project!]!
-  Default: Boolean!
 }
 
 type IngestionItem {

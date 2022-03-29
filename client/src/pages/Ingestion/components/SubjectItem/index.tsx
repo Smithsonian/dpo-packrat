@@ -10,9 +10,8 @@ import { Redirect, useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { useItemStore, useMetadataStore, useProjectStore, useSubjectStore, useVocabularyStore } from '../../../../store';
+import { useItemStore, useMetadataStore, useSubjectStore, useVocabularyStore } from '../../../../store';
 import ItemList from './ItemList';
-import ProjectList from './ProjectList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
 import { Helmet } from 'react-helmet';
@@ -48,15 +47,13 @@ function SubjectItem(): React.ReactElement {
     const history = useHistory();
 
     const [subjectError, setSubjectError] = useState(false);
-    const [projectError, setProjectError] = useState(false);
     const [itemError, setItemError] = useState(false);
     const [metadataStepLoading, setMetadataStepLoading] = useState(false);
 
     const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
     const subjects = useSubjectStore(state => state.subjects);
-    const [projects, projectsLoading, getSelectedProject] = useProjectStore(state => [state.projects, state.loading, state.getSelectedProject]);
     const [itemsLoading, getSelectedItem] = useItemStore(state => [state.loading, state.getSelectedItem]);
-    const [metadatas, updateMetadataFolders, getMetadataInfo] = useMetadataStore(state => [state.metadatas, state.updateMetadataFolders, state.getMetadataInfo]);
+    const [metadatas, updateMetadataFolders, getMetadataInfo, initializeSubtitlesForModels] = useMetadataStore(state => [state.metadatas, state.updateMetadataFolders, state.getMetadataInfo, state.initializeSubtitlesForModels]);
     const { ingestionReset } = useIngest();
     const selectedItem = getSelectedItem();
 
@@ -67,34 +64,23 @@ function SubjectItem(): React.ReactElement {
     }, [subjects]);
 
     useEffect(() => {
-        if (projects.length > 0) {
-            setProjectError(false);
-        }
-    }, [projects]);
-
-    useEffect(() => {
         if (selectedItem) {
-            if (selectedItem.name.length) {
+            if (selectedItem.subtitle.length) {
                 setItemError(false);
             }
         }
     }, [selectedItem]);
 
     const onNext = async (): Promise<void> => {
+        toast.dismiss();
         let error: boolean = false;
+        // Note: we only want certain warnings to flag if we have missing fields after selecting an new item
+        const isItemSelected = !!selectedItem;
 
         if (!subjects.length) {
             error = true;
             setSubjectError(true);
             toast.warn('Please provide at least one subject', { autoClose: false });
-        }
-
-        const selectedProject = getSelectedProject();
-
-        if (!selectedProject) {
-            error = true;
-            setProjectError(true);
-            toast.warn('Please select a project', { autoClose: false });
         }
 
         if (!selectedItem) {
@@ -103,14 +89,27 @@ function SubjectItem(): React.ReactElement {
             toast.warn('Please select or provide a media group', { autoClose: false });
         }
 
-        if (selectedItem?.name.trim() === '') {
+        if (isItemSelected && selectedItem?.idProject === -1) {
             error = true;
             setItemError(true);
-            toast.warn('Please provide a valid name for media group', { autoClose: false });
+            toast.warn('Please select a project for media group', { autoClose: false });
+        }
+
+        if (isItemSelected && selectedItem?.entireSubject === null) {
+            error = true;
+            setItemError(true);
+            toast.warn('Please indicate whether media group is entire subject', { autoClose: false });
+        }
+
+        if (isItemSelected && (subjects.length > 1 || !selectedItem?.entireSubject) && selectedItem?.subtitle.trim() === '' && selectedItem.id === 'default') {
+            error = true;
+            setItemError(true);
+            toast.warn('Please provide a valid subtitle for media group', { autoClose: false });
         }
 
         if (error) return;
 
+        await initializeSubtitlesForModels();
         try {
             setMetadataStepLoading(true);
             await updateVocabularyEntries();
@@ -126,7 +125,6 @@ function SubjectItem(): React.ReactElement {
         const { file: { id, type } } = metadatas[0];
         const { isLast } = getMetadataInfo(id);
         const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
-        // console.log(`SubjectItem onNext() nextRoute=${nextRoute}, metadatas=${JSON.stringify(metadatas)}`);
         toast.dismiss();
         history.push(nextRoute);
     };
@@ -156,18 +154,6 @@ function SubjectItem(): React.ReactElement {
                     padding='10px'
                 >
                     <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
-                </FieldType>
-
-                <FieldType
-                    error={projectError}
-                    loading={projectsLoading}
-                    width={'40%'}
-                    required
-                    label='Project'
-                    marginTop={2}
-                    padding='10px'
-                >
-                    <ProjectList />
                 </FieldType>
 
                 <FieldType

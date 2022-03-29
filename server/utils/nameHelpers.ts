@@ -16,16 +16,20 @@ export type ModelHierarchy = {
 };
 
 export class NameHelpers {
-    static mediaGroupDisplayName(itemSubtitle: string | null, subjects: DBAPI.Subject[]): string {
+    static mediaGroupDisplayName(itemName: string | undefined | null, itemSubtitle: string | null, subjects: DBAPI.Subject[]): string {
         if (subjects.length !== 1)
-            return itemSubtitle ?? UNKNOWN_NAME;
+            return itemName ?? UNKNOWN_NAME;
         return itemSubtitle ? `${subjects[0].Name}: ${itemSubtitle}` : subjects[0].Name;
     }
 
-    static modelDisplayName(modelSubtitle: string, item: DBAPI.Item, subjects: DBAPI.Subject[]): string {
-        if (subjects.length !== 1)
-            return modelSubtitle ?? item.Title ?? UNKNOWN_NAME;
-        return modelSubtitle ? `${item.Name}: ${modelSubtitle}` : item.Name;
+    static modelDisplayName(modelSubtitle: string, item: DBAPI.Item, _subjects: DBAPI.Subject[]): string {
+        // Per https://jira.si.edu/browse/DPO3DPKRT-558, image 016 - Ingest - M - 03a - multisubject media group - new.jpg,
+        // it looks like a model connected to an item that has multiple subjects should have the item's name plus an optional subtitle;
+        // so, commenting out this incorrect logic:
+        // if (subjects.length !== 1)
+        //     return modelSubtitle ?? item.Title ?? UNKNOWN_NAME;
+        const itemBaseName: string = NameHelpers.computeBaseTitle(item.Name, item.Title);
+        return modelSubtitle ? `${itemBaseName}: ${modelSubtitle}` : itemBaseName;
     }
 
     static sceneDisplayName(sceneSubtitle: string, modelHierarchies: ModelHierarchy[]): string {
@@ -47,12 +51,18 @@ export class NameHelpers {
         return sanitize(fileName.replace(/:/g, '-').replace(/ /g, '_'), { replacement: '_' });
     }
 
+    static computeBaseTitle(name: string, subtitle: string | undefined | null): string {
+        return (subtitle) ? name.replace(`: ${subtitle}`, '') : name; // base title is the display name, with its subtitle removed, if any
+    }
+
     static modelTitleOptions(item: DBAPI.Item): IngestTitle {
-        const title: string = (item.Title) ? item.Name.replace(`: ${item.Title}`, '') : item.Name; // base title is the item's display name, with its subtitle removed, if any
+        const title: string = NameHelpers.computeBaseTitle(item.Name, item.Title);
         const subtitle: (string | null)[] = [];
-        subtitle.push(item.Title);  // user can select the default item subtitle.
-        if (item.Title)             // if we record an entry with a real subtitle,
-            subtitle.push(null);    // provide an entry with null subtitle, indicating the user can enter one
+        subtitle.push(item.Title);      // user can select the default item subtitle.
+        if (item.Title !== '')
+            subtitle.push('<None>');    // allow user to pick "None"
+        if (item.Title !== null)        // if we record an entry with a real or empty subtitle,
+            subtitle.push(null);        // provide an entry with null subtitle, indicating the user can enter one
         return { title, forced: false, subtitle };
     }
 
@@ -61,7 +71,7 @@ export class NameHelpers {
         let forced: boolean = false;
         let subtitle: (string | null)[] = [];
         if (modelHierarchies.length === 1) {        // if only one model parent
-            title = modelHierarchies[0].model.Name; // scene must be named same as model
+            title = NameHelpers.computeBaseTitle(modelHierarchies[0].model.Name, modelHierarchies[0].model.Title); // scene must be named same as model
             forced = true;
             subtitle.push(modelHierarchies[0].model.Title);
         } else {
@@ -154,7 +164,9 @@ export class NameHelpers {
 
         const subtitle: (string | null)[] = [];
         if (subject !== null) {
-            subtitle.push([...subtitleSet].join(', '));
+            const mergedSubtitle: string = [...subtitleSet].join(', ');
+            if (mergedSubtitle)
+                subtitle.push(mergedSubtitle);
             subtitle.push('<None>');
             subtitle.push(null);
         } else

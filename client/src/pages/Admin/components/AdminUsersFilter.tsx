@@ -21,11 +21,9 @@ const useStyles = makeStyles(({ typography, palette }) => ({
     AdminUsersSearchFilterContainer: {
         display: 'flex',
         justifyContent: 'space-around',
-        height: '70px',
         width: '900px',
         backgroundColor: '#FFFCD1',
-        paddingLeft: '20px',
-        paddingRight: '20px'
+        padding: '15px 20px'
     },
     AdminUsersSearchFilterSettingsContainer: {
         display: 'flex',

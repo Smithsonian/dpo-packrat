@@ -35,8 +35,6 @@ export type Query = {
   getFilterViewData: GetFilterViewDataResult;
   getIngestTitle: GetIngestTitleResult;
   getIngestionItems: GetIngestionItemsResult;
-  getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
-  getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
   getIntermediaryFile: GetIntermediaryFileResult;
   getItem: GetItemResult;
   getItemsForSubject: GetItemsForSubjectResult;
@@ -128,16 +126,6 @@ export type QueryGetIngestTitleArgs = {
 
 export type QueryGetIngestionItemsArgs = {
   input: GetIngestionItemsInput;
-};
-
-
-export type QueryGetIngestionItemsForSubjectsArgs = {
-  input: GetIngestionItemsForSubjectsInput;
-};
-
-
-export type QueryGetIngestionProjectsForSubjectsArgs = {
-  input: GetIngestionProjectsForSubjectsInput;
 };
 
 
@@ -954,6 +942,7 @@ export type IngestProjectInput = {
 
 export type IngestItemInput = {
   id?: Maybe<Scalars['Int']>;
+  name?: Maybe<Scalars['String']>;
   subtitle: Scalars['String'];
   entireSubject: Scalars['Boolean'];
 };
@@ -1489,10 +1478,20 @@ export type IntermediaryFile = {
   SystemObject?: Maybe<SystemObject>;
 };
 
+export type SvxNonModelAsset = {
+  __typename?: 'SvxNonModelAsset';
+  uri: Scalars['String'];
+  type: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  size?: Maybe<Scalars['Int']>;
+  idAssetVersion?: Maybe<Scalars['Int']>;
+};
+
 export type SceneConstellation = {
   __typename?: 'SceneConstellation';
   Scene?: Maybe<Scene>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
+  SvxNonModelAssets?: Maybe<Array<SvxNonModelAsset>>;
 };
 
 export type UpdateObjectDetailsInput = {
@@ -1592,6 +1591,7 @@ export type AssetVersionDetailFieldsInput = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
   StorageSize?: Maybe<Scalars['BigInt']>;
+  StorageHash?: Maybe<Scalars['String']>;
 };
 
 export type ActorDetailFieldsInput = {
@@ -1615,6 +1615,7 @@ export type MetadataInput = {
 
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
+  Subtitle?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
   License?: Maybe<Scalars['Int']>;
   Unit?: Maybe<UnitDetailFieldsInput>;
@@ -1874,6 +1875,7 @@ export type AssetVersionDetailFields = {
   AssetVersion?: Maybe<AssetVersion>;
   idAsset?: Maybe<Scalars['Int']>;
   idAssetVersion?: Maybe<Scalars['Int']>;
+  StorageHash?: Maybe<Scalars['String']>;
 };
 
 export type ActorDetailFields = {
@@ -1923,6 +1925,7 @@ export type GetSystemObjectDetailsResult = {
   idSystemObject: Scalars['Int'];
   idObject: Scalars['Int'];
   name: Scalars['String'];
+  subTitle?: Maybe<Scalars['String']>;
   retired: Scalars['Boolean'];
   objectType: Scalars['Int'];
   allowed: Scalars['Boolean'];
@@ -1989,6 +1992,7 @@ export type DetailVersion = {
   creator: Scalars['String'];
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
+  hash: Scalars['String'];
   ingested: Scalars['Boolean'];
   Comment?: Maybe<Scalars['String']>;
   CommentLink?: Maybe<Scalars['String']>;
@@ -2216,25 +2220,6 @@ export type SearchIngestionSubjectsInput = {
 export type SearchIngestionSubjectsResult = {
   __typename?: 'SearchIngestionSubjectsResult';
   SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
-};
-
-export type GetIngestionItemsForSubjectsInput = {
-  idSubjects: Array<Scalars['Int']>;
-};
-
-export type GetIngestionItemsForSubjectsResult = {
-  __typename?: 'GetIngestionItemsForSubjectsResult';
-  Item: Array<Item>;
-};
-
-export type GetIngestionProjectsForSubjectsInput = {
-  idSubjects: Array<Scalars['Int']>;
-};
-
-export type GetIngestionProjectsForSubjectsResult = {
-  __typename?: 'GetIngestionProjectsForSubjectsResult';
-  Project: Array<Project>;
-  Default: Scalars['Boolean'];
 };
 
 export type IngestionItem = {
@@ -3563,7 +3548,10 @@ export type GetSceneForAssetVersionQuery = (
             & Pick<SystemObject, 'idSystemObject' | 'idAsset'>
           )> }
         )> }
-      )>>> }
+      )>>>, SvxNonModelAssets?: Maybe<Array<(
+        { __typename?: 'SvxNonModelAsset' }
+        & Pick<SvxNonModelAsset, 'uri' | 'type' | 'description' | 'size' | 'idAssetVersion'>
+      )>> }
     )> }
   ) }
 );
@@ -3648,7 +3636,7 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<AssetDetailFields, 'AssetType' | 'idAsset'>
     )>, AssetVersion?: Maybe<(
       { __typename?: 'AssetVersionDetailFields' }
-      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion' | 'FilePath'>
+      & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version' | 'idAsset' | 'idAssetVersion' | 'FilePath' | 'StorageHash'>
     )>, Actor?: Maybe<(
       { __typename?: 'ActorDetailFields' }
       & Pick<ActorDetailFields, 'OrganizationName'>
@@ -3720,7 +3708,7 @@ export type GetSystemObjectDetailsQuery = (
   { __typename?: 'Query' }
   & { getSystemObjectDetails: (
     { __typename?: 'GetSystemObjectDetailsResult' }
-    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInheritance'>
+    & Pick<GetSystemObjectDetailsResult, 'idSystemObject' | 'idObject' | 'name' | 'subTitle' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'publishedEnum' | 'publishable' | 'thumbnail' | 'licenseInheritance'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
       & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
@@ -3775,7 +3763,7 @@ export type GetVersionsForAssetQuery = (
     { __typename?: 'GetVersionsForAssetResult' }
     & { versions: Array<(
       { __typename?: 'DetailVersion' }
-      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'ingested' | 'Comment' | 'CommentLink'>
+      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size' | 'hash' | 'ingested' | 'Comment' | 'CommentLink'>
     )> }
   ) }
 );
@@ -3807,39 +3795,6 @@ export type GetIngestionItemsQuery = (
       { __typename?: 'IngestionItem' }
       & Pick<IngestionItem, 'idItem' | 'EntireSubject' | 'MediaGroupName' | 'idProject' | 'ProjectName'>
     )>> }
-  ) }
-);
-
-export type GetIngestionItemsForSubjectsQueryVariables = Exact<{
-  input: GetIngestionItemsForSubjectsInput;
-}>;
-
-
-export type GetIngestionItemsForSubjectsQuery = (
-  { __typename?: 'Query' }
-  & { getIngestionItemsForSubjects: (
-    { __typename?: 'GetIngestionItemsForSubjectsResult' }
-    & { Item: Array<(
-      { __typename?: 'Item' }
-      & Pick<Item, 'idItem' | 'EntireSubject' | 'Name'>
-    )> }
-  ) }
-);
-
-export type GetIngestionProjectsForSubjectsQueryVariables = Exact<{
-  input: GetIngestionProjectsForSubjectsInput;
-}>;
-
-
-export type GetIngestionProjectsForSubjectsQuery = (
-  { __typename?: 'Query' }
-  & { getIngestionProjectsForSubjects: (
-    { __typename?: 'GetIngestionProjectsForSubjectsResult' }
-    & Pick<GetIngestionProjectsForSubjectsResult, 'Default'>
-    & { Project: Array<(
-      { __typename?: 'Project' }
-      & Pick<Project, 'idProject' | 'Name'>
-    )> }
   ) }
 );
 
@@ -6199,6 +6154,13 @@ export const GetSceneForAssetVersionDocument = gql`
           }
         }
       }
+      SvxNonModelAssets {
+        uri
+        type
+        description
+        size
+        idAssetVersion
+      }
     }
   }
 }
@@ -6431,6 +6393,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       idAsset
       idAssetVersion
       FilePath
+      StorageHash
     }
     Actor {
       OrganizationName
@@ -6599,6 +6562,7 @@ export const GetSystemObjectDetailsDocument = gql`
     idSystemObject
     idObject
     name
+    subTitle
     retired
     objectType
     allowed
@@ -6725,6 +6689,7 @@ export const GetVersionsForAssetDocument = gql`
       creator
       dateCreated
       size
+      hash
       ingested
       Comment
       CommentLink
@@ -6840,84 +6805,6 @@ export function useGetIngestionItemsLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type GetIngestionItemsQueryHookResult = ReturnType<typeof useGetIngestionItemsQuery>;
 export type GetIngestionItemsLazyQueryHookResult = ReturnType<typeof useGetIngestionItemsLazyQuery>;
 export type GetIngestionItemsQueryResult = Apollo.QueryResult<GetIngestionItemsQuery, GetIngestionItemsQueryVariables>;
-export const GetIngestionItemsForSubjectsDocument = gql`
-    query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
-  getIngestionItemsForSubjects(input: $input) {
-    Item {
-      idItem
-      EntireSubject
-      Name
-    }
-  }
-}
-    `;
-
-/**
- * __useGetIngestionItemsForSubjectsQuery__
- *
- * To run a query within a React component, call `useGetIngestionItemsForSubjectsQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetIngestionItemsForSubjectsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetIngestionItemsForSubjectsQuery({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useGetIngestionItemsForSubjectsQuery(baseOptions: Apollo.QueryHookOptions<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>(GetIngestionItemsForSubjectsDocument, options);
-      }
-export function useGetIngestionItemsForSubjectsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>(GetIngestionItemsForSubjectsDocument, options);
-        }
-export type GetIngestionItemsForSubjectsQueryHookResult = ReturnType<typeof useGetIngestionItemsForSubjectsQuery>;
-export type GetIngestionItemsForSubjectsLazyQueryHookResult = ReturnType<typeof useGetIngestionItemsForSubjectsLazyQuery>;
-export type GetIngestionItemsForSubjectsQueryResult = Apollo.QueryResult<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>;
-export const GetIngestionProjectsForSubjectsDocument = gql`
-    query getIngestionProjectsForSubjects($input: GetIngestionProjectsForSubjectsInput!) {
-  getIngestionProjectsForSubjects(input: $input) {
-    Project {
-      idProject
-      Name
-    }
-    Default
-  }
-}
-    `;
-
-/**
- * __useGetIngestionProjectsForSubjectsQuery__
- *
- * To run a query within a React component, call `useGetIngestionProjectsForSubjectsQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetIngestionProjectsForSubjectsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetIngestionProjectsForSubjectsQuery({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useGetIngestionProjectsForSubjectsQuery(baseOptions: Apollo.QueryHookOptions<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>(GetIngestionProjectsForSubjectsDocument, options);
-      }
-export function useGetIngestionProjectsForSubjectsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>(GetIngestionProjectsForSubjectsDocument, options);
-        }
-export type GetIngestionProjectsForSubjectsQueryHookResult = ReturnType<typeof useGetIngestionProjectsForSubjectsQuery>;
-export type GetIngestionProjectsForSubjectsLazyQueryHookResult = ReturnType<typeof useGetIngestionProjectsForSubjectsLazyQuery>;
-export type GetIngestionProjectsForSubjectsQueryResult = Apollo.QueryResult<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>;
 export const GetItemDocument = gql`
     query getItem($input: GetItemInput!) {
   getItem(input: $input) {

@@ -39,6 +39,7 @@ export default async function getVersionsForAsset(_: Parent, args: QueryGetVersi
             creator: user ? user.Name : '',
             dateCreated: assetVersion.DateCreated,
             size: assetVersion.StorageSize,
+            hash: assetVersion.StorageHash,
             ingested: assetVersion.Ingested ?? false,
             Comment: assetVersion.Comment,
             CommentLink: assetVersion.Comment && assetVersion.Comment.length <= 300
