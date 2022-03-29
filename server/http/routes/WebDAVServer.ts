@@ -17,7 +17,7 @@ import { Readable, Writable } from 'stream';
 import { v2 as webdav } from 'webdav-server';
 import mime from 'mime'; // const mime = require('mime-types'); // can't seem to make this work using "import * as mime from 'mime'"; subsequent calls to mime.lookup freeze!
 import path from 'path';
-import { Semaphore, Mutex } from 'async-mutex';
+import { Semaphore, Mutex, withTimeout, SemaphoreInterface, E_TIMEOUT } from 'async-mutex';
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -178,8 +178,8 @@ class FileSystemResource {
 class WebDAVFileSystem extends webdav.FileSystem {
     resources: Map<string, FileSystemResource>;
     managers: Map<string, WebDAVManagers>;
-    private writeSemaphoreMap: Map<number, Semaphore>;      // idSystemObject -> write Semaphore for that system object
-    private writeSemaphoreCountMap: Map<number, number>;    // idSystemObject -> count of writers
+    private writeSemaphoreMap: Map<number, SemaphoreInterface>;     // idSystemObject -> write Semaphore for that system object
+    private writeSemaphoreCountMap: Map<number, number>;            // idSystemObject -> count of writers
     private semaphoreMapLock: Mutex;
 
     // private static lockExclusiveWrite: webdav.LockKind = new webdav.LockKind(webdav.LockScope.Exclusive, webdav.LockType.Write, 300);
@@ -379,15 +379,15 @@ class WebDAVFileSystem extends webdav.FileSystem {
         }
     }
 
-    private async computeWriteLock(idSystemObject: number | null, _pathS: string): Promise<Semaphore | undefined> {
+    private async computeWriteLock(idSystemObject: number | null, _pathS: string): Promise<SemaphoreInterface | undefined> {
         if (!idSystemObject)
             return undefined;
 
         const releaser = await this.semaphoreMapLock.acquire();
 
-        let writeLock: Semaphore | undefined = this.writeSemaphoreMap.get(idSystemObject);
+        let writeLock: SemaphoreInterface | undefined = this.writeSemaphoreMap.get(idSystemObject);
         if (writeLock === undefined) {
-            writeLock = new Semaphore(1);
+            writeLock = withTimeout(new Semaphore(1), 2000); // wait 2 seconds for this writeLock
             this.writeSemaphoreMap.set(idSystemObject, writeLock);
         }
 
@@ -502,18 +502,33 @@ class WebDAVFileSystem extends webdav.FileSystem {
                     };
 
                     // Serialize access per DP.idSystemObjectV via Semaphore, allowing only 1 ingestion at a time per system object
-                    const writeLock: Semaphore | undefined = await this.computeWriteLock(DP.idSystemObjectV, pathS);
+                    const writeLock: SemaphoreInterface | undefined = await this.computeWriteLock(DP.idSystemObjectV, pathS);
 
                     if (writeLock) {
-                        return await writeLock.runExclusive(async (_value) => {
+                        for (let lockAttempt = 1; lockAttempt <= 5; lockAttempt++) {
                             try {
-                                LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream START`, LOG.LS.eHTTP);
-                                return await this.ingestStream(ISI, pathS);
-                            } finally {
-                                await this.releaseWriteLock(DP.idSystemObjectV, pathS);
-                                LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream END`, LOG.LS.eHTTP);
+                                await writeLock.runExclusive(async (_value) => {
+                                    try {
+                                        LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream START`, LOG.LS.eHTTP);
+                                        return await this.ingestStream(ISI, pathS);
+                                    } finally {
+                                        await this.releaseWriteLock(DP.idSystemObjectV, pathS);
+                                        LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream END`, LOG.LS.eHTTP);
+                                    }
+                                });
+                                return;
+                            } catch (error) {
+                                if (error === E_TIMEOUT) {
+                                    const finalTry: boolean = (lockAttempt === 5);
+                                    if (finalTry) {
+                                        LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream timeout write lock`, LOG.LS.eHTTP);
+                                        return;
+                                    }
+                                    LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream timeout write lock`, LOG.LS.eHTTP);
+                                } else
+                                    LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream`, LOG.LS.eHTTP, error);
                             }
-                        });
+                        }
                     } else
                         return await this.ingestStream(ISI, pathS);
                 } catch (error) {
