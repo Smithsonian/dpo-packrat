@@ -24,6 +24,7 @@ import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSy
 import { PublishScene } from '../../../../../collections/impl/PublishScene';
 import { NameHelpers, ModelHierarchy } from '../../../../../utils/nameHelpers';
 import * as COMMON from '@dpo-packrat/common';
+import { eSystemObjectType } from '@dpo-packrat/common';
 
 type AssetPair = {
     asset: DBAPI.Asset;
@@ -104,9 +105,10 @@ class IngestDataWorker extends ResolverBase {
         LOG.info(`ingestData: input=${JSON.stringify(this.input, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
 
         const results: H.IOResults = await this.validateInput();
-        this.workflowHelper = await this.createWorkflow(); // do this *after* this.validateInput, and *before* returning from validation failure
-        if (!results.success) return { success: results.success, message: results.error };
+        if (!results.success)
+            return { success: results.success, message: results.error };
 
+        this.workflowHelper = await this.createWorkflow(); // do this *after* this.validateInput, and *after* returning from validation failure, to avoid creating ingestion workflows that failed due to validation issues
         const subjectsDB: DBAPI.Subject[] = [];
         let itemDB: DBAPI.Item | null = null;
         if (this.ingestNew) {
@@ -520,7 +522,7 @@ class IngestDataWorker extends ResolverBase {
             itemDB = new DBAPI.Item({
                 idAssetThumbnail: null,
                 idGeoLocation: null,
-                Name: NameHelpers.mediaGroupDisplayName(item.subtitle, subjectsDB),
+                Name: NameHelpers.mediaGroupDisplayName(item.name, item.subtitle, subjectsDB),
                 EntireSubject: item.entireSubject,
                 Title: item.subtitle,
                 idItem: 0
@@ -947,10 +949,11 @@ class IngestDataWorker extends ResolverBase {
                 const MSXExisting: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromModelAndScene(MSX.idModel, sceneDB.idScene);
                 let MSXUpdate: DBAPI.ModelSceneXref | null = (MSXExisting && MSXExisting.length > 0) ? MSXExisting[0] : null;
                 if (MSXUpdate) {
-                    if (MSXUpdate.updateTransformIfNeeded(MSX)) {
+                    const { transformUpdated: transformUpdatedLocal, updated } = MSXUpdate.updateIfNeeded(MSX);
+                    if (updated)
                         success = await MSXUpdate.update();
+                    if (transformUpdatedLocal)
                         transformUpdated = true;
-                    }
                 } else {
                     MSX.idScene = sceneDB.idScene;
                     success = await MSX.create() && success;
@@ -1476,6 +1479,8 @@ class IngestDataWorker extends ResolverBase {
         if (this.ingestScene) {
             for (const scene of this.input.scene) {
                 // add validation in this area while we iterate through the objects
+                if (!scene.sourceObjects || !scene.sourceObjects.length || !scene.sourceObjects.some(sourceObj => sourceObj.objectType === eSystemObjectType.eModel))
+                    return { success: false, error: 'Scene ingestion must have at least 1 source object of type model' };
                 if (scene.sourceObjects && scene.sourceObjects.length) {
                     for (const sourceObject of scene.sourceObjects) {
                         if (!isValidParentChildRelationship(sourceObject.objectType, COMMON.eSystemObjectType.eScene, scene.sourceObjects, [], true)) {
@@ -1651,13 +1656,16 @@ class IngestDataWorker extends ResolverBase {
                     await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(scene.idScene, MSX.Name, MSX.Usage, MSX.Quality, MSX.UVResolution);
                 const MSXSource: DBAPI.ModelSceneXref | null = (MSXSources && MSXSources.length > 0) ? MSXSources[0] : null;
                 if (MSXSource) {
-                    if (MSXSource.updateTransformIfNeeded(MSX)) {
+                    const { transformUpdated: transformUpdatedLocal, updated } = MSXSource.updateIfNeeded(MSX);
+
+                    if (updated) {
                         if (!await MSXSource.update()) {
                             LOG.error(`ingestData handleComplexIngestionScene unable to update ModelSceneXref ${JSON.stringify(MSXSource, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
                             success = false;
                         }
-                        transformUpdated = true;
                     }
+                    if (transformUpdatedLocal)
+                        transformUpdated = true;
 
                     model = await DBAPI.Model.fetch(MSXSource.idModel);
                     if (!model) {

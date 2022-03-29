@@ -5,6 +5,14 @@ import * as H from '../helpers';
 import * as SVX from '../../types/voyager';
 import * as THREE from 'three';
 
+export type SvxNonModelAsset = {
+    uri: string;
+    type: string;
+    description?: string | undefined;
+    size?: number | undefined;
+    idAssetVersion?: number | undefined;
+};
+
 /** Create instances using the static SvxExtraction.extract() */
 export class SvxExtraction {
     document: SVX.IDocument;
@@ -18,34 +26,38 @@ export class SvxExtraction {
     setupCount: number = 0;
     tourCount: number = 0;
 
+    metaImages: SVX.IImage[] | null = null;
+    metaArticles: SVX.IArticle[] | null = null;
+    nonModelAssets: SvxNonModelAsset[] | null = null;
+
     extractScene(): DBAPI.Scene {
         // first, attempt to extract Name and Title from metas -> collection -> title, sceneTitle
-        let Name: string = '';
-        let Title: string = '';
+        let title: string = '';
+        let sceneTitle: string = '';
         if (this.document.metas !== undefined) {
             for (const meta of this.document.metas) {
                 if (meta.collection) {
-                    if (Name === '' && meta.collection['title'])
-                        Name = meta.collection['title'];
-                    if (Title === '' && meta.collection['sceneTitle'])
-                        Title = meta.collection['sceneTitle'];
-                    if (Name && Title)
+                    if (title === '' && meta.collection['title'])
+                        title = meta.collection['title'];
+                    if (sceneTitle === '' && meta.collection['sceneTitle'])
+                        sceneTitle = meta.collection['sceneTitle'];
+                    if (title && sceneTitle)
                         break;
                 }
             }
         }
 
         // if we didn't get a name, try again from scenes -> name
-        if (Name === '') {
+        if (title === '') {
             if (this.document.scene !== undefined &&                    // we have a specific scene index
                 this.document.scenes &&                                 // we have a list of scenes
                 (this.document.scenes.length > this.document.scene))    // we have that specific scene
-                Name = this.document.scenes[this.document.scene].name ?? '';
+                title = this.document.scenes[this.document.scene].name ?? '';
         }
 
         return new DBAPI.Scene({
-            Name,
-            Title,
+            Name: title + (sceneTitle ? `: ${sceneTitle}` : ''),
+            Title: sceneTitle,
             idAssetThumbnail: null,
             CountScene: this.sceneCount,
             CountNode: this.nodeCount,
@@ -154,18 +166,62 @@ export class SvxExtraction {
                 }
             }
             for (const derivative of model.derivatives) {
-                for (const asset of derivative.assets) {
-                    const xref: DBAPI.ModelSceneXref = new DBAPI.ModelSceneXref({
-                        idModelSceneXref: 0, idModel: 0, idScene: 0, Name: asset.uri, Usage: derivative.usage, Quality: derivative.quality,
-                        FileSize: asset.byteSize !== undefined ? BigInt(asset.byteSize) : null, UVResolution: asset.imageSize || null,
-                        BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
-                        TS0, TS1, TS2, R0, R1, R2, R3, S0, S1, S2
-                    });
+                if (derivative.usage !== 'Image2D') {   // Skip image derivatives here
+                    for (const asset of derivative.assets) {
+                        const xref: DBAPI.ModelSceneXref = new DBAPI.ModelSceneXref({
+                            idModelSceneXref: 0, idModel: 0, idScene: 0, Name: asset.uri, Usage: derivative.usage, Quality: derivative.quality,
+                            FileSize: asset.byteSize !== undefined ? BigInt(asset.byteSize) : null, UVResolution: asset.imageSize || null,
+                            BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
+                            TS0, TS1, TS2, R0, R1, R2, R3, S0, S1, S2
+                        });
 
-                    this.modelDetails.push(xref);
+                        this.modelDetails.push(xref);
+                    }
                 }
             }
         }
+        return true;
+    }
+
+    private extractNonModelDetails(): boolean {
+        const metaImages: SVX.IImage[] = [];
+        const metaArticles: SVX.IArticle[] = [];
+        const nonModelAssets: SvxNonModelAsset[] = [];
+
+        if (this.document.metas) {
+            for (const meta of this.document.metas) {
+                if (meta.images) {
+                    for (const image of meta.images) {
+                        metaImages.push(image);
+                        nonModelAssets.push({ uri: image.uri, type: 'Image', description: image.quality, size: image.byteSize });
+                    }
+                }
+
+                if (meta.articles) {
+                    for (const article of meta.articles) {
+                        metaArticles.push(article);
+                        if (article.uri)
+                            nonModelAssets.push({ uri: article.uri, type: 'Article', description: article.title });
+                        else if (article.uris) {
+                            for (const [lang, uri] of Object.entries(article.uris)) {
+                                let description: string | undefined = article.titles ? article.titles[lang] : undefined;
+                                if (description === undefined)
+                                    description = article.title;
+                                nonModelAssets.push({ uri, type: 'Article', description });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (metaImages.length > 0)
+            this.metaImages = metaImages;
+        if (metaArticles.length > 0)
+            this.metaArticles = metaArticles;
+        if (nonModelAssets.length > 0)
+            this.nonModelAssets = nonModelAssets;
+
         return true;
     }
 
@@ -212,6 +268,7 @@ export class SvxExtraction {
         }
         svx.tourCount = tourCount;
         svx.extractModelDetails();
+        svx.extractNonModelDetails();
         return { svx, results: { success: true } };
     }
 }

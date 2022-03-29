@@ -32,8 +32,6 @@ export type Query = {
   getFilterViewData: GetFilterViewDataResult;
   getIngestTitle: GetIngestTitleResult;
   getIngestionItems: GetIngestionItemsResult;
-  getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
-  getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
   getIntermediaryFile: GetIntermediaryFileResult;
   getItem: GetItemResult;
   getItemsForSubject: GetItemsForSubjectResult;
@@ -125,16 +123,6 @@ export type QueryGetIngestTitleArgs = {
 
 export type QueryGetIngestionItemsArgs = {
   input: GetIngestionItemsInput;
-};
-
-
-export type QueryGetIngestionItemsForSubjectsArgs = {
-  input: GetIngestionItemsForSubjectsInput;
-};
-
-
-export type QueryGetIngestionProjectsForSubjectsArgs = {
-  input: GetIngestionProjectsForSubjectsInput;
 };
 
 
@@ -951,6 +939,7 @@ export type IngestProjectInput = {
 
 export type IngestItemInput = {
   id?: Maybe<Scalars['Int']>;
+  name?: Maybe<Scalars['String']>;
   subtitle: Scalars['String'];
   entireSubject: Scalars['Boolean'];
 };
@@ -1486,10 +1475,20 @@ export type IntermediaryFile = {
   SystemObject?: Maybe<SystemObject>;
 };
 
+export type SvxNonModelAsset = {
+  __typename?: 'SvxNonModelAsset';
+  uri: Scalars['String'];
+  type: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  size?: Maybe<Scalars['Int']>;
+  idAssetVersion?: Maybe<Scalars['Int']>;
+};
+
 export type SceneConstellation = {
   __typename?: 'SceneConstellation';
   Scene?: Maybe<Scene>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
+  SvxNonModelAssets?: Maybe<Array<SvxNonModelAsset>>;
 };
 
 export type UpdateObjectDetailsInput = {
@@ -1589,6 +1588,7 @@ export type AssetVersionDetailFieldsInput = {
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
   StorageSize?: Maybe<Scalars['BigInt']>;
+  StorageHash?: Maybe<Scalars['String']>;
 };
 
 export type ActorDetailFieldsInput = {
@@ -1612,6 +1612,7 @@ export type MetadataInput = {
 
 export type UpdateObjectDetailsDataInput = {
   Name?: Maybe<Scalars['String']>;
+  Subtitle?: Maybe<Scalars['String']>;
   Retired?: Maybe<Scalars['Boolean']>;
   License?: Maybe<Scalars['Int']>;
   Unit?: Maybe<UnitDetailFieldsInput>;
@@ -1871,6 +1872,7 @@ export type AssetVersionDetailFields = {
   AssetVersion?: Maybe<AssetVersion>;
   idAsset?: Maybe<Scalars['Int']>;
   idAssetVersion?: Maybe<Scalars['Int']>;
+  StorageHash?: Maybe<Scalars['String']>;
 };
 
 export type ActorDetailFields = {
@@ -1920,6 +1922,7 @@ export type GetSystemObjectDetailsResult = {
   idSystemObject: Scalars['Int'];
   idObject: Scalars['Int'];
   name: Scalars['String'];
+  subTitle?: Maybe<Scalars['String']>;
   retired: Scalars['Boolean'];
   objectType: Scalars['Int'];
   allowed: Scalars['Boolean'];
@@ -1986,6 +1989,7 @@ export type DetailVersion = {
   creator: Scalars['String'];
   dateCreated: Scalars['DateTime'];
   size: Scalars['BigInt'];
+  hash: Scalars['String'];
   ingested: Scalars['Boolean'];
   Comment?: Maybe<Scalars['String']>;
   CommentLink?: Maybe<Scalars['String']>;
@@ -2213,25 +2217,6 @@ export type SearchIngestionSubjectsInput = {
 export type SearchIngestionSubjectsResult = {
   __typename?: 'SearchIngestionSubjectsResult';
   SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
-};
-
-export type GetIngestionItemsForSubjectsInput = {
-  idSubjects: Array<Scalars['Int']>;
-};
-
-export type GetIngestionItemsForSubjectsResult = {
-  __typename?: 'GetIngestionItemsForSubjectsResult';
-  Item: Array<Item>;
-};
-
-export type GetIngestionProjectsForSubjectsInput = {
-  idSubjects: Array<Scalars['Int']>;
-};
-
-export type GetIngestionProjectsForSubjectsResult = {
-  __typename?: 'GetIngestionProjectsForSubjectsResult';
-  Project: Array<Project>;
-  Default: Scalars['Boolean'];
 };
 
 export type IngestionItem = {

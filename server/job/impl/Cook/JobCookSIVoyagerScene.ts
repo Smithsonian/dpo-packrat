@@ -34,17 +34,20 @@ export class JobCookSIVoyagerSceneParameterHelper {
     OG: DBAPI.ObjectGraph;
     metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile;
     sceneName: string;
+    sceneTitle: string | undefined;
 
     static initialized: boolean = false;
     static idVocabEdanRecordID: number;
 
-    constructor(idModel: number, modelSource: DBAPI.Model, SOModelSource: DBAPI.SystemObject, OG: DBAPI.ObjectGraph, metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile, sceneName: string) {
+    constructor(idModel: number, modelSource: DBAPI.Model, SOModelSource: DBAPI.SystemObject, OG: DBAPI.ObjectGraph,
+        metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile, sceneName: string, sceneTitle: string | undefined) {
         this.idModel = idModel;
         this.modelSource = modelSource;
         this.SOModelSource = SOModelSource;
         this.OG = OG;
         this.metaDataFileJSON = metaDataFileJSON;
         this.sceneName = sceneName;
+        this.sceneTitle = sceneTitle;
     }
 
     static async compute(idModel: number | undefined): Promise<JobCookSIVoyagerSceneParameterHelper | null> {
@@ -72,7 +75,7 @@ export class JobCookSIVoyagerSceneParameterHelper {
             return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute metadata file JSON from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
 
         const sceneName: string = metaDataFileJSON.title + (metaDataFileJSON.sceneTitle ? ': ' + metaDataFileJSON.sceneTitle : '');
-        return new JobCookSIVoyagerSceneParameterHelper(idModel ?? 0, modelSource, SOModelSource, OG, metaDataFileJSON, sceneName);
+        return new JobCookSIVoyagerSceneParameterHelper(idModel ?? 0, modelSource, SOModelSource, OG, metaDataFileJSON, sceneName, metaDataFileJSON.sceneTitle);
     }
 
     private static async computeSceneMetaData(OG: DBAPI.ObjectGraph, modelSource: DBAPI.Model): Promise<JobCookSIVoyagerSceneMetaDataFile | null> {
@@ -245,6 +248,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         if (createScene) {
             // compute ItemParent of ModelSource
             scene.Name = this.parameterHelper.sceneName;
+            if (this.parameterHelper.sceneTitle)
+                scene.Title = this.parameterHelper.sceneTitle;
             if (!await scene.create())
                 return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`);
 

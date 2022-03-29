@@ -8,7 +8,7 @@
  */
 import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
-import { AssetIdentifiers, DateInputField, /*FieldType, InputField, SelectField,*/ ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
@@ -20,9 +20,11 @@ import AssetFilesTable from './AssetFilesTable';
 import { extractModelConstellation } from '../../../../../constants';
 import { apolloClient } from '../../../../../graphql/index';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
-import { DebounceInput } from 'react-debounce-input';
 import { errorFieldStyling } from '../Photogrammetry';
+import SubtitleControl from '../Control/SubtitleControl';
 import clsx from 'clsx';
+import lodash from 'lodash';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -170,8 +172,6 @@ function Model(props: ModelProps): React.ReactElement {
                 // console.log(`modelConstellation=${JSON.stringify(modelConstellation)}`);
                 const { ingestionModel, modelObjects, assets } = extractModelConstellation(modelConstellation);
                 // if we're not in update mode, set the name:
-                if (!idAsset)
-                    updateMetadataField(metadataIndex, 'name', modelConstellation.Model.Name, MetadataType.model);
 
                 // handles 0 and non-numeric idVFileTypes
                 if (modelConstellation.Model.idVFileType)
@@ -267,6 +267,31 @@ function Model(props: ModelProps): React.ReactElement {
         onModalClose();
     };
 
+    const onSelectSubtitle = (id: number) => {
+        const updatedSubtitles = model.subtitles.map((subtitle) => {
+            return {
+                id: subtitle.id,
+                value: subtitle.value,
+                subtitleOption: subtitle.subtitleOption,
+                selected: id === subtitle.id
+            };
+        });
+        updateMetadataField(metadataIndex, 'subtitles', updatedSubtitles, MetadataType.model);
+    };
+
+    const onUpdateCustomSubtitle = (event: React.ChangeEvent<HTMLInputElement>, id: number) => {
+        const subtitlesCopy = lodash.cloneDeep(model.subtitles);
+        const targetSubtitle = subtitlesCopy.find(subtitle => subtitle.id === id);
+
+        if (!targetSubtitle) {
+            toast.warn('Something went wrong with updating the subtitle. Please try again');
+            return;
+        }
+
+        targetSubtitle.value = event.target.value;
+        updateMetadataField(metadataIndex, 'subtitles', subtitlesCopy, MetadataType.model);
+    };
+
     return (
         <React.Fragment>
             <Box className={classes.container}>
@@ -317,26 +342,22 @@ function Model(props: ModelProps): React.ReactElement {
                     <Box className={classes.captionContainer}>
                         <Typography variant='caption'>Model</Typography>
                     </Box>
-
+                    {!idAsset && (
+                        <Box mb={1.25}>
+                            <SubtitleControl
+                                subtitles={model.subtitles}
+                                objectName={model.name}
+                                onSelectSubtitle={onSelectSubtitle}
+                                onUpdateCustomSubtitle={onUpdateCustomSubtitle}
+                                hasPrimaryTheme={false}
+                            />
+                        </Box>
+                    )}
                     <Box className={classes.modelMetricsAndForm}>
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
                             <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ backgroundColor: 'rgb(255, 252, 209', paddingTop: '10px' }}>
                                 <Table className={tableClasses.table}>
                                     <TableBody>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.name || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Name</Typography></TableCell>
-                                            <TableCell className={tableClasses.tableCell}>
-                                                <DebounceInput
-                                                    element='input'
-                                                    title='name-input'
-                                                    value={model.name}
-                                                    type='string'
-                                                    name='name'
-                                                    onChange={setNameField}
-                                                    className={clsx(tableClasses.input, tableClasses.datasetFieldInput)}
-                                                />
-                                            </TableCell>
-                                        </TableRow>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.dateCreated || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Date Created</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>

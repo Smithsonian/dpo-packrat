@@ -166,6 +166,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
     };
 
     const updateRepositorySearch = (): void => {
+        resetRepositoryBrowserRoot();
         const filterState = getFilterState();
         filterState.search = filterState.keyword;
         resetRepositoryFilter();

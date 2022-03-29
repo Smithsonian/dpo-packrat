@@ -16,14 +16,15 @@ import {
     GetAssetVersionsDetailsDocument,
     GetAssetVersionsDetailsQuery,
     GetContentsForAssetVersionsDocument,
-    Project
+    Project,
+    GetIngestTitleDocument,
+    GetIngestTitleQuery
 } from '../../types/graphql';
 import { eVocabularySetID } from '@dpo-packrat/common';
-import { StateItem, useItemStore } from '../item';
-import { StateProject, useProjectStore } from '../project';
+import { StateItem, useItemStore, StateProject } from '../item';
 import { StateSubject, useSubjectStore } from '../subject';
 import { FileId, IngestionFile, useUploadStore } from '../upload';
-import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from '../utils';
+import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState, parseSubtitlesToState } from '../utils';
 import { useVocabularyStore } from '../vocabulary';
 import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema, defaultSceneAttachmentFields } from './metadata.defaults';
 import {
@@ -40,7 +41,7 @@ import {
     StateFolder,
     StateIdentifier,
     StateMetadata,
-    ValidateFields
+    ValidateFields,
 } from './metadata.types';
 
 type MetadataStore = {
@@ -54,6 +55,7 @@ type MetadataStore = {
     updateMetadataSteps: (existingMetadata: any) => Promise<MetadataUpdate>;
     updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => void;
     updateMetadataFolders: () => Promise<void>;
+    initializeSubtitlesForModels: () => Promise<void>;
     updateCameraSettings: (metadatas: StateMetadata[]) => Promise<StateMetadata[]>;
     reset: () => void;
     getMetadatas: () => StateMetadata[];
@@ -145,7 +147,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         const { completed, getSelectedFiles } = useUploadStore.getState();
         const { getInitialEntry } = useVocabularyStore.getState();
         const { addSubjects } = useSubjectStore.getState();
-        const { addProjects } = useProjectStore.getState();
         const { addItems } = useItemStore.getState();
         const { UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet } = (existingMetadata ? existingMetadata : { UpdatedAssetVersionMetadata: [], idAssetVersionsUpdatedSet: new Set<number>() });
         const selectedFiles = getSelectedFiles(completed, true);
@@ -208,7 +209,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
             if (data) {
                 const {
-                    // Note: Details comes mostly empty in normal ingestion and update mode. Not sure if intended
                     getAssetVersionsDetails: { Details }
                 } = data;
                 const subjects: StateSubject[] = [];
@@ -216,7 +216,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 const items: StateItem[] = [];
                 const metadatas: StateMetadata[] = [];
 
-                // console.log(`useMetaStore Details=${JSON.stringify(Details)}`);
                 for (let index = 0; index < Details.length; index++) {
                     const {
                         idAssetVersion,
@@ -231,10 +230,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     const updateModel = UpdatedAssetVersionMetadata.find((asset) => asset.idAssetVersion === idAssetVersion && asset?.Model)?.Model;
                     const updateScene = UpdatedAssetVersionMetadata.find((asset) => asset.idAssetVersion === idAssetVersion && asset?.Scene)?.Scene;
                     const updatePhoto = UpdatedAssetVersionMetadata.find((asset) => asset.idAssetVersion === idAssetVersion && asset?.CaptureDataPhoto)?.CaptureDataPhoto;
-                    // console.log(`useMetaStore idAssetVersion=${idAssetVersion}; existingIdAssetVersion=${existingIdAssetVersion}`);
-                    // console.log(`useMetaStore updateModel=${JSON.stringify(updateModel)}`);
-                    // console.log(`useMetaStore updateScene=${JSON.stringify(updateScene)}`);
-                    // console.log(`useMetaStore updatePhoto=${JSON.stringify(updatePhoto)}`);
 
                     if (foundSubjectUnitIdentifier) {
                         const subject: StateSubject = parseSubjectUnitIdentifierToState(foundSubjectUnitIdentifier);
@@ -247,6 +242,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     }
 
                     if (foundItem) {
+                        // console.log('foundItem', foundItem);
                         const item: StateItem = parseItemToState(foundItem, !index, index);
                         items.push(item);
                     }
@@ -296,7 +292,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                                 ...(Model && {
                                     ...Model,
                                     dateCreated: new Date(Model.dateCreated),
-                                    identifiers: stateIdentifiers,
+                                    identifiers: stateIdentifiers
                                 })
                             }
                         };
@@ -360,7 +356,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (referenceModels) metadataStep.scene.referenceModels = referenceModels;
                         }
                         metadatas.push(metadataStep);
-                        console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
+                        // console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
                     }
                 }
 
@@ -368,7 +364,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 const uniqueItems = lodash.uniqBy(items, 'name');
 
                 addSubjects(uniqueSubjects);
-                addProjects(projects);
                 addItems(uniqueItems);
                 set({ metadatas });
 
@@ -380,7 +375,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             }
         } catch (error) {
             toast.error('Failed to ingest selected files, please try again later');
-            console.log(`Failed to ingest selected files, please try again later: ${JSON.stringify(error)}`);
+            // console.log(`Failed to ingest selected files, please try again later: ${JSON.stringify(error)}`);
         }
 
         return {
@@ -391,7 +386,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     },
     updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => {
         const { metadatas } = get();
-
         if (!(name in metadatas[metadataIndex][metadataType])) {
             toast.error(`Field ${name} doesn't exist on a ${metadataType} asset`);
             return;
@@ -411,6 +405,64 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             return metadata;
         });
         set({ metadatas: updatedMetadatas });
+    },
+    initializeSubtitlesForModels: async (): Promise<void> => {
+        const { metadatas } = get();
+        const { getSelectedItem } = useItemStore.getState();
+        const { subjects } = useSubjectStore.getState();
+        const selectedItem = getSelectedItem();
+
+        try {
+            const { subtitle, name } = calculateNameAndSubtitle(selectedItem as StateItem, subjects);
+            // const subtitle = Number(selectedItem?.id) > 0 ? selectedItem?.subtitle : subjects.length > 1 ? selectedItem?.subtitle : `${subjects[0].name}` + (selectedItem?.subtitle.length ? selectedItem?.subtitle : '');
+
+            // console.log('subtitle', subtitle, 'name', name);
+            const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
+                query: GetIngestTitleDocument,
+                variables: {
+                    input: {
+                        item: {
+                            id: Number(selectedItem?.id) || -1,
+                            /*
+                                if there is a valid itemId (existing subject)
+                                    -subtitle = selectedItem.subtitle
+                                if there isn't (new subject)
+                                    if there are 2+ subjects
+                                        -subtitle = subtitle
+                                    if there is 1 subject
+                                        -subtitle = subjectname + subtitle
+                            */
+                            subtitle,
+                            entireSubject: selectedItem?.entireSubject,
+                            name
+                        }
+                    }
+                }
+            });
+
+            if (!ingestTitle) {
+                toast.error('Failed to fetch titles for ingestion items');
+                return;
+            }
+            // console.log('selectedItem', selectedItem);
+            // console.log('ingestTitleInput', { id: Number(selectedItem?.id) || -1, subtitle, name, entireSubject: selectedItem?.entireSubject });
+            // console.log('ingestTitle', ingestTitle);
+            const metadatasCopy = lodash.cloneDeep(metadatas);
+            const subtitleState = parseSubtitlesToState(ingestTitle);
+
+            metadatasCopy.forEach(metadata => {
+                if (metadata.model) {
+                    metadata.model.subtitles = subtitleState;
+                    metadata.model.name = ingestTitle.title;
+                }
+            });
+
+            // console.log('metadatasCopy', metadatasCopy);
+            set({ metadatas: metadatasCopy });
+        } catch (error) {
+            toast.error(`Failed to fetch titles for ingestion items ${error}`);
+        }
+
     },
     getInitialStateFolders: (folders: string[]): StateFolder[] => {
         const { getInitialEntry, getEntries } = useVocabularyStore.getState();
@@ -526,3 +578,20 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 export * from './metadata.defaults';
 export * from './metadata.types';
 
+const calculateNameAndSubtitle = (selectedItem: StateItem, subjects: StateSubject[]) => {
+    let subtitle = '';
+    let name = '';
+
+    if (Number(selectedItem?.id) > 0) {
+        name = selectedItem?.subtitle;
+    } else {
+        if (subjects.length > 1) {
+            name = selectedItem?.subtitle;
+        } else {
+            name = subjects?.[0]?.name;
+            subtitle = selectedItem?.subtitle;
+        }
+    }
+
+    return { subtitle, name };
+};

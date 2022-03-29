@@ -2,7 +2,6 @@ import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
 import {
     IngestItemInput,
-    IngestProjectInput,
     IngestSubjectInput,
     IngestPhotogrammetry,
     IngestIdentifier,
@@ -13,7 +12,8 @@ import {
     CreateUserInput,
     GetContentsForAssetVersionsInput,
     CreateVocabularyInput,
-    CreateVocabularySetInput
+    CreateVocabularySetInput,
+    IngestProjectInput
 } from '../../../../types/graphql';
 import { Context } from '../../../../types/resolvers';
 import * as COMMON from '@dpo-packrat/common';
@@ -91,17 +91,19 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             unit: UnitAbbreviation
                         };
 
-                        const projectsInput = {
+                        const ingestionItemsInput = {
                             idSubjects: [idSubject]
                         };
-                        const { Project } = await graphQLApi.getIngestionProjectsForSubjects(projectsInput);
-                        expect(Project).toBeTruthy();
 
-                        const { idProject, Name } = Project[0];
+                        const { IngestionItem } = await graphQLApi.getIngestionItems(ingestionItemsInput);
+                        expect(IngestionItem).toBeTruthy();
+
+                        if (!IngestionItem || !IngestionItem.length) done();
+
 
                         const project: IngestProjectInput = {
-                            id: idProject,
-                            name: Name
+                            id: IngestionItem?.[0].idProject ?? 0,
+                            name: IngestionItem?.[0].ProjectName ?? ''
                         };
 
                         const item: IngestItemInput = {

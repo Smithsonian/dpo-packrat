@@ -4,7 +4,7 @@ import * as DBAPI from '../../../../../db';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 
-export default async function getIngestionItemsForSubjects(_: Parent, args: QueryGetIngestionItemsArgs): Promise<GetIngestionItemsResult> {
+export default async function getIngestionItems(_: Parent, args: QueryGetIngestionItemsArgs): Promise<GetIngestionItemsResult> {
     const { input } = args;
     const { idSubjects } = input;
 
@@ -31,7 +31,7 @@ export default async function getIngestionItemsForSubjects(_: Parent, args: Quer
         IngestionItem.push({
             idItem: itemAndProject.idItem,
             EntireSubject: itemAndProject.EntireSubject ?? true,
-            MediaGroupName: itemAndProject.Title ?? itemAndProject.Name ?? '',
+            MediaGroupName: itemAndProject.Name ?? '',
             idProject: itemAndProject.idProject,
             ProjectName: itemAndProject.ProjectName ?? 'Unknown',
         });

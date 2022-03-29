@@ -331,7 +331,8 @@ export enum eAssetGridColumnType {
     eBoolean = 2,
     eHyperLink = 3,
     eDate = 4,
-    eFileSize = 5
+    eFileSize = 5,
+    eTruncate = 6
 }
 
 // Keep this in sync with SQL in WorkflowListResult.search()

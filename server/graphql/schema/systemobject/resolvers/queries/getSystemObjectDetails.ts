@@ -66,6 +66,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const { owner: assetOwner, asset } = await computeAssetAndOwner(oID);
 
     const name: string = await resolveNameForObject(idSystemObject);
+    const subTitle: string | null = await resolveSubtitleForObject(idSystemObject);
     // LOG.info('getSystemObjectDetails 3', LOG.LS.eGQL);
 
     const metadata: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchFromSystemObject(idSystemObject);
@@ -79,6 +80,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         idSystemObject,
         idObject: oID.idObject,
         name,
+        subTitle,
         retired: systemObject.Retired,
         objectType: oID.eObjectType,
         allowed: true, // TODO: True until Access control is implemented (Post MVP)
@@ -213,6 +215,44 @@ async function resolveNameForObject(idSystemObject: number): Promise<string> {
     return name ?? UNKNOWN_NAME;
 }
 
+async function resolveSubtitleForObject(idSystemObject: number): Promise<string | null> {
+    const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+    if (!oID) {
+        LOG.error(`getSystemObjectDetails resolveSubtitleForObject failed to compute object ID and type for ${idSystemObject}`, LOG.LS.eGQL);
+        return null;
+    }
+
+    switch (oID.eObjectType) {
+        case COMMON.eSystemObjectType.eItem: {
+            const item: DBAPI.Item | null = await DBAPI.Item.fetch(oID.idObject);
+            if (!item) {
+                LOG.error(`getSystemObjectDetails resolveSubtitleForObject unable to load item with id ${oID.idObject}`, LOG.LS.eGQL);
+                return null;
+            }
+            return item.Title;
+        }
+
+        case COMMON.eSystemObjectType.eModel: {
+            const model: DBAPI.Model | null = await DBAPI.Model.fetch(oID.idObject);
+            if (!model) {
+                LOG.error(`getSystemObjectDetails resolveSubtitleForObject unable to load model with id ${oID.idObject}`, LOG.LS.eGQL);
+                return null;
+            }
+            return model.Title;
+        }
+
+        case COMMON.eSystemObjectType.eScene: {
+            const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
+            if (!scene) {
+                LOG.error(`getSystemObjectDetails resolveSubtitleForObject unable to load scene with id ${oID.idObject}`, LOG.LS.eGQL);
+                return null;
+            }
+            return scene.Title;
+        }
+    }
+    return null;
+}
+
 async function computeAssetAndOwner(oID: DBAPI.ObjectIDAndType): Promise<{ owner: RepositoryPath | undefined, asset: RepositoryPath | undefined }> {
     let idAsset: number | undefined = undefined;
     let owner: RepositoryPath | undefined = undefined;
@@ -247,7 +287,7 @@ async function computeAssetAndOwner(oID: DBAPI.ObjectIDAndType): Promise<{ owner
         return { owner, asset };
     }
 
-    const assetName: string | undefined = await resolveNameForObject(SOAsset.idSystemObject);
+    const assetName: string = await resolveNameForObject(SOAsset.idSystemObject);
     asset = { idSystemObject: SOAsset.idSystemObject, name: assetName ?? '', objectType: COMMON.eSystemObjectType.eAsset };
 
     if (!assetDB.idSystemObject)

@@ -49,22 +49,39 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             && this.S2 === MSX.S2;
     }
     /** return true if transform is updated */
-    public updateTransformIfNeeded(MSX: ModelSceneXref): boolean {
-        let retValue: boolean = false;
+    public updateIfNeeded(MSX: ModelSceneXref): { transformUpdated: boolean, updated: boolean } {
+        let updated: boolean = false;
+        let transformUpdated: boolean = false;
         const logContext: string = `${H.Helpers.JSONStringify(this)} vs incoming ${H.Helpers.JSONStringify(MSX)}`;
-        if (H.Helpers.safeRound(this.TS0) !== H.Helpers.safeRound(MSX.TS0)) { this.TS0 = MSX.TS0; retValue = true; }
-        if (H.Helpers.safeRound(this.TS1) !== H.Helpers.safeRound(MSX.TS1)) { this.TS1 = MSX.TS1; retValue = true; }
-        if (H.Helpers.safeRound(this.TS2) !== H.Helpers.safeRound(MSX.TS2)) { this.TS2 = MSX.TS2; retValue = true; }
-        if (H.Helpers.safeRound(this.R0)  !== H.Helpers.safeRound(MSX.R0))  { this.R0  = MSX.R0;  retValue = true; }
-        if (H.Helpers.safeRound(this.R1)  !== H.Helpers.safeRound(MSX.R1))  { this.R1  = MSX.R1;  retValue = true; }
-        if (H.Helpers.safeRound(this.R2)  !== H.Helpers.safeRound(MSX.R2))  { this.R2  = MSX.R2;  retValue = true; }
-        if (H.Helpers.safeRound(this.R3)  !== H.Helpers.safeRound(MSX.R3))  { this.R3  = MSX.R3;  retValue = true; }
-        if (H.Helpers.safeRound(this.S0)  !== H.Helpers.safeRound(MSX.S0))  { this.S0  = MSX.S0; retValue = true; }
-        if (H.Helpers.safeRound(this.S1)  !== H.Helpers.safeRound(MSX.S1))  { this.S1  = MSX.S1; retValue = true; }
-        if (H.Helpers.safeRound(this.S2)  !== H.Helpers.safeRound(MSX.S2))  { this.S2  = MSX.S2; retValue = true; }
-        if (retValue)
-            LOG.info(`ModelSceneXref.updateTransformIfNeeded UPDATED: ${logContext}`, LOG.LS.eDB);
-        return retValue;
+
+        if (this.Name                                   !== MSX.Name)                                   { this.Name             = MSX.Name;             updated = true; }
+        if (this.Usage                                  !== MSX.Usage)                                  { this.Usage            = MSX.Usage;            updated = true; }
+        if (this.Quality                                !== MSX.Quality)                                { this.Quality          = MSX.Quality;          updated = true; }
+        if (this.FileSize                               !== MSX.FileSize)                               { this.FileSize         = MSX.FileSize;         updated = true; }
+        if (this.UVResolution                           !== MSX.UVResolution)                           { this.UVResolution     = MSX.UVResolution;     updated = true; }
+        if (H.Helpers.safeRound(this.BoundingBoxP1X)    !== H.Helpers.safeRound(MSX.BoundingBoxP1X))    { this.BoundingBoxP1X   = MSX.BoundingBoxP1X;   updated = true; }
+        if (H.Helpers.safeRound(this.BoundingBoxP1Y)    !== H.Helpers.safeRound(MSX.BoundingBoxP1Y))    { this.BoundingBoxP1Y   = MSX.BoundingBoxP1Y;   updated = true; }
+        if (H.Helpers.safeRound(this.BoundingBoxP1Z)    !== H.Helpers.safeRound(MSX.BoundingBoxP1Z))    { this.BoundingBoxP1Z   = MSX.BoundingBoxP1Z;   updated = true; }
+        if (H.Helpers.safeRound(this.BoundingBoxP2X)    !== H.Helpers.safeRound(MSX.BoundingBoxP2X))    { this.BoundingBoxP2X   = MSX.BoundingBoxP2X;   updated = true; }
+        if (H.Helpers.safeRound(this.BoundingBoxP2Y)    !== H.Helpers.safeRound(MSX.BoundingBoxP2Y))    { this.BoundingBoxP2Y   = MSX.BoundingBoxP2Y;   updated = true; }
+        if (H.Helpers.safeRound(this.BoundingBoxP2Z)    !== H.Helpers.safeRound(MSX.BoundingBoxP2Z))    { this.BoundingBoxP2Z   = MSX.BoundingBoxP2Z;   updated = true; }
+
+        if (H.Helpers.safeRound(this.TS0)               !== H.Helpers.safeRound(MSX.TS0))               { this.TS0 = MSX.TS0; transformUpdated = true; }
+        if (H.Helpers.safeRound(this.TS1)               !== H.Helpers.safeRound(MSX.TS1))               { this.TS1 = MSX.TS1; transformUpdated = true; }
+        if (H.Helpers.safeRound(this.TS2)               !== H.Helpers.safeRound(MSX.TS2))               { this.TS2 = MSX.TS2; transformUpdated = true; }
+        if (H.Helpers.safeRound(this.R0)                !== H.Helpers.safeRound(MSX.R0))                { this.R0  = MSX.R0;  transformUpdated = true; }
+        if (H.Helpers.safeRound(this.R1)                !== H.Helpers.safeRound(MSX.R1))                { this.R1  = MSX.R1;  transformUpdated = true; }
+        if (H.Helpers.safeRound(this.R2)                !== H.Helpers.safeRound(MSX.R2))                { this.R2  = MSX.R2;  transformUpdated = true; }
+        if (H.Helpers.safeRound(this.R3)                !== H.Helpers.safeRound(MSX.R3))                { this.R3  = MSX.R3;  transformUpdated = true; }
+        if (H.Helpers.safeRound(this.S0)                !== H.Helpers.safeRound(MSX.S0))                { this.S0  = MSX.S0;  transformUpdated = true; }
+        if (H.Helpers.safeRound(this.S1)                !== H.Helpers.safeRound(MSX.S1))                { this.S1  = MSX.S1;  transformUpdated = true; }
+        if (H.Helpers.safeRound(this.S2)                !== H.Helpers.safeRound(MSX.S2))                { this.S2  = MSX.S2;  transformUpdated = true; }
+
+        if (transformUpdated)
+            updated = true;
+        if (updated)
+            LOG.info(`ModelSceneXref.updateTransformIfNeeded ${transformUpdated ? 'TRANSFORM UPDATED' : 'UPDATED'}: ${logContext}`, LOG.LS.eDB);
+        return { transformUpdated, updated };
     }
 
     public computeModelAutomationTag(): string {

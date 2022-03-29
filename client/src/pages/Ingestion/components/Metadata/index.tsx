@@ -26,12 +26,11 @@ import {
     otherFieldsSchemaUpdate,
     StateItem,
     StateMetadata,
-    StateProject,
     useItemStore,
     useMetadataStore,
-    useProjectStore,
     useVocabularyStore,
-    useUploadStore
+    useUploadStore,
+    useSubjectStore
 } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
 import Model from './Model';
@@ -76,7 +75,6 @@ function Metadata(): React.ReactElement {
     const [invalidMetadataStep, setInvalidMetadataStep] = useState<boolean>(false);
     const [breadcrumbNames, setBreadcrumbNames] = useState<string[]>([]);
 
-    const getSelectedProject = useProjectStore(state => state.getSelectedProject);
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
     const [metadatas, getMetadataInfo, validateFields] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields]);
     const { ingestionStart, ingestionComplete } = useIngest();
@@ -115,8 +113,8 @@ function Metadata(): React.ReactElement {
         return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
     }
 
-    const project = getSelectedProject();
     const item = getSelectedItem();
+    const project = item?.projectName;
     const assetType = getAssetType(Number.parseInt(type, 10));
 
     const onPrevious = async () => {
@@ -175,7 +173,6 @@ function Metadata(): React.ReactElement {
             } = nextMetadata;
             const { isLast } = getMetadataInfo(id);
             const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
-            // console.log(`Metadata onNext() nextRoute=${nextRoute}, assetType=${JSON.stringify(assetType)}, metadataIndex=${metadataIndex}, metadatas=${JSON.stringify(metadatas)}`);
             history.push(nextRoute);
         }
     };
@@ -203,9 +200,9 @@ function Metadata(): React.ReactElement {
 
     const calculateBreadcrumbPath = (): React.ReactNode => {
         if (breadcrumbNames) {
-            return <BreadcrumbsHeader project={project} item={item} metadata={metadata} customBreadcrumbs customBreadcrumbsArr={breadcrumbNames} />;
+            return <BreadcrumbsHeader projectName={project} item={item} metadata={metadata} customBreadcrumbs customBreadcrumbsArr={breadcrumbNames} />;
         } else {
-            return <BreadcrumbsHeader project={project} item={item} metadata={metadata} />;
+            return <BreadcrumbsHeader projectName={project} item={item} metadata={metadata} />;
         }
     };
 
@@ -232,7 +229,7 @@ function Metadata(): React.ReactElement {
 }
 
 interface BreadcrumbsHeaderProps {
-    project: StateProject | undefined;
+    projectName: string | undefined;
     item: StateItem | undefined;
     metadata: StateMetadata;
     customBreadcrumbs?: boolean;
@@ -241,8 +238,8 @@ interface BreadcrumbsHeaderProps {
 
 function BreadcrumbsHeader(props: BreadcrumbsHeaderProps) {
     const classes = useStyles();
-    const { project, item, metadata, customBreadcrumbs, customBreadcrumbsArr } = props;
-
+    const [subjects] = useSubjectStore(state => [state.subjects]);
+    const { projectName, item, metadata, customBreadcrumbs, customBreadcrumbsArr } = props;
     let content: React.ReactNode;
 
     if (customBreadcrumbs && customBreadcrumbsArr?.length) {
@@ -259,9 +256,15 @@ function BreadcrumbsHeader(props: BreadcrumbsHeaderProps) {
     } else {
         content = (
             <Breadcrumbs className={classes.breadcrumbs} separator={<MdNavigateNext color='inherit' size={20} />}>
-                <Typography color='inherit'>Specify metadata for: {project?.name}</Typography>
-                <Typography color='inherit'>{item?.name}</Typography>
-                <Typography color='inherit'>{metadata.file.name}</Typography>
+                <Typography color='inherit'>Specify metadata for: Project: {projectName}</Typography>
+                {/*
+                    Case 1: more than 1 subject - show entered name
+                    Case 2: existing item is selected - show full name of that item
+                    Case 3: new item w/o subtitle - [subject]: [subtitle]
+                    Case 4: new item w/ subtitle - [subject]
+                */}
+                <Typography color='inherit'>Media Group: {subjects.length > 1 ? item?.subtitle : item?.id === 'default' ? `${subjects?.[0]?.name}${item?.subtitle ? `: ${item?.subtitle}` : ''}` : item?.subtitle}</Typography>
+                <Typography color='inherit'>{metadata?.file?.name}</Typography>
             </Breadcrumbs>
         );
     }
