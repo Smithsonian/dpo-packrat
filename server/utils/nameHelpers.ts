@@ -22,9 +22,12 @@ export class NameHelpers {
         return itemSubtitle ? `${subjects[0].Name}: ${itemSubtitle}` : subjects[0].Name;
     }
 
-    static modelDisplayName(modelSubtitle: string, item: DBAPI.Item, subjects: DBAPI.Subject[]): string {
-        if (subjects.length !== 1)
-            return modelSubtitle ?? item.Title ?? UNKNOWN_NAME;
+    static modelDisplayName(modelSubtitle: string, item: DBAPI.Item, _subjects: DBAPI.Subject[]): string {
+        // Per https://jira.si.edu/browse/DPO3DPKRT-558, image 016 - Ingest - M - 03a - multisubject media group - new.jpg,
+        // it looks like a model connected to an item that has multiple subjects should have the item's name plus an optional subtitle;
+        // so, commenting out this incorrect logic:
+        // if (subjects.length !== 1)
+        //     return modelSubtitle ?? item.Title ?? UNKNOWN_NAME;
         const itemBaseName: string = NameHelpers.computeBaseTitle(item.Name, item.Title);
         return modelSubtitle ? `${itemBaseName}: ${modelSubtitle}` : itemBaseName;
     }
