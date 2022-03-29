@@ -415,7 +415,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         try {
             const { subtitle, name } = calculateNameAndSubtitle(selectedItem as StateItem, subjects);
             // const subtitle = Number(selectedItem?.id) > 0 ? selectedItem?.subtitle : subjects.length > 1 ? selectedItem?.subtitle : `${subjects[0].name}` + (selectedItem?.subtitle.length ? selectedItem?.subtitle : '');
-            
+
             console.log('subtitle', subtitle, 'name', name);
             const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
                 query: GetIngestTitleDocument,
@@ -445,7 +445,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 return;
             }
             console.log('selectedItem', selectedItem);
-            console.log('ingestTitleInput', {id: Number(selectedItem?.id) || -1, subtitle, name, entireSubject: selectedItem?.entireSubject });
+            console.log('ingestTitleInput', { id: Number(selectedItem?.id) || -1, subtitle, name, entireSubject: selectedItem?.entireSubject });
             console.log('ingestTitle', ingestTitle);
             const metadatasCopy = lodash.cloneDeep(metadatas);
             const subtitleState = parseSubtitlesToState(ingestTitle);
@@ -593,5 +593,5 @@ const calculateNameAndSubtitle = (selectedItem: StateItem, subjects: StateSubjec
         }
     }
 
-    return { subtitle, name }
-}
+    return { subtitle, name };
+};
