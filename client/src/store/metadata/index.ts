@@ -242,7 +242,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     }
 
                     if (foundItem) {
-                        console.log('foundItem', foundItem);
+                        // console.log('foundItem', foundItem);
                         const item: StateItem = parseItemToState(foundItem, !index, index);
                         items.push(item);
                     }
@@ -356,7 +356,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (referenceModels) metadataStep.scene.referenceModels = referenceModels;
                         }
                         metadatas.push(metadataStep);
-                        console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
+                        // console.log(`useMetaStore metadataStep=${JSON.stringify(metadataStep)}`);
                     }
                 }
 
@@ -375,7 +375,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             }
         } catch (error) {
             toast.error('Failed to ingest selected files, please try again later');
-            console.log(`Failed to ingest selected files, please try again later: ${JSON.stringify(error)}`);
+            // console.log(`Failed to ingest selected files, please try again later: ${JSON.stringify(error)}`);
         }
 
         return {
@@ -416,7 +416,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             const { subtitle, name } = calculateNameAndSubtitle(selectedItem as StateItem, subjects);
             // const subtitle = Number(selectedItem?.id) > 0 ? selectedItem?.subtitle : subjects.length > 1 ? selectedItem?.subtitle : `${subjects[0].name}` + (selectedItem?.subtitle.length ? selectedItem?.subtitle : '');
 
-            console.log('subtitle', subtitle, 'name', name);
+            // console.log('subtitle', subtitle, 'name', name);
             const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
                 query: GetIngestTitleDocument,
                 variables: {
@@ -444,9 +444,9 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 toast.error('Failed to fetch titles for ingestion items');
                 return;
             }
-            console.log('selectedItem', selectedItem);
-            console.log('ingestTitleInput', { id: Number(selectedItem?.id) || -1, subtitle, name, entireSubject: selectedItem?.entireSubject });
-            console.log('ingestTitle', ingestTitle);
+            // console.log('selectedItem', selectedItem);
+            // console.log('ingestTitleInput', { id: Number(selectedItem?.id) || -1, subtitle, name, entireSubject: selectedItem?.entireSubject });
+            // console.log('ingestTitle', ingestTitle);
             const metadatasCopy = lodash.cloneDeep(metadatas);
             const subtitleState = parseSubtitlesToState(ingestTitle);
 
