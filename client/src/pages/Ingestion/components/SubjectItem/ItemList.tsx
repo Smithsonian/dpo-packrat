@@ -78,11 +78,8 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
 
 function ItemList(): React.ReactElement {
     const classes = useStyles();
-    const [items, hasNewItem, newItem, addNewItem, projectList, updateNewItemSubtitle, updateNewItemEntireSubject, updateNewItemProject, updateSelectedItem] = useItemStore(state => [state.items, /*state.updateItem,*/ state.hasNewItem, state.newItem, state.addNewItem, state.projectList, state.updateNewItemSubtitle, state.updateNewItemEntireSubject, state.updateNewItemProject, state.updateSelectedItem]);
+    const [items, hasNewItem, newItem, addNewItem, projectList, updateNewItemSubtitle, updateNewItemEntireSubject, updateNewItemProject, updateSelectedItem] = useItemStore(state => [state.items, state.hasNewItem, state.newItem, state.addNewItem, state.projectList, state.updateNewItemSubtitle, state.updateNewItemEntireSubject, state.updateNewItemProject, state.updateSelectedItem]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
-    const selectableHeaderStyle = {
-        width: 100
-    };
 
     const getItemsList = (item: StateItem, index: number) => {
         const { id, selected, subtitle, entireSubject, projectName } = item;
@@ -106,10 +103,10 @@ function ItemList(): React.ReactElement {
             <Table style={{ tableLayout: 'fixed' }}>
                 <TableHead>
                     <TableRow>
-                        <TableCell className={classes.headerText} style={selectableHeaderStyle} align='center'>Selected</TableCell>
-                        <TableCell className={classes.headerText} align='left'>Project</TableCell>
-                        <TableCell className={classes.headerText} style={selectableHeaderStyle} align='center'>Full Subject?</TableCell>
-                        <TableCell className={classes.headerText} align='left'>Subtitle</TableCell>
+                        <TableCell className={classes.headerText} style={{ width: 60 }} align='left'>SELECTED</TableCell>
+                        <TableCell className={classes.headerText} align='left'>PROJECT</TableCell>
+                        <TableCell className={classes.headerText} style={{ width: 100 }} align='center'>FULL SUBJECT?</TableCell>
+                        <TableCell className={classes.headerText} align='left'>NAME/SUBTITLE</TableCell>
 
                     </TableRow>
                 </TableHead>
@@ -237,7 +234,7 @@ function ItemListNewItem(props: ItemListNewItemProps) {
             </TableCell>
             <TableCell style={cellStyle} align='center'>
                 {hasMultipleSubjects ? (
-                    <Typography>No</Typography>
+                    <Typography style={{ fontSize: '0.75rem' }}>No</Typography>
                 ) : (
                     <Select
                         value={entireSubject === null ? -1 : !entireSubject ? 0 : 1}

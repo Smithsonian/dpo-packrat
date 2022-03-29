@@ -101,7 +101,7 @@ function SubjectItem(): React.ReactElement {
             toast.warn('Please indicate whether media group is entire subject', { autoClose: false });
         }
 
-        if (isItemSelected && (subjects.length > 1 || !selectedItem?.entireSubject) && selectedItem?.subtitle.trim() === '') {
+        if (isItemSelected && (subjects.length > 1 || !selectedItem?.entireSubject) && selectedItem?.subtitle.trim() === '' && selectedItem.id === 'default') {
             error = true;
             setItemError(true);
             toast.warn('Please provide a valid subtitle for media group', { autoClose: false });

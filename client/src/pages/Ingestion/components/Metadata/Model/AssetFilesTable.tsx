@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableRow, Typography, Box } fro
 
 const useStyles = makeStyles(theme => ({
     assetFilesTableContainer: {
-        width: 'calc(52vw + 20px)',
+        width: 'fit-content',
+        minWidth: 400,
         borderRadius: 5,
         padding: 1,
         backgroundColor: theme.palette.secondary.light
