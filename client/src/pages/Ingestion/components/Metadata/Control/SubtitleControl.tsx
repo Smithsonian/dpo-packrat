@@ -61,7 +61,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
 
 
     const renderSubtitleOptions = (subtitles: SubtitleFields): React.ReactElement => {
-        console.log('subtitles', subtitles,'objectName', objectName);
+        // console.log('subtitles', subtitles,'objectName', objectName);
         // Case: forced
         if (subtitles.some(option => option.subtitleOption === eSubtitleOption.eForced))
             return (
