@@ -257,7 +257,13 @@ function BreadcrumbsHeader(props: BreadcrumbsHeaderProps) {
         content = (
             <Breadcrumbs className={classes.breadcrumbs} separator={<MdNavigateNext color='inherit' size={20} />}>
                 <Typography color='inherit'>Specify metadata for: Project: {projectName}</Typography>
-                <Typography color='inherit'>Media Group: {subjects.length > 1 ? item?.subtitle : item?.id === 'default' ? `${subjects?.[0]?.name}${item?.subtitle ? `: ${item?.subtitle}` : ''}` : subjects?.[0]?.name}</Typography>
+                {/*
+                    Case 1: more than 1 subject - show entered name
+                    Case 2: existing item is selected - show full name of that item
+                    Case 3: new item w/o subtitle - [subject]: [subtitle]
+                    Case 4: new item w/ subtitle - [subject]
+                */}
+                <Typography color='inherit'>Media Group: {subjects.length > 1 ? item?.subtitle : item?.id === 'default' ? `${subjects?.[0]?.name}${item?.subtitle ? `: ${item?.subtitle}` : ''}` : item?.subtitle}</Typography>
                 <Typography color='inherit'>{metadata?.file?.name}</Typography>
             </Breadcrumbs>
         );

@@ -522,7 +522,7 @@ class IngestDataWorker extends ResolverBase {
             itemDB = new DBAPI.Item({
                 idAssetThumbnail: null,
                 idGeoLocation: null,
-                Name: NameHelpers.mediaGroupDisplayName(item.subtitle, subjectsDB),
+                Name: NameHelpers.mediaGroupDisplayName(item.name, item.subtitle, subjectsDB),
                 EntireSubject: item.entireSubject,
                 Title: item.subtitle,
                 idItem: 0

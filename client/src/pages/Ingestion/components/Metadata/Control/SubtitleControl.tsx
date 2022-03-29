@@ -29,10 +29,10 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     cell: {
         border: 'none',
         padding: '1px 10px',
-        height: 30
+        maxHeight: 22
     },
     labelCell: {
-        width: 50
+        width: 30
     },
     optionContainer: {
         display: 'flex',
@@ -40,7 +40,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         alignItems: 'center'
     },
     input: {
-        height: 18,
+        height: 20,
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         fontFamily: typography.fontFamily,
         fontSize: '0.8rem',
@@ -48,7 +48,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         borderRadius: 5,
     },
     text: {
-        fontSize: '0.75rem'
+        fontSize: '0.8rem'
     }
 }));
 
@@ -61,6 +61,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
 
 
     const renderSubtitleOptions = (subtitles: SubtitleFields): React.ReactElement => {
+        // console.log('subtitles', subtitles,'objectName', objectName);
         // Case: forced
         if (subtitles.some(option => option.subtitleOption === eSubtitleOption.eForced))
             return (
@@ -68,13 +69,45 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
                         <Typography className={classes.text}>Name:</Typography>
                     </TableCell>
-                    <TableCell className={classes.cell}>
+                    <TableCell className={classes.cell} style={{ height: 24 }}>
                         <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
                     </TableCell>
                 </TableRow>
             );
 
-        // Case: Name input only
+        // Case: optional subtitle
+        if (objectName && subtitles.length === 1 && subtitles.find(option => option.subtitleOption === eSubtitleOption.eInput)) {
+            const { id, value } = subtitles[0];
+            return (
+                <>
+                    <TableRow>
+                        <TableCell className={clsx(classes.labelCell, classes.cell)}>
+                            <Typography className={classes.text}>Name:</Typography>
+                        </TableCell>
+                        <TableCell className={classes.cell} style={{ height: 24 }}>
+                            <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className={clsx(classes.labelCell, classes.cell)}>
+                            <Typography className={classes.text}>Subtitle:</Typography>
+                        </TableCell>
+                        <TableCell className={classes.cell} style={{ height: 24 }}>
+                            <DebounceInput
+                                onChange={(e) => onUpdateCustomSubtitle(e, id)}
+                                element='input'
+                                value={value}
+                                className={classes.input}
+                                debounceTimeout={400}
+                                title={`subtitle-input-${value}`}
+                            />
+                        </TableCell>
+                    </TableRow>
+                </>
+            );
+        }
+
+        // Case: mandatory name input
         if (subtitles.length === 1 && subtitles.find(option => option.subtitleOption === eSubtitleOption.eInput)) {
             const { id, value } = subtitles[0];
             return (
@@ -82,7 +115,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
                         <Typography className={classes.text}>Name:</Typography>
                     </TableCell>
-                    <TableCell className={classes.cell}>
+                    <TableCell className={classes.cell} style={{ height: 24 }}>
                         <DebounceInput
                             onChange={(e) => onUpdateCustomSubtitle(e, id)}
                             element='input'
@@ -103,7 +136,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
                         <Typography className={classes.text}>Name:</Typography>
                     </TableCell>
-                    <TableCell className={classes.cell}>
+                    <TableCell className={classes.cell} style={{ height: 24 }}>
                         <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
                     </TableCell>
                 </TableRow>
@@ -111,8 +144,8 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
                         <Typography className={classes.text}>Subtitle:</Typography>
                     </TableCell>
-                    <TableCell>
-                        <div style={{ display: 'flex', height: '100%' }}>
+                    <TableCell className={classes.cell}>
+                        <div style={{ display: 'flex', height: 24 }}>
                             {
                                 sortedSubtitles.map(({ selected, value, id, subtitleOption }, key) => (
                                     <div className={classes.optionContainer} key={key}>
