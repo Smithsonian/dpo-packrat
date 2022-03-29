@@ -352,6 +352,7 @@ function DetailsView(): React.ReactElement {
 
         updatedData.Retired = updatedData?.Retired || details?.retired;
         updatedData.Name = updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name;
+        updatedData.Subtitle = updatedData?.Subtitle || details?.subtitle;
         updatedData.Identifiers = stateIdentifiersWithIdSystemObject || [];
 
         const invalidMetadata = validateMetadataFields();
