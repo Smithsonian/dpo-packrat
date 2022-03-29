@@ -68,7 +68,7 @@ export class NameHelpers {
         let forced: boolean = false;
         let subtitle: (string | null)[] = [];
         if (modelHierarchies.length === 1) {        // if only one model parent
-            title = modelHierarchies[0].model.Name; // scene must be named same as model
+            title = NameHelpers.computeBaseTitle(modelHierarchies[0].model.Name, modelHierarchies[0].model.Title); // scene must be named same as model
             forced = true;
             subtitle.push(modelHierarchies[0].model.Title);
         } else {
