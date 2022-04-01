@@ -32,7 +32,7 @@ export const useStyles = makeStyles(({ palette }) => ({
     btn: {
         ...sharedButtonProps,
         width: 'fit-content',
-        outline: '0.1px hidden #FFFCD1'
+        outline: '0.1px hidden rgb(255, 255, 224)'
     },
     tableContainer: {
         height: 'fit-content',
@@ -120,6 +120,12 @@ export const useStyles = makeStyles(({ palette }) => ({
         whiteSpace: 'nowrap',
         color: 'rgb(0,121,196)',
         cursor: 'pointer'
+    },
+    evenTableRow: {
+        backgroundColor: 'white'
+    },
+    oddTableRow: {
+        backgroundColor: 'rgb(255, 255, 224)'
     }
 }));
 
@@ -133,13 +139,13 @@ const getMuiTheme = () =>
         overrides: {
             MuiTableCell: {
                 root: {
-                    backgroundColor: '#FFFCD1',
+                    // backgroundColor: 'rgb(255, 255, 224)',
                     height: 'fit-content',
                     padding: '0px 3px',
                     margin: '1px',
                     fontSize: '0.8em',
                 },
-                body: { color: '#2C405A', borderBottomColor: '#FFFCD1', align: 'center' }
+                body: { color: '#2C405A', borderBottomColor: 'rgb(255, 255, 224)', align: 'center' }
             },
             MuiToolbar: {
                 regular: {
@@ -149,7 +155,7 @@ const getMuiTheme = () =>
                     }
                 },
                 root: {
-                    backgroundColor: '#FFFCD1',
+                    backgroundColor: 'rgb(255, 255, 224)',
                     borderTopRightRadius: '5px',
                     borderTopLeftRadius: '5px'
                 }
@@ -162,7 +168,8 @@ const getMuiTheme = () =>
             },
             MuiTableHead: {
                 root: {
-                    borderBottom: '1.2px solid rgb(128,128,128)'
+                    borderBottom: '1.2px solid rgb(128,128,128)',
+                    backgroundColor: 'rgb(255, 255, 224)'
                 }
             },
             MuiButtonBase: {
@@ -170,7 +177,7 @@ const getMuiTheme = () =>
                     '&:focus': {
                         outline: '0.5px hidden rgba(141, 171, 196, 0.4)'
                     },
-                    outline: '0.1px hidden #FFFCD1'
+                    outline: '0.1px hidden rgb(255, 255, 224)'
                 }
             },
             MuiTypography: {
@@ -391,7 +398,10 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         fixedHeader: false,
         pagination: false,
         elevation: 0,
-        onViewColumnsChange: toggleColumn
+        onViewColumnsChange: toggleColumn,
+        setRowProps: (_row, _dataIndex, _rowIndex) => {
+            return { className: _rowIndex % 2 !== 0 ? classes.oddTableRow : classes.evenTableRow };
+        }
     };
 
     return (

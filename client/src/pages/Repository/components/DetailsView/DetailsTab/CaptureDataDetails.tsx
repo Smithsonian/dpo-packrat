@@ -39,7 +39,6 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         padding: '10px 0px 6px 0px'
     },
     table: {
-        width: 'fit-content'
     },
     tableRow: {
     },
@@ -179,7 +178,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                 onChange={onSetField}
                 updated={isFieldUpdated(CaptureDataDetails, captureDataData, 'description')}
                 disabled={disabled}
-                containerProps={{ style: { paddingTop: '5px', paddingBottom: '5px' } }}
+                containerProps={{ style: { paddingTop: '5px', paddingBottom: '5px', width: 700 } }}
             />
             <Box className={classes.cdInputContainer}>
                 <TableContainer component={Paper} className={classes.captureMethodTableContainer} elevation={0}>
