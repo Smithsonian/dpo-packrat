@@ -1,3 +1,3 @@
 ---
-title: Packrat Administrator Guide
+title: Administrator Guide
 ---

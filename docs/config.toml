@@ -28,7 +28,7 @@ pygmentsUseClasses = true
 
 [params]
     mainSections = ["user", "admin", "integration"]
-    github_link = "3D Data Repository and Workflow Management"
+    github_link = "https://github.com/smithsonian/dpo-packrat"
     github_logo = "/images/github.svg"
     smithsonian_logo = "/images/si-digitization-logo-neg.svg"
     google_analytics_id=""

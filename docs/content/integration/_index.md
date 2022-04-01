@@ -1,3 +1,3 @@
 ---
-title: Packrat Integration and Extension
+title: Integration Guide
 ---

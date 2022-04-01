@@ -1,13 +1,13 @@
 ---
-title: "Packrat User Guide"
+title: "User Guide"
 ---
 
 ## Tasks
-- [Login](./login)
-- [Browsing the Repository](./browse)
-- [Searching the Repository](./search)
-- [Ingesting Content](./ingestion)
-- [Managing Content](./managing)
-- [Publishing Content](./publishing)
-- [Business Process Management](./workflows)
+- [Login](../user-tasks/login)
+- [Browsing the Repository](../user-tasks/browse)
+- [Searching the Repository](../user-tasks/search)
+- [Ingesting Content](../user-tasks/ingestion)
+- [Managing Content](../user-tasks/managing)
+- [Publishing Content](../user-tasks/publishing)
+- [Business Process Management](../user-tasks/workflows)
 - [Administration](../admin)

@@ -1,5 +1,5 @@
 ---
-title: "Packrat User Guide: Login"
+title: "Login"
 ---
 
 There are two versions of Packrat deployed at the Smithsonian, Production and Staging. Each can be accesssed in two ways, depending on whether you are working behind the Smithsonian firewall:
