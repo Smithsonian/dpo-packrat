@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Packrat User Guide: Browsing the Repository on Packrat Documentation</title>
+    <title>Repository Browsing on Packrat Documentation</title>
     <link>https://smithsonian.github.io/dpo-packrat/user/browse/</link>
-    <description>Recent content in Packrat User Guide: Browsing the Repository on Packrat Documentation</description>
+    <description>Recent content in Repository Browsing on Packrat Documentation</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language><atom:link href="https://smithsonian.github.io/dpo-packrat/user/browse/index.xml" rel="self" type="application/rss+xml" />
   </channel>
