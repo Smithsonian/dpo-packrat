@@ -33,7 +33,7 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     tableContainer: {
         backgroundColor: 'rgb(236, 245, 253)',
         padding: '0px 2px 11px 2px',
-        width: 'fit-content',
+        width: 380,
         height: 'fit-content',
         '& .MuiTableRow-head': {
         }
@@ -58,15 +58,15 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
         <>
             <EmptyContent label='folders' isEmpty={!folders.length} />
             <TableContainer component={Paper} className={classes.tableContainer} elevation={0}>
-                <Table style={{ width: 'fit-content' }}>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>
+                <Table>
+                    <TableHead style={{ borderBottom: '2px solid #D8E5EE' }}>
+                        <TableRow >
+                            <TableCell align='center' style={{ paddingBottom: 0 }}>
                                 <Typography style={{ alignItems: 'center', color: palette.primary.dark }} variant='caption'>
                                     Folder Name
                                 </Typography>
                             </TableCell>
-                            <TableCell align='center'>
+                            <TableCell align='center' style={{ paddingBottom: 0 }}>
                                 <Typography style={{ alignItems: 'center', color: palette.primary.dark }} variant='caption'>
                                     Variant Type
                                 </Typography>
