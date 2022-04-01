@@ -28,18 +28,18 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
     const [hoverColumn, setHoverColumn] = useState<null | eMetadata>(null);
     // Pull the generated MUI classes from TreeColumnsStore and assign the divs the appropriate class based on metadataColumn
     const [classes, updateOrder, columnOrder] = useTreeColumnsStore(state => [state.classes, state.updateOrder, state.order]);
-    const [initializeTree, setLoading] = useRepositoryStore(state => [state.initializeTree, state.setLoading])
-    const iconStyle = { cursor: 'pointer' }
+    const [initializeTree, setLoading] = useRepositoryStore(state => [state.initializeTree, state.setLoading]);
+    const iconStyle = { cursor: 'pointer' };
 
     const renderTreeColumns = (treeColumns: TreeViewColumn[]) => {
         return treeColumns.map((treeColumn: TreeViewColumn, index: number) => {
-            const onMouseEnter = () => { if (header) setHoverColumn(metadataColumn); }
-            const onMouseLeave = () => { if (header) setHoverColumn(null); }
+            const onMouseEnter = () => { if (header) setHoverColumn(metadataColumn); };
+            const onMouseLeave = () => { if (header) setHoverColumn(null); };
             const onRightShift = async () => {
                 if (treeColumns[treeColumns.length - 1].metadataColumn === metadataColumn) return;
                 const currentInd = treeColumns.findIndex((element) => element.metadataColumn === metadataColumn);
                 if (currentInd === -1) return;
-                
+
                 const nextInd = currentInd + 1;
                 const currentCol = treeColumns[currentInd];
                 const nextCol = treeColumns[nextInd];
@@ -53,7 +53,7 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
                 if (treeColumns[0].metadataColumn === metadataColumn) return;
                 const currentInd = treeColumns.findIndex((element) => element.metadataColumn === metadataColumn);
                 if (currentInd <= 0) return;
-                
+
                 const prevInd = currentInd - 1;
                 const currentCol = treeColumns[currentInd];
                 const prevCol = treeColumns[prevInd];

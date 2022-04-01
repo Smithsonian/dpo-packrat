@@ -58,7 +58,7 @@ export const useTreeColumnsStore = create<TreeColumns>((set: SetState<TreeColumn
         let columnOrderCookie;
         if ((!document.cookie.length || document.cookie.indexOf(COL_ORDER_COOKIE) === -1)) {
             const defaultOrder = {};
-            let index = 1
+            let index = 1;
             for (const col in eMetadata) {
                 defaultOrder[eMetadata[col]] = index;
                 index ++;

@@ -119,7 +119,7 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
         });
         if (nameHeader)
             columnObersver.observe(nameHeader);
-        
+
         treeColumns.forEach((col) => {
             const target = document.getElementById(`column-${col.label}`);
             if (target) {
@@ -139,7 +139,7 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
     return (
         <Box className={classes.container}>
             <Box className={classes.treeView}>
-                <Box className={clsx(classes.treeViewText, columnClasses[SO_NAME_COLUMN_HEADER])} id={SO_NAME_COLUMN_HEADER} style={{ padding: '10px 0px'}} />
+                <Box className={clsx(classes.treeViewText, columnClasses[SO_NAME_COLUMN_HEADER])} id={SO_NAME_COLUMN_HEADER} style={{ padding: '10px 0px' }} />
             </Box>
             <MetadataView header treeColumns={treeColumns} makeStyles={{ text: classes.text, column: classes.column }} />
         </Box>
