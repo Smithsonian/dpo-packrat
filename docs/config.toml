@@ -5,3 +5,48 @@ title = "Packrat Documentation"
 pygmentsCodeFences = true
 pygmentsCodefencesGuessSyntax = true
 pygmentsUseClasses = true
+
+[[menu.main]]
+    name = "Home"
+    url = "/"
+    weight = 1
+
+[[menu.main]]
+    name = "User Guide"
+    url = "/user/"
+    weight = 2
+
+[[menu.main]]
+    name = "Admin Guide"
+    url = "/admin/"
+    weight = 3
+
+[[menu.main]]
+    name = "Integration"
+    url = "/integration/"
+    weight = 4
+
+[params]
+    mainSections = ["user", "admin", "integration"]
+    github_link = "3D Data Repository and Workflow Management"
+    github_logo = "/images/github.svg"
+    smithsonian_logo = "/images/si-digitization-logo-neg.svg"
+    google_analytics_id=""
+    homepage_button_link = "/user"
+    homepage_button_text = "Packrat"
+    homepage_intro = "3D Data Repository and Workflow Management"
+    homepage_image = "/images/packrat-webui-1.png"
+
+[params.homepage_meta_tags]
+    meta_description = "3D Data Repository and Workflow Management"
+    meta_og_title = "Smithsonian Packrat"
+    meta_og_type = "website"
+    meta_og_url = "https://3d.si.edu"
+    meta_og_description = "3D Data Repository and Workflow Management"
+    meta_twitter_card = "summary"
+    meta_twitter_site = "@3D_Digi_SI"
+    meta_twitter_creator = "@3D_Digi_SI"
+
+[params.logo]
+    mobile = "/images/logo192.png"
+    standard  = "/images/logo512.png"
