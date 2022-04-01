@@ -48,5 +48,5 @@ pygmentsUseClasses = true
     meta_twitter_creator = "@3D_Digi_SI"
 
 [params.logo]
-    mobile = "/images/logo192.png"
-    standard  = "/images/logo512.png"
+    mobile = "/images/logo64.png"
+    standard  = "/images/logo64.png"

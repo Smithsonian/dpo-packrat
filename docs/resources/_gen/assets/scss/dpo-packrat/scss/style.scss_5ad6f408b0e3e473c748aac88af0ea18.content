@@ -5729,8 +5729,7 @@ p {
   display: none; }
   @media (min-width: 576px) {
     .logo {
-      display: block;
-      width: 140px; } }
+      display: block; } }
   .logo img {
     width: 100%;
     height: auto; }
@@ -5740,8 +5739,7 @@ p {
     height: 100%; }
 
 .logo-mobile {
-  display: block;
-  width: 100px; }
+  display: block; }
   @media (min-width: 576px) {
     .logo-mobile {
       display: none; } }
