@@ -111,7 +111,7 @@ dist
 build
 
 ### Docs ###
-docs/.hugo_build.lock
+docs-source/.hugo_build.lock
 
 ### Custom ###
 server/var
