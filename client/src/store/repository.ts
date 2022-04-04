@@ -54,6 +54,7 @@ type RepositoryStore = {
     getChildrenForIngestion: (idRoot: number) => void;
     closeRepositoryBrowser: () => void;
     resetRepositoryBrowserRoot: () => void;
+    setLoading: (isLoading: boolean) => void;
 };
 
 export const treeRootKey: string = 'root';
@@ -473,5 +474,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     resetRepositoryBrowserRoot: (): void => {
         set({  idRoot: null, repositoryBrowserRootObjectType: null, repositoryBrowserRootName: null });
+    },
+    setLoading: (isLoading: boolean): void => {
+        set({ loading: isLoading });
     }
 }));
