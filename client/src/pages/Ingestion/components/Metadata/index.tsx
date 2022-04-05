@@ -136,7 +136,6 @@ function Metadata(): React.ReactElement {
         }
 
         if (assetType.model) {
-            console.log('model case');
             const hasError: boolean = updateMode
                 ? validateFields(metadata.model, modelFieldsSchemaUpdate)
                 : validateFields(metadata.model, modelFieldsSchema);
