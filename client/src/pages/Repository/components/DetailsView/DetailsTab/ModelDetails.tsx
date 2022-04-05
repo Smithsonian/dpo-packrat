@@ -155,7 +155,6 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         selectHeight='24px'
                         valueLeftAligned
                         selectFitContent
-                        
                     />
                     <SelectField
                         required

@@ -122,7 +122,7 @@ function RepositoryFilterView(): React.ReactElement {
 
     useEffect(() => {
         initializeFilterPosition();
-    }, []);
+    }, [initializeFilterPosition]);
 
     const convertToChipState = (filterName: eRepositoryChipFilterType, selected: eSystemObjectType[] | number[]): ChipOption[] => {
         switch (filterName) {
