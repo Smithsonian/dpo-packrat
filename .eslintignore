@@ -10,4 +10,3 @@ client/src/types/graphql.tsx
 server/types/graphql.ts
 server/var
 docs
-docs-source
