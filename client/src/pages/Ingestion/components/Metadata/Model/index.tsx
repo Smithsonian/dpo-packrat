@@ -144,9 +144,7 @@ function Model(props: ModelProps): React.ReactElement {
             ModelMaterials: []
         }
     ]);
-    // const [fieldErrors, setFieldErrors] = useState<FieldErrors>();
 
-    // setFieldErrors(getFieldErrors(metadata))
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
 
