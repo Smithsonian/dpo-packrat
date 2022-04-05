@@ -49,4 +49,4 @@ pygmentsUseClasses = true
 
 [params.logo]
     mobile = "/images/logo48.png"
-    standard  = "/images/logo48.png"
+    standard  = "/images/logo-name.png"

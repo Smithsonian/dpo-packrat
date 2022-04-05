@@ -1,8 +1,7 @@
 ---
-title: "User Guide"
+title: "Packrat User Guide"
 ---
 
-## Tasks
 - [Login](../user-tasks/login)
 - [Navigation](../user-tasks/navigation)
 - [Browsing the Repository](../user-tasks/browse)
