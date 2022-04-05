@@ -6,7 +6,7 @@
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Redirect } from 'react-router';
 import { Header, PrivateRoute } from '../../components';
 import { HOME_ROUTE, HOME_ROUTES, resolveRoute } from '../../constants';
@@ -33,9 +33,12 @@ const useStyles = makeStyles(() => ({
 
 function Home(): React.ReactElement {
     const classes = useStyles();
-    const [sideBarExpanded, toggleSidebar] = useControlStore(state => [state.sideBarExpanded, state.toggleSidebar]);
-
+    const [sideBarExpanded, toggleSidebar, initializeSidebarPosition] = useControlStore(state => [state.sideBarExpanded, state.toggleSidebar, state.initializeSidebarPosition]);
     const onToggle = (): void => toggleSidebar(!sideBarExpanded);
+
+    useEffect(() => {
+        initializeSidebarPosition();
+    }, []);
 
     return (
         <Box className={classes.container}>
