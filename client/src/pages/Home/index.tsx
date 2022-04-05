@@ -38,7 +38,7 @@ function Home(): React.ReactElement {
 
     useEffect(() => {
         initializeSidebarPosition();
-    }, []);
+    }, [initializeSidebarPosition]);
 
     return (
         <Box className={classes.container}>
