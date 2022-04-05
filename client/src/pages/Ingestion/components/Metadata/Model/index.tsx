@@ -8,7 +8,7 @@
  */
 import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
-import { AssetIdentifiers, DateInputField, ReadOnlyRow, SidebarBottomNavigator, TextArea } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, ReadOnlyRow, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
@@ -35,26 +35,21 @@ const useStyles = makeStyles(({ palette }) => ({
         flexDirection: 'column',
         borderRadius: 5,
         backgroundColor: palette.secondary.light,
-        minWidth: '250px',
-        maxWidth: '400px',
-        '& > *': {
-            minHeight: '20px',
-            height: 'fit-content',
-            borderBottom: '0.5px solid #D8E5EE',
-            borderTop: '0.5px solid #D8E5EE'
-        }
+        width: 'fit-content',
+        height: 'fit-content',
+        padding: '5px',
+        outline: '1px solid rgba(141, 171, 196, 0.4)'
     },
     dataEntry: {
         display: 'flex',
         flexDirection: 'column',
         width: 'fit-content',
-        '& > *': {
-            minHeight: '20px',
-            borderRadius: 0
-        },
-        height: 'fit-content'
+        height: 'fit-content',
+        backgroundColor: palette.secondary.light,
+        borderRadius: 5,
+        outline: '1px solid rgba(141, 171, 196, 0.4)'
     },
-    ModelMetricsAndFormContainer: {
+    modelDetailsAndSubtitleContainer: {
         borderRadius: 5,
         padding: 10,
         backgroundColor: palette.primary.light,
@@ -62,42 +57,45 @@ const useStyles = makeStyles(({ palette }) => ({
         display: 'flex',
         flexDirection: 'column'
     },
-    modelMetricsAndForm: {
+    modelDetailsContainer: {
         display: 'flex',
         flexDirection: 'row',
         borderRadius: 5,
         backgroundColor: palette.primary.light,
-        width: 'fit-content',
-        paddingRight: 20,
-        columnGap: '10px'
+        width: '100%',
+        columnGap: 10,
+        rowGap: 10,
+        flexWrap: 'wrap'
     },
-    captionContainer: {
+    caption: {
         flex: '1 1 0%',
-        width: '92%',
+        width: '100%',
         display: 'flex',
         marginBottom: '8px',
         flexDirection: 'row',
-        color: '#2C405A'
-    }
+        color: 'grey',
+    },
+    readOnlyRowsContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: palette.secondary.light,
+        width: '200px'
+    },
 }));
 
 interface ModelProps {
     readonly metadataIndex: number;
-    onPrevious: () => void;
-    onClickRight: () => Promise<void>;
-    isLast: boolean;
-    rightLoading: boolean;
-    disableNavigation: boolean;
+    fieldErrors?: FieldErrors
 }
 
 function Model(props: ModelProps): React.ReactElement {
-    const { metadataIndex, onPrevious, onClickRight, isLast, rightLoading, disableNavigation } = props;
+    const { metadataIndex, fieldErrors } = props;
     const classes = useStyles();
     const tableClasses = useTableStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { model, file } = metadata;
     const { idAsset } = file;
-    const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
+    const [updateMetadataField] = useMetadataStore(state => [state.updateMetadataField]);
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
@@ -146,8 +144,9 @@ function Model(props: ModelProps): React.ReactElement {
             ModelMaterials: []
         }
     ]);
-    const [fieldErrors, setFieldErrors] = useState<FieldErrors>();
+    // const [fieldErrors, setFieldErrors] = useState<FieldErrors>();
 
+    // setFieldErrors(getFieldErrors(metadata))
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
 
@@ -337,13 +336,9 @@ function Model(props: ModelProps): React.ReactElement {
                         </Box>
                     </React.Fragment>
                 )}
-                {/* Start of data-entry form */}
-                <Box className={classes.ModelMetricsAndFormContainer}>
-                    <Box className={classes.captionContainer}>
-                        <Typography variant='caption'>Model</Typography>
-                    </Box>
+                <Box className={classes.modelDetailsAndSubtitleContainer}>
                     {!idAsset && (
-                        <Box mb={1.25}>
+                        <Box style={{ marginBottom: 10 }}>
                             <SubtitleControl
                                 subtitles={model.subtitles}
                                 objectName={model.name}
@@ -353,7 +348,7 @@ function Model(props: ModelProps): React.ReactElement {
                             />
                         </Box>
                     )}
-                    <Box className={classes.modelMetricsAndForm}>
+                    <Box className={classes.modelDetailsContainer}>
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
                             <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ backgroundColor: 'rgb(255, 252, 209', paddingTop: '10px' }}>
                                 <Table className={tableClasses.table}>
@@ -443,36 +438,40 @@ function Model(props: ModelProps): React.ReactElement {
                                 </Table>
                             </TableContainer>
                         </Box>
-                        {/* End of data-entry form */}
 
-                        {/* Start of model-level metrics form */}
                         <Box className={classes.notRequiredFields}>
-                            <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} />
-                            <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} />
-                            <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} />
-                            <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} />
-                            <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} />
-                            <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} />
-                            <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} />
-                            <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} />
-                            <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} />
-                            <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} />
-                            <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} />
-                            <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} />
+                            <Box className={classes.caption}>
+                                <Typography variant='caption'>Model</Typography>
+                            </Box>
+                            <Box className={classes.readOnlyRowsContainer}>
+                                <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='0px' />
+                                <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='0px' />
+                                <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} paddingString='0px' />
+                                <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} paddingString='0px' />
+                                <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} paddingString='0px' />
+                                <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} paddingString='0px' />
+                                <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='0px' />
+                                <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} paddingString='0px' />
+                                <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='0px' />
+                                <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} paddingString='0px' />
+                                <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} paddingString='0px' />
+                                <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} paddingString='0px' />
+                            </Box>
                         </Box>
-                        {/* End of  model-level metrics form */}
+
+                        <ObjectMeshTable modelObjects={modelObjects} />
+
                     </Box>
                 </Box>
 
-                <SidebarBottomNavigator
+                {/* <SidebarBottomNavigator
                     rightLoading={rightLoading}
                     leftLabel='Previous'
                     onClickLeft={onPrevious}
                     rightLabel={isLast ? 'Finish' : 'Next'}
                     onClickRight={() => { setFieldErrors(getFieldErrors(metadata)); onClickRight();  }}
                     disableNavigation={disableNavigation}
-                />
-                <ObjectMeshTable modelObjects={modelObjects} />
+                /> */}
             </Box>
             <ObjectSelectModal
                 open={modalOpen}
