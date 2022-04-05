@@ -122,10 +122,10 @@ export const useStyles = makeStyles(({ palette }) => ({
         cursor: 'pointer'
     },
     evenTableRow: {
-        backgroundColor: 'white'
+        backgroundColor: 'rgb(255, 255, 224)'
     },
     oddTableRow: {
-        backgroundColor: 'rgb(255, 255, 224)'
+        backgroundColor: 'white'
     }
 }));
 
@@ -139,7 +139,6 @@ const getMuiTheme = () =>
         overrides: {
             MuiTableCell: {
                 root: {
-                    // backgroundColor: 'rgb(255, 255, 224)',
                     height: 'fit-content',
                     padding: '0px 3px',
                     margin: '1px',
@@ -169,7 +168,14 @@ const getMuiTheme = () =>
             MuiTableHead: {
                 root: {
                     borderBottom: '1.2px solid rgb(128,128,128)',
-                    backgroundColor: 'rgb(255, 255, 224)'
+                    backgroundColor: 'rgb(255, 255, 224)',
+                    '& button': {
+                        padding: '0px 8px',
+                        // Note: by default, these values are set so that header buttons are not horizontally aligned
+                        // Set marginLeft and marginRight to 0 to center
+                        marginLeft: 0,
+                        marginRight: 0
+                    }
                 }
             },
             MuiButtonBase: {
@@ -184,7 +190,7 @@ const getMuiTheme = () =>
                 h6: {
                     display: 'none'
                 }
-            }
+            },
         }
     });
 

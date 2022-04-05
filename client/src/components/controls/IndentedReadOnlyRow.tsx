@@ -76,7 +76,7 @@ function IndentedReadOnlyRow(props: IndentedReadOnlyRowProps): React.ReactElemen
                 {content}
             </Box>
             <Box className={classes.value}>
-                <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A', overflowWrap: 'break-word' }}>
+                <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', overflowWrap: 'break-word', wordBreak: 'break-all' }}>
                     {value}
                 </Typography>
             </Box>
