@@ -4,7 +4,7 @@
   <h4>{{ .Title | humanize }}</h4>
   <ul>
     {{ range .Pages }}
-    <li class="{{ if eq .File.UniqueID $currentNode.File.UniqueID }}active {{ end }}">
+    <li class="{{ if eq .File.UniqueID $currentNode.File.UniqueID }}active{{ end }}">
       <a href="{{ .RelPermalink }}">{{ .Title }}</a>
     </li>
     {{ end }}
