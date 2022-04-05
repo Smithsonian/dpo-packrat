@@ -30,7 +30,8 @@ import {
     useMetadataStore,
     useVocabularyStore,
     useUploadStore,
-    useSubjectStore
+    useSubjectStore,
+    FieldErrors
 } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
 import Model from './Model';
@@ -74,9 +75,10 @@ function Metadata(): React.ReactElement {
     const [disableNavigation, setDisableNavigation] = useState(false);
     const [invalidMetadataStep, setInvalidMetadataStep] = useState<boolean>(false);
     const [breadcrumbNames, setBreadcrumbNames] = useState<string[]>([]);
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>();
 
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
-    const [metadatas, getMetadataInfo, validateFields] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields]);
+    const [metadatas, getMetadataInfo, validateFields, getFieldErrors] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields, state.getFieldErrors]);
     const { ingestionStart, ingestionComplete } = useIngest();
     const getAssetType = useVocabularyStore(state => state.getAssetType);
     const [setUpdateMode] = useUploadStore(state => [state.setUpdateMode]);
@@ -124,6 +126,8 @@ function Metadata(): React.ReactElement {
 
     const onNext = async (): Promise<void> => {
         const updateMode: boolean = !!(metadata.file.idAsset);
+        setFieldErrors(getFieldErrors(metadata));
+
         if (assetType.photogrammetry) {
             const hasError: boolean = updateMode
                 ? validateFields(metadata.photogrammetry, photogrammetryFieldsSchemaUpdate)
@@ -188,7 +192,7 @@ function Metadata(): React.ReactElement {
 
         if (assetType.model) {
             // Model takes in additional props for onPrevious, onClickRight, isLast, and rightLoading because it imports an additional copy of <SidebarBottomNavigator />
-            return <Model metadataIndex={metadataIndex} onPrevious={onPrevious} onClickRight={onNext} isLast={isLast} rightLoading={ingestionLoading} disableNavigation={disableNavigation} />;
+            return <Model metadataIndex={metadataIndex} fieldErrors={fieldErrors} />;
         }
 
         if (assetType.attachment) {
