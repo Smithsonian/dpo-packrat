@@ -4,7 +4,7 @@
  * This component renders the folder type selector for contents present in
  * the uploaded assets
  */
-import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@material-ui/core';
+import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { AiFillFolder } from 'react-icons/ai';
@@ -33,7 +33,7 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     tableContainer: {
         backgroundColor: 'rgb(236, 245, 253)',
         padding: '0px 2px 11px 2px',
-        width: 'fit-content',
+        width: 380,
         height: 'fit-content',
         '& .MuiTableRow-head': {
         }
@@ -58,28 +58,26 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
         <>
             <EmptyContent label='folders' isEmpty={!folders.length} />
             <TableContainer component={Paper} className={classes.tableContainer} elevation={0}>
-                <Table style={{ width: 'fit-content' }}>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>
+                <Table>
+                    <TableBody>
+                        <TableRow style={{ borderBottom: '2px solid #D8E5EE' }}>
+                            <TableCell align='center' style={{ paddingBottom: 0 }}>
                                 <Typography style={{ alignItems: 'center', color: palette.primary.dark }} variant='caption'>
                                     Folder Name
                                 </Typography>
                             </TableCell>
-                            <TableCell align='center'>
+                            <TableCell align='center' style={{ paddingBottom: 0 }}>
                                 <Typography style={{ alignItems: 'center', color: palette.primary.dark }} variant='caption'>
                                     Variant Type
                                 </Typography>
                             </TableCell>
                         </TableRow>
-                    </TableHead>
-                    <TableBody>
                         {folders.map(({ id, name, variantType }: StateFolder, index: number) => {
                             const update = ({ target }) => onUpdate(id, target.value);
 
                             return (
                                 <TableRow key={index}>
-                                    <TableCell className={classes.paddedCell}>
+                                    <TableCell className={classes.paddedCell} style={{ paddingTop: index === 0 ? 5 : 1 }}>
                                         <Box display='flex' alignItems='center'>
                                             <Box paddingRight='5px'>
                                                 <AiFillFolder color={palette.primary.contrastText} size={20} />
@@ -87,7 +85,7 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
                                             <Typography style={{ color: palette.primary.dark, wordBreak: 'break-word' }} variant='caption'>{name}</Typography>
                                         </Box>
                                     </TableCell>
-                                    <TableCell className={classes.paddedCell}>
+                                    <TableCell className={classes.paddedCell} style={{ paddingTop: index === 0 ? 5 : 1 }}>
                                         <Select
                                             disabled={disabled}
                                             value={variantType || initialEntry}

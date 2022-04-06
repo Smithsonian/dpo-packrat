@@ -8,7 +8,7 @@
  */
 import { Box, Chip, Typography } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { FiLink2 } from 'react-icons/fi';
 import { IoIosRemoveCircle } from 'react-icons/io';
@@ -116,9 +116,13 @@ const StyledChip = withStyles(({ palette }) => ({
 function RepositoryFilterView(): React.ReactElement {
     const { data, loading } = useGetFilterViewDataQuery();
     const [units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType, dateCreatedFrom, dateCreatedTo, isExpanded, repositoryBrowserRootObjectType, repositoryBrowserRootName, repositoryRootType] = useRepositoryStore(state => [state.units, state.projects, state.has, state.missing, state.captureMethod, state.variantType, state.modelPurpose, state.modelFileType, state.dateCreatedFrom, state.dateCreatedTo, state.isExpanded, state.repositoryBrowserRootObjectType, state.repositoryBrowserRootName, state.repositoryRootType]);
-    const [toggleFilter, removeChipOption] = useRepositoryStore(state => [state.toggleFilter, state.removeChipOption]);
+    const [toggleFilter, removeChipOption, initializeFilterPosition] = useRepositoryStore(state => [state.toggleFilter, state.removeChipOption, state.initializeFilterPosition]);
     const [getEntries, getVocabularyTerm] = useVocabularyStore(state => [state.getEntries, state.getVocabularyTerm]);
     const classes = useStyles(isExpanded);
+
+    useEffect(() => {
+        initializeFilterPosition();
+    }, [initializeFilterPosition]);
 
     const convertToChipState = (filterName: eRepositoryChipFilterType, selected: eSystemObjectType[] | number[]): ChipOption[] => {
         switch (filterName) {

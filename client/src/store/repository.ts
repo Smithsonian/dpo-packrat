@@ -12,6 +12,9 @@ import { parseRepositoryTreeNodeId, validateArray, getTermForSystemObjectType } 
 import { apolloClient } from '../graphql';
 import { GetSystemObjectDetailsDocument } from '../types/graphql';
 import { eRepositoryChipFilterType } from '../pages/Repository/components/RepositoryFilterView/RepositoryFilterOptions';
+import { updateCookie } from './treeColumns';
+
+const FILTER_POSITION_COOKIE = 'isFilterExpanded';
 
 type RepositoryStore = {
     isExpanded: boolean;
@@ -55,6 +58,7 @@ type RepositoryStore = {
     closeRepositoryBrowser: () => void;
     resetRepositoryBrowserRoot: () => void;
     setLoading: (isLoading: boolean) => void;
+    initializeFilterPosition: () => void;
 };
 
 export const treeRootKey: string = 'root';
@@ -97,6 +101,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     toggleFilter: (): void => {
         const { isExpanded } = get();
+        updateCookie(FILTER_POSITION_COOKIE, String(!isExpanded));
         set({ isExpanded: !isExpanded });
     },
     initializeTree: async (): Promise<void> => {
@@ -477,5 +482,18 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     setLoading: (isLoading: boolean): void => {
         set({ loading: isLoading });
+    },
+    initializeFilterPosition: () => {
+        let filterCookie;
+        if ((!document.cookie.length || document.cookie.indexOf(FILTER_POSITION_COOKIE) === -1)) {
+            document.cookie = `${FILTER_POSITION_COOKIE}=${true};path=/;max-age=630700000`;
+        }
+
+        const cookies = document.cookie.split(';');
+        filterCookie = cookies.find(entry => entry.trim().startsWith(FILTER_POSITION_COOKIE));
+        if (filterCookie) {
+            filterCookie = filterCookie.split('=')[1];
+            set({ isExpanded: filterCookie === 'true' ? true : false });
+        }
     }
 }));
