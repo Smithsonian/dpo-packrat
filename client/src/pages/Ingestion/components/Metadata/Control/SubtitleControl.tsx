@@ -21,7 +21,8 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         flexDirection: 'column',
         backgroundColor: (hasPrimaryTheme) => hasPrimaryTheme ? palette.primary.light : palette.secondary.light,
         width: 'fit-content',
-        minWidth: 300
+        minWidth: 300,
+        borderRadius: 5
     },
     selected: {
         cursor: 'pointer',
