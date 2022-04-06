@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Bulk Ingestion - Packrat Documentation</title>
+  <title>Ingestion: Upload - Packrat Documentation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="https://smithsonian.github.io/dpo-packrat/favicon.ico">
@@ -164,7 +164,7 @@
       <a href="/dpo-packrat/user-tasks/search/">Repository Searching</a>
     </li>
     
-    <li class="">
+    <li class="active">
       <a href="/dpo-packrat/user-tasks/ingestion-upload/">Ingestion: Upload</a>
     </li>
     
@@ -176,7 +176,7 @@
       <a href="/dpo-packrat/user-tasks/ingestion-metadata/">Ingestion: Common Metadata</a>
     </li>
     
-    <li class="active">
+    <li class="">
       <a href="/dpo-packrat/user-tasks/bulk-ingestion/">Bulk Ingestion</a>
     </li>
     
@@ -202,219 +202,41 @@
           
 
   
-  <h1 class="title">Bulk Ingestion</h1>
+  <h1 class="title">Ingestion: Upload</h1>
   <div class="content">
-    <p>Bulk ingestion is a form of ingestion in which a specially crafted zip file is provided. This file contains metadata needed by the ingestion process, as well as file manifests that enable the system to confirm uncorrupted receipt of the correct information.</p>
-<p>This zip file is in the bagit format (<a href="https://datatracker.ietf.org/doc/html/rfc8493">https://datatracker.ietf.org/doc/html/rfc8493</a>) and contains the following contents:</p>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Function</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>bagit.txt</td>
-<td>Declaration file</td>
-</tr>
-<tr>
-<td>bag-info.txt</td>
-<td>Unused metadata file</td>
-</tr>
-<tr>
-<td>manifest-sha1.txt</td>
-<td>Data file manifest, with hashes for each data file in the SHA1 format</td>
-</tr>
-<tr>
-<td>tagmanifest-sha1.txt</td>
-<td>Tag file manifest, with hashes for each metadata file in the SHA1 format</td>
-</tr>
-<tr>
-<td>data/*</td>
-<td>Data files, stored in the data subfolder, potentially with additional file path elements</td>
-</tr>
-<tr>
-<td>capture_data_photo.csv</td>
-<td>Optional photogrammetry capture data metadata</td>
-</tr>
-<tr>
-<td>models.csv</td>
-<td>Optional model metadata</td>
-</tr>
-<tr>
-<td>scenes.csv</td>
-<td>Optional scene metadata</td>
-</tr>
-</tbody>
-</table>
-<p><strong>One of capture_data_photo.csv, models.csv, or scenes.csv must be supplied.</strong>  These metadata files contain common data as well as object-specific metadata needed for ingestion:</p>
-<table>
-<thead>
-<tr>
-<th>Metadata Type</th>
-<th>Column Header</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>All</td>
-<td>subject_guid</td>
-<td>Subject Identifier</td>
-</tr>
-<tr>
-<td>All</td>
-<td>subject_name</td>
-<td>Subject Name</td>
-</tr>
-<tr>
-<td>All</td>
-<td>unit_guid</td>
-<td>Unit Identifier</td>
-</tr>
-<tr>
-<td>All</td>
-<td>unit_name</td>
-<td>Unit Name</td>
-</tr>
-<tr>
-<td>All</td>
-<td>item_guid</td>
-<td>Media Group Identifier</td>
-</tr>
-<tr>
-<td>All</td>
-<td>item_name</td>
-<td>Media Group Name</td>
-</tr>
-<tr>
-<td>All</td>
-<td>item_subtitle</td>
-<td>Media Group Subtitle, if any</td>
-</tr>
-<tr>
-<td>All</td>
-<td>entire_subject</td>
-<td>Is this media group the entire subject or just a portion?</td>
-</tr>
-<tr>
-<td>All</td>
-<td>name</td>
-<td>Name of object</td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>date_captured</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>description</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>capture_dataset_type</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>capture_dataset_field_id</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>item_position_type</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>item_position_field_id</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>item_arrangement_field_id</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>focus_type</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>light_source_type</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>background_removal_method</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>light_sourccluster_type_type</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>cluster_geometry_field_id</td>
-<td></td>
-</tr>
-<tr>
-<td>Models</td>
-<td>model_subtitle</td>
-<td>Model subtitle, if any</td>
-</tr>
-<tr>
-<td>Models</td>
-<td>date_created</td>
-<td></td>
-</tr>
-<tr>
-<td>Models</td>
-<td>creation_method</td>
-<td></td>
-</tr>
-<tr>
-<td>Models</td>
-<td>modality</td>
-<td></td>
-</tr>
-<tr>
-<td>Models</td>
-<td>units</td>
-<td></td>
-</tr>
-<tr>
-<td>Models</td>
-<td>purpose</td>
-<td></td>
-</tr>
-<tr>
-<td>Scenes</td>
-<td>scene_subtitle</td>
-<td>Scene subtitle, if any</td>
-</tr>
-<tr>
-<td>Scenes</td>
-<td>posed_and_qcd</td>
-<td></td>
-</tr>
-<tr>
-<td>Scenes</td>
-<td>approved_for_publication</td>
-<td></td>
-</tr>
-<tr>
-<td>All</td>
-<td>directory_path</td>
-<td>Relative path to data file(s) starting from the data folder</td>
-</tr>
-</tbody>
-</table>
+    <p>Ingestion is the process of bringing content into Packrat&rsquo;s repository. Click on &ldquo;Ingestion&rdquo; in the left navigation to begin and manage this process.</p>
+<p>The first step of the ingestion process is to select and upload files to Packrat.
+<img src="/dpo-packrat/images/packrat-ingestion-1.png" alt="Packrat Ingestion Upload" title="Packrat Ingestion Upload"></p>
+<ol>
+<li>
+<p><strong>Choose files</strong> for upload: either drag-and-drop files to the highlighted red box, or select them via the &ldquo;Browse Files&rdquo; button.</p>
+</li>
+<li>
+<p><strong>Select Asset Type</strong> for the added file. The system will attempt to guess the correct type.</p>
+</li>
+<li>
+<p><strong>Initiate Upload</strong> by clicking the &ldquo;Upload&rdquo; icon.</p>
+<p>Packrat validates the uploaded files once upload has completed. If any validations fail, the upload fails, and an error message is shown to the user. Validations include:</p>
+<ul>
+<li>3D Model vaidation using Cook&rsquo;s si-packrat-inspect recipe</li>
+<li>Image file format validation</li>
+<li>Zip file format validation</li>
+<li>Bulk Ingestion bagger format and contents validation. See <a href="../bulk-ingestion">Bulk Ingestion</a> for more details.</li>
+<li>Voyager document (.svx.json file) validation</li>
+</ul>
+<p>Once upload and validation is complete:</p>
+</li>
+<li>
+<p><strong>Select upload file(s) for ingestion</strong></p>
+</li>
+<li>
+<p><strong>Initiate Ingestion</strong> by clicking &ldquo;Ingest&rdquo; to move to the next step of ingestion for the selected file(s)</p>
+</li>
+<li>
+<p><strong>Discard unwanted uploads</strong> by clicking &ldquo;Discard&rdquo; to remove uploaded files from the ingestion queue</p>
+</li>
+</ol>
+<p>After uploading and validating files, the next step of ingestion is to <a href="../ingestion-subject">Specify the Subject(s), Media Group, and Project</a> for the to-be-ingested items.</p>
 
   </div>
 

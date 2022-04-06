@@ -138,7 +138,7 @@
 </div>
 
 <div class="docs-menu">
-  <h4>Packrat user guide</h4>
+  <h4>User guide</h4>
   <ul>
     
   </ul>
@@ -165,7 +165,15 @@
     </li>
     
     <li class="">
-      <a href="/dpo-packrat/user-tasks/ingestion/">Content Ingestion</a>
+      <a href="/dpo-packrat/user-tasks/ingestion-upload/">Ingestion: Upload</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/ingestion-subject/">Ingestion: Subject &amp; Media Group</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/ingestion-metadata/">Ingestion: Common Metadata</a>
     </li>
     
     <li class="">
@@ -230,16 +238,31 @@ When searching, the display of repository contents is updated with objects that 
   
     <div class="summary mb-2">
   
-  <h2 class="title-summary"><a href="/dpo-packrat/user-tasks/ingestion/">Content Ingestion</a></h2>
+  <h2 class="title-summary"><a href="/dpo-packrat/user-tasks/ingestion-upload/">Ingestion: Upload</a></h2>
   <p>Ingestion is the process of bringing content into Packrat&rsquo;s repository. Click on &ldquo;Ingestion&rdquo; in the left navigation to begin and manage this process.
-Upload The first step of the ingestion process is to select and upload files to Packrat.   Choose files for upload: either drag-and-drop files to the highlighted red box, or select them via the &ldquo;Browse Files&rdquo; button.
-  Select Asset Type for the added file.</p>
+The first step of the ingestion process is to select and upload files to Packrat.   Choose files for upload: either drag-and-drop files to the highlighted red box, or select them via the &ldquo;Browse Files&rdquo; button.
+  Select Asset Type for the added file. The system will attempt to guess the correct type.</p>
+</div>
+  
+    <div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="/dpo-packrat/user-tasks/ingestion-subject/">Ingestion: Subject &amp; Media Group</a></h2>
+  <p>After uploading and validating files, the next step of ingestion is to specify the Subject(s), Media Group, and Project for the to-be-ingested items.
+   Step Image     1. Search Packrat and the broader collection found in EDAN by entering search text. Feel free to use ARK IDs and EDAN MDM Record IDs. Click the search icon.    2. Select one or more subjects by clicking the plus icon next to the correct subject.</p>
+</div>
+  
+    <div class="summary mb-2">
+  
+  <h2 class="title-summary"><a href="/dpo-packrat/user-tasks/ingestion-metadata/">Ingestion: Common Metadata</a></h2>
+  <p>All ingested objects share a set of common metadata:  Either add an identifier by clicking the Add button, and/or Allow the system to create an identifier by leaving the checkbox selected. Specify parent and/or children objects.  Adding parents or children tells the system how to connect the ingested object to objects which already exist in Packrat. Doing so makes use of the repository browser:  Select one or more objects If needed, make use of search.</p>
 </div>
   
     <div class="summary mb-2">
   
   <h2 class="title-summary"><a href="/dpo-packrat/user-tasks/bulk-ingestion/">Bulk Ingestion</a></h2>
-  <p>Bulk ingestion&hellip;</p>
+  <p>Bulk ingestion is a form of ingestion in which a specially crafted zip file is provided. This file contains metadata needed by the ingestion process, as well as file manifests that enable the system to confirm uncorrupted receipt of the correct information.
+This zip file is in the bagit format (https://datatracker.ietf.org/doc/html/rfc8493) and contains the following contents:
+   Name Function     bagit.txt Declaration file   bag-info.</p>
 </div>
   
     <div class="summary mb-2">

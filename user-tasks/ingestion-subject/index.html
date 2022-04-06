@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Bulk Ingestion - Packrat Documentation</title>
+  <title>Ingestion: Subject &amp; Media Group - Packrat Documentation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="https://smithsonian.github.io/dpo-packrat/favicon.ico">
@@ -168,7 +168,7 @@
       <a href="/dpo-packrat/user-tasks/ingestion-upload/">Ingestion: Upload</a>
     </li>
     
-    <li class="">
+    <li class="active">
       <a href="/dpo-packrat/user-tasks/ingestion-subject/">Ingestion: Subject &amp; Media Group</a>
     </li>
     
@@ -176,7 +176,7 @@
       <a href="/dpo-packrat/user-tasks/ingestion-metadata/">Ingestion: Common Metadata</a>
     </li>
     
-    <li class="active">
+    <li class="">
       <a href="/dpo-packrat/user-tasks/bulk-ingestion/">Bulk Ingestion</a>
     </li>
     
@@ -202,219 +202,39 @@
           
 
   
-  <h1 class="title">Bulk Ingestion</h1>
+  <h1 class="title">Ingestion: Subject &amp; Media Group</h1>
   <div class="content">
-    <p>Bulk ingestion is a form of ingestion in which a specially crafted zip file is provided. This file contains metadata needed by the ingestion process, as well as file manifests that enable the system to confirm uncorrupted receipt of the correct information.</p>
-<p>This zip file is in the bagit format (<a href="https://datatracker.ietf.org/doc/html/rfc8493">https://datatracker.ietf.org/doc/html/rfc8493</a>) and contains the following contents:</p>
+    <p>After uploading and validating files, the next step of ingestion is to specify the Subject(s), Media Group, and Project for the to-be-ingested items.</p>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Function</th>
+<th>Step</th>
+<th>Image</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>bagit.txt</td>
-<td>Declaration file</td>
+<td>1. Search Packrat and the broader collection found in EDAN by entering search text. Feel free to use ARK IDs and EDAN MDM Record IDs. Click the search icon.</td>
+<td><a href="/dpo-packrat/images/packrat-ingestion-2.png"><img src="/dpo-packrat/images/packrat-ingestion-2.png" alt="Packrat Ingestion Subject Search" title="Packrat Ingestion Subject Search"></a></td>
 </tr>
 <tr>
-<td>bag-info.txt</td>
-<td>Unused metadata file</td>
+<td>2. Select one or more subjects by clicking the plus icon next to the correct subject.</td>
+<td><a href="/dpo-packrat/images/packrat-ingestion-3.png"><img src="/dpo-packrat/images/packrat-ingestion-3.png" alt="Packrat Ingestion Subject Selection" title="Packrat Ingestion Subject Selection"></a></td>
 </tr>
 <tr>
-<td>manifest-sha1.txt</td>
-<td>Data file manifest, with hashes for each data file in the SHA1 format</td>
+<td>3a. Select an existing media group, or create a new one.</td>
+<td><a href="/dpo-packrat/images/packrat-ingestion-4.png"><img src="/dpo-packrat/images/packrat-ingestion-4.png" alt="Packrat Ingestion New Media Group Selection" title="Packrat Ingestion New Media Group Selection"></a></td>
 </tr>
 <tr>
-<td>tagmanifest-sha1.txt</td>
-<td>Tag file manifest, with hashes for each metadata file in the SHA1 format</td>
-</tr>
-<tr>
-<td>data/*</td>
-<td>Data files, stored in the data subfolder, potentially with additional file path elements</td>
-</tr>
-<tr>
-<td>capture_data_photo.csv</td>
-<td>Optional photogrammetry capture data metadata</td>
-</tr>
-<tr>
-<td>models.csv</td>
-<td>Optional model metadata</td>
-</tr>
-<tr>
-<td>scenes.csv</td>
-<td>Optional scene metadata</td>
+<td>3b. When creating a new media group, pick the appropriate digitization project, then indicate if the media group is the entire subject. Provide a subtitle &ndash; this is required when the media group is not the entire subject</td>
+<td><a href="/dpo-packrat/images/packrat-ingestion-5.png"><img src="/dpo-packrat/images/packrat-ingestion-5.png" alt="Packrat Ingestion New Media Group" title="Packrat Ingestion New Media Group"></a></td>
 </tr>
 </tbody>
 </table>
-<p><strong>One of capture_data_photo.csv, models.csv, or scenes.csv must be supplied.</strong>  These metadata files contain common data as well as object-specific metadata needed for ingestion:</p>
-<table>
-<thead>
-<tr>
-<th>Metadata Type</th>
-<th>Column Header</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>All</td>
-<td>subject_guid</td>
-<td>Subject Identifier</td>
-</tr>
-<tr>
-<td>All</td>
-<td>subject_name</td>
-<td>Subject Name</td>
-</tr>
-<tr>
-<td>All</td>
-<td>unit_guid</td>
-<td>Unit Identifier</td>
-</tr>
-<tr>
-<td>All</td>
-<td>unit_name</td>
-<td>Unit Name</td>
-</tr>
-<tr>
-<td>All</td>
-<td>item_guid</td>
-<td>Media Group Identifier</td>
-</tr>
-<tr>
-<td>All</td>
-<td>item_name</td>
-<td>Media Group Name</td>
-</tr>
-<tr>
-<td>All</td>
-<td>item_subtitle</td>
-<td>Media Group Subtitle, if any</td>
-</tr>
-<tr>
-<td>All</td>
-<td>entire_subject</td>
-<td>Is this media group the entire subject or just a portion?</td>
-</tr>
-<tr>
-<td>All</td>
-<td>name</td>
-<td>Name of object</td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>date_captured</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>description</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>capture_dataset_type</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>capture_dataset_field_id</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>item_position_type</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>item_position_field_id</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>item_arrangement_field_id</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>focus_type</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>light_source_type</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>background_removal_method</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>light_sourccluster_type_type</td>
-<td></td>
-</tr>
-<tr>
-<td>Capture Data</td>
-<td>cluster_geometry_field_id</td>
-<td></td>
-</tr>
-<tr>
-<td>Models</td>
-<td>model_subtitle</td>
-<td>Model subtitle, if any</td>
-</tr>
-<tr>
-<td>Models</td>
-<td>date_created</td>
-<td></td>
-</tr>
-<tr>
-<td>Models</td>
-<td>creation_method</td>
-<td></td>
-</tr>
-<tr>
-<td>Models</td>
-<td>modality</td>
-<td></td>
-</tr>
-<tr>
-<td>Models</td>
-<td>units</td>
-<td></td>
-</tr>
-<tr>
-<td>Models</td>
-<td>purpose</td>
-<td></td>
-</tr>
-<tr>
-<td>Scenes</td>
-<td>scene_subtitle</td>
-<td>Scene subtitle, if any</td>
-</tr>
-<tr>
-<td>Scenes</td>
-<td>posed_and_qcd</td>
-<td></td>
-</tr>
-<tr>
-<td>Scenes</td>
-<td>approved_for_publication</td>
-<td></td>
-</tr>
-<tr>
-<td>All</td>
-<td>directory_path</td>
-<td>Relative path to data file(s) starting from the data folder</td>
-</tr>
-</tbody>
-</table>
+<p>Click Next to specify object-specific metadata based on the type of object being ingested.</p>
+<ul>
+<li>Specify <a href="../ingestion-metadata">Common Metadata</a> for all object types</li>
+</ul>
 
   </div>
 

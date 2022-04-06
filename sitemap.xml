@@ -10,7 +10,11 @@
   </url><url>
     <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/search/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/ingestion/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/ingestion-upload/</loc>
+  </url><url>
+    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/ingestion-subject/</loc>
+  </url><url>
+    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/ingestion-metadata/</loc>
   </url><url>
     <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/bulk-ingestion/</loc>
   </url><url>
@@ -29,9 +33,9 @@
   </url><url>
     <loc>https://smithsonian.github.io/dpo-packrat/integration/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user/</loc>
-  </url><url>
     <loc>https://smithsonian.github.io/dpo-packrat/tags/</loc>
+  </url><url>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/</loc>
   </url><url>
     <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/</loc>
   </url>

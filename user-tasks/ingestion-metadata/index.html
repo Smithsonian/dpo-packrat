@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Content Ingestion - Packrat Documentation</title>
+  <title>Ingestion: Common Metadata - Packrat Documentation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="https://smithsonian.github.io/dpo-packrat/favicon.ico">
@@ -138,7 +138,7 @@
 </div>
 
 <div class="docs-menu">
-  <h4>Packrat user guide</h4>
+  <h4>User guide</h4>
   <ul>
     
   </ul>
@@ -164,8 +164,16 @@
       <a href="/dpo-packrat/user-tasks/search/">Repository Searching</a>
     </li>
     
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/ingestion-upload/">Ingestion: Upload</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/ingestion-subject/">Ingestion: Subject &amp; Media Group</a>
+    </li>
+    
     <li class="active">
-      <a href="/dpo-packrat/user-tasks/ingestion/">Content Ingestion</a>
+      <a href="/dpo-packrat/user-tasks/ingestion-metadata/">Ingestion: Common Metadata</a>
     </li>
     
     <li class="">
@@ -194,43 +202,23 @@
           
 
   
-  <h1 class="title">Content Ingestion</h1>
+  <h1 class="title">Ingestion: Common Metadata</h1>
   <div class="content">
-    <p>Ingestion is the process of bringing content into Packrat&rsquo;s repository. Click on &ldquo;Ingestion&rdquo; in the left navigation to begin and manage this process.</p>
-<h3 id="upload">Upload</h3>
-<p>The first step of the ingestion process is to select and upload files to Packrat.
-<img src="/dpo-packrat/images/packrat-ingestion-1.png" alt="Packrat Ingestion Upload" title="Packrat Ingestion Upload"></p>
+    <p>All ingested objects share a set of common metadata:
+<img src="/dpo-packrat/images/packrat-ingestion-md-common.png" alt="Packrat Ingestion Common Metadata" title="Packrat Ingestion Common Metadata"></p>
 <ol>
-<li>
-<p><strong>Choose files</strong> for upload: either drag-and-drop files to the highlighted red box, or select them via the &ldquo;Browse Files&rdquo; button.</p>
-</li>
-<li>
-<p><strong>Select Asset Type</strong> for the added file.</p>
-</li>
-<li>
-<p><strong>Initiate Upload</strong> by clicking the &ldquo;Upload&rdquo; icon.</p>
-<p>Packrat validates the uploaded files once upload has completed. If any validations fail, the upload fails, and an error message is shown to the user. Validations include:</p>
-<ul>
-<li>3D Model vaidation using Cook&rsquo;s si-packrat-inspect recipe</li>
-<li>Image file format validation</li>
-<li>Zip file format validation</li>
-<li>Bulk Ingestion bagger format and contents validation</li>
-<li>Voyager document (.svx.json file) validation</li>
-</ul>
-<p>Once upload and validation is complete:</p>
-</li>
-<li>
-<p><strong>Select upload file(s) for ingestion</strong></p>
-</li>
-<li>
-<p><strong>Initiate Ingestion</strong> by clicking &ldquo;Ingest&rdquo; to move to the next step of ingestion for the selected file(s)</p>
-</li>
-<li>
-<p><strong>Discard unwanted uploads</strong> by clicking &ldquo;Discard&rdquo; to remove uploaded files from the ingestion queue</p>
-</li>
+<li>Either add an identifier by clicking the Add button, and/or</li>
+<li>Allow the system to create an identifier by leaving the checkbox selected.</li>
+<li>Specify parent and/or children objects.</li>
 </ol>
-<h3 id="metadata">Metadata</h3>
-<p>After uploading and validating files, the next step of ingestion is to specify the Subject, Media Group, and Project for the to-be-ingested items, followed by specifying object-specific metadata for each to-be-ingested file.</p>
+<p>Adding parents or children tells the system how to connect the ingested object to objects which already exist in Packrat. Doing so makes use of the repository browser: 
+<img src="/dpo-packrat/images/packrat-ingestion-md-common-2.png" alt="Packrat Ingestion Common Related" title="Packrat Ingestion Common Related"></p>
+<ol>
+<li>Select one or more objects</li>
+<li>If needed, make use of search. Note that when ingesting scenes, search will show you results from the entire repository, allowing the selection of diverse parent models &ndash; more than just from the selected subject. Otherwise, you will only see objects related to the subjects selected for ingestion.</li>
+<li>Click the carrot to reveal the repository browser filter, if that assists in selecting the desired object.</li>
+<li>Click &ldquo;Save&rdquo; when you are done.</li>
+</ol>
 
   </div>
 
