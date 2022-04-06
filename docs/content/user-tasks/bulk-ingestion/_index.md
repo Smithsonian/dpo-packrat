@@ -17,6 +17,8 @@ This zip file is in the bagit format (https://datatracker.ietf.org/doc/html/rfc8
 | models.csv | Optional model metadata |
 | scenes.csv | Optional scene metadata |
 
+The Library of Congress has built and shared the [Bagger](https://github.com/LibraryOfCongress/bagger) utility for constructing bagit files.
+
 **One of capture_data_photo.csv, models.csv, or scenes.csv must be supplied.**  These metadata files contain common data as well as object-specific metadata needed for ingestion:
 | Metadata Type | Column Header | Meaning |
 | ---- | ------------- | ------- |
