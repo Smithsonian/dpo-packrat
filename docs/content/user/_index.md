@@ -13,4 +13,5 @@ title: "User Guide"
 - [Managing Content](../user-tasks/managing)
 - [Publishing Content](../user-tasks/publishing)
 - [Business Process Management](../user-tasks/workflows)
+- [Controlled Vocabularies](../user-tasks/vocabulary)
 - [Administration](../admin)

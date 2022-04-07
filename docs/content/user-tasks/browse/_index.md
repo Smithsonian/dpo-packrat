@@ -18,7 +18,7 @@ The Packrat repository is organized into a tree of objects representing core con
 ### Repository Browser
 Clicking on "Repository" in the left navigation brings the user to the repository browser:
 ![Packrat Repository Browser](/dpo-packrat/images/packrat-repobrowser-1.png "Packrat Repository Browser")
-1. **Repository Filter**: use the controls here to filter the results of what is displayed in the Repository Contents section below (item 5). For example, the results here have been filtered to show only things created on or after 3/29/2022.
+1. **Repository Filter**: use the controls here to filter the results of what is displayed in the Repository Contents section below (item 5). For example, the results here have been filtered to show only things created on or after 3/29/2022. See [Repository Filter](#repository-filter) below for filter element details.
 
 2. **Filter Toggle and Link Icons**
     - The ^ icon is used to collapse the filter, providing more screen real estate for the Repository Contents below. 
@@ -42,3 +42,20 @@ Clicking on "Repository" in the left navigation brings the user to the repositor
 
 9. **Object Name**: Double-click the name to view the object details page. Single-click the row to show/hide children objects.
 
+### Repository Filter
+The filter can be used to focus attention on those portions of the repository matching your selections:
+| Filter Element | Purpose | Example |
+| -------------- | ------- | ------- |
+| Top-Level Objects | Choose the top-most items in the tree | [List of models in the repository](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&repositoryRootType=6) |
+| Children Objects | Choose which object types appear as the children of items in the tree, allowing for the construction of very customized views of the repository | [View asset versions belonging to each scene](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&objectsToDisplay=11&repositoryRootType=7) |
+| Metadata To Display | Controls the columns of metadata displayed in the browser | [View Date Created, Identifier, and Model Purpose of Models](https://packrat.si.edu/repository?metadataToDisplay=2,28,3&repositoryRootType=6) |
+| Units | Selects which units to display | [View Models from NMNH](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&repositoryRootType=6&units=17) |
+| Projects | Selects which projects to display | [View Media Groups from Project "Bees"](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&projects=127&repositoryRootType=4) |
+| Has | Only display objects that "have" the selected object type as a child | [View Subjects that have Models](https://packrat.si.edu/repository?has=6&metadataToDisplay=5,7,8&repositoryRootType=3) |
+| Missing | Only display objects that are missing the selected object type as a child | [View NMNH Subjects that don't have Models](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&missing=6&repositoryRootType=3&units=17) |
+| Capture Method | Display objects that have Capture Data Sets with the specified capture method | [View Photogrammetry Capture Data](https://packrat.si.edu/repository?captureMethod=1&metadataToDisplay=5,7,8&repositoryRootType=5) |
+| Variant Type | Display objects that have Capture Data Set assets with the specified variant type | [View Raw Capture Data](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&repositoryRootType=5&variantType=28) |
+| Model Purpose | Display objects that have Models with the specified purpose | [View Voyager Scene Models](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&modelPurpose=46&repositoryRootType=6) |
+| Model File Type | Display objects that have Models with the specified file type | [View OBJ Models](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&modelFileType=49&repositoryRootType=6) |
+| Date Created (from) | Display objects created on or after the specifed date | [View scenes created after 1/1/2022](https://packrat.si.edu/repository?dateCreatedFrom=2022-01-01&metadataToDisplay=5,7,8&repositoryRootType=7) |
+| Date Created (to) | Display objects created on or before the specifed date | [View scenes created in February 2022](https://packrat.si.edu/repository?dateCreatedFrom=2022-02-01&dateCreatedTo=2022-02-28&metadataToDisplay=5,7,8&repositoryRootType=7) |
