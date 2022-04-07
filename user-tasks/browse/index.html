@@ -192,6 +192,10 @@
       <a href="/dpo-packrat/user-tasks/workflows/">Business Process Management</a>
     </li>
     
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/vocabulary/">Controlled Vocabularies</a>
+    </li>
+    
   </ul>
 </div>
 
@@ -222,7 +226,7 @@
 <img src="/dpo-packrat/images/packrat-repobrowser-1.png" alt="Packrat Repository Browser" title="Packrat Repository Browser"></p>
 <ol>
 <li>
-<p><strong>Repository Filter</strong>: use the controls here to filter the results of what is displayed in the Repository Contents section below (item 5). For example, the results here have been filtered to show only things created on or after 3/29/2022.</p>
+<p><strong>Repository Filter</strong>: use the controls here to filter the results of what is displayed in the Repository Contents section below (item 5). For example, the results here have been filtered to show only things created on or after 3/29/2022. See <a href="#repository-filter">Repository Filter</a> below for filter element details.</p>
 </li>
 <li>
 <p><strong>Filter Toggle and Link Icons</strong></p>
@@ -259,6 +263,84 @@
 <p><strong>Object Name</strong>: Double-click the name to view the object details page. Single-click the row to show/hide children objects.</p>
 </li>
 </ol>
+<h3 id="repository-filter">Repository Filter</h3>
+<p>The filter can be used to focus attention on those portions of the repository matching your selections:</p>
+<table>
+<thead>
+<tr>
+<th>Filter Element</th>
+<th>Purpose</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Top-Level Objects</td>
+<td>Choose the top-most items in the tree</td>
+<td><a href="https://packrat.si.edu/repository?metadataToDisplay=5,7,8&amp;repositoryRootType=6">List of models in the repository</a></td>
+</tr>
+<tr>
+<td>Children Objects</td>
+<td>Choose which object types appear as the children of items in the tree, allowing for the construction of very customized views of the repository</td>
+<td><a href="https://packrat.si.edu/repository?metadataToDisplay=5,7,8&amp;objectsToDisplay=11&amp;repositoryRootType=7">View asset versions belonging to each scene</a></td>
+</tr>
+<tr>
+<td>Metadata To Display</td>
+<td>Controls the columns of metadata displayed in the browser</td>
+<td><a href="https://packrat.si.edu/repository?metadataToDisplay=2,28,3&amp;repositoryRootType=6">View Date Created, Identifier, and Model Purpose of Models</a></td>
+</tr>
+<tr>
+<td>Units</td>
+<td>Selects which units to display</td>
+<td><a href="https://packrat.si.edu/repository?metadataToDisplay=5,7,8&amp;repositoryRootType=6&amp;units=17">View Models from NMNH</a></td>
+</tr>
+<tr>
+<td>Projects</td>
+<td>Selects which projects to display</td>
+<td><a href="https://packrat.si.edu/repository?metadataToDisplay=5,7,8&amp;projects=127&amp;repositoryRootType=4">View Media Groups from Project &ldquo;Bees&rdquo;</a></td>
+</tr>
+<tr>
+<td>Has</td>
+<td>Only display objects that &ldquo;have&rdquo; the selected object type as a child</td>
+<td><a href="https://packrat.si.edu/repository?has=6&amp;metadataToDisplay=5,7,8&amp;repositoryRootType=3">View Subjects that have Models</a></td>
+</tr>
+<tr>
+<td>Missing</td>
+<td>Only display objects that are missing the selected object type as a child</td>
+<td><a href="https://packrat.si.edu/repository?metadataToDisplay=5,7,8&amp;missing=6&amp;repositoryRootType=3&amp;units=17">View NMNH Subjects that don&rsquo;t have Models</a></td>
+</tr>
+<tr>
+<td>Capture Method</td>
+<td>Display objects that have Capture Data Sets with the specified capture method</td>
+<td><a href="https://packrat.si.edu/repository?captureMethod=1&amp;metadataToDisplay=5,7,8&amp;repositoryRootType=5">View Photogrammetry Capture Data</a></td>
+</tr>
+<tr>
+<td>Variant Type</td>
+<td>Display objects that have Capture Data Set assets with the specified variant type</td>
+<td><a href="https://packrat.si.edu/repository?metadataToDisplay=5,7,8&amp;repositoryRootType=5&amp;variantType=28">View Raw Capture Data</a></td>
+</tr>
+<tr>
+<td>Model Purpose</td>
+<td>Display objects that have Models with the specified purpose</td>
+<td><a href="https://packrat.si.edu/repository?metadataToDisplay=5,7,8&amp;modelPurpose=46&amp;repositoryRootType=6">View Voyager Scene Models</a></td>
+</tr>
+<tr>
+<td>Model File Type</td>
+<td>Display objects that have Models with the specified file type</td>
+<td><a href="https://packrat.si.edu/repository?metadataToDisplay=5,7,8&amp;modelFileType=49&amp;repositoryRootType=6">View OBJ Models</a></td>
+</tr>
+<tr>
+<td>Date Created (from)</td>
+<td>Display objects created on or after the specifed date</td>
+<td><a href="https://packrat.si.edu/repository?dateCreatedFrom=2022-01-01&amp;metadataToDisplay=5,7,8&amp;repositoryRootType=7">View scenes created after 1/1/2022</a></td>
+</tr>
+<tr>
+<td>Date Created (to)</td>
+<td>Display objects created on or before the specifed date</td>
+<td><a href="https://packrat.si.edu/repository?dateCreatedFrom=2022-02-01&amp;dateCreatedTo=2022-02-28&amp;metadataToDisplay=5,7,8&amp;repositoryRootType=7">View scenes created in February 2022</a></td>
+</tr>
+</tbody>
+</table>
 
   </div>
 

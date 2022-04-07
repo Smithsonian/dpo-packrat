@@ -192,6 +192,10 @@
       <a href="/dpo-packrat/user-tasks/workflows/">Business Process Management</a>
     </li>
     
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/vocabulary/">Controlled Vocabularies</a>
+    </li>
+    
   </ul>
 </div>
 
@@ -205,12 +209,12 @@
   <h1 class="title">Bulk Ingestion</h1>
   <div class="content">
     <p>Bulk ingestion is a form of ingestion in which a specially crafted zip file is provided. This file contains metadata needed by the ingestion process, as well as file manifests that enable the system to confirm uncorrupted receipt of the correct information.</p>
-<p>This zip file is in the bagit format (<a href="https://datatracker.ietf.org/doc/html/rfc8493">https://datatracker.ietf.org/doc/html/rfc8493</a>) and contains the following contents:</p>
+<p>This zip file is in the bagit format (<a href="https://datatracker.ietf.org/doc/html/rfc8493)">https://datatracker.ietf.org/doc/html/rfc8493)</a>. The Library of Congress has built and shared the <a href="https://github.com/LibraryOfCongress/bagger">Bagger</a> utility for constructing these files. Bagit zips contain the following contents:</p>
 <table>
 <thead>
 <tr>
 <th>Name</th>
-<th>Function</th>
+<th>Purpose</th>
 </tr>
 </thead>
 <tbody>
@@ -220,7 +224,7 @@
 </tr>
 <tr>
 <td>bag-info.txt</td>
-<td>Unused metadata file</td>
+<td>Metadata file (unused by Packrat)</td>
 </tr>
 <tr>
 <td>manifest-sha1.txt</td>
@@ -235,24 +239,24 @@
 <td>Data files, stored in the data subfolder, potentially with additional file path elements</td>
 </tr>
 <tr>
-<td>capture_data_photo.csv</td>
+<td><strong>capture_data_photo.csv</strong></td>
 <td>Optional photogrammetry capture data metadata</td>
 </tr>
 <tr>
-<td>models.csv</td>
+<td><strong>models.csv</strong></td>
 <td>Optional model metadata</td>
 </tr>
 <tr>
-<td>scenes.csv</td>
+<td><strong>scenes.csv</strong></td>
 <td>Optional scene metadata</td>
 </tr>
 </tbody>
 </table>
-<p><strong>One of capture_data_photo.csv, models.csv, or scenes.csv must be supplied.</strong>  These metadata files contain common data as well as object-specific metadata needed for ingestion:</p>
+<p><strong>One of capture_data_photo.csv, models.csv, or scenes.csv must be supplied.</strong> These metadata files contain common data as well as object-specific metadata needed for ingestion. Some of these fields make use of <a href="../vocabulary">Controlled Vocabularies</a>:</p>
 <table>
 <thead>
 <tr>
-<th>Metadata Type</th>
+<th>Metadata Usage</th>
 <th>Column Header</th>
 <th>Meaning</th>
 </tr>
@@ -306,62 +310,62 @@
 <tr>
 <td>Capture Data</td>
 <td>date_captured</td>
-<td></td>
+<td>Date of Capture</td>
 </tr>
 <tr>
 <td>Capture Data</td>
 <td>description</td>
-<td></td>
+<td>Description of Capture</td>
 </tr>
 <tr>
 <td>Capture Data</td>
 <td>capture_dataset_type</td>
-<td></td>
+<td>Dataset Type (Controlled Vocabulary)</td>
 </tr>
 <tr>
 <td>Capture Data</td>
 <td>capture_dataset_field_id</td>
-<td></td>
+<td>Field ID for capture dataset</td>
 </tr>
 <tr>
 <td>Capture Data</td>
 <td>item_position_type</td>
-<td></td>
+<td>Position Type (Controlled Vocabulary)</td>
 </tr>
 <tr>
 <td>Capture Data</td>
 <td>item_position_field_id</td>
-<td></td>
+<td>Field ID for position</td>
 </tr>
 <tr>
 <td>Capture Data</td>
 <td>item_arrangement_field_id</td>
-<td></td>
+<td>Field ID for arrangement</td>
 </tr>
 <tr>
 <td>Capture Data</td>
 <td>focus_type</td>
-<td></td>
+<td>Focus Type (Controlled Vocabulary)</td>
 </tr>
 <tr>
 <td>Capture Data</td>
 <td>light_source_type</td>
-<td></td>
+<td>Light Source Type (Controlled Vocabulary)</td>
 </tr>
 <tr>
 <td>Capture Data</td>
 <td>background_removal_method</td>
-<td></td>
+<td>Background Removal Method (Controlled Vocabulary)</td>
 </tr>
 <tr>
 <td>Capture Data</td>
-<td>light_sourccluster_type_type</td>
-<td></td>
+<td>cluster_type_type</td>
+<td>Cluster Type (Controlled Vocabulary)</td>
 </tr>
 <tr>
 <td>Capture Data</td>
 <td>cluster_geometry_field_id</td>
-<td></td>
+<td>Field ID for Cluster Geometry</td>
 </tr>
 <tr>
 <td>Models</td>
@@ -371,27 +375,27 @@
 <tr>
 <td>Models</td>
 <td>date_created</td>
-<td></td>
+<td>Creation Date</td>
 </tr>
 <tr>
 <td>Models</td>
 <td>creation_method</td>
-<td></td>
+<td>Creation Method (Controlled Vocabulary)</td>
 </tr>
 <tr>
 <td>Models</td>
 <td>modality</td>
-<td></td>
+<td>Model Modality (Controlled Vocabulary)</td>
 </tr>
 <tr>
 <td>Models</td>
 <td>units</td>
-<td></td>
+<td>Model Units (Controlled Vocabulary)</td>
 </tr>
 <tr>
 <td>Models</td>
 <td>purpose</td>
-<td></td>
+<td>Model Purpose (Controlled Vocabulary)</td>
 </tr>
 <tr>
 <td>Scenes</td>
@@ -401,12 +405,12 @@
 <tr>
 <td>Scenes</td>
 <td>posed_and_qcd</td>
-<td></td>
+<td>Set if the scene has been posed and QC&rsquo;d</td>
 </tr>
 <tr>
 <td>Scenes</td>
 <td>approved_for_publication</td>
-<td></td>
+<td>Set if the scene has been approved for publication</td>
 </tr>
 <tr>
 <td>All</td>

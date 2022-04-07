@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Controlled Vocabularies - Packrat Documentation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="icon" href="https://smithsonian.github.io/dpo-packrat/favicon.ico">
+
+  
+  
+  <link rel="stylesheet" href="/dpo-packrat/css/style.min.css">
+  
+
+  
+
+</head>
+
+<body class='page page-default-list'>
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="/dpo-packrat/">
+        <span>Home</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-user guide">
+      <a href="/dpo-packrat/user/">
+        <span>User Guide</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-admin guide">
+      <a href="/dpo-packrat/admin/">
+        <span>Admin Guide</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-integration">
+      <a href="/dpo-packrat/integration/">
+        <span>Integration</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-github" title="Smithsonian Cook on Github">
+      <a href="https://github.com/smithsonian/dpo-packrat"><img src="/dpo-packrat/images/github.svg" alt="Github"></a>
+    </li>
+  </ul>
+</div>
+  <div class="wrapper">
+    <div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="https://smithsonian.github.io/dpo-packrat"><img alt="Logo" src="/dpo-packrat/images/logo-name.png" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="https://smithsonian.github.io/dpo-packrat"><img alt="Logo" src="/dpo-packrat/images/logo48.png" /></a>
+    </div>
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-home">
+      <a href="/dpo-packrat/">
+        <span>Home</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-user guide">
+      <a href="/dpo-packrat/user/">
+        <span>User Guide</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-admin guide">
+      <a href="/dpo-packrat/admin/">
+        <span>Admin Guide</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-integration">
+      <a href="/dpo-packrat/integration/">
+        <span>Integration</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-github" title="Smithsonian Packrat on Github">
+      <a href="https://github.com/smithsonian/dpo-packrat"><img src="/dpo-packrat/images/github.svg" alt="Github"></a>
+    </li>
+  </ul>
+</div>
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+</div>
+
+
+    
+    
+      
+    
+      
+    
+      
+    
+      
+        
+      
+    
+
+    
+    <div class="container pt-2 pt-md-6 pb-3 pb-md-6">
+      <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+          <div class="sidebar">
+            
+
+<div class="docs-menu">
+  <h4>Administrator guide</h4>
+  <ul>
+    
+  </ul>
+</div>
+
+<div class="docs-menu">
+  <h4>Integration guide</h4>
+  <ul>
+    
+  </ul>
+</div>
+
+<div class="docs-menu">
+  <h4>User guide</h4>
+  <ul>
+    
+  </ul>
+</div>
+
+<div class="docs-menu">
+  <h4>User tasks</h4>
+  <ul>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/login/">Login</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/navigation/">Navigation</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/browse/">Repository Browsing</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/search/">Repository Searching</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/ingestion-upload/">Ingestion: Upload</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/ingestion-subject/">Ingestion: Subject &amp; Media Group</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/ingestion-metadata/">Ingestion: Common Metadata</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/bulk-ingestion/">Bulk Ingestion</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/managing/">Content Management</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/publishing/">Content Publishing</a>
+    </li>
+    
+    <li class="">
+      <a href="/dpo-packrat/user-tasks/workflows/">Business Process Management</a>
+    </li>
+    
+    <li class="active">
+      <a href="/dpo-packrat/user-tasks/vocabulary/">Controlled Vocabularies</a>
+    </li>
+    
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+        <div class="col-12 col-md-9">
+          
+
+  
+  <h1 class="title">Controlled Vocabularies</h1>
+  <div class="content">
+    <p>Packrat makes use of the following controlled vocabularies:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Element</th>
+<th>Term</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CaptureData</td>
+<td>CaptureMethod</td>
+<td>Photogrammetry</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>CaptureMethod</td>
+<td>CT</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>CaptureMethod</td>
+<td>Structured Light</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>CaptureMethod</td>
+<td>Laser Line</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>CaptureMethod</td>
+<td>Spherical Laser</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>DatasetType</td>
+<td>Photogrammetry Image Set</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>DatasetType</td>
+<td>Grey Card Image Set</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>DatasetType</td>
+<td>Color Card Image Set</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>DatasetType</td>
+<td>Background Removal Image Set</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>DatasetType</td>
+<td>Calibration Dataset</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>ItemPositionType</td>
+<td>Relative To Environment</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>ItemPositionType</td>
+<td>Relative To Turntable</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>FocusType</td>
+<td>Fixed</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>FocusType</td>
+<td>Variable</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>LightSourceType</td>
+<td>Ambient</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>LightSourceType</td>
+<td>Strobe Standard</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>LightSourceType</td>
+<td>Strobe Cross</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>LightSourceType</td>
+<td>Patterned/Structured</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>BackgroundRemovalMethod</td>
+<td>None</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>BackgroundRemovalMethod</td>
+<td>Clip Black</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>BackgroundRemovalMethod</td>
+<td>Clip White</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>BackgroundRemovalMethod</td>
+<td>Background Subtraction</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>ClusterType</td>
+<td>None</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>ClusterType</td>
+<td>Array</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>ClusterType</td>
+<td>Spherical Image Station</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>ClusterType</td>
+<td>Focal Stack Position Based</td>
+</tr>
+<tr>
+<td>CaptureData</td>
+<td>ClusterType</td>
+<td>Focal Stack Focus Based</td>
+</tr>
+<tr>
+<td>CaptureDataFile</td>
+<td>VariantType</td>
+<td>Raw</td>
+</tr>
+<tr>
+<td>CaptureDataFile</td>
+<td>VariantType</td>
+<td>Processed</td>
+</tr>
+<tr>
+<td>CaptureDataFile</td>
+<td>VariantType</td>
+<td>From Camera</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>CreationMethod</td>
+<td>Scan To Mesh</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>CreationMethod</td>
+<td>CAD</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Modality</td>
+<td>Point Cloud</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Modality</td>
+<td>Mesh</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Units</td>
+<td>Micrometer</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Units</td>
+<td>Millimeter</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Units</td>
+<td>Centimeter</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Units</td>
+<td>Meter</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Units</td>
+<td>Kilometer</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Units</td>
+<td>Inch</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Units</td>
+<td>Foot</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Units</td>
+<td>Yard</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Units</td>
+<td>Mile</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Units</td>
+<td>Astronomical Unit</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Purpose</td>
+<td>Master</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Purpose</td>
+<td>Voyager Scene Model</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Purpose</td>
+<td>Download</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Purpose</td>
+<td>Intermediate Processing Step</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>obj - Alias Wavefront Object</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>ply - Stanford Polygon File Format</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>stl - StereoLithography</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>glb - GL Transmission Format Binary</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>gltf - GL Transmission Format</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>usd - Universal Scene Description</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>usdz - Universal Scene Description (zipped)</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>x3d</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>wrl - VRML</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>dae - COLLADA</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>fbx - Filmbox</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>ma - Maya</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>3ds - 3D Studio</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>ptx</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>FileType</td>
+<td>pts</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Diffuse</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Specular</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Ambient</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Emissive</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Bump</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Normal</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Glossiness</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Opacity</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Displacement</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Occlusion</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Reflection</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Metalness</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Roughness</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>None</td>
+</tr>
+<tr>
+<td>ModelMaterialChannel</td>
+<td>MaterialType</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>Identifier</td>
+<td>IdentifierType</td>
+<td>ARK</td>
+</tr>
+<tr>
+<td>Identifier</td>
+<td>IdentifierType</td>
+<td>DOI</td>
+</tr>
+<tr>
+<td>Identifier</td>
+<td>IdentifierType</td>
+<td>EdanMDM</td>
+</tr>
+<tr>
+<td>Identifier</td>
+<td>IdentifierTypeActor</td>
+<td>ORCID</td>
+</tr>
+<tr>
+<td>Identifier</td>
+<td>IdentifierTypeActor</td>
+<td>ISNI</td>
+</tr>
+<tr>
+<td>Metadata</td>
+<td>MetadataSource</td>
+<td>Bulk Ingestion</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Bulk Ingestion</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Capture Data Set: Photogrammetry</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Capture Data Set: Diconde</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Capture Data Set: Dicom</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Capture Data Set: Laser Line</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Capture Data Set: Spherical Laser</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Capture Data Set: Structured Light</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Capture Data Set: Other</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Capture Data File</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Model</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Model Geometry File</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Model UV Map File</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Scene</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Project Documentation</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Intermediary File</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Attachment</td>
+</tr>
+<tr>
+<td>Asset</td>
+<td>AssetType</td>
+<td>Other</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: bake</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: decimate-unwrap</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: decimate</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: generate-usdz</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: generate-web-gltf</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: inspect-mesh</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: si-ar-backfill-fix</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: si-generate-downloads</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: si-orient-model-to-svx</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: si-packrat-inspect</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: si-voyager-asset</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: si-voyager-scene</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>JobType</td>
+<td>Cook: unwrap</td>
+</tr>
+<tr>
+<td>Workflow</td>
+<td>Type</td>
+<td>Cook Job</td>
+</tr>
+<tr>
+<td>WorkflowStep</td>
+<td>WorkflowStepType</td>
+<td>Start</td>
+</tr>
+<tr>
+<td>Workflow</td>
+<td>Event</td>
+<td>Ingestion: Upload Asset Version</td>
+</tr>
+<tr>
+<td>Workflow</td>
+<td>Event</td>
+<td>Ingestion: Ingest Object</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeUnits</td>
+<td>mm</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeUnits</td>
+<td>cm</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeUnits</td>
+<td>m</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeUnits</td>
+<td>km</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeUnits</td>
+<td>in</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeUnits</td>
+<td>ft</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeUnits</td>
+<td>yd</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeUnits</td>
+<td>mi</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeModelFileType</td>
+<td>obj</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeModelFileType</td>
+<td>ply</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeModelFileType</td>
+<td>stl</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeModelFileType</td>
+<td>glb</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeModelFileType</td>
+<td>x3d</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeModelFileType</td>
+<td>gltf</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeModelFileType</td>
+<td>usdz</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeFileType</td>
+<td>zip</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeFileType</td>
+<td>glb</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceAttributeFileType</td>
+<td>usdz</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceType</td>
+<td>3d mesh</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceType</td>
+<td>CAD model</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceCategory</td>
+<td>Full resolution</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceCategory</td>
+<td>Medium resolution</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceCategory</td>
+<td>Low resolution</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceCategory</td>
+<td>Watertight</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>3DResourceCategory</td>
+<td>iOS AR model</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Label</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Title</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Record ID</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Unit</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>License</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>License Text</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Object Type</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Date</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Place</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Topic</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Identifier (FT)</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Data Source (FT)</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Date (FT)</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Name (FT)</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Object Rights (FT)</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Place (FT)</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Taxonomic Name (FT)</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Notes (FT)</td>
+</tr>
+<tr>
+<td>Edan</td>
+<td>MDMFields</td>
+<td>Physical Description (FT)</td>
+</tr>
+</tbody>
+</table>
+
+  </div>
+
+  
+
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+          <a href="https://3d.si.edu" target="_blank"><img class="si-logo" src="/dpo-packrat/images/si-digitization-logo-neg.svg" alt="Smithsonian Digitization Logo"></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/dpo-packrat/js/scripts.min.js"></script>
+  
+
+  
+  
+  
+    
+  
+
+
+</body>
+
+</html>
