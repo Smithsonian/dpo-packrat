@@ -37,7 +37,7 @@ export const useStyles = makeStyles(({ palette }) => ({
         // need to specify top radius in table container AND MuiToolbar override
         borderTopRightRadius: '5px',
         borderTopLeftRadius: '5px',
-        width: '80%'
+        width: 'max-content'
     },
     centeredTableHead: {
         '& > span': {

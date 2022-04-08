@@ -6,6 +6,7 @@ import React from 'react';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { ReadOnlyRow, IndentedReadOnlyRow } from '../../../../../components';
+import { toFixed } from '../../../../../constants/helperfunctions';
 
 const useStyles = makeStyles(({ palette }) => ({
     materialFields: {
@@ -62,6 +63,13 @@ function roundToTwoPlaces(num) {
     return Math.ceil(num * 100) / 100;
 }
 
+function parseAndRoundValues(val: string): string {
+    if (!val.length) return val;
+    
+    const values = val.split(', ').map(value => toFixed(Number(value), 6));
+    return values.join(', ');
+}
+
 function interpretTrinary(truthyOrNull: boolean | null) {
     if (truthyOrNull === null) return 'Unknown';
     if (truthyOrNull === false) return 'No';
@@ -75,18 +83,19 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
         height: 26,
         alignItems: 'center'
     };
-
     return (
         <>
             {modelObjects.map(modelObject => {
+                const materialNames: string[] = [];
                 return (
                     <>
-                        <Box className={classes.materialFields}>
-                            <Box className={classes.caption}>
-                                <Typography variant='caption'>Material</Typography>
-                            </Box>
-                            {modelObject.ModelMaterials.map(materialType => {
-                                return (
+                        {modelObject.ModelMaterials.map(materialType => {
+                            materialNames.push(materialType.Name);
+                            return (
+                                <Box className={classes.materialFields}>
+                                    <Box className={classes.caption}>
+                                        <Typography variant='caption'>Material</Typography>
+                                    </Box>
                                     <Box className={classes.unindentedFields} style={{ width: 200 }}>
                                         <ReadOnlyRow label='Material Name' value={materialType.Name} paddingString='0px' />
                                         {materialType.ModelMaterialChannel.map(channel => {
@@ -95,21 +104,23 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                                     <ReadOnlyRow label='Type' value={channel.Type} paddingString='0px' />
                                                     <Box className={classes.indentedFields}>
                                                         <IndentedReadOnlyRow label='Source' value={channel.Source} indentation={1} padding='0px' />
-                                                        <IndentedReadOnlyRow label='Value' value={channel.Value} indentation={1} padding='0px' />
+                                                        <IndentedReadOnlyRow label='Value' value={parseAndRoundValues(channel.Value)} indentation={1} padding='0px' />
                                                         <IndentedReadOnlyRow label='Additional' value={channel.AdditionalAttributes} indentation={1} padding='0px' />
                                                     </Box>
                                                 </Box>
                                             );
                                         })}
                                     </Box>
-                                );
-                            })}
-                        </Box>
+                                </Box>
+                            );
+                        })}
 
                         <Box className={classes.notRequiredFields}>
                             <Box className={classes.caption}>
                                 <Typography variant='caption'>Mesh</Typography>
                             </Box>
+                            <ReadOnlyRow label='Materials Referenced' value={materialNames.length ? materialNames[0] : 'None'} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                            {materialNames.slice(1).map(materialName => (<ReadOnlyRow label='' value={materialName} paddingString='0px' containerStyle={readOnlyContainerProps} />))}
                             <ReadOnlyRow label='Vertex Count' value={modelObject.CountVertices} paddingString='0px' containerStyle={readOnlyContainerProps} />
                             <ReadOnlyRow label='Face Count' value={modelObject.CountFaces} paddingString='0px' containerStyle={readOnlyContainerProps} />
                             <ReadOnlyRow label='Triangle Count' value={modelObject.CountTriangles} paddingString='0px' containerStyle={readOnlyContainerProps} />
