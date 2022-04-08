@@ -29,24 +29,24 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         }
     },
     container: {
-        backgroundColor: palette.secondary.light
+        backgroundColor: (type) => type === eObjectMetadataType.eSubjectCreation ? palette.primary.light : palette.secondary.light,
+        borderRadius: 5
     },
     headerRow: {
-        borderBottom: '1.5px solid black'
+        borderBottom: '1.5px solid black',
+        margin: 0
     },
-    tableBanner: {
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        color: palette.primary.dark
+    headerCell: {
+        fontWeight: 500
     },
     textField: {
-        width: '95%'
+        width: '95%',
+        verticalAlign: 'bottom'
     },
     text: {
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
-        fontSize: '1em',
+        fontSize: '0.8rem',
         '& .MuiInputBase-input': {
             padding: '0.5px'
         }
@@ -54,19 +54,25 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     autocompleteText: {
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
-        fontSize: '1em',
+        fontSize: '0.8rem',
         '& .MuiAutocomplete-input:first-child': {
             padding: '0 !important'
         }
     },
+    table: {
+        fontSize: '0.8rem'
+    },
+    cell: {
+        padding: '1px 10px'
+    },
     row: {
-        height: '30px'
+        height: 26
     }
 }));
 
 type MetadataControlTableProps = {
     type: eObjectMetadataType;
-    metadataData: Metadata[]
+    metadataData: Metadata[];
 };
 
 type MetadataControlRowProps = {
@@ -83,7 +89,7 @@ type MetadataControlRowProps = {
 
 function MetadataControlTable(props: MetadataControlTableProps): React.ReactElement {
     const { type /* metadataData*/ } = props;
-    const classes = useStyles();
+    const classes = useStyles(type);
     const { data } = useEdanUnitsNamed();
     const [getLicenses] = useLicenseStore(state => [state.getEntries]);
     const licenses = getLicenses().map(license => license.Name);
@@ -122,19 +128,17 @@ function MetadataControlTable(props: MetadataControlTableProps): React.ReactElem
             {
                 metadata.length > 0 ? (
                     <Box className={classes.container}>
-                        { type !== eObjectMetadataType.eDetailView && (
-                            <Box className={classes.tableBanner}>
-                                <Typography>Fields marked with * are required</Typography>
-                            </Box>
-                        )}
-                        <Table>
+                        <Table className={classes.table}>
                             <TableHead>
                                 <TableRow className={classes.headerRow}>
-                                    <TableCell width='20%'>Name</TableCell>
-                                    <TableCell width='15%'>Label</TableCell>
-                                    <TableCell width='61%'>Value</TableCell>
-                                    <TableCell width='2%'></TableCell>
-                                    <TableCell width='2%'></TableCell>
+                                    <TableCell width='20%'><Typography className={classes.headerCell}>Name</Typography></TableCell>
+                                    <TableCell width='15%'><Typography className={classes.headerCell}>Label</Typography></TableCell>
+                                    <TableCell className={classes.headerCell} width='61%' colSpan={3}>
+                                        <Box display='flex' justifyContent='space-between'>
+                                            <Typography className={classes.headerCell}>Value</Typography>
+                                            {(type !== eObjectMetadataType.eDetailView) && <Typography style={{ fontStyle: 'italic', fontSize: '0.8rem' }}>Fields marked with * are required</Typography>}
+                                        </Box>
+                                    </TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -159,27 +163,27 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
                 onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Value', e.target.value)}
                 value={Value}
                 InputProps={{ className: style.text }}
-                style={{ width: '95%' }}
+                style={{ width: '95%', verticalAlign: 'bottom' }}
             />
         </React.Fragment>
     );
     if (type === eObjectMetadataType.eDetailView) {
         return (
             <TableRow className={style.row}>
-                <TableCell padding='none'>
+                <TableCell className={style.cell} >
                     <label htmlFor={`${index + Name}-name`} style={{ display: 'none' }}>Value for {Name}</label>
                     <TextField
                         id={`${index + Name}-name`}
                         onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Name', e.target.value)}
                         value={Name}
                         InputProps={{ className: style.text }}
-                        style={{ width: '95%' }}
+                        style={{ width: '95%', verticalAlign: 'bottom' }}
                     />
                 </TableCell>
-                <TableCell padding='none'></TableCell>
-                <TableCell padding='none'>{valueInput}</TableCell>
-                <TableCell padding='none'></TableCell>
-                <TableCell padding='none'><MdRemoveCircleOutline onClick={() => deleteMetadata(idMetadata ?? 0, index)} style={{ cursor: 'pointer' }} /></TableCell>
+                <TableCell className={style.cell}></TableCell>
+                <TableCell className={style.cell}>{valueInput}</TableCell>
+                <TableCell className={style.cell}></TableCell>
+                <TableCell className={style.cell}><MdRemoveCircleOutline onClick={() => deleteMetadata(idMetadata ?? 0, index)} style={{ cursor: 'pointer' }} /></TableCell>
             </TableRow>
         );
     }
@@ -208,14 +212,14 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
     }
     const row = (
         <TableRow className={style.row}>
-            <TableCell padding='none'>
+            <TableCell className={style.cell}>
                 {isImmutable ?
                     <Typography className={clsx(style.textField, style.text)}>{Name}</Typography> :
                     <Autocomplete
                         value={Name}
                         classes={{ inputRoot: clsx(style.autocompleteText, style.textField) }}
                         freeSolo
-                        renderInput={(params) => <TextField {...params} />}
+                        renderInput={(params) => <TextField {...params} style={{ verticalAlign: 'bottom' }} />}
                         options={options}
                         onInputChange={(_e, value) => {
                             if (value !== null) {
@@ -230,7 +234,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
                     />
                 }
             </TableCell>
-            <TableCell padding='none'>{noLabel.has(Name) ? null : (
+            <TableCell className={style.cell}>{noLabel.has(Name) ? null : (
                 <React.Fragment>
                     <label htmlFor={`${index + Name}-label`} style={{ display: 'none' }}>Label</label>
                     <TextField
@@ -238,14 +242,14 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
                         onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Label', e.target.value)}
                         value={Label}
                         InputProps={{ className: style.text }}
-                        style={{ width: '95%' }}
+                        style={{ width: '95%', verticalAlign: 'bottom' }}
                     />
                 </React.Fragment>
             )}
             </TableCell>
-            <TableCell padding='none'>{valueInput}</TableCell>
-            <TableCell padding='none'>{isRequired.has(Name) ? '*' : null}</TableCell>
-            <TableCell padding='none'><MdRemoveCircleOutline onClick={() => deleteMetadata(idMetadata ?? 0, index)} style={{ cursor: 'pointer' }} /></TableCell>
+            <TableCell className={style.cell}>{valueInput}</TableCell>
+            <TableCell className={style.cell}>{isRequired.has(Name) ? '*' : null}</TableCell>
+            <TableCell className={style.cell}><MdRemoveCircleOutline onClick={() => deleteMetadata(idMetadata ?? 0, index)} style={{ cursor: 'pointer' }} /></TableCell>
         </TableRow>
     );
     return row;
