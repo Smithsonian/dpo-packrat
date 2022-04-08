@@ -12,6 +12,7 @@ title: "User Guide"
 - [Bulk Ingestion](../user-tasks/bulk-ingestion)
 - [Managing Content](../user-tasks/managing)
 - [Publishing Content](../user-tasks/publishing)
+- [Voyager Integration](../user-tasks/voyager)
 - [Business Process Management](../user-tasks/workflows)
 - [Controlled Vocabularies](../user-tasks/vocabulary)
 - [Administration](../admin)
