@@ -2,6 +2,7 @@
 title: "User Guide"
 ---
 
+Below are a set of topics aimed to help orient a new Packrat user as well as provide details about specific tasks performed in Packrat:
 - [Login](../user-tasks/login)
 - [Navigation](../user-tasks/navigation)
 - [Browsing the Repository](../user-tasks/browse)
@@ -12,7 +13,7 @@ title: "User Guide"
 - [Bulk Ingestion](../user-tasks/bulk-ingestion)
 - [Managing Content](../user-tasks/managing)
 - [Publishing Content](../user-tasks/publishing)
-- [Voyager Integration](../user-tasks/voyager)
+- [Voyager Story Integration](../user-tasks/voyager)
 - [Business Process Management](../user-tasks/workflows)
 - [Controlled Vocabularies](../user-tasks/vocabulary)
 - [Administration](../admin)

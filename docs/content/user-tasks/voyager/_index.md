@@ -1,10 +1,7 @@
 ---
-title: "Voyager Integration"
+title: "Voyager Story Integration"
 weight: 700
 ---
-
-### Voyager Exporer
-ABBA
 
 ### Pose
 Voyager Story can be used to pose models.
