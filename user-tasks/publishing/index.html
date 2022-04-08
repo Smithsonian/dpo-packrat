@@ -189,6 +189,10 @@
     </li>
     
     <li class="">
+      <a href="/dpo-packrat/user-tasks/voyager/">Voyager Story Integration</a>
+    </li>
+    
+    <li class="">
       <a href="/dpo-packrat/user-tasks/workflows/">Business Process Management</a>
     </li>
     
@@ -208,7 +212,33 @@
   
   <h1 class="title">Content Publishing</h1>
   <div class="content">
-    
+    <p>Packrat includes an integration with the Smithsonian&rsquo;s <a href="http://edan.si.edu/openaccess/docs/">EDAN Content Repository</a>:</p>
+<ul>
+<li>Subject search, during ingestion, makes use of the <a href="http://edan.si.edu/openaccess/apidocs/">EDAN query API</a></li>
+<li><a href="#scene-publishing">Scene and attachment publishing</a> is accomplished using the <a href="http://dev.3d.api.si.edu/apidocs/">EDAN 3D API</a> (<em>this is a private SI link</em>)</li>
+<li><a href="../../admin#subjects">Subject creation</a> is also accomplished using the <a href="http://dev.3d.api.si.edu/apidocs/">EDAN 3D API</a> (<em>this is a private SI link</em>)</li>
+</ul>
+<h3 id="scene-publishing">Scene Publishing</h3>
+<p>Packrat Scenes can be published to the EDAN content repository, resulting in the creation of an EDAN record of type &lsquo;3d_package&rsquo;. This can be perfomed when the following conditions are met:
+<img src="/dpo-packrat/images/packrat-publish-scene.png" alt="Packrat Publish Scene" title="Packrat Publish Scene"></p>
+<ol>
+<li>The models have been posed using <a href="../voyager#pose">Voyager Story</a>, launched via the &ldquo;Edit&rdquo; at the bottom of the Scene detail page.</li>
+<li>Thumbnails have been generated using <a href="../voyager#capture">Voyager Story</a>.</li>
+<li>The scene is marked &ldquo;Posed and QC&rsquo;d&rdquo;, on the Details tab. This is available for use once thumbnails are present in the scene.</li>
+<li>The scene is marked &ldquo;Approved for Publication&rdquo;, on the Details tab.</li>
+<li>The scene&rsquo;s license allows for publishing. Change this as needed and appropriate.</li>
+<li>Use the &ldquo;Update&rdquo; button to record changes made on the Details tab or to the license.</li>
+</ol>
+<p>Once the scene meets these criteria, the &ldquo;Publish&rdquo; and &ldquo;API Only&rdquo; buttons will become active.</p>
+<ul>
+<li><strong>Publish</strong> makes downloads available and makes the scene discoverable via the EDAN search API</li>
+<li><strong>API Only</strong> makes downloads available but <strong>does not</strong> allow the scene to be discoverable via the EDAN search API.</li>
+</ul>
+<p>Click the appropriate button to initiate the publishing process. This involves transmission of data to EDAN&rsquo;s servers; some time is required here before the content will be visible in EDAN.</p>
+<h3 id="subject-publishing">Subject Publishing</h3>
+<p>Packrat allows for the authoring of novel Subjects and the publishing of these Subjects to EDAN, resulting in the creation &amp; maintenance of EDAN records of type &rsquo;edanmdm&rsquo;. This functionality is intended to replace the <a href="http://dev.3d.api.si.edu/prod/console/home">EDAN 3D Console</a>.</p>
+<p>You can read more about <a href="../../admin#subjects">subject creation</a> in the <a href="../../admin">Administrative Guide</a>.</p>
+
   </div>
 
   

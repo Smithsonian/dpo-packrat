@@ -189,6 +189,10 @@
     </li>
     
     <li class="">
+      <a href="/dpo-packrat/user-tasks/voyager/">Voyager Story Integration</a>
+    </li>
+    
+    <li class="">
       <a href="/dpo-packrat/user-tasks/workflows/">Business Process Management</a>
     </li>
     
@@ -208,7 +212,202 @@
   
   <h1 class="title">Administrator Guide</h1>
   <div class="content">
-    
+    <p>Packrat administrative users can manage the following types of content by selecting &ldquo;Admin&rdquo; in the left navigation. In each case, these users can search for content, edit content, and create new content:</p>
+<ul>
+<li><a href="#licenses">Licenses</a></li>
+<li><a href="#users">Users</a></li>
+<li><a href="#projects">Projects</a></li>
+<li><a href="#units">Units</a></li>
+<li><a href="#subjects">Subjects</a></li>
+</ul>
+<h3 id="licenses">Licenses</h3>
+<p>Packrat licensing controls <a href="../user-tasks/publishing">publishing</a> behavior as well as <a href="../user-tasks/workflows#download-generation">download generation</a>. Licenses are defined at the object level and then inherited from that object to all subobjects which do not have explicit licenses defined.</p>
+<p>If a given object does not have an explicit license defined, Packrat considers all of that object&rsquo;s direct ancestors, moving &ldquo;up&rdquo; the repository hierarchy until finding an object with an explicit license assignment. In the event that an object has multiple ancestors, Packrat will use the most restrictive license inherited from all of the considered ancestors.</p>
+<p>From least restrictive to most restrictive, Packrat&rsquo;s default licenses include:</p>
+<table>
+<thead>
+<tr>
+<th>License</th>
+<th>Description</th>
+<th>Published?</th>
+<th>Downloads?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CC0, Publishable w/ Downloads</td>
+<td>No Rights Reserved. Read more about <a href="https://creativecommons.org/share-your-work/public-domain/cc0/">Creative Commons CC0</a></td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SI ToU, Publishable w/ Downloads</td>
+<td>Smithsonian&rsquo;s <a href="https://www.si.edu/termsofuse">Terms of Use</a>, Usage Conditions Apply</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SI ToU, Publishable Only</td>
+<td>Smithsonian&rsquo;s <a href="https://www.si.edu/termsofuse">Terms of Use</a>, Usage Conditions Apply</td>
+<td>Yes</td>
+<td><strong>No</strong></td>
+</tr>
+<tr>
+<td>Restricted, Not Publishable</td>
+<td>Restricted from public use</td>
+<td><strong>No</strong></td>
+<td><strong>No</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Each Packrat license has a &ldquo;Restriction Level&rdquo;, allowing Packrat to organize and understand these license. Generally speaking, the lower the restriction level, the less restrictive the license is.</p>
+<h3 id="users">Users</h3>
+<p>Packrat maintains its own database of users, including the username and user email address. Only active Packrat users are able to login to Packrat. Authentication of login credentials is performed by an integration with the Smithsonian Active Directory.</p>
+<h3 id="projects">Projects</h3>
+<p>Packrat organizes digitization initiative into Projects. In turn, a project owns a set of media groups, each of which represents digitization activities for a given subject of set of subjects. Projects are typically associated with a unit.</p>
+<h3 id="units">Units</h3>
+<p>Units represent an organizational group that owns or has responsibility for an object in the collection. Each Packrat subject is associated with a unit.</p>
+<h3 id="subjects">Subjects</h3>
+<p>Subjects are objects in the collection. Packrat allows for the authoring of novel Subjects and the publishing of these Subjects to EDAN, resulting in the creation &amp; maintenance of EDAN records of type &rsquo;edanmdm&rsquo;. This functionality is intended to replace the <a href="http://dev.3d.api.si.edu/prod/console/home">EDAN 3D Console</a>.</p>
+<p>New Subjects are created by visiting Administration &gt; Subjects, and then clicking &ldquo;Create&rdquo;.  When appropriate, start your construction of a Subject from an existing Subject:
+<a href="/dpo-packrat/images/packrat-publish-subject-1.png"><img src="/dpo-packrat/images/packrat-publish-subject-1.png" alt="Packrat Publish Subject Existing" title="Packrat Publish Subject Existing"></a></p>
+<ol>
+<li>Enter search text in order to search EDAN for the existing subject</li>
+<li>Click the Search button</li>
+<li>Select the correct Subject by clicking the &ldquo;plus&rdquo; butotn</li>
+<li>Verify the Name and Unit for the subject</li>
+<li>Verify the identifiers for the subject, and select one to be the preferred identifier by choosing it via its radio button</li>
+</ol>
+<p>Alternatively, you can create a new subject from scratch:
+<a href="/dpo-packrat/images/packrat-publish-subject-2.png"><img src="/dpo-packrat/images/packrat-publish-subject-2.png" alt="Packrat Publish Subject New" title="Packrat Publish Subject New"></a></p>
+<ol>
+<li>Enter the subject&rsquo;s name</li>
+<li>Select the subject&rsquo;s unit</li>
+<li>Supply identifier(s)</li>
+<li>Provide required metadata, which may involve repeating some information from above:
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Label</th>
+<th>Value</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Label</td>
+<td>N/A</td>
+<td>How &lsquo;Title&rsquo; is referred to in EDAN &hellip; typically set to &lsquo;Title&rsquo;</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Title</td>
+<td>N/A</td>
+<td>Please enter the Title in this field, for example &lsquo;Captain Gabriel Archer burial&rsquo;</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Record ID</td>
+<td>N/A</td>
+<td>EDAN Record ID. For the DPO 3D Team, prefix this with dpo_3d_, and use the next available incrementing number</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Unit</td>
+<td>N/A</td>
+<td>Smithsonian unit responsible for the object or who partnered in scanning the object</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>License</td>
+<td>N/A</td>
+<td>This is the rights of the object metadata, not the 3D model, and should almost always be CC0</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>License Text</td>
+<td>N/A</td>
+<td>Additional rights texts for the object, when appropriate, such as &ldquo;Usage Conditions Apply&rdquo;</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>Click the &ldquo;Create&rdquo; button when ready, to create the Subject and publish it to EDAN</li>
+</ol>
+<p>Additional metadata can be provided:
+<img src="/dpo-packrat/images/packrat-publish-subject-3.png" alt="Packrat Publish Subject Metadata" title="Packrat Publish Subject Metadata"></p>
+<ol>
+<li>Click &ldquo;Add Field&rdquo;</li>
+<li>Select the metadata Name.  Names ending in &ldquo;(FT)&rdquo; are free text entries; they can be repeated, and they optionally take a &ldquo;Label&rdquo;, which provides introductory text for the metadata.</li>
+<li>Supply a Value (and Label, when appropriate)</li>
+</ol>
+<p>These metadata fields will be persisted to Packrat and transmitted to EDAN when &ldquo;Create&rdquo; is clicked.</p>
+<p>Below is an additional set of metadata Names that have special meaning for EDAN. This <a href="http://dev.3d.api.si.edu/resources/terms.pdf">very thorough list of terms</a> may help guide data entry here.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Sample Field Values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Object Type</td>
+<td>Page 474 of <a href="http://dev.3d.api.si.edu/resources/terms.pdf#page=474">terms list</a></td>
+</tr>
+<tr>
+<td>Date</td>
+<td></td>
+</tr>
+<tr>
+<td>Place</td>
+<td>Page 738 of <a href="http://dev.3d.api.si.edu/resources/terms.pdf#page=738">terms list</a></td>
+</tr>
+<tr>
+<td>Topic</td>
+<td>Page 1 of <a href="http://dev.3d.api.si.edu/resources/terms.pdf#page=1">terms list</a></td>
+</tr>
+<tr>
+<td>Identifier (FT)</td>
+<td>Label values found on Page 474 of <a href="http://dev.3d.api.si.edu/resources/terms.pdf#page=474">terms list</a></td>
+</tr>
+<tr>
+<td>Data Source (FT)</td>
+<td></td>
+</tr>
+<tr>
+<td>Date (FT)</td>
+<td></td>
+</tr>
+<tr>
+<td>Name (FT)</td>
+<td>Page 1164 of <a href="http://dev.3d.api.si.edu/resources/terms.pdf#page=1164">terms list</a></td>
+</tr>
+<tr>
+<td>Object Rights (FT)</td>
+<td></td>
+</tr>
+<tr>
+<td>Place (FT)</td>
+<td>Page 1174 of <a href="http://dev.3d.api.si.edu/resources/terms.pdf#page=1174">terms list</a></td>
+</tr>
+<tr>
+<td>Taxonomic Name (FT)</td>
+<td></td>
+</tr>
+<tr>
+<td>Notes (FT)</td>
+<td>Page 1162 of <a href="http://dev.3d.api.si.edu/resources/terms.pdf#page=1162">terms list</a></td>
+</tr>
+<tr>
+<td>Physical Description (FT)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
   </div>
 
   
