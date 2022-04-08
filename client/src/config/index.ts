@@ -6,6 +6,11 @@
 const Config = {
     contact: {
         email: 'blundellj@si.edu'
+    },
+    voyager: {
+        story: '', //TODO: set to appropriate link based on env
+        explorer: '', //TODO: set to appropriate link based on env
+        quill: '' //TODO: set to appropriate link based on env
     }
 };
 

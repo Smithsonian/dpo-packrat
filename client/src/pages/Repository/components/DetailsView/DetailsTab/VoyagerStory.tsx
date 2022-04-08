@@ -31,16 +31,14 @@ function VoyagerStory(props: VoyagerStoryProps): React.ReactElement {
 
 
     useVoyagerStyling();
-    useScript('https://code.jquery.com/pep/0.4.3/pep.min.js');
-    useScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/104/three.min.js');
-    useScript('https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.js');
+    useScript('https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js');
 
     // this is the script required to run voyager-story component
     // useScript('https://3d-api.si.edu/resources/js/voyager-story.min.js');
 
     // Note that this script is in a location maintained by Andrew Gunther ...
     // Our non-prod builds should use a location that is accessible and updatable by our DEV team
-    useScript('https://3d-api.si.edu/resources/js/voyager-story.dev.js');
+    useScript('https://3d-api.si.edu/resources/js/voyager-story.min.js');
 
     // NOTE:  root and document are *not* properties of voyager-story
     // Instead, they need to be present as arguments to the URL for the page
