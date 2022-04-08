@@ -121,7 +121,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     padding='1px 10px'
                     containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
                 />
-                <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
+                <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
                 <ReadOnlyRow label='Scene Count' value={SceneDetails.CountScene} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
                 <ReadOnlyRow label='Node Count' value={SceneDetails.CountNode} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
                 <ReadOnlyRow label='Camera Count' value={SceneDetails.CountCamera} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
@@ -134,7 +134,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     value={SceneDetails.CountTour}
                     paddingString='1px 10px'
                     padding={10}
-                    containerStyle={{ borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '4px', ...readOnlyContainerProps }}
+                    containerStyle={{ borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '5px', ...readOnlyContainerProps }}
                 />
             </Box>
         </Box>
