@@ -147,11 +147,11 @@ function MetadataControlTable(props: MetadataControlTableProps): React.ReactElem
                                     <TableCell width='25%' className={classes.headerCell}><Typography className={classes.headerCellText}>Name</Typography></TableCell>
                                     <TableCell width='20%' className={classes.headerCell}><Typography className={classes.headerCellText}>Label</Typography></TableCell>
                                     <TableCell className={classes.headerCell} width='55%' colSpan={3}>
-                                        <Box display='flex' justifyContent='space-between'>
-                                            <Typography style={{ paddingTop: '4px' }} className={classes.headerCellText}>Value</Typography>
+                                        <Box display='flex' justifyContent='space-between' alignItems='center'>
+                                            <Typography className={classes.headerCellText}>Value</Typography>
                                             {(type !== eObjectMetadataType.eDetailView) &&
                                                 <Typography style={{ fontStyle: 'italic', fontSize: '0.6rem' }}>
-                                                    Fields marked with * are required<br />(FT) means &apos;Free Text&apos;: a Label is required
+                                                    Fields marked with * are required<br />Names with Free Text (FT) may include a Label
                                                 </Typography>}
                                         </Box>
                                     </TableCell>
