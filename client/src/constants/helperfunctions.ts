@@ -141,9 +141,9 @@ export const truncateMiddleWithEllipses = (text: string, firstHalf: number, seco
 
 export function getDownloadSiteMapXMLLink(serverEndPoint: string | undefined): string {
     return `${serverEndPoint}/download/sitemap.xml`;
-};
+}
 
 export function toFixed(num, fixed) {
-    var re = new RegExp('^-?\\d+(?:\.\\d{0,' + (fixed || -1) + '})?');
+    const re = new RegExp('^-?\\d+(?:\.\\d{0,' + (fixed || -1) + '})?'); /* eslint-disable-line  */
     return num.toString().match(re)[0];
-};
+}
