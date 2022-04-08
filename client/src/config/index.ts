@@ -13,7 +13,7 @@ const Config = {
             -Once a voyager/dev endpoint is deployed, these links should point to that and be tested upon each release
             -To specify a version, use https://3d-api.si.edu/resources/js/v[release]/voyager-explorer.min.js
                 -e.g. https://3d-api.si.edu/resources/js/v0.14.2/voyager-explorer.min.js
-            
+
             -See releases @ https://github.com/Smithsonian/dpo-voyager/releases
     */
     voyager: {
