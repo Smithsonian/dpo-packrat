@@ -9,6 +9,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { useRepositoryStore } from '../../../../store';
 import { FilterOption } from './RepositoryFilterOptions';
+import { HOME_ROUTES } from '../../../../constants';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     label: {
@@ -41,6 +42,10 @@ interface FilterSelectProps {
 
 function FilterSelect(props: FilterSelectProps): React.ReactElement {
     const { label, name, multiple, options } = props;
+    const { href: url } = window.location;
+    let isModal: boolean = false;
+    if (url.includes('details') || url.includes(HOME_ROUTES.INGESTION)) 
+        isModal = true;
 
     const classes = useStyles();
 
@@ -53,7 +58,7 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
             value = value.sort();
         }
 
-        updateFilterValue(name, value);
+        updateFilterValue(name, value, isModal);
     };
 
     const inputProps = {
