@@ -37,10 +37,14 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         margin: 0
     },
     headerCell: {
+        padding: '1px 10px',
+        fontWeight: 500
+    },
+    headerCellText: {
         fontWeight: 500
     },
     textField: {
-        width: '95%',
+        width: '100%',
         verticalAlign: 'bottom'
     },
     text: {
@@ -63,6 +67,15 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         fontSize: '0.8rem'
     },
     cell: {
+        padding: '1px 10px'
+    },
+    cellValue: {
+        padding: '1px 2px 1px 10px'
+    },
+    cellStar: {
+        padding: '1px 2px'
+    },
+    cellMinus: {
         padding: '1px 10px'
     },
     row: {
@@ -131,12 +144,15 @@ function MetadataControlTable(props: MetadataControlTableProps): React.ReactElem
                         <Table className={classes.table}>
                             <TableHead>
                                 <TableRow className={classes.headerRow}>
-                                    <TableCell width='20%'><Typography className={classes.headerCell}>Name</Typography></TableCell>
-                                    <TableCell width='15%'><Typography className={classes.headerCell}>Label</Typography></TableCell>
-                                    <TableCell className={classes.headerCell} width='61%' colSpan={3}>
-                                        <Box display='flex' justifyContent='space-between'>
-                                            <Typography className={classes.headerCell}>Value</Typography>
-                                            {(type !== eObjectMetadataType.eDetailView) && <Typography style={{ fontStyle: 'italic', fontSize: '0.8rem' }}>Fields marked with * are required</Typography>}
+                                    <TableCell width='25%' className={classes.headerCell}><Typography className={classes.headerCellText}>Name</Typography></TableCell>
+                                    <TableCell width='20%' className={classes.headerCell}><Typography className={classes.headerCellText}>Label</Typography></TableCell>
+                                    <TableCell className={classes.headerCell} width='55%' colSpan={3}>
+                                        <Box display='flex' justifyContent='space-between' alignItems='center'>
+                                            <Typography className={classes.headerCellText}>Value</Typography>
+                                            {(type !== eObjectMetadataType.eDetailView) &&
+                                                <Typography style={{ fontStyle: 'italic', fontSize: '0.6rem' }}>
+                                                    Fields marked with * are required<br />Names with Free Text (FT) may include a Label
+                                                </Typography>}
                                         </Box>
                                     </TableCell>
                                 </TableRow>
@@ -163,7 +179,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
                 onChange={(e) => updateMetadata(idMetadata ?? 0, index, 'Value', e.target.value)}
                 value={Value}
                 InputProps={{ className: style.text }}
-                style={{ width: '95%', verticalAlign: 'bottom' }}
+                style={{ width: '100%', verticalAlign: 'bottom' }}
             />
         </React.Fragment>
     );
@@ -212,7 +228,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
     }
     const row = (
         <TableRow className={style.row}>
-            <TableCell className={style.cell}>
+            <TableCell width='25%' className={style.cell}>
                 {isImmutable ?
                     <Typography className={clsx(style.textField, style.text)}>{Name}</Typography> :
                     <Autocomplete
@@ -234,7 +250,7 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
                     />
                 }
             </TableCell>
-            <TableCell className={style.cell}>{noLabel.has(Name) ? null : (
+            <TableCell width='20%' className={style.cell}>{noLabel.has(Name) ? null : (
                 <React.Fragment>
                     <label htmlFor={`${index + Name}-label`} style={{ display: 'none' }}>Label</label>
                     <TextField
@@ -247,9 +263,9 @@ function MetadataControlRow(props: MetadataControlRowProps): React.ReactElement 
                 </React.Fragment>
             )}
             </TableCell>
-            <TableCell className={style.cell}>{valueInput}</TableCell>
-            <TableCell className={style.cell}>{isRequired.has(Name) ? '*' : null}</TableCell>
-            <TableCell className={style.cell}><MdRemoveCircleOutline onClick={() => deleteMetadata(idMetadata ?? 0, index)} style={{ cursor: 'pointer' }} /></TableCell>
+            <TableCell width='100%' className={style.cellValue}>{valueInput}</TableCell>
+            <TableCell width='5' className={style.cellStar}>{isRequired.has(Name) ? '*' : null}</TableCell>
+            <TableCell width='5' className={style.cellMinus}><MdRemoveCircleOutline onClick={() => deleteMetadata(idMetadata ?? 0, index)} style={{ cursor: 'pointer' }} /></TableCell>
         </TableRow>
     );
     return row;
