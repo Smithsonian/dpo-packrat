@@ -44,7 +44,7 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
     const { label, name, multiple, options } = props;
     const { href: url } = window.location;
     let isModal: boolean = false;
-    if (url.includes('details') || url.includes(HOME_ROUTES.INGESTION)) 
+    if (url.includes('details') || url.includes(HOME_ROUTES.INGESTION))
         isModal = true;
 
     const classes = useStyles();

@@ -48,7 +48,7 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
     const classes = useStyles();
     const { href: url } = window.location;
     let isModal: boolean = false;
-    if (url.includes('details') || url.includes(HOME_ROUTES.INGESTION)) 
+    if (url.includes('details') || url.includes(HOME_ROUTES.INGESTION))
         isModal = true;
 
     let [dateCreatedFrom, dateCreatedTo, updateFilterValue] = useRepositoryStore(state => [state.dateCreatedFrom, state.dateCreatedTo, state.updateFilterValue]); // eslint-disable-line prefer-const
