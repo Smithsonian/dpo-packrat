@@ -43,15 +43,15 @@ type RepositoryStore = {
     repositoryBrowserRootObjectType: string | null;
     repositoryBrowserRootName: string | null;
     getFilterState: () => RepositoryFilter;
-    removeChipOption: (id: number, type: eRepositoryChipFilterType) => void;
-    updateFilterValue: (name: string, value: number | number[] | Date | null) => void;
+    removeChipOption: (id: number, type: eRepositoryChipFilterType, isModal: boolean) => void;
+    updateFilterValue: (name: string, value: number | number[] | Date | null, isModal: boolean) => void;
     resetRepositoryFilter: (modifyCookie?: boolean) => void;
     resetKeywordSearch: () => void;
     initializeTree: () => Promise<void>;
     getMoreRoot: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
     getMoreChildren: (nodeId: string, cursorMark: string) => Promise<void>;
-    updateRepositoryFilter: (filter: RepositoryFilter) => void;
+    updateRepositoryFilter: (filter: RepositoryFilter, isModal: boolean) => void;
     setCookieToState: () => void;
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined) => Promise<void>;
     getChildrenForIngestion: (idRoot: number) => void;
@@ -89,10 +89,11 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     idRoot: null,
     repositoryBrowserRootObjectType: null,
     repositoryBrowserRootName: null,
-    updateFilterValue: (name: string, value: number | number[] | Date | null): void => {
+    updateFilterValue: (name: string, value: number | number[] | Date | null, isModal: boolean): void => {
         const { initializeTree, setCookieToState, keyword } = get();
         set({ [name]: value, loading: true, search: keyword });
-        setCookieToState();
+        if (!isModal) setCookieToState();
+        
         initializeTree();
     },
     updateSearch: (value: string): void => {
@@ -198,7 +199,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         }
         set({ loadingMore: false });
     },
-    removeChipOption: (id: number, type: eRepositoryChipFilterType): void => {
+    removeChipOption: (id: number, type: eRepositoryChipFilterType, isModal: boolean): void => {
         const { units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType, setCookieToState, initializeTree, keyword } = get();
 
         switch (type) {
@@ -268,10 +269,11 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             }
         }
         set({ search: keyword, loading: true });
-        setCookieToState();
+        if (!isModal) setCookieToState();
+
         initializeTree();
     },
-    updateRepositoryFilter: async (filter: RepositoryFilter): Promise<void> => {
+    updateRepositoryFilter: async (filter: RepositoryFilter, isModal: boolean): Promise<void> => {
         const {
             repositoryRootType,
             objectsToDisplay,
@@ -321,7 +323,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 set({ idRoot: filter.idRoot, repositoryBrowserRootName: name, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
             }
         }
-        setCookieToState();
+        if (!isModal) setCookieToState();
+
         initializeTree();
     },
     resetRepositoryFilter: (modifyCookie = true): void => {
