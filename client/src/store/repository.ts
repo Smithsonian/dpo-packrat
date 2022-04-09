@@ -93,7 +93,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         const { initializeTree, setCookieToState, keyword } = get();
         set({ [name]: value, loading: true, search: keyword });
         if (!isModal) setCookieToState();
-        
+
         initializeTree();
     },
     updateSearch: (value: string): void => {

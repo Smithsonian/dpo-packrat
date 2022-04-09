@@ -122,7 +122,7 @@ function RepositoryFilterView(): React.ReactElement {
     const classes = useStyles(isExpanded);
     const { href: url } = window.location;
     let isModal: boolean = false;
-    if (url.includes('details') || url.includes(HOME_ROUTES.INGESTION)) 
+    if (url.includes('details') || url.includes(HOME_ROUTES.INGESTION))
         isModal = true;
 
     useEffect(() => {
