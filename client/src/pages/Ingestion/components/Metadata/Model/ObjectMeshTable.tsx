@@ -66,7 +66,7 @@ function roundToTwoPlaces(num) {
 function parseAndRoundValues(val: string): string {
     if (!val.length) return val;
 
-    const values = val.split(', ').map(value => toFixed(Number(value), 6));
+    const values = val.split(', ').map(value => toFixed(value, 6));
     return values.join(', ');
 }
 
