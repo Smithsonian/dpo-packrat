@@ -228,13 +228,13 @@ function DetailsView(): React.ReactElement {
     const onModalClose = () => {
         setModalOpen(false);
         setObjectRelationship(RelatedObjectType.Source);
-        resetRepositoryFilter();
+        resetRepositoryFilter(false);
     };
 
     const onAddSourceObject = () => {
         setObjectRelationship(RelatedObjectType.Source);
         resetKeywordSearch();
-        resetRepositoryFilter();
+        resetRepositoryFilter(false);
         initializeTree();
         setModalOpen(true);
     };
@@ -242,7 +242,7 @@ function DetailsView(): React.ReactElement {
     const onAddDerivedObject = () => {
         setObjectRelationship(RelatedObjectType.Derived);
         resetKeywordSearch();
-        resetRepositoryFilter();
+        resetRepositoryFilter(false);
         initializeTree();
         setModalOpen(true);
     };

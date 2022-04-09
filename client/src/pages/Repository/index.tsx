@@ -138,7 +138,7 @@ function TreeViewPage(): React.ReactElement {
         const newUrl = generateRepositoryUrl(initialFilterState);
         // console.log(`*** src/pages/Repository/index.tsx TreeViewPage useEffect window.history.pushState(path: ${route}, '', ${newUrl})`);
         window.history.pushState({ path: route }, '', newUrl);
-        updateRepositoryFilter(initialFilterState);
+        updateRepositoryFilter(initialFilterState, true);
     }, [updateRepositoryFilter, location.search]);
 
     const newRepositoryFilterState: any = {

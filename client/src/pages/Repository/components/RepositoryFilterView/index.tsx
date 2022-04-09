@@ -23,6 +23,7 @@ import FilterDate from './FilterDate';
 import FilterSelect from './FilterSelect';
 import { ChipOption, getRepositoryFilterOptions, eRepositoryChipFilterType, getTermForRepositoryFilterType } from './RepositoryFilterOptions';
 import { extractISOMonthDateYear } from '../../../../constants';
+import { HOME_ROUTES } from '../../../../constants';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -119,6 +120,10 @@ function RepositoryFilterView(): React.ReactElement {
     const [toggleFilter, removeChipOption, initializeFilterPosition] = useRepositoryStore(state => [state.toggleFilter, state.removeChipOption, state.initializeFilterPosition]);
     const [getEntries, getVocabularyTerm] = useVocabularyStore(state => [state.getEntries, state.getVocabularyTerm]);
     const classes = useStyles(isExpanded);
+    const { href: url } = window.location;
+    let isModal: boolean = false;
+    if (url.includes('details') || url.includes(HOME_ROUTES.INGESTION))
+        isModal = true;
 
     useEffect(() => {
         initializeFilterPosition();
@@ -221,7 +226,7 @@ function RepositoryFilterView(): React.ReactElement {
                             deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
                             className={classes.chip}
                             onClick={onClick}
-                            onDelete={() => removeChipOption(id, type)}
+                            onDelete={() => removeChipOption(id, type, isModal)}
                             variant='outlined'
                         />
                     ) : (
@@ -231,7 +236,7 @@ function RepositoryFilterView(): React.ReactElement {
                             size='small'
                             deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
                             className={classes.chip}
-                            onDelete={() => removeChipOption(id, type)}
+                            onDelete={() => removeChipOption(id, type, isModal)}
                             variant='outlined'
                         />
                     );

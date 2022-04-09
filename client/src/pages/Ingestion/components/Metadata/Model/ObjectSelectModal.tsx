@@ -169,8 +169,8 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
         resetRepositoryBrowserRoot();
         const filterState = getFilterState();
         filterState.search = filterState.keyword;
-        resetRepositoryFilter();
-        updateRepositoryFilter(filterState);
+        resetRepositoryFilter(false);
+        updateRepositoryFilter(filterState, true);
     };
 
     // onSelect handles selecting of entry
@@ -289,7 +289,6 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                     <RepositoryTreeView isModal selectedItems={selected} onSelect={onSelect} onUnSelect={onUnSelect} />
                 </Box>
             </Box>
-
         </Dialog>
     );
 }
