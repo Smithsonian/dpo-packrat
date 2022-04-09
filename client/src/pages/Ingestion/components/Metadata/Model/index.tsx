@@ -289,6 +289,11 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, 'subtitles', subtitlesCopy, MetadataType.model);
     };
 
+    const readOnlyContainerProps: React.CSSProperties = {
+        height: 26,
+        alignItems: 'center'
+    };
+
     return (
         <React.Fragment>
             <Box className={classes.container}>
@@ -442,34 +447,23 @@ function Model(props: ModelProps): React.ReactElement {
                                 <Typography variant='caption'>Model</Typography>
                             </Box>
                             <Box className={classes.readOnlyRowsContainer}>
-                                <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='0px' />
-                                <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='0px' />
-                                <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} paddingString='0px' />
-                                <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} paddingString='0px' />
-                                <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} paddingString='0px' />
-                                <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} paddingString='0px' />
-                                <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='0px' />
-                                <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} paddingString='0px' />
-                                <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='0px' />
-                                <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} paddingString='0px' />
-                                <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} paddingString='0px' />
-                                <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} paddingString='0px' />
+                                <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} paddingString='0px' containerStyle={readOnlyContainerProps} />
                             </Box>
                         </Box>
-
                         <ObjectMeshTable modelObjects={modelObjects} />
-
                     </Box>
                 </Box>
-
-                {/* <SidebarBottomNavigator
-                    rightLoading={rightLoading}
-                    leftLabel='Previous'
-                    onClickLeft={onPrevious}
-                    rightLabel={isLast ? 'Finish' : 'Next'}
-                    onClickRight={() => { setFieldErrors(getFieldErrors(metadata)); onClickRight();  }}
-                    disableNavigation={disableNavigation}
-                /> */}
             </Box>
             <ObjectSelectModal
                 open={modalOpen}

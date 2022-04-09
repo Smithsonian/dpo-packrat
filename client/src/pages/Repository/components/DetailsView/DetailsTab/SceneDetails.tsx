@@ -84,6 +84,11 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eScene, name, checked);
     };
 
+    const readOnlyContainerProps: React.CSSProperties = {
+        height: 22,
+        alignItems: 'center'
+    };
+
     return (
         <Box>
             <Box display='flex' flexDirection='column' className={classes.container}>
@@ -116,19 +121,68 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     padding='1px 10px'
                     containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
                 />
-                <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} paddingString='1px 10px' />
-                <ReadOnlyRow label='Scene Count' value={SceneDetails.CountScene} padding={10} paddingString='1px 10px' />
-                <ReadOnlyRow label='Node Count' value={SceneDetails.CountNode} padding={10} paddingString='1px 10px' />
-                <ReadOnlyRow label='Camera Count' value={SceneDetails.CountCamera} padding={10} paddingString='1px 10px' />
-                <ReadOnlyRow label='Light Count' value={SceneDetails.CountLight} padding={10} paddingString='1px 10px' />
-                <ReadOnlyRow label='Model Count' value={SceneDetails.CountModel} padding={10} paddingString='1px 10px' />
-                <ReadOnlyRow label='Meta Count' value={SceneDetails.CountMeta} padding={10} paddingString='1px 10px' />
-                <ReadOnlyRow label='Setup Count' value={SceneDetails.CountSetup} padding={10} paddingString='1px 10px' />
+                <ReadOnlyRow
+                    label='EDAN UUID'
+                    value={SceneDetails.EdanUUID}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Scene Count'
+                    value={SceneDetails.CountScene}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Node Count'
+                    value={SceneDetails.CountNode}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Camera Count'
+                    value={SceneDetails.CountCamera}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Light Count'
+                    value={SceneDetails.CountLight}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Model Count'
+                    value={SceneDetails.CountModel}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Meta Count'
+                    value={SceneDetails.CountMeta}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Setup Count'
+                    value={SceneDetails.CountSetup}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
                 <ReadOnlyRow
                     label='Tour Count'
                     value={SceneDetails.CountTour}
-                    padding={10} paddingString='1px 10px'
-                    containerStyle={{ borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '5px' }}
+                    paddingString='1px 10px'
+                    padding={10}
+                    containerStyle={{ borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '5px', ...readOnlyContainerProps }}
                 />
             </Box>
         </Box>
