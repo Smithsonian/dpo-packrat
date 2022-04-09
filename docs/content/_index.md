@@ -9,6 +9,7 @@ date: 2022-03-31
 - A robust data repository for data files and associated metadata, via an implementation of the [Oxford Common File Layout](https://ocfl.io/)
 - A flexible business process engine for automating common 3D workflows
 - An integration with [Smithsonian Cook](https://github.com/Smithsonian/dpo-cook) as our computational engine for 3D tasks
+- An integration with [Smithsonian Voyager](https://github.com/Smithsonian/dpo-voyager) for 3D viewing and authoring
 - A web user interface, with real-time search and navigation of the repository
 - A variety of integration points allowing for customization and extension
 
