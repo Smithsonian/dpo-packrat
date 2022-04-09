@@ -121,14 +121,62 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     padding='1px 10px'
                     containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
                 />
-                <ReadOnlyRow label='EDAN UUID' value={SceneDetails.EdanUUID} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
-                <ReadOnlyRow label='Scene Count' value={SceneDetails.CountScene} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
-                <ReadOnlyRow label='Node Count' value={SceneDetails.CountNode} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
-                <ReadOnlyRow label='Camera Count' value={SceneDetails.CountCamera} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
-                <ReadOnlyRow label='Light Count' value={SceneDetails.CountLight} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
-                <ReadOnlyRow label='Model Count' value={SceneDetails.CountModel} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
-                <ReadOnlyRow label='Meta Count' value={SceneDetails.CountMeta} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
-                <ReadOnlyRow label='Setup Count' value={SceneDetails.CountSetup} padding={10} paddingString='1px 10px' containerStyle={readOnlyContainerProps} />
+                <ReadOnlyRow
+                    label='EDAN UUID'
+                    value={SceneDetails.EdanUUID}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Scene Count'
+                    value={SceneDetails.CountScene}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Node Count'
+                    value={SceneDetails.CountNode}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Camera Count'
+                    value={SceneDetails.CountCamera}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Light Count'
+                    value={SceneDetails.CountLight}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Model Count'
+                    value={SceneDetails.CountModel}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Meta Count'
+                    value={SceneDetails.CountMeta}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
+                <ReadOnlyRow
+                    label='Setup Count'
+                    value={SceneDetails.CountSetup}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
+                />
                 <ReadOnlyRow
                     label='Tour Count'
                     value={SceneDetails.CountTour}
