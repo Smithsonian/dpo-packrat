@@ -23,7 +23,8 @@ const useStyles = makeStyles(({ palette }) => ({
         borderRadius: 5,
         padding: 10,
         marginBottom: 10,
-        transition: '250ms height ease'
+        transition: '250ms height ease',
+        width: 'fit-content'
     },
     label: {
         fontSize: '0.8em',

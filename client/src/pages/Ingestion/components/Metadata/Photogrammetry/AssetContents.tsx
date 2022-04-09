@@ -54,57 +54,56 @@ interface AssetContentsProps extends ViewableProps {
 function AssetContents(props: AssetContentsProps): React.ReactElement {
     const { folders, options, initialEntry, onUpdate, disabled = false } = props;
     const classes = useStyles();
-    return (
-        <>
-            <EmptyContent label='folders' isEmpty={!folders.length} />
-            <TableContainer component={Paper} className={classes.tableContainer} elevation={0}>
-                <Table>
-                    <TableBody>
-                        <TableRow style={{ borderBottom: '2px solid #D8E5EE' }}>
-                            <TableCell align='center' style={{ paddingBottom: 0 }}>
-                                <Typography style={{ alignItems: 'center', color: palette.primary.dark }} variant='caption'>
-                                    Folder Name
-                                </Typography>
-                            </TableCell>
-                            <TableCell align='center' style={{ paddingBottom: 0 }}>
-                                <Typography style={{ alignItems: 'center', color: palette.primary.dark }} variant='caption'>
-                                    Variant Type
-                                </Typography>
-                            </TableCell>
-                        </TableRow>
-                        {folders.map(({ id, name, variantType }: StateFolder, index: number) => {
-                            const update = ({ target }) => onUpdate(id, target.value);
 
-                            return (
-                                <TableRow key={index}>
-                                    <TableCell className={classes.paddedCell} style={{ paddingTop: index === 0 ? 5 : 1 }}>
-                                        <Box display='flex' alignItems='center'>
-                                            <Box paddingRight='5px'>
-                                                <AiFillFolder color={palette.primary.contrastText} size={20} />
-                                            </Box>
-                                            <Typography style={{ color: palette.primary.dark, wordBreak: 'break-word' }} variant='caption'>{name}</Typography>
+    return (
+        <TableContainer component={Paper} className={classes.tableContainer} elevation={0}>
+            <Table>
+                <TableBody>
+                    <TableRow style={{ borderBottom: '2px solid #D8E5EE' }}>
+                        <TableCell align='center' style={{ paddingBottom: 0 }}>
+                            <Typography style={{ alignItems: 'center', color: palette.primary.dark }} variant='caption'>
+                                Folder Name
+                            </Typography>
+                        </TableCell>
+                        <TableCell align='center' style={{ paddingBottom: 0 }}>
+                            <Typography style={{ alignItems: 'center', color: palette.primary.dark }} variant='caption'>
+                                Variant Type
+                            </Typography>
+                        </TableCell>
+                    </TableRow>
+                    {(folders.length) && (folders.map(({ id, name, variantType }: StateFolder, index: number) => {
+                        const update = ({ target }) => onUpdate(id, target.value);
+
+                        return (
+                            <TableRow key={index}>
+                                <TableCell className={classes.paddedCell} style={{ paddingTop: index === 0 ? 5 : 1 }}>
+                                    <Box display='flex' alignItems='center'>
+                                        <Box paddingRight='5px'>
+                                            <AiFillFolder color={palette.primary.contrastText} size={20} />
                                         </Box>
-                                    </TableCell>
-                                    <TableCell className={classes.paddedCell} style={{ paddingTop: index === 0 ? 5 : 1 }}>
-                                        <Select
-                                            disabled={disabled}
-                                            value={variantType || initialEntry}
-                                            name={name}
-                                            onChange={update}
-                                            disableUnderline
-                                            className={classes.select}
-                                            SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
-                                        >
-                                            {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                        </Select>
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </>
+                                        <Typography style={{ color: palette.primary.dark, wordBreak: 'break-word' }} variant='caption'>{name}</Typography>
+                                    </Box>
+                                </TableCell>
+                                <TableCell className={classes.paddedCell} style={{ paddingTop: index === 0 ? 5 : 1 }}>
+                                    <Select
+                                        disabled={disabled}
+                                        value={variantType || initialEntry}
+                                        name={name}
+                                        onChange={update}
+                                        disableUnderline
+                                        className={classes.select}
+                                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
+                                    >
+                                        {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                    </Select>
+                                </TableCell>
+                            </TableRow>
+                        );
+                    }))}
+                </TableBody>
+            </Table>
+            <EmptyContent label='folders' isEmpty={!folders.length} />
+        </TableContainer>
     );
 }
 
@@ -121,7 +120,11 @@ export function EmptyContent(props: EmptyContentProps): React.ReactElement {
         return <React.Fragment />;
     }
 
-    return <Typography className={classes.emptyFolders} variant='caption'>No {label} detected</Typography>;
+    return (
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <Typography className={classes.emptyFolders} variant='caption'>No {label} detected</Typography>
+        </div>
+    );
 }
 
 export default AssetContents;
