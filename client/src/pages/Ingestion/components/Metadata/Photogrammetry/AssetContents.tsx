@@ -54,7 +54,6 @@ interface AssetContentsProps extends ViewableProps {
 function AssetContents(props: AssetContentsProps): React.ReactElement {
     const { folders, options, initialEntry, onUpdate, disabled = false } = props;
     const classes = useStyles();
-
     return (
         <TableContainer component={Paper} className={classes.tableContainer} elevation={0}>
             <Table>
@@ -71,7 +70,7 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
                             </Typography>
                         </TableCell>
                     </TableRow>
-                    {(folders.length) && (folders.map(({ id, name, variantType }: StateFolder, index: number) => {
+                    {folders.length > 0 && (folders.map(({ id, name, variantType }: StateFolder, index: number) => {
                         const update = ({ target }) => onUpdate(id, target.value);
 
                         return (
