@@ -102,7 +102,7 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                         {materialType.ModelMaterialChannel.map(channel => {
                                             return (
                                                 <Box className={classes.unindentedFields}>
-                                                    <ReadOnlyRow label='Type' value={channel.Type} paddingString='5px 0px 0px 0px' />                                                    
+                                                    <ReadOnlyRow label='Type' value={channel.Type} paddingString='5px 0px 0px 0px' />
                                                     <Box className={classes.indentedFields}>
                                                         <IndentedReadOnlyRow label='Source' value={channel.Source} indentation={1} padding='0px' />
                                                         <IndentedReadOnlyRow label='Value' value={parseAndRoundValues(channel.Value)} indentation={1} padding='0px' />
@@ -120,8 +120,22 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                             <Box className={classes.caption}>
                                 <Typography variant='caption'>Mesh</Typography>
                             </Box>
-                            <ReadOnlyRow label='Materials Referenced' value={materialNames.length ? materialNames[0] : 'None'} paddingString='0px' containerStyle={readOnlyContainerProps} labelProps={{ style: { fontWeight: 'bold' } }} />
-                            {materialNames.slice(1).map(materialName => (<ReadOnlyRow label='' value={materialName} key={materialName} paddingString='0px' containerStyle={readOnlyContainerProps} />))}
+                            <ReadOnlyRow
+                                label='Materials Referenced'
+                                value={materialNames.length ? materialNames[0] : 'None'}
+                                paddingString='0px'
+                                containerStyle={readOnlyContainerProps}
+                                labelProps={{ style: { fontWeight: 'bold' } }}
+                            />
+                            {materialNames.slice(1).map(materialName => (
+                                <ReadOnlyRow
+                                    label=''
+                                    value={materialName}
+                                    key={materialName}
+                                    paddingString='0px'
+                                    containerStyle={readOnlyContainerProps}
+                                />
+                            ))}
                             <ReadOnlyRow label='Vertex Count' value={modelObject.CountVertices} paddingString='0px' containerStyle={readOnlyContainerProps} />
                             <ReadOnlyRow label='Face Count' value={modelObject.CountFaces} paddingString='0px' containerStyle={readOnlyContainerProps} />
                             <ReadOnlyRow label='Triangle Count' value={modelObject.CountTriangles} paddingString='0px' containerStyle={readOnlyContainerProps} />
