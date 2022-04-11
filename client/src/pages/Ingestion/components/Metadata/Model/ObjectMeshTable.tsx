@@ -81,7 +81,8 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
 
     const readOnlyContainerProps: React.CSSProperties = {
         height: 26,
-        alignItems: 'center'
+        alignItems: 'center',
+        columnGap: 10,
     };
 
     return (
@@ -90,18 +91,21 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                 const materialNames: string[] = [];
                 return (
                     <React.Fragment key={modelObject.idModelObject}>
-                        {modelObject.ModelMaterials.map(materialType => {
+                        {modelObject.ModelMaterials.map((materialType, index) => {
                             materialNames.push(materialType.Name);
                             return (
-                                <Box className={classes.materialFields} key={materialType.Name}>
+                                <Box className={classes.materialFields} key={materialType.Name + `.${index}`}>
                                     <Box className={classes.caption}>
                                         <Typography variant='caption'>Material</Typography>
                                     </Box>
                                     <Box className={classes.unindentedFields} style={{ width: 200 }}>
-                                        <ReadOnlyRow label='Material Name' value={materialType.Name} paddingString='0px' labelProps={{ style: { fontWeight: 'bold' } }} />
-                                        {materialType.ModelMaterialChannel.map(channel => {
+                                        <ReadOnlyRow label='Material Name' value={materialType.Name} paddingString='0px' containerStyle={readOnlyContainerProps}
+                                            labelProps={{ style: { fontWeight: 'bold' } }}
+                                            valueProps={{ style: { fontWeight: 'bold' } }}
+                                        />
+                                        {materialType.ModelMaterialChannel.map((channel, index) => {
                                             return (
-                                                <Box className={classes.unindentedFields}>
+                                                <Box className={classes.unindentedFields} key={channel.Value + `.${index}`}>
                                                     <ReadOnlyRow label='Type' value={channel.Type} paddingString='5px 0px 0px 0px' />
                                                     <Box className={classes.indentedFields}>
                                                         <IndentedReadOnlyRow label='Source' value={channel.Source} indentation={1} padding='0px' />
@@ -121,19 +125,21 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                 <Typography variant='caption'>Mesh</Typography>
                             </Box>
                             <ReadOnlyRow
-                                label='Materials Referenced'
+                                label='Materials'
                                 value={materialNames.length ? materialNames[0] : 'None'}
                                 paddingString='0px'
                                 containerStyle={readOnlyContainerProps}
                                 labelProps={{ style: { fontWeight: 'bold' } }}
+                                valueProps={{ style: { fontWeight: 'bold' } }}
                             />
-                            {materialNames.slice(1).map(materialName => (
+                            {materialNames.slice(1).map((materialName, index) => (
                                 <ReadOnlyRow
                                     label=''
                                     value={materialName}
-                                    key={materialName}
+                                    key={materialName + `.${index}`}
                                     paddingString='0px'
                                     containerStyle={readOnlyContainerProps}
+                                    valueProps={{ style: { fontWeight: 'bold' } }}
                                 />
                             ))}
                             <ReadOnlyRow label='Vertex Count' value={modelObject.CountVertices} paddingString='0px' containerStyle={readOnlyContainerProps} />
