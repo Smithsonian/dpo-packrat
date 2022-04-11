@@ -38,7 +38,7 @@ function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
     }
 
     return (
-        <FieldType label={label} direction='row' containerProps={rowFieldProps} labelProps={{ ...labelProps, style: { wordBreak: 'keep-all' } }} valueLeftAligned={valueLeftAligned} gridValue={gridValue} gridLabel={gridLabel} padding={paddingString} required={required}>
+        <FieldType label={label} direction='row' containerProps={rowFieldProps} labelProps={{ style: { wordBreak: 'keep-all' }, ...labelProps  }} valueLeftAligned={valueLeftAligned} gridValue={gridValue} gridLabel={gridLabel} padding={paddingString} required={required}>
             <Box width='fit-content' textAlign='right' display='flex'>
                 <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', overflowWrap: 'break-word', wordBreak: 'break-all', padding }}>
                     {value}

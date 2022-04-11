@@ -327,9 +327,9 @@ function Detail(props: DetailProps): React.ReactElement {
             content = <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>{content}</NewTabLink>;
     } else if (paths) {
         content = <React.Fragment>{paths.map((path, index) => {
-            const ciInnner: React.ReactNode = <Typography className={classes.value}>{path.name || '-'}</Typography>;
+            const ciInnner: React.ReactNode = <Typography className={classes.value} key={index}>{path.name || '-'}</Typography>;
             const ciOuter: React.ReactNode = (clickable && path.idSystemObject)
-                ? <NewTabLink to={getDetailsUrlForObject(path.idSystemObject)}>{ciInnner}</NewTabLink>
+                ? <NewTabLink to={getDetailsUrlForObject(path.idSystemObject)} key={index}>{ciInnner}</NewTabLink>
                 : ciInnner;
             return [(index) ? (<Typography className={classes.value} key={`comma${path.idSystemObject}`}>,&nbsp;</Typography>) : null, ciOuter];
         })}</React.Fragment>;
