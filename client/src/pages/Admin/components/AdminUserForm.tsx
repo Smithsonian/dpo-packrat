@@ -31,7 +31,7 @@ const useStyles = makeStyles(({ typography }) => ({
         flexDirection: 'column',
         overflow: 'auto',
         maxHeight: 'calc(100vh - 60px)',
-        paddingLeft: '1%',
+        paddingLeft: '15px',
         width: '1200px',
         margin: '0 auto'
     },
@@ -44,14 +44,15 @@ const useStyles = makeStyles(({ typography }) => ({
         flexWrap: 'nowrap',
         width: '500px',
         backgroundColor: '#EFF2FC',
-        borderRadius: '4px',
+        borderRadius: '10px',
         border: '1px solid #B7D2E5CC',
         boxShadow: '0 0 0 15px #75B3DF',
         letterSpacing: 'var(--unnamed-character-spacing-0)',
         textAlign: 'left',
         padding: '10px 20px',
-        marginTop: '2%',
-        marginLeft: '1%'
+        marginTop: '30px',
+        marginLeft: '15px'
+
     },
     AdminUserFormRowLabel: {
         gridColumnStart: '1',
@@ -95,7 +96,6 @@ const useStyles = makeStyles(({ typography }) => ({
         paddingRight: '20px',
         background: '#ECF5FD',
         color: '#3F536E',
-        marginBottom: '2%',
         width: 'fit-content'
     },
     searchUsersFilterButton: {
