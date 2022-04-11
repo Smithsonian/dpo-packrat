@@ -11,6 +11,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../../../../global/datepicker.css';
 import parseISO from 'date-fns/parseISO';
+import { HOME_ROUTES } from '../../../../constants';
 
 const useStyles = makeStyles(({ palette }) => ({
     label: {
@@ -45,17 +46,21 @@ interface FilterDateProps {
 function FilterDate(props: FilterDateProps): React.ReactElement {
     const { label } = props;
     const classes = useStyles();
+    const { href: url } = window.location;
+    let isModal: boolean = false;
+    if (url.includes('details') || url.includes(HOME_ROUTES.INGESTION))
+        isModal = true;
 
     let [dateCreatedFrom, dateCreatedTo, updateFilterValue] = useRepositoryStore(state => [state.dateCreatedFrom, state.dateCreatedTo, state.updateFilterValue]); // eslint-disable-line prefer-const
 
     const onDate = (name: string, date: string | null | undefined) => {
         // console.log(`onDate ${name}: ${date}`);
         if (date == null) // or undefined
-            updateFilterValue(name, null);
+            updateFilterValue(name, null, isModal);
         else {
             const timestamp = Date.parse(date);
             if (!isNaN(timestamp))
-                updateFilterValue(name, new Date(timestamp));
+                updateFilterValue(name, new Date(timestamp), isModal);
         }
     };
 

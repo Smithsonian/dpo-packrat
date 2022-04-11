@@ -17,6 +17,7 @@ interface ReadOnlyRowProps extends ViewableProps {
     gridTemplate?: string;
     width?: string;
     labelProps?: any;
+    valueProps?: any;
     valueLeftAligned?: boolean;
     gridValue?: number;
     gridLabel?: number;
@@ -26,7 +27,7 @@ interface ReadOnlyRowProps extends ViewableProps {
 }
 
 function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
-    const { label, value, padding, gridTemplate, width, labelProps, valueLeftAligned, gridValue, gridLabel, paddingString, containerStyle, required = false } = props;
+    const { label, value, padding, gridTemplate, width, labelProps, valueProps, valueLeftAligned, gridValue, gridLabel, paddingString, containerStyle, required = false } = props;
 
     const rowFieldProps = { alignItems: 'baseline', justifyContent: 'space-between', style: { borderRadius: 0, ...containerStyle } };
     if (width) {
@@ -38,9 +39,9 @@ function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
     }
 
     return (
-        <FieldType label={label} direction='row' containerProps={rowFieldProps} labelProps={{ ...labelProps, style: { wordBreak: 'keep-all' } }} valueLeftAligned={valueLeftAligned} gridValue={gridValue} gridLabel={gridLabel} padding={paddingString} required={required}>
-            <Box width='fit-content' textAlign='right'>
-                <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A', overflowWrap: 'break-word', padding }}>
+        <FieldType label={label} direction='row' containerProps={rowFieldProps} labelProps={{ style: { wordBreak: 'keep-all' }, ...labelProps  }} valueLeftAligned={valueLeftAligned} gridValue={gridValue} gridLabel={gridLabel} padding={paddingString} required={required}>
+            <Box width='fit-content' textAlign='right' display='flex'>
+                <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', overflowWrap: 'break-word', wordBreak: 'break-all', padding }} {...valueProps}>
                     {value}
                 </Typography>
             </Box>

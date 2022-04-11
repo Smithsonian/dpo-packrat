@@ -51,17 +51,21 @@ const useStyles = makeStyles(({ palette }) => ({
         marginTop: 10
     },
     nameCell: {
-        padding: '1px 0px 1px 8px'
+        padding: '0px 0px 0px 8px',
+        lineHeight: 0
     },
     objectTypeCell: {
-        padding: '1px 4px 1px 8px',
-        textAlign: 'center'
+        padding: '0px 4px 0px 8px',
+        textAlign: 'center',
+        lineHeight: 0
     },
     identifierCell: {
-        padding: '1px 0px 1px 4px'
+        padding: '0px 0px 0px 4px',
+        lineHeight: 0
     },
     removeBtnCell: {
-        padding: '1px 8px 0px 0px',
+        padding: '0px 8px 0px 0px',
+        lineHeight: 0
     }
 }));
 

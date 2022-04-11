@@ -8,84 +8,58 @@
  */
 import { Typography, Box, makeStyles, Select, MenuItem, fade } from '@material-ui/core';
 import React, { useEffect } from 'react';
-import { DateInputField, Loader, ReadOnlyRow } from '../../../../../components';
+import { DateInputField, Loader, ReadOnlyRow, } from '../../../../../components';
 import { useVocabularyStore, useDetailTabStore } from '../../../../../store';
 import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { extractModelConstellation } from '../../../../../constants/helperfunctions';
-import ObjectMeshTable from './../../../../Ingestion/components/Metadata/Model/ObjectMeshTable';
 import { DetailComponentProps } from './index';
 import { useStyles as useSelectStyles, SelectFieldProps } from '../../../../../components/controls/SelectField';
 import { DebounceInput } from 'react-debounce-input';
+import ObjectMeshTable from '../../../../Ingestion/components/Metadata/Model/ObjectMeshTable';
 
 export const useStyles = makeStyles(({ palette, typography }) => ({
-    value: {
-        fontSize: '0.8em',
-        color: palette.primary.dark
-    },
     notRequiredFields: {
         display: 'flex',
         flexDirection: 'column',
         borderRadius: 5,
         backgroundColor: palette.secondary.light,
-        width: 'max(200px, 10vw)',
-        '& > *': {
-            height: '20px',
-            borderBottom: '0.5px solid #D8E5EE',
-            borderTop: '0.5px solid #D8E5EE'
-        }
+        width: 'fit-content',
+        height: 'fit-content',
+        padding: '5px',
+        outline: '1px solid rgba(141, 171, 196, 0.4)'
     },
     dataEntry: {
         display: 'flex',
         flexDirection: 'column',
         width: 'fit-content',
-        '& > *': {
-            height: '20px',
-            width: 'auto'
-        },
         height: 'fit-content',
         backgroundColor: palette.secondary.light,
         paddingTop: '5px',
-        paddingBottom: '5px'
+        paddingBottom: '5px',
+        borderRadius: 5,
+        outline: '1px solid rgba(141, 171, 196, 0.4)'
     },
-    ModelMetricsAndFormContainer: {
+    modelDetailsContainer: {
         borderRadius: 5,
         padding: 10,
         backgroundColor: palette.primary.light,
         width: 'calc(100% - 20px)',
         display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'start'
-    },
-    modelMetricsAndForm: {
-        display: 'flex',
         flexDirection: 'row',
-        borderRadius: 5,
-        backgroundColor: palette.primary.light,
-        width: 'auto',
-        justifyContent: 'space-around',
-        columnGap: '10px'
+        alignItems: 'start',
+        flexWrap: 'wrap',
+        columnGap: 10,
+        rowGap: 10
     },
-    captionContainer: {
+    caption: {
         flex: '1 1 0%',
-        width: '92%',
+        width: '100%',
         display: 'flex',
         marginBottom: '8px',
         flexDirection: 'row',
-        color: '#2C405A'
-    },
-    objectMeshTableContainer: {
-        display: 'flex',
-        justifyContent: 'start',
-        width: '100%',
-        backgroundColor: palette.primary.light,
-        '& > *': {
-            width: 'calc(100% - 20px)'
-        }
+        color: 'grey',
     },
     detailsContainer: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
     },
     label: {
         color: 'auto'
@@ -100,6 +74,12 @@ export const useStyles = makeStyles(({ palette, typography }) => ({
         fontFamily: typography.fontFamily,
         fontSize: '0.8em',
         height: 3
+    },
+    readOnlyRowsContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: palette.secondary.light,
+        width: '200px'
     }
 }));
 
@@ -136,111 +116,115 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eModel, name, idFieldValue);
     };
 
+    const readOnlyContainerProps: React.CSSProperties = {
+        height: 26,
+        alignItems: 'center'
+    };
+
     return (
         <Box flex={1} className={classes.detailsContainer}>
-            <Box className={classes.ModelMetricsAndFormContainer} mb={2}>
-                <Box className={classes.captionContainer}>
-                    <Typography variant='caption'>Model</Typography>
+            <Box className={classes.modelDetailsContainer}>
+                <Box display='flex' flexDirection='column' className={classes.dataEntry}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px', height: 20 }}>
+                        <div style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>
+                            <Typography className={classes.label} variant='caption'>
+                                Subtitle
+                            </Typography>
+                        </div>
+                        <div style={{ gridColumnStart: 2, gridColumnEnd: 3 }}>
+                            <DebounceInput value={subtitle} onChange={onSubtitleUpdate} className={classes.input} />
+                        </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px', height: 20 }}>
+                        <div style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>
+                            <Typography className={classes.label} variant='caption'>
+                                Date Created
+                            </Typography>
+                        </div>
+                        <div style={{ gridColumnStart: 2, gridColumnEnd: 3 }}>
+                            <DateInputField value={ModelDetails.DateCreated} onChange={date => setDateField(date)} dateHeight='22px' />
+                        </div>
+                    </div>
+                    <SelectField
+                        required
+                        label='Creation Method'
+                        value={ModelDetails.idVCreationMethod}
+                        name='idVCreationMethod'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eModelCreationMethod)}
+                        selectHeight='24px'
+                        valueLeftAligned
+                        selectFitContent
+                    />
+                    <SelectField
+                        required
+                        label='Modality'
+                        value={ModelDetails.idVModality}
+                        name='idVModality'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eModelModality)}
+                        selectHeight='24px'
+                        valueLeftAligned
+                        selectFitContent
+                    />
+
+                    <SelectField
+                        required
+                        label='Units'
+                        value={ModelDetails.idVUnits}
+                        name='idVUnits'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eModelUnits)}
+                        selectHeight='24px'
+                        valueLeftAligned
+                        selectFitContent
+                    />
+
+                    <SelectField
+                        required
+                        label='Purpose'
+                        value={ModelDetails.idVPurpose}
+                        name='idVPurpose'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eModelPurpose)}
+                        selectHeight='24px'
+                        valueLeftAligned
+                        selectFitContent
+                    />
+
+                    <SelectField
+                        required
+                        label='Model File Type'
+                        value={ModelDetails.idVFileType}
+                        name='idVFileType'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eModelFileType)}
+                        selectHeight='24px'
+                        valueLeftAligned
+                        selectFitContent
+                    />
                 </Box>
 
-                <Box className={classes.modelMetricsAndForm}>
-                    <Box display='flex' flexDirection='column' className={classes.dataEntry}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px' }}>
-                            <div style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>
-                                <Typography className={classes.label} variant='caption'>
-                                    Subtitle
-                                </Typography>
-                            </div>
-                            <div style={{ gridColumnStart: 2, gridColumnEnd: 3 }}>
-                                <DebounceInput value={subtitle} onChange={onSubtitleUpdate} className={classes.input} />
-                            </div>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px' }}>
-                            <div style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>
-                                <Typography className={classes.label} variant='caption'>
-                                    Date Created
-                                </Typography>
-                            </div>
-                            <div style={{ gridColumnStart: 2, gridColumnEnd: 3 }}>
-                                <DateInputField value={ModelDetails.DateCreated} onChange={date => setDateField(date)} dateHeight='22px' />
-                            </div>
-                        </div>
-                        <SelectField
-                            required
-                            label='Creation Method'
-                            value={ModelDetails.idVCreationMethod}
-                            name='idVCreationMethod'
-                            onChange={setIdField}
-                            options={getEntries(eVocabularySetID.eModelCreationMethod)}
-                            selectHeight='24px'
-                            valueLeftAligned
-                            selectFitContent
-                        />
-                        <SelectField
-                            required
-                            label='Modality'
-                            value={ModelDetails.idVModality}
-                            name='idVModality'
-                            onChange={setIdField}
-                            options={getEntries(eVocabularySetID.eModelModality)}
-                            selectHeight='24px'
-                            valueLeftAligned
-                            selectFitContent
-                        />
-
-                        <SelectField
-                            required
-                            label='Units'
-                            value={ModelDetails.idVUnits}
-                            name='idVUnits'
-                            onChange={setIdField}
-                            options={getEntries(eVocabularySetID.eModelUnits)}
-                            selectHeight='24px'
-                            valueLeftAligned
-                            selectFitContent
-                        />
-
-                        <SelectField
-                            required
-                            label='Purpose'
-                            value={ModelDetails.idVPurpose}
-                            name='idVPurpose'
-                            onChange={setIdField}
-                            options={getEntries(eVocabularySetID.eModelPurpose)}
-                            selectHeight='24px'
-                            valueLeftAligned
-                            selectFitContent
-                        />
-
-                        <SelectField
-                            required
-                            label='Model File Type'
-                            value={ModelDetails.idVFileType}
-                            name='idVFileType'
-                            onChange={setIdField}
-                            options={getEntries(eVocabularySetID.eModelFileType)}
-                            selectHeight='24px'
-                            valueLeftAligned
-                            selectFitContent
-                        />
+                <Box className={classes.notRequiredFields}>
+                    <Box className={classes.caption}>
+                        <Typography variant='caption'>Model</Typography>
                     </Box>
-                    <Box className={classes.notRequiredFields}>
-                        <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} paddingString='3px 10px 3px 10px' />
-                        <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} paddingString='3px 10px 3px 10px' />
+                    <Box className={classes.readOnlyRowsContainer}>
+                        <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                        <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} paddingString='0px' containerStyle={readOnlyContainerProps} />
                     </Box>
                 </Box>
-            </Box>
-            <Box className={classes.objectMeshTableContainer}>
+
                 <ObjectMeshTable modelObjects={modelObjects} />
             </Box>
         </Box>
@@ -255,13 +239,23 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
     const classes = useSelectStyles(props);
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px', height: 20 }}>
             <div style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>
                 <Typography style={{ color: 'auto' }} variant='caption'>
                     {label}
                 </Typography>
             </div>
-            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline inputProps={{ 'title': `${name} select`, style: { width: '100%' } }} style={{ minWidth: '100%', width: 'fit-content' }} SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}>
+            <Select
+                value={value || ''}
+                className={classes.select}
+                name={name}
+                onChange={onChange}
+                disabled={disabled}
+                disableUnderline
+                inputProps={{ 'title': `${name} select`, style: { width: '100%' } }}
+                style={{ minWidth: '100%', width: 'fit-content' }}
+                SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+            >
                 {options.map(({ idVocabulary, Term }, index) => (
                     <MenuItem key={index} value={idVocabulary}>
                         {Term}

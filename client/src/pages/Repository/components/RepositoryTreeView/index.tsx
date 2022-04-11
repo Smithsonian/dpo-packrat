@@ -149,13 +149,14 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         state.loadingMore
     ]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
-    const [initializeWidths] = useTreeColumnsStore((state) => [state.initializeWidth]);
+    const [initializeWidths, initializeOrder, columnOrder] = useTreeColumnsStore((state) => [state.initializeWidth, state.initializeOrder, state.order]);
     const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
     const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
 
     useEffect(() => {
         initializeWidths();
+        initializeOrder();
     }, [tree]);
 
     const onNodeToggle = useCallback(
@@ -195,6 +196,8 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             const { icon, color } = getObjectInterfaceDetails(objectType, variant, { container: classes.iconContainer, initial: classes.iconInitial }, idSystemObject);
 
             const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
+            if (columnOrder)
+                treeColumns.sort((a, b) => Number(columnOrder[a.metadataColumn]) - Number(columnOrder[b.metadataColumn]));
 
             const isSelected = isRepositoryItemSelected(nodeId, selectedItems);
             const select = (event: React.MouseEvent<SVGElement, MouseEvent>) => {
