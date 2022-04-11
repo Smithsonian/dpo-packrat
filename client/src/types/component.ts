@@ -30,7 +30,7 @@ export interface DataTableOptions {
     };
     customFooter?: () => any;
     customTableBodyFooterRender?: () => any;
-    setRowProps?: (any) => any;
+    setRowProps?: (row?, dataIndex?, rowIndex?) => any;
     setCellHeaderProps?: (any) => any;
     setTableProps?: (any) => any;
 }

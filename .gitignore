@@ -110,8 +110,15 @@ dist
 ### Builds ###
 build
 
+### Docs ###
+docs/.hugo_build.lock
+docs/public
+docs/resources/_gen
+
 ### Custom ###
 server/var
 server/tests/mock/models/
 server/config/solr/data/packrat/data
 server/config/solr/data/packratMeta/data
+### Per-developer settings ###
+JTConfig

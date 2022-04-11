@@ -7,7 +7,7 @@ import { Box, Typography, Button } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
 import { DebounceInput } from 'react-debounce-input';
-import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
+import { IoIosLogOut, IoIosHelp, /* IoIosNotifications, */ IoIosSearch } from 'react-icons/io';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Logo from '../../assets/images/logo-packrat.square.png';
@@ -129,6 +129,10 @@ function Header(): React.ReactElement {
         }
     };
 
+    const onHelp = async (): Promise<void> => {
+        window.open('https://smithsonian.github.io/dpo-packrat/');
+    };
+
     const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
 
     // Specific to search while in repository view
@@ -136,7 +140,7 @@ function Header(): React.ReactElement {
         const filterState = getFilterState();
         filterState.search = filterState.keyword;
         resetRepositoryFilter();
-        updateRepositoryFilter(filterState);
+        updateRepositoryFilter(filterState, false);
         const repositoryURL = generateRepositoryUrl(filterState);
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
         history.push(route + repositoryURL);
@@ -148,7 +152,7 @@ function Header(): React.ReactElement {
         resetRepositoryFilter();
         const filterState = getFilterState();
         filterState.search = filterState.keyword;
-        updateRepositoryFilter(filterState);
+        updateRepositoryFilter(filterState, false);
         history.push(route);
     };
 
@@ -207,8 +211,8 @@ function Header(): React.ReactElement {
                 </NavOption>
             </React.Fragment>
             <Box className={classes.navOptionsContainer}>
-                <NavOption>
-                    <IoIosNotifications size={25} color={Colors.defaults.white} />
+                <NavOption onClick={onHelp}>
+                    <IoIosHelp size={45} color={Colors.defaults.white} />
                 </NavOption>
                 <NavOption onClick={onLogout}>
                     <IoIosLogOut id={Selectors.AUTH.LOGOUT_BUTTON} size={25} color={Colors.defaults.white} />

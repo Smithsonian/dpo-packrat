@@ -142,3 +142,9 @@ export const truncateMiddleWithEllipses = (text: string, firstHalf: number, seco
 export function getDownloadSiteMapXMLLink(serverEndPoint: string | undefined): string {
     return `${serverEndPoint}/download/sitemap.xml`;
 }
+
+export function toFixed(num, fixed) {
+    // Get the number string and then match the string up to the specified decimal place
+    const re = new RegExp('^-?\\d+(?:\.\\d{0,' + (fixed || -1) + '})?'); /* eslint-disable-line  */
+    return num.toString().match(re)[0];
+}

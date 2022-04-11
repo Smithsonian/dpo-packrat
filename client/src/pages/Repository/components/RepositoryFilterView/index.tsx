@@ -8,7 +8,7 @@
  */
 import { Box, Chip, Typography } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { FiLink2 } from 'react-icons/fi';
 import { IoIosRemoveCircle } from 'react-icons/io';
@@ -23,6 +23,7 @@ import FilterDate from './FilterDate';
 import FilterSelect from './FilterSelect';
 import { ChipOption, getRepositoryFilterOptions, eRepositoryChipFilterType, getTermForRepositoryFilterType } from './RepositoryFilterOptions';
 import { extractISOMonthDateYear } from '../../../../constants';
+import { HOME_ROUTES } from '../../../../constants';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -116,9 +117,17 @@ const StyledChip = withStyles(({ palette }) => ({
 function RepositoryFilterView(): React.ReactElement {
     const { data, loading } = useGetFilterViewDataQuery();
     const [units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType, dateCreatedFrom, dateCreatedTo, isExpanded, repositoryBrowserRootObjectType, repositoryBrowserRootName, repositoryRootType] = useRepositoryStore(state => [state.units, state.projects, state.has, state.missing, state.captureMethod, state.variantType, state.modelPurpose, state.modelFileType, state.dateCreatedFrom, state.dateCreatedTo, state.isExpanded, state.repositoryBrowserRootObjectType, state.repositoryBrowserRootName, state.repositoryRootType]);
-    const [toggleFilter, removeChipOption] = useRepositoryStore(state => [state.toggleFilter, state.removeChipOption]);
+    const [toggleFilter, removeChipOption, initializeFilterPosition] = useRepositoryStore(state => [state.toggleFilter, state.removeChipOption, state.initializeFilterPosition]);
     const [getEntries, getVocabularyTerm] = useVocabularyStore(state => [state.getEntries, state.getVocabularyTerm]);
     const classes = useStyles(isExpanded);
+    const { href: url } = window.location;
+    let isModal: boolean = false;
+    if (url.includes('details') || url.includes(HOME_ROUTES.INGESTION))
+        isModal = true;
+
+    useEffect(() => {
+        initializeFilterPosition();
+    }, [initializeFilterPosition]);
 
     const convertToChipState = (filterName: eRepositoryChipFilterType, selected: eSystemObjectType[] | number[]): ChipOption[] => {
         switch (filterName) {
@@ -217,7 +226,7 @@ function RepositoryFilterView(): React.ReactElement {
                             deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
                             className={classes.chip}
                             onClick={onClick}
-                            onDelete={() => removeChipOption(id, type)}
+                            onDelete={() => removeChipOption(id, type, isModal)}
                             variant='outlined'
                         />
                     ) : (
@@ -227,7 +236,7 @@ function RepositoryFilterView(): React.ReactElement {
                             size='small'
                             deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
                             className={classes.chip}
-                            onDelete={() => removeChipOption(id, type)}
+                            onDelete={() => removeChipOption(id, type, isModal)}
                             variant='outlined'
                         />
                     );
