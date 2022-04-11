@@ -16,7 +16,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         width: '1200px'
     },
     DataGridContainer: {
-        marginTop: '20px',
+        marginTop: '15px',
         width: '1000px',
         padding: '20px',
         height: 'calc(100% - 120px)',

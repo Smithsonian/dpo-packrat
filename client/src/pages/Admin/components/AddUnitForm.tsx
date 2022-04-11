@@ -13,6 +13,8 @@ import { toTitleCase } from '../../../constants/helperfunctions';
 import * as yup from 'yup';
 import { Helmet } from 'react-helmet';
 import { DebounceInput } from 'react-debounce-input';
+import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
+import { useLocation } from 'react-router';
 
 const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
     container: {
@@ -22,11 +24,9 @@ const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
         maxHeight: 'calc(100vh - 60px)',
         width: '1200px',
         overflowY: 'scroll',
-        marginLeft: '1%',
-        marginTop: '1%',
+        marginLeft: '15px',
         [breakpoints.down('lg')]: {
             maxHeight: 'calc(100vh - 120px)',
-            padding: 10
         }
     },
     updateButton: {
@@ -46,8 +46,8 @@ const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
         background: '#687DDB1A 0% 0% no-repeat padding-box;',
         border: '1px solid #B7D2E5CC',
         boxShadow: '0 0 0 15px #75B3DF',
-        marginTop: '2%',
-        marginLeft: '1%'
+        marginTop: '30px',
+        marginLeft: '15px'
     },
     formRow: {
         display: 'grid',
@@ -78,12 +78,23 @@ const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
         fontFamily: typography.fontFamily,
         fontSize: 'inherit',
         height: '30px'
+    },
+    breadCrumbsContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '46px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        background: '#ECF5FD',
+        color: '#3F536E',
+        width: 'fit-content'
     }
 }));
 
 function AddUnitForm(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
+    const location = useLocation();
     const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [name, setName] = useState('');
     const [abbreviation, setAbbreviation] = useState('');
@@ -175,6 +186,9 @@ function AddUnitForm(): React.ReactElement {
             <Helmet>
                 <title>Create Unit</title>
             </Helmet>
+            <Box className={classes.breadCrumbsContainer}>
+                <GenericBreadcrumbsView items={location.pathname.slice(1)} />
+            </Box>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
                     <InputLabel htmlFor='unitName' className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</InputLabel>

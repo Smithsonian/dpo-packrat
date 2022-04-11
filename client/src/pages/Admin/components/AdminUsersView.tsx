@@ -19,7 +19,7 @@ const useStyles = makeStyles({
         flexDirection: 'column',
         overflow: 'auto',
         maxHeight: 'calc(100vh - 60px)',
-        paddingLeft: '1%',
+        paddingLeft: '15px',
         width: '1200px',
         margin: '0 auto'
     },
@@ -31,7 +31,7 @@ const useStyles = makeStyles({
         paddingRight: '20px',
         background: '#ECF5FD',
         color: '#3F536E',
-        marginBottom: '2%',
+        marginBottom: '15px',
         width: 'fit-content'
     }
 });

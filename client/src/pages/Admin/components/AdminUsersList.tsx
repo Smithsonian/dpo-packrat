@@ -14,7 +14,7 @@ import { extractISOMonthDateYear } from '../../../constants/index';
 
 const useStyles = makeStyles({
     AdminUsersListContainer: {
-        marginTop: '20px',
+        marginTop: '15px',
         width: '1000px',
         padding: '20px',
         height: 'calc(100% - 120px)',
