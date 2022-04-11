@@ -96,13 +96,9 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                             return (
                                 <Box className={classes.materialFields} key={materialType.Name + `.${index}`}>
                                     <Box className={classes.caption}>
-                                        <Typography variant='caption'>Material</Typography>
+                                        <Typography variant='caption'>Material &apos;{materialType.Name}&apos;</Typography>
                                     </Box>
                                     <Box className={classes.unindentedFields} style={{ width: 200 }}>
-                                        <ReadOnlyRow label='Material Name' value={materialType.Name} paddingString='0px' containerStyle={readOnlyContainerProps}
-                                            labelProps={{ style: { fontWeight: 'bold' } }}
-                                            valueProps={{ style: { fontWeight: 'bold' } }}
-                                        />
                                         {materialType.ModelMaterialChannel.map((channel, index) => {
                                             return (
                                                 <Box className={classes.unindentedFields} key={channel.Value + `.${index}`}>
@@ -129,7 +125,6 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                 value={materialNames.length ? materialNames[0] : 'None'}
                                 paddingString='0px'
                                 containerStyle={readOnlyContainerProps}
-                                labelProps={{ style: { fontWeight: 'bold' } }}
                                 valueProps={{ style: { fontWeight: 'bold' } }}
                             />
                             {materialNames.slice(1).map((materialName, index) => (
