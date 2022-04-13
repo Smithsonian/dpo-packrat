@@ -40,10 +40,12 @@ interface AssetIdentifiersProps {
     onRemoveIdentifer: (identifiers: StateIdentifier[]) => void;
     subjectView?: boolean;
     onUpdateIdIdentifierPreferred?: (id: number) => void;
+    identifierName: string;
 }
 
 function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
-    const { systemCreated, identifiers, onSystemCreatedChange, onAddIdentifer, onUpdateIdentifer, onRemoveIdentifer, subjectView, onUpdateIdIdentifierPreferred } = props;
+    const { systemCreated, identifiers, onSystemCreatedChange, onAddIdentifer, onUpdateIdentifer, onRemoveIdentifer,
+        subjectView, onUpdateIdIdentifierPreferred, identifierName } = props;
     const classes = useStyles();
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
 
@@ -78,9 +80,10 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
         onUpdateIdentifer(updatedIdentifiers);
     };
 
+    const label: string = (identifierName ? identifierName : 'Asset') + ' Identifier(s)';
     return (
         <Box marginBottom='10px'>
-            <FieldType required label='Asset Identifier(s)' padding='10px'>
+            <FieldType required label={label} padding='10px'>
                 <Box display='flex' justifyContent='space-between'>
                     <Box className={classes.assetIdentifier}>
                         <label htmlFor='systemCreated' style={{ display: 'none' }}>System Created Identifier</label>

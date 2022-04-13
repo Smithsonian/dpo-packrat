@@ -311,6 +311,7 @@ function Model(props: ModelProps): React.ReactElement {
                         onAddIdentifer={onIdentifersChange}
                         onUpdateIdentifer={onIdentifersChange}
                         onRemoveIdentifer={onIdentifersChange}
+                        identifierName='Model'
                     />
                 </Box>
 
