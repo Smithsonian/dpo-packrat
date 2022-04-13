@@ -110,7 +110,7 @@ Each asset grid has "Download All" and "Add Version" buttons. "Download All" pre
 | Quality       | Model Quality (e.g. High, Medium, Low, Thumb, AR) |
 | UV            | Model UV Map size, in pixels |
 | Bounding Box  | Model Bounding Box, in world coordinates |
-| Att?          | When checked, indicates that the asset is a scene attachment (such as for downloads) |
+| Att?          | When checked, indicates that the asset is a Scene attachment (such as for downloads) |
 | Type          | Attachment type |
 | Cat           | Attachment category |
 | Units         | Attachment units |
@@ -120,4 +120,4 @@ Each asset grid has "Download All" and "Add Version" buttons. "Download All" pre
 | Draco Compr   | When checked, indicates that the model is Draco compressed |
 | Title         | Attachment title |
 
-The scene asset tab contains an "**Add Attachment**" button. When pressed, the user is brought to the ingestion upload screen. An asset uploaded and ingested in this manner will be added as an attachment to the scene.
+The Scene asset tab contains an "**Add Attachment**" button. When pressed, the user is brought to the ingestion upload screen. An asset uploaded and ingested in this manner will be added as an attachment to the Scene.

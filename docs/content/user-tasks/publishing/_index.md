@@ -13,18 +13,18 @@ Packrat Scenes can be published to the EDAN content repository, resulting in the
 ![Packrat Publish Scene](/dpo-packrat/images/packrat-publish-scene.png "Packrat Publish Scene")   
 1. The models have been posed using [Voyager Story](../voyager#pose), launched via the "Edit" at the bottom of the Scene detail page.
 2. Thumbnails have been generated using [Voyager Story](../voyager#capture).
-3. The scene is marked "Posed and QC'd", on the Details tab. This is available for use once thumbnails are present in the scene.
-4. The scene is marked "Approved for Publication", on the Details tab.
-5. The scene's license allows for publishing. Change this as needed and appropriate.
+3. The Scene is marked "Posed and QC'd", on the Details tab. This is available for use once thumbnails are present in the Scene.
+4. The Scene is marked "Approved for Publication", on the Details tab.
+5. The Scene's license allows for publishing. Change this as needed and appropriate.
 6. Use the "Update" button to record changes made on the Details tab or to the license.
 
-Once the scene meets these criteria, the "Publish" and "API Only" buttons will become active.
-* **Publish** makes downloads available and makes the scene discoverable via the EDAN search API
-* **API Only** makes downloads available but **does not** allow the scene to be discoverable via the EDAN search API.
+Once the Scene meets these criteria, the "Publish" and "API Only" buttons will become active.
+* **Publish** makes downloads available and makes the Scene discoverable via the EDAN search API
+* **API Only** makes downloads available but **does not** allow the Scene to be discoverable via the EDAN search API.
 
 Click the appropriate button to initiate the publishing process. This involves transmission of data to EDAN's servers; some time is required here before the content will be visible in EDAN.
 
 ### Subject Publishing
 Packrat allows for the authoring of novel Subjects and the publishing of these Subjects to EDAN, resulting in the creation & maintenance of EDAN records of type 'edanmdm'. This functionality is intended to replace the [EDAN 3D Console](http://dev.3d.api.si.edu/prod/console/home). 
 
-You can read more about [subject creation](../../admin#subjects) in the [Administrative Guide](../../admin).
+You can read more about [Subject creation](../../admin#subjects) in the [Administrative Guide](../../admin).

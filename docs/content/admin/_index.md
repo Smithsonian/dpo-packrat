@@ -28,26 +28,26 @@ Each Packrat license has a "Restriction Level", allowing Packrat to organize and
 Packrat maintains its own database of users, including the username and user email address. Only active Packrat users are able to login to Packrat. Authentication of login credentials is performed by an integration with the Smithsonian Active Directory.
 
 ### Projects
-Packrat organizes digitization initiative into Projects. In turn, a project owns a set of media groups, each of which represents digitization activities for a given subject of set of subjects. Projects are typically associated with a unit.
+Packrat organizes digitization initiative into Projects. In turn, a Project owns a set of media groups, each of which represents digitization activities for a given Subject of set of subjects. Projects are typically associated with a Unit.
 
 ### Units
-Units represent an organizational group that owns or has responsibility for an object in the collection. Each Packrat subject is associated with a unit.
+Units represent an organizational group that owns or has responsibility for an object in the collection. Each Packrat Subject is associated with a Unit.
 
 ### Subjects
 Subjects are objects in the collection. Packrat allows for the authoring of novel Subjects and the publishing of these Subjects to EDAN, resulting in the creation & maintenance of EDAN records of type 'edanmdm'. This functionality is intended to replace the [EDAN 3D Console](http://dev.3d.api.si.edu/prod/console/home). 
 
 New Subjects are created by visiting Administration > Subjects, and then clicking "Create".  When appropriate, start your construction of a Subject from an existing Subject:
 [![Packrat Publish Subject Existing](/dpo-packrat/images/packrat-publish-subject-1.png "Packrat Publish Subject Existing")](/dpo-packrat/images/packrat-publish-subject-1.png)
-1. Enter search text in order to search EDAN for the existing subject
+1. Enter search text in order to search EDAN for the existing Subject
 2. Click the Search button
 3. Select the correct Subject by clicking the "plus" butotn
-4. Verify the Name and Unit for the subject
-5. Verify the identifiers for the subject, and select one to be the preferred identifier by choosing it via its radio button
+4. Verify the Name and Unit for the Subject
+5. Verify the identifiers for the Subject, and select one to be the preferred identifier by choosing it via its radio button
 
-Alternatively, you can create a new subject from scratch:
+Alternatively, you can create a new Subject from scratch:
 [![Packrat Publish Subject New](/dpo-packrat/images/packrat-publish-subject-2.png "Packrat Publish Subject New")](/dpo-packrat/images/packrat-publish-subject-2.png)
-1. Enter the subject's name
-2. Select the subject's unit
+1. Enter the Subject's name
+2. Select the Subject's Unit
 3. Supply identifier(s)
 4. Provide required metadata, which may involve repeating some information from above:
     | Name | Label | Value | Required? |
@@ -55,8 +55,8 @@ Alternatively, you can create a new subject from scratch:
     | Label | N/A | How 'Title' is referred to in EDAN ... typically set to 'Title' | Yes |
     | Title | N/A | Please enter the Title in this field, for example 'Captain Gabriel Archer burial' | Yes |
     | Record ID | N/A | EDAN Record ID. For the DPO 3D Team, prefix this with dpo_3d_, and use the next available incrementing number | Yes |
-    | Unit | N/A | Smithsonian unit responsible for the object or who partnered in scanning the object | Yes |
-    | License | N/A | This is the rights of the object metadata, not the 3D model, and should almost always be CC0 | Yes |
+    | Unit | N/A | Smithsonian Unit responsible for the object or who partnered in scanning the object | Yes |
+    | License | N/A | This is the rights of the object metadata, not the 3D Model, and should almost always be CC0 | Yes |
     | License Text | N/A | Additional rights texts for the object, when appropriate, such as "Usage Conditions Apply" | No |
 5. Click the "Create" button when ready, to create the Subject and publish it to EDAN
 

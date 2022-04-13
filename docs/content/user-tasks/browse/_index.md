@@ -6,13 +6,13 @@ weight: 200
 ### Repository Organization
 The Packrat repository is organized into a tree of objects representing core concepts for our organization as well as the data produced by the work that we perform. These are listed below, each with a representation of their icon used in the Packrat repository tree:
 - ![Packrat Unit Icon](/dpo-packrat/images/packrat-repounit.png "Packrat Unit Icon") Unit: an organizational group that owns or has responsibility for an object in the collection
-- ![Packrat Project Icon](/dpo-packrat/images/packrat-repoproject.png "Packrat Project Icon") Project: a group of work representing a digitization initiative; each media group (below) belongs to a project
+- ![Packrat Project Icon](/dpo-packrat/images/packrat-repoproject.png "Packrat Project Icon") Project: a group of work representing a digitization initiative; each Media Group (below) belongs to a Project
 - ![Packrat Subject Icon](/dpo-packrat/images/packrat-reposubject.png "Packrat Subject Icon") Subject: an object in the collection
-- ![Packrat Media Group Icon](/dpo-packrat/images/packrat-repomediagroup.png "Packrat Media Group Icon") Media Group: a representation of a subject for digitization; this may be the entire subject or part of the subject. Belongs to a project (above)
+- ![Packrat Media Group Icon](/dpo-packrat/images/packrat-repomediagroup.png "Packrat Media Group Icon") Media Group: a representation of a Subject for digitization; this may be the entire Subject or part of the Subject. Belongs to a Project (above)
 - ![Packrat Capture Data Icon](/dpo-packrat/images/packrat-repocapturedata.png "Packrat Capture Data Icon") Capture Data Set: raw and processed data used as inputs to the 3D modelling process
 - ![Packrat Model Icon](/dpo-packrat/images/packrat-repomodel.png "Packrat Model Icon") Model: a 3D model
 - ![Packrat Scene Icon](/dpo-packrat/images/packrat-reposcene.png "Packrat Scene Icon") Scene: a [Voyager Scene](https://smithsonian.github.io/dpo-voyager/)
-- ![Packrat Unit Icon](/dpo-packrat/images/packrat-repoasset.png "Packrat Asset Icon") Asset: a file belonging to one of our objects (typically a capture data set, model, or scene). Assets have one or more asset versions.
+- ![Packrat Unit Icon](/dpo-packrat/images/packrat-repoasset.png "Packrat Asset Icon") Asset: a file belonging to one of our objects (typically a Capture Data set, Model, or Scene). Assets have one or more asset versions.
 - ![Packrat Unit Icon](/dpo-packrat/images/packrat-repoasset.png "Packrat Asset Version Icon") Asset Version: the actual bits corresponding to a specific version of an asset.
 
 ### Repository Browser
@@ -47,7 +47,7 @@ The filter can be used to focus attention on those portions of the repository ma
 | Filter Element | Purpose | Example |
 | -------------- | ------- | ------- |
 | Top-Level Objects | Choose the top-most items in the tree | [List of models in the repository](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&repositoryRootType=6) |
-| Children Objects | Choose which object types appear as the children of items in the tree, allowing for the construction of very customized views of the repository | [View asset versions belonging to each scene](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&objectsToDisplay=11&repositoryRootType=7) |
+| Children Objects | Choose which object types appear as the children of items in the tree, allowing for the construction of very customized views of the repository | [View asset versions belonging to each Scene](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&objectsToDisplay=11&repositoryRootType=7) |
 | Metadata To Display | Controls the columns of metadata displayed in the browser | [View Date Created, Identifier, and Model Purpose of Models](https://packrat.si.edu/repository?metadataToDisplay=2,28,3&repositoryRootType=6) |
 | Units | Selects which units to display | [View Models from NMNH](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&repositoryRootType=6&units=17) |
 | Projects | Selects which projects to display | [View Media Groups from Project "Bees"](https://packrat.si.edu/repository?metadataToDisplay=5,7,8&projects=127&repositoryRootType=4) |

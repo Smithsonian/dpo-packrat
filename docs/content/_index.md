@@ -14,3 +14,5 @@ date: 2022-03-31
 - A variety of integration points allowing for customization and extension
 
 Packrat is written in Typescript and runs on node.js. It includes a relational database for robust transactional record keeping, and employs Apache Solr for search and navigation.
+
+Packrat is a work in progress. [Join us](https://github.com/Smithsonian/dpo-packrat) and help create a tool that can be used by your organization.
