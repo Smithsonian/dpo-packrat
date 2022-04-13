@@ -61,6 +61,7 @@ function Other(props: OtherProps): React.ReactElement {
                     onAddIdentifer={onIdentifersChange}
                     onUpdateIdentifer={onIdentifersChange}
                     onRemoveIdentifer={onIdentifersChange}
+                    identifierName='Asset'
                 />
             </Box>
         </Box>

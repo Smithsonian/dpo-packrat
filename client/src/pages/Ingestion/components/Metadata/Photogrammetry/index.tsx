@@ -164,6 +164,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     onAddIdentifer={onIdentifersChange}
                     onUpdateIdentifer={onIdentifersChange}
                     onRemoveIdentifer={onIdentifersChange}
+                    identifierName='Capture Data'
                 />
             </Box>
             {!idAsset && (

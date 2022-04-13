@@ -287,6 +287,7 @@ function Scene(props: SceneProps): React.ReactElement {
                     onAddIdentifer={onIdentifersChange}
                     onUpdateIdentifer={onIdentifersChange}
                     onRemoveIdentifer={onIdentifersChange}
+                    identifierName='Scene'
                 />
             </Box>
             {!idAsset && (

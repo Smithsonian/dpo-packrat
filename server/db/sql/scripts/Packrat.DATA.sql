@@ -1188,6 +1188,10 @@ INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES 
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Vince Rossi', 'rossiv@si.edu', '', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jamie Cope', 'copeg@si.edu', '', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Hsin Tung', 'tungh@si.edu', '', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Megan Dattoria', 'dattoriam@si.edu', '', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Anais Perez', 'pereza3@si.edu ', '', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('James Boyle', 'boylej@si.edu', 'TBD', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jonathan Bylsma', 'bylsmaj@si.edu', 'TBD', 1, NOW());
 
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (1, NULL, '3D_YT');
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (4, 'Archives of American Art', 'AAA');
