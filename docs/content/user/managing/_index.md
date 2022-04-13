@@ -1,5 +1,6 @@
 ---
 title: "Content Management"
+summary: Managing Content in Packrat
 weight: 400
 ---
 

@@ -1,5 +1,6 @@
 ---
 title: "Repository Browsing"
+summary: Browsing the Packrat Repository
 weight: 200
 ---
 

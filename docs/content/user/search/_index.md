@@ -1,5 +1,6 @@
 ---
 title: "Repository Searching"
+summary: Searching the Packrat Repository
 weight: 210
 ---
 

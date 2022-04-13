@@ -1,5 +1,6 @@
 ---
 title: "Ingestion: Common Metadata"
+summary: Handling Ingestion Metadata Shared by All Objects
 weight: 320
 ---
 

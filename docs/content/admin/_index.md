@@ -1,5 +1,6 @@
 ---
 title: "Administrator Guide"
+weight: 20
 ---
 
 Packrat administrative users can manage the following types of content by selecting "Admin" in the left navigation. In each case, these users can search for content, edit content, and create new content:
@@ -10,7 +11,7 @@ Packrat administrative users can manage the following types of content by select
 - [Subjects](#subjects)
 
 ### Licenses
-Packrat licensing controls [publishing](../user-tasks/publishing) behavior as well as [download generation](../user-tasks/workflows#download-generation). Licenses are defined at the object level and then inherited from that object to all subobjects which do not have explicit licenses defined.
+Packrat licensing controls [publishing](../user/publishing) behavior as well as [download generation](../user/workflows#download-generation). Licenses are defined at the object level and then inherited from that object to all subobjects which do not have explicit licenses defined.
 
 If a given object does not have an explicit license defined, Packrat considers all of that object's direct ancestors, moving "up" the repository hierarchy until finding an object with an explicit license assignment. In the event that an object has multiple ancestors, Packrat will use the most restrictive license inherited from all of the considered ancestors.
 

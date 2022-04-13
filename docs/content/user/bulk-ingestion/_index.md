@@ -1,5 +1,6 @@
 ---
 title: "Bulk Ingestion"
+summary: Ingesting Content into Packrat Using Bulk Ingestion
 weight: 390
 ---
 
