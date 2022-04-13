@@ -409,6 +409,7 @@ function SubjectForm(): React.ReactElement {
                     onRemoveIdentifer={onIdentifierChange}
                     onUpdateIdIdentifierPreferred={onIdentifierPreferredChange}
                     subjectView
+                    identifierName='Subject'
                 />
                 <Box mb={3}>
                     <MetadataControlTable type={eObjectMetadataType.eSubjectCreation} metadataData={[]} />
