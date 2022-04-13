@@ -93,6 +93,7 @@ function Attachment(props: AttachmentProps): React.ReactElement {
                     onAddIdentifer={onAttachmentIdentifierChange}
                     onUpdateIdentifer={onAttachmentIdentifierChange}
                     onRemoveIdentifer={onAttachmentIdentifierChange}
+                    identifierName='Attachment'
                 />
             </Box>
 
