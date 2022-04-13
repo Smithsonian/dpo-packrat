@@ -13,9 +13,9 @@ This zip file is in the bagit format (https://datatracker.ietf.org/doc/html/rfc8
 | manifest-sha1.txt          | Data file manifest, with hashes for each data file in the SHA1 format |
 | tagmanifest-sha1.txt       | Tag file manifest, with hashes for each metadata file in the SHA1 format |
 | data/*                     | Data files, stored in the data subfolder, potentially with additional file path elements |
-| **capture_data_photo.csv** | Optional photogrammetry capture data metadata |
-| **models.csv**             | Optional model metadata |
-| **scenes.csv**             | Optional scene metadata |
+| **capture_data_photo.csv** | Optional photogrammetry Capture Data metadata |
+| **models.csv**             | Optional Model metadata |
+| **scenes.csv**             | Optional Scene metadata |
 
 **One of capture_data_photo.csv, models.csv, or scenes.csv must be supplied.** These metadata files contain common data as well as object-specific metadata needed for ingestion. Some of these fields make use of [Controlled Vocabularies](../vocabulary):
 |   Metadata Usage  |          Column Header        |       Meaning      |
@@ -27,12 +27,12 @@ This zip file is in the bagit format (https://datatracker.ietf.org/doc/html/rfc8
 | All               | item_guid                     | Media Group Identifier |
 | All               | item_name                     | Media Group Name |
 | All               | item_subtitle                 | Media Group Subtitle, if any |
-| All               | entire_subject                | Is this media group the entire subject or just a portion? |
+| All               | entire_subject                | Is this Media Group the entire Subject or just a portion? |
 | All               | name                          | Name of object |
 | Capture Data      | date_captured                 | Date of Capture |
 | Capture Data      | description                   | Description of Capture |
 | Capture Data      | capture_dataset_type          | Dataset Type (Controlled Vocabulary) |
-| Capture Data      | capture_dataset_field_id      | Field ID for capture dataset |
+| Capture Data      | capture_dataset_field_id      | Field ID for Capture Data dataset |
 | Capture Data      | item_position_type            | Position Type (Controlled Vocabulary) |
 | Capture Data      | item_position_field_id        | Field ID for position |
 | Capture Data      | item_arrangement_field_id     | Field ID for arrangement |
@@ -48,6 +48,6 @@ This zip file is in the bagit format (https://datatracker.ietf.org/doc/html/rfc8
 | Models            | units                         | Model Units (Controlled Vocabulary) |
 | Models            | purpose                       | Model Purpose (Controlled Vocabulary) |
 | Scenes            | scene_subtitle                | Scene subtitle, if any |
-| Scenes            | posed_and_qcd                 | Set if the scene has been posed and QC'd |
-| Scenes            | approved_for_publication      | Set if the scene has been approved for publication |
+| Scenes            | posed_and_qcd                 | Set if the Scene has been posed and QC'd |
+| Scenes            | approved_for_publication      | Set if the Scene has been approved for publication |
 | All               | directory_path                | Relative path to data file(s) starting from the data folder |

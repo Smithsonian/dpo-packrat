@@ -11,7 +11,7 @@ Voyager Story can be used to pose models.
 3. Click on "Zoom Extents" in the Pose Task
 4. Use the other tools (Rotate, Move, etc.) in the Pose Task, in conjunction with
 5. Click and drag to use selected positioning tools
-6. Click on "Save" in the top navigation to send the updated .svx.json scene file back to Packrat
+6. Click on "Save" in the top navigation to send the updated .svx.json Scene file back to Packrat
 
 ### Capture
 Voyager Story can be used to create and maintain thumbnails in the Voyager Scene.
@@ -20,4 +20,4 @@ Voyager Story can be used to create and maintain thumbnails in the Voyager Scene
 2. Click on "Capture" in the top navigation
 3. Click on "Capture" in the Capture Task
 4. Click on "Save" in the Capture Task to send the thumbnails back to Packrat
-5. Click on "Save" in the top navigation to send the updated .svx.json scene file back to Packrat
+5. Click on "Save" in the top navigation to send the updated .svx.json Scene file back to Packrat

@@ -17,4 +17,4 @@ Visit the "workflow" page to browse and query the workflows managed by Packrat:
 5. When appears occur, a summary is displayed here
 
 ### Download Generation
-Packrat makes use of Cook's si-generate-downloads recipe to create versions of models optimized for download, which are then included with scene packages that are [published to EDAN](../publishing).
+Packrat makes use of Cook's si-generate-downloads recipe to create versions of models optimized for download, which are then included with Scene packages that are [published to EDAN](../publishing).
