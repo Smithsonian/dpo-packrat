@@ -1,5 +1,6 @@
 ---
 title: Integration Guide
+weight: 30
 ---
 
 Future editions of Packrat's documentation will include details about how to customize and extend Packrat in order to fit into other organizations' IT/OPS landscapes, including:

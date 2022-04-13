@@ -1,5 +1,6 @@
 ---
 title: "Controlled Vocabularies"
+summary: Packrat's Controlled Vocabularies
 weight: 900
 ---
 

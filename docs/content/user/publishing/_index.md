@@ -1,5 +1,6 @@
 ---
 title: "Content Publishing"
+summary: Publishing Content from Packrat
 weight: 600
 ---
 

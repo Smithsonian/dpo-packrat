@@ -1,5 +1,6 @@
 ---
 title: "Login"
+summary: Logging into Packrat
 weight: 100
 ---
 

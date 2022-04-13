@@ -1,5 +1,6 @@
 ---
 title: "Ingestion: Subject & Media Group"
+summary: Picking Subjects, Projects, and Media Groups for Ingestion
 weight: 310
 ---
 

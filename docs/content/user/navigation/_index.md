@@ -1,5 +1,6 @@
 ---
 title: "Navigation"
+summary: Navigating the Packrat Repository
 weight: 110
 ---
 

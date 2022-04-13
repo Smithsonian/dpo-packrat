@@ -1,5 +1,6 @@
 ---
 title: "Voyager Story Integration"
+summary: Using Voyager Story in Packrat
 weight: 700
 ---
 
