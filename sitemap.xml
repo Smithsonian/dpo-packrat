@@ -2,45 +2,43 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/login/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/navigation/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/admin/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/browse/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/integration/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/search/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/login/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/ingestion-upload/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/navigation/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/ingestion-subject/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/browse/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/ingestion-metadata/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/search/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/bulk-ingestion/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/ingestion-upload/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/managing/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/ingestion-subject/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/publishing/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/ingestion-metadata/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/voyager/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/bulk-ingestion/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/workflows/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/managing/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/vocabulary/</loc>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/publishing/</loc>
+  </url><url>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/voyager/</loc>
+  </url><url>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/workflows/</loc>
+  </url><url>
+    <loc>https://smithsonian.github.io/dpo-packrat/user/vocabulary/</loc>
   </url><url>
     <loc>https://smithsonian.github.io/dpo-packrat/</loc>
     <lastmod>2022-03-31T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/admin/</loc>
-  </url><url>
     <loc>https://smithsonian.github.io/dpo-packrat/categories/</loc>
   </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/integration/</loc>
-  </url><url>
     <loc>https://smithsonian.github.io/dpo-packrat/tags/</loc>
-  </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user/</loc>
-  </url><url>
-    <loc>https://smithsonian.github.io/dpo-packrat/user-tasks/</loc>
   </url>
 </urlset>

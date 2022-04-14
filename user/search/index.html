@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Integration Guide - Packrat Documentation</title>
+  <title>Repository Searching - Packrat Documentation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="https://smithsonian.github.io/dpo-packrat/favicon.ico">
@@ -106,11 +106,11 @@
     
     
       
-    
-      
-    
-      
         
+      
+    
+      
+    
       
     
 
@@ -140,7 +140,7 @@
     </li>
       
     
-    <li class="">
+    <li class="active ">
       <a href="/dpo-packrat/user/search/">Repository Searching</a>
     </li>
       
@@ -214,17 +214,19 @@
           
 
   
-  <h1 class="title">Integration Guide</h1>
+  <h1 class="title">Repository Searching</h1>
   <div class="content">
-    <p>Future editions of Packrat&rsquo;s documentation will include details about how to customize and extend Packrat in order to fit into other organizations&rsquo; IT/OPS landscapes, including:</p>
+    <p>Use the &ldquo;Search Repository&rdquo; box at the top of Packrat to perform a keyword search of the repository contents. Click &ldquo;Search&rdquo; or hit enter after supplying search text.</p>
+<p>When searching, the display of repository contents is updated with objects that match the specified search text.  If the search is performed from within the repository browser page, any selected repository filters are applied to the search results.  If the search is performed from a different Packrat page, all repository filters are removed.</p>
+<p>Search tips:</p>
 <ul>
-<li>Authentication (i.e. Login)</li>
-<li>Collection Management (i.e. Searching and Publishing)</li>
-<li>Computational Engine Integration</li>
-<li>Event Management</li>
-<li>Storage Customization and Extension</li>
-<li>Business Process Customization and Extension</li>
+<li>Packrat&rsquo;s keyword search uses the <a href="https://solr.apache.org/guide/8_11/the-extended-dismax-query-parser.html">Extended DisMax Query Parser</a></li>
+<li>Surround text with double quotes to require that exact text to be matched</li>
+<li>Use * and ? for wildcard searches</li>
+<li>Packrat will search for objects with matching identifiers, such as ARK IDs and EDAN MDM IDs</li>
+<li>Capitalization is ignored</li>
 </ul>
+<p>As always, you can copy and share the Packrat URL representing your search results to bring another user (or yourself) to the selected view of the repository.</p>
 
   </div>
 

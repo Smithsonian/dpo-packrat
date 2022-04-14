@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Integration Guide - Packrat Documentation</title>
+  <title>Business Process Management - Packrat Documentation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="https://smithsonian.github.io/dpo-packrat/favicon.ico">
@@ -106,11 +106,11 @@
     
     
       
-    
-      
-    
-      
         
+      
+    
+      
+    
       
     
 
@@ -180,7 +180,7 @@
     </li>
       
     
-    <li class="">
+    <li class="active ">
       <a href="/dpo-packrat/user/workflows/">Business Process Management</a>
     </li>
       
@@ -214,17 +214,28 @@
           
 
   
-  <h1 class="title">Integration Guide</h1>
+  <h1 class="title">Business Process Management</h1>
   <div class="content">
-    <p>Future editions of Packrat&rsquo;s documentation will include details about how to customize and extend Packrat in order to fit into other organizations&rsquo; IT/OPS landscapes, including:</p>
+    <p>In addition to providing a robust data repository and content management system, Packrat provides business process management and automation for common 3D workflows. <a href="https://github.com/Smithsonian/dpo-cook">Smithsonian Cook</a> is used extensively as our computational engine for 3D tasks.</p>
+<p>Visit the &ldquo;Workflow&rdquo; page to browse and query the workflows managed by Packrat:
+<a href="/dpo-packrat/images/packrat-workflow.png" target="_blank"><img src="/dpo-packrat/images/packrat-workflow.png" alt="Packrat Workflows" title="Packrat Workflows"></a></p>
+<ol>
+<li>Select &ldquo;Workflow&rdquo; from the left navigation.</li>
+<li>Apply Filters to focus attention on workflows of interest. Click &ldquo;Search&rdquo; to apply the selected filters.</li>
+<li>Individual workflows are gathered into &ldquo;Sets&rdquo;, allowing for combined reporting for business processes that have multiple steps, such as Upload and Ingestion.</li>
+<li>A set of reports are available; click on:
 <ul>
-<li>Authentication (i.e. Login)</li>
-<li>Collection Management (i.e. Searching and Publishing)</li>
-<li>Computational Engine Integration</li>
-<li>Event Management</li>
-<li>Storage Customization and Extension</li>
-<li>Business Process Customization and Extension</li>
+<li>&ldquo;R&rdquo; icon to view the individual workflow&rsquo;s report</li>
+<li>&ldquo;S&rdquo; icon to view the combined workflow set&rsquo;s report</li>
+<li>&ldquo;J&rdquo; icon, when appropriate, to view the workflow job output, typically from Cook</li>
 </ul>
+</li>
+<li>Error summaries are displayed in this column, when errors occur</li>
+</ol>
+<h3 id="download-generation">Download Generation</h3>
+<p>Packrat makes use of Cook&rsquo;s si-generate-downloads recipe to create versions of Models optimized for download, which are then included with Scene packages that are <a href="../publishing">published to EDAN</a>.</p>
+<h3 id="other-workflows">Other Workflows</h3>
+<p>Information about additional Packrat workflows will be added here.</p>
 
   </div>
 

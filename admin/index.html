@@ -47,7 +47,7 @@
       </a>
     </li>
     
-    <li class="menu-item-github" title="Smithsonian Cook on Github">
+    <li class="menu-item-github" title="Smithsonian Packrat on Github">
       <a href="https://github.com/smithsonian/dpo-packrat"><img src="/dpo-packrat/images/github.svg" alt="Github"></a>
     </li>
   </ul>
@@ -106,11 +106,9 @@
     
     
       
+    
+      
         
-      
-    
-      
-    
       
     
       
@@ -124,81 +122,87 @@
             
 
 <div class="docs-menu">
-  <h4>Administrator guide</h4>
+  <h4><a href="/dpo-packrat/user/">User guide</a></h4>
+  <ul>
+    
+    <li class="">
+      <a href="/dpo-packrat/user/login/">Login</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/navigation/">Navigation</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/browse/">Repository Browsing</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/search/">Repository Searching</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/ingestion-upload/">Ingestion, Step 1: Upload</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/ingestion-subject/">Ingestion, Step 2: Subject &amp; Media Group</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/ingestion-metadata/">Ingestion, Step 3: Common Metadata</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/bulk-ingestion/">Bulk Ingestion</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/managing/">Content Management</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/publishing/">Content Publishing</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/voyager/">Voyager Story Integration</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/workflows/">Business Process Management</a>
+    </li>
+      
+    
+    <li class="">
+      <a href="/dpo-packrat/user/vocabulary/">Controlled Vocabularies</a>
+    </li>
+      
+    
+  </ul>
+</div>
+
+<div class="docs-menu">
+  <h4><a href="/dpo-packrat/admin/">Administrator guide</a></h4>
   <ul>
     
   </ul>
 </div>
 
 <div class="docs-menu">
-  <h4>Integration guide</h4>
+  <h4><a href="/dpo-packrat/integration/">Integration guide</a></h4>
   <ul>
-    
-  </ul>
-</div>
-
-<div class="docs-menu">
-  <h4>User guide</h4>
-  <ul>
-    
-  </ul>
-</div>
-
-<div class="docs-menu">
-  <h4>User tasks</h4>
-  <ul>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/login/">Login</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/navigation/">Navigation</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/browse/">Repository Browsing</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/search/">Repository Searching</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/ingestion-upload/">Ingestion: Upload</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/ingestion-subject/">Ingestion: Subject &amp; Media Group</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/ingestion-metadata/">Ingestion: Common Metadata</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/bulk-ingestion/">Bulk Ingestion</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/managing/">Content Management</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/publishing/">Content Publishing</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/voyager/">Voyager Story Integration</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/workflows/">Business Process Management</a>
-    </li>
-    
-    <li class="">
-      <a href="/dpo-packrat/user-tasks/vocabulary/">Controlled Vocabularies</a>
-    </li>
     
   </ul>
 </div>
@@ -221,7 +225,7 @@
 <li><a href="#subjects">Subjects</a></li>
 </ul>
 <h3 id="licenses">Licenses</h3>
-<p>Packrat licensing controls <a href="../user-tasks/publishing">publishing</a> behavior as well as <a href="../user-tasks/workflows#download-generation">download generation</a>. Licenses are defined at the object level and then inherited from that object to all subobjects which do not have explicit licenses defined.</p>
+<p>Packrat licensing controls <a href="../user/publishing">publishing</a> behavior as well as <a href="../user/workflows#download-generation">download generation</a>. Licenses are defined at the object level and then inherited from that object to all child objects which do not have explicit licenses defined.</p>
 <p>If a given object does not have an explicit license defined, Packrat considers all of that object&rsquo;s direct ancestors, moving &ldquo;up&rdquo; the repository hierarchy until finding an object with an explicit license assignment. In the event that an object has multiple ancestors, Packrat will use the most restrictive license inherited from all of the considered ancestors.</p>
 <p>From least restrictive to most restrictive, Packrat&rsquo;s default licenses include:</p>
 <table>
@@ -229,8 +233,9 @@
 <tr>
 <th>License</th>
 <th>Description</th>
-<th>Published?</th>
+<th>Publishable?</th>
 <th>Downloads?</th>
+<th>Restriction Level</th>
 </tr>
 </thead>
 <tbody>
@@ -239,50 +244,54 @@
 <td>No Rights Reserved. Read more about <a href="https://creativecommons.org/share-your-work/public-domain/cc0/">Creative Commons CC0</a></td>
 <td>Yes</td>
 <td>Yes</td>
+<td>10</td>
 </tr>
 <tr>
 <td>SI ToU, Publishable w/ Downloads</td>
 <td>Smithsonian&rsquo;s <a href="https://www.si.edu/termsofuse">Terms of Use</a>, Usage Conditions Apply</td>
 <td>Yes</td>
 <td>Yes</td>
+<td>20</td>
 </tr>
 <tr>
 <td>SI ToU, Publishable Only</td>
 <td>Smithsonian&rsquo;s <a href="https://www.si.edu/termsofuse">Terms of Use</a>, Usage Conditions Apply</td>
 <td>Yes</td>
 <td><strong>No</strong></td>
+<td>30</td>
 </tr>
 <tr>
 <td>Restricted, Not Publishable</td>
 <td>Restricted from public use</td>
 <td><strong>No</strong></td>
 <td><strong>No</strong></td>
+<td>40</td>
 </tr>
 </tbody>
 </table>
-<p>Each Packrat license has a &ldquo;Restriction Level&rdquo;, allowing Packrat to organize and understand these license. Generally speaking, the lower the restriction level, the less restrictive the license is.</p>
+<p>Each Packrat license has a &ldquo;Restriction Level&rdquo;, allowing Packrat to organize and better understand these licenses. Generally speaking, the lower the restriction level, the less restrictive the license is.</p>
 <h3 id="users">Users</h3>
 <p>Packrat maintains its own database of users, including the username and user email address. Only active Packrat users are able to login to Packrat. Authentication of login credentials is performed by an integration with the Smithsonian Active Directory.</p>
 <h3 id="projects">Projects</h3>
-<p>Packrat organizes digitization initiative into Projects. In turn, a project owns a set of media groups, each of which represents digitization activities for a given subject of set of subjects. Projects are typically associated with a unit.</p>
+<p>Packrat organizes digitization initiatives into Projects. In turn, a Project owns a set of Media Groups, each of which represents digitization activities for a given set of Subjects. Projects are typically associated with a Unit.</p>
 <h3 id="units">Units</h3>
-<p>Units represent an organizational group that owns or has responsibility for an object in the collection. Each Packrat subject is associated with a unit.</p>
+<p>Units represent an organizational group that owns or has responsibility for a physical Subject or maintains the authoritative metadata record for that Subject. Each Packrat Subject is associated with a Unit.</p>
 <h3 id="subjects">Subjects</h3>
-<p>Subjects are objects in the collection. Packrat allows for the authoring of novel Subjects and the publishing of these Subjects to EDAN, resulting in the creation &amp; maintenance of EDAN records of type &rsquo;edanmdm&rsquo;. This functionality is intended to replace the <a href="http://dev.3d.api.si.edu/prod/console/home">EDAN 3D Console</a>.</p>
+<p>Subjects are objects in the collection, or environments. Packrat allows for the authoring of novel Subjects and the publishing of these Subjects to EDAN, resulting in the creation &amp; maintenance of EDAN records of type &rsquo;edanmdm'.</p>
 <p>New Subjects are created by visiting Administration &gt; Subjects, and then clicking &ldquo;Create&rdquo;.  When appropriate, start your construction of a Subject from an existing Subject:
-<a href="/dpo-packrat/images/packrat-publish-subject-1.png"><img src="/dpo-packrat/images/packrat-publish-subject-1.png" alt="Packrat Publish Subject Existing" title="Packrat Publish Subject Existing"></a></p>
+<a href="/dpo-packrat/images/packrat-publish-subject-1.png" target="_blank"><img src="/dpo-packrat/images/packrat-publish-subject-1.png" alt="Packrat Publish Subject Existing" title="Packrat Publish Subject Existing"></a></p>
 <ol>
-<li>Enter search text in order to search EDAN for the existing subject</li>
-<li>Click the Search button</li>
-<li>Select the correct Subject by clicking the &ldquo;plus&rdquo; butotn</li>
-<li>Verify the Name and Unit for the subject</li>
-<li>Verify the identifiers for the subject, and select one to be the preferred identifier by choosing it via its radio button</li>
+<li>Enter search text in order to search EDAN for the existing Subject</li>
+<li>Click the &ldquo;Search&rdquo; button</li>
+<li>Select the correct Subject by clicking the &ldquo;plus&rdquo; (<img src="/dpo-packrat/images/packrat-repoplus.png" alt="Packrat Plus Icon" title="Packrat Plus Icon">) button</li>
+<li>Verify the Name and Unit for the Subject</li>
+<li>Verify the identifiers for the Subject, and select one to be the preferred identifier by choosing it via its radio button</li>
 </ol>
-<p>Alternatively, you can create a new subject from scratch:
-<a href="/dpo-packrat/images/packrat-publish-subject-2.png"><img src="/dpo-packrat/images/packrat-publish-subject-2.png" alt="Packrat Publish Subject New" title="Packrat Publish Subject New"></a></p>
+<p>Alternatively, you can create a new Subject from scratch:
+<a href="/dpo-packrat/images/packrat-publish-subject-2.png" target="_blank"><img src="/dpo-packrat/images/packrat-publish-subject-2.png" alt="Packrat Publish Subject New" title="Packrat Publish Subject New"></a></p>
 <ol>
-<li>Enter the subject&rsquo;s name</li>
-<li>Select the subject&rsquo;s unit</li>
+<li>Enter the Subject&rsquo;s name</li>
+<li>Select the Subject&rsquo;s Unit</li>
 <li>Supply identifier(s)</li>
 <li>Provide required metadata, which may involve repeating some information from above:
 <table>
@@ -316,13 +325,13 @@
 <tr>
 <td>Unit</td>
 <td>N/A</td>
-<td>Smithsonian unit responsible for the object or who partnered in scanning the object</td>
+<td>Smithsonian Unit responsible for the object or who partnered in scanning the object</td>
 <td>Yes</td>
 </tr>
 <tr>
 <td>License</td>
 <td>N/A</td>
-<td>This is the rights of the object metadata, not the 3D model, and should almost always be CC0</td>
+<td>This is the rights of the object metadata, not the 3D Model, and should almost always be CC0</td>
 <td>Yes</td>
 </tr>
 <tr>
@@ -337,7 +346,7 @@
 <li>Click the &ldquo;Create&rdquo; button when ready, to create the Subject and publish it to EDAN</li>
 </ol>
 <p>Additional metadata can be provided:
-<img src="/dpo-packrat/images/packrat-publish-subject-3.png" alt="Packrat Publish Subject Metadata" title="Packrat Publish Subject Metadata"></p>
+<a href="/dpo-packrat/images/packrat-publish-subject-3.png" target="_blank"><img src="/dpo-packrat/images/packrat-publish-subject-3.png" alt="Packrat Publish Subject Metadata" title="Packrat Publish Subject Metadata"></a></p>
 <ol>
 <li>Click &ldquo;Add Field&rdquo;</li>
 <li>Select the metadata Name.  Names ending in &ldquo;(FT)&rdquo; are free text entries; they can be repeated, and they optionally take a &ldquo;Label&rdquo;, which provides introductory text for the metadata.</li>

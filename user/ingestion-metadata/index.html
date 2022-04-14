@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Integration Guide - Packrat Documentation</title>
+  <title>Ingestion, Step 3: Common Metadata - Packrat Documentation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <link rel="icon" href="https://smithsonian.github.io/dpo-packrat/favicon.ico">
@@ -106,11 +106,11 @@
     
     
       
-    
-      
-    
-      
         
+      
+    
+      
+    
       
     
 
@@ -155,7 +155,7 @@
     </li>
       
     
-    <li class="">
+    <li class="active ">
       <a href="/dpo-packrat/user/ingestion-metadata/">Ingestion, Step 3: Common Metadata</a>
     </li>
       
@@ -214,17 +214,30 @@
           
 
   
-  <h1 class="title">Integration Guide</h1>
+  <h1 class="title">Ingestion, Step 3: Common Metadata</h1>
   <div class="content">
-    <p>Future editions of Packrat&rsquo;s documentation will include details about how to customize and extend Packrat in order to fit into other organizations&rsquo; IT/OPS landscapes, including:</p>
+    <h3 id="common-metadata">Common Metadata</h3>
+<p>All ingested objects share a set of common metadata:</p>
 <ul>
-<li>Authentication (i.e. Login)</li>
-<li>Collection Management (i.e. Searching and Publishing)</li>
-<li>Computational Engine Integration</li>
-<li>Event Management</li>
-<li>Storage Customization and Extension</li>
-<li>Business Process Customization and Extension</li>
+<li>Identifier(s): every object needs at least one primary identifier, such as a ARK ID or EDAN Record ID. It may be system generated.</li>
+<li>Parents: during ingestion, we can specify any additional parent objects other than the Media Group already selected in <a href="../ingestion-subject">Ingestion, Step 2: Subject &amp; Media Group</a>. For most object types, this is optional, but Scenes require one or more Models as parents. Models often have Capture Data as parents, and sometimes other Models. This parent-child relationship represents the relationship of source data (e.g. Capture Data) to derived data (e.g. Model).</li>
+<li>Children: during ingestion, we can also specify any children objects (i.e. for each such child, we are ingesting <strong>their</strong> parent).</li>
 </ul>
+<h3 id="adding-identifiers">Adding Identifiers</h3>
+<p><a href="/dpo-packrat/images/packrat-ingestion-md-common.png" target="_blank"><img src="/dpo-packrat/images/packrat-ingestion-md-common.png" alt="Packrat Ingestion Common Metadata" title="Packrat Ingestion Common Metadata"></a></p>
+<ol>
+<li>Either add an identifier by clicking the &ldquo;Add&rdquo; button, and/or</li>
+<li>Allow the system to create an identifier by leaving the checkbox selected.</li>
+</ol>
+<h3 id="adding-parents-and-children">Adding Parents and Children</h3>
+<p>Click the &ldquo;Add&rdquo; button under either &ldquo;Parents&rdquo; or &ldquo;Children&rdquo; (#3 in the picture above). This tells the system how to connect the ingested object to objects which already exist in Packrat. Doing so makes use of the repository browser: 
+<a href="/dpo-packrat/images/packrat-ingestion-md-common-2.png" target="_blank"><img src="/dpo-packrat/images/packrat-ingestion-md-common-2.png" alt="Packrat Ingestion Common Related" title="Packrat Ingestion Common Related"></a></p>
+<ol>
+<li>Select one or more objects</li>
+<li>If needed, make use of search. Note that when ingesting <strong>Scenes</strong>, search will show you results from the entire repository, allowing the selection of diverse parent Models &ndash; more than just from the selected Subject. <strong>Otherwise</strong>, you will only see objects related to the <strong>Subjects</strong> selected for ingestion.</li>
+<li>Click the carrot (<img src="/dpo-packrat/images/packrat-repocarrotdown.png" alt="Packrat Carrot Down Icon" title="Packrat Carrot Down Icon">) icon to reveal the repository browser filter, if that assists in selecting the desired object.</li>
+<li>Click &ldquo;Save&rdquo; when you are done.</li>
+</ol>
 
   </div>
 
