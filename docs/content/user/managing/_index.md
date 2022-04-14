@@ -4,7 +4,7 @@ summary: Managing Content in Packrat
 weight: 400
 ---
 
-Within the [Repository Browser](../browse), clicking on an object icon or double-clicking a row will bring you to the detail page for the object in question.
+Within the [Repository Browser](../browse), clicking on an object icon or double-clicking the object name will bring you to the detail page for the object in question.
 
 ### Common Information
 All detail pages have a set of common information at the top of the page and a tabbed UI of information specific to the type of object being viewed:
