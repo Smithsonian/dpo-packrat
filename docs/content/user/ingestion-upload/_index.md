@@ -1,5 +1,5 @@
 ---
-title: "Ingestion: Upload"
+title: "Ingestion, Step 1: Upload"
 summary: Uploading Files for Ingestion
 weight: 300
 ---
@@ -7,13 +7,13 @@ weight: 300
 Ingestion is the process of bringing content into Packrat's repository. Click on "Ingestion" in the left navigation to begin and manage this process.
 
 The first step of the ingestion process is to select and upload files to Packrat.
-![Packrat Ingestion Upload](/dpo-packrat/images/packrat-ingestion-1.png "Packrat Ingestion Upload")
-1. **Choose files** for upload: either drag-and-drop files to the highlighted red box, or select them via the "Browse Files" button.
+[![Packrat Ingestion Upload](/dpo-packrat/images/packrat-ingestion-1.png "Packrat Ingestion Upload")](/dpo-packrat/images/packrat-ingestion-1.png)
+1. **Choose files** for upload: Either drag-and-drop files to the "Upload Files" area of the page, or select them via the "Browse Files" button.
 2. **Select Asset Type** for the added file. The system will attempt to guess the correct type.
-3. **Initiate Upload** by clicking the "Upload" icon.
+3. **Initiate Upload** by clicking the "Upload" button.
 
     Packrat validates the uploaded files once upload has completed. If any validations fail, the upload fails, and an error message is shown to the user. Validations include:
-    - 3D Model vaidation using Cook's si-packrat-inspect recipe
+    - 3D Model validation using Cook's si-packrat-inspect recipe
     - Image file format validation
     - Zip file format validation
     - Bulk Ingestion bagger format and contents validation. See [Bulk Ingestion](../bulk-ingestion) for more details.

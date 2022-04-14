@@ -3,7 +3,7 @@ title: "Packrat: System of Record for 3D data"
 date: 2022-03-31
 ---
 
-### 3D Data Repository and Workflow Management for captures, models, and scenes
+### 3D Data Repository and Workflow Management for Data Captures, Models, and Scenes
 
 [Packrat](https://github.com/Smithsonian/dpo-packrat) is the Smithsonian's system of record for 3D data.  It provides:
 - A robust data repository for data files and associated metadata, via an implementation of the [Oxford Common File Layout](https://ocfl.io/)
