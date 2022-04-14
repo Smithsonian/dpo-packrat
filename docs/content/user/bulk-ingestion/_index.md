@@ -27,28 +27,28 @@ This zip file is in the [BagIt format](https://datatracker.ietf.org/doc/html/rfc
 | All               | unit_name                     | Unit Name |
 | All               | item_guid                     | Media Group Identifier |
 | All               | item_name                     | Media Group Name |
-| All               | item_subtitle                 | Media Group Subtitle, if any |
-| All               | entire_subject                | Is this Media Group the entire Subject or just a portion? |
-| All               | name                          | Name of object |
+| All               | item_subtitle                 | Media Group Subtitle |
+| All               | entire_subject                | Is this Media Group the Entire Subject or Just a Portion? |
+| All               | name                          | Name of Object |
 | Capture Data      | date_captured                 | Date of Capture |
 | Capture Data      | description                   | Description of Capture |
 | Capture Data      | capture_dataset_type          | Dataset Type (Controlled Vocabulary) |
 | Capture Data      | capture_dataset_field_id      | Field ID for Capture Data dataset |
 | Capture Data      | item_position_type            | Position Type (Controlled Vocabulary) |
-| Capture Data      | item_position_field_id        | Field ID for position |
-| Capture Data      | item_arrangement_field_id     | Field ID for arrangement |
+| Capture Data      | item_position_field_id        | Field ID for Position |
+| Capture Data      | item_arrangement_field_id     | Field ID for Arrangement |
 | Capture Data      | focus_type                    | Focus Type (Controlled Vocabulary) |
 | Capture Data      | light_source_type             | Light Source Type (Controlled Vocabulary) |
 | Capture Data      | background_removal_method     | Background Removal Method (Controlled Vocabulary) |
 | Capture Data      | cluster_type_type             | Cluster Type (Controlled Vocabulary) |
 | Capture Data      | cluster_geometry_field_id     | Field ID for Cluster Geometry |
-| Models            | model_subtitle                | Model subtitle, if any |
+| Models            | model_subtitle                | Model Subtitle |
 | Models            | date_created                  | Creation Date |
 | Models            | creation_method               | Creation Method (Controlled Vocabulary) |
 | Models            | modality                      | Model Modality (Controlled Vocabulary) |
 | Models            | units                         | Model Units (Controlled Vocabulary) |
 | Models            | purpose                       | Model Purpose (Controlled Vocabulary) |
-| Scenes            | scene_subtitle                | Scene subtitle, if any |
-| Scenes            | posed_and_qcd                 | Set if the Scene has been posed and QC'd |
-| Scenes            | approved_for_publication      | Set if the Scene has been approved for publication |
-| All               | directory_path                | Relative path to data file(s) starting from the data folder |
+| Scenes            | scene_subtitle                | Scene Subtitle |
+| Scenes            | posed_and_qcd                 | Set if the Scene has been Posed and QC'd |
+| Scenes            | approved_for_publication      | Set if the Scene has been Approved for Publication |
+| All               | directory_path                | Relative Path to Data File(s) Starting from the Data Folder |
