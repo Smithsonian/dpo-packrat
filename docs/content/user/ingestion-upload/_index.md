@@ -16,7 +16,7 @@ The first step of the ingestion process is to select and upload files to Packrat
     - 3D Model validation using Cook's si-packrat-inspect recipe
     - Image file format validation
     - Zip file format validation
-    - Bulk Ingestion bagger format and contents validation. See [Bulk Ingestion](../bulk-ingestion) for more details.
+    - Bulk Ingestion BagIt format and contents validation. See [Bulk Ingestion](../bulk-ingestion) for more details.
     - Voyager document (.svx.json file) validation
 
     Once upload and validation is complete:
