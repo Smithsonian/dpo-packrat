@@ -6,7 +6,7 @@ weight: 390
 
 Bulk ingestion is a form of ingestion in which a specially crafted zip file is provided. This file contains metadata needed by the ingestion process, as well as file manifests that enable the system to confirm uncorrupted receipt of the correct information.
 
-This zip file is in the bagit format (https://datatracker.ietf.org/doc/html/rfc8493). The Library of Congress has built and shared the [Bagger](https://github.com/LibraryOfCongress/bagger) utility for constructing these files. Bagit zips contain the following contents:
+This zip file is in the [BagIt format](https://datatracker.ietf.org/doc/html/rfc8493). The Library of Congress has built and shared the [Bagger](https://github.com/LibraryOfCongress/bagger) utility for constructing these files. Bagit zips contain the following contents:
 |            Name            |      Purpose     |
 | -------------------------- | ---------------- |
 | bagit.txt                  | Declaration file |
