@@ -6,9 +6,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Tooltip, TextField, Button, IconButton } from '@material-ui/core';
+import { Box, TextField, Button, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { DataGrid, GridColumns } from '@material-ui/data-grid';
 import { useLocation } from 'react-router';
 import { GetUnitsFromNameSearchDocument, GetUnitsFromNameSearchResult } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
@@ -16,33 +15,38 @@ import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumb
 import { Helmet } from 'react-helmet';
 import { useHistory } from 'react-router-dom';
 import Clear from '@material-ui/icons/Clear';
+import DataTable from './shared/DataTable';
+import { DataTableOptions } from '../../../types/component';
+import clsx from 'clsx';
 
 const useStyles = makeStyles({
-    AdminListContainer: {
-        marginTop: '15px',
-        width: '80%',
-        padding: '20px',
-        height: 'calc(100% - 120px)',
-        display: 'flex',
-        border: '1px solid #B7D2E5CC',
-        margin: '1px solid #B7D2E5CC',
-        alignItems: 'center',
-        backgroundColor: '#687DDB1A',
-        borderRadius: '4px'
+    centeredTableHead: {
+        '& > span': {
+            '& > button': {
+                marginRight: 0,
+                marginLeft: '0px',
+                '&:focus': {
+                    outline: '0.5px solid #8DABC4'
+                }
+            },
+            justifyContent: 'center'
+        }
     },
-    DataGridList: {
-        letterSpacing: '1.7px',
-        color: '#8DABC4',
-        border: '1px solid #B7D2E5CC',
-        borderRadius: '2px',
+    evenTableRow: {
+        backgroundColor: 'rgb(255, 255, 224)'
+    },
+    oddTableRow: {
         backgroundColor: 'white'
+    },
+    tableContainer: {
+        marginTop: 15
     },
     AdminPageViewContainer: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
         overflow: 'auto',
-        maxHeight: 'calc(100vh - 60px)',
+        paddingBottom: '15px',
         paddingLeft: '15px',
         width: '1200px',
         margin: '0 auto'
@@ -61,28 +65,33 @@ const useStyles = makeStyles({
     styledButton: {
         backgroundColor: '#3854d0',
         color: 'white',
-        width: '90px',
-        height: '30px',
+        width: '75px',
+        height: '25px',
         outline: '2px hidden #8DABC4',
         '& :focus': {
             outline: '2px solid #8DABC4',
-        }
+        },
+        fontSize: '0.8rem'
     },
-    AdminSearchFilterContainer: {
+    filterContainer: {
         display: 'flex',
         justifyContent: 'space-around',
-        width: '600px',
-        backgroundColor: '#FFFCD1',
-        padding: '15px 20px'
+        width: 'max-content',
+        backgroundColor: 'rgb(255, 255, 224)',
+        padding: '10px 10px',
+        fontSize: '0.8rem',
+        outline: '1px solid rgba(141, 171, 196, 0.4)',
+        borderRadius: 5
     },
-    AdminUsersSearchFilterSettingsContainer: {
+    searchContainerLeft: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         height: '100%',
-        width: '80%'
+        width: '80%',
+        columnGap: 10
     },
-    AdminUsersSearchFilterSettingsContainer2: {
+    searchContainerRight: {
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'center',
@@ -94,65 +103,70 @@ const useStyles = makeStyles({
         borderRadius: '4px'
     },
     searchFilter: {
-        width: '350px'
+        width: '250px'
     }
 });
 
 function AdminUnitsList({ units }): React.ReactElement {
     const classes = useStyles();
-    const unitsWithId = units.map(unit => {
-        const { idUnit, Name, SystemObject, Abbreviation } = unit;
-        const { idSystemObject } = SystemObject;
-        return {
-            id: idUnit,
-            Abbreviation,
-            Name,
-            idSystemObject
-        };
-    });
 
-    const columnHeader: GridColumns = [
+    const dataTableOptions: DataTableOptions = {
+        filter: false,
+        filterType: 'dropdown',
+        responsive: 'standard',
+        selectableRows: 'none',
+        search: false,
+        download: false,
+        print: false,
+        fixedHeader: false,
+        pagination: false,
+        elevation: 0,
+        setRowProps: (_row, _dataIndex, _rowIndex) => {
+            return { className: _rowIndex % 2 !== 0 ? classes.oddTableRow : classes.evenTableRow };
+        }
+    };
+
+    const setCenterCell = () => ({ align: 'center' });
+    const setCenterHeader = () => {
+        return {
+            className: clsx({
+                [classes.centeredTableHead]: true
+            }),
+        };
+    };
+
+    const columns = [
         {
-            field: 'Abbreviation',
-            headerName: 'Abbreviation',
-            flex: 1.5,
-            type: 'string'
+            name: 'Abbreviation',
+            label: 'Abbreviation',
+            options: {
+                setCellHeaderProps: setCenterHeader
+            }
         },
         {
-            field: 'Name',
-            headerName: 'Name',
-            flex: 4,
-            renderCell: params => (
-                <Tooltip placement='left' title={`${params.row.Name}`} arrow>
-                    <div>{`${params.row.Name}`}</div>
-                </Tooltip>
-            )
+            name: 'Name',
+            label: 'Name',
+            options: {
+                setCellHeaderProps: setCenterHeader,
+            }
         },
         {
-            field: 'Action',
-            headerName: 'Action',
-            flex: 1,
-            sortable: false,
-            renderCell: params => (
-                <Link to={`/repository/details/${[params.row.idSystemObject]}`} target='_blank'>
-                    Edit
-                </Link>
-            )
+            name: 'idUnit',
+            label: 'Action',
+            options: {
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader,
+                customBodyRender(value) {
+                    return <Link to={`/repository/details/${value}`}>Edit</Link>
+                },
+                sort: false
+            }
         }
     ];
 
     return (
-        <Box className={classes.AdminListContainer}>
-            <DataGrid
-                className={classes.DataGridList}
-                rows={unitsWithId}
-                columns={columnHeader}
-                rowHeight={55}
-                scrollbarSize={5}
-                density='compact'
-                disableSelectionOnClick
-                hideFooter
-            />
+        <Box className={classes.tableContainer}>
+            <DataTable title='units' data={units} columns={columns} options={dataTableOptions} />
         </Box>
     );
 }
@@ -171,8 +185,8 @@ function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSear
     };
 
     return (
-        <Box className={classes.AdminSearchFilterContainer}>
-            <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
+        <Box className={classes.filterContainer}>
+            <Box className={classes.searchContainerLeft}>
                 <label htmlFor='searchFilter' style={{ display: 'none' }}>Search Unit</label>
                 <TextField
                     className={classes.searchFilter}
@@ -185,14 +199,15 @@ function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSear
                             <IconButton size='small' onClick={() => { setSearchFilter(''); queryUnitsByFilter(''); }}>
                                 <Clear style={{ height: '16px' }} />
                             </IconButton>
-                        ) : null
+                        ) : null,
+                        style: { fontSize: '0.8rem' }
                     }}
                 />
-                <Button className={classes.styledButton} style={{ right: '25px' }} onClick={searchUnits} variant='contained' disableElevation>
+                <Button className={classes.styledButton} onClick={searchUnits} variant='contained' disableElevation>
                     Search
                 </Button>
             </Box>
-            <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
+            <Box className={classes.searchContainerRight}>
                 <Button className={classes.styledButton} onClick={() => history.push('/admin/units/create')} variant='contained' disableElevation>Create</Button>
             </Box>
         </Box>
