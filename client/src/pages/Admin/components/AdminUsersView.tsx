@@ -18,12 +18,11 @@ const useStyles = makeStyles({
         flex: 1,
         flexDirection: 'column',
         overflow: 'auto',
-        maxHeight: 'calc(100vh - 60px)',
+        paddingBottom: '15px',
         paddingLeft: '15px',
-        width: '1200px',
         margin: '0 auto'
     },
-    AdminBreadCrumbsContainer: {
+    breadcrumbContainer: {
         display: 'flex',
         alignItems: 'center',
         minHeight: '46px',
@@ -87,7 +86,7 @@ function AdminUsersView(): React.ReactElement {
                 <title>Users Admin</title>
             </Helmet>
             <Box className={classes.AdminUsersViewContainer}>
-                <Box className={classes.AdminBreadCrumbsContainer}>
+                <Box className={classes.breadcrumbContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />
                 </Box>
                 <AdminUsersFilter queryUsersByFilter={queryUsersByFilter} />
