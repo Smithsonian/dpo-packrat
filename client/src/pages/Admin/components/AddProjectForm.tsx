@@ -76,7 +76,6 @@ const useStyles = makeStyles(({ typography }) => ({
         borderRadius: '4px',
         width: '80%',
         minHeight: '100px',
-        // new
         resize: 'vertical',
         fontSize: '0.8rem',
         marginTop: 3
