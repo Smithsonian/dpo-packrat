@@ -4,128 +4,134 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Tooltip } from '@material-ui/core';
+import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import ClearIcon from '@material-ui/icons/Clear';
 import CheckIcon from '@material-ui/icons/Check';
-import { DataGrid, GridColumns, GridCellValue } from '@material-ui/data-grid';
+// import { DataGrid, GridColumns, GridCellValue } from '@material-ui/data-grid';
 import { GetAllUsersResult } from '../../../types/graphql';
 import { extractISOMonthDateYear } from '../../../constants/index';
+import DataTable from './shared/DataTable';
+import { DataTableOptions } from '../../../types/component';
+import clsx from 'clsx';
 
 const useStyles = makeStyles({
-    AdminUsersListContainer: {
-        marginTop: '20px',
-        width: '1000px',
-        padding: '20px',
-        height: 'calc(100% - 120px)',
-        display: 'flex',
-        border: '1px solid #B7D2E5CC',
-        margin: '1px solid #B7D2E5CC',
-        alignItems: 'center',
-        backgroundColor: '#687DDB1A',
-        borderRadius: '4px'
+    centeredTableHead: {
+        '& > span': {
+            '& > button': {
+                marginRight: 0,
+                marginLeft: '0px',
+                '&:focus': {
+                    outline: '0.5px solid #8DABC4'
+                }
+            },
+            justifyContent: 'center'
+        }
     },
-    UsersListDataGrid: {
-        letterSpacing: '1.7px',
-        color: '#8DABC4',
-        border: '1px solid #B7D2E5CC',
-        borderRadius: '2px',
+    evenTableRow: {
+        backgroundColor: 'rgb(255, 255, 224)'
+    },
+    oddTableRow: {
         backgroundColor: 'white'
+    },
+    tableContainer: {
+        marginTop: 15
     }
 });
 
 function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.ReactElement {
     const classes = useStyles();
 
-    // usersWithId is necessary because DataGrid only takes in objects with id
-    const usersWithId = users.map(user => {
-        const { idUser, Active, DateActivated, EmailAddress, Name, SecurityID, DateDisabled, EmailSettings, WorkflowNotificationTime } = user;
+    const dataTableOptions: DataTableOptions = {
+        filter: false,
+        filterType: 'dropdown',
+        responsive: 'standard',
+        selectableRows: 'none',
+        search: false,
+        download: false,
+        print: false,
+        fixedHeader: false,
+        pagination: false,
+        elevation: 0,
+        setRowProps: (_row, _dataIndex, _rowIndex) => {
+            return { className: _rowIndex % 2 !== 0 ? classes.oddTableRow : classes.evenTableRow };
+        }
+    };
 
+    const setCenterCell = () => ({ align: 'center' });
+    const setCenterHeader = () => {
         return {
-            id: idUser,
-            idUser,
-            Active,
-            DateActivated,
-            EmailAddress,
-            Name,
-            SecurityID,
-            DateDisabled,
-            EmailSettings,
-            WorkflowNotificationTime
+            className: clsx({
+                [classes.centeredTableHead]: true
+            }),
         };
-    });
+    };
 
-    const columnHeader: GridColumns = [
+    const columns = [
         {
-            field: 'Active',
-            headerName: 'Active',
-            flex: 1,
-            headerAlign: 'center',
-            renderCell: params => (params.row.Active ? <CheckIcon color='primary' /> : <ClearIcon color='error' />)
+            name: 'Active',
+            label: 'Active',
+            options: {
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader,
+                customBodyRender(value) {
+                    return value ? <CheckIcon color='primary' style={{ height: 15, verticalAlign: 'text-bottom' }} /> : <ClearIcon color='error' style={{ height: 15, verticalAlign: 'text-bottom' }} />;
+                }
+            }
         },
         {
-            field: 'Name',
-            headerName: 'Name',
-            flex: 1.7,
-            renderCell: params => (
-                <Tooltip placement='left' title={`${params.row.Name}`} arrow>
-                    <div>{`${params.row.Name}`}</div>
-                </Tooltip>
-            )
+            name: 'Name',
+            label: 'Name',
+            options: {
+                setCellHeaderProps: setCenterHeader
+            }
         },
         {
-            field: 'EmailAddress',
-            headerName: 'Email',
-            flex: 1.7,
-            renderCell: params => (
-                <Tooltip placement='left' title={`${params.row.EmailAddress}`} arrow>
-                    <div>{`${params.row.EmailAddress}`}</div>
-                </Tooltip>
-            )
+            name: 'EmailAddress',
+            label: 'Email',
+            options: {
+                setCellHeaderProps: setCenterHeader
+            }
         },
         {
-            field: 'DateActivated',
-            headerName: 'Date Activated',
-            type: 'string',
-            flex: 1.7,
-            valueFormatter: params => extractISOMonthDateYearHelper(params.value)
+            name: 'DateActivated',
+            label: 'Date Activated',
+            options: {
+                setCellProps: setCenterCell,
+                customBodyRender(value) {
+                    return extractISOMonthDateYear(value);
+                }
+            }
         },
         {
-            field: 'DateDisabled',
-            headerName: 'Date Disabled',
-            type: 'string',
-            flex: 1.6,
-            valueFormatter: params => extractISOMonthDateYearHelper(params.value)
+            name: 'DateDisabled',
+            label: 'Date Disabled',
+            options: {
+                setCellProps: setCenterCell,
+                customBodyRender(value) {
+                    return extractISOMonthDateYear(value);
+                }
+            }
         },
         {
-            field: 'Action',
-            headerName: 'Action',
-            flex: 1,
-            sortable: false,
-            renderCell: params => <Link to={`/admin/users/${[params.row.idUser]}`}>Edit</Link>
+            name: 'idUser',
+            label: 'Action',
+            options: {
+                setCellProps: setCenterCell,
+                customBodyRender(value) {
+                    return <Link to={`/admin/users/${value}`}>Edit</Link>;
+                },
+                sort: false
+            }
         }
     ];
 
     return (
-        <Box className={classes.AdminUsersListContainer}>
-            <DataGrid
-                className={classes.UsersListDataGrid}
-                rows={usersWithId}
-                columns={columnHeader}
-                rowHeight={55}
-                scrollbarSize={5}
-                density='compact'
-                disableSelectionOnClick
-                disableColumnResize={undefined}
-                hideFooter
-            />
+        <Box className={classes.tableContainer}>
+            <DataTable title='users' columns={columns} data={users} options={dataTableOptions} />
         </Box>
     );
 }
 
-function extractISOMonthDateYearHelper(iso: GridCellValue): string | null {
-    if (typeof iso !== 'string' && !(iso instanceof Date)) return null;
-    return extractISOMonthDateYear(iso);
-}
 
 export default AdminUsersList;
