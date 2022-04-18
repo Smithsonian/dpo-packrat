@@ -8,7 +8,6 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import ClearIcon from '@material-ui/icons/Clear';
 import CheckIcon from '@material-ui/icons/Check';
-// import { DataGrid, GridColumns, GridCellValue } from '@material-ui/data-grid';
 import { GetAllUsersResult } from '../../../types/graphql';
 import { extractISOMonthDateYear } from '../../../constants/index';
 import DataTable from './shared/DataTable';

@@ -163,7 +163,7 @@ function AddProjectForm(): React.ReactElement {
             const isValidUnit = await schema.isValid({ unit });
             setValidUnit(isValidUnit);
             if (!isValidUnit)
-                toast.error('Creation Failed: Must Select A Unit', { autoClose: false });
+                toast.error('Creation Failed: Must Select A Unit');
 
             return isValidName && isValidUnit;
         } catch (error) {
@@ -222,7 +222,7 @@ function AddProjectForm(): React.ReactElement {
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
                     <InputLabel className={classes.formRowLabel} htmlFor='projectName'>{toTitleCase(singularSystemObjectType)} Name</InputLabel>
-                    <FormControl variant='outlined'>
+                    <FormControl>
                         <DebounceInput
                             id='projectName'
                             className={classes.formField}

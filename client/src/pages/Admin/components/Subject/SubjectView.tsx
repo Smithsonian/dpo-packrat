@@ -303,6 +303,9 @@ function SearchFilter(props: SearchFilterProps): React.ReactElement {
                     value={keyword}
                     id='searchFilter'
                     onChange={handleSearchFilterChange}
+                    onKeyPress={e => {
+                        if (e.key === 'Enter') queryByFilter();
+                    }}
                     InputProps={{
                         endAdornment: keyword.length ? (
                             <IconButton size='small' onClick={() => queryByFilter(true)}>
