@@ -11,7 +11,7 @@
 import Checkbox from '@material-ui/core/Checkbox';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, Select, MenuItem, InputLabel } from '@material-ui/core';
+import { Box, TextField, Button, Select, MenuItem, InputLabel, FormControl } from '@material-ui/core';
 import { extractISOMonthDateYear, formatISOToHoursMinutes } from '../../../constants/index';
 import { useParams, useLocation, useHistory } from 'react-router';
 import { useGetUserQuery, CreateUserDocument, UpdateUserDocument, GetAllUsersDocument, User_Status } from '../../../types/graphql';
@@ -25,45 +25,39 @@ import { Helmet } from 'react-helmet';
 import { DebounceInput } from 'react-debounce-input';
 
 const useStyles = makeStyles(({ typography }) => ({
-    AdminUsersViewContainer: {
+    container: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
         overflow: 'auto',
-        maxHeight: 'calc(100vh - 60px)',
-        paddingLeft: '1%',
-        width: '1200px',
+        paddingLeft: '15px',
         margin: '0 auto'
     },
-    formControl: {
-        minWidth: 120
-    },
-    AdminUserFormContainer: {
+    formContainer: {
         display: 'flex',
         flexDirection: 'column',
         flexWrap: 'nowrap',
         width: '500px',
         backgroundColor: '#EFF2FC',
-        borderRadius: '4px',
+        borderRadius: '10px',
         border: '1px solid #B7D2E5CC',
-        boxShadow: '0 0 0 15px #75B3DF',
+        boxShadow: '0 0 0 5px #75B3DF',
         letterSpacing: 'var(--unnamed-character-spacing-0)',
         textAlign: 'left',
-        padding: '10px 20px',
-        marginTop: '2%',
-        marginLeft: '1%'
+        padding: '5px',
+        marginTop: '15px',
+        marginLeft: '5px'
+
     },
-    AdminUserFormRowLabel: {
+    formLabel: {
         gridColumnStart: '1',
-        fontSize: '0.875rem',
-        color: 'auto'
+        fontSize: '0.8rem',
+        color: 'black'
     },
-    AdminUserFormRowInput: {
-        gridColumnStart: '2'
-    },
-    AdminUserFormRow: {
-        height: 45,
+    row: {
+        minHeight: 30,
         display: 'grid',
+        padding: '0px 5px',
         gridTemplateColumns: '40% 60%',
         gridGap: '10px',
         alignItems: 'center',
@@ -71,21 +65,21 @@ const useStyles = makeStyles(({ typography }) => ({
             borderBottom: '1px solid #D8E5EE'
         }
     },
-    AdminUserFormButtonGroup: {
-        marginTop: '30px',
-        '& Button': {
-            marginRight: '30px'
-        }
+    buttonGroup: {
+        marginTop: '15px',
+        // marginLeft: '20px',
+        columnGap: 30,
+        display: 'flex'
     },
     formField: {
         backgroundColor: 'white',
-        borderRadius: '4px',
+        borderRadius: '5px',
         border: '1px solid rgb(118,118,118)',
-        width: '80%',
+        width: '95%',
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
-        fontSize: 'inherit',
-        height: '30px'
+        fontSize: '0.8rem',
+        height: '20px'
     },
     AdminBreadCrumbsContainer: {
         display: 'flex',
@@ -95,10 +89,9 @@ const useStyles = makeStyles(({ typography }) => ({
         paddingRight: '20px',
         background: '#ECF5FD',
         color: '#3F536E',
-        marginBottom: '2%',
         width: 'fit-content'
     },
-    searchUsersFilterButton: {
+    styledBtn: {
         backgroundColor: '#3854d0',
         color: 'white',
         width: '90px',
@@ -111,11 +104,11 @@ const useStyles = makeStyles(({ typography }) => ({
     select: {
         width: '60%',
         minWidth: 'fit-content',
-        height: '32px',
+        height: '24px',
         padding: '0px 5px',
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
-        fontSize: 'inherit',
+        fontSize: '0.8rem',
         color: 'black',
         borderRadius: 5,
         border: '1px solid rgb(118,118,118)',
@@ -194,136 +187,161 @@ function AdminUserForm(): React.ReactElement {
         const newMinutes = workflowNotificationTime?.slice(3);
         manipulatedTime.setHours(Number(newHours));
         manipulatedTime.setMinutes(Number(newMinutes));
-
-        await apolloClient.mutate({
-            mutation: UpdateUserDocument,
-            variables: {
-                input: {
-                    idUser: Number(idUser),
-                    EmailAddress: email,
-                    Name: name,
-                    Active: active,
-                    EmailSettings: Number(workflowNotificationType),
-                    WorkflowNotificationTime: manipulatedTime
-                }
-            },
-            refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
-            awaitRefetchQueries: true
-        });
-        updateUsersEntries();
-        history.push('/admin/users');
+        try {
+            const { data } = await apolloClient.mutate({
+                mutation: UpdateUserDocument,
+                variables: {
+                    input: {
+                        idUser: Number(idUser),
+                        EmailAddress: email,
+                        Name: name,
+                        Active: active,
+                        EmailSettings: workflowNotificationType,
+                        WorkflowNotificationTime: manipulatedTime
+                    }
+                },
+                refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
+                awaitRefetchQueries: true
+            });
+            await updateUsersEntries();
+            if (data?.updateUser) {
+                toast.success('User updated successfully');
+                history.push('/admin/users');
+            } else {
+                throw new Error('Update request returned success: false');
+            }
+        } catch (error) {
+            toast.error(`Failed to update user: error ${error}`);
+        }
     };
 
     const createNewUser = async () => {
         const validCreate = await validateFields();
         if (!validCreate) {
-            toast.warn('Creation Failed. Please be sure to include a name and email');
+            toast.warn('Creation Failed. Please double-check your form inputs');
             return;
         }
 
-        await apolloClient.mutate({
-            mutation: CreateUserDocument,
-            variables: {
-                input: {
-                    EmailAddress: email,
-                    Name: name,
-                    EmailSettings: workflowNotificationType
-                }
-            },
-            refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
-            awaitRefetchQueries: true
-        });
-        updateUsersEntries();
-        history.push('/admin/users');
+        try {
+            console.log('notificationType', workflowNotificationType);
+            const { data } = await apolloClient.mutate({
+                mutation: CreateUserDocument,
+                variables: {
+                    input: {
+                        EmailAddress: email,
+                        Name: name,
+                        EmailSettings: workflowNotificationType
+                    }
+                },
+                refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
+                awaitRefetchQueries: true
+            });
+            updateUsersEntries();
+            if (data?.createUser) {
+                toast.success('User created successfully');
+                history.push('/admin/users');
+            } else {
+                throw new Error('Create request returned success: false');
+            }
+        } catch (error) {
+            toast.error(`Failed to create user: error ${error}`);
+        }
     };
 
     return (
-        <Box className={classes.AdminUsersViewContainer}>
+        <Box className={classes.container}>
             <Helmet>
                 <title>Create User</title>
             </Helmet>
             <Box className={classes.AdminBreadCrumbsContainer}>
                 <GenericBreadcrumbsView items={location.pathname.slice(1)} end={create ? null : `${fetchedUser?.Name} <${fetchedUser?.EmailAddress}>`} />
             </Box>
-            <Box className={classes.AdminUserFormContainer}>
-                <Box className={classes.AdminUserFormRow}>
-                    <InputLabel htmlFor='userName' className={classes.AdminUserFormRowLabel}>Name</InputLabel>
-                    <DebounceInput
-                        id='userName'
-                        className={classes.formField}
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                    />
-                    {validNameInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+            <Box className={classes.formContainer}>
+                <Box className={classes.row}>
+                    <InputLabel htmlFor='userName' className={classes.formLabel}>Name</InputLabel>
+                    <FormControl>
+                        <DebounceInput
+                            id='userName'
+                            className={classes.formField}
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                        />
+                        {validNameInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+                    </FormControl>
                 </Box>
-                <Box className={classes.AdminUserFormRow}>
-                    <InputLabel htmlFor='userEmail' className={classes.AdminUserFormRowLabel}>Email Address</InputLabel>
-                    <DebounceInput
-                        id='userEmail'
-                        className={classes.formField}
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                    />
-                    {validEmailInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+                <Box className={classes.row}>
+                    <InputLabel htmlFor='userEmail' className={classes.formLabel}>Email Address</InputLabel>
+                    <FormControl>
+                        <DebounceInput
+                            id='userEmail'
+                            className={classes.formField}
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                        />
+                        {validEmailInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+                    </FormControl>
                 </Box>
-                <Box className={classes.AdminUserFormRow}>
-                    <InputLabel htmlFor='userActive' className={classes.AdminUserFormRowLabel}>Active</InputLabel>
+                <Box className={classes.row}>
+                    <InputLabel htmlFor='userActive' className={classes.formLabel}>Active</InputLabel>
                     <Checkbox
                         id='userActive'
-                        style={{ width: '10px', height: '10px' }}
+                        style={{ width: '0px', height: '0px' }}
                         color='primary'
                         checked={active}
                         onChange={() => setActive(!active)}
+                        size='small'
                     />
                 </Box>
-                <Box className={classes.AdminUserFormRow}>
-                    <InputLabel htmlFor='dateActivated' className={classes.AdminUserFormRowLabel}>Date Activated</InputLabel>
+                <Box className={classes.row}>
+                    <InputLabel htmlFor='dateActivated' className={classes.formLabel}>Date Activated</InputLabel>
                     {!dateActivated ? (
                         <TextField
                             id='dateActivated'
                             style={{ maxWidth: '50%', alignSelf: 'flex-end', paddingBottom: 4 }}
-                            size='small'
                             disabled
+                            inputProps={{ style: { fontSize: '0.8rem' } }}
+
                         />
                     ) : (
                         <TextField
                             id='dateActivated'
                             style={{ maxWidth: '50%', alignSelf: 'flex-end', paddingBottom: 4 }}
                             type='date'
-                            size='small'
                             disabled
                             onChange={e => {
                                 setDateActivated(e.target.value);
                             }}
                             value={extractISOMonthDateYear(dateActivated, true)}
+                            inputProps={{ style: { fontSize: '0.8rem' } }}
                         />
                     )}
                 </Box>
-                <Box className={classes.AdminUserFormRow}>
-                    <InputLabel htmlFor='dateDisabled' className={classes.AdminUserFormRowLabel}>Date Disabled</InputLabel>
+                <Box className={classes.row}>
+                    <InputLabel htmlFor='dateDisabled' className={classes.formLabel}>Date Disabled</InputLabel>
                     {!dateDisabled ? (
                         <TextField
                             id='dateDisabled'
                             style={{ maxWidth: '50%', alignSelf: 'flex-end', paddingBottom: 4 }}
-                            size='small'
                             disabled
+                            inputProps={{ style: { fontSize: '0.8rem' } }}
                         />
                     ) : (
                         <TextField
                             id='dateDisabled'
                             style={{ maxWidth: '50%', alignSelf: 'flex-end', paddingBottom: 4 }}
                             type='date'
-                            size='small'
                             disabled
                             onChange={e => {
                                 setDateDisabled(e.target.value);
                             }}
                             value={extractISOMonthDateYear(dateDisabled, true)}
+                            inputProps={{ style: { fontSize: '0.8rem' } }}
+
                         />
                     )}
                 </Box>
-                <Box className={classes.AdminUserFormRow}>
-                    <InputLabel htmlFor='notificationType' className={classes.AdminUserFormRowLabel}>Workflow Notification Type</InputLabel>
+                <Box className={classes.row}>
+                    <InputLabel htmlFor='notificationType' className={classes.formLabel}>Workflow Notification Type</InputLabel>
                     <Select
                         id='notificationType'
                         value={typeof workflowNotificationType === 'number' ? workflowNotificationType : ''}
@@ -340,8 +358,8 @@ function AdminUserForm(): React.ReactElement {
                         <MenuItem value={1}>Immediately</MenuItem>
                     </Select>
                 </Box>
-                <Box className={classes.AdminUserFormRow}>
-                    <InputLabel htmlFor='notificationTime' className={classes.AdminUserFormRowLabel}>Workflow Notification Time</InputLabel>
+                <Box className={classes.row}>
+                    <InputLabel htmlFor='notificationTime' className={classes.formLabel}>Workflow Notification Time</InputLabel>
                     <TextField
                         id='notificationTime'
                         disabled={workflowNotificationType === 0 ? false : true}
@@ -350,7 +368,8 @@ function AdminUserForm(): React.ReactElement {
                         style={{ width: '50%', alignSelf: 'flex-end', paddingBottom: 4 }}
                         value={workflowNotificationTime}
                         inputProps={{
-                            step: 300
+                            step: 300,
+                            style: { fontSize: '0.8rem' }
                         }}
                         InputLabelProps={{
                             shrink: true,
@@ -363,17 +382,17 @@ function AdminUserForm(): React.ReactElement {
                     />
                 </Box>
             </Box>
-            <Box className={classes.AdminUserFormButtonGroup}>
+            <Box className={classes.buttonGroup}>
                 {create ? (
-                    <Button variant='contained' className={classes.searchUsersFilterButton} onClick={createNewUser} disableElevation>
+                    <Button variant='contained' className={classes.styledBtn} onClick={createNewUser} disableElevation>
                         Create
                     </Button>
                 ) : (
-                    <Button variant='contained' className={classes.searchUsersFilterButton} onClick={updateExistingUser} disableElevation>
+                    <Button variant='contained' className={classes.styledBtn} onClick={updateExistingUser} disableElevation>
                         Update
                     </Button>
                 )}
-                <Button variant='contained' className={classes.searchUsersFilterButton} onClick={() => history.push('/admin/users')} disableElevation>
+                <Button variant='contained' className={classes.styledBtn} onClick={() => history.push('/admin/users')} disableElevation>
                     Cancel
                 </Button>
             </Box>

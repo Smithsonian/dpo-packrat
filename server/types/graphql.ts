@@ -2419,7 +2419,7 @@ export type UpdateUserInput = {
   Name: Scalars['String'];
   EmailAddress: Scalars['String'];
   Active: Scalars['Boolean'];
-  EmailSettings: Scalars['Int'];
+  EmailSettings?: Maybe<Scalars['Int']>;
   WorkflowNotificationTime: Scalars['DateTime'];
 };
 

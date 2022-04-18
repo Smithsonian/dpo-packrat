@@ -11,28 +11,33 @@ const useStyles = makeStyles(({ typography, palette }) => ({
     searchUsersFilterButton: {
         backgroundColor: '#3854d0',
         color: 'white',
-        width: '90px',
-        height: '30px',
+        width: '75px',
+        height: '25px',
         outline: '2px hidden #8DABC4',
         '& :focus': {
             outline: '2px solid #8DABC4',
-        }
+        },
+        fontSize: '0.8rem'
     },
-    AdminUsersSearchFilterContainer: {
+    filterContainer: {
         display: 'flex',
         justifyContent: 'space-around',
-        width: '900px',
-        backgroundColor: '#FFFCD1',
-        padding: '15px 20px'
+        width: 'max-content',
+        backgroundColor: 'rgb(255, 255, 224)',
+        padding: '10px 10px',
+        fontSize: '0.8rem',
+        outline: '1px solid rgba(141, 171, 196, 0.4)',
+        borderRadius: 5
     },
-    AdminUsersSearchFilterSettingsContainer: {
+    searchFilterContainerLeft: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         height: '100%',
-        width: '80%'
+        width: '80%',
+        columnGap: 10,
     },
-    AdminUsersSearchFilterSettingsContainer2: {
+    searchFilterContainerRight: {
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'center',
@@ -44,7 +49,7 @@ const useStyles = makeStyles(({ typography, palette }) => ({
         borderRadius: '4px'
     },
     searchFilter: {
-        width: '380px'
+        width: '250px'
     },
     filterLabel: {
         fontWeight: typography.fontWeightRegular,
@@ -55,11 +60,12 @@ const useStyles = makeStyles(({ typography, palette }) => ({
     select: {
         minWidth: 70,
         width: 'fit-content',
-        height: 30,
+        height: 25,
         marginLeft: 10,
         color: palette.primary.dark,
         borderRadius: 5,
-        border: `0.5px solid ${palette.primary.contrastText}`
+        border: `0.5px solid ${palette.primary.contrastText}`,
+        fontSize: 'inherit'
     },
     labelSelectContainer: {
         display: 'flex',
@@ -87,8 +93,8 @@ function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActi
     };
 
     return (
-        <Box className={classes.AdminUsersSearchFilterContainer}>
-            <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
+        <Box className={classes.filterContainer}>
+            <Box className={classes.searchFilterContainerLeft}>
                 <label htmlFor='searchFilter' style={{ display: 'none' }}>Seach User</label>
                 <TextField
                     className={classes.searchFilter}
@@ -96,12 +102,16 @@ function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActi
                     value={searchFilter}
                     id='searchFilter'
                     onChange={handleSearchFilterChange}
+                    onKeyPress={e => {
+                        if (e.key === 'Enter') searchUsers();
+                    }}
                     InputProps={{
                         endAdornment: searchFilter.length ? (
                             <IconButton size='small' onClick={() => { setSearchFilter(''); setActiveStatusFilter(User_Status.EAll); queryUsersByFilter(User_Status.EAll, ''); }}>
                                 <Clear style={{ height: '16px' }} />
                             </IconButton>
-                        ) : null
+                        ) : null,
+                        style: { fontSize: '0.8rem' }
                     }}
                 />
                 <Box className={classes.labelSelectContainer}>
@@ -125,7 +135,6 @@ function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActi
                 </Box>
                 <Button
                     className={classes.searchUsersFilterButton}
-                    style={{ right: '25px' }}
                     onClick={searchUsers}
                     variant='contained'
                     disableElevation
@@ -133,7 +142,7 @@ function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActi
                     Search
                 </Button>
             </Box>
-            <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
+            <Box className={classes.searchFilterContainerRight}>
                 <Button className={classes.searchUsersFilterButton} onClick={() => history.push('/admin/users/create')} variant='contained' disableElevation>Create</Button>
             </Box>
         </Box>

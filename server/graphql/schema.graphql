@@ -1918,7 +1918,7 @@ input UpdateUserInput {
   Name: String!
   EmailAddress: String!
   Active: Boolean!
-  EmailSettings: Int!
+  EmailSettings: Int
   WorkflowNotificationTime: DateTime!
 }
 

@@ -6,9 +6,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Tooltip, TextField, Button, IconButton } from '@material-ui/core';
+import { Box, TextField, Button, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { DataGrid, GridColumns } from '@material-ui/data-grid';
+// import { GridColumns } from '@material-ui/data-grid';
 import { useLocation } from 'react-router';
 import { GetLicenseListDocument, License } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
@@ -17,38 +17,24 @@ import { useLicenseStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
 import { useHistory } from 'react-router-dom';
 import Clear from '@material-ui/icons/Clear';
+import DataTable from '../shared/DataTable';
+import { DataTableOptions } from '../../../../types/component';
+import clsx from 'clsx';
 
-const useStyles = makeStyles({
-    AdminListContainer: {
-        marginTop: '20px',
-        width: '80%',
-        padding: '20px',
-        height: 'calc(100% - 120px)',
-        display: 'flex',
-        border: '1px solid #B7D2E5CC',
-        margin: '1px solid #B7D2E5CC',
-        alignItems: 'center',
-        backgroundColor: '#687DDB1A',
-        borderRadius: '4px'
-    },
-    DataGridList: {
-        letterSpacing: '1.7px',
-        color: '#8DABC4',
-        border: '1px solid #B7D2E5CC',
-        borderRadius: '2px',
-        backgroundColor: 'white'
+const useStyles = makeStyles(() => ({
+    tableContainer: {
+        marginTop: 15
     },
     AdminPageViewContainer: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
         overflow: 'auto',
-        maxHeight: 'calc(100vh - 60px)',
-        paddingLeft: '1%',
-        width: '1200px',
+        paddingLeft: '15px',
+        paddingBottom: '15px',
         margin: '0 auto'
     },
-    AdminBreadCrumbsContainer: {
+    breadcrumbsContainer: {
         display: 'flex',
         alignItems: 'center',
         minHeight: '46px',
@@ -56,34 +42,39 @@ const useStyles = makeStyles({
         paddingRight: '20px',
         background: '#ECF5FD',
         color: '#3F536E',
-        marginBottom: '2%',
+        marginBottom: '15px',
         width: 'fit-content'
     },
     styledButton: {
         backgroundColor: '#3854d0',
         color: 'white',
-        width: '90px',
-        height: '30px',
+        width: '75px',
+        height: '25px',
         outline: '2px hidden #8DABC4',
         '& :focus': {
             outline: '2px solid #8DABC4',
-        }
+        },
+        fontSize: '0.8rem'
     },
-    AdminSearchFilterContainer: {
+    filterContainer: {
         display: 'flex',
         justifyContent: 'space-around',
-        width: '600px',
-        backgroundColor: '#FFFCD1',
-        padding: '15px 20px'
+        width: 'max-content',
+        backgroundColor: 'rgb(255, 255, 224)',
+        padding: '10px 10px',
+        fontSize: '0.8rem',
+        outline: '1px solid rgba(141, 171, 196, 0.4)',
+        borderRadius: 5
     },
-    AdminUsersSearchFilterSettingsContainer: {
+    searchFilterContainerLeft: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         height: '100%',
-        width: '80%'
+        width: '80%',
+        columnGap: 10
     },
-    AdminUsersSearchFilterSettingsContainer2: {
+    searchFilterContainerRight: {
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'center',
@@ -95,57 +86,81 @@ const useStyles = makeStyles({
         borderRadius: '4px'
     },
     searchFilter: {
-        width: '350px'
-    }
-});
+        width: '250px'
+    },
+    evenTableRow: {
+        backgroundColor: 'rgb(255, 255, 224)'
+    },
+    oddTableRow: {
+        backgroundColor: 'white'
+    },
+    centeredTableHead: {
+        '& > span': {
+            '& > button': {
+                marginRight: 0,
+                marginLeft: '0px',
+                '&:focus': {
+                    outline: '0.5px solid #8DABC4'
+                }
+            },
+            justifyContent: 'center'
+        }
+    },
+}));
 
 function LicenseList({ licenses }): React.ReactElement {
     const classes = useStyles();
-    const licensesWithId = licenses.map(license => {
-        const { idLicense, Name, Description } = license;
-        return {
-            id: idLicense,
-            Description,
-            Name
-        };
-    });
 
-    const columnHeader: GridColumns = [
+    const dataTableOptions: DataTableOptions = {
+        filter: false,
+        filterType: 'dropdown',
+        responsive: 'standard',
+        selectableRows: 'none',
+        search: false,
+        download: false,
+        print: false,
+        fixedHeader: false,
+        pagination: false,
+        elevation: 0,
+        setRowProps: (_row, _dataIndex, _rowIndex) => {
+            return { className: _rowIndex % 2 !== 0 ? classes.oddTableRow : classes.evenTableRow };
+        }
+    };
+
+    const setCenterCell = () => ({ align: 'center' });
+    const setCenterHeader = () => {
+        return {
+            className: clsx({
+                [classes.centeredTableHead]: true
+            }),
+        };
+    };
+
+    const columns = [
         {
-            field: 'Name',
-            headerName: 'Name',
-            flex: 4,
-            renderCell: params => (
-                <Tooltip placement='left' title={`${params.row.Name}`} arrow>
-                    <div>{`${params.row.Name}`}</div>
-                </Tooltip>
-            )
+            name: 'Name',
+            label: 'Name',
+            options: {
+                setCellHeaderProps: setCenterHeader
+            }
         },
         {
-            field: 'Action',
-            headerName: 'Action',
-            flex: 1,
-            sortable: false,
-            renderCell: params => (
-                <Link to={`/admin/licenses/${[params.row.id]}`} target='_blank'>
-                    Edit
-                </Link>
-            )
+            name: 'idLicense',
+            label: 'Action',
+            options: {
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader,
+                customBodyRender(value) {
+                    return <Link to={`/admin/licenses/${value}`}>Edit</Link>;
+                },
+                sort: false
+            }
         }
     ];
 
     return (
-        <Box className={classes.AdminListContainer}>
-            <DataGrid
-                className={classes.DataGridList}
-                rows={licensesWithId}
-                columns={columnHeader}
-                rowHeight={55}
-                scrollbarSize={5}
-                density='compact'
-                disableSelectionOnClick
-                hideFooter
-            />
+        <Box className={classes.tableContainer}>
+            <DataTable title='licenses' columns={columns} data={licenses} options={dataTableOptions} />
         </Box>
     );
 }
@@ -162,8 +177,8 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
     const search = () => queryByFilter(searchFilter);
 
     return (
-        <Box className={classes.AdminSearchFilterContainer}>
-            <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
+        <Box className={classes.filterContainer}>
+            <Box className={classes.searchFilterContainerLeft}>
                 <label htmlFor='searchFilter' style={{ display: 'none' }}>Search License</label>
                 <TextField
                     className={classes.searchFilter}
@@ -171,17 +186,21 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
                     value={searchFilter}
                     id='searchFilter'
                     onChange={handleSearchFilterChange}
+                    onKeyPress={e => {
+                        if (e.key === 'Enter') search();
+                    }}
                     InputProps={{
                         endAdornment: searchFilter.length ? (
                             <IconButton size='small' onClick={() => { setSearchFilter(''); queryByFilter(''); }}>
                                 <Clear style={{ height: '16px' }} />
                             </IconButton>
-                        ) : null
+                        ) : null,
+                        style: { fontSize: '0.8rem' }
                     }}
                 />
-                <Button className={classes.styledButton} style={{ right: '25px' }} onClick={search} variant='contained' disableElevation>Search</Button>
+                <Button className={classes.styledButton} onClick={search} variant='contained' disableElevation>Search</Button>
             </Box>
-            <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
+            <Box className={classes.searchFilterContainerRight}>
                 <Button className={classes.styledButton} onClick={() => history.push('/admin/licenses/create')} variant='contained' disableElevation>Create</Button>
             </Box>
         </Box>
@@ -217,7 +236,7 @@ function LicenseView(): React.ReactElement {
                 <title>Licenses Admin</title>
             </Helmet>
             <Box className={classes.AdminPageViewContainer}>
-                <Box className={classes.AdminBreadCrumbsContainer}>
+                <Box className={classes.breadcrumbsContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />
                 </Box>
                 <SearchFilter queryByFilter={queryByFilter} />
