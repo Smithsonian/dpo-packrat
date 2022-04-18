@@ -75,7 +75,7 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader,
                 customBodyRender(value) {
-                   return value ? <CheckIcon color='primary' style={{ height: 15, verticalAlign: 'text-bottom' }} /> : <ClearIcon color='error' style={{ height: 15, verticalAlign: 'text-bottom' }} />;
+                    return value ? <CheckIcon color='primary' style={{ height: 15, verticalAlign: 'text-bottom' }} /> : <ClearIcon color='error' style={{ height: 15, verticalAlign: 'text-bottom' }} />;
                 }
             }
         },
@@ -119,12 +119,12 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
             options: {
                 setCellProps: setCenterCell,
                 customBodyRender(value) {
-                    return <Link to={`/admin/users/${value}`}>Edit</Link>
+                    return <Link to={`/admin/users/${value}`}>Edit</Link>;
                 },
                 sort: false
             }
         }
-    ]
+    ];
 
     return (
         <Box className={classes.tableContainer}>

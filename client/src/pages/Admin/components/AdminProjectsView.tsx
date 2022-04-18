@@ -48,7 +48,6 @@ const useStyles = makeStyles({
         overflow: 'auto',
         paddingBottom: '15px',
         paddingLeft: '15px',
-        width: '1200px',
         margin: '0 auto'
     },
     AdminBreadCrumbsContainer: {
@@ -144,13 +143,13 @@ function AdminProjectsList({ projects }): React.ReactElement {
             }
         },
         {
-            name: 'idProject',
+            name: 'SystemObject',
             label: 'Action',
             options: {
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader,
                 customBodyRender(value) {
-                    return <Link to={`/admin/projects/${value}`}>Edit</Link>
+                    return <Link to={`/repository/details/${value?.idSystemObject}`}>Edit</Link>;
                 },
                 sort: false
             }

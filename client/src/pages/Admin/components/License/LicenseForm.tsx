@@ -19,60 +19,58 @@ import clsx from 'clsx';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 
 
-const useStyles = makeStyles(({ breakpoints, typography }) => ({
+const useStyles = makeStyles(({ typography }) => ({
     container: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        maxHeight: 'calc(100vh - 60px)',
-        width: '1200px',
         overflowY: 'scroll',
         marginLeft: '15px',
-        [breakpoints.down('lg')]: {
-            maxHeight: 'calc(100vh - 120px)'
-        }
     },
     formContainer: {
         width: '700px',
-        maxHeight: '90%',
         borderRadius: 10,
-        padding: '10px 20px',
+        padding: '5px',
         background: '#687DDB1A 0% 0% no-repeat padding-box;',
         border: '1px solid #B7D2E5CC',
-        boxShadow: '0 0 0 15px #75B3DF',
-        marginTop: '30px',
-        marginLeft: '15px'
+        boxShadow: '0 0 0 5px #75B3DF',
+        marginTop: '15px',
+        marginLeft: '5px',
+        display: 'flex',
+        flexDirection: 'column'
     },
     formRow: {
         display: 'grid',
         gridTemplateColumns: '30% 70%',
         gridGap: '10px',
         alignItems: 'center',
-        minHeight: '5%',
-        paddingTop: '10px',
-        paddingBottom: '10px',
+        padding: '0px 5px',
+        minHeight: 30,
         '&:not(:last-child)': {
             borderBottom: '1px solid #D8E5EE'
         }
     },
     formRowLabel: {
         gridColumnStart: '1',
-        fontSize: '0.875rem',
-        color: 'auto'
+        fontSize: '0.8rem',
+        color: 'black'
     },
     formField: {
         backgroundColor: 'white',
-        borderRadius: '4px',
+        borderRadius: '5px',
         border: '1px solid rgb(118,118,118)',
-        width: '55%',
+        width: '95%',
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
-        fontSize: 'inherit',
-        height: '30px'
+        fontSize: '0.8rem',
+        height: '20px'
     },
     descriptionInput: {
         width: '80%',
-        minHeight: '100px'
+        minHeight: '100px',
+        resize: 'vertical',
+        fontSize: '0.8rem',
+        marginTop: 3
     },
     btn: {
         backgroundColor: '#3854d0',
@@ -84,11 +82,10 @@ const useStyles = makeStyles(({ breakpoints, typography }) => ({
             outline: '2px solid #8DABC4',
         }
     },
-    ButtonGroup: {
-        marginTop: '30px',
-        '& Button': {
-            marginRight: '30px'
-        }
+    buttonGroup: {
+        marginTop: '15px',
+        columnGap: 30,
+        display: 'flex'
     },
     breadCrumbsContainer: {
         display: 'flex',
@@ -230,7 +227,7 @@ function LicenseForm(): React.ReactElement {
                 <title>Create License</title>
             </Helmet>
             <Box className={classes.breadCrumbsContainer}>
-                <GenericBreadcrumbsView items={location.pathname.slice(1)} end={create ? null : name}/>
+                <GenericBreadcrumbsView items={location.pathname.slice(1)} end={create ? null : name} />
             </Box>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
@@ -270,7 +267,7 @@ function LicenseForm(): React.ReactElement {
                     </FormControl>
                 </Box>
             </Box>
-            <Box className={classes.ButtonGroup}>
+            <Box className={classes.buttonGroup}>
                 {create ? (
                     <Button className={classes.btn} onClick={onCreateLicense} disableElevation variant='contained'>
                         Create

@@ -130,6 +130,11 @@ const useStyles = makeStyles(({ typography, palette }) => ({
     empty: {
         height: '400px',
         width: '80%'
+    },
+    toolbar: {
+        '& > *': {
+            fontSize: '0.8rem'
+        }
     }
 }));
 
@@ -205,6 +210,7 @@ function SubjectList(props: ListProps): React.ReactElement {
                             nextIconButtonProps={{ className: classes.footerBtn }}
                             rowsPerPageOptions={[50, 100]}
                             className={classes.footerControls}
+                            classes={{ toolbar: classes.toolbar }}
                         />
                     </tr>
                 </tfoot>
@@ -251,7 +257,7 @@ function SubjectList(props: ListProps): React.ReactElement {
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader,
                 customBodyRender(value) {
-                    return <Link to={`/repository/details/${value}`}>Edit</Link>
+                    return <Link to={`/repository/details/${value}`}>Edit</Link>;
                 },
                 sort: false
             }
@@ -391,7 +397,7 @@ function SubjectView(): React.ReactElement {
                 idUnit: selectedUnit,
                 // pageNumber + 1 because Material UI requires starting page === 0
                 pageNumber: pageNumber + 1,
-                rowCount: rowCount,
+                rowCount,
                 sortBy,
                 sortOrder
             };
@@ -448,7 +454,7 @@ function SubjectView(): React.ReactElement {
             setSortOrder(direction === 'asc' ? true : false);
             setSortBy(subjectUnitIdentifierStringToEnum(column));
         }
-    }
+    };
     const handleDropDownChange = value => setSelectedUnit(value);
     const handleSearchKeywordChange = value => setKeyword(value);
 

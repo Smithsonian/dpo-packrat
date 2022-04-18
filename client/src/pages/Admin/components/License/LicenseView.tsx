@@ -151,12 +151,12 @@ function LicenseList({ licenses }): React.ReactElement {
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader,
                 customBodyRender(value) {
-                    return <Link to={`/admin/licenses/${value}`}>Edit</Link>
+                    return <Link to={`/admin/licenses/${value}`}>Edit</Link>;
                 },
                 sort: false
             }
         }
-    ]
+    ];
 
     return (
         <Box className={classes.tableContainer}>
