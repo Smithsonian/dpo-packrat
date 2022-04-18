@@ -5,7 +5,7 @@ import { Box, FormControl, FormHelperText, Button, InputLabel } from '@material-
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import { useParams } from 'react-router';
+import { useParams, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { DebounceInput } from 'react-debounce-input';
 import { GetLicenseDocument } from '../../../../types/graphql';
@@ -16,63 +16,61 @@ import * as yup from 'yup';
 import { useLicenseStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
 import clsx from 'clsx';
+import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 
-const useStyles = makeStyles(({ breakpoints, typography }) => ({
+
+const useStyles = makeStyles(({ typography }) => ({
     container: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        maxHeight: 'calc(100vh - 60px)',
-        width: '1200px',
         overflowY: 'scroll',
-        marginLeft: '1%',
-        marginTop: '1%',
-        [breakpoints.down('lg')]: {
-            maxHeight: 'calc(100vh - 120px)',
-            padding: 10
-        }
+        marginLeft: '15px',
     },
     formContainer: {
         width: '700px',
-        maxHeight: '90%',
         borderRadius: 10,
-        padding: '10px 20px',
+        padding: '5px',
         background: '#687DDB1A 0% 0% no-repeat padding-box;',
         border: '1px solid #B7D2E5CC',
-        boxShadow: '0 0 0 15px #75B3DF',
-        marginTop: '2%',
-        marginLeft: '1%'
+        boxShadow: '0 0 0 5px #75B3DF',
+        marginTop: '15px',
+        marginLeft: '5px',
+        display: 'flex',
+        flexDirection: 'column'
     },
     formRow: {
         display: 'grid',
         gridTemplateColumns: '30% 70%',
         gridGap: '10px',
         alignItems: 'center',
-        minHeight: '5%',
-        paddingTop: '10px',
-        paddingBottom: '10px',
+        padding: '0px 5px',
+        minHeight: 30,
         '&:not(:last-child)': {
             borderBottom: '1px solid #D8E5EE'
         }
     },
     formRowLabel: {
         gridColumnStart: '1',
-        fontSize: '0.875rem',
-        color: 'auto'
+        fontSize: '0.8rem',
+        color: 'black'
     },
     formField: {
         backgroundColor: 'white',
-        borderRadius: '4px',
+        borderRadius: '5px',
         border: '1px solid rgb(118,118,118)',
-        width: '55%',
+        width: '95%',
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
-        fontSize: 'inherit',
-        height: '30px'
+        fontSize: '0.8rem',
+        height: '20px'
     },
     descriptionInput: {
         width: '80%',
-        minHeight: '100px'
+        minHeight: '100px',
+        resize: 'vertical',
+        fontSize: '0.8rem',
+        marginTop: 3
     },
     btn: {
         backgroundColor: '#3854d0',
@@ -84,11 +82,21 @@ const useStyles = makeStyles(({ breakpoints, typography }) => ({
             outline: '2px solid #8DABC4',
         }
     },
-    ButtonGroup: {
-        marginTop: '30px',
-        '& Button': {
-            marginRight: '30px'
-        }
+    buttonGroup: {
+        marginTop: '15px',
+        columnGap: 30,
+        display: 'flex'
+    },
+    breadCrumbsContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '46px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        background: '#ECF5FD',
+        color: '#3F536E',
+        // marginBottom: '2%',
+        width: 'fit-content'
     }
 }));
 
@@ -101,6 +109,7 @@ function LicenseForm(): React.ReactElement {
     const [restrictLevel, setRestrictLevel] = useState('');
     const [validName, setValidName] = useState<boolean | null>(null);
     const [updateLicenseEntries, getEntries] = useLicenseStore(state => [state.updateLicenseEntries, state.getEntries]);
+    const location = useLocation();
 
     const singularSystemObjectType = 'license';
     const { idLicense } = parameters;
@@ -217,6 +226,9 @@ function LicenseForm(): React.ReactElement {
             <Helmet>
                 <title>Create License</title>
             </Helmet>
+            <Box className={classes.breadCrumbsContainer}>
+                <GenericBreadcrumbsView items={location.pathname.slice(1)} end={create ? null : name} />
+            </Box>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
                     <InputLabel className={classes.formRowLabel} htmlFor='licenseNameInput'>{toTitleCase(singularSystemObjectType)} Name</InputLabel>
@@ -255,7 +267,7 @@ function LicenseForm(): React.ReactElement {
                     </FormControl>
                 </Box>
             </Box>
-            <Box className={classes.ButtonGroup}>
+            <Box className={classes.buttonGroup}>
                 {create ? (
                     <Button className={classes.btn} onClick={onCreateLicense} disableElevation variant='contained'>
                         Create

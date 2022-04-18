@@ -1,90 +1,98 @@
 /* eslint-disable react/jsx-max-props-per-line */
 /* eslint-disable react/jsx-boolean-value */
 
-import { Box, FormControl, FormHelperText, InputLabel } from '@material-ui/core';
+import { Box, FormControl, FormHelperText, InputLabel, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { LoadingButton } from '../../../components';
 import { CreateUnitDocument } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
 import { toTitleCase } from '../../../constants/helperfunctions';
 import * as yup from 'yup';
 import { Helmet } from 'react-helmet';
 import { DebounceInput } from 'react-debounce-input';
+import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
+import { useLocation } from 'react-router';
 
-const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
+const useStyles = makeStyles(({ typography }) => ({
     container: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        maxHeight: 'calc(100vh - 60px)',
-        width: '1200px',
-        overflowY: 'scroll',
-        marginLeft: '1%',
-        marginTop: '1%',
-        [breakpoints.down('lg')]: {
-            maxHeight: 'calc(100vh - 120px)',
-            padding: 10
-        }
+        marginLeft: '15px'
     },
-    updateButton: {
-        height: 35,
-        width: 100,
-        marginTop: 30,
-        color: palette.background.paper,
-        [breakpoints.down('lg')]: {
-            height: 30
-        }
+    btn: {
+        height: 30,
+        width: 90,
+        backgroundColor: '#3854d0',
+        color: 'white',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
+        },
+        // fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily
     },
     formContainer: {
-        width: '700px',
-        maxHeight: '90%',
+        width: '500px',
         borderRadius: 10,
-        padding: '10px 20px',
+        padding: '5px',
         background: '#687DDB1A 0% 0% no-repeat padding-box;',
         border: '1px solid #B7D2E5CC',
-        boxShadow: '0 0 0 15px #75B3DF',
-        marginTop: '2%',
-        marginLeft: '1%'
+        boxShadow: '0 0 0 5px #75B3DF',
+        marginTop: '15px',
+        marginLeft: '5px',
+        display: 'flex',
+        flexDirection: 'column'
     },
     formRow: {
         display: 'grid',
         gridTemplateColumns: '30% 70%',
         gridGap: '10px',
         alignItems: 'center',
-        minHeight: '5%',
-        paddingTop: '10px',
-        paddingBottom: '10px',
+        minHeight: 30,
+        padding: '0px 5px',
         '&:not(:last-child)': {
             borderBottom: '1px solid #D8E5EE'
         }
     },
     formRowLabel: {
         gridColumnStart: '1',
-        fontSize: '0.875rem',
-        color: 'auto'
-    },
-    formRowInput: {
-        gridColumnStart: '2'
+        fontSize: '0.8rem',
+        color: 'black'
     },
     formField: {
         backgroundColor: 'white',
-        borderRadius: '4px',
+        borderRadius: '5px',
         border: '1px solid rgb(118,118,118)',
-        width: '60%',
+        width: '95%',
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
-        fontSize: 'inherit',
-        height: '30px'
-    }
+        fontSize: '0.8rem',
+        height: '20px'
+    },
+    breadCrumbsContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '46px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        background: '#ECF5FD',
+        color: '#3F536E',
+        width: 'fit-content'
+    },
+    buttonGroup: {
+        marginTop: '15px',
+        columnGap: 30,
+        display: 'flex'
+    },
 }));
 
 function AddUnitForm(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const [isUpdatingData, setIsUpdatingData] = useState(false);
+    const location = useLocation();
     const [name, setName] = useState('');
     const [abbreviation, setAbbreviation] = useState('');
     const [ARKPrefix, setARKPrefix] = useState('');
@@ -128,13 +136,10 @@ function AddUnitForm(): React.ReactElement {
         } catch (error) {
             const message: string = (error instanceof Error) ? error.message : 'Validation Failure';
             toast.warn(message);
-        } finally {
-            setIsUpdatingData(false);
         }
     };
 
     const createUnit = async (): Promise<void> => {
-        setIsUpdatingData(true);
         const validUpdate = await validateFields();
         if (!validUpdate) return;
 
@@ -161,7 +166,6 @@ function AddUnitForm(): React.ReactElement {
             const message: string = (error instanceof Error) ? `: ${error.message}` : '';
             toast.error(`Failed to create object${message}`);
         } finally {
-            setIsUpdatingData(false);
             if (newUnitSystemObjectId) {
                 history.push(`/repository/details/${newUnitSystemObjectId}`);
             } else {
@@ -175,6 +179,9 @@ function AddUnitForm(): React.ReactElement {
             <Helmet>
                 <title>Create Unit</title>
             </Helmet>
+            <Box className={classes.breadCrumbsContainer}>
+                <GenericBreadcrumbsView items={location.pathname.slice(1)} />
+            </Box>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
                     <InputLabel htmlFor='unitName' className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</InputLabel>
@@ -212,9 +219,14 @@ function AddUnitForm(): React.ReactElement {
                     </FormControl>
                 </Box>
             </Box>
-            <LoadingButton className={classes.updateButton} onClick={createUnit} disableElevation loading={isUpdatingData}>
-                Create
-            </LoadingButton>
+            <Box className={classes.buttonGroup}>
+                <Button className={classes.btn} onClick={createUnit} disableElevation>
+                    Create
+                </Button>
+                <Button variant='contained' className={classes.btn} onClick={() => history.push('/admin/units')} disableElevation>
+                    Cancel
+                </Button>
+            </Box>
         </Box>
     );
 }
