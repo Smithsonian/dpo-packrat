@@ -185,7 +185,7 @@ function AddUnitForm(): React.ReactElement {
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
                     <InputLabel htmlFor='unitName' className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</InputLabel>
-                    <FormControl variant='outlined'>
+                    <FormControl>
                         <DebounceInput
                             id='unitName'
                             className={classes.formField}
@@ -197,7 +197,7 @@ function AddUnitForm(): React.ReactElement {
                 </Box>
                 <Box className={classes.formRow}>
                     <InputLabel htmlFor='unitAbbreviation' className={classes.formRowLabel}>Abbreviation</InputLabel>
-                    <FormControl variant='outlined'>
+                    <FormControl>
                         <DebounceInput
                             id='unitAbbreviation'
                             className={classes.formField}
