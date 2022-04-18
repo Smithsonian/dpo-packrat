@@ -193,6 +193,9 @@ function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSear
                     value={searchFilter}
                     id='searchFilter'
                     onChange={handleSearchFilterChange}
+                    onKeyPress={e => {
+                        if (e.key === 'Enter') searchUnits();
+                    }}
                     InputProps={{
                         endAdornment: searchFilter.length ? (
                             <IconButton size='small' onClick={() => { setSearchFilter(''); queryUnitsByFilter(''); }}>

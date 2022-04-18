@@ -186,6 +186,9 @@ function AdminProjectsFilter({ queryProjectsByFilter }: { queryProjectsByFilter:
                     value={searchFilter}
                     id='searchFilter'
                     onChange={handleSearchFilterChange}
+                    onKeyPress={e => {
+                        if (e.key === 'Enter') searchProjects();
+                    }}
                     InputProps={{
                         endAdornment: searchFilter.length ? (
                             <IconButton size='small' onClick={() => { setSearchFilter(''); queryProjectsByFilter(''); }}>
