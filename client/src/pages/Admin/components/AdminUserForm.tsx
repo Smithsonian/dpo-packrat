@@ -11,7 +11,7 @@
 import Checkbox from '@material-ui/core/Checkbox';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, Select, MenuItem, InputLabel } from '@material-ui/core';
+import { Box, TextField, Button, Select, MenuItem, InputLabel, FormControl } from '@material-ui/core';
 import { extractISOMonthDateYear, formatISOToHoursMinutes } from '../../../constants/index';
 import { useParams, useLocation, useHistory } from 'react-router';
 import { useGetUserQuery, CreateUserDocument, UpdateUserDocument, GetAllUsersDocument, User_Status } from '../../../types/graphql';
@@ -55,7 +55,7 @@ const useStyles = makeStyles(({ typography }) => ({
         color: 'black'
     },
     row: {
-        height: 30,
+        minHeight: 30,
         display: 'grid',
         padding: '0px 5px',
         gridTemplateColumns: '40% 60%',
@@ -187,47 +187,65 @@ function AdminUserForm(): React.ReactElement {
         const newMinutes = workflowNotificationTime?.slice(3);
         manipulatedTime.setHours(Number(newHours));
         manipulatedTime.setMinutes(Number(newMinutes));
-
-        await apolloClient.mutate({
-            mutation: UpdateUserDocument,
-            variables: {
-                input: {
-                    idUser: Number(idUser),
-                    EmailAddress: email,
-                    Name: name,
-                    Active: active,
-                    EmailSettings: Number(workflowNotificationType),
-                    WorkflowNotificationTime: manipulatedTime
-                }
-            },
-            refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
-            awaitRefetchQueries: true
-        });
-        updateUsersEntries();
-        history.push('/admin/users');
+        try {
+            const { data } = await apolloClient.mutate({
+                mutation: UpdateUserDocument,
+                variables: {
+                    input: {
+                        idUser: Number(idUser),
+                        EmailAddress: email,
+                        Name: name,
+                        Active: active,
+                        EmailSettings: workflowNotificationType,
+                        WorkflowNotificationTime: manipulatedTime
+                    }
+                },
+                refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
+                awaitRefetchQueries: true
+            });
+            await updateUsersEntries();
+            if (data?.updateUser) {
+                toast.success('User updated successfully');
+                history.push('/admin/users');
+            } else {
+                throw new Error('Update request returned success: false');
+            }
+        } catch (error) {
+            toast.error(`Failed to update user: error ${error}`);
+        }
     };
 
     const createNewUser = async () => {
         const validCreate = await validateFields();
         if (!validCreate) {
-            toast.warn('Creation Failed. Please be sure to include a name and email');
+            toast.warn('Creation Failed. Please double-check your form inputs');
             return;
         }
 
-        await apolloClient.mutate({
-            mutation: CreateUserDocument,
-            variables: {
-                input: {
-                    EmailAddress: email,
-                    Name: name,
-                    EmailSettings: workflowNotificationType
-                }
-            },
-            refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
-            awaitRefetchQueries: true
-        });
-        updateUsersEntries();
-        history.push('/admin/users');
+        try {
+            console.log('notificationType', workflowNotificationType);
+            const { data } = await apolloClient.mutate({
+                mutation: CreateUserDocument,
+                variables: {
+                    input: {
+                        EmailAddress: email,
+                        Name: name,
+                        EmailSettings: workflowNotificationType
+                    }
+                },
+                refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
+                awaitRefetchQueries: true
+            });
+            updateUsersEntries();
+            if (data?.createUser) {
+                toast.success('User created successfully');
+                history.push('/admin/users');
+            } else {
+                throw new Error('Create request returned success: false');
+            }
+        } catch (error) {
+            toast.error(`Failed to create user: error ${error}`);
+        }
     };
 
     return (
@@ -241,23 +259,27 @@ function AdminUserForm(): React.ReactElement {
             <Box className={classes.formContainer}>
                 <Box className={classes.row}>
                     <InputLabel htmlFor='userName' className={classes.formLabel}>Name</InputLabel>
-                    <DebounceInput
-                        id='userName'
-                        className={classes.formField}
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                    />
-                    {validNameInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+                    <FormControl>
+                        <DebounceInput
+                            id='userName'
+                            className={classes.formField}
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                        />
+                        {validNameInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+                    </FormControl>
                 </Box>
                 <Box className={classes.row}>
                     <InputLabel htmlFor='userEmail' className={classes.formLabel}>Email Address</InputLabel>
-                    <DebounceInput
-                        id='userEmail'
-                        className={classes.formField}
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                    />
-                    {validEmailInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+                    <FormControl>
+                        <DebounceInput
+                            id='userEmail'
+                            className={classes.formField}
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                        />
+                        {validEmailInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+                    </FormControl>
                 </Box>
                 <Box className={classes.row}>
                     <InputLabel htmlFor='userActive' className={classes.formLabel}>Active</InputLabel>

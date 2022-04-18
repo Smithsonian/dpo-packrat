@@ -186,6 +186,9 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
                     value={searchFilter}
                     id='searchFilter'
                     onChange={handleSearchFilterChange}
+                    onKeyPress={e => {
+                        if (e.key === 'Enter') search();
+                    }}
                     InputProps={{
                         endAdornment: searchFilter.length ? (
                             <IconButton size='small' onClick={() => { setSearchFilter(''); queryByFilter(''); }}>

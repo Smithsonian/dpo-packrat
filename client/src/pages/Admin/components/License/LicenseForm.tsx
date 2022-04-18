@@ -130,7 +130,8 @@ function LicenseForm(): React.ReactElement {
                     input: {
                         idLicense: Number(idLicense)
                     }
-                }
+                },
+                fetchPolicy: 'no-cache'
             });
 
             setName(data.getLicense.License.Name);
@@ -232,7 +233,7 @@ function LicenseForm(): React.ReactElement {
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
                     <InputLabel className={classes.formRowLabel} htmlFor='licenseNameInput'>{toTitleCase(singularSystemObjectType)} Name</InputLabel>
-                    <FormControl variant='outlined'>
+                    <FormControl>
                         <DebounceInput
                             id='licenseNameInput'
                             className={classes.formField}

@@ -102,6 +102,9 @@ function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActi
                     value={searchFilter}
                     id='searchFilter'
                     onChange={handleSearchFilterChange}
+                    onKeyPress={e => {
+                        if (e.key === 'Enter') searchUsers();
+                    }}
                     InputProps={{
                         endAdornment: searchFilter.length ? (
                             <IconButton size='small' onClick={() => { setSearchFilter(''); setActiveStatusFilter(User_Status.EAll); queryUsersByFilter(User_Status.EAll, ''); }}>
