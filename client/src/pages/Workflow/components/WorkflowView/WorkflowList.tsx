@@ -282,7 +282,8 @@ function WorkflowList(): React.ReactElement {
                     return <WorkflowIcon reportType={eWorkflowLinkType.eReport} path={getDownloadValueForWorkflowReport(serverEndpoint, value)} />;
                 },
                 setCellProps: setCenterCell,
-                setCellHeaderProps: setCenterHeader
+                setCellHeaderProps: setCenterHeader,
+                sort: false
             }
         },
         {
@@ -294,7 +295,8 @@ function WorkflowList(): React.ReactElement {
                     return <WorkflowIcon reportType={eWorkflowLinkType.eSet} path={getDownloadValueForWorkflowSet(serverEndpoint, value)} />;
                 },
                 setCellProps: setCenterCell,
-                setCellHeaderProps: setCenterHeader
+                setCellHeaderProps: setCenterHeader,
+                sort: false
             }
         },
         {
@@ -306,7 +308,8 @@ function WorkflowList(): React.ReactElement {
                     return <WorkflowIcon reportType={eWorkflowLinkType.eJob} path={getDownloadValueForJob(serverEndpoint, value)} />;
                 },
                 setCellProps: setCenterCell,
-                setCellHeaderProps: setCenterHeader
+                setCellHeaderProps: setCenterHeader,
+                sort: false
             }
         },
         {
@@ -322,7 +325,8 @@ function WorkflowList(): React.ReactElement {
                     );
                 },
                 // setCellProps: setCenterCell,
-                setCellHeaderProps: setCenterHeader
+                setCellHeaderProps: setCenterHeader,
+                sort: false
             }
         }
     ];
