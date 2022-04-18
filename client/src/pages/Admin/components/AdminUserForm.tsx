@@ -211,7 +211,7 @@ function AdminUserForm(): React.ReactElement {
                 throw new Error('Update request returned success: false');
             }
         } catch (error) {
-            toast.error(`Failed to update user: error ${error}`)
+            toast.error(`Failed to update user: error ${error}`);
         }
     };
 
@@ -244,7 +244,7 @@ function AdminUserForm(): React.ReactElement {
                 throw new Error('Create request returned success: false');
             }
         } catch (error) {
-            toast.error(`Failed to create user: error ${error}`)
+            toast.error(`Failed to create user: error ${error}`);
         }
     };
 
