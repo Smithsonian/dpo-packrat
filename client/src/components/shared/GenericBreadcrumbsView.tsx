@@ -44,7 +44,7 @@ interface BreadcrumbsViewProps {
 function GenericBreadcrumbsView(props: BreadcrumbsViewProps): React.ReactElement {
     const { items, highlighted = false, end = null } = props;
     const classes = useStyles();
-    if (!items || !items.includes('/')) return <React.Fragment />;
+    if (!items || items.length === 0 || !items.includes('/')) return <React.Fragment />;
     const trimmedItems = items[items.length - 1] === '/' ? items.slice(0, items.length - 1) : items;
     const splitPathCrumbsArray = trimmedItems.split('/');
     const finalPathCrumbsArray = splitPathCrumbsArray.map(subPath => {
