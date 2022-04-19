@@ -58,14 +58,20 @@ export class EdanCollection implements COL.ICollection {
             gatherRaw = options.gatherRaw ?? false;
         }
 
-        const params: string                = `q=${encodeURIComponent(query)}${filter}&rows=${rows}&start=${start}`;
+        // in addition to URI encoding the query, also replace single quotes with %27
+        const params: string                = `q=${encodeURIComponent(query).replace(/'/g, '%27')}${filter}&rows=${rows}&start=${start}`;
         const reqResult: HttpRequestResult  = await this.sendRequest(eAPIType.eEDAN, eHTTPMethod.eGet, path, params);
+        if (!reqResult.success) {
+            LOG.error(`EdanCollection.queryCollection ${query}`, LOG.LS.eCOLL);
+            return null;
+        }
+
         let jsonResult: any | null          = null;
         try {
             jsonResult                      = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
             LOG.error(`EdanCollection.queryCollection ${query}`, LOG.LS.eCOLL, error);
-            jsonResult                      = null;
+            return null;
         }
 
         // jsonResult.rows -- array of { ..., title, id, unitCode, ..., content };
