@@ -464,3 +464,9 @@ ALTER TABLE Model ADD COLUMN Title VARCHAR(255) DEFAULT NULL;
 ALTER TABLE Scene ADD COLUMN Title VARCHAR(255) DEFAULT NULL;
 
 -- 2022-03-04 Deployed to Staging and Production
+
+-- 2022-04-19 Jon
+INSERT INTO Project (idProject, Name) VALUES (99, 'Lineages'); INSERT INTO SystemObject (idProject, Retired) VALUES (99, 0);
+INSERT INTO Project (idProject, Name) VALUES (100, 'Awhi-Girlhood'); INSERT INTO SystemObject (idProject, Retired) VALUES (100, 0);
+INSERT INTO Project (idProject, Name) VALUES (101, 'Searchable Museum Pottery'); INSERT INTO SystemObject (idProject, Retired) VALUES (101, 0);
+INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'SAAMPAIK');
