@@ -599,8 +599,8 @@ export class IndexSolr implements NAV.IIndexer {
         doc.ChildrenDateCreated = [captureData.DateCaptured];
         doc.CDCaptureMethod = await this.lookupVocabulary(captureData.idVCaptureMethod);
         if (captureDataPhoto) {
-            doc.CDCaptureDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
-            doc.CDCaptureDatasetFieldID = captureDataPhoto.CaptureDatasetFieldID;
+            doc.CDDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
+            doc.CDDatasetFieldID = captureDataPhoto.CaptureDatasetFieldID;
             doc.CDItemPositionType = await this.lookupVocabulary(captureDataPhoto.idVItemPositionType);
             doc.CDItemPositionFieldID = captureDataPhoto.ItemPositionFieldID;
             doc.CDItemArrangementFieldID = captureDataPhoto.ItemArrangementFieldID;
