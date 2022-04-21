@@ -278,8 +278,8 @@ export class NavigationSolr implements NAV.INavigation {
                 case COMMON.eMetadata.eSubjectIdentifierPreferred:                  metadata.push(this.computeMetadataFromString(doc.SubjectIdentifierPreferred)); break;
                 case COMMON.eMetadata.eItemEntireSubject:                           metadata.push(this.computeMetadataFromBoolean(doc.ItemEntireSubject)); break;
                 case COMMON.eMetadata.eCDCaptureMethod:                             metadata.push(this.computeMetadataFromString(doc.CDCaptureMethod)); break;
-                case COMMON.eMetadata.eCDDatasetType:                               metadata.push(this.computeMetadataFromString(doc.CDCaptureDatasetType)); break;
-                case COMMON.eMetadata.eCDDatasetFieldID:                            metadata.push(this.computeMetadataFromNumber(doc.CDCaptureDatasetFieldID)); break;
+                case COMMON.eMetadata.eCDDatasetType:                               metadata.push(this.computeMetadataFromString(doc.CDDatasetType)); break;
+                case COMMON.eMetadata.eCDDatasetFieldID:                            metadata.push(this.computeMetadataFromNumber(doc.CDDatasetFieldID)); break;
                 case COMMON.eMetadata.eCDItemPositionType:                          metadata.push(this.computeMetadataFromString(doc.CDItemPositionType)); break;
                 case COMMON.eMetadata.eCDItemPositionFieldID:                       metadata.push(this.computeMetadataFromNumber(doc.CDItemPositionFieldID)); break;
                 case COMMON.eMetadata.eCDItemArrangementFieldID:                    metadata.push(this.computeMetadataFromNumber(doc.CDItemArrangementFieldID)); break;
