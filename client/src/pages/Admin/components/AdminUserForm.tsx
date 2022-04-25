@@ -176,6 +176,8 @@ function AdminUserForm(): React.ReactElement {
         }
     };
 
+    const updateWorkflowNotificationType = (e) => setWorkflowNotificationType(e.target.value >= 0 ? e.target.value : null);
+
     const updateExistingUser = async () => {
         const validUpdate = await validateFields();
         if (!validUpdate) {
@@ -344,16 +346,13 @@ function AdminUserForm(): React.ReactElement {
                     <InputLabel htmlFor='notificationType' className={classes.formLabel}>Workflow Notification Type</InputLabel>
                     <Select
                         id='notificationType'
-                        value={typeof workflowNotificationType === 'number' ? workflowNotificationType : ''}
+                        value={typeof workflowNotificationType === 'number' ? workflowNotificationType : -1}
                         className={classes.select}
                         disableUnderline
                         inputProps={{ 'aria-label': 'notificationTypeSelect' }}
-                        onChange={e => {
-                            if (typeof e.target.value === 'number') {
-                                setWorkflowNotificationType(e.target.value);
-                            }
-                        }}
+                        onChange={updateWorkflowNotificationType}
                     >
+                        <MenuItem value={-1}>(No Selection)</MenuItem>
                         <MenuItem value={0}>Daily Digest</MenuItem>
                         <MenuItem value={1}>Immediately</MenuItem>
                     </Select>

@@ -585,7 +585,7 @@ class IngestDataWorker extends ResolverBase {
             idVBackgroundRemovalMethod: photogrammetry.backgroundRemovalMethod ? photogrammetry.backgroundRemovalMethod : null,
             idVClusterType: photogrammetry.clusterType ? photogrammetry.clusterType : null,
             ClusterGeometryFieldID: photogrammetry.clusterGeometryFieldId ? photogrammetry.clusterGeometryFieldId : null,
-            CameraSettingsUniform: false,
+            CameraSettingsUniform: photogrammetry.cameraSettingUniform ? photogrammetry.cameraSettingUniform : false,
             idCaptureData: captureDataDB.idCaptureData,
             idCaptureDataPhoto: 0
         });
@@ -653,7 +653,7 @@ class IngestDataWorker extends ResolverBase {
 
             const folderVariantMap: Map<string, number> = new Map<string, number>(); // map of normalized folder name to variant vocabulary id
             for (const folder of ingestPhotoInput.folders) {
-                folderVariantMap.set(folder.name.toLowerCase(), folder.variantType);
+                folderVariantMap.set(folder.name.toLowerCase(), folder?.variantType ?? 0);
                 // LOG.info(`ingestData mapping ${folder.name.toLowerCase()} -> ${folder.variantType}`, LOG.LS.eGQL);
             }
 

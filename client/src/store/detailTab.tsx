@@ -15,6 +15,7 @@ import {
     IngestFolder
 } from '../types/graphql';
 import * as yup from 'yup';
+import { nullableSelectFields } from '../utils/controls';
 
 export interface ModelDetailsType {
     DateCreated: string | null;
@@ -213,7 +214,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
     },
     updateDetailField(assetType, fieldName, value) {
         const { getDetail } = get();
-        // console.log('assetType', assetType, 'fieldName', fieldName, 'value', value);
+        if (value === -1 && nullableSelectFields.has(fieldName)) value = null;
 
         if (assetType === eSystemObjectType.eUnit) {
             const UnitDetails = getDetail(eSystemObjectType.eUnit) as UnitDetailFields;

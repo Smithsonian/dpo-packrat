@@ -93,7 +93,7 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
         const CDPs: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(SOP.CaptureData.idCaptureData);
         if (CDPs && CDPs.length > 0) {
             const folders: IngestFolder[] = [];
-            const folderVariantMap: Map<string, number> | null = await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(SOP.CaptureData.idCaptureData);
+            const folderVariantMap: Map<string, number | null> | null = await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(SOP.CaptureData.idCaptureData);
             if (folderVariantMap) {
                 for (const [name, variantType] of folderVariantMap)
                     folders.push({ name, variantType });

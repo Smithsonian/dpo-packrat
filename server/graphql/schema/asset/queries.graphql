@@ -19,7 +19,7 @@ type IngestIdentifier {
 
 type IngestFolder {
     name: String!
-    variantType: Int!
+    variantType: Int
 }
 
 type IngestPhotogrammetry {
