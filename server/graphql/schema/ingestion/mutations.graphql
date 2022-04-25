@@ -30,7 +30,7 @@ input IngestIdentifierInput {
 
 input IngestFolderInput {
     name: String!
-    variantType: Int!
+    variantType: Int
 }
 
 input IngestPhotogrammetryInput {

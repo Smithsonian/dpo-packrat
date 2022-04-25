@@ -516,15 +516,15 @@ export class IndexSolr implements NAV.IIndexer {
         // LOG.info(`IndexSolr.extractCommonChildrenFields doc=${JSON.stringify(doc, H.Helpers.saferStringify)}, OGDEH=${JSON.stringify(OGDEH, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
     }
 
-    private async computeVocabulary(idVocabulary: number | null): Promise<string | undefined> {
+    private async computeVocabulary(idVocabulary: number | null): Promise<string | null> {
         const vocab: DBAPI.Vocabulary | undefined = idVocabulary ? await CACHE.VocabularyCache.vocabulary(idVocabulary) : undefined;
-        return vocab ? vocab.Term : undefined;
+        return vocab ? vocab.Term : null;
     }
 
     private async computeVocabularyTerms(IDs: number[]): Promise<string[]> {
         const retValue: string[] = [];
         for (const ID of IDs) {
-            const vocab: string | undefined = await this.computeVocabulary(ID);
+            const vocab: string | null = await this.computeVocabulary(ID);
             if (vocab) retValue.push(vocab);
         }
         return retValue;

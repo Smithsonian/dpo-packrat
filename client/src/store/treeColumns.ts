@@ -1,5 +1,6 @@
 import create, { GetState, SetState } from 'zustand';
 import { eMetadata } from '@dpo-packrat/common';
+import { defaultDisplayMetadataAndWidth } from '../pages/Repository/components/RepositoryFilterView/RepositoryFilterOptions';
 
 /*
     Tree Column Store
@@ -38,9 +39,11 @@ export const useTreeColumnsStore = create<TreeColumns>((set: SetState<TreeColumn
         if ((!document.cookie.length || document.cookie.indexOf(COL_WIDTH_COOKIE) === -1)) {
             const defaultWidths = {};
             for (const col in eMetadata) {
-                defaultWidths[eMetadata[col]] = '80';
+                // this check prevents duplication of enum and value
+                if (!isNaN(Number(col)))
+                    defaultWidths[col] = defaultDisplayMetadataAndWidth[col]['width'];
             }
-            defaultWidths['object-name'] = '200';
+            defaultWidths['object-name'] = '350';
             document.cookie = `${COL_WIDTH_COOKIE}=${JSON.stringify(defaultWidths)};path=/;max-age=630700000`;
         }
 
@@ -60,7 +63,9 @@ export const useTreeColumnsStore = create<TreeColumns>((set: SetState<TreeColumn
             const defaultOrder = {};
             let index = 1;
             for (const col in eMetadata) {
-                defaultOrder[eMetadata[col]] = index;
+                // this check prevents duplication of enum and value
+                if (!isNaN(Number(col)))
+                    defaultOrder[col] = index;
                 index ++;
             }
             document.cookie = `${COL_ORDER_COOKIE}=${JSON.stringify(defaultOrder)};path=/;max-age=630700000`;

@@ -43,6 +43,7 @@ import {
     StateMetadata,
     ValidateFields,
 } from './metadata.types';
+import { nullableSelectFields } from '../../utils/controls';
 
 type MetadataStore = {
     metadatas: StateMetadata[];
@@ -242,7 +243,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     }
 
                     if (foundItem) {
-                        // console.log('foundItem', foundItem);
                         const item: StateItem = parseItemToState(foundItem, !index, index);
                         items.push(item);
                     }
@@ -390,6 +390,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             toast.error(`Field ${name} doesn't exist on a ${metadataType} asset`);
             return;
         }
+
+        if (value === -1 && nullableSelectFields.has(name)) value = null;
 
         const updatedMetadatas = lodash.map(metadatas, (metadata: StateMetadata, index: number) => {
             if (index === metadataIndex) {

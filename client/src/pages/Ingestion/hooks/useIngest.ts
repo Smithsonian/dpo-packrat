@@ -375,7 +375,7 @@ function useIngest(): UseIngest {
 
             const folderData: IngestFolderInput = {
                 name,
-                variantType: nonNullValue<number>('variantType', variantType)
+                variantType
             };
 
             ingestFolders.push(folderData);
