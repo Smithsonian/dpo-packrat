@@ -2408,7 +2408,7 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch CaptureDataFile: CaptureDataFile.fetchFolderVariantMapFromCaptureData', async () => {
-        let folderVariantMap: Map<string, number> | null = null;
+        let folderVariantMap: Map<string, number | null> | null = null;
         if (captureData) {
             folderVariantMap = await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(captureData.idCaptureData);
             if (folderVariantMap && assetVersion && vocabulary) {
