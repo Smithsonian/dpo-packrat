@@ -36,7 +36,6 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         flex: 5,
         height: '100%',
         overflowY: 'auto',
-        minWidth: '60vw',
         width: 'fit-content',
         flexDirection: 'column',
         transition: '250ms height, width ease',
