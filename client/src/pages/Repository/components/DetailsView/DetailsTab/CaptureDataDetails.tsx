@@ -23,6 +23,7 @@ import { DebounceInput } from 'react-debounce-input';
 import { withDefaultValueBoolean } from '../../../../../utils/shared';
 import clsx from 'clsx';
 import { palette } from '../../../../../theme';
+import { getNullableSelectEntries } from '../../../../../utils/controls';
 
 export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     captureMethodTableContainer: {
@@ -132,6 +133,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     }
 
     const updateFolderVariant = (id, variantType) => {
+        if (variantType === -1) variantType = null;
         const folders = [...CaptureDataDetails.folders];
         const folder = folders[id];
         folder.variantType = variantType;
@@ -160,16 +162,10 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eCaptureData, name, idFieldValue);
     };
 
-    const setCheckboxField = ({ target }): void => {
-        const { name, checked } = target;
-        updateDetailField(eSystemObjectType.eCaptureData, name, checked);
-    };
-
     const captureDataData = data.getDetailsTabDataForObject?.CaptureData;
     const cdMethods = getEntries(eVocabularySetID.eCaptureDataCaptureMethod);
     const captureMethodidVocabulary = withDefaultValueNumber(CaptureDataDetails?.captureMethod, getInitialEntry(eVocabularySetID.eCaptureDataCaptureMethod));
     const captureMethod = cdMethods.find(method => method.idVocabulary === captureMethodidVocabulary);
-
     return (
         <Box>
             <Description
@@ -217,7 +213,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 <TableCell className={classes.tableCell}>
                                     <Select
                                         disabled={disabled}
-                                        value={withDefaultValueNumber(CaptureDataDetails?.datasetType, getInitialEntry(eVocabularySetID.eCaptureDataDatasetType))}
+                                        value={CaptureDataDetails?.datasetType}
                                         name='datasetType'
                                         onChange={setIdField}
                                         disableUnderline
@@ -236,7 +232,6 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                 <AssetContents
                     viewMode
                     disabled={disabled}
-                    initialEntry={getInitialEntry(eVocabularySetID.eCaptureDataFileVariantType)}
                     folders={parseFoldersToState(CaptureDataDetails?.folders ?? [])}
                     options={getEntries(eVocabularySetID.eCaptureDataFileVariantType)}
                     onUpdate={updateFolderVariant}
@@ -271,7 +266,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                     <TableCell className={classes.tableCell}>
                                         <Select
                                             disabled={disabled}
-                                            value={withDefaultValueNumber(CaptureDataDetails.itemPositionType, getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType))}
+                                            value={CaptureDataDetails?.itemPositionType ?? -1}
                                             name='itemPositionType'
                                             onChange={setIdField}
                                             disableUnderline
@@ -279,7 +274,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                             style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'itemPositionType')) }}
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                         >
-                                            {getEntries(eVocabularySetID.eCaptureDataItemPositionType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                            {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataItemPositionType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>
@@ -326,7 +321,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                     <TableCell className={classes.tableCell}>
                                         <Select
                                             disabled={disabled}
-                                            value={withDefaultValueNumber(CaptureDataDetails.focusType, getInitialEntry(eVocabularySetID.eCaptureDataFocusType))}
+                                            value={CaptureDataDetails?.focusType ?? -1}
                                             name='focusType'
                                             onChange={setIdField}
                                             disableUnderline
@@ -334,7 +329,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                             style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'focusType')) }}
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                         >
-                                            {getEntries(eVocabularySetID.eCaptureDataFocusType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                            {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataFocusType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>
@@ -345,7 +340,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                     <TableCell className={classes.tableCell}>
                                         <Select
                                             disabled={disabled}
-                                            value={withDefaultValueNumber(CaptureDataDetails.lightsourceType, getInitialEntry(eVocabularySetID.eCaptureDataLightSourceType))}
+                                            value={CaptureDataDetails?.lightsourceType ?? -1}
                                             name='lightsourceType'
                                             onChange={setIdField}
                                             disableUnderline
@@ -353,7 +348,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                             style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'lightsourceType')) }}
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                         >
-                                            {getEntries(eVocabularySetID.eCaptureDataLightSourceType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                            {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataLightSourceType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>
@@ -364,7 +359,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                     <TableCell className={classes.tableCell}>
                                         <Select
                                             disabled={disabled}
-                                            value={withDefaultValueNumber(CaptureDataDetails.backgroundRemovalMethod, getInitialEntry(eVocabularySetID.eCaptureDataBackgroundRemovalMethod))}
+                                            value={CaptureDataDetails?.backgroundRemovalMethod ?? -1}
                                             name='backgroundRemovalMethod'
                                             onChange={setIdField}
                                             disableUnderline
@@ -372,7 +367,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                             style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'backgroundRemovalMethod')) }}
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                         >
-                                            {getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                            {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>
@@ -383,7 +378,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                     <TableCell className={classes.tableCell}>
                                         <Select
                                             disabled={disabled}
-                                            value={withDefaultValueNumber(CaptureDataDetails.clusterType, getInitialEntry(eVocabularySetID.eCaptureDataClusterType))}
+                                            value={CaptureDataDetails?.clusterType ?? -1}
                                             name='clusterType'
                                             onChange={setIdField}
                                             disableUnderline
@@ -391,7 +386,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                             style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'clusterType')) }}
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
                                         >
-                                            {getEntries(eVocabularySetID.eCaptureDataClusterType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                            {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataClusterType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>
@@ -420,11 +415,10 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                     <TableCell className={classes.tableCell} style={{ verticalAlign: 'middle' }}>
                                         <Checkbox
                                             className={classes.checkbox}
+                                            disabled
                                             name='cameraSettingUniform'
-                                            onChange={setCheckboxField}
                                             checked={withDefaultValueBoolean(CaptureDataDetails.cameraSettingUniform ?? false, false)}
                                             title='cameraSettingsUniform-input'
-                                            disabled={disabled}
                                             size='small'
                                             style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'cameraSettingUniform')) }}
                                             color='primary'

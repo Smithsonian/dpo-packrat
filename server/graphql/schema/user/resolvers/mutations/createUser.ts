@@ -15,7 +15,7 @@ export default async function createUser(_: Parent, args: MutationCreateUserArgs
         DateActivated: new Date(),
         DateDisabled: null,
         WorkflowNotificationTime: null,
-        EmailSettings: EmailSettings || null
+        EmailSettings: EmailSettings ?? null
     };
 
     const User = new DBAPI.User(userArgs);
