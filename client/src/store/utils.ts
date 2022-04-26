@@ -108,7 +108,7 @@ export function parseFoldersToState(folders: IngestFolder[]): StateFolder[] {
     const stateFolders: StateFolder[] = folders.map(({ name, variantType }: IngestFolder, index: number) => ({
         id: index,
         name,
-        variantType
+        variantType: variantType as null | number
     }));
 
     return stateFolders;

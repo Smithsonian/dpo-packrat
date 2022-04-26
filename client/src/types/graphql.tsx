@@ -561,7 +561,7 @@ export type IngestIdentifier = {
 export type IngestFolder = {
   __typename?: 'IngestFolder';
   name: Scalars['String'];
-  variantType: Scalars['Int'];
+  variantType?: Maybe<Scalars['Int']>;
 };
 
 export type IngestPhotogrammetry = {
@@ -955,7 +955,7 @@ export type IngestIdentifierInput = {
 
 export type IngestFolderInput = {
   name: Scalars['String'];
-  variantType: Scalars['Int'];
+  variantType?: Maybe<Scalars['Int']>;
 };
 
 export type IngestPhotogrammetryInput = {
