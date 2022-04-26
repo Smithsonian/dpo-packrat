@@ -27,13 +27,16 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         display: 'flex',
         flex: 1,
         width: 'fit-content',
+        maxWidth: '100%',
         flexDirection: 'column',
         padding: 20,
         paddingBottom: 0,
         paddingRight: 0,
         [breakpoints.down('lg')]: {
             paddingRight: 20
-        }
+        },
+        height: 'calc(100vh - 80px)',
+        overflowY: 'auto'
     }
 }));
 
@@ -58,11 +61,8 @@ export type RepositoryFilter = {
 };
 
 function Repository(): React.ReactElement {
-    const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
-    const classes = useStyles(sideBarExpanded);
 
     return (
-        <Box className={classes.container}>
             <PrivateRoute path={resolveRoute(HOME_ROUTES.REPOSITORY)}>
                 <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} component={TreeViewPage} />
                 <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.DETAILS)} component={DetailsView} />
@@ -71,11 +71,13 @@ function Repository(): React.ReactElement {
                     <Redirect to={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} />
                 </PrivateRoute>
             </PrivateRoute>
-        </Box>
     );
 }
 
 function TreeViewPage(): React.ReactElement {
+    const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
+    const classes = useStyles(sideBarExpanded);
+
     const location = useLocation();
     const {
         search,
@@ -168,8 +170,11 @@ function TreeViewPage(): React.ReactElement {
             <Helmet>
                 <title>Repository</title>
             </Helmet>
-            <RepositoryFilterView />
-            <RepositoryTreeView />
+            <Box className={classes.container}>
+
+                <RepositoryFilterView />
+                <RepositoryTreeView />
+            </Box>
         </React.Fragment>
     );
 }
