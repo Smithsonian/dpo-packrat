@@ -34,14 +34,12 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        height: 'fit-content',
+        height: '100%',
+        overflowY: 'auto',
         minWidth: '60vw',
         width: 'fit-content',
         flexDirection: 'column',
-        overflowY: 'hidden',
         transition: '250ms height, width ease',
-        // paddingRight is needed so that a second horizontal scrollbar isn't created when hovering a row
-        paddingRight: 20,
         [breakpoints.down('lg')]: {
             paddingRight: 10
         },
@@ -81,7 +79,7 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     label: {
         display: 'flex',
         alignItems: 'center',
-        position: 'sticky',
+        // position: 'sticky',
         left: 45,
         [breakpoints.down('lg')]: {
             left: 30

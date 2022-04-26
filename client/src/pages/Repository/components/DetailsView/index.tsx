@@ -46,12 +46,23 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
+        width: 'fit-content',
         flexDirection: 'column',
-        // maxHeight: 'calc(100vh - 140px)',
+        padding: 20,
+        paddingBottom: 0,
+        paddingRight: 0,
+        [breakpoints.down('lg')]: {
+            paddingRight: 20
+        }
+    },
+    content: {
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'column',
         padding: 20,
         marginBottom: 20,
         borderRadius: 10,
-        overflowY: 'scroll',
+        overflowY: 'auto',
         backgroundColor: palette.primary.light,
         [breakpoints.down('lg')]: {
             padding: 10
@@ -490,92 +501,94 @@ function DetailsView(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <DetailsHeader
-                originalFields={data.getSystemObjectDetails}
-                name={details.name}
-                disabled={disabled || immutableNameTypes.has(objectType)}
-                objectType={objectType}
-                path={objectAncestors}
-                onNameUpdate={onNameUpdate}
-            />
-
-            <Box display='flex' mt={2}>
-                <ObjectDetails
-                    unit={unit}
-                    project={project}
-                    subject={subject}
-                    item={item}
-                    asset={asset}
-                    disabled={disabled}
-                    publishedState={publishedState}
-                    publishedEnum={publishedEnum}
-                    publishable={publishable}
-                    retired={withDefaultValueBoolean(details.retired, false)}
-                    objectType={objectType}
-                    onRetiredUpdate={onRetiredUpdate}
-                    onLicenseUpdate={onLicenseUpdate}
+            <Box className={classes.content}>
+                <DetailsHeader
                     originalFields={data.getSystemObjectDetails}
-                    license={withDefaultValueNumber(details.idLicense, 0)}
-                    idSystemObject={idSystemObject}
-                    licenseInheritance={licenseInheritance}
+                    name={details.name}
+                    disabled={disabled || immutableNameTypes.has(objectType)}
+                    objectType={objectType}
                     path={objectAncestors}
-                    updateData={updateData}
+                    onNameUpdate={onNameUpdate}
                 />
-                <Box display='flex' flex={2.2} flexDirection='column'>
-                    <IdentifierList
-                        viewMode
+
+                <Box display='flex' mt={2}>
+                    <ObjectDetails
+                        unit={unit}
+                        project={project}
+                        subject={subject}
+                        item={item}
+                        asset={asset}
                         disabled={disabled}
-                        identifiers={stateIdentifiers || []}
-                        identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
-                        onAdd={addIdentifer}
-                        onRemove={removeIdentifier}
-                        onUpdate={updateIdentifierFields}
-                        subjectView={objectType === eSystemObjectType.eSubject}
-                        onUpdateIdIdentifierPreferred={updateIdentifierPreferred}
-                        loading={loadingIdentifiers}
+                        publishedState={publishedState}
+                        publishedEnum={publishedEnum}
+                        publishable={publishable}
+                        retired={withDefaultValueBoolean(details.retired, false)}
+                        objectType={objectType}
+                        onRetiredUpdate={onRetiredUpdate}
+                        onLicenseUpdate={onLicenseUpdate}
+                        originalFields={data.getSystemObjectDetails}
+                        license={withDefaultValueNumber(details.idLicense, 0)}
+                        idSystemObject={idSystemObject}
+                        licenseInheritance={licenseInheritance}
+                        path={objectAncestors}
+                        updateData={updateData}
+                    />
+                    <Box display='flex' flex={2.2} flexDirection='column'>
+                        <IdentifierList
+                            viewMode
+                            disabled={disabled}
+                            identifiers={stateIdentifiers || []}
+                            identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
+                            onAdd={addIdentifer}
+                            onRemove={removeIdentifier}
+                            onUpdate={updateIdentifierFields}
+                            subjectView={objectType === eSystemObjectType.eSubject}
+                            onUpdateIdIdentifierPreferred={updateIdentifierPreferred}
+                            loading={loadingIdentifiers}
+                        />
+                    </Box>
+                </Box>
+
+                <Box display='flex' alignItems='center' mt={'10px'}>
+                    <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
+                        Update
+                    </LoadingButton>
+                    {(updatedIdentifiers || updatedMetadata) && <div style={{ fontStyle: 'italic', marginLeft: '5px' }}>Update needed to save your data</div>}
+                    {objectType === eSystemObjectType.eScene && <LoadingButton className={classes.updateButton} loading={false} onClick={() => document.getElementById('Voyager-Explorer')?.scrollIntoView()} style={{ marginLeft: 5 }}>View</LoadingButton>}
+                </Box>
+
+                <Box display='flex'>
+                    <DetailsTab
+                        disabled={disabled}
+                        idSystemObject={idSystemObject}
+                        objectType={objectType}
+                        assetOwner={assetOwner}
+                        sourceObjects={sourceObjects}
+                        derivedObjects={derivedObjects}
+                        onAddSourceObject={onAddSourceObject}
+                        onAddDerivedObject={onAddDerivedObject}
+                        onUpdateDetail={onUpdateDetail}
+                        onSubtitleUpdate={onSubtitleUpdate}
+                        subtitle={details?.subtitle}
+                        objectVersions={objectVersions}
+                        detailQuery={detailQuery}
+                        metadata={metadata}
                     />
                 </Box>
-            </Box>
 
-            <Box display='flex' alignItems='center' mt={'10px'}>
-                <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
-                    Update
-                </LoadingButton>
-                {(updatedIdentifiers || updatedMetadata) && <div style={{ fontStyle: 'italic', marginLeft: '5px' }}>Update needed to save your data</div>}
-                {objectType === eSystemObjectType.eScene && <LoadingButton className={classes.updateButton} loading={false} onClick={() => document.getElementById('Voyager-Explorer')?.scrollIntoView()} style={{ marginLeft: 5 }}>View</LoadingButton>}
-            </Box>
+                <Box display='flex' flex={1} padding={2}>
+                    <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />
+                </Box>
 
-            <Box display='flex'>
-                <DetailsTab
-                    disabled={disabled}
+                <ObjectSelectModal
+                    open={modalOpen}
+                    onModalClose={onModalClose}
+                    selectedObjects={objectRelationship === RelatedObjectType.Source ? sourceObjects : derivedObjects}
                     idSystemObject={idSystemObject}
+                    relationship={objectRelationship}
                     objectType={objectType}
-                    assetOwner={assetOwner}
-                    sourceObjects={sourceObjects}
-                    derivedObjects={derivedObjects}
-                    onAddSourceObject={onAddSourceObject}
-                    onAddDerivedObject={onAddDerivedObject}
-                    onUpdateDetail={onUpdateDetail}
-                    onSubtitleUpdate={onSubtitleUpdate}
-                    subtitle={details?.subtitle}
-                    objectVersions={objectVersions}
-                    detailQuery={detailQuery}
-                    metadata={metadata}
                 />
             </Box>
-
-            <Box display='flex' flex={1} padding={2}>
-                <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />
-            </Box>
-
-            <ObjectSelectModal
-                open={modalOpen}
-                onModalClose={onModalClose}
-                selectedObjects={objectRelationship === RelatedObjectType.Source ? sourceObjects : derivedObjects}
-                idSystemObject={idSystemObject}
-                relationship={objectRelationship}
-                objectType={objectType}
-            />
         </Box>
     );
 }

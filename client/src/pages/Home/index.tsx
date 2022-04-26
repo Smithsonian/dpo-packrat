@@ -22,7 +22,7 @@ const useStyles = makeStyles(() => ({
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        width: 'fit-content',
+        width: '99vw',
         minWidth: '100%'
     },
     content: {
