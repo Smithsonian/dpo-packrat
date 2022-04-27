@@ -18,7 +18,7 @@ export default async function updateUser(_: Parent, args: MutationUpdateUserArgs
     User.Name = Name;
     User.EmailAddress = EmailAddress;
     User.Active = Active;
-    User.EmailSettings = EmailSettings || null;
+    User.EmailSettings = EmailSettings ?? null;
     User.WorkflowNotificationTime = WorkflowNotificationTime;
 
     const success = await User.update();

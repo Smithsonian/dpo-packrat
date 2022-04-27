@@ -9,11 +9,12 @@ import { eMetadata } from '@dpo-packrat/common';
 import { useTreeColumnsStore, useRepositoryStore } from '../../../../store';
 import { GoArrowRight, GoArrowLeft } from 'react-icons/go';
 import clsx from 'clsx';
+import { Tooltip } from '@material-ui/core';
+import { defaultDisplayMetadataAndWidth } from '../RepositoryFilterView/RepositoryFilterOptions';
 
 export type TreeViewColumn = {
     metadataColumn: eMetadata;
     label: string;
-    size: number;
 };
 
 interface MetadataViewProps {
@@ -64,7 +65,7 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
                 await initializeTree();
             };
             const { label, metadataColumn } = treeColumn;
-            return (
+            const metadata = (
                 <div
                     key={index}
                     className={clsx(makeStyles?.column, classes?.[metadataColumn])}
@@ -76,7 +77,7 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
                     <span className={makeStyles?.text} title={header ? undefined : label} data-tooltip-position='bottom'>
                         {label}
                     </span>
-                    {hoverColumn === metadataColumn &&(
+                    {hoverColumn === metadataColumn && (
                         <div style={{ display: 'flex', flexWrap: 'nowrap' }}>
                             {/* Limit arrow options based on start, last, or middle header position */}
                             {(treeColumns[0].metadataColumn !== metadataColumn) && <GoArrowLeft style={iconStyle} onClick={onLeftShift} />}
@@ -85,6 +86,7 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
                     )}
                 </div>
             );
+            return header ? <Tooltip title={defaultDisplayMetadataAndWidth[metadataColumn]['name'] ?? label} placement='top' arrow key={index}>{metadata}</Tooltip> : metadata;
         });
     };
 
