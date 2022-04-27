@@ -32,11 +32,11 @@ const workflowSets: number = IGNORE_FAILURES ? 0 : 1;
 const normalizedCreationDate: Date = new Date('2021-04-01T00:00:00.000Z'); // 4/1/2021 Keep this date in sync with Model.setup.ts modelTestCaseInspectJSONMap
 
 let jobEngine: JOB.IJobEngine | null = null;
-const JobSet: Set<JOB.IJob> = new Set<JOB.IJob>();
+const JobMap: Map<string, JOB.IJob> = new Map<string, JOB.IJob>(); // testcase name -> IJob
 const JobDataMap: Map<number, JobData> = new Map<number, JobData>();
 
 let workflowEngine: WF.IWorkflowEngine | null = null;
-const WorkflowSet: Set<WF.IWorkflow> = new Set<WF.IWorkflow>();
+const WorkflowMap: Map<string, WF.IWorkflow> = new Map<string, WF.IWorkflow>(); // testcase name -> IWorkflow
 
 let modelTestAvailable: boolean | null = null;
 const MTS: TESTMODEL.ModelTestSetup = new TESTMODEL.ModelTestSetup();
@@ -76,7 +76,7 @@ describe('JobNS Cook Test Setup', () => {
         testCookImplicit('obj', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookExplicit('ply', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('stl', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookExplicit('x3d', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // testCookExplicit('x3d', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('gltf-stand-alone', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookExplicit('gltf-with-support', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('dae', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -105,7 +105,7 @@ describe('JobNS IWorkflow Test Setup', () => {
         testWorkflow('obj', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('ply', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('stl', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testWorkflow('x3d', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // testWorkflow('x3d', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('gltf-stand-alone', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('gltf-with-support', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('dae', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -123,10 +123,10 @@ describe('JobNS Cook Test Completion', () => {
     test('IJob.Cook Job Completion', async() => {
         jest.setTimeout(testTimeout);
         const jobFinalizationList: Promise<H.IOResults>[] = [];
-        for (const job of JobSet)
+        for (const job of JobMap.values())
             jobFinalizationList.push(job.waitForCompletion(testTimeout));
 
-        LOG.info(`JobNS Cook awaiting job completion of ${JobSet.size} jobs`, LOG.LS.eTEST);
+        LOG.info(`JobNS Cook awaiting job completion of ${JobMap.size} jobs`, LOG.LS.eTEST);
         try {
             const resultsArray = await Promise.all(jobFinalizationList);
             for (const res of resultsArray)
@@ -142,9 +142,9 @@ describe('JobNS Cook Test Completion', () => {
         if (!modelTestAvailable)
             return;
 
-        for (const job of JobSet) {
+        for (const [name, job] of JobMap) {
             const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
-            expect(await validateJobOutput(dbJobRun)).toBeTruthy();
+            expect(await validateJobOutput(name, dbJobRun)).toBeTruthy();
         }
     });
 });
@@ -153,10 +153,10 @@ describe('JobNS IWorkflow Completion', () => {
     test('JobNS IWorkflow Completion', async() => {
         jest.setTimeout(testTimeout);
         const wfFinalizationList: Promise<H.IOResults>[] = [];
-        for (const WF of WorkflowSet)
+        for (const WF of WorkflowMap.values())
             wfFinalizationList.push(WF.waitForCompletion(testTimeout));
 
-        LOG.info(`JobNS IWorkflow Completion awaiting completion of ${WorkflowSet.size} workflows`, LOG.LS.eTEST);
+        LOG.info(`JobNS IWorkflow Completion awaiting completion of ${WorkflowMap.size} workflows`, LOG.LS.eTEST);
         try {
             const resultsArray = await Promise.all(wfFinalizationList);
             for (const res of resultsArray)
@@ -172,7 +172,7 @@ describe('JobNS IWorkflow Completion', () => {
         if (!modelTestAvailable)
             return;
 
-        for (const workflow of WorkflowSet) {
+        for (const [name, workflow] of WorkflowMap) {
             const workflowConstellation: DBAPI.WorkflowConstellation | null = await workflow.workflowConstellation();
             expect(workflowConstellation).toBeTruthy();
             expect(workflowConstellation?.workflow).toBeTruthy();
@@ -192,7 +192,7 @@ describe('JobNS IWorkflow Completion', () => {
                         continue;
                     expect(workflowConstellation.workflowStep[0].idJobRun).toBeTruthy();
                     const dbJobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(workflowConstellation.workflowStep[0].idJobRun || 0);
-                    expect(await validateJobOutput(dbJobRun)).toBeTruthy();
+                    expect(await validateJobOutput(name, dbJobRun)).toBeTruthy();
                 } break;
 
                 default:
@@ -254,7 +254,7 @@ function testCookImplicit(testCase: string, eJobType: COMMON.eVocabularyID): voi
 }
 
 async function recordJob(job: JOB.IJob, eJobType: COMMON.eVocabularyID, testCase: string): Promise<void> {
-    JobSet.add(job);
+    JobMap.set(testCase, job);
 
     const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
     expect(dbJobRun).toBeTruthy();
@@ -314,7 +314,8 @@ function computeJobParameters(testCase: string, eJobType: COMMON.eVocabularyID):
     }
 }
 
-async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean> {
+async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null): Promise<boolean> {
+    LOG.info(`JonNS Test validateJobOutput(${testcase}): idJobRun ${dbJobRun?.idJobRun}`, LOG.LS.eTEST);
     expect(dbJobRun).toBeTruthy();
     if (!dbJobRun)
         return false;
@@ -322,7 +323,7 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
         expect(dbJobRun.Result).toBeTruthy();
     else {
         if (!dbJobRun.Result) {
-            LOG.error(`JonNS Test validateJobOutput failed: ${dbJobRun.idJobRun}`, LOG.LS.eTEST);
+            LOG.error(`JonNS Test validateJobOutput(${testcase}) failed: idJobRun ${dbJobRun.idJobRun}`, LOG.LS.eTEST);
             return true;
         }
     }
@@ -341,7 +342,7 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
             try {
                 JCOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''), null, null);
             } catch (error) {
-                LOG.error(`JonNS Test validateJobOutput ${COMMON.eVocabularyID[jobData.eJobType]}: ${output}`, LOG.LS.eTEST, error);
+                LOG.error(`JonNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output}`, LOG.LS.eTEST, error);
                 expect(true).toBeFalsy();
             }
             expect(JCOutput).toBeTruthy();
@@ -351,7 +352,7 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
                 expect(JCOutput.success).toBeTruthy();
             else {
                 if (!JCOutput.success)
-                    LOG.error(`JonNS Test validateJobOutput ${COMMON.eVocabularyID[jobData.eJobType]}: ${output} FAILED`, LOG.LS.eTEST);
+                    LOG.error(`JonNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output} FAILED`, LOG.LS.eTEST);
             }
 
             normalizeOutput(JCOutput);
@@ -466,8 +467,7 @@ async function recordWorkflow(workflow: WF.IWorkflow, eWorkflowType: COMMON.eVoc
     }
 
     eWorkflowType;
-    testCase;
-    WorkflowSet.add(workflow);
+    WorkflowMap.set(testCase, workflow);
 }
 
 function computeWorkflowParameters(testCase: string, eWorkflowType: COMMON.eVocabularyID, eJobType: COMMON.eVocabularyID): any {
