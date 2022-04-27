@@ -14,7 +14,6 @@ interface StyledTreeItemProps {
 const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) => ({
     iconContainer: {
         width: 25,
-        position: 'sticky',
         left: 2.5,
         zIndex: 10,
         [breakpoints.down('lg')]: {
