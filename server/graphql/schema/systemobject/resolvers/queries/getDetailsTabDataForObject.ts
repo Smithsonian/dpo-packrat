@@ -175,7 +175,7 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
     };
 
     // creates a unique map of AssetVersion.filePath and file.idVVariantType
-    const foldersMap: Map<string, number> | null = await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(idCaptureData);
+    const foldersMap: Map<string, number | null> | null = await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(idCaptureData);
     if (foldersMap) {
         foldersMap.forEach((value, key) => {
             fields.folders.push({ name: key, variantType: value });
