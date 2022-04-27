@@ -102,6 +102,7 @@ export type IngestStreamOrFileInput = {
     idUserCreator: number;
     SOBased: DBAPI.SystemObjectBased;
     Comment: string | null;
+    doNotSendIngestionEvent?: boolean | undefined;
     doNotUpdateParentVersion?: boolean | undefined;
 };
 
@@ -527,7 +528,7 @@ export class AssetStorageAdapter {
 
         // Send Workflow Ingestion event
         if (ingestAssetInput.doNotSendIngestionEvent === undefined || ingestAssetInput.doNotSendIngestionEvent === false)
-            AssetStorageAdapter.sendWorkflowIngestionEvent(IAR, opInfo.idUser);
+            await AssetStorageAdapter.sendWorkflowIngestionEvent(IAR, opInfo.idUser);
         return IAR;
     }
 
@@ -1063,6 +1064,7 @@ export class AssetStorageAdapter {
             idSystemObject: null,
             opInfo,
             Comment: ISI.Comment,
+            doNotSendIngestionEvent: ISI.doNotSendIngestionEvent,
             doNotUpdateParentVersion: ISI.doNotUpdateParentVersion
         };
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
