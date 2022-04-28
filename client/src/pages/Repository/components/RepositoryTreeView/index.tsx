@@ -42,13 +42,18 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         [breakpoints.down('lg')]: {
             paddingRight: 10
         },
-        paddingBottom: 10
+        paddingBottom: 10,
+        direction: 'rtl'
     },
     tree: {
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        width: 'fit-content'
+        width: 'fit-content',
+        direction: 'ltr',
+        '&:focus': {
+            outline: 'none'
+        }
     },
     fullWidth: {
         maxWidth: '95.5vw'
@@ -289,11 +294,11 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         });
     };
 
-    let content: React.ReactNode = <Loader maxWidth='85vw' minHeight='40vh' size={20} />;
+    let content: React.ReactNode = <Loader maxWidth='85vw' minHeight='40vh' width='40vw' size={40} />;
     if (!loading) {
         const children = tree.get(treeRootKey);
         content = (
-            <TreeView className={classes.tree} defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />} onNodeToggle={onNodeToggle}>
+            <TreeView id='treeView' tabIndex={0} className={classes.tree} defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />} onNodeToggle={onNodeToggle}>
                 <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />
                 {renderTree(children)}
                 {loadingMore && <TreeLabelLoading />}
