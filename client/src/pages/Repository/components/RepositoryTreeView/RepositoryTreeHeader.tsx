@@ -130,6 +130,9 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
             }
         });
 
+        const tree = document.getElementById('treeView');
+        tree?.focus();
+
         return () => {
             columnSet.forEach((col) => col.unobserve);
         };
