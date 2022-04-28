@@ -69,20 +69,24 @@ describe('JobNS Init', () => {
 describe('JobNS Cook Test Setup', () => {
     jest.setTimeout(testTimeout);
     for (let nSet = 0; nSet < jobSets; nSet++) {
-        testCookExplicit('fbx-stand-alone', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('fbx-with-support', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookExplicit('glb', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookExplicit('glb-draco', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookImplicit('obj', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookExplicit('ply', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('glb-draco', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('obj', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookImplicit('stl', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // testCookExplicit('x3d', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookImplicit('gltf-stand-alone', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookExplicit('gltf-with-support', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookImplicit('dae', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('gltf-stand-alone', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('gltf-with-support', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('dae', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
 
-        // Not yet supported by cook's si-packrat-inspect, as of 2022-01-06
+        // Persistence incomplete (with errors logged) as of 2022-04-28 due to test model having references to missing assets:
+        testCookImplicit('fbx-stand-alone', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('ply', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+
         if (IGNORE_FAILURES) {
+            // Failing as of 2022-04-28 due to Blender bug
+            testCookExplicit('x3d', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+
+            // Not yet supported by cook's si-packrat-inspect, as of 2022-01-06
             testCookImplicit('usd', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
             testCookExplicit('usdz', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
             testCookImplicit('wrl', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -98,20 +102,24 @@ describe('JobNS Cook Test Setup', () => {
 describe('JobNS IWorkflow Test Setup', () => {
     jest.setTimeout(testTimeout);
     for (let nSet = 0; nSet < workflowSets; nSet++) {
-        testWorkflow('fbx-stand-alone', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('fbx-with-support', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('glb', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('glb-draco', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('obj', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testWorkflow('ply', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('stl', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // testWorkflow('x3d', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('gltf-stand-alone', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('gltf-with-support', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('dae', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
 
-        // Not yet supported by cook's si-packrat-inspect, as of 2022-01-06
+        // Persistence incomplete (with errors logged) as of 2022-04-28 due to test model having references to missing assets:
+        testWorkflow('fbx-stand-alone', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('ply', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+
         if (IGNORE_FAILURES) {
+            // Failing as of 2022-04-28 due to Blender bug
+            testWorkflow('x3d', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+
+            // Not yet supported by cook's si-packrat-inspect, as of 2022-01-06
             testWorkflow('usd', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
             testWorkflow('usdz', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
             testWorkflow('wrl', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -376,10 +384,10 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
             // Test persistence of data
             const assetFileNameMap: Map<string, number> = MTC.assetFileNameMap();
             const res: H.IOResults = await JCOutput.persist(MTC.model.idModel, assetFileNameMap);
-            if (!res.success)
+            if (!res.success) {
                 LOG.error(`JobNS Persisting ${MTC.testCase} FAILED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eTEST);
-            else {
-                // expect(res.success).toBeTruthy();
+                expect(res.success).toBeTruthy();
+            } else {
                 expect(JCOutput.modelConstellation).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model?.idModel).toBeTruthy();
