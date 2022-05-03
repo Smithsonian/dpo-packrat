@@ -26,7 +26,13 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         }
     },
     root: {
-        marginTop: 5
+        marginTop: 5,
+        '&:focus': {
+            '& > div': {
+                outline: `1px solid ${palette.primary.main}`,
+            }
+        },
+        borderRadius: 5
     },
     group: {
         paddingLeft: 20,
