@@ -1,4 +1,5 @@
 import { ModelMigrationFile } from './ModelMigrationFile';
+import { SceneMigrationEntry } from './SceneMigrationEntry';
 import { eVocabularyID } from '@dpo-packrat/common';
 
 // hashes are computed using sha256
@@ -28,5 +29,12 @@ export const ModelMigrationFiles: ModelMigrationFile[] = [
     { uniqueID: 'gltf-with-support', title: 'gltf-with-support', path: '', fileName: 'nmah-1981_0706_06-clemente_helmet-150k-4096-normals.jpg',    filePath: 'nmah-1981_0706_06-clemente_helmet-150k-4096-gltf',  hash: 'f2af32ccabf37328bc452926bc07abe824baa9c53b5be5d769b497e757b0f844', testData: true, geometry: false, },
     { uniqueID: 'gltf-with-support', title: 'gltf-with-support', path: '', fileName: 'nmah-1981_0706_06-clemente_helmet-150k-4096-occlusion.jpg',  filePath: 'nmah-1981_0706_06-clemente_helmet-150k-4096-gltf',  hash: '2d68c5832d2ca5bab941d6d08ad676577e56f47459c7470a3c975ce8ff23c51c', testData: true, geometry: false, },
     { uniqueID: 'gltf-with-support', title: 'gltf-with-support', path: '', fileName: 'nmah-1981_0706_06-clemente_helmet-150k-4096.bin',            filePath: 'nmah-1981_0706_06-clemente_helmet-150k-4096-gltf',  hash: '7aa6ad1a0c11a16adec395261d900e58eb50db238f2ce3a602f1033c0b24b4b2', testData: true, geometry: false, },
+];
+
+export const SceneMigrationEntries: SceneMigrationEntry[] = [
+    { EdanUUID: 'ed99f44d-3c60-4111-b666-e2908e1b64ef', testData: true },
+    { EdanUUID: '341c96cd-f967-4540-8ed1-d3fc56d31f12', testData: true },
+    { EdanUUID: 'd8c62e5e-4ebc-11ea-b77f-2e728ce88125', testData: true },
+    { EdanUUID: 'd8c64114-4ebc-11ea-b77f-2e728ce88125', testData: true },
 ];
 
