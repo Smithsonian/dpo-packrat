@@ -12,12 +12,13 @@ afterAll(async done => {
 });
 
 enum eTestType {
-    eRegressionSuite = 1,
-    eScrapeDPO = 2,
-    eScrapeMigration = 3,
-    eScrapeEDAN = 4,
-    eScrapeSpecial = 5,
-    eOneOff
+    eRegressionSuite,
+    e3DPackageFetchTest,
+    eScrapeDPO,
+    eScrapeMigration,
+    eScrapeEDAN,
+    eScrapeSpecial,
+    eOneOff,
 }
 
 const eTYPE: eTestType = +eTestType.eRegressionSuite; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eRegressionSuite!
@@ -64,6 +65,10 @@ describe('Collections: EdanCollection', () => {
             test('Collections: EdanCollection Ark Tests', () => {
                 executeArkTests(ICol);
             });
+            break;
+
+        case eTestType.e3DPackageFetchTest:
+            executeFetch3DPackage(ICol);
             break;
 
         case eTestType.eScrapeDPO:
@@ -1327,23 +1332,65 @@ export async function scrapeDPOMigrationMDM(ICol: COL.ICollection, fileName: str
     await handleResults(ICol, WS, 'Winter Wonderland of Innovation Ornament', '281');
     await handleResults(ICol, WS, 'Wright Bicycle', '378');
 }
+// #endregion
 
-async function handleResults(ICol: COL.ICollection, WS: NodeJS.WritableStream, query: string, id: string): Promise<boolean> {
+async function handleResults(ICol: COL.ICollection, WS: NodeJS.WritableStream | null, query: string, id: string,
+    options?: COL.CollectionQueryOptions | undefined): Promise<boolean> {
+    if (!options)
+        options = { gatherRaw: true };
+
     for (let retry: number = 1; retry <= 5; retry++) {
-        const results: COL.CollectionQueryResults | null = await ICol.queryCollection(query.trim(), 10, 0, { gatherRaw: true });
+        const results: COL.CollectionQueryResults | null = await ICol.queryCollection(query.trim(), 10, 0, options);
+        // LOG.info(`*** Edan Scrape: ${H.Helpers.JSONStringify(results)}`, LOG.LS.eTEST);
         if (results) {
             if (results.error)
-                LOG.info(`*** Edan Scrape: encountered error ${results.error}`, LOG.LS.eTEST);
+                LOG.info(`*** Edan Scrape [${id}] ERROR for '${query}': ${results.error}`, LOG.LS.eTEST);
 
             for (const record of results.records) {
-                WS.write(`${id}\t${record.name.replace(/\r?\n|\r/g, ' ')}\t${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${results.records.length}\n`);
-                // WS.write(`${id}\t${record.name.replace(/\r?\n|\r/g, ' ')}\t${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${H.Helpers.JSONStringify(record.raw)}\n`);
-                // LOG.info(`EDAN Query: ${JSON.stringify(record)}`, LOG.LS.eTEST);
+                if (WS)
+                    WS.write(`${id}\t${record.name.replace(/\r?\n|\r/g, ' ')}\t${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${results.records.length}\n`);
+                    // WS.write(`${id}\t${record.name.replace(/\r?\n|\r/g, ' ')}\t${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${H.Helpers.JSONStringify(record.raw)}\n`);
+                else
+                    LOG.info(`EDAN Query(${query}): ${H.Helpers.JSONStringify(record)}`, LOG.LS.eTEST);
             }
             return true;
         }
     }
     LOG.error(`*** Edan Scrape [${id}] failed for '${query}'`, LOG.LS.eTEST);
     return false;
+}
+
+async function handle3DContentQuery(ICol: COL.ICollection, _WS: NodeJS.WritableStream | null,
+    id: string | undefined, url: string | undefined, queryID: string): Promise<boolean> {
+    for (let retry: number = 1; retry <= 5; retry++) {
+        const edanRecord: COL.EdanRecord | null = await ICol.fetchContent(id, url);
+        if (edanRecord) {
+            LOG.info(`Content Query ${id ? id : ''}${url ? url : ''}: ${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eTEST);
+            const edan3DResources: COL.Edan3DResource[] | undefined = edanRecord?.content?.resources;
+            if (edan3DResources) {
+                for (const resource of edan3DResources)
+                    LOG.info(`Content Query ${id ? id : ''}${url ? url : ''} resource: ${H.Helpers.JSONStringify(resource)}`, LOG.LS.eTEST);
+            }
+            return true;
+        }
+        if (retry < 5)
+            await H.Helpers.sleep(2000); // wait and try again
+    }
+    LOG.error(`Content Query ${id ? id : ''}${url ? url : ''} [${queryID}] failed`, LOG.LS.eTEST);
+    return false;
+}
+
+// #region SCRAPE 3D Packages
+function executeFetch3DPackage(ICol: COL.ICollection): void {
+    test('Collections: EdanCollection.Fetch3DPackage', async () => {
+        await fetch3DPackage(ICol, 'b0bf6d44-af22-40dc-bd85-7d66255be4a7');
+        await fetch3DPackage(ICol, 'ed99f44d-3c60-4111-b666-e2908e1b64ef');
+        await fetch3DPackage(ICol, '341c96cd-f967-4540-8ed1-d3fc56d31f12');
+        await fetch3DPackage(ICol, 'd8c62e5e-4ebc-11ea-b77f-2e728ce88125');
+    });
+}
+
+async function fetch3DPackage(ICol: COL.ICollection, UUID: string): Promise<void> {
+    await handle3DContentQuery(ICol, null, undefined, `3d_package:${UUID}`, UUID);
 }
 // #endregion
