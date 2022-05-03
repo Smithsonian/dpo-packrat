@@ -298,7 +298,14 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     if (!loading) {
         const children = tree.get(treeRootKey);
         content = (
-            <TreeView id='treeView' tabIndex={0} className={classes.tree} defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />} onNodeToggle={onNodeToggle}>
+            <TreeView
+                className={classes.tree}
+                defaultCollapseIcon={<ExpandMoreIcon />}
+                defaultExpandIcon={<ChevronRightIcon />}
+                onNodeToggle={onNodeToggle}
+                id='treeView'
+                tabIndex={0}
+            >
                 <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />
                 {renderTree(children)}
                 {loadingMore && <TreeLabelLoading />}

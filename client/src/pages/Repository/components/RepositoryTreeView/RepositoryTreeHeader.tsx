@@ -31,7 +31,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         paddingRight: 5,
         [breakpoints.down('lg')]: {
             minHeight: 40
-        }
+        },
+        direction: 'ltr'
     },
     treeView: {
         display: 'flex',
