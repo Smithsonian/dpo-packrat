@@ -32,7 +32,8 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
                 outline: `1px solid ${palette.primary.main}`,
             }
         },
-        borderRadius: 5
+        borderRadius: 5,
+        paddingLeft: 1
     },
     group: {
         paddingLeft: 20,
