@@ -112,7 +112,6 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
         initializeClasses(columnClasses);
         const columnSet = new Set<ResizeObserver>();
 
-        // Debouncing the width update makes the transition smoother
         const nameHeader = document.getElementById(SO_NAME_COLUMN_HEADER);
         const columnObersver = new ResizeObserver((e) => {
             updateWidth(SO_NAME_COLUMN_HEADER, String(e[0].contentRect.width));
@@ -134,8 +133,38 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
         const tree = document.getElementById('treeView');
         tree?.focus();
 
+        // event listener/handler for key presses in repository
+        const handleTreeKeyStrokes = (e) => {
+            if (e.key === 'PageUp') {
+                const treeItems = document.querySelectorAll('li');
+                if (!treeItems.length) return;
+
+                const target = treeItems[0] as HTMLElement;
+                target.focus();
+            }
+            if (e.key === 'PageDown') {
+                e.preventDefault();
+                const treeItems = document.querySelectorAll('li');
+                if (!treeItems.length) return;
+
+                const target = treeItems[treeItems.length - 1] as HTMLElement;
+                target.focus();
+            }
+
+            if (e.key === 'Enter') {
+                e.stopPropagation();
+                const active = document.activeElement;
+                if (!active) return;
+                const icon = active.children[0]?.children[0]?.children[0] as null | HTMLElement;
+                if (icon) icon.click();
+            }
+        };
+
+        tree?.addEventListener('keydown', handleTreeKeyStrokes);
+
         return () => {
             columnSet.forEach((col) => col.unobserve);
+            tree?.removeEventListener('keydown', handleTreeKeyStrokes);
         };
     }, []);
 
