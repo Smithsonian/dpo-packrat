@@ -5,7 +5,7 @@ import * as STORE from '../../storage/interface';
 import * as NAV from '../../navigation/interface';
 import * as H from '../helpers';
 import * as LOG from '../logger';
-import { SceneMigrationEntry } from './SceneMigrationEntry';
+import { SceneMigrationPackage } from './SceneMigrationPackage';
 
 import * as path from 'path';
 
@@ -44,32 +44,32 @@ export class SceneMigration {
         return { success: true };
     }
 
-    async migrateScene(sceneEntry: SceneMigrationEntry, doNotSendIngestionEvent?: boolean): Promise<SceneMigrationResults> {
+    async migrateScene(scenePackage: SceneMigrationPackage, doNotSendIngestionEvent?: boolean): Promise<SceneMigrationResults> {
         let testData: boolean | undefined = undefined;
 
         let sceneFileName: string | undefined = undefined;
         let asset: DBAPI.Asset[] | null | undefined = undefined;
         let assetVersion: DBAPI.AssetVersion[] | null | undefined = undefined;
 
-        const fileExists: boolean = await this.testFileExistence(sceneEntry);
+        const fileExists: boolean = await this.testFileExistence(scenePackage);
         if (!fileExists)
-            return this.recordError(`migrateScene unable to locate file for ${H.Helpers.JSONStringify(sceneEntry)}`, { filesMissing: true });
+            return this.recordError(`migrateScene unable to locate file for ${H.Helpers.JSONStringify(scenePackage)}`, { filesMissing: true });
 
         // capture testData flag, if set, and ensure consistency
-        if (sceneEntry.testData !== testData) {
+        if (scenePackage.testData !== testData) {
             if (testData === undefined)
-                testData = sceneEntry.testData;
+                testData = scenePackage.testData;
             else
-                return this.recordError(`migrateScene called with inconsistent value for testData (${sceneEntry.testData}); expected ${testData}`);
+                return this.recordError(`migrateScene called with inconsistent value for testData (${scenePackage.testData}); expected ${testData}`);
         }
 
-        if (!sceneEntry.idSystemObjectItem && testData) {
+        if (!scenePackage.idSystemObjectItem && testData) {
             await this.createTestObjects();
-            sceneEntry.idSystemObjectItem = SceneMigration.idSystemObjectTest;
+            scenePackage.idSystemObjectItem = SceneMigration.idSystemObjectTest;
         }
 
         // TODO: Fetch scene package via HTTP; process scene file and extract metrics below
-        sceneFileName = sceneEntry.EdanUUID;
+        sceneFileName = scenePackage.EdanUUID;
         this.scene = new DBAPI.Scene({
             Name: sceneFileName,
             idAssetThumbnail: null,
@@ -81,9 +81,9 @@ export class SceneMigration {
             CountMeta: null,
             CountSetup: null,
             CountTour: null,
-            EdanUUID: sceneEntry.EdanUUID,
-            PosedAndQCd: sceneEntry.PosedAndQCd ?? false,
-            ApprovedForPublication: sceneEntry.ApprovedForPublication ?? false,
+            EdanUUID: scenePackage.EdanUUID,
+            PosedAndQCd: scenePackage.PosedAndQCd ?? false,
+            ApprovedForPublication: scenePackage.ApprovedForPublication ?? false,
             Title: null,
             idScene: 0
         });
@@ -91,12 +91,12 @@ export class SceneMigration {
         if (!await this.scene.create())
             return this.recordError(`migrateScene failed to create scene DB record ${H.Helpers.JSONStringify(this.scene)}`);
         // wire item to scene
-        if (sceneEntry.idSystemObjectItem) {
-            if (!await this.wireItemToScene(sceneEntry.idSystemObjectItem))
-                return this.recordError(`migrateScene failed to wire media group to scene for ${H.Helpers.JSONStringify(sceneEntry)}`);
+        if (scenePackage.idSystemObjectItem) {
+            if (!await this.wireItemToScene(scenePackage.idSystemObjectItem))
+                return this.recordError(`migrateScene failed to wire media group to scene for ${H.Helpers.JSONStringify(scenePackage)}`);
         }
 
-        const ingestRes: STORE.IngestStreamOrFileResult = await this.ingestFile(sceneEntry, doNotSendIngestionEvent);
+        const ingestRes: STORE.IngestStreamOrFileResult = await this.ingestFile(scenePackage, doNotSendIngestionEvent);
         if (ingestRes.asset) {
             if (!asset)
                 asset = [];
@@ -109,26 +109,27 @@ export class SceneMigration {
         }
 
         if (!ingestRes.success)
-            return this.recordError(`migrateScene failed to ingest ${H.Helpers.JSONStringify(sceneEntry)}: ${ingestRes.error}`);
+            return this.recordError(`migrateScene failed to ingest ${H.Helpers.JSONStringify(scenePackage)}: ${ingestRes.error}`);
 
-        if (sceneEntry.idSystemObjectItem)
+        if (scenePackage.idSystemObjectItem)
             await this.postItemWiring();
 
         return { success: true, scene: this.scene, sceneFileName, asset, assetVersion };
     }
 
-    private async ingestFile(sceneEntry: SceneMigrationEntry, doNotSendIngestionEvent?: boolean): Promise<STORE.IngestStreamOrFileResult> {
+    private async ingestFile(scenePackage: SceneMigrationPackage, doNotSendIngestionEvent?: boolean): Promise<STORE.IngestStreamOrFileResult> {
         if (!this.scene || !this.userOwner || !SceneMigration.vocabScene || !SceneMigration.vocabOther)
             return { success: false };
 
-        const LocalFilePath: string | null = this.computeFilePath(sceneEntry);
-        LOG.info(`SceneMigration.ingestFile ${LocalFilePath} for scene ${this.scene}`, LOG.LS.eSYS);
+        const localFilePath: string | null = this.computeFilePath(scenePackage);
+
+        LOG.info(`SceneMigration.ingestFile ${localFilePath} for scene ${this.scene}`, LOG.LS.eSYS);
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream: null,
-            localFilePath: LocalFilePath,
+            localFilePath,
             asset: null,
-            FileName: 'ABBA', // sceneEntry.fileName,   // FIXME: correct this info!
-            FilePath: 'ABBA', // sceneEntry.filePath,   // FIXME: correct this info!
+            FileName: scenePackage.PackageName ? scenePackage.PackageName : scenePackage.EdanUUID,
+            FilePath: '',
             idAssetGroup: 0,
             idVAssetType: SceneMigration.vocabScene.idVocabulary, // sceneEntry.geometry ? SceneMigration.vocabScene.idVocabulary : SceneMigration.vocabOther.idVocabulary, // FIXME: correct this info!
             allowZipCracking: true,
@@ -231,16 +232,16 @@ export class SceneMigration {
         return { success: true };
     }
 
-    private computeFilePath(sceneEntry: SceneMigrationEntry): string | null {
-        if (!sceneEntry.PackageName)
+    private computeFilePath(scenePackage: SceneMigrationPackage): string | null {
+        if (!scenePackage.PackageName)
             return null;
         // if no path is provided, assume this is regression testing, and look in the appropriate path for our mock scenes
-        const basePath: string = sceneEntry.PackagePath ? sceneEntry.PackagePath : path.join(__dirname, '../../tests/mock/scenes', sceneEntry.EdanUUID);
-        return path.join(basePath, sceneEntry.PackageName);
+        const basePath: string = scenePackage.PackagePath ? scenePackage.PackagePath : path.join(__dirname, '../../tests/mock/scenes', scenePackage.EdanUUID);
+        return path.join(basePath, scenePackage.PackageName);
     }
 
-    private async testFileExistence(sceneEntry: SceneMigrationEntry): Promise<boolean> {
-        const filePath: string | null = this.computeFilePath(sceneEntry);
+    private async testFileExistence(scenePackage: SceneMigrationPackage): Promise<boolean> {
+        const filePath: string | null = this.computeFilePath(scenePackage);
         if (filePath === null) {
             // We are loading via EDAN ... handle that here!
             return false;
