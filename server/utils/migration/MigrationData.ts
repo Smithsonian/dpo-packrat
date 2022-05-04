@@ -1,5 +1,5 @@
 import { ModelMigrationFile } from './ModelMigrationFile';
-import { SceneMigrationEntry } from './SceneMigrationEntry';
+import { SceneMigrationPackage } from './SceneMigrationPackage';
 import { eVocabularyID } from '@dpo-packrat/common';
 
 // hashes are computed using sha256
@@ -31,7 +31,7 @@ export const ModelMigrationFiles: ModelMigrationFile[] = [
     { uniqueID: 'gltf-with-support', title: 'gltf-with-support', path: '', fileName: 'nmah-1981_0706_06-clemente_helmet-150k-4096.bin',            filePath: 'nmah-1981_0706_06-clemente_helmet-150k-4096-gltf',  hash: '7aa6ad1a0c11a16adec395261d900e58eb50db238f2ce3a602f1033c0b24b4b2', testData: true, geometry: false, },
 ];
 
-export const SceneMigrationEntries: SceneMigrationEntry[] = [
+export const SceneMigrationPackages: SceneMigrationPackage[] = [
     { EdanUUID: 'ed99f44d-3c60-4111-b666-e2908e1b64ef', testData: true },
     { EdanUUID: '341c96cd-f967-4540-8ed1-d3fc56d31f12', testData: true },
     { EdanUUID: 'd8c62e5e-4ebc-11ea-b77f-2e728ce88125', testData: true },
