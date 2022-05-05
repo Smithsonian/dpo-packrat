@@ -132,23 +132,21 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
 
         const tree = document.getElementById('treeView');
         tree?.focus();
-
-        // event listener/handler for key presses in repository
-        const handleTreeKeyStrokes = (e) => {
+        const treeContainer = document.getElementById('treeContainer') as HTMLElement;
+        const handleRepositoryKeyStrokes = (e: KeyboardEvent) => {
             if (e.key === 'PageUp') {
-                const treeItems = document.querySelectorAll('li');
-                if (!treeItems.length) return;
-
-                const target = treeItems[0] as HTMLElement;
-                target.focus();
+                const lis = Array.from(document.querySelectorAll('li'));
+                // TODO: target is last element of previous page OR first element of current page
+                const target = getLastElementInView(lis, treeContainer);
+                console.log('target', target);
+                target?.focus();
             }
             if (e.key === 'PageDown') {
-                e.preventDefault();
-                const treeItems = document.querySelectorAll('li');
-                if (!treeItems.length) return;
-
-                const target = treeItems[treeItems.length - 1] as HTMLElement;
-                target.focus();
+                const lis = Array.from(document.querySelectorAll('li'));
+                // TODO: target is first element of next page OR last element of current page
+                const target = getLastElementInView(lis, treeContainer);
+                console.log('target', target);
+                target?.focus();
             }
 
             if (e.key === 'Enter') {
@@ -160,13 +158,14 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
             }
         };
 
-        tree?.addEventListener('keydown', handleTreeKeyStrokes);
+        tree?.addEventListener('keydown', handleRepositoryKeyStrokes);
 
         return () => {
             columnSet.forEach((col) => col.unobserve);
-            tree?.removeEventListener('keydown', handleTreeKeyStrokes);
+            tree?.removeEventListener('keydown', handleRepositoryKeyStrokes);
         };
     }, []);
+
 
     return (
         <Box className={classes.container}>
@@ -179,3 +178,29 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
 }
 
 export default React.memo(RepositoryTreeHeader);
+
+
+export function isElementInView (child: HTMLElement, parent: HTMLElement) {
+    // TODO: make sure it handles the header. This may require the header to be rewritten so that it's outside of the tree component
+    let childRect = child.getBoundingClientRect();
+    let parentRect = parent.getBoundingClientRect();
+    
+    /* Note: a row is in view if its top is lower/greater than the parent top and its bottom is higher/less than the parent bottom */
+    return (childRect.top > parentRect.top && childRect.bottom < parentRect.bottom);
+}
+
+export function getFirstElementInView (elements, parent) {
+    for (let i = 0; i < elements.length; i++) {
+        if (isElementInView(elements[i], parent)) {
+            return elements[i];
+        }
+    }
+}
+
+export function getLastElementInView (elements, parent) {
+    for (let i = 0; i < elements.length - 1; i++) {
+        if (isElementInView(elements[i], parent) && !isElementInView(elements[i+1], parent)) {
+            return elements[i + 1];
+        }
+    }
+}

@@ -316,7 +316,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     const fullWidthStyles = isModal ? { minWidth: '90%' } : {};
 
     return (
-        <div className={classes.container} style={fullWidthStyles}>
+        <div id='treeContainer' className={classes.container} style={fullWidthStyles}>
             {content}
         </div>
     );
