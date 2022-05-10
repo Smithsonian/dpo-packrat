@@ -25,13 +25,14 @@ interface TreeLabelProps {
     renderSelected?: boolean;
     selected?: boolean;
     makeStyles?: { [key: string]: string };
+    nodeId: string;
     onSelect?: (event: React.MouseEvent<SVGElement, MouseEvent>) => void;
     onUnSelect?: (event: React.MouseEvent<SVGElement, MouseEvent>) => void;
 }
 
 // pass the event handler for clicking to this component
 function TreeLabel(props: TreeLabelProps): React.ReactElement {
-    const { idSystemObject, label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType, makeStyles, color } = props;
+    const { idSystemObject, label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType, makeStyles, color, nodeId } = props;
     const [waitTime, setWaitTime] = useState<NodeJS.Timeout[]>([]);
     const objectTitle = useMemo(() => `${getTermForSystemObjectType(objectType)} ${label}`, [objectType, label]);
     const WAIT_INTERVAL_MS = 200;
@@ -45,7 +46,7 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
             window.open(getDetailsUrlForObject(idSystemObject), '_blank')?.focus();
             return;
         } else {
-            const timer = setTimeout(() => { const target = document.getElementById(`repository row id ${idSystemObject}`)?.firstChild as HTMLElement; target.click(); }, WAIT_INTERVAL_MS);
+            const timer = setTimeout(() => { const target = document.getElementById(nodeId)?.firstChild as HTMLElement; target?.click(); }, WAIT_INTERVAL_MS);
             setWaitTime([timer]);
         }
     };
