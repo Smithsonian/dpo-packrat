@@ -11,6 +11,7 @@ const getObjectChildren = gql`
                 objectType
                 idObject
                 metadata
+                index
             }
             metadataColumns
             cursorMark
