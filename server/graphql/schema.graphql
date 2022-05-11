@@ -970,6 +970,7 @@ type NavigationResultEntry {
   objectType: Int!
   idObject: Int!
   metadata: [String!]!
+  index: Int
 }
 
 type GetObjectChildrenResult {
