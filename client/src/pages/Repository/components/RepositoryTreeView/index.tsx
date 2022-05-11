@@ -137,13 +137,12 @@ interface RepositoryTreeViewProps {
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { isModal = false, selectedItems = [], onSelect, onUnSelect } = props;
-    const [tree, getChildren, getMoreRoot, getMoreChildren, cursors, loadingMore] = useRepositoryStore(state => [
+    const [tree, getChildren, getMoreRoot, getMoreChildren, cursors] = useRepositoryStore(state => [
         state.tree,
         state.getChildren,
         state.getMoreRoot,
         state.getMoreChildren,
-        state.cursors,
-        state.loadingMore
+        state.cursors
     ]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
     const [initializeWidths, initializeOrder, columnOrder] = useTreeColumnsStore((state) => [state.initializeWidth, state.initializeOrder, state.order]);
@@ -175,8 +174,8 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         if (!children) return null;
         return children.map((child: NavigationResultEntry, index: number) => {
             const { idSystemObject, objectType, idObject, name, metadata } = child;
-
-            const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject);
+            const nodeIndex = child.index;
+            const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject, nodeIndex ? nodeIndex : 0);
             const childNodes = tree.get(nodeId);
 
             let childNodesContent: React.ReactNode = <TreeLabelLoading />;
@@ -228,15 +227,20 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                     objectType={objectType}
                     color={color}
                     treeColumns={treeColumns}
+                    nodeId={nodeId}
                     makeStyles={{ container: classes.treeLabelContainer, label: classes.label, labelText: classes.labelText, column: classes.column, text: classes.text, options: classes.options, option: classes.option, link: classes.link }}
                 />
             );
+
+            // loader case
+            if (idSystemObject === -1)
+                return <TreeLabelLoading key={idSystemObject} />;
 
             // non-root case for end of list
             if ((index + 1 + repositoryRowPrefetchThreshold) % repositoryRowCount === 0 && index + 1 + repositoryRowPrefetchThreshold === children.length && isChild) {
                 return (
                     <InViewTreeItem
-                        id={`repository row id ${idSystemObject}`}
+                        id={nodeId}
                         key={idSystemObject}
                         nodeId={nodeId}
                         icon={icon}
@@ -260,7 +264,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             if ((index + 1 + repositoryRowPrefetchThreshold) % repositoryRowCount === 0 && index + 1 + repositoryRowPrefetchThreshold === children.length) {
                 return (
                     <InViewTreeItem
-                        id={`repository row id ${idSystemObject}`}
+                        id={nodeId}
                         key={idSystemObject}
                         nodeId={nodeId}
                         icon={icon}
@@ -276,7 +280,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             // base case
             return (
                 <StyledTreeItem
-                    id={`repository row id ${idSystemObject}`}
+                    id={nodeId}
                     key={idSystemObject}
                     nodeId={nodeId}
                     icon={icon}
@@ -296,7 +300,6 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             <TreeView className={classes.tree} defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />} onNodeToggle={onNodeToggle}>
                 <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />
                 {renderTree(children)}
-                {loadingMore && <TreeLabelLoading />}
             </TreeView>
         );
     }
