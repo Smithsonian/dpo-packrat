@@ -16,14 +16,25 @@ import { updateCookie } from './treeColumns';
 
 const FILTER_POSITION_COOKIE = 'isFilterExpanded';
 
+export interface NavigationResultEntryState extends NavigationResultEntry {
+    index?: number;
+}
+
+const loadingEntry: NavigationResultEntryState = {
+    idSystemObject: -1,
+    idObject: 0,
+    name: 'Loading...',
+    objectType: 1,
+    metadata: []
+};
+
 type RepositoryStore = {
     isExpanded: boolean;
     search: string;
     keyword: string;
-    tree: Map<string, NavigationResultEntry[]>;
+    tree: Map<string, NavigationResultEntryState[]>;
     cursors: Map<string, string>;
     loading: boolean;
-    loadingMore: boolean;
     updateSearch: (value: string) => void;
     toggleFilter: () => void;
     repositoryRootType: eSystemObjectType[];
@@ -59,6 +70,7 @@ type RepositoryStore = {
     resetRepositoryBrowserRoot: () => void;
     setLoading: (isLoading: boolean) => void;
     initializeFilterPosition: () => void;
+    getRowCount: () => number;
 };
 
 export const treeRootKey: string = 'root';
@@ -68,11 +80,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     // keyword is the text within input. search is the actual term used for searching
     search: '',
     keyword: '',
-    tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
+    tree: new Map<string, NavigationResultEntryState[]>([[treeRootKey, []]]),
     cursors: new Map<string, string>(),
     loading: true,
-    // this state is used to determine whether we render a loading icon at the bottom of the tree view
-    loadingMore: false,
     repositoryRootType: [],
     objectsToDisplay: [],
     metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
@@ -106,7 +116,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ isExpanded: !isExpanded });
     },
     initializeTree: async (): Promise<void> => {
-        const { getFilterState, getChildrenForIngestion, idRoot } = get();
+        const { getFilterState, getChildrenForIngestion, idRoot, getRowCount } = get();
         const filter = getFilterState();
         if (idRoot) {
             getChildrenForIngestion(idRoot);
@@ -117,20 +127,34 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 const { entries, cursorMark } = getObjectChildren;
                 if (cursorMark) {
                     const newCursors = new Map<string, string>();
-                    newCursors.set('root', cursorMark);
+                    newCursors.set(treeRootKey, cursorMark);
                     set({ cursors: newCursors });
                 }
-                const entry: [string, NavigationResultEntry[]] = [treeRootKey, entries];
+
+                const rowCount = getRowCount();
+                const uniqueEntries = entries.map((entry, index) => {
+                    const entryCopy: NavigationResultEntryState = { ...entry };
+                    entryCopy.index = index + rowCount;
+                    return entryCopy;
+                });
+
+                const entry: [string, NavigationResultEntryState[]] = [treeRootKey, uniqueEntries];
                 const updatedTree = new Map([entry]);
                 set({ tree: updatedTree, loading: false });
             }
         }
     },
     getMoreRoot: async (): Promise<void> => {
-        const { tree, cursors, getFilterState } = get();
-        set({ loadingMore: true });
+        const { tree, cursors, getFilterState, getRowCount } = get();
         const filter = getFilterState();
-        const rootCursor = cursors.get('root');
+        const rootCursor = cursors.get(treeRootKey);
+
+        const treeCopy = new Map(tree);
+        const rootWithoutLoader = treeCopy.get(treeRootKey) ?? [];
+        const rootWithLoader = [...rootWithoutLoader, loadingEntry] as NavigationResultEntryState[];
+        treeCopy.set(treeRootKey, rootWithLoader);
+        set({ tree: treeCopy });
+
         if (rootCursor) {
             filter.cursorMark = rootCursor;
         }
@@ -141,29 +165,43 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             if (cursorMark) {
                 const newCursors = new Map(cursors);
                 if (cursorMark !== rootCursor) {
-                    newCursors.set('root', cursorMark);
+                    newCursors.set(treeRootKey, cursorMark);
                 } else {
-                    newCursors.set('root', '');
+                    newCursors.set(treeRootKey, '');
                 }
                 set({ cursors: newCursors });
             }
-            const newRoot = tree.get('root')?.concat(entries) as NavigationResultEntry[];
-            const entry: [string, NavigationResultEntry[]] = [treeRootKey, newRoot];
-            const updatedTree = new Map([entry]);
-            set({ tree: updatedTree, loading: false });
+
+            const rowCount = getRowCount();
+            const uniqueEntries = entries.map((entry, index) => {
+                const entryCopy: NavigationResultEntryState = { ...entry };
+                entryCopy.index = index + rowCount;
+                return entryCopy;
+            });
+
+            const updatedNode = rootWithoutLoader.concat(uniqueEntries) as NavigationResultEntryState[];
+            treeCopy.set(treeRootKey, updatedNode);
+            set({ tree: treeCopy, loading: false });
         }
-        set({ loadingMore: false });
     },
     getChildren: async (nodeId: string): Promise<void> => {
-        const { tree, getFilterState, cursors } = get();
+        const { tree, getFilterState, cursors, getRowCount } = get();
         const filter = getFilterState();
         const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
         const { data, error } = await getObjectChildren(idSystemObject, filter);
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries, cursorMark } = getObjectChildren;
-            const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
-            updatedTree.set(nodeId, entries);
+            const updatedTree: Map<string, NavigationResultEntryState[]> = new Map(tree);
+
+            const rowCount = getRowCount();
+            const uniqueEntries = entries.map((entry, index) => {
+                const entryCopy: NavigationResultEntryState = { ...entry };
+                entryCopy.index = index + rowCount;
+                return entryCopy;
+            });
+
+            updatedTree.set(nodeId, uniqueEntries);
             set({ tree: updatedTree });
 
             if (cursorMark) {
@@ -174,19 +212,33 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         }
     },
     getMoreChildren: async (nodeId: string, cursorMark: string): Promise<void> => {
-        const { tree, cursors, getFilterState } = get();
-        set({ loadingMore: true });
+        const { tree, cursors, getFilterState, getRowCount } = get();
         const filter = getFilterState();
         const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
+
+        const treeCopy = new Map(tree);
+        const nodeWithoutLoader = treeCopy.get(nodeId) ?? [];
+        const nodeWithLoader = [...nodeWithoutLoader, loadingEntry] as NavigationResultEntryState[];
+        treeCopy.set(nodeId, nodeWithLoader);
+        set({ tree: treeCopy });
+
         if (cursorMark) filter.cursorMark = cursorMark;
         const { data, error } = await getObjectChildren(idSystemObject, filter);
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries, cursorMark } = getObjectChildren;
-            const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
-            const previousEntries = updatedTree.get(nodeId) || [];
-            updatedTree.set(nodeId, [...previousEntries, ...entries]);
-            set({ tree: updatedTree });
+
+            const rowCount = getRowCount();
+            const uniqueEntries = entries.map((entry, index) => {
+                const entryCopy: NavigationResultEntryState = { ...entry };
+                entryCopy.index = index + rowCount;
+                return entryCopy;
+            });
+
+            const updatedNode = nodeWithoutLoader.concat(uniqueEntries) as NavigationResultEntryState[];
+            treeCopy.set(nodeId, updatedNode);
+
+            set({ tree: treeCopy });
             if (cursorMark) {
                 const newCursors = cursors;
                 if (cursorMark !== cursors.get(nodeId)) {
@@ -197,7 +249,6 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 set({ cursors: newCursors });
             }
         }
-        set({ loadingMore: false });
     },
     removeChipOption: (id: number, type: eRepositoryChipFilterType, isModal: boolean): void => {
         const { units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType, setCookieToState, initializeTree, keyword } = get();
@@ -498,5 +549,11 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             filterCookie = filterCookie.split('=')[1];
             set({ isExpanded: filterCookie === 'true' ? true : false });
         }
+    },
+    getRowCount: (): number => {
+        const { tree } = get();
+        let result = 0;
+        tree.forEach(node => result += node.length);
+        return result;
     }
 }));
