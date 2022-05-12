@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 /**
  * RepositoryTreeHeader
@@ -135,7 +136,7 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
         const handleRepositoryKeyStrokes = (e: KeyboardEvent) => {
             if (e.key === 'PageUp') {
                 const lis = Array.from(document.querySelectorAll('li'));
-                if (!lis) return;
+                if (!lis.length) return;
                 const originalRect = lis[0].getBoundingClientRect();
 
                 setTimeout(() => {
@@ -146,7 +147,7 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
             }
             if (e.key === 'PageDown') {
                 const lis = Array.from(document.querySelectorAll('li'));
-                if (!lis) return;
+                if (!lis.length) return;
                 const originalRect = lis[0].getBoundingClientRect();
 
                 setTimeout(() => {
@@ -189,8 +190,8 @@ export default React.memo(RepositoryTreeHeader);
 
 export function isElementInView (child: HTMLElement, parent: HTMLElement) {
     if (!child || !parent) return false;
-    let childRect = child.getBoundingClientRect();
-    let parentRect = parent.getBoundingClientRect();
+    const childRect = child.getBoundingClientRect();
+    const parentRect = parent.getBoundingClientRect();
     return (childRect.top > parentRect.top && childRect.bottom < parentRect.bottom);
 }
 
@@ -204,7 +205,7 @@ export function getFirstElementInView (elements, parent) {
 export function getLastElementInView (elements, parent) {
     for (let i = 0; i < elements.length - 1; i++) {
         if (isElementInView(elements[i], parent) && !isElementInView(elements[i+1], parent))
-            return !!elements[i + 1] ? elements[i + 1] : elements[i];
+            return elements[i + 1] ? elements[i + 1] : elements[i];
     }
 }
 
