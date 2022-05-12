@@ -16,7 +16,11 @@ import { updateCookie } from './treeColumns';
 
 const FILTER_POSITION_COOKIE = 'isFilterExpanded';
 
-const loadingEntry: NavigationResultEntry = {
+export interface NavigationResultEntryState extends NavigationResultEntry {
+    index?: number;
+}
+
+const loadingEntry: NavigationResultEntryState = {
     idSystemObject: -1,
     idObject: 0,
     name: 'Loading...',
@@ -28,7 +32,7 @@ type RepositoryStore = {
     isExpanded: boolean;
     search: string;
     keyword: string;
-    tree: Map<string, NavigationResultEntry[]>;
+    tree: Map<string, NavigationResultEntryState[]>;
     cursors: Map<string, string>;
     loading: boolean;
     updateSearch: (value: string) => void;
@@ -76,7 +80,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     // keyword is the text within input. search is the actual term used for searching
     search: '',
     keyword: '',
-    tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
+    tree: new Map<string, NavigationResultEntryState[]>([[treeRootKey, []]]),
     cursors: new Map<string, string>(),
     loading: true,
     repositoryRootType: [],
@@ -129,12 +133,12 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
 
                 const rowCount = getRowCount();
                 const uniqueEntries = entries.map((entry, index) => {
-                    const entryCopy = { ...entry };
+                    const entryCopy: NavigationResultEntryState = { ...entry };
                     entryCopy.index = index + rowCount;
                     return entryCopy;
                 });
 
-                const entry: [string, NavigationResultEntry[]] = [treeRootKey, uniqueEntries];
+                const entry: [string, NavigationResultEntryState[]] = [treeRootKey, uniqueEntries];
                 const updatedTree = new Map([entry]);
                 set({ tree: updatedTree, loading: false });
             }
@@ -147,7 +151,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
 
         const treeCopy = new Map(tree);
         const rootWithoutLoader = treeCopy.get(treeRootKey) ?? [];
-        const rootWithLoader = [...rootWithoutLoader, loadingEntry] as NavigationResultEntry[];
+        const rootWithLoader = [...rootWithoutLoader, loadingEntry] as NavigationResultEntryState[];
         treeCopy.set(treeRootKey, rootWithLoader);
         set({ tree: treeCopy });
 
@@ -170,12 +174,12 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
 
             const rowCount = getRowCount();
             const uniqueEntries = entries.map((entry, index) => {
-                const entryCopy = { ...entry };
+                const entryCopy: NavigationResultEntryState = { ...entry };
                 entryCopy.index = index + rowCount;
                 return entryCopy;
             });
 
-            const updatedNode = rootWithoutLoader.concat(uniqueEntries) as NavigationResultEntry[];
+            const updatedNode = rootWithoutLoader.concat(uniqueEntries) as NavigationResultEntryState[];
             treeCopy.set(treeRootKey, updatedNode);
             set({ tree: treeCopy, loading: false });
         }
@@ -188,11 +192,11 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries, cursorMark } = getObjectChildren;
-            const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
+            const updatedTree: Map<string, NavigationResultEntryState[]> = new Map(tree);
 
             const rowCount = getRowCount();
             const uniqueEntries = entries.map((entry, index) => {
-                const entryCopy = { ...entry };
+                const entryCopy: NavigationResultEntryState = { ...entry };
                 entryCopy.index = index + rowCount;
                 return entryCopy;
             });
@@ -214,7 +218,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
 
         const treeCopy = new Map(tree);
         const nodeWithoutLoader = treeCopy.get(nodeId) ?? [];
-        const nodeWithLoader = [...nodeWithoutLoader, loadingEntry] as NavigationResultEntry[];
+        const nodeWithLoader = [...nodeWithoutLoader, loadingEntry] as NavigationResultEntryState[];
         treeCopy.set(nodeId, nodeWithLoader);
         set({ tree: treeCopy });
 
@@ -226,12 +230,12 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
 
             const rowCount = getRowCount();
             const uniqueEntries = entries.map((entry, index) => {
-                const entryCopy = { ...entry };
+                const entryCopy: NavigationResultEntryState = { ...entry };
                 entryCopy.index = index + rowCount;
                 return entryCopy;
             });
 
-            const updatedNode = nodeWithoutLoader.concat(uniqueEntries) as NavigationResultEntry[];
+            const updatedNode = nodeWithoutLoader.concat(uniqueEntries) as NavigationResultEntryState[];
             treeCopy.set(nodeId, updatedNode);
 
             set({ tree: treeCopy });
