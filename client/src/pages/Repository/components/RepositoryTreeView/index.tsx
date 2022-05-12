@@ -13,8 +13,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
 import React, { useCallback, useEffect } from 'react';
 import { Loader } from '../../../../components';
-import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore, useTreeColumnsStore } from '../../../../store';
-import { NavigationResultEntry } from '../../../../types/graphql';
+import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore, useTreeColumnsStore, NavigationResultEntryState } from '../../../../store';
 import {
     getObjectInterfaceDetails,
     getRepositoryTreeNodeId,
@@ -174,10 +173,10 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     );
 
     // recursive
-    const renderTree = (children: NavigationResultEntry[] | undefined, isChild?: boolean, parentNodeId?: string) => {
+    const renderTree = (children: NavigationResultEntryState[] | undefined, isChild?: boolean, parentNodeId?: string) => {
 
         if (!children) return null;
-        return children.map((child: NavigationResultEntry, index: number) => {
+        return children.map((child: NavigationResultEntryState, index: number) => {
             const { idSystemObject, objectType, idObject, name, metadata } = child;
             const nodeIndex = child.index;
             const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject, nodeIndex ? nodeIndex : 0);
