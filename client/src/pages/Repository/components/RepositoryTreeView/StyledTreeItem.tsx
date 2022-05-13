@@ -33,7 +33,9 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
             }
         },
         borderRadius: 5,
-        paddingLeft: 1
+        paddingLeft: 1,
+        direction: 'ltr',
+        textAlign: 'left'
     },
     group: {
         paddingLeft: 20,
