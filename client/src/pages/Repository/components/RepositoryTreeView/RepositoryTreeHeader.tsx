@@ -152,7 +152,6 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
                 const initialRect = lis[0].children[0].getBoundingClientRect();
 
                 setTimeout(() => {
-                    console.log(lis[lis.length-1].children[0].getBoundingClientRect(), tree.getBoundingClientRect());
                     const isBottom = isElementInView(lis[lis.length - 1], tree);
                     const hasScrolled = hasViewContainerScrolled(initialRect, document.querySelector('li')?.getBoundingClientRect() as DOMRect);
                     const target = isBottom? getLastElementInView(lis, tree) : hasScrolled ? getFirstElementInView(lis, tree) : getLastElementInView(lis, tree);
