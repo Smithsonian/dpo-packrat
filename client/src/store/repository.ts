@@ -56,7 +56,7 @@ type RepositoryStore = {
     getFilterState: () => RepositoryFilter;
     removeChipOption: (id: number, type: eRepositoryChipFilterType, isModal: boolean) => void;
     updateFilterValue: (name: string, value: number | number[] | Date | null, isModal: boolean) => void;
-    resetRepositoryFilter: (modifyCookie?: boolean) => void;
+    resetRepositoryFilter: (modifyCookie?: boolean, keepMetadata?: boolean) => void;
     resetKeywordSearch: () => void;
     initializeTree: () => Promise<void>;
     getMoreRoot: () => Promise<void>;
@@ -378,12 +378,12 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
 
         initializeTree();
     },
-    resetRepositoryFilter: (modifyCookie = true): void => {
-        const { setCookieToState } = get();
+    resetRepositoryFilter: (modifyCookie = true, keepMetadata = false): void => {
+        const { setCookieToState, metadataToDisplay } = get();
         const stateValues = {
             repositoryRootType: [],
             objectsToDisplay: [],
-            metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
+            metadataToDisplay: keepMetadata ? metadataToDisplay : [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
             units: [],
             projects: [],
             has: [],
