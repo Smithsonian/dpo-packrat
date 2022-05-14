@@ -1,101 +1,123 @@
 /* eslint-disable react/jsx-max-props-per-line, react/jsx-boolean-value, @typescript-eslint/no-explicit-any */
 
-import { Box, InputLabel, FormControl, FormHelperText, Select, MenuItem } from '@material-ui/core';
+import { Box, InputLabel, FormControl, FormHelperText, Select, MenuItem, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { DebounceInput } from 'react-debounce-input';
 import { Helmet } from 'react-helmet';
 import * as yup from 'yup';
 import clsx from 'clsx';
-import { LoadingButton } from '../../../components';
 import { CreateProjectDocument } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
 import { getUnitsList } from '../hooks/useAdminView';
 import { toTitleCase } from '../../../constants/helperfunctions';
+import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 
-const useStyles = makeStyles(({ palette, breakpoints, typography }) => ({
+const useStyles = makeStyles(({ typography }) => ({
     container: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        maxHeight: 'calc(100vh - 60px)',
-        width: '1200px',
-        overflowY: 'scroll',
-        marginLeft: '1%',
-        marginTop: '1%',
-        [breakpoints.down('lg')]: {
-            maxHeight: 'calc(100vh - 120px)',
-            padding: 10
-        }
+        marginLeft: '15px'
     },
-    updateButton: {
-        height: 35,
-        width: 100,
-        marginTop: 30,
-        color: palette.background.paper,
-        [breakpoints.down('lg')]: {
-            height: 30
+    btn: {
+        height: 30,
+        width: 90,
+        backgroundColor: '#3854d0',
+        color: 'white',
+        outline: '2px hidden #8DABC4',
+        '& :focus': {
+            outline: '2px solid #8DABC4',
         }
     },
     formContainer: {
-        width: '700px',
-        maxHeight: '90%',
+        width: '600px',
         borderRadius: 10,
-        padding: '10px 20px',
+        padding: '5px',
         background: '#687DDB1A 0% 0% no-repeat padding-box;',
         border: '1px solid #B7D2E5CC',
-        boxShadow: '0 0 0 15px #75B3DF',
-        marginTop: '2%',
-        marginLeft: '1%'
+        boxShadow: '0 0 0 5px #75B3DF',
+        marginTop: '15px',
+        marginLeft: '5px',
+        display: 'flex',
+        flexDirection: 'column'
     },
     formRow: {
         display: 'grid',
         gridTemplateColumns: '30% 70%',
         gridGap: '10px',
         alignItems: 'center',
-        minHeight: '5%',
-        paddingTop: '10px',
-        paddingBottom: '10px',
+        minHeight: 30,
+        padding: '0px 5px',
         '&:not(:last-child)': {
             borderBottom: '1px solid #D8E5EE'
         }
     },
     formRowLabel: {
         gridColumnStart: '1',
-        fontSize: '0.875rem',
-        color: 'auto'
+        fontSize: '0.8rem',
+        color: 'black'
     },
     formField: {
         backgroundColor: 'white',
-        borderRadius: '4px',
+        borderRadius: '5px',
         border: '1px solid rgb(118,118,118)',
-        width: '55%',
+        width: '95%',
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
-        fontSize: 'inherit',
-        height: '30px'
+        fontSize: '0.8rem',
+        height: '20px'
     },
     descriptionInput: {
         backgroundColor: 'white',
         borderRadius: '4px',
         width: '80%',
-        minHeight: '100px'
+        minHeight: '100px',
+        resize: 'vertical',
+        fontSize: '0.8rem',
+        marginTop: 3
     },
     unitInput: {
-        width: '80%'
+        width: '60%',
+        minWidth: 'fit-content',
+        height: '24px',
+        padding: '0px 5px',
+        fontWeight: typography.fontWeightRegular,
+        fontFamily: typography.fontFamily,
+        fontSize: '0.8rem',
+        color: 'black',
+        borderRadius: 5,
+        border: '1px solid rgb(118,118,118)',
+        backgroundColor: 'white'
+    },
+    breadCrumbsContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '46px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        background: '#ECF5FD',
+        color: '#3F536E',
+        width: 'fit-content'
+    },
+    buttonGroup: {
+        marginTop: '15px',
+        columnGap: 30,
+        display: 'flex'
     },
 }));
 
 function AddProjectForm(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [unit, setUnit] = useState(0);
     const [unitList, setUnitList] = useState<any>([]);
+    const location = useLocation();
 
     // these are the states referenced when rendering error inputs after failed validation
     const [validUnit, setValidUnit] = useState(true);
@@ -141,20 +163,16 @@ function AddProjectForm(): React.ReactElement {
             const isValidUnit = await schema.isValid({ unit });
             setValidUnit(isValidUnit);
             if (!isValidUnit)
-                toast.error('Creation Failed: Must Select A Unit', { autoClose: false });
+                toast.error('Creation Failed: Must Select A Unit');
 
             return isValidName && isValidUnit;
         } catch (error) {
             const message: string = (error instanceof Error) ? error.message : 'Validation Failure';
             toast.warn(message);
-        } finally {
-            setIsUpdatingData(false);
         }
     };
 
     const createProject = async (): Promise<void> => {
-        setIsUpdatingData(true);
-
         const validUpdate = await validateFields();
         if (!validUpdate) return;
 
@@ -181,7 +199,6 @@ function AddProjectForm(): React.ReactElement {
             const message: string = (error instanceof Error) ? `: ${error.message}` : '';
             toast.error(`Failed to create project${message}`);
         } finally {
-            setIsUpdatingData(false);
             if (newProjectSystemObjectId) {
                 history.push(`/repository/details/${newProjectSystemObjectId}`);
             } else {
@@ -199,10 +216,13 @@ function AddProjectForm(): React.ReactElement {
             <Helmet>
                 <title>Create Project</title>
             </Helmet>
+            <Box className={classes.breadCrumbsContainer}>
+                <GenericBreadcrumbsView items={location.pathname.slice(1)} />
+            </Box>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
                     <InputLabel className={classes.formRowLabel} htmlFor='projectName'>{toTitleCase(singularSystemObjectType)} Name</InputLabel>
-                    <FormControl variant='outlined'>
+                    <FormControl>
                         <DebounceInput
                             id='projectName'
                             className={classes.formField}
@@ -240,9 +260,15 @@ function AddProjectForm(): React.ReactElement {
                     </FormControl>
                 </Box>
             </Box>
-            <LoadingButton className={classes.updateButton} onClick={createProject} disableElevation loading={isUpdatingData}>
-                Create
-            </LoadingButton>
+            <Box className={classes.buttonGroup}>
+                <Button className={classes.btn} onClick={createProject} disableElevation>
+                    Create
+                </Button>
+                <Button variant='contained' className={classes.btn} onClick={() => history.push('/admin/projects')} disableElevation>
+                    Cancel
+                </Button>
+            </Box>
+
         </Box>
     );
 }

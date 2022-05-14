@@ -159,7 +159,7 @@ function Header(): React.ReactElement {
     // Filter and keyword clear when in Repository
     const clearSearchAndUpdateRepositorySearch = (): void => {
         resetKeywordSearch();
-        resetRepositoryFilter();
+        resetRepositoryFilter(true, true);
         updateRepositorySearch();
     };
 

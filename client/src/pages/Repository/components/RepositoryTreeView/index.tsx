@@ -13,8 +13,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
 import React, { useCallback, useEffect } from 'react';
 import { Loader } from '../../../../components';
-import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore, useTreeColumnsStore } from '../../../../store';
-import { NavigationResultEntry } from '../../../../types/graphql';
+import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore, useTreeColumnsStore, NavigationResultEntryState } from '../../../../store';
 import {
     getObjectInterfaceDetails,
     getRepositoryTreeNodeId,
@@ -34,14 +33,11 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        height: 'fit-content',
-        minWidth: '60vw',
+        height: '100%',
+        overflowY: 'auto',
         width: 'fit-content',
         flexDirection: 'column',
-        overflowY: 'hidden',
         transition: '250ms height, width ease',
-        // paddingRight is needed so that a second horizontal scrollbar isn't created when hovering a row
-        paddingRight: 20,
         [breakpoints.down('lg')]: {
             paddingRight: 10
         },
@@ -51,7 +47,19 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        width: 'fit-content'
+        '&:focus': {
+            outline: 'none'
+        },
+        height: '100%',
+        overflowY: 'auto',
+        width: '100%'
+    },
+    treeViewContainer: {
+        height: '100%',
+        overflowY: 'auto',
+        width: '100%',
+        // Note: this is to help relocate the scrollbar to the left
+        direction: 'rtl'
     },
     fullWidth: {
         maxWidth: '95.5vw'
@@ -81,7 +89,7 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     label: {
         display: 'flex',
         alignItems: 'center',
-        position: 'sticky',
+        // position: 'sticky',
         left: 45,
         [breakpoints.down('lg')]: {
             left: 30
@@ -140,13 +148,12 @@ interface RepositoryTreeViewProps {
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { isModal = false, selectedItems = [], onSelect, onUnSelect } = props;
-    const [tree, getChildren, getMoreRoot, getMoreChildren, cursors, loadingMore] = useRepositoryStore(state => [
+    const [tree, getChildren, getMoreRoot, getMoreChildren, cursors] = useRepositoryStore(state => [
         state.tree,
         state.getChildren,
         state.getMoreRoot,
         state.getMoreChildren,
-        state.cursors,
-        state.loadingMore
+        state.cursors
     ]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
     const [initializeWidths, initializeOrder, columnOrder] = useTreeColumnsStore((state) => [state.initializeWidth, state.initializeOrder, state.order]);
@@ -173,13 +180,13 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     );
 
     // recursive
-    const renderTree = (children: NavigationResultEntry[] | undefined, isChild?: boolean, parentNodeId?: string) => {
+    const renderTree = (children: NavigationResultEntryState[] | undefined, isChild?: boolean, parentNodeId?: string) => {
 
         if (!children) return null;
-        return children.map((child: NavigationResultEntry, index: number) => {
+        return children.map((child: NavigationResultEntryState, index: number) => {
             const { idSystemObject, objectType, idObject, name, metadata } = child;
-
-            const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject);
+            const nodeIndex = child.index;
+            const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject, nodeIndex ? nodeIndex : 0);
             const childNodes = tree.get(nodeId);
 
             let childNodesContent: React.ReactNode = <TreeLabelLoading />;
@@ -231,15 +238,20 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                     objectType={objectType}
                     color={color}
                     treeColumns={treeColumns}
+                    nodeId={nodeId}
                     makeStyles={{ container: classes.treeLabelContainer, label: classes.label, labelText: classes.labelText, column: classes.column, text: classes.text, options: classes.options, option: classes.option, link: classes.link }}
                 />
             );
+
+            // loader case
+            if (idSystemObject === -1)
+                return <TreeLabelLoading key={idSystemObject} />;
 
             // non-root case for end of list
             if ((index + 1 + repositoryRowPrefetchThreshold) % repositoryRowCount === 0 && index + 1 + repositoryRowPrefetchThreshold === children.length && isChild) {
                 return (
                     <InViewTreeItem
-                        id={`repository row id ${idSystemObject}`}
+                        id={nodeId}
                         key={idSystemObject}
                         nodeId={nodeId}
                         icon={icon}
@@ -263,7 +275,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             if ((index + 1 + repositoryRowPrefetchThreshold) % repositoryRowCount === 0 && index + 1 + repositoryRowPrefetchThreshold === children.length) {
                 return (
                     <InViewTreeItem
-                        id={`repository row id ${idSystemObject}`}
+                        id={nodeId}
                         key={idSystemObject}
                         nodeId={nodeId}
                         icon={icon}
@@ -279,7 +291,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             // base case
             return (
                 <StyledTreeItem
-                    id={`repository row id ${idSystemObject}`}
+                    id={nodeId}
                     key={idSystemObject}
                     nodeId={nodeId}
                     icon={icon}
@@ -292,22 +304,32 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         });
     };
 
-    let content: React.ReactNode = <Loader maxWidth='85vw' minHeight='40vh' size={20} />;
+    let content: React.ReactNode = <Loader maxWidth='85vw' minHeight='40vh' width='40vw' size={40} />;
     if (!loading) {
         const children = tree.get(treeRootKey);
         content = (
-            <TreeView className={classes.tree} defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />} onNodeToggle={onNodeToggle}>
+            <>
                 <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />
-                {renderTree(children)}
-                {loadingMore && <TreeLabelLoading />}
-            </TreeView>
+                <div className={classes.treeViewContainer}>
+                    <TreeView
+                        className={classes.tree}
+                        defaultCollapseIcon={<ExpandMoreIcon />}
+                        defaultExpandIcon={<ChevronRightIcon />}
+                        onNodeToggle={onNodeToggle}
+                        id='treeView'
+                        tabIndex={0}
+                    >
+                        {renderTree(children)}
+                    </TreeView>
+                </div>
+            </>
         );
     }
 
     const fullWidthStyles = isModal ? { minWidth: '90%' } : {};
 
     return (
-        <div className={classes.container} style={fullWidthStyles}>
+        <div id='treeContainer' className={classes.container} style={fullWidthStyles}>
             {content}
         </div>
     );

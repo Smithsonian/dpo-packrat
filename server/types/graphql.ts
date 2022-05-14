@@ -558,7 +558,7 @@ export type IngestIdentifier = {
 export type IngestFolder = {
   __typename?: 'IngestFolder';
   name: Scalars['String'];
-  variantType: Scalars['Int'];
+  variantType?: Maybe<Scalars['Int']>;
 };
 
 export type IngestPhotogrammetry = {
@@ -952,7 +952,7 @@ export type IngestIdentifierInput = {
 
 export type IngestFolderInput = {
   name: Scalars['String'];
-  variantType: Scalars['Int'];
+  variantType?: Maybe<Scalars['Int']>;
 };
 
 export type IngestPhotogrammetryInput = {
@@ -2419,7 +2419,7 @@ export type UpdateUserInput = {
   Name: Scalars['String'];
   EmailAddress: Scalars['String'];
   Active: Scalars['Boolean'];
-  EmailSettings: Scalars['Int'];
+  EmailSettings?: Maybe<Scalars['Int']>;
   WorkflowNotificationTime: Scalars['DateTime'];
 };
 

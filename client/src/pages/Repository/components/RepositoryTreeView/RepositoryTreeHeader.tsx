@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 /**
  * RepositoryTreeHeader
@@ -31,11 +32,11 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         paddingRight: 5,
         [breakpoints.down('lg')]: {
             minHeight: 40
-        }
+        },
+        direction: 'ltr'
     },
     treeView: {
         display: 'flex',
-        position: 'sticky',
         left: 0,
         alignItems: 'center',
         color: palette.primary.dark,
@@ -112,7 +113,6 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
         initializeClasses(columnClasses);
         const columnSet = new Set<ResizeObserver>();
 
-        // Debouncing the width update makes the transition smoother
         const nameHeader = document.getElementById(SO_NAME_COLUMN_HEADER);
         const columnObersver = new ResizeObserver((e) => {
             updateWidth(SO_NAME_COLUMN_HEADER, String(e[0].contentRect.width));
@@ -131,10 +131,51 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
             }
         });
 
+        const tree = document.getElementById('treeView') as HTMLElement;
+        tree?.focus();
+        const handleRepositoryKeyStrokes = (e: KeyboardEvent) => {
+            if (e.key === 'PageUp') {
+                const lis = Array.from(document.querySelectorAll('li'));
+                if (!lis.length) return;
+                const initialRect = lis[0].children[0].getBoundingClientRect();
+
+                setTimeout(() => {
+                    const isTop = isElementInView(lis[0].children[0] as HTMLElement, tree);
+                    const hasScrolled = hasViewContainerScrolled(initialRect, document.querySelector('li')?.getBoundingClientRect() as DOMRect);
+                    const target = isTop ? getFirstElementInView(lis, tree) : hasScrolled ? getLastElementInView(lis, tree) : getFirstElementInView(lis, tree);
+                    target?.focus();
+                }, 200);
+            }
+            if (e.key === 'PageDown') {
+                const lis = Array.from(document.querySelectorAll('li'));
+                if (!lis.length) return;
+                const initialRect = lis[0].children[0].getBoundingClientRect();
+
+                setTimeout(() => {
+                    const isBottom = isElementInView(lis[lis.length - 1], tree);
+                    const hasScrolled = hasViewContainerScrolled(initialRect, document.querySelector('li')?.getBoundingClientRect() as DOMRect);
+                    const target = isBottom? getLastElementInView(lis, tree) : hasScrolled ? getFirstElementInView(lis, tree) : getLastElementInView(lis, tree);
+                    target?.focus();
+                }, 200);
+            }
+
+            if (e.key === 'Enter') {
+                e.stopPropagation();
+                const active = document.activeElement;
+                if (!active) return;
+                const icon = active.children[0]?.children[0]?.children[0] as null | HTMLElement;
+                if (icon) icon.click();
+            }
+        };
+
+        tree?.addEventListener('keydown', handleRepositoryKeyStrokes);
+
         return () => {
             columnSet.forEach((col) => col.unobserve);
+            tree?.removeEventListener('keydown', handleRepositoryKeyStrokes);
         };
     }, []);
+
 
     return (
         <Box className={classes.container}>
@@ -147,3 +188,29 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
 }
 
 export default React.memo(RepositoryTreeHeader);
+
+
+export function isElementInView (child: HTMLElement, parent: HTMLElement) {
+    if (!child || !parent) return false;
+    const childRect = child.getBoundingClientRect();
+    const parentRect = parent.getBoundingClientRect();
+    return (childRect.top > parentRect.top && childRect.bottom < parentRect.bottom);
+}
+
+export function getFirstElementInView (elements, parent) {
+    for (let i = 0; i < elements.length; i++) {
+        if (isElementInView(elements[i].children[0], parent))
+            return elements[i];
+    }
+}
+
+export function getLastElementInView (elements, parent) {
+    for (let i = elements.length - 1; i > 0; i--) {
+        if (isElementInView(elements[i].children[0], parent))
+            return elements[i];
+    }
+}
+
+export function hasViewContainerScrolled (originalPos: DOMRect, newPos: DOMRect) {
+    return originalPos.y !== newPos.y;
+}

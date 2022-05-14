@@ -20,7 +20,7 @@ import { RelatedObjectType, useGetSubjectQuery } from '../../../../../types/grap
 import clsx from 'clsx';
 import { DebounceInput } from 'react-debounce-input';
 import { useStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
-
+import { getNullableSelectEntries } from '../../../../../utils/controls';
 
 interface PhotogrammetryProps {
     readonly metadataIndex: number;
@@ -93,8 +93,9 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.photogrammetry);
     };
 
-    const updateFolderVariant = (folderId: number, variantType: number) => {
+    const updateFolderVariant = (folderId: number, variantType: number | null) => {
         const { folders } = photogrammetry;
+        if (variantType === -1) variantType = null;
         const updatedFolders = folders.map(folder => {
             if (folderId === folder.id) {
                 return {
@@ -164,6 +165,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     onAddIdentifer={onIdentifersChange}
                     onUpdateIdentifer={onIdentifersChange}
                     onRemoveIdentifer={onIdentifersChange}
+                    identifierName='Capture Data'
                 />
             </Box>
             {!idAsset && (
@@ -248,7 +250,6 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                 </TableContainer>
 
                 <AssetContents
-                    initialEntry={getInitialEntry(eVocabularySetID.eCaptureDataFileVariantType)}
                     folders={photogrammetry.folders}
                     options={getEntries(eVocabularySetID.eCaptureDataFileVariantType)}
                     onUpdate={updateFolderVariant}
@@ -280,14 +281,14 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     </TableCell>
                                     <TableCell className={classes.tableCell}>
                                         <Select
-                                            value={withDefaultValueNumber(photogrammetry.itemPositionType, getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType))}
+                                            value={photogrammetry.itemPositionType ?? -1}
                                             name='itemPositionType'
                                             onChange={setIdField}
                                             disableUnderline
                                             className={clsx(classes.select, classes.datasetFieldSelect)}
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                         >
-                                            {getEntries(eVocabularySetID.eCaptureDataItemPositionType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                            {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataItemPositionType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>
@@ -329,14 +330,14 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     </TableCell>
                                     <TableCell className={classes.tableCell}>
                                         <Select
-                                            value={withDefaultValueNumber(photogrammetry.focusType, getInitialEntry(eVocabularySetID.eCaptureDataFocusType))}
+                                            value={photogrammetry?.focusType ?? -1}
                                             name='focusType'
                                             onChange={setIdField}
                                             disableUnderline
                                             className={clsx(classes.select, classes.datasetFieldSelect)}
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                         >
-                                            {getEntries(eVocabularySetID.eCaptureDataFocusType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                            {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataFocusType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>
@@ -346,14 +347,14 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     </TableCell>
                                     <TableCell className={classes.tableCell}>
                                         <Select
-                                            value={withDefaultValueNumber(photogrammetry.lightsourceType, getInitialEntry(eVocabularySetID.eCaptureDataLightSourceType))}
+                                            value={photogrammetry.lightsourceType ?? -1}
                                             name='lightsourceType'
                                             onChange={setIdField}
                                             disableUnderline
                                             className={clsx(classes.select, classes.datasetFieldSelect)}
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                         >
-                                            {getEntries(eVocabularySetID.eCaptureDataLightSourceType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                            {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataLightSourceType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>
@@ -363,14 +364,14 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     </TableCell>
                                     <TableCell className={classes.tableCell}>
                                         <Select
-                                            value={withDefaultValueNumber(photogrammetry.backgroundRemovalMethod, getInitialEntry(eVocabularySetID.eCaptureDataBackgroundRemovalMethod))}
+                                            value={photogrammetry.backgroundRemovalMethod ?? -1}
                                             name='backgroundRemovalMethod'
                                             onChange={setIdField}
                                             disableUnderline
                                             className={clsx(classes.select, classes.datasetFieldSelect)}
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                         >
-                                            {getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                            {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>
@@ -380,14 +381,14 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     </TableCell>
                                     <TableCell className={classes.tableCell}>
                                         <Select
-                                            value={withDefaultValueNumber(photogrammetry.clusterType, getInitialEntry(eVocabularySetID.eCaptureDataClusterType))}
+                                            value={photogrammetry.clusterType ?? -1}
                                             name='clusterType'
                                             onChange={setIdField}
                                             disableUnderline
                                             className={clsx(classes.select, classes.datasetFieldSelect)}
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                         >
-                                            {getEntries(eVocabularySetID.eCaptureDataClusterType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                            {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataClusterType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>
@@ -414,8 +415,8 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     <TableCell className={classes.tableCell}>
                                         <CustomCheckbox
                                             className={classes.checkbox}
+                                            disabled
                                             name='cameraSettingUniform'
-                                            onChange={setCheckboxField}
                                             checked={withDefaultValueBoolean(photogrammetry.cameraSettingUniform ?? false, false)}
                                             title='cameraSettingsUniform-input'
                                             size='small'

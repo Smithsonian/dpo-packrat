@@ -14,7 +14,6 @@ interface StyledTreeItemProps {
 const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) => ({
     iconContainer: {
         width: 25,
-        position: 'sticky',
         left: 2.5,
         zIndex: 10,
         [breakpoints.down('lg')]: {
@@ -27,7 +26,17 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         }
     },
     root: {
-        marginTop: 5
+        marginTop: 2.5,
+        marginBottom: 2.5,
+        '&:focus': {
+            '& > div': {
+                outline: `1px solid ${palette.primary.main}`,
+            }
+        },
+        borderRadius: 5,
+        paddingLeft: 1,
+        direction: 'ltr',
+        textAlign: 'left'
     },
     group: {
         paddingLeft: 20,

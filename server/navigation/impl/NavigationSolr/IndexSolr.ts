@@ -516,15 +516,15 @@ export class IndexSolr implements NAV.IIndexer {
         // LOG.info(`IndexSolr.extractCommonChildrenFields doc=${JSON.stringify(doc, H.Helpers.saferStringify)}, OGDEH=${JSON.stringify(OGDEH, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
     }
 
-    private async computeVocabulary(idVocabulary: number | null): Promise<string | undefined> {
+    private async computeVocabulary(idVocabulary: number | null): Promise<string | null> {
         const vocab: DBAPI.Vocabulary | undefined = idVocabulary ? await CACHE.VocabularyCache.vocabulary(idVocabulary) : undefined;
-        return vocab ? vocab.Term : undefined;
+        return vocab ? vocab.Term : null;
     }
 
     private async computeVocabularyTerms(IDs: number[]): Promise<string[]> {
         const retValue: string[] = [];
         for (const ID of IDs) {
-            const vocab: string | undefined = await this.computeVocabulary(ID);
+            const vocab: string | null = await this.computeVocabulary(ID);
             if (vocab) retValue.push(vocab);
         }
         return retValue;
@@ -599,8 +599,8 @@ export class IndexSolr implements NAV.IIndexer {
         doc.ChildrenDateCreated = [captureData.DateCaptured];
         doc.CDCaptureMethod = await this.lookupVocabulary(captureData.idVCaptureMethod);
         if (captureDataPhoto) {
-            doc.CDCaptureDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
-            doc.CDCaptureDatasetFieldID = captureDataPhoto.CaptureDatasetFieldID;
+            doc.CDDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
+            doc.CDDatasetFieldID = captureDataPhoto.CaptureDatasetFieldID;
             doc.CDItemPositionType = await this.lookupVocabulary(captureDataPhoto.idVItemPositionType);
             doc.CDItemPositionFieldID = captureDataPhoto.ItemPositionFieldID;
             doc.CDItemArrangementFieldID = captureDataPhoto.ItemArrangementFieldID;

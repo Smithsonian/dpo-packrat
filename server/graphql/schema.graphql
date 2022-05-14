@@ -181,7 +181,7 @@ type IngestIdentifier {
 
 type IngestFolder {
   name: String!
-  variantType: Int!
+  variantType: Int
 }
 
 type IngestPhotogrammetry {
@@ -548,7 +548,7 @@ input IngestIdentifierInput {
 
 input IngestFolderInput {
   name: String!
-  variantType: Int!
+  variantType: Int
 }
 
 input IngestPhotogrammetryInput {
@@ -1918,7 +1918,7 @@ input UpdateUserInput {
   Name: String!
   EmailAddress: String!
   Active: Boolean!
-  EmailSettings: Int!
+  EmailSettings: Int
   WorkflowNotificationTime: DateTime!
 }
 

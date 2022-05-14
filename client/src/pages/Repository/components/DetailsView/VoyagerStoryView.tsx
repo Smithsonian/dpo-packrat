@@ -19,7 +19,7 @@ import { eVoyagerStoryMode, getModeForVoyager, getVoyagerModeFromParam } from '.
 import * as qs from 'query-string';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
-    container: {
+    content: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
@@ -31,7 +31,19 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         [breakpoints.down('lg')]: {
             padding: 10
         }
-    }
+    },
+    container: {
+        display: 'flex',
+        flex: 1,
+        width: 'fit-content',
+        flexDirection: 'column',
+        padding: 20,
+        paddingBottom: 0,
+        paddingRight: 0,
+        [breakpoints.down('lg')]: {
+            paddingRight: 20
+        }
+    },
 }));
 
 type DetailsParams = {
@@ -73,28 +85,29 @@ function VoyagerStoryView(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <DetailsHeader
-                originalFields={data.getSystemObjectDetails}
-                name={objectName}
-                disabled
-                objectType={objectType}
-                path={objectAncestors}
-                onNameUpdate={() => {}}
-            />
+            <Box className={classes.content}>
+                <DetailsHeader
+                    originalFields={data.getSystemObjectDetails}
+                    name={objectName}
+                    disabled
+                    objectType={objectType}
+                    path={objectAncestors}
+                    onNameUpdate={() => {}}
+                />
 
-            <Box display='flex'>
-                <Box display='flex' flex={1} padding={2}>
-                    {eMode === eVoyagerStoryMode.eViewer && (
-                        <VoyagerExplorer root={root} document={document} width={'80vw'} height={'80vh'} />
-                    )}
-                    {eMode !== eVoyagerStoryMode.eViewer && (
-                        <VoyagerStory root={root} document={document} mode={getModeForVoyager(eMode)}
-                            width={'80vw'} height={'80vh'}
-                        />
-                    )}
+                <Box display='flex'>
+                    <Box display='flex' flex={1} padding={2}>
+                        {eMode === eVoyagerStoryMode.eViewer && (
+                            <VoyagerExplorer root={root} document={document} width={'80vw'} height={'80vh'} />
+                        )}
+                        {eMode !== eVoyagerStoryMode.eViewer && (
+                            <VoyagerStory root={root} document={document} mode={getModeForVoyager(eMode)}
+                                width={'80vw'} height={'80vh'}
+                            />
+                        )}
+                    </Box>
                 </Box>
             </Box>
-
         </Box>
     );
 }

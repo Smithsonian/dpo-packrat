@@ -58,8 +58,8 @@ export function getTermForSystemObjectType(objectType: eSystemObjectType): strin
     }
 }
 
-export function getRepositoryTreeNodeId(idSystemObject: number, objectType: eSystemObjectType, idObject: number): string {
-    return `${idSystemObject}-${eSystemObjectType[objectType]}-${idObject}`;
+export function getRepositoryTreeNodeId(idSystemObject: number, objectType: eSystemObjectType, idObject: number, index: number): string {
+    return `${idSystemObject}-${eSystemObjectType[objectType]}-${idObject}-${index}`;
 }
 
 type ParsedNodeId = {
@@ -174,8 +174,6 @@ let metadataTitleMap: Map<eMetadata, string> | null = null;
 // prettier-ignore
 export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boolean, values?: string[]): TreeViewColumn[] {
     const treeColumns: TreeViewColumn[] = [];
-    // width of each column
-    const MIN_SIZE = 5;
 
     if (!metadataTitleMap) {
         metadataTitleMap = new Map<eMetadata, string>();
@@ -188,26 +186,15 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
         const treeColumn: TreeViewColumn = {
             metadataColumn,
             label: (values && valuesCount > index) ? values[index] : 'Unknown',
-            size: MIN_SIZE
         };
 
         if (isHeader)
             treeColumn.label = metadataTitleMap ? (metadataTitleMap.get(metadataColumn) || 'Unknown') : 'Unknown';
 
-        switch (metadataColumn) {
-            case eMetadata.eHierarchySubject:   treeColumn.size = MIN_SIZE * 3; break;
-            case eMetadata.eHierarchyItem:      treeColumn.size = MIN_SIZE * 3; break;
-            default: break;
-        }
-
         treeColumns.push(treeColumn);
     });
 
     return treeColumns;
-}
-
-export function computeMetadataViewWidth(treeColumns: TreeViewColumn[]): string {
-    return `${treeColumns.reduce((prev, current) => prev + current.size, 0)}vw`;
 }
 
 type ObjectInterfaceDetails = {
