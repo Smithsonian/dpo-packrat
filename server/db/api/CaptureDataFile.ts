@@ -82,11 +82,11 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
     }
 
     /** Returns map from asset filePath -> idVVariantType */
-    static async fetchFolderVariantMapFromCaptureData(idCaptureData: number): Promise<Map<string, number> | null> {
+    static async fetchFolderVariantMapFromCaptureData(idCaptureData: number): Promise<Map<string, number | null> | null> {
         if (!idCaptureData)
             return null;
         // creates a unique map of AssetVersion.filePath and file.idVVariantType
-        const folderVariantMap = new Map<string, number>();
+        const folderVariantMap = new Map<string, number | null>();
 
         const CDFiles: CaptureDataFile[] | null = await CaptureDataFile.fetchFromCaptureData(idCaptureData); /* istanbul ignore next */
         if (!CDFiles) {
@@ -101,7 +101,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
                 return null;
             }
 
-            if (!folderVariantMap.has(assetVersion.FilePath) && CDFile.idVVariantType)
+            if (!folderVariantMap.has(assetVersion.FilePath))
                 folderVariantMap.set(assetVersion.FilePath, CDFile.idVVariantType);
         }
         return folderVariantMap;

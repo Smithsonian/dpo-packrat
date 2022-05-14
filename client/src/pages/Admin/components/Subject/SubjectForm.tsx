@@ -12,12 +12,14 @@ import { toast } from 'react-toastify';
 import { eVocabularySetID } from '@dpo-packrat/common';
 import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
 import { useHistory } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { CreateSubjectWithIdentifiersInput } from '../../../../types/graphql';
 import { Helmet } from 'react-helmet';
 import MetadataControlTable from '../../../Repository/components/DetailsView/DetailsTab/MetadataControlTable';
 import { DebounceInput } from 'react-debounce-input';
 import { useStyles as useTableStyles, updatedFieldStyling } from '../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import clsx from 'clsx';
+import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -33,8 +35,7 @@ const useStyles = makeStyles(({ palette }) => ({
         minWidth: '52vw',
         width: 'fit-content',
         flexDirection: 'column',
-        padding: 20,
-        paddingBottom: 0
+        padding: '0px 20px 0px 20px'
     },
     filesLabel: {
         color: palette.primary.dark,
@@ -53,6 +54,17 @@ const useStyles = makeStyles(({ palette }) => ({
         '& :focus': {
             outline: '2px solid #8DABC4',
         }
+    },
+    breadCrumbsContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '46px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        background: '#ECF5FD',
+        color: '#3F536E',
+        width: 'fit-content',
+        marginLeft: '15px'
     }
 }));
 
@@ -79,6 +91,7 @@ function SubjectForm(): React.ReactElement {
     const classes = useStyles();
     const tableClasses = useTableStyles();
     const history = useHistory();
+    const location = useLocation();
     const [subjectName, setSubjectName] = useState('');
     const [subjectUnit, setSubjectUnit] = useState(0);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -299,6 +312,9 @@ function SubjectForm(): React.ReactElement {
             <Helmet>
                 <title>Create Subject</title>
             </Helmet>
+            <Box className={classes.breadCrumbsContainer}>
+                <GenericBreadcrumbsView items={location.pathname.slice(1)} />
+            </Box>
             <Box className={classes.content}>
                 <SearchList EdanOnly />
                 <Box style={{ marginTop: '10px', marginBottom: '10px', width: '600px', backgroundColor: 'rgb(236, 245, 253)', paddingTop: '5px', paddingBottom: '5px', borderRadius: '5px' }}>
@@ -409,6 +425,7 @@ function SubjectForm(): React.ReactElement {
                     onRemoveIdentifer={onIdentifierChange}
                     onUpdateIdIdentifierPreferred={onIdentifierPreferredChange}
                     subjectView
+                    identifierName='Subject'
                 />
                 <Box mb={3}>
                     <MetadataControlTable type={eObjectMetadataType.eSubjectCreation} metadataData={[]} />

@@ -269,7 +269,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 if (folders && folders.length) {
                     const foldersMap = new Map<string, number>();
-                    folders.forEach((folder) => foldersMap.set(folder.name, folder.variantType));
+                    folders.forEach((folder) => foldersMap.set(folder.name, folder.variantType ?? 0));
                     const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(CaptureData.idCaptureData);
                     if (!CDFiles)
                         return sendResult(false, `Unable to fetch Capture Data Files with id ${CaptureData.idCaptureData}; update failed`);
@@ -279,7 +279,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             return sendResult(false, `Unable to fetch asset version with idAsset ${file.idAsset}; update failed`);
 
                         const newVariantType = foldersMap.get(assetVersion.FilePath);
-                        file.idVVariantType = newVariantType || file.idVVariantType;
+                        file.idVVariantType = newVariantType || null;
                         if (!await file.update())
                             return sendResult(false, `Unable to update Capture Data File with id ${file.idCaptureDataFile}; update failed`);
                     }

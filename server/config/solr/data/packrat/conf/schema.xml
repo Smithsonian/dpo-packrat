@@ -34,8 +34,8 @@
     <field name="CDCaptureMethod" type="string" indexed="true" stored="true" multiValued="false" />
 
     <!-- CaptureDataPhoto, CaptureDataFile fields -->
-    <field name="CDCaptureDatasetType" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="CDCaptureDatasetFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="CDDatasetType" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CDDatasetFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="CDItemPositionType" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="CDItemPositionFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="CDItemArrangementFieldID" type="pint" indexed="true" stored="true" multiValued="false" />

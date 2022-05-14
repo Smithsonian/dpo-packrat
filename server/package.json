@@ -1,6 +1,6 @@
 {
   "name": "@dpo-packrat/server",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "private": true,
   "license": "Apache-2.0",
   "description": "Node server for Packrat",
@@ -46,7 +46,7 @@
     "reset": "yarn dropdb && yarn initdb && rm -rf var/Storage && curl http://localhost:8983/solr/packrat/update --data \"<delete><query>*:*</query></delete>\" -H \"Content-type:text/xml; charset=utf-8\" && curl http://localhost:8983/solr/packrat/update --data \"<commit/>\" -H \"Content-type:text/xml; charset=utf-8\" && curl http://localhost:8983/solr/packratMeta/update --data \"<delete><query>*:*</query></delete>\" -H \"Content-type:text/xml; charset=utf-8\" && curl http://localhost:8983/solr/packratMeta/update --data \"<commit/>\" -H \"Content-type:text/xml; charset=utf-8\""
   },
   "dependencies": {
-    "@dpo-packrat/common": "0.9.9",
+    "@dpo-packrat/common": "0.9.10",
     "ajv": "6.10.2",
     "apollo-server-express": "2.21.1",
     "async-mutex": "0.3.1",
