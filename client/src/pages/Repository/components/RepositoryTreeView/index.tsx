@@ -41,18 +41,25 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         [breakpoints.down('lg')]: {
             paddingRight: 10
         },
-        paddingBottom: 10,
-        direction: 'rtl'
+        paddingBottom: 10
     },
     tree: {
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        width: 'fit-content',
-        direction: 'ltr',
         '&:focus': {
             outline: 'none'
-        }
+        },
+        height: '100%',
+        overflowY: 'auto',
+        width: '100%'
+    },
+    treeViewContainer: {
+        height: '100%',
+        overflowY: 'auto',
+        width: '100%',
+        // Note: this is to help relocate the scrollbar to the left
+        direction: 'rtl'
     },
     fullWidth: {
         maxWidth: '95.5vw'
@@ -301,24 +308,28 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     if (!loading) {
         const children = tree.get(treeRootKey);
         content = (
-            <TreeView
-                className={classes.tree}
-                defaultCollapseIcon={<ExpandMoreIcon />}
-                defaultExpandIcon={<ChevronRightIcon />}
-                onNodeToggle={onNodeToggle}
-                id='treeView'
-                tabIndex={0}
-            >
+            <>
                 <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />
-                {renderTree(children)}
-            </TreeView>
+                <div className={classes.treeViewContainer}>
+                    <TreeView
+                        className={classes.tree}
+                        defaultCollapseIcon={<ExpandMoreIcon />}
+                        defaultExpandIcon={<ChevronRightIcon />}
+                        onNodeToggle={onNodeToggle}
+                        id='treeView'
+                        tabIndex={0}
+                    >
+                        {renderTree(children)}
+                    </TreeView>
+                </div>
+            </>
         );
     }
 
     const fullWidthStyles = isModal ? { minWidth: '90%' } : {};
 
     return (
-        <div className={classes.container} style={fullWidthStyles}>
+        <div id='treeContainer' className={classes.container} style={fullWidthStyles}>
             {content}
         </div>
     );
