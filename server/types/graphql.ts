@@ -1399,7 +1399,6 @@ export type NavigationResultEntry = {
   objectType: Scalars['Int'];
   idObject: Scalars['Int'];
   metadata: Array<Scalars['String']>;
-  index?: Maybe<Scalars['Int']>;
 };
 
 export type GetObjectChildrenResult = {

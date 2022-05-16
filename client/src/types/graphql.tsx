@@ -1402,7 +1402,6 @@ export type NavigationResultEntry = {
   objectType: Scalars['Int'];
   idObject: Scalars['Int'];
   metadata: Array<Scalars['String']>;
-  index?: Maybe<Scalars['Int']>;
 };
 
 export type GetObjectChildrenResult = {
@@ -3483,7 +3482,7 @@ export type GetObjectChildrenQuery = (
     & Pick<GetObjectChildrenResult, 'success' | 'error' | 'metadataColumns' | 'cursorMark'>
     & { entries: Array<(
       { __typename?: 'NavigationResultEntry' }
-      & Pick<NavigationResultEntry, 'idSystemObject' | 'name' | 'objectType' | 'idObject' | 'metadata' | 'index'>
+      & Pick<NavigationResultEntry, 'idSystemObject' | 'name' | 'objectType' | 'idObject' | 'metadata'>
     )> }
   ) }
 );
@@ -5976,7 +5975,6 @@ export const GetObjectChildrenDocument = gql`
       objectType
       idObject
       metadata
-      index
     }
     metadataColumns
     cursorMark
