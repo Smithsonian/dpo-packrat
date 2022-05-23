@@ -2,6 +2,7 @@
 Data Repository and Workflow Management for 3D data captures, models, and scenes
 
 ## Setup instructions (Development):
+**Note**: *the setup instructions below are **out of date**. Updates are expected by 6/15/2022*
 
 *Note: `.env.dev` is required and it follows `.env.template`*
 
