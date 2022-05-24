@@ -32,9 +32,8 @@ export const ModelMigrationFiles: ModelMigrationFile[] = [
 ];
 
 export const SceneMigrationPackages: SceneMigrationPackage[] = [
-    { EdanUUID: 'ed99f44d-3c60-4111-b666-e2908e1b64ef', testData: true },
-    { EdanUUID: '341c96cd-f967-4540-8ed1-d3fc56d31f12', testData: true },
-    { EdanUUID: 'd8c62e5e-4ebc-11ea-b77f-2e728ce88125', testData: true },
-    { EdanUUID: 'd8c64114-4ebc-11ea-b77f-2e728ce88125', testData: true },
+    { EdanUUID: 'ed99f44d-3c60-4111-b666-e2908e1b64ef', fetchRemote: true, PosedAndQCd: false, ApprovedForPublication: false, idSystemObjectItem: 658,  testData: true, SceneName: 'Morse Telegraph Key' },
+    // { EdanUUID: '341c96cd-f967-4540-8ed1-d3fc56d31f12', fetchRemote: true, PosedAndQCd: false, ApprovedForPublication: false, idSystemObjectItem: 1411, testData: true, SceneName: 'Woolly Mammoth' },
+    // { EdanUUID: 'd8c62e5e-4ebc-11ea-b77f-2e728ce88125', fetchRemote: true, PosedAndQCd: false, ApprovedForPublication: false, idSystemObjectItem: 552,  testData: true, SceneName: 'Wright Flyer (1903) Laser Scan' },
+    // { EdanUUID: 'd8c64114-4ebc-11ea-b77f-2e728ce88125', fetchRemote: true, PosedAndQCd: false, ApprovedForPublication: false, idSystemObjectItem: 576,  testData: true, SceneName: 'Costume boots for the Wizard in The Wiz on Broadway, worn by Carl Hall' },
 ];
-

@@ -112,6 +112,8 @@ export type IngestStreamOrFileResult = {
     asset?: DBAPI.Asset | null | undefined;
     assetVersion?: DBAPI.AssetVersion | null | undefined;
     systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined;
+    assets?: DBAPI.Asset[] | null | undefined;
+    assetVersions?: DBAPI.AssetVersion[] | null | undefined;
 };
 
 type AssetFileOrStreamResult = {
@@ -1070,7 +1072,8 @@ export class AssetStorageAdapter {
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
         return { success: IAR.success, error: IAR.error, asset: comRes.assets[0] || null,
-            assetVersion: comRes.assetVersions[0] || null, systemObjectVersion: IAR.systemObjectVersion };
+            assetVersion: comRes.assetVersions[0] || null, systemObjectVersion: IAR.systemObjectVersion,
+            assets: IAR.assets, assetVersions: IAR.assetVersions };
     }
 
     static async renameAsset(asset: DBAPI.Asset, fileNameNew: string, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {

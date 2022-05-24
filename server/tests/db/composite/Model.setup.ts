@@ -99,13 +99,6 @@ export class ModelTestSetup {
             }
         }
 
-        const MM: MIG.ModelMigration = new MIG.ModelMigration();
-        const res: H.IOResults = await MM.initialize(this.userOwner.idUser);
-        if (!res.success) {
-            LOG.error(`ModelTestSetup failed to initialize ModelMigration: ${res.error}`, LOG.LS.eTEST);
-            return false;
-        }
-
         const migrationFilesMap: Map<string, MIG.ModelMigrationFile[]> = new Map<string, MIG.ModelMigrationFile[]>(); // map of ModelMigrationFile.uniqueID -> ModelMigrationFile[]
         for (const MMF of MIG.ModelMigrationFiles) {
             if (testCaseSet && !testCaseSet.has(MMF.uniqueID))  // trim ModelMigrationFiles to only those of interest
@@ -121,7 +114,8 @@ export class ModelTestSetup {
 
         for (const [ uniqueID, MMFList ] of migrationFilesMap) {
             LOG.info(`ModelTestSetup handling ${uniqueID} with ${MMFList.length} files`, LOG.LS.eTEST);
-            const resMigration: MIG.ModelMigrationResults = await MM.migrateModel(MMFList, true);
+            const MM: MIG.ModelMigration = new MIG.ModelMigration();
+            const resMigration: MIG.ModelMigrationResults = await MM.migrateModel(this.userOwner.idUser, MMFList, true);
             if (!resMigration.success || !resMigration.model || !resMigration.modelFileName) {
                 if (resMigration.filesMissing)    // handle special case where files are not present
                     return null;        // return null to mean "not performing this test"

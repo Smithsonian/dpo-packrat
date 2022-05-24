@@ -203,10 +203,13 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 Comment: 'Created by Cook si-generate-downloads',
                 doNotUpdateParentVersion: true // we create a new system object version below
             };
+
+            LOG.info(`JobCookSIGenerateDownloads.createSystemObjects ingesting ${downloadFile}`, LOG.LS.eJOB);
             const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
             if (!ISR.success) {
                 await this.appendToReportAndLog(`${this.name()} unable to ingest generated download model ${downloadFile}: ${ISR.error}`, true);
-                return { success: false, error: ISR.error };
+                continue;
+                // return { success: false, error: ISR.error };
             }
 
             let idSystemObjectModel: number | null = modelSO ? modelSO.idSystemObject : null;
