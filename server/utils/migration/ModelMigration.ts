@@ -28,34 +28,21 @@ export class ModelMigration {
     private userOwner:                  DBAPI.User | undefined          = undefined;
     private model:                      DBAPI.Model | null | undefined  = undefined;
 
-    async initialize(idUser: number): Promise<H.IOResults> {
-        // this.storage = await STORE.StorageFactory.getInstance();
-        // if (!this.storage)
-        //     return this.recordError('initialize failed to retrieve storage interface');
-
-        this.userOwner = await CACHE.UserCache.getUser(idUser);
-        if (!this.userOwner)
-            return this.recordError(`initialize unable to load user with idUser of ${idUser}`);
-
-        if (!ModelMigration.vocabModel)
-            ModelMigration.vocabModel             = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
-        if (!ModelMigration.vocabModelUVMapFile)
-            ModelMigration.vocabModelUVMapFile    = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile);
-
-        if (!ModelMigration.vocabModel)
-            return this.recordError('initialize unable to load vocabulary for model file asset type');
-        if (!ModelMigration.vocabModelUVMapFile)
-            return this.recordError('initialize unable to load vocabulary for model uv map file asset type');
-        return { success: true };
-    }
-
-    async migrateModel(modelFileSet: ModelMigrationFile[], doNotSendIngestionEvent?: boolean): Promise<ModelMigrationResults> {
+    async migrateModel(idUser: number, modelFileSet: ModelMigrationFile[], doNotSendIngestionEvent?: boolean): Promise<ModelMigrationResults> {
         let idSystemObject: number | undefined = undefined;
         let testData: boolean | undefined = undefined;
 
         let modelFileName: string | undefined = undefined;
         let asset: DBAPI.Asset[] | null | undefined = undefined;
         let assetVersion: DBAPI.AssetVersion[] | null | undefined = undefined;
+
+        const initRes: H.IOResults = await this.initialize();
+        if (!initRes.success)
+            return initRes;
+
+        this.userOwner = await CACHE.UserCache.getUser(idUser);
+        if (!this.userOwner)
+            return this.recordError(`migrateModel unable to load user with idUser of ${idUser}`);
 
         for (const modelFile of modelFileSet) {
             const fileExists: boolean = await this.testFileExistence(modelFile);
@@ -130,12 +117,21 @@ export class ModelMigration {
                 return this.recordError(`migrateModel attempting to ingest non-model ${H.Helpers.JSONStringify(modelFile)} without model already created`);
 
             const ingestRes: STORE.IngestStreamOrFileResult = await this.ingestFile(modelFile, doNotSendIngestionEvent);
-            if (ingestRes.asset) {
+            if (ingestRes.assets) {
+                if (!asset)
+                    asset = [];
+                asset = asset.concat(ingestRes.assets);
+            } else if (ingestRes.asset) {
                 if (!asset)
                     asset = [];
                 asset.push(ingestRes.asset);
             }
-            if (ingestRes.assetVersion) {
+
+            if (ingestRes.assetVersions) {
+                if (!assetVersion)
+                    assetVersion = [];
+                assetVersion = assetVersion.concat(ingestRes.assetVersions);
+            } else if (ingestRes.assetVersion) {
                 if (!assetVersion)
                     assetVersion = [];
                 assetVersion.push(ingestRes.assetVersion);
@@ -149,6 +145,18 @@ export class ModelMigration {
             await this.postItemWiring();
 
         return { success: true, model: this.model, modelFileName, asset, assetVersion };
+    }
+
+    private async initialize(): Promise<H.IOResults> {
+        if (!ModelMigration.vocabModel)
+            ModelMigration.vocabModel             = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
+        if (!ModelMigration.vocabModelUVMapFile)
+            ModelMigration.vocabModelUVMapFile    = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile);
+        if (!ModelMigration.vocabModel)
+            return this.recordError('initialize unable to load vocabulary for model file asset type');
+        if (!ModelMigration.vocabModelUVMapFile)
+            return this.recordError('initialize unable to load vocabulary for model uv map file asset type');
+        return { success: true };
     }
 
     private async ingestFile(modelFile: ModelMigrationFile, doNotSendIngestionEvent?: boolean): Promise<STORE.IngestStreamOrFileResult> {

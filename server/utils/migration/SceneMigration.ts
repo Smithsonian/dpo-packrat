@@ -3,11 +3,15 @@ import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as STORE from '../../storage/interface';
 import * as NAV from '../../navigation/interface';
+import * as COL from '../../collections/interface/';
 import * as H from '../helpers';
 import * as LOG from '../logger';
 import { SceneMigrationPackage } from './SceneMigrationPackage';
+import { SceneHelpers } from '../../utils';
+import { SvxReader } from '../parser';
 
 import * as path from 'path';
+import fetch from 'node-fetch';
 
 export type SceneMigrationResults = {
     success: boolean;
@@ -20,18 +24,16 @@ export type SceneMigrationResults = {
 };
 
 export class SceneMigration {
-    private static vocabScene:          DBAPI.Vocabulary | undefined    = undefined;
-    private static vocabOther:          DBAPI.Vocabulary | undefined    = undefined;
-    private static idSystemObjectTest:  number | undefined              = undefined;
+    private static vocabScene:          DBAPI.Vocabulary | undefined        = undefined;
+    private static vocabOther:          DBAPI.Vocabulary | undefined        = undefined;
+    private static idSystemObjectTest:  number | undefined                  = undefined;
 
-    private userOwner:                  DBAPI.User | undefined          = undefined;
-    private scene:                      DBAPI.Scene | null | undefined  = undefined;
+    private ICol:                       COL.ICollection | undefined         = undefined;
+    private scenePackage:               SceneMigrationPackage | undefined   = undefined;
+    private userOwner:                  DBAPI.User | undefined              = undefined;
+    private scene:                      DBAPI.Scene | null | undefined      = undefined;
 
-    async initialize(idUser: number): Promise<H.IOResults> {
-        this.userOwner = await CACHE.UserCache.getUser(idUser);
-        if (!this.userOwner)
-            return this.recordError(`initialize unable to load user with idUser of ${idUser}`);
-
+    private async initialize(): Promise<H.IOResults> {
         if (!SceneMigration.vocabScene)
             SceneMigration.vocabScene   = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
         if (!SceneMigration.vocabOther)
@@ -44,34 +46,44 @@ export class SceneMigration {
         return { success: true };
     }
 
-    async migrateScene(scenePackage: SceneMigrationPackage, doNotSendIngestionEvent?: boolean): Promise<SceneMigrationResults> {
+    async migrateScene(idUser: number, scenePackage: SceneMigrationPackage, doNotSendIngestionEvent?: boolean): Promise<SceneMigrationResults> {
         let testData: boolean | undefined = undefined;
 
-        let sceneFileName: string | undefined = undefined;
         let asset: DBAPI.Asset[] | null | undefined = undefined;
         let assetVersion: DBAPI.AssetVersion[] | null | undefined = undefined;
 
-        const fileExists: boolean = await this.testFileExistence(scenePackage);
-        if (!fileExists)
-            return this.recordError(`migrateScene unable to locate file for ${H.Helpers.JSONStringify(scenePackage)}`, { filesMissing: true });
+        const initRes: H.IOResults = await this.initialize();
+        if (!initRes.success)
+            return initRes;
+
+        this.ICol = COL.CollectionFactory.getInstance();
+        this.scenePackage = scenePackage;
+        this.userOwner = await CACHE.UserCache.getUser(idUser);
+        if (!this.userOwner)
+            return this.recordError(`initialize unable to load user with idUser of ${idUser}`);
+
+        if (!await this.testFileExistence())
+            return this.recordError(`migrateScene unable to locate file for ${H.Helpers.JSONStringify(this.scenePackage)}`, { filesMissing: true });
 
         // capture testData flag, if set, and ensure consistency
-        if (scenePackage.testData !== testData) {
+        if (this.scenePackage.testData !== testData) {
             if (testData === undefined)
-                testData = scenePackage.testData;
+                testData = this.scenePackage.testData;
             else
-                return this.recordError(`migrateScene called with inconsistent value for testData (${scenePackage.testData}); expected ${testData}`);
+                return this.recordError(`migrateScene called with inconsistent value for testData (${this.scenePackage.testData}); expected ${testData}`);
         }
 
-        if (!scenePackage.idSystemObjectItem && testData) {
+        if (!this.scenePackage.idSystemObjectItem && testData) {
             await this.createTestObjects();
-            scenePackage.idSystemObjectItem = SceneMigration.idSystemObjectTest;
+            this.scenePackage.idSystemObjectItem = SceneMigration.idSystemObjectTest;
         }
 
-        // TODO: Fetch scene package via HTTP; process scene file and extract metrics below
-        sceneFileName = scenePackage.EdanUUID;
+        const readStream: NodeJS.ReadableStream | null = await this.fetchRemoteScenePackage();
+        if (!readStream)
+            return this.recordError(`migrateScene failed to retrieve scene package stream for ${H.Helpers.JSONStringify(this.scenePackage)}`);
+
         this.scene = new DBAPI.Scene({
-            Name: sceneFileName,
+            Name: this.scenePackage.SceneName,
             idAssetThumbnail: null,
             CountScene: null,
             CountNode: null,
@@ -81,61 +93,88 @@ export class SceneMigration {
             CountMeta: null,
             CountSetup: null,
             CountTour: null,
-            EdanUUID: scenePackage.EdanUUID,
-            PosedAndQCd: scenePackage.PosedAndQCd ?? false,
-            ApprovedForPublication: scenePackage.ApprovedForPublication ?? false,
+            EdanUUID: this.scenePackage.EdanUUID,
+            PosedAndQCd: this.scenePackage.PosedAndQCd ?? false,
+            ApprovedForPublication: this.scenePackage.ApprovedForPublication ?? false,
             Title: null,
             idScene: 0
         });
 
         if (!await this.scene.create())
             return this.recordError(`migrateScene failed to create scene DB record ${H.Helpers.JSONStringify(this.scene)}`);
+        LOG.info(`SceneMigration.migrateScene created scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+
         // wire item to scene
-        if (scenePackage.idSystemObjectItem) {
-            if (!await this.wireItemToScene(scenePackage.idSystemObjectItem))
-                return this.recordError(`migrateScene failed to wire media group to scene for ${H.Helpers.JSONStringify(scenePackage)}`);
+        if (this.scenePackage.idSystemObjectItem) {
+            if (!await this.wireItemToScene(this.scenePackage.idSystemObjectItem))
+                return this.recordError(`migrateScene failed to wire media group to scene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
+            LOG.info(`SceneMigration.migrateScene wired scene to idSystemObject ${this.scenePackage.idSystemObjectItem}`, LOG.LS.eSYS);
         }
 
-        const ingestRes: STORE.IngestStreamOrFileResult = await this.ingestFile(scenePackage, doNotSendIngestionEvent);
-        if (ingestRes.asset) {
-            if (!asset)
-                asset = [];
-            asset.push(ingestRes.asset);
-        }
-        if (ingestRes.assetVersion) {
-            if (!assetVersion)
-                assetVersion = [];
-            assetVersion.push(ingestRes.assetVersion);
-        }
-
+        const sceneFileName: string = this.scenePackage.PackageName ? this.scenePackage.PackageName : `${this.scenePackage.EdanUUID}.zip`;
+        const ingestRes: STORE.IngestStreamOrFileResult = await this.ingestStream(readStream, sceneFileName, true, doNotSendIngestionEvent); /* true -> allow zip containing scene package to be cracked open */
         if (!ingestRes.success)
-            return this.recordError(`migrateScene failed to ingest ${H.Helpers.JSONStringify(scenePackage)}: ${ingestRes.error}`);
+            return this.recordError(`migrateScene failed to ingest ${H.Helpers.JSONStringify(this.scenePackage)}: ${ingestRes.error}`);
+        if (ingestRes.assets)
+            asset = ingestRes.assets;
+        if (ingestRes.assetVersions)
+            assetVersion = ingestRes.assetVersions;
 
-        if (scenePackage.idSystemObjectItem)
+        // Extract scene metrics
+        const metricsRes: H.IOResults = await this.extractAndUpdateSceneMetrics(asset, assetVersion);
+        if (!metricsRes.success)
+            return metricsRes;
+
+        // Fetch and Ingest Resources
+        const resourceRes: H.IOResults = await this.fetchAndIngestResources(doNotSendIngestionEvent);
+        if (!resourceRes.success)
+            return resourceRes;
+
+        if (this.scenePackage.idSystemObjectItem)
             await this.postItemWiring();
 
         return { success: true, scene: this.scene, sceneFileName, asset, assetVersion };
     }
 
-    private async ingestFile(scenePackage: SceneMigrationPackage, doNotSendIngestionEvent?: boolean): Promise<STORE.IngestStreamOrFileResult> {
-        if (!this.scene || !this.userOwner || !SceneMigration.vocabScene || !SceneMigration.vocabOther)
+    private async fetchRemoteScenePackage(): Promise<NodeJS.ReadableStream | null> {
+        if (!this.scenePackage)
+            return null;
+
+        const packageURL: string = `https://3d-api.si.edu/content/package/3d_package:${this.scenePackage.EdanUUID}`;
+        return this.fetchRemoteStream(packageURL);
+    }
+
+    private async fetchRemoteStream(url: string): Promise<NodeJS.ReadableStream | null> {
+        LOG.info(`SceneMigration.fetchRemoteStream fetching ${url}`, LOG.LS.eSYS);
+        try {
+            const res = await fetch(url);
+            return res.body;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('SceneMigration.fetchRemoteStream', LOG.LS.eSYS, error);
+            return null;
+        }
+    }
+
+    private async ingestStream(readStream: NodeJS.ReadableStream | null, FileName: string, allowZipCracking: boolean,
+        doNotSendIngestionEvent?: boolean): Promise<STORE.IngestStreamOrFileResult> {
+        if (!this.scenePackage || !this.scene || !this.userOwner || !SceneMigration.vocabScene || !SceneMigration.vocabOther)
             return { success: false };
 
-        const localFilePath: string | null = this.computeFilePath(scenePackage);
+        const localFilePath: string | null = readStream ? null : this.computeFilePath(FileName);
+        LOG.info(`SceneMigration.ingestFile using ${readStream ? 'stream' : 'file ' + localFilePath} for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
 
-        LOG.info(`SceneMigration.ingestFile ${localFilePath} for scene ${this.scene}`, LOG.LS.eSYS);
         const ISI: STORE.IngestStreamOrFileInput = {
-            readStream: null,
+            readStream,
             localFilePath,
             asset: null,
-            FileName: scenePackage.PackageName ? scenePackage.PackageName : scenePackage.EdanUUID,
+            FileName,
             FilePath: '',
             idAssetGroup: 0,
             idVAssetType: SceneMigration.vocabScene.idVocabulary, // sceneEntry.geometry ? SceneMigration.vocabScene.idVocabulary : SceneMigration.vocabOther.idVocabulary, // FIXME: correct this info!
-            allowZipCracking: true,
+            allowZipCracking,
             idUserCreator: this.userOwner.idUser,
             SOBased: this.scene,
-            Comment: null,
+            Comment: 'Created by migration',
             doNotSendIngestionEvent
         };
 
@@ -158,9 +197,9 @@ export class SceneMigration {
 
         const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, this.scene);
         if (!xref)
-            return this.recordError(`wireItemToScene unable to wire item ${JSON.stringify(itemDB)} to scene ${this.scene}`);
+            return this.recordError(`wireItemToScene unable to wire item ${JSON.stringify(itemDB)} to scene ${H.Helpers.JSONStringify(this.scene)}`);
 
-        LOG.info(`SceneMigration.wireItemToScene ${JSON.stringify(itemDB)} to scene ${this.scene}`, LOG.LS.eSYS);
+        LOG.info(`SceneMigration.wireItemToScene ${JSON.stringify(itemDB)} to scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
         return { success: true };
     }
 
@@ -232,20 +271,23 @@ export class SceneMigration {
         return { success: true };
     }
 
-    private computeFilePath(scenePackage: SceneMigrationPackage): string | null {
-        if (!scenePackage.PackageName)
+    private computeFilePath(FileName?: string | undefined): string | null {
+        if (!this.scenePackage || !FileName)
             return null;
         // if no path is provided, assume this is regression testing, and look in the appropriate path for our mock scenes
-        const basePath: string = scenePackage.PackagePath ? scenePackage.PackagePath : path.join(__dirname, '../../tests/mock/scenes', scenePackage.EdanUUID);
-        return path.join(basePath, scenePackage.PackageName);
+        const basePath: string = this.scenePackage?.PackagePath ? this.scenePackage.PackagePath : path.join(__dirname, '../../tests/mock/scenes', this.scenePackage.EdanUUID);
+        return path.join(basePath, FileName);
     }
 
-    private async testFileExistence(scenePackage: SceneMigrationPackage): Promise<boolean> {
-        const filePath: string | null = this.computeFilePath(scenePackage);
-        if (filePath === null) {
-            // We are loading via EDAN ... handle that here!
+    private async testFileExistence(): Promise<boolean> {
+        if (!this.scenePackage) // missing scene package details? Error!
             return false;
-        }
+        if (this.scenePackage.fetchRemote)  // fetching remotely, all is good
+            return true;
+
+        const filePath: string | null = this.computeFilePath(this.scenePackage.PackageName);
+        if (filePath === null) // We are loading via EDAN
+            return true;
         const res: H.StatResults = await H.Helpers.stat(filePath);
         const success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
 
@@ -264,6 +306,104 @@ export class SceneMigration {
 
         LOG.info(`SceneMigration.testFileExistience('${filePath}') = ${success}`, LOG.LS.eSYS);
         return success;
+    }
+
+    private async extractAndUpdateSceneMetrics(assets: DBAPI.Asset[] | undefined, assetVersions: DBAPI.AssetVersion[] | undefined): Promise<H.IOResults> {
+        if (!assets || !assetVersions || !this.scene)
+            return this.recordError('extractAndUpdateSceneMetrics called without assets and/or asset versions');
+
+        LOG.info(`SceneMigration.extractAndUpdateSceneMetrics called for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+        // Build map of asset ID -> asset version
+        const assetIDToVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>();
+        for (const assetVersion of assetVersions)
+            assetIDToVersionMap.set(assetVersion.idAsset, assetVersion);
+
+        for (const asset of assets) {
+            const assetVersion: DBAPI.AssetVersion | undefined = assetIDToVersionMap.get(asset.idAsset);
+            if (!assetVersion)
+                return this.recordError(`extractAndUpdateSceneMetrics could not find asset version for asset ${H.Helpers.JSONStringify(asset)}`);
+
+            const assetType: COMMON.eVocabularyID | undefined = await asset.assetType();
+            if (!assetType)
+                return this.recordError(`extractAndUpdateSceneMetrics unable to compute asset type for asset ${H.Helpers.JSONStringify(asset)}`);
+
+            if (assetType !== COMMON.eVocabularyID.eAssetAssetTypeScene)
+                continue;
+
+            // found our scene; process it!
+            LOG.info(`SceneMigration.extractAndUpdateSceneMetrics extracting svx.json from ${H.Helpers.JSONStringify(asset)}`, LOG.LS.eSYS);
+            const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
+            if (!RSR.success)
+                return this.recordError(`extractAndUpdateSceneMetrics failed to read scene asset ${H.Helpers.JSONStringify(asset)}: ${RSR.error}`);
+            if (!RSR.readStream)
+                return this.recordError(`extractAndUpdateSceneMetrics unable to compute stream for scene asset ${H.Helpers.JSONStringify(asset)}`);
+
+            const svx: SvxReader = new SvxReader();
+            const svxRes: H.IOResults = await svx.loadFromStream(RSR.readStream);
+            if (!svxRes.success || !svx.SvxExtraction)
+                return this.recordError(`extractAndUpdateSceneMetrics unable to parse SVX from stream: ${svxRes.error}`);
+
+            this.scene.CountScene   = svx.SvxExtraction.sceneCount;
+            this.scene.CountNode    = svx.SvxExtraction.nodeCount;
+            this.scene.CountCamera  = svx.SvxExtraction.cameraCount;
+            this.scene.CountLight   = svx.SvxExtraction.lightCount;
+            this.scene.CountModel   = svx.SvxExtraction.modelCount;
+            this.scene.CountMeta    = svx.SvxExtraction.metaCount;
+            this.scene.CountSetup   = svx.SvxExtraction.setupCount;
+            this.scene.CountTour    = svx.SvxExtraction.tourCount;
+            if (!await this.scene.update())
+                return this.recordError(`extractAndUpdateSceneMetrics unable to update scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
+
+            LOG.info(`SceneMigration.extractAndUpdateSceneMetrics updated scene metrics for ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+            return { success: true };
+        }
+
+        return this.recordError('extractAndUpdateSceneMetrics unable to locate asset for scene svx.json');
+    }
+
+    private async fetchAndIngestResources(doNotSendIngestionEvent?: boolean | undefined): Promise<H.IOResults> {
+        if (!this.ICol || !this.scenePackage || !this.scene)
+            return this.recordError(`fetchAndIngestResources called without required data for ${H.Helpers.JSONStringify(this.scenePackage)}`);
+
+        const edanURL: string = `3d_package:${this.scenePackage.EdanUUID}`;
+        const edanRecord: COL.EdanRecord | null = await this.ICol.fetchContent(undefined, edanURL);
+        if (!edanRecord)
+            return this.recordError(`fetchAndIngestResources unable to fetch EDAN record for ${edanURL}`);
+
+        LOG.info(`fetchAndIngestResources ${edanURL}: ${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eSYS);
+
+        const edan3DResources: COL.Edan3DResource[] | undefined = edanRecord.content?.resources;
+        if (edan3DResources) {
+            const SO: DBAPI.SystemObject | null = await this.scene.fetchSystemObject();
+            if (!SO)
+                return this.recordError(`fetchAndIngestResources unable to fetch SystemObject from scene ${H.Helpers.JSONStringify(this.scene)}`);
+
+            for (const resource of edan3DResources) {
+                LOG.info(`fetchAndIngestResources ${edanURL}: Handling resource ${H.Helpers.JSONStringify(resource)}`, LOG.LS.eSYS);
+                if (!resource.url || !resource.filename)
+                    continue;
+                const readStream: NodeJS.ReadableStream | null = await this.fetchRemoteStream(resource.url);
+                if (!readStream)
+                    return this.recordError(`fetchAndIngestResources failed to retrieve stream for resource ${H.Helpers.JSONStringify(resource)}`);
+
+                const ingestRes: STORE.IngestStreamOrFileResult = await this.ingestStream(readStream, resource.filename, false, doNotSendIngestionEvent); /* false -> do not crack resource/attachment zips */
+                if (!ingestRes.success)
+                    return this.recordError(`fetchAndIngestResources failed to ingest resource ${H.Helpers.JSONStringify(resource)}: ${ingestRes.error}`);
+
+                let idSystemObject: number = SO.idSystemObject;
+                if (ingestRes.assetVersion) {
+                    const SOAssetVersion: DBAPI.SystemObject | null = await ingestRes.assetVersion.fetchSystemObject();
+                    if (!SOAssetVersion)
+                        return this.recordError(`fetchAndIngestResources failed to fetch system object for asset version ${H.Helpers.JSONStringify(ingestRes.assetVersion)}`);
+                    idSystemObject = SOAssetVersion.idSystemObject;
+                }
+
+                const metadataRes: H.IOResults = await SceneHelpers.recordResourceMetadata(resource, idSystemObject, SO.idSystemObject, this.userOwner?.idUser ?? null);
+                if (!metadataRes.success)
+                    LOG.error('fetchAndIngestResources could not persist attachment metadata', LOG.LS.eSYS);
+            }
+        }
+        return { success: true };
     }
 
     private recordError(error: string, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any

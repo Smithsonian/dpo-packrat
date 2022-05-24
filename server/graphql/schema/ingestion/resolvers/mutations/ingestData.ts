@@ -12,6 +12,7 @@ import * as COL from '../../../../../collections/interface';
 import * as META from '../../../../../metadata';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
+import { SceneHelpers } from '../../../../../utils';
 import { SvxReader, SvxExtraction } from '../../../../../utils/parser';
 import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
@@ -1195,36 +1196,13 @@ class IngestDataWorker extends ResolverBase {
         }
 
         // record metadata
-        const extractor: META.MetadataExtractor = new META.MetadataExtractor();
-        extractor.metadata.set('isAttachment', '1');
-        if (sceneAttachment.type)
-            extractor.metadata.set('type', await IngestDataWorker.convertVocabToString(sceneAttachment.type));
-        if (sceneAttachment.category)
-            extractor.metadata.set('category', await IngestDataWorker.convertVocabToString(sceneAttachment.category));
-        if (sceneAttachment.units)
-            extractor.metadata.set('units', await IngestDataWorker.convertVocabToString(sceneAttachment.units));
-        if (sceneAttachment.modelType)
-            extractor.metadata.set('modelType', await IngestDataWorker.convertVocabToString(sceneAttachment.modelType));
-        if (sceneAttachment.fileType)
-            extractor.metadata.set('fileType', await IngestDataWorker.convertVocabToString(sceneAttachment.fileType));
-        if (sceneAttachment.gltfStandardized)
-            extractor.metadata.set('gltfStandardized', sceneAttachment.gltfStandardized ? '1' : '0');
-        if (sceneAttachment.dracoCompressed)
-            extractor.metadata.set('dracoCompressed', sceneAttachment.dracoCompressed ? '1' : '0');
-        if (sceneAttachment.title)
-            extractor.metadata.set('title', sceneAttachment.title);
         const idSOParent: number = assetVersion.idSOAttachment ? assetVersion.idSOAttachment : SOAssetVersion.idSystemObject;
-        const results: H.IOResults = await META.MetadataManager.persistExtractor(SOAssetVersion.idSystemObject, idSOParent, extractor, this.user?.idUser ?? null);
+        const results: H.IOResults = await SceneHelpers.recordAttachmentMetadata(sceneAttachment, SOAssetVersion.idSystemObject, idSOParent, this.user?.idUser ?? null);
         if (!results.success)
             LOG.error('ingestData could not persist attachment metadata', LOG.LS.eGQL);
 
         this.assetVersionMap.set(sceneAttachment.idAssetVersion, { SOOwner, isAttachment: true, Comment: null }); // store attachment without unzipping
         return true;
-    }
-
-    private static async convertVocabToString(idVocabulary: number): Promise<string> {
-        const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabulary);
-        return vocab ? vocab.Term : '';
     }
 
     private async wireItemToAssetOwners(itemDB: DBAPI.Item): Promise<boolean> {

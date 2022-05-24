@@ -282,14 +282,14 @@ export class Helpers {
     /** Computes a hash from a stream. @param hashMethod Pass in 'sha512' or 'sha1', for example */
     static async computeHashFromStream(stream: NodeJS.ReadableStream, hashMethod: string): Promise<HashResults> {
         try {
-            let dataLength: number = 0;
-            const hash = crypto.createHash(hashMethod);
-            stream.pipe(hash);
-
             return new Promise<HashResults>((resolve) => {
+                let dataLength: number = 0;
+                const hash = crypto.createHash(hashMethod);
+
                 stream.on('data', (chunk: Buffer) => { dataLength += chunk.length; });
                 stream.on('end', () => { resolve({ hash: hash.digest('hex'), dataLength, success: true }); });
                 stream.on('error', () => { resolve({ hash: '', dataLength: 0, success: false, error: 'Helpers.computeHashFromFile() Stream Error' }); });
+                stream.pipe(hash);
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.computeHashFromFile', LOG.LS.eSYS, error);
@@ -373,9 +373,9 @@ export class Helpers {
 
     static async writeStreamToStreamComputeSize(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream, waitOnEnd: boolean = false): Promise<IOResultsSized> {
         try {
-            let size: number = 0;
-            readStream.pipe(writeStream);
             return new Promise<IOResultsSized>((resolve) => {
+                let size: number = 0;
+
                 readStream.on('data', (chunk: Buffer) => { size += chunk.length; });
                 /* istanbul ignore else */
                 if (!waitOnEnd) {
@@ -384,7 +384,10 @@ export class Helpers {
                 } else {
                     writeStream.on('end', () => { resolve({ success: true, size }); });
                 } /* istanbul ignore next */
-                writeStream.on('error', () => { resolve({ success: false, error: 'Unknown stream error', size }); });
+                readStream.on('error', () => { resolve({ success: false, error: 'Unknown readstream error', size }); });
+                writeStream.on('error', () => { resolve({ success: false, error: 'Unknown writestream error', size }); });
+
+                readStream.pipe(writeStream);
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.writeStreamToStream', LOG.LS.eSYS, error);

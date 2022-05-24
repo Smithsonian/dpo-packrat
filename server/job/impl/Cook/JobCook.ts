@@ -318,6 +318,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     headers: { 'Content-Type': 'application/octet-stream' }
                 };
                 const RS: Readable = webdavClient.createReadStream(destination, webdavWSOpts);
+                RS.on('error', error => { LOG.error(`JobCook [${this.name()}] JobCook.fetchFile stream error`, LOG.LS.eJOB, error); });
                 return { readStream: RS, fileName, storageHash: null, success: true };
             } catch (error) {
                 LOG.error('JobCook [${this.name()}] JobCook.fetchFile', LOG.LS.eJOB, error);
@@ -369,6 +370,8 @@ export abstract class JobCook<T> extends JobPackrat {
                         let res: H.IOResultsSized = { success: false, error: 'Not Executed', size: -1 };
                         for (let transmitCount: number = 0; transmitCount < CookWebDAVTransmitRetryCount; transmitCount++) {
                             const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
+                            WS.on('error', error => { LOG.error(`JobCook [${this.name()}] JobCook.stageFiles stream error`, LOG.LS.eJOB, error); });
+
                             res = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
                             if (res.success)
                                 break;
