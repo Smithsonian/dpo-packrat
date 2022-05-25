@@ -18,7 +18,8 @@ export interface ItemDetailFields extends SubjectDetailFields {
 }
 
 function ItemDetails(props: DetailComponentProps): React.ReactElement {
-    const { data, loading, disabled, onUpdateDetail, objectType, subtitle, onSubtitleUpdate } = props;
+    const { data, loading, disabled, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle } = props;
+
     const [ItemDetails, updateDetailField] = useDetailTabStore(state => [state.ItemDetails, state.updateDetailField]);
 
     useEffect(() => {
@@ -50,6 +51,7 @@ function ItemDetails(props: DetailComponentProps): React.ReactElement {
                 disabled={disabled}
                 onChange={onSetField}
                 subtitle={subtitle}
+                originalSubtitle={originalSubtitle}
                 onSubtitleUpdate={onSubtitleUpdate}
                 isItemView
                 setCheckboxField={setCheckboxField}
