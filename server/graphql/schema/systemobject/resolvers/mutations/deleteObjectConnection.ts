@@ -16,7 +16,7 @@ export default async function deleteObjectConnection(_: Parent, args: MutationDe
         const sourceObjectsOfChild = await getRelatedObjects(idSystemObjectDerived, RelatedObjectType.Source);
         const sourceItemCount = sourceObjectsOfChild.filter(source => source.objectType === COMMON.eSystemObjectType.eItem).length;
         if (sourceItemCount <= 1) {
-            return { success: false, details: 'Cannot delete last item parent' };
+            return { success: false, details: 'Cannot delete last media group parent' };
         }
     }
 

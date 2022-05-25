@@ -570,6 +570,7 @@ function DetailsView(): React.ReactElement {
                         onUpdateDetail={onUpdateDetail}
                         onSubtitleUpdate={onSubtitleUpdate}
                         subtitle={details?.subtitle}
+                        originalSubtitle={data.getSystemObjectDetails?.subTitle || ''}
                         objectVersions={objectVersions}
                         detailQuery={detailQuery}
                         metadata={metadata}

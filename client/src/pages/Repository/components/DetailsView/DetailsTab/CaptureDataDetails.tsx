@@ -9,7 +9,7 @@
 import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Checkbox } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { DateInputField, Loader } from '../../../../../components';
-import { parseFoldersToState, useVocabularyStore } from '../../../../../store';
+import { parseFoldersToState, StateFolder, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
@@ -166,6 +166,10 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const cdMethods = getEntries(eVocabularySetID.eCaptureDataCaptureMethod);
     const captureMethodidVocabulary = withDefaultValueNumber(CaptureDataDetails?.captureMethod, getInitialEntry(eVocabularySetID.eCaptureDataCaptureMethod));
     const captureMethod = cdMethods.find(method => method.idVocabulary === captureMethodidVocabulary);
+
+    const cdDetailsDate = new Date(CaptureDataDetails.dateCaptured as string);
+    const cdDataDate = new Date(captureDataData?.dateCaptured as string);
+
     return (
         <Box>
             <Description
@@ -198,7 +202,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 </TableCell>
                                 <TableCell className={classes.tableCell}>
                                     <DateInputField
-                                        updated={isFieldUpdated(CaptureDataDetails, captureDataData, 'dateCaptured')}
+                                        updated={`${cdDataDate.getMonth()}/${cdDataDate.getDate()}/${cdDataDate.getFullYear()}` !== `${cdDetailsDate.getMonth()}/${cdDetailsDate.getDate()}/${cdDetailsDate.getFullYear()}`}
                                         value={new Date(CaptureDataDetails?.dateCaptured ?? Date.now())}
                                         disabled={disabled}
                                         onChange={(_, value) => setDateField('dateCaptured', value)}
@@ -235,6 +239,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                     folders={parseFoldersToState(CaptureDataDetails?.folders ?? [])}
                     options={getEntries(eVocabularySetID.eCaptureDataFileVariantType)}
                     onUpdate={updateFolderVariant}
+                    originalFolders={data?.getDetailsTabDataForObject?.CaptureData?.folders as StateFolder[]}
                 />
 
                 <Box className={classes.fieldTableBoxContainer}>
