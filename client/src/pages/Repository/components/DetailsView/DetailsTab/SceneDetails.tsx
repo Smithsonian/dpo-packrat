@@ -13,6 +13,7 @@ import { apolloClient } from '../../../../../graphql/index';
 import { ReadOnlyRow, CheckboxField, InputField } from '../../../../../components/index';
 import { useDetailTabStore } from '../../../../../store';
 import { eSystemObjectType } from '@dpo-packrat/common';
+import { isFieldUpdated } from '../../../../../utils/repository';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {
@@ -36,9 +37,9 @@ export const useStyles = makeStyles(({ palette }) => ({
 function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const isMounted = useRef(false);
-    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate } = props;
+    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle } = props;
     const [SceneDetails, updateDetailField] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField]);
-
+    const sceneData = data?.getDetailsTabDataForObject.Scene;
     useEffect(() => {
         const retrieveSceneData = async () => {
             if (data && !loading) {
@@ -100,6 +101,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     required
                     padding='3px 10px 1px 10px'
                     containerStyle={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', paddingTop: '4px' }}
+                    updated={subtitle !== originalSubtitle}
                 />
                 <CheckboxField
                     label='Approved for Publication'
@@ -109,6 +111,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     required
                     padding='1px 10px'
                     containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+                    updated={isFieldUpdated(SceneDetails, sceneData,'ApprovedForPublication')}
                 />
                 <CheckboxField
                     label="Posed and QC'd"
@@ -120,6 +123,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     required
                     padding='1px 10px'
                     containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+                    updated={isFieldUpdated(SceneDetails, sceneData,'PosedAndQCd')}
                 />
                 <ReadOnlyRow
                     label='EDAN UUID'

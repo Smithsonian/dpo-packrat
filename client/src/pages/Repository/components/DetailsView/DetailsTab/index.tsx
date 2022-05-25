@@ -83,6 +83,7 @@ export interface DetailComponentProps extends GetDetailsTabDataForObjectQueryRes
     disabled: boolean;
     objectType: number;
     subtitle: string;
+    originalSubtitle: string;
     onSubtitleUpdate: (e) => void;
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
 }
@@ -113,6 +114,7 @@ type DetailsTabParams = {
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
     onSubtitleUpdate: (e) => void;
     subtitle?: string;
+    originalSubtitle?: string;
     objectVersions: SystemObjectVersion[];
     detailQuery: any;
     metadata: Metadata[]
@@ -131,6 +133,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         onUpdateDetail,
         onSubtitleUpdate,
         subtitle,
+        originalSubtitle,
         objectVersions,
         detailQuery,
         metadata
@@ -214,7 +217,8 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         objectType,
         disabled,
         onSubtitleUpdate,
-        subtitle
+        subtitle,
+        originalSubtitle
     };
 
     const detailsProps = {
