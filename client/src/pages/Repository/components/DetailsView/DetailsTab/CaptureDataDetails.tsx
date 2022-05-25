@@ -169,7 +169,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     const cdDetailsDate = new Date(CaptureDataDetails.dateCaptured as string);
     const cdDataDate = new Date(captureDataData?.dateCaptured as string);
-    console.log(`${cdDataDate.getMonth()}/${cdDataDate.getDate()}/${cdDataDate.getFullYear()}`, `${cdDetailsDate.getMonth()}/${cdDetailsDate.getDate()}/${cdDetailsDate.getFullYear()}`)
+    console.log(`${cdDataDate.getMonth()}/${cdDataDate.getDate()}/${cdDataDate.getFullYear()}`, `${cdDetailsDate.getMonth()}/${cdDetailsDate.getDate()}/${cdDetailsDate.getFullYear()}`);
 
     return (
         <Box>
