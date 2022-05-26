@@ -150,7 +150,7 @@ function DetailsView(): React.ReactElement {
         if (data) {
             const handleDetailTab = async () => {
                 await fetchDetailTabDataAndSetState();
-            }
+            };
             handleDetailTab();
         }
     }, [idSystemObject, data]);
