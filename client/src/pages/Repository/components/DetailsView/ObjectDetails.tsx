@@ -235,7 +235,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Publish</LoadingButton>
                             &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>API Only</LoadingButton>
                             &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
-                            &nbsp;<Tooltip arrow open={isTooltipOpen} title={ <ToolTip text={scenePublishNotes} />}><HelpOutline onClick={() => setIsTooltipOpen(!isTooltipOpen)} onMouseLeave={() => {setIsTooltipOpen(false)}} style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
+                            &nbsp;<Tooltip arrow open={isTooltipOpen} title={ <ToolTip text={scenePublishNotes} />}><HelpOutline onClick={() => setIsTooltipOpen(!isTooltipOpen)} onMouseLeave={() => {setIsTooltipOpen(false)}} style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>;
                         </Box>
                     }
                 />
@@ -364,4 +364,4 @@ Clicking "Publish" transmits the scene package to EDAN and marks the EDAN record
 Clicking "API Only" transmits the scene package to EDAN, but marks the EDAN record as not searchable.  As well, scene downloads are sent if allowed by the license.
 For published scenes, clicking "Unpublish" marks the scene package as inactive and not searchable.
 Changes made to scenes are only published to EDAN when the user makes use of "Publish", "API Only", or "Unpublish".
-Users must explicitly publish these changes to EDAN.`
+Users must explicitly publish these changes to EDAN.`;
