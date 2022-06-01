@@ -55,7 +55,7 @@ type ItemStore = {
     updateNewItemProject: (idProject: number) => void;
     updateSelectedItem: (id: string) => void;
     loadingItems: () => void;
-    fetchIngestionItems: (idSubjects: number[]) => Promise<void>;
+    fetchAndInitializeIngestionItems: (idSubjects: number[]) => Promise<void>;
     reset: () => void;
 };
 
@@ -117,7 +117,6 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
         newItemCopy.selected = true;
         set({ hasNewItem: true, items: itemsCopy, newItem: newItemCopy });
     },
-
     updateNewItemEntireSubject: (entireSubject: boolean) => {
         const { newItem } = get();
         const newItemCopy = lodash.cloneDeep(newItem);
@@ -159,7 +158,8 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
     loadingItems: (): void => {
         set({ loading: true });
     },
-    fetchIngestionItems: async (idSubjects: number[]): Promise<void> => {
+    fetchAndInitializeIngestionItems: async (idSubjects: number[]): Promise<void> => {
+        const { hasNewItem } = get();
         try {
             const ingestionItemQuery: ApolloQueryResult<GetIngestionItemsQuery> = await apolloClient.query({
                 query: GetIngestionItemsDocument,
@@ -172,6 +172,7 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
             });
             const { data: { getIngestionItems: { IngestionItem } } } = ingestionItemQuery;
             const ingestionItemState = IngestionItem?.map(item => parseIngestionItemToState(item));
+            if (ingestionItemState?.length === 1 && !hasNewItem) ingestionItemState[0].selected = true;
             set({ items: ingestionItemState });
         } catch (error) {
             toast.error('Failed to get media group for subjects');
