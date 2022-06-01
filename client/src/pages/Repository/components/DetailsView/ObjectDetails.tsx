@@ -235,7 +235,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Publish</LoadingButton>
                             &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>API Only</LoadingButton>
                             &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
-                            &nbsp;<Tooltip arrow open={isTooltipOpen} title={ <ToolTip text={scenePublishNotes} />}><HelpOutline onClick={() => setIsTooltipOpen(!isTooltipOpen)} onMouseLeave={() => {setIsTooltipOpen(false)}} style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>;
+                            &nbsp;<Tooltip arrow open={isTooltipOpen} title={ <ToolTip text={scenePublishNotes} />}><HelpOutline onClick={() => setIsTooltipOpen(!isTooltipOpen)} onMouseLeave={() => setIsTooltipOpen(false)} style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
                         </Box>
                     }
                 />
