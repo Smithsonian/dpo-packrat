@@ -136,20 +136,22 @@ function DetailsView(): React.ReactElement {
     const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields, initializeMetadata, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields, state.initializeMetadata, state.resetMetadata]);
 
     const objectDetailsData = data;
+    const fetchDetailTabDataAndSetState = async () => {
+        const detailsTabData = await getDetailsTabDataForObject(idSystemObject, objectType);
+        setDetailQuery(detailsTabData);
+        initializeDetailFields(detailsTabData, objectType);
+        if (objectType === eSystemObjectType.eSubject) {
+            initializePreferredIdentifier(detailsTabData?.data?.getDetailsTabDataForObject?.Subject?.idIdentifierPreferred);
+            setLoadingIdentifiers(false);
+        }
+    };
 
     useEffect(() => {
         if (data) {
-            const fetchDetailTabDataAndInitializeStateStore = async () => {
-                const detailsTabData = await getDetailsTabDataForObject(idSystemObject, objectType);
-                setDetailQuery(detailsTabData);
-                initializeDetailFields(detailsTabData, objectType);
-                if (objectType === eSystemObjectType.eSubject) {
-                    initializePreferredIdentifier(detailsTabData?.data?.getDetailsTabDataForObject?.Subject?.idIdentifierPreferred);
-                    setLoadingIdentifiers(false);
-                }
+            const handleDetailTab = async () => {
+                await fetchDetailTabDataAndSetState();
             };
-
-            fetchDetailTabDataAndInitializeStateStore();
+            handleDetailTab();
         }
     }, [idSystemObject, data]);
 
@@ -485,6 +487,7 @@ function DetailsView(): React.ReactElement {
             if (data?.updateObjectDetails?.success) {
                 const message: string | null | undefined = data?.updateObjectDetails?.message;
                 toast.success(`Data saved successfully${message? ': ' + message : ''}`);
+                fetchDetailTabDataAndSetState();
                 return true;
             } else
                 throw new Error(data?.updateObjectDetails?.message ?? '');
