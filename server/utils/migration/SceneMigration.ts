@@ -25,6 +25,7 @@ export type SceneMigrationResults = {
 
 export class SceneMigration {
     private static vocabScene:          DBAPI.Vocabulary | undefined        = undefined;
+    private static vocabModel:          DBAPI.Vocabulary | undefined        = undefined;
     private static vocabOther:          DBAPI.Vocabulary | undefined        = undefined;
     private static idSystemObjectTest:  number | undefined                  = undefined;
 
@@ -36,6 +37,8 @@ export class SceneMigration {
     private async initialize(): Promise<H.IOResults> {
         if (!SceneMigration.vocabScene)
             SceneMigration.vocabScene   = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
+        if (!SceneMigration.vocabModel)
+            SceneMigration.vocabModel   = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
         if (!SceneMigration.vocabOther)
             SceneMigration.vocabOther   = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
 
@@ -112,13 +115,17 @@ export class SceneMigration {
         }
 
         const sceneFileName: string = this.scenePackage.PackageName ? this.scenePackage.PackageName : `${this.scenePackage.EdanUUID}.zip`;
-        const ingestRes: STORE.IngestStreamOrFileResult = await this.ingestStream(readStream, sceneFileName, true, doNotSendIngestionEvent); /* true -> allow zip containing scene package to be cracked open */
-        if (!ingestRes.success)
-            return this.recordError(`migrateScene failed to ingest ${H.Helpers.JSONStringify(this.scenePackage)}: ${ingestRes.error}`);
-        if (ingestRes.assets)
-            asset = ingestRes.assets;
-        if (ingestRes.assetVersions)
-            assetVersion = ingestRes.assetVersions;
+        const IAR: STORE.IngestAssetResult = await this.ingestStream(readStream, sceneFileName, true, SceneMigration.vocabScene?.idVocabulary, doNotSendIngestionEvent); /* true -> allow zip containing scene package to be cracked open */
+        if (!IAR.success)
+            return this.recordError(`migrateScene failed to ingest ${H.Helpers.JSONStringify(this.scenePackage)}: ${IAR.error}`);
+        if (IAR.assets)
+            asset = IAR.assets;
+        if (IAR.assetVersions)
+            assetVersion = IAR.assetVersions;
+
+        const { success } = await SceneHelpers.handleComplexIngestionScene(this.scene, IAR);
+        if (!success)
+            return this.recordError(`migrateScene failed in handleComplexIngestionScene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
 
         // Extract scene metrics
         const metricsRes: H.IOResults = await this.extractAndUpdateSceneMetrics(asset, assetVersion);
@@ -156,12 +163,15 @@ export class SceneMigration {
     }
 
     private async ingestStream(readStream: NodeJS.ReadableStream | null, FileName: string, allowZipCracking: boolean,
-        doNotSendIngestionEvent?: boolean): Promise<STORE.IngestStreamOrFileResult> {
-        if (!this.scenePackage || !this.scene || !this.userOwner || !SceneMigration.vocabScene || !SceneMigration.vocabOther)
+        idVAssetType?: number, doNotSendIngestionEvent?: boolean): Promise<STORE.IngestAssetResult> {
+        if (!this.scenePackage || !this.scene || !this.userOwner || !SceneMigration.vocabScene)
             return { success: false };
 
         const localFilePath: string | null = readStream ? null : this.computeFilePath(FileName);
         LOG.info(`SceneMigration.ingestFile using ${readStream ? 'stream' : 'file ' + localFilePath} for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+
+        if (!idVAssetType)
+            idVAssetType = SceneMigration.vocabScene.idVocabulary;
 
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream,
@@ -170,7 +180,7 @@ export class SceneMigration {
             FileName,
             FilePath: '',
             idAssetGroup: 0,
-            idVAssetType: SceneMigration.vocabScene.idVocabulary, // sceneEntry.geometry ? SceneMigration.vocabScene.idVocabulary : SceneMigration.vocabOther.idVocabulary, // FIXME: correct this info!
+            idVAssetType,
             allowZipCracking,
             idUserCreator: this.userOwner.idUser,
             SOBased: this.scene,
@@ -386,15 +396,18 @@ export class SceneMigration {
                 if (!readStream)
                     return this.recordError(`fetchAndIngestResources failed to retrieve stream for resource ${H.Helpers.JSONStringify(resource)}`);
 
-                const ingestRes: STORE.IngestStreamOrFileResult = await this.ingestStream(readStream, resource.filename, false, doNotSendIngestionEvent); /* false -> do not crack resource/attachment zips */
-                if (!ingestRes.success)
-                    return this.recordError(`fetchAndIngestResources failed to ingest resource ${H.Helpers.JSONStringify(resource)}: ${ingestRes.error}`);
+                const IAR: STORE.IngestAssetResult = await this.ingestStream(readStream, resource.filename, false, SceneMigration.vocabModel?.idVocabulary, doNotSendIngestionEvent); /* false -> do not crack resource/attachment zips */
+                if (!IAR.success)
+                    return this.recordError(`fetchAndIngestResources failed to ingest resource ${H.Helpers.JSONStringify(resource)}: ${IAR.error}`);
+                if (IAR.assetVersions && IAR.assetVersions.length > 1)
+                    LOG.error(`fetchAndIngestResources created multiple asset versions, unexpectedly, ingesting ${resource.filename}`, LOG.LS.eJOB);
 
                 let idSystemObject: number = SO.idSystemObject;
-                if (ingestRes.assetVersion) {
-                    const SOAssetVersion: DBAPI.SystemObject | null = await ingestRes.assetVersion.fetchSystemObject();
+                const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
+                if (assetVersion) {
+                    const SOAssetVersion: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
                     if (!SOAssetVersion)
-                        return this.recordError(`fetchAndIngestResources failed to fetch system object for asset version ${H.Helpers.JSONStringify(ingestRes.assetVersion)}`);
+                        return this.recordError(`fetchAndIngestResources failed to fetch system object for asset version ${H.Helpers.JSONStringify(assetVersion)}`);
                     idSystemObject = SOAssetVersion.idSystemObject;
                 }
 

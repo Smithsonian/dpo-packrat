@@ -205,29 +205,32 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             };
 
             LOG.info(`JobCookSIGenerateDownloads.createSystemObjects ingesting ${downloadFile}`, LOG.LS.eJOB);
-            const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
-            if (!ISR.success) {
-                await this.appendToReportAndLog(`${this.name()} unable to ingest generated download model ${downloadFile}: ${ISR.error}`, true);
+            const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
+            if (!IAR.success) {
+                await this.appendToReportAndLog(`${this.name()} unable to ingest generated download model ${downloadFile}: ${IAR.error}`, true);
                 continue;
                 // return { success: false, error: ISR.error };
             }
+            if (IAR.assetVersions && IAR.assetVersions.length > 1)
+                LOG.error(`JobCookSIGenerateDownloads.createSystemObjects created multiple asset versions, unexpectedly, ingesting ${downloadFile}`, LOG.LS.eJOB);
 
             let idSystemObjectModel: number | null = modelSO ? modelSO.idSystemObject : null;
             if (!idSystemObjectModel) {
                 const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
                 idSystemObjectModel = SOI ? SOI.idSystemObject : null;
             }
+            const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
             const pathObject: string = idSystemObjectModel ? RouteBuilder.RepositoryDetails(idSystemObjectModel, eHrefMode.ePrependClientURL) : '';
             const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
-            const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
+            const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
             const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
             await this.appendToReportAndLog(`${this.name()} ingested generated download model ${hrefObject}${hrefDownload}`);
 
-            if (ISR.assetVersion)
-                assetVersionOverrideMap.set(ISR.assetVersion.idAsset, ISR.assetVersion.idAssetVersion);
+            if (assetVersion)
+                assetVersionOverrideMap.set(assetVersion.idAsset, assetVersion.idAssetVersion);
 
             // create/update ModelSceneXref for each download generated ... do after ingest so that we have the storage size available
-            const FileSize: bigint | null = ISR.assetVersion ? ISR.assetVersion.StorageSize : null;
+            const FileSize: bigint | null = assetVersion ? assetVersion.StorageSize : null;
             const MSXSource: DBAPI.ModelSceneXref | null = MSXSources.length > 0 ? MSXSources[0] : null;
 
             const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(model.idModel, sceneSource.idScene, model.Name);
