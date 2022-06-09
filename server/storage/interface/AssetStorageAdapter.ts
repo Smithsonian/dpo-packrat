@@ -106,16 +106,6 @@ export type IngestStreamOrFileInput = {
     doNotUpdateParentVersion?: boolean | undefined;
 };
 
-export type IngestStreamOrFileResult = {
-    success: boolean;
-    error?: string;
-    asset?: DBAPI.Asset | null | undefined;
-    assetVersion?: DBAPI.AssetVersion | null | undefined;
-    systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined;
-    assets?: DBAPI.Asset[] | null | undefined;
-    assetVersions?: DBAPI.AssetVersion[] | null | undefined;
-};
-
 type AssetFileOrStreamResult = {
     success: boolean;
     fileName?: string;
@@ -984,7 +974,7 @@ export class AssetStorageAdapter {
         return { asset, assetVersion, success: res.success };
     }
 
-    static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestStreamOrFileResult> {
+    static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestAssetResult> {
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} starting`, LOG.LS.eSTR);
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
@@ -1071,9 +1061,7 @@ export class AssetStorageAdapter {
         };
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
-        return { success: IAR.success, error: IAR.error, asset: comRes.assets[0] || null,
-            assetVersion: comRes.assetVersions[0] || null, systemObjectVersion: IAR.systemObjectVersion,
-            assets: IAR.assets, assetVersions: IAR.assetVersions };
+        return IAR;
     }
 
     static async renameAsset(asset: DBAPI.Asset, fileNameNew: string, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {

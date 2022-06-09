@@ -116,29 +116,21 @@ export class ModelMigration {
             } else if (!this.model)
                 return this.recordError(`migrateModel attempting to ingest non-model ${H.Helpers.JSONStringify(modelFile)} without model already created`);
 
-            const ingestRes: STORE.IngestStreamOrFileResult = await this.ingestFile(modelFile, doNotSendIngestionEvent);
-            if (ingestRes.assets) {
+            const IAR: STORE.IngestAssetResult = await this.ingestFile(modelFile, doNotSendIngestionEvent);
+            if (IAR.assets) {
                 if (!asset)
                     asset = [];
-                asset = asset.concat(ingestRes.assets);
-            } else if (ingestRes.asset) {
-                if (!asset)
-                    asset = [];
-                asset.push(ingestRes.asset);
+                asset = asset.concat(IAR.assets);
             }
 
-            if (ingestRes.assetVersions) {
+            if (IAR.assetVersions) {
                 if (!assetVersion)
                     assetVersion = [];
-                assetVersion = assetVersion.concat(ingestRes.assetVersions);
-            } else if (ingestRes.assetVersion) {
-                if (!assetVersion)
-                    assetVersion = [];
-                assetVersion.push(ingestRes.assetVersion);
+                assetVersion = assetVersion.concat(IAR.assetVersions);
             }
 
-            if (!ingestRes.success)
-                return this.recordError(`migrateModel failed to ingest ${H.Helpers.JSONStringify(modelFile)}: ${ingestRes.error}`);
+            if (!IAR.success)
+                return this.recordError(`migrateModel failed to ingest ${H.Helpers.JSONStringify(modelFile)}: ${IAR.error}`);
         }
 
         if (idSystemObject)
@@ -159,7 +151,7 @@ export class ModelMigration {
         return { success: true };
     }
 
-    private async ingestFile(modelFile: ModelMigrationFile, doNotSendIngestionEvent?: boolean): Promise<STORE.IngestStreamOrFileResult> {
+    private async ingestFile(modelFile: ModelMigrationFile, doNotSendIngestionEvent?: boolean): Promise<STORE.IngestAssetResult> {
         if (!this.model || !this.userOwner || !ModelMigration.vocabModel || !ModelMigration.vocabModelUVMapFile)
             return { success: false };
 
