@@ -24,7 +24,7 @@ When switching to the `dpo-packrat` repo, the node version will automatically be
 yarn
 ```
 
-2. Export the environment variables *(at the root level)* after the `.env.dev` has been configured.
+2. Export the environment variables *(at the root level)* after `.env.dev` has been configured.
 ```
 export $(grep -v ‘^#’ .env.dev | xargs)
 ```
@@ -59,7 +59,7 @@ yarn initdbdock
 ```
 
 8. After the database has been initialized, Solr enterprise-search needs to be indexed in order to populate the repository.
-Navigate to `localhost:4000/solrindex` in the browser and wait for the result to appear.
+Navigate to `localhost:4000/solrindex` in the browser and wait for the result to appear. Once Solr finishes indexing, set up via Docker is complete!
 
 *Note: sometimes a failure message will appear even upon successful indexing. Successful indexing can be seen in the server container logs and by visiting the repository and finding the newly populated entries.*
 
