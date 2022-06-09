@@ -181,6 +181,7 @@
     <copyField source="StakeholderPhoneNumberOffice" dest="_text_"/>
     <copyField source="StakeholderMailingAddress" dest="_text_"/>
     <copyField source="SceneEdanUUID" dest="_text_"/>
+    <copyField source="UnitAbbreviation" dest="_text_"/>
 
     <!-- Field to use to determine and enforce document uniqueness.
       Unless this field is marked with required="false", it will be a required field

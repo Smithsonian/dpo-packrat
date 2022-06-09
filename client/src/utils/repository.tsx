@@ -115,6 +115,18 @@ export function parseRepositoryUrl(search: string): any {
         const dateCreatedTo: Date = convertLocalDateToUTC(new Date(dateString));
         filter.dateCreatedTo = safeDate(dateCreatedTo);
     }
+
+    const searchS: RegExpMatchArray | null = search.match(/search=(.*?)([&]|$)/);
+    if (searchS && searchS.length >= 2) {
+        const searchString: string = decodeURIComponent(searchS[1]);
+        filter.search = searchString;
+    }
+
+    const keywordS: RegExpMatchArray | null = search.match(/keyword=(.*?)([&]|$)/);
+    if (keywordS && keywordS.length >= 2) {
+        const keywordString: string = decodeURIComponent(keywordS[1]);
+        filter.keyword = keywordString;
+    }
     return filter;
 }
 

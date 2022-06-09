@@ -12,6 +12,7 @@ import { StateFolder, VocabularyOption } from '../../../../../store';
 import { palette } from '../../../../../theme';
 import { ViewableProps } from '../../../../../types/repository';
 import { getNullableSelectEntries } from '../../../../../utils/controls';
+import { updatedFieldStyling } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 
 export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     emptyFolders: {
@@ -47,12 +48,13 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 
 interface AssetContentsProps extends ViewableProps {
     folders: StateFolder[];
+    originalFolders: StateFolder[];
     options: VocabularyOption[];
     onUpdate: (id: number, variantType: number) => void;
 }
 
 function AssetContents(props: AssetContentsProps): React.ReactElement {
-    const { folders, options, onUpdate, disabled = false } = props;
+    const { folders, options, onUpdate, disabled = false, originalFolders } = props;
     const classes = useStyles();
     return (
         <TableContainer component={Paper} className={classes.tableContainer} elevation={0}>
@@ -72,7 +74,7 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
                     </TableRow>
                     {folders.length > 0 && (folders.map(({ id, name, variantType }: StateFolder, index: number) => {
                         const update = ({ target }) => onUpdate(id, target.value);
-
+                        const originalFolder = originalFolders.find((folder) => folder.name === name);
                         return (
                             <TableRow key={index}>
                                 <TableCell className={classes.paddedCell} style={{ paddingTop: index === 0 ? 5 : 1 }}>
@@ -92,6 +94,7 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
                                         disableUnderline
                                         className={classes.select}
                                         SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
+                                        style={{ ...updatedFieldStyling(originalFolder?.variantType !== variantType) }}
                                     >
                                         {getNullableSelectEntries(options, 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                     </Select>
