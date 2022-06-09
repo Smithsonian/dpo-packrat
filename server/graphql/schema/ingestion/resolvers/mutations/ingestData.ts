@@ -1479,7 +1479,8 @@ class IngestDataWorker extends ResolverBase {
         if (this.ingestScene) {
             for (const scene of this.input.scene) {
                 // add validation in this area while we iterate through the objects
-                if (!scene.sourceObjects || !scene.sourceObjects.length || !scene.sourceObjects.some(sourceObj => sourceObj.objectType === eSystemObjectType.eModel))
+                // we only care about scene having a model parent if it's not an update (i.e. if it doesn't have an idAsset)
+                if (typeof scene.idAsset !== 'number' && (!scene.sourceObjects || !scene.sourceObjects.length || !scene.sourceObjects.some(sourceObj => sourceObj.objectType === eSystemObjectType.eModel)))
                     return { success: false, error: 'Scene ingestion must have at least 1 source object of type model' };
                 if (scene.sourceObjects && scene.sourceObjects.length) {
                     for (const sourceObject of scene.sourceObjects) {
