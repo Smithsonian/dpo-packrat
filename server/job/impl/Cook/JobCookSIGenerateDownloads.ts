@@ -302,7 +302,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         return this.parameters;
     }
 
-    protected computeModelAutomationTag(downloadType: string): string {
+    public static computeModelAutomationTag(downloadType: string): string {
         return `download-${downloadType}`;
     }
 
@@ -321,7 +321,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             idVFileType: vFileType ? vFileType.idVocabulary : null,
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
-            AutomationTag: this.computeModelAutomationTag(downloadType), CountTriangles: null
+            AutomationTag: JobCookSIGenerateDownloads.computeModelAutomationTag(downloadType), CountTriangles: null
         });
     }
 
@@ -344,7 +344,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     }
 
     private async findMatchingModel(modelSource: DBAPI.Model, downloadType: string): Promise<DBAPI.Model | null> {
-        const matches: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(modelSource.idModel, null, this.computeModelAutomationTag(downloadType));
+        const matches: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(modelSource.idModel, null, JobCookSIGenerateDownloads.computeModelAutomationTag(downloadType));
         return matches && matches.length > 0 ? matches[0] : null;
     }
 
