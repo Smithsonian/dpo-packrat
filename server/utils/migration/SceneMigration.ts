@@ -9,6 +9,9 @@ import * as LOG from '../logger';
 import { SceneMigrationPackage } from './SceneMigrationPackage';
 import { SceneHelpers } from '../../utils';
 import { SvxReader } from '../parser';
+import { JobCookSIGenerateDownloads } from '../../job/impl/Cook';
+import { PublishScene } from '../../collections/impl/PublishScene';
+import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
 
 import * as path from 'path';
 import fetch from 'node-fetch';
@@ -27,25 +30,33 @@ export class SceneMigration {
     private static vocabScene:          DBAPI.Vocabulary | undefined        = undefined;
     private static vocabModel:          DBAPI.Vocabulary | undefined        = undefined;
     private static vocabOther:          DBAPI.Vocabulary | undefined        = undefined;
+    private static vocabDownload:       DBAPI.Vocabulary | undefined        = undefined;
     private static idSystemObjectTest:  number | undefined                  = undefined;
 
     private ICol:                       COL.ICollection | undefined         = undefined;
     private scenePackage:               SceneMigrationPackage | undefined   = undefined;
     private userOwner:                  DBAPI.User | undefined              = undefined;
     private scene:                      DBAPI.Scene | null | undefined      = undefined;
+    private sceneSystemObjectID:        number | undefined                  = undefined;
 
     private async initialize(): Promise<H.IOResults> {
         if (!SceneMigration.vocabScene)
             SceneMigration.vocabScene   = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
         if (!SceneMigration.vocabModel)
-            SceneMigration.vocabModel   = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
+            SceneMigration.vocabModel   = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
         if (!SceneMigration.vocabOther)
             SceneMigration.vocabOther   = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
+        if (!SceneMigration.vocabDownload)
+            SceneMigration.vocabDownload = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
 
         if (!SceneMigration.vocabScene)
             return this.recordError('initialize unable to load vocabulary for scene asset type');
+        if (!SceneMigration.vocabModel)
+            return this.recordError('initialize unable to load vocabulary for model asset type');
         if (!SceneMigration.vocabOther)
             return this.recordError('initialize unable to load vocabulary for other asset type');
+        if (!SceneMigration.vocabDownload)
+            return this.recordError('initialize unable to load vocabulary for download model purpose');
         return { success: true };
     }
 
@@ -115,7 +126,7 @@ export class SceneMigration {
         }
 
         const sceneFileName: string = this.scenePackage.PackageName ? this.scenePackage.PackageName : `${this.scenePackage.EdanUUID}.zip`;
-        const IAR: STORE.IngestAssetResult = await this.ingestStream(readStream, sceneFileName, true, SceneMigration.vocabScene?.idVocabulary, doNotSendIngestionEvent); /* true -> allow zip containing scene package to be cracked open */
+        const IAR: STORE.IngestAssetResult = await this.ingestStream(readStream, sceneFileName, true, this.scene, SceneMigration.vocabScene?.idVocabulary, doNotSendIngestionEvent); /* true -> allow zip containing scene package to be cracked open */
         if (!IAR.success)
             return this.recordError(`migrateScene failed to ingest ${H.Helpers.JSONStringify(this.scenePackage)}: ${IAR.error}`);
         if (IAR.assets)
@@ -123,12 +134,12 @@ export class SceneMigration {
         if (IAR.assetVersions)
             assetVersion = IAR.assetVersions;
 
-        const { success } = await SceneHelpers.handleComplexIngestionScene(this.scene, IAR);
+        const { success } = await SceneHelpers.handleComplexIngestionScene(this.scene, IAR, this.userOwner.idUser, undefined);
         if (!success)
             return this.recordError(`migrateScene failed in handleComplexIngestionScene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
 
-        // Extract scene metrics
-        const metricsRes: H.IOResults = await this.extractAndUpdateSceneMetrics(asset, assetVersion);
+        // Extract scene metrics; Trim excess objects that were present in scene zip (EDAN seems to have scenes published with all sorts of extraneous crap)
+        const metricsRes: H.IOResults = await this.extractSceneDetails(asset, assetVersion);
         if (!metricsRes.success)
             return metricsRes;
 
@@ -162,13 +173,13 @@ export class SceneMigration {
         }
     }
 
-    private async ingestStream(readStream: NodeJS.ReadableStream | null, FileName: string, allowZipCracking: boolean,
+    private async ingestStream(readStream: NodeJS.ReadableStream | null, FileName: string, allowZipCracking: boolean, SOBased: DBAPI.SystemObjectBased,
         idVAssetType?: number, doNotSendIngestionEvent?: boolean): Promise<STORE.IngestAssetResult> {
         if (!this.scenePackage || !this.scene || !this.userOwner || !SceneMigration.vocabScene)
             return { success: false };
 
         const localFilePath: string | null = readStream ? null : this.computeFilePath(FileName);
-        LOG.info(`SceneMigration.ingestFile using ${readStream ? 'stream' : 'file ' + localFilePath} for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+        LOG.info(`SceneMigration.ingestStream using ${readStream ? 'stream' : 'file ' + localFilePath} for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
 
         if (!idVAssetType)
             idVAssetType = SceneMigration.vocabScene.idVocabulary;
@@ -183,7 +194,7 @@ export class SceneMigration {
             idVAssetType,
             allowZipCracking,
             idUserCreator: this.userOwner.idUser,
-            SOBased: this.scene,
+            SOBased,
             Comment: 'Created by migration',
             doNotSendIngestionEvent
         };
@@ -223,9 +234,9 @@ export class SceneMigration {
         if (!nav)
             return this.recordError('postItemWiring unable to fetch navigation interface');
 
-        const SO: DBAPI.SystemObject | null = await this.scene.fetchSystemObject();
-        if (!SO)
-            return this.recordError(`postItemWiring unable to fetch system object for ${H.Helpers.JSONStringify(this.scene)}`);
+        const idSystemObject: number | undefined = await this.fetchSceneSystemObjectID();
+        if (!idSystemObject)
+            return this.recordError(`postItemWiring unable to fetch system object ID for ${H.Helpers.JSONStringify(this.scene)}`);
 
         // index directly instead of scheduling indexing, so that we get an initial SOLR entry right away
         // NAV.NavigationFactory.scheduleObjectIndexing(SO.idSystemObject);
@@ -233,8 +244,22 @@ export class SceneMigration {
         if (!indexer)
             return this.recordError(`postItemWiring unable to fetch navigation indexer for ${H.Helpers.JSONStringify(this.scene)}`);
 
-        indexer.indexObject(SO.idSystemObject);
+        indexer.indexObject(idSystemObject);
         return { success: true };
+    }
+
+    private async fetchSceneSystemObjectID(): Promise<number | undefined> {
+        if (this.sceneSystemObjectID)
+            return this.sceneSystemObjectID;
+        if (!this.scene)
+            return undefined;
+        const SO: DBAPI.SystemObject | null = await this.scene.fetchSystemObject();
+        if (!SO) {
+            this.recordError(`fetchSceneSystemObjectID unable to fetch system object for ${H.Helpers.JSONStringify(this.scene)}`);
+            return undefined;
+        }
+        this.sceneSystemObjectID = SO.idSystemObject;
+        return this.sceneSystemObjectID;
     }
 
     private async createTestObjects(): Promise<H.IOResults> {
@@ -318,57 +343,126 @@ export class SceneMigration {
         return success;
     }
 
-    private async extractAndUpdateSceneMetrics(assets: DBAPI.Asset[] | undefined, assetVersions: DBAPI.AssetVersion[] | undefined): Promise<H.IOResults> {
+    private async extractSceneDetails(assets: DBAPI.Asset[] | undefined, assetVersions: DBAPI.AssetVersion[] | undefined): Promise<H.IOResults> {
         if (!assets || !assetVersions || !this.scene)
-            return this.recordError('extractAndUpdateSceneMetrics called without assets and/or asset versions');
+            return this.recordError('extractSceneDetails called without assets and/or asset versions');
 
-        LOG.info(`SceneMigration.extractAndUpdateSceneMetrics called for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+        LOG.info(`SceneMigration.extractSceneDetails called for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
         // Build map of asset ID -> asset version
         const assetIDToVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>();
         for (const assetVersion of assetVersions)
             assetIDToVersionMap.set(assetVersion.idAsset, assetVersion);
 
+        let svxLoaded: boolean = false;
+        let assetScene: DBAPI.Asset | undefined = undefined;
+        let assetVersionScene: DBAPI.AssetVersion | undefined = undefined;
+        const svx: SvxReader = new SvxReader();
         for (const asset of assets) {
             const assetVersion: DBAPI.AssetVersion | undefined = assetIDToVersionMap.get(asset.idAsset);
             if (!assetVersion)
-                return this.recordError(`extractAndUpdateSceneMetrics could not find asset version for asset ${H.Helpers.JSONStringify(asset)}`);
+                return this.recordError(`extractSceneDetails could not find asset version for asset ${H.Helpers.JSONStringify(asset)}`);
 
             const assetType: COMMON.eVocabularyID | undefined = await asset.assetType();
             if (!assetType)
-                return this.recordError(`extractAndUpdateSceneMetrics unable to compute asset type for asset ${H.Helpers.JSONStringify(asset)}`);
+                return this.recordError(`extractSceneDetails unable to compute asset type for asset ${H.Helpers.JSONStringify(asset)}`);
 
             if (assetType !== COMMON.eVocabularyID.eAssetAssetTypeScene)
                 continue;
 
             // found our scene; process it!
-            LOG.info(`SceneMigration.extractAndUpdateSceneMetrics extracting svx.json from ${H.Helpers.JSONStringify(asset)}`, LOG.LS.eSYS);
-            const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
-            if (!RSR.success)
-                return this.recordError(`extractAndUpdateSceneMetrics failed to read scene asset ${H.Helpers.JSONStringify(asset)}: ${RSR.error}`);
-            if (!RSR.readStream)
-                return this.recordError(`extractAndUpdateSceneMetrics unable to compute stream for scene asset ${H.Helpers.JSONStringify(asset)}`);
+            if (!svxLoaded) {
+                assetScene = asset;
+                assetVersionScene = assetVersion;
 
-            const svx: SvxReader = new SvxReader();
-            const svxRes: H.IOResults = await svx.loadFromStream(RSR.readStream);
-            if (!svxRes.success || !svx.SvxExtraction)
-                return this.recordError(`extractAndUpdateSceneMetrics unable to parse SVX from stream: ${svxRes.error}`);
+                LOG.info(`SceneMigration.extractSceneDetails extracting svx.json from ${H.Helpers.JSONStringify(assetScene)}`, LOG.LS.eSYS);
+                const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(assetScene, assetVersion);
+                if (!RSR.success)
+                    return this.recordError(`extractSceneDetails failed to read scene asset ${H.Helpers.JSONStringify(assetScene)}: ${RSR.error}`);
+                if (!RSR.readStream)
+                    return this.recordError(`extractSceneDetails unable to compute stream for scene asset ${H.Helpers.JSONStringify(assetScene)}`);
 
-            this.scene.CountScene   = svx.SvxExtraction.sceneCount;
-            this.scene.CountNode    = svx.SvxExtraction.nodeCount;
-            this.scene.CountCamera  = svx.SvxExtraction.cameraCount;
-            this.scene.CountLight   = svx.SvxExtraction.lightCount;
-            this.scene.CountModel   = svx.SvxExtraction.modelCount;
-            this.scene.CountMeta    = svx.SvxExtraction.metaCount;
-            this.scene.CountSetup   = svx.SvxExtraction.setupCount;
-            this.scene.CountTour    = svx.SvxExtraction.tourCount;
-            if (!await this.scene.update())
-                return this.recordError(`extractAndUpdateSceneMetrics unable to update scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
+                const svxRes: H.IOResults = await svx.loadFromStream(RSR.readStream);
+                if (!svxRes.success || !svx.SvxExtraction)
+                    return this.recordError(`extractSceneDetails unable to parse SVX from stream: ${svxRes.error}`);
+                svxLoaded = true;
 
-            LOG.info(`SceneMigration.extractAndUpdateSceneMetrics updated scene metrics for ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
-            return { success: true };
+                this.scene.CountScene   = svx.SvxExtraction.sceneCount;
+                this.scene.CountNode    = svx.SvxExtraction.nodeCount;
+                this.scene.CountCamera  = svx.SvxExtraction.cameraCount;
+                this.scene.CountLight   = svx.SvxExtraction.lightCount;
+                this.scene.CountModel   = svx.SvxExtraction.modelCount;
+                this.scene.CountMeta    = svx.SvxExtraction.metaCount;
+                this.scene.CountSetup   = svx.SvxExtraction.setupCount;
+                this.scene.CountTour    = svx.SvxExtraction.tourCount;
+                if (!await this.scene.update())
+                    return this.recordError(`extractSceneDetails unable to update scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
+
+                LOG.info(`SceneMigration.extractSceneDetails updated scene metrics for ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+            }
         }
 
-        return this.recordError('extractAndUpdateSceneMetrics unable to locate asset for scene svx.json');
+        if (!svxLoaded || !svx.SvxExtraction || !assetScene || !assetVersionScene)
+            return this.recordError('extractSceneDetails unable to locate asset for scene svx.json');
+
+        // retire assets and asset versions for objects not referenced by scene's svx.jxon
+        const referencedAssetUris: Set<string> = new Set<string>();
+        if (svx.SvxExtraction.modelAssets)
+            for (const asset of svx.SvxExtraction.modelAssets)
+                referencedAssetUris.add(this.normalizePath(assetVersionScene, asset.uri));
+        if (svx.SvxExtraction.nonModelAssets)
+            for (const asset of svx.SvxExtraction.nonModelAssets)
+                referencedAssetUris.add(this.normalizePath(assetVersionScene, asset.uri));
+
+        // LOG.info(`SceneMigration.extractSceneDetails testing assets against ${H.Helpers.JSONStringify(referencedAssetUris)}`, LOG.LS.eSYS);
+
+        let assetVersionOverrideMap: Map<number, number> | undefined = undefined;
+        for (const asset of assets) {
+            if (asset === assetScene) // asset representing scene svx.json should not be retired!
+                continue;
+            const assetVersion: DBAPI.AssetVersion | undefined = assetIDToVersionMap.get(asset.idAsset);
+            if (!assetVersion)
+                return this.recordError(`extractSceneDetails could not find asset version for asset ${H.Helpers.JSONStringify(asset)}`);
+            const normalizedUri: string = this.normalizePath(assetVersion);
+
+            if (!referencedAssetUris.has(normalizedUri)) {
+                LOG.info(`SceneMigration.extractSceneDetails retiring unreferenced asset ${normalizedUri} for asset version ${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eSYS);
+
+                let retired: boolean = false;
+                const SOAV: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+                if (SOAV)
+                    retired = await SOAV.retireObject();
+                if (!retired)
+                    this.recordError(`extractSceneDetails unable to retire asset version ${H.Helpers.JSONStringify(assetVersion)}`);
+
+                const SOA: DBAPI.SystemObject | null = await asset.fetchSystemObject();
+                if (SOA)
+                    retired = await SOA.retireObject();
+                if (!retired)
+                    this.recordError(`extractSceneDetails unable to retire asset ${H.Helpers.JSONStringify(asset)}`);
+
+                if (!assetVersionOverrideMap)
+                    assetVersionOverrideMap = new Map<number, number>();
+                assetVersionOverrideMap.set(asset.idAsset, 0); // set override value of 0 for idAssetVersion to indicate removal of asset/asset version from cloned system object version
+            }
+        }
+
+        // Use SystemObjectVersion.cloneObjectAndXrefs if any are retired
+        if (assetVersionOverrideMap) {
+            const idSystemObject: number | undefined = await this.fetchSceneSystemObjectID();
+            if (!idSystemObject)
+                return this.recordError(`postItemWiring unable to fetch system object ID for ${H.Helpers.JSONStringify(this.scene)}`);
+
+            const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null,
+                'Created by migration: removing unreferenced assets from scene', assetVersionOverrideMap);
+            if (!SOV)
+                return this.recordError(`extractSceneDetails unable to cloneObjectAndXrefs for idSystemObject ${idSystemObject}`);
+        }
+
+        return { success: true };
+    }
+
+    private normalizePath(assetVersion: DBAPI.AssetVersion, uriOverride?: string | undefined): string {
+        return assetVersion.FilePath.toLowerCase() + (assetVersion.FilePath ? '/' : '') + (uriOverride ? uriOverride : assetVersion.FileName).toLowerCase();
     }
 
     private async fetchAndIngestResources(doNotSendIngestionEvent?: boolean | undefined): Promise<H.IOResults> {
@@ -382,11 +476,16 @@ export class SceneMigration {
 
         LOG.info(`fetchAndIngestResources ${edanURL}: ${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eSYS);
 
+        // record updated asset -> asset version, for use in rolling a new SystemObjectVersion for the scene
+        const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
+        let idSystemObjectScene: number | null = null;
+
         const edan3DResources: COL.Edan3DResource[] | undefined = edanRecord.content?.resources;
         if (edan3DResources) {
             const SO: DBAPI.SystemObject | null = await this.scene.fetchSystemObject();
             if (!SO)
                 return this.recordError(`fetchAndIngestResources unable to fetch SystemObject from scene ${H.Helpers.JSONStringify(this.scene)}`);
+            idSystemObjectScene = SO.idSystemObject;
 
             for (const resource of edan3DResources) {
                 LOG.info(`fetchAndIngestResources ${edanURL}: Handling resource ${H.Helpers.JSONStringify(resource)}`, LOG.LS.eSYS);
@@ -396,28 +495,152 @@ export class SceneMigration {
                 if (!readStream)
                     return this.recordError(`fetchAndIngestResources failed to retrieve stream for resource ${H.Helpers.JSONStringify(resource)}`);
 
-                const IAR: STORE.IngestAssetResult = await this.ingestStream(readStream, resource.filename, false, SceneMigration.vocabModel?.idVocabulary, doNotSendIngestionEvent); /* false -> do not crack resource/attachment zips */
+                const resourceInfo: COL.Edan3DResource & COL.Edan3DResourceAttribute = this.extractResourceInfo(resource);
+                const downloadType: string = PublishScene.computeDownloadType(resourceInfo.category, resourceInfo.MODEL_FILE_TYPE, resourceInfo.DRACO_COMPRESSED);
+                const model: DBAPI.Model | null = await this.createModel(resourceInfo, downloadType);
+                const IAR: STORE.IngestAssetResult = await this.ingestStream(readStream, resource.filename, false, model ?? this.scene,
+                    SceneMigration.vocabModel?.idVocabulary, doNotSendIngestionEvent); /* false -> do not crack resource/attachment zips */
                 if (!IAR.success)
                     return this.recordError(`fetchAndIngestResources failed to ingest resource ${H.Helpers.JSONStringify(resource)}: ${IAR.error}`);
                 if (IAR.assetVersions && IAR.assetVersions.length > 1)
                     LOG.error(`fetchAndIngestResources created multiple asset versions, unexpectedly, ingesting ${resource.filename}`, LOG.LS.eJOB);
 
                 let idSystemObject: number = SO.idSystemObject;
+                let FileSize: bigint | null = null;
+
                 const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
                 if (assetVersion) {
                     const SOAssetVersion: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
                     if (!SOAssetVersion)
                         return this.recordError(`fetchAndIngestResources failed to fetch system object for asset version ${H.Helpers.JSONStringify(assetVersion)}`);
                     idSystemObject = SOAssetVersion.idSystemObject;
+                    assetVersionOverrideMap.set(assetVersion.idAsset, assetVersion.idAssetVersion);
+                    FileSize = assetVersion.StorageSize;
                 }
 
                 const metadataRes: H.IOResults = await SceneHelpers.recordResourceMetadata(resource, idSystemObject, SO.idSystemObject, this.userOwner?.idUser ?? null);
                 if (!metadataRes.success)
                     LOG.error('fetchAndIngestResources could not persist attachment metadata', LOG.LS.eSYS);
+
+                // create/update ModelSceneXref for each download generated ... do after ingest so that we have the storage size available
+                if (model) {
+                    await this.createModelSceneXref(model, downloadType, FileSize);
+                    const SOModel: DBAPI.SystemObject | null = await model.fetchSystemObject();
+                    if (SOModel) {
+                        // run si-packrat-inspect on this model
+                        const results: H.IOResults = await WorkflowUtil.computeModelMetrics(model.Name, model.idModel, SOModel.idSystemObject, undefined,
+                            undefined, undefined /* FIXME */, this.userOwner?.idUser);
+                        if (results.error)
+                            this.recordError(`fetchAndIngestResources failed to compute model metrics: ${results.error}`);
+                    } else
+                        this.recordError(`fetchAndIngestResources failed to fetch system object for model ${H.Helpers.JSONStringify(model)}`);
+                }
             }
+        }
+
+        if (assetVersionOverrideMap.size > 0 && idSystemObjectScene) {
+            // Clone scene's systemObjectVersion, using the assetVersionOverrideMap populated with new/updated assets
+            const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObjectScene, null,
+                'Created by migration of downloads', assetVersionOverrideMap);
+            if (!SOV)
+                return this.recordError(`fetchAndIngestResources unable to clone SystemObjectVersion for ${H.Helpers.JSONStringify(this.scene)}`);
         }
         return { success: true };
     }
+
+    private extractResourceInfo(resource: COL.Edan3DResource): COL.Edan3DResource & COL.Edan3DResourceAttribute {
+        let UNITS: COL.Edan3DResourceAttributeUnits | undefined = undefined;
+        let MODEL_FILE_TYPE: COL.Edan3DResourceAttributeModelFileType | undefined = undefined;
+        let FILE_TYPE: COL.Edan3DResourceAttributeFileType | undefined = undefined;
+        let GLTF_STANDARDIZED: boolean | undefined = undefined;
+        let DRACO_COMPRESSED: boolean | undefined = undefined;
+
+        if (resource.attributes) {
+            for (const attribute of resource.attributes) {
+                if (attribute.UNITS)
+                    UNITS = attribute.UNITS;
+                else if (attribute.MODEL_FILE_TYPE)
+                    MODEL_FILE_TYPE = attribute.MODEL_FILE_TYPE;
+                else if (attribute.FILE_TYPE)
+                    FILE_TYPE = attribute.FILE_TYPE;
+                else if (attribute.GLTF_STANDARDIZED)
+                    GLTF_STANDARDIZED = attribute.GLTF_STANDARDIZED;
+                else if (attribute.DRACO_COMPRESSED)
+                    DRACO_COMPRESSED = attribute.DRACO_COMPRESSED;
+            }
+        }
+        return { ...resource, UNITS, MODEL_FILE_TYPE, FILE_TYPE, GLTF_STANDARDIZED, DRACO_COMPRESSED };
+    }
+
+    private async createModel(resourceInfo: COL.Edan3DResource & COL.Edan3DResourceAttribute, downloadType: string): Promise<DBAPI.Model | null> {
+        const isModel: boolean = (resourceInfo.type === '3D mesh' || resourceInfo.type === 'CAD model');
+        if (!isModel)
+            return null;
+
+        const Name: string = resourceInfo.filename ?? '';
+        const Units: DBAPI.Vocabulary | undefined = resourceInfo.UNITS ? await PublishScene.mapEdanUnitsToPackratVocabulary(resourceInfo.UNITS) : undefined;
+        const AutomationTag: string = JobCookSIGenerateDownloads.computeModelAutomationTag(downloadType);
+
+        const idVPurpose: number | null = SceneMigration.vocabDownload?.idVocabulary ?? null;
+        const idVUnits: number | null = Units?.idVocabulary ?? null;
+        const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
+        const model: DBAPI.Model = new DBAPI.Model({
+            idModel: 0,
+            Name,
+            Title: null,
+            DateCreated: new Date(),
+            idVCreationMethod: null,
+            idVModality: null,
+            idVPurpose,
+            idVUnits,
+            idVFileType: vFileType ? vFileType.idVocabulary : null,
+            idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
+            CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
+            AutomationTag, CountTriangles: null
+        });
+
+        if (!await model.create()) {
+            this.recordError(`createModel unable to create model ${H.Helpers.JSONStringify(model)}`);
+            return null;
+        }
+
+        // link each model as derived from both the scene and the master model
+        if (this.scene) {
+            const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.scene, model);
+            if (!SOX1)
+                this.recordError(`createModel unable to wire Scene ${H.Helpers.JSONStringify(this.scene)} and Model ${H.Helpers.JSONStringify(model)} together`);
+        }
+
+        /*
+        const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.modelSource, model);
+        if (!SOX2)
+            return this.logError(`createSystemObjects unable to wire Model Source ${H.Helpers.JSONStringify(this.modelSource)} and Model ${H.Helpers.JSONStringify(model)} together`);
+        */
+
+        return model;
+    }
+
+    private async createModelSceneXref(model: DBAPI.Model, downloadType: string, FileSize: bigint | null): Promise<H.IOResults> {
+        if (!this.scene)
+            return this.recordError('createModelSceneXref called without valid scene');
+
+        const MSX: DBAPI.ModelSceneXref = new DBAPI.ModelSceneXref({
+            idModelSceneXref: 0,
+            idModel: model.idModel,
+            idScene: this.scene.idScene,
+            Name: model.Name,
+            Usage: `Download ${downloadType}`,
+            Quality: null,
+            FileSize,
+            UVResolution: null,
+            BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null, BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
+            TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null, S0: null, S1: null, S2: null,
+        });
+        if (!await MSX.create())
+            return this.recordError(`createModelSceneXref unable to create ModelSceneXref ${H.Helpers.JSONStringify(MSX)}`);
+        return { success: true };
+    }
+
 
     private recordError(error: string, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
         LOG.error(`SceneMigration.${error}`, LOG.LS.eSYS);
