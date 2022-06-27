@@ -297,7 +297,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                                 const label2 = typeof obj2.data.label === 'string' ? obj2.data.label.toLowerCase() : obj2.data.path;
                                 let comparisonVal = 1;
                                 if (label1 < label2) comparisonVal = -1;
-                                return order === 'asc' ? 1 * comparisonVal: -1 * comparisonVal;
+                                return (order === 'asc') ? comparisonVal : -comparisonVal;
                             };
                         },
                         customBodyRender(value) {
