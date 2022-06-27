@@ -50,7 +50,7 @@
     "ajv": "6.10.2",
     "apollo-server-express": "2.21.1",
     "async-mutex": "0.3.1",
-    "axios": "0.21.1",
+    "axios": "0.27.2",
     "body-parser": "1.19.0",
     "cookie-parser": "1.4.5",
     "cors": "2.8.5",
@@ -83,7 +83,7 @@
     "tmp-promise": "3.0.2",
     "ts-node": "9.1.1",
     "uuid": "8.3.2",
-    "webdav": "4.2.1",
+    "webdav": "4.10.0",
     "webdav-server": "https://github.com/Smithsonian/npm-WebDAV-Server.git",
     "winston": "3.3.3"
   },

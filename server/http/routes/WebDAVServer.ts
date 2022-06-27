@@ -546,17 +546,21 @@ class WebDAVFileSystem extends webdav.FileSystem {
     }
 
     private async ingestStream(ISI: STORE.IngestStreamOrFileInput, pathS: string): Promise<void> {
-        const ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
-        if (!ISR.success)
-            LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}) (W) onFinish failed to ingest new asset version: ${ISR.error}`, LOG.LS.eHTTP);
+        const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
+        if (!IAR.success)
+            LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}) (W) onFinish failed to ingest new asset version: ${IAR.error}`, LOG.LS.eHTTP);
 
-        const assetVersion: DBAPI.AssetVersion | null | undefined = ISR.assetVersion;
-        if (!assetVersion) {
+        const assetVersions: DBAPI.AssetVersion[] | null | undefined = IAR.assetVersions;
+        if (!assetVersions || assetVersions.length === 0) {
             LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}) (W) onFinish failed to create new asset version`, LOG.LS.eHTTP);
             // await this.removeLock(pathWD, info.context, lockUUID);
             return;
         }
 
+        if (assetVersions.length > 1)
+            LOG.error(`WebDAVFileSystem.ingestStream(${pathS}) created multiple asset versions, unexpectedly`, LOG.LS.eHTTP);
+
+        const assetVersion: DBAPI.AssetVersion = assetVersions[0];
         // Update WebDAV resource
         const utcMS: number = assetVersion.DateCreated.getTime();
         let resource: FileSystemResource | undefined = this.getResource(pathS);
