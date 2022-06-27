@@ -305,18 +305,21 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             SOBased: scene,
             Comment: 'Created by Cook si-voyager-scene'
         };
-        let ISR: STORE.IngestStreamOrFileResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
-        if (!ISR.success)
-            return this.logError(`unable to ingest scene file ${svxFile}: ${ISR.error}`);
+        let IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
+        if (!IAR.success)
+            return this.logError(`unable to ingest scene file ${svxFile}: ${IAR.error}`);
+        if (IAR.assetVersions && IAR.assetVersions.length > 1)
+            LOG.error(`JobCookSIVoyagerScene.createSystemObjects created multiple asset versions, unexpectedly, ingesting ${svxFile}`, LOG.LS.eJOB);
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(scene);
+        const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
         const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
         const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name);
-        const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
+        const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
         const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
         await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
 
-        const SOV: DBAPI.SystemObjectVersion | null | undefined = ISR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
+        const SOV: DBAPI.SystemObjectVersion | null | undefined = IAR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
         // Now extract (just) the models; per Jamie Cope 5/3/2021, each model has all textures embedded
@@ -393,14 +396,17 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                         Comment: 'Created by Cook si-voyager-scene',
                         doNotUpdateParentVersion: true // if needed, we update the existing system object version below
                     };
-                    ISR = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISIModel);
-                    if (!ISR.success)
-                        return this.logError(`unable to ingest model file ${MSX.Name}: ${ISR.error}`);
+                    IAR = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISIModel);
+                    if (!IAR.success)
+                        return this.logError(`unable to ingest model file ${MSX.Name}: ${IAR.error}`);
+                    if (IAR.assetVersions && IAR.assetVersions.length > 1)
+                        LOG.error(`JobCookSIVoyagerScene.createSystemObjects created multiple asset versions, unexpectedly, ingesting ${MSX.Name}`, LOG.LS.eJOB);
 
                     const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
+                    const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
                     const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
                     const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
-                    const pathDownload: string = ISR.assetVersion ? RouteBuilder.DownloadAssetVersion(ISR.assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
+                    const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
                     const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
                     await this.appendToReportAndLog(`${this.name()} ingested model ${hrefObject}${hrefDownload}`);
 
@@ -408,11 +414,11 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                     // associate the asset version with the scene's system object version (enabling a scene package to be downloaded, even if some assets
                     // are owned by the ingested models). Note that if we *updated* models, we will be update the original models'
                     // SystemObjectVersionAssetVersionXref with records pointing to the new model asset versions
-                    if (SOV && ISR.assetVersion) {
+                    if (SOV && assetVersion) {
                         const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref | null =
-                            await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(SOV.idSystemObjectVersion, ISR.assetVersion.idAsset, ISR.assetVersion.idAssetVersion);
+                            await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(SOV.idSystemObjectVersion, assetVersion.idAsset, assetVersion.idAssetVersion);
                         if (!SOVAVX)
-                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable create/update SystemObjectVersionAssetVersionXref for ${JSON.stringify(SOV, H.Helpers.saferStringify)}, ${JSON.stringify(ISR.assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable create/update SystemObjectVersionAssetVersionXref for ${JSON.stringify(SOV, H.Helpers.saferStringify)}, ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
                     }
 
                     // run si-packrat-inspect on this model

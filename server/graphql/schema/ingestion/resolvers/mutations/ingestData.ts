@@ -12,11 +12,11 @@ import * as COL from '../../../../../collections/interface';
 import * as META from '../../../../../metadata';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
-import { SvxReader, SvxExtraction } from '../../../../../utils/parser';
+import { SceneHelpers } from '../../../../../utils';
 import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
 import * as NAV from '../../../../../navigation/interface';
-import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, ReadStreamResult } from '../../../../../storage/interface';
+import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo } from '../../../../../storage/interface';
 import { VocabularyCache } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
@@ -25,11 +25,6 @@ import { PublishScene } from '../../../../../collections/impl/PublishScene';
 import { NameHelpers, ModelHierarchy } from '../../../../../utils/nameHelpers';
 import * as COMMON from '@dpo-packrat/common';
 import { eSystemObjectType } from '@dpo-packrat/common';
-
-type AssetPair = {
-    asset: DBAPI.Asset;
-    assetVersion: DBAPI.AssetVersion | undefined;
-};
 
 type ModelInfo = {
     model: IngestModelInput;
@@ -80,7 +75,6 @@ class IngestDataWorker extends ResolverBase {
 
     private static vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
     private static vocabularyEdanRecordID: DBAPI.Vocabulary | undefined = undefined;
-    private static vocabularyPurposeVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
 
     constructor(input: IngestDataInput, user: User | undefined) {
         super();
@@ -263,17 +257,6 @@ class IngestDataWorker extends ResolverBase {
             }
         }
         return IngestDataWorker.vocabularyEdanRecordID;
-    }
-
-    private async getVocabularyVoyagerSceneModel(): Promise<DBAPI.Vocabulary | undefined> {
-        if (!IngestDataWorker.vocabularyPurposeVoyagerSceneModel) {
-            IngestDataWorker.vocabularyPurposeVoyagerSceneModel = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel);
-            if (!IngestDataWorker.vocabularyPurposeVoyagerSceneModel) {
-                LOG.error('ingestData unable to fetch vocabulary for Voyager Scene Model Model Purpose', LOG.LS.eGQL);
-                return undefined;
-            }
-        }
-        return IngestDataWorker.vocabularyPurposeVoyagerSceneModel;
     }
 
     private async validateIdentifiers(identifiers: IngestIdentifierInput[] | undefined): Promise<H.IOResults> {
@@ -1195,36 +1178,13 @@ class IngestDataWorker extends ResolverBase {
         }
 
         // record metadata
-        const extractor: META.MetadataExtractor = new META.MetadataExtractor();
-        extractor.metadata.set('isAttachment', '1');
-        if (sceneAttachment.type)
-            extractor.metadata.set('type', await IngestDataWorker.convertVocabToString(sceneAttachment.type));
-        if (sceneAttachment.category)
-            extractor.metadata.set('category', await IngestDataWorker.convertVocabToString(sceneAttachment.category));
-        if (sceneAttachment.units)
-            extractor.metadata.set('units', await IngestDataWorker.convertVocabToString(sceneAttachment.units));
-        if (sceneAttachment.modelType)
-            extractor.metadata.set('modelType', await IngestDataWorker.convertVocabToString(sceneAttachment.modelType));
-        if (sceneAttachment.fileType)
-            extractor.metadata.set('fileType', await IngestDataWorker.convertVocabToString(sceneAttachment.fileType));
-        if (sceneAttachment.gltfStandardized)
-            extractor.metadata.set('gltfStandardized', sceneAttachment.gltfStandardized ? '1' : '0');
-        if (sceneAttachment.dracoCompressed)
-            extractor.metadata.set('dracoCompressed', sceneAttachment.dracoCompressed ? '1' : '0');
-        if (sceneAttachment.title)
-            extractor.metadata.set('title', sceneAttachment.title);
         const idSOParent: number = assetVersion.idSOAttachment ? assetVersion.idSOAttachment : SOAssetVersion.idSystemObject;
-        const results: H.IOResults = await META.MetadataManager.persistExtractor(SOAssetVersion.idSystemObject, idSOParent, extractor, this.user?.idUser ?? null);
+        const results: H.IOResults = await SceneHelpers.recordAttachmentMetadata(sceneAttachment, SOAssetVersion.idSystemObject, idSOParent, this.user?.idUser ?? null);
         if (!results.success)
             LOG.error('ingestData could not persist attachment metadata', LOG.LS.eGQL);
 
         this.assetVersionMap.set(sceneAttachment.idAssetVersion, { SOOwner, isAttachment: true, Comment: null }); // store attachment without unzipping
         return true;
-    }
-
-    private static async convertVocabToString(idVocabulary: number): Promise<string> {
-        const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabulary);
-        return vocab ? vocab.Term : '';
     }
 
     private async wireItemToAssetOwners(itemDB: DBAPI.Item): Promise<boolean> {
@@ -1303,7 +1263,7 @@ class IngestDataWorker extends ResolverBase {
                     // In this case, we will receive the scene .svx.json file, supporting HTML, images, CSS, as well as models.
                     // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
                     if (!AVInfo.isAttachment && SOBased instanceof DBAPI.Scene) {
-                        const { success, transformUpdated: modelTransformUpdated } = await this.handleComplexIngestionScene(SOBased, IAR, idAssetVersion);
+                        const { success, transformUpdated: modelTransformUpdated } = await SceneHelpers.handleComplexIngestionScene(SOBased, IAR, user.idUser, idAssetVersion);
                         if (success && modelTransformUpdated) {
                             transformUpdated = true;
                             LOG.info(`ingestData set transformUpdated to true from idAssetVersion ${idAssetVersion} for ${JSON.stringify(SOBased, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
@@ -1577,241 +1537,6 @@ class IngestDataWorker extends ResolverBase {
             return { success: false, error };
         }
         return { success: true };
-    }
-
-    private async handleComplexIngestionScene(scene: DBAPI.Scene, IAR: IngestAssetResult, idAssetVersion: number): Promise<{ success: boolean, transformUpdated: boolean }> {
-        if (!IAR.assets || !IAR.assetVersions)
-            return { success: false, transformUpdated: false };
-
-        // first, identify assets and asset versions for the scene and models
-        let sceneAsset: DBAPI.Asset | null = null;
-        let sceneAssetVersion: DBAPI.AssetVersion | undefined = undefined;
-        const modelAssetMap: Map<string, AssetPair> = new Map<string, AssetPair>(); // map of asset name -> { asset, asset version }
-
-        const assetVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>(); // map of *asset* id -> asset version
-        for (const assetVersion of IAR.assetVersions)
-            assetVersionMap.set(assetVersion.idAsset, assetVersion); // idAsset is correct here!
-
-        for (const asset of IAR.assets) {
-            switch (await asset.assetType()) {
-                case COMMON.eVocabularyID.eAssetAssetTypeScene:
-                    if (!sceneAsset) {
-                        sceneAsset = asset;
-                        sceneAssetVersion = assetVersionMap.get(asset.idAsset);
-                    } else
-                        LOG.error(`ingestData handleComplexIngestionScene skipping unexpected scene ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                    break;
-
-                case COMMON.eVocabularyID.eAssetAssetTypeModel:
-                case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile: {
-                    const assetVersion: DBAPI.AssetVersion | undefined = assetVersionMap.get(asset.idAsset);
-                    modelAssetMap.set(asset.FileName.toLowerCase(), { asset, assetVersion });
-                } break;
-                case undefined:
-                    LOG.error(`ingestData handleComplexIngestionScene unable to detect asset type for ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                    break;
-            }
-        }
-
-        if (!sceneAsset || !sceneAssetVersion) {
-            LOG.error(`ingestData handleComplexIngestionScene unable to identify asset and/or asset version for the ingested scene ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-            return { success: false, transformUpdated: false };
-        }
-
-        // next, retrieve & parse the scene, extracting model references and transforms
-        const RSR: ReadStreamResult = await AssetStorageAdapter.readAsset(sceneAsset, sceneAssetVersion);
-        if (!RSR.success || !RSR.readStream) {
-            LOG.error(`ingestData handleComplexIngestionScene unable to fetch stream for scene asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}: ${RSR.error}`, LOG.LS.eGQL);
-            return { success: false, transformUpdated: false };
-        }
-
-        const svx: SvxReader = new SvxReader();
-        const res: H.IOResults = await svx.loadFromStream(RSR.readStream);
-        if (!res.success || !svx.SvxExtraction) {
-            LOG.error(`ingestData handleComplexIngestionScene unable to parse scene asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eGQL);
-            return { success: false, transformUpdated: false };
-        }
-
-        this.extractSceneMetrics(scene, svx.SvxExtraction);
-        if (!await scene.update())
-            LOG.error(`ingestData handleComplexIngestionScene unable to update scene ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-
-        // finally, create/update Model and ModelSceneXref for each model reference:
-        let success: boolean = true;
-        let transformUpdated: boolean = false;
-        if (svx.SvxExtraction.modelDetails) {
-            for (const MSX of svx.SvxExtraction.modelDetails) {
-                if (!MSX.Name)
-                    continue;
-                let model: DBAPI.Model | null = null;
-
-                // look for matching ModelSceneXref
-                // scene.idScene, MSX.Name, .Usage, .Quality, .UVResolution
-                // if not found, create model and MSX
-                // if found, determine if MSX transform has changed; if so, update MSX, and return a status that can be used to kick off download generation workflow
-                const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion, MSX.Name);
-                if (JCOutput && !JCOutput.success)
-                    LOG.error(`ingestData handleComplexIngestionScene failed to extract JobCookSIPackratInspectOutput from idAssetVersion ${idAssetVersion}, model ${MSX.Name}`, LOG.LS.eGQL);
-
-                const MSXSources: DBAPI.ModelSceneXref[] | null =
-                    await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(scene.idScene, MSX.Name, MSX.Usage, MSX.Quality, MSX.UVResolution);
-                const MSXSource: DBAPI.ModelSceneXref | null = (MSXSources && MSXSources.length > 0) ? MSXSources[0] : null;
-                if (MSXSource) {
-                    const { transformUpdated: transformUpdatedLocal, updated } = MSXSource.updateIfNeeded(MSX);
-
-                    if (updated) {
-                        if (!await MSXSource.update()) {
-                            LOG.error(`ingestData handleComplexIngestionScene unable to update ModelSceneXref ${JSON.stringify(MSXSource, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                            success = false;
-                        }
-                    }
-                    if (transformUpdatedLocal)
-                        transformUpdated = true;
-
-                    model = await DBAPI.Model.fetch(MSXSource.idModel);
-                    if (!model) {
-                        LOG.error(`ingestData handleComplexIngestionScene unable to load model ${MSXSource.idModel}`, LOG.LS.eGQL);
-                        success = false;
-                        continue;
-                    }
-                    LOG.info(`ingestData handleComplexIngestionScene found existing ModelSceneXref=${JSON.stringify(MSXSource, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-
-                    if (JCOutput && JCOutput.success && JCOutput.modelConstellation && JCOutput.modelConstellation.Model) {
-                        this.extractModelMetrics(model, JCOutput.modelConstellation.Model);
-                        if (!await model.update())
-                            LOG.error(`ingestData handleComplexIngestionScene unable to update model ${MSXSource.idModel} with metrics`, LOG.LS.eGQL);
-                    }
-
-                } else {
-                    model = await this.transformModelSceneXrefIntoModel(MSX);
-                    if (JCOutput && JCOutput.success && JCOutput.modelConstellation && JCOutput.modelConstellation.Model)
-                        this.extractModelMetrics(model, JCOutput.modelConstellation.Model);
-
-                    if (!await model.create()) {
-                        LOG.error(`ingestData handleComplexIngestionScene unable to create model from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-                        success = false;
-                        continue;
-                    }
-                    LOG.info(`ingestData handleComplexIngestionScene created model=${JSON.stringify(model, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-
-                    // Create ModelSceneXref for model and scene
-                    /* istanbul ignore else */
-                    if (!MSX.idModelSceneXref) { // should always be true
-                        MSX.idModel = model.idModel;
-                        MSX.idScene = scene.idScene;
-                        if (!await MSX.create()) {
-                            LOG.error(`ingestData handleComplexIngestionScene unable to create ModelSceneXref for model xref ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-                            success = false;
-                            continue;
-                        }
-                    } else
-                        LOG.error(`ingestData handleComplexIngestionScene unexpected non-null ModelSceneXref for model xref ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-
-                    const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
-                    if (!SOX) {
-                        LOG.error(`ingestData handleComplexIngestionScene unable to wire scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and model ${JSON.stringify(model, H.Helpers.saferStringify)} together`, LOG.LS.eGQL);
-                        success = false;
-                        continue;
-                    }
-                }
-
-                const assetPair: AssetPair | undefined = modelAssetMap.get(MSX.Name.toLowerCase());
-                if (!assetPair || !assetPair.asset || !assetPair.assetVersion) {
-                    LOG.info(`ingestData handleComplexIngestionScene unable to locate assets for SVX model ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
-                    continue;
-                }
-
-                // reassign asset to model; create SystemObjectVersion and SystemObjectVersionAssetVersionXref
-                const SO: DBAPI.SystemObject | null = await model.fetchSystemObject();
-                if (!SO) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to fetch SystemObject for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                    success = false;
-                    continue;
-                }
-
-                assetPair.asset.idSystemObject = SO.idSystemObject;
-                if (!await assetPair.asset.update()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to reassign model asset ${JSON.stringify(assetPair.asset, H.Helpers.saferStringify)} to model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                    success = false;
-                    continue;
-                }
-
-                const SOV: DBAPI.SystemObjectVersion = new DBAPI.SystemObjectVersion({
-                    idSystemObject: SO.idSystemObject,
-                    PublishedState: COMMON.ePublishedState.eNotPublished,
-                    DateCreated: new Date(),
-                    Comment: null,
-                    idSystemObjectVersion: 0
-                });
-                if (!await SOV.create()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersion ${JSON.stringify(SOV, H.Helpers.saferStringify)} for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                    success = false;
-                    continue;
-                }
-
-                const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref = new DBAPI.SystemObjectVersionAssetVersionXref({
-                    idSystemObjectVersion: SOV.idSystemObjectVersion,
-                    idAssetVersion: assetPair.assetVersion.idAssetVersion,
-                    idSystemObjectVersionAssetVersionXref: 0,
-                });
-                if (!await SOVAVX.create()) {
-                    LOG.error(`ingestData handleComplexIngestionScene unable to create SystemObjectVersionAssetVersionXref ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)} for model ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                    success = false;
-                    continue;
-                }
-            }
-        }
-
-        return { success, transformUpdated };
-    }
-
-    private extractSceneMetrics(scene: DBAPI.Scene, svxExtraction: SvxExtraction): void {
-        const sceneExtract: DBAPI.Scene = svxExtraction.extractScene();
-        scene.CountScene = sceneExtract.CountScene;
-        scene.CountNode = sceneExtract.CountNode;
-        scene.CountCamera = sceneExtract.CountCamera;
-        scene.CountLight = sceneExtract.CountLight;
-        scene.CountModel = sceneExtract.CountModel;
-        scene.CountMeta = sceneExtract.CountMeta;
-        scene.CountSetup = sceneExtract.CountSetup;
-        scene.CountTour = sceneExtract.CountTour;
-    }
-
-    private async transformModelSceneXrefIntoModel(MSX: DBAPI.ModelSceneXref): Promise<DBAPI.Model> {
-        const Name: string = MSX.Name ?? '';
-        const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
-        const vPurpose: DBAPI.Vocabulary | undefined = await this.getVocabularyVoyagerSceneModel();
-        return new DBAPI.Model({
-            idModel: 0,
-            Name,
-            Title: '',
-            DateCreated: new Date(),
-            idVCreationMethod: null,
-            idVModality: null,
-            idVPurpose: vPurpose ? vPurpose.idVocabulary : null,
-            idVUnits: null,
-            idVFileType: vFileType ? vFileType.idVocabulary : null,
-            idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null, CountMaterials: null,
-            CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
-            AutomationTag: MSX.computeModelAutomationTag(), CountTriangles: null
-        });
-    }
-
-    private extractModelMetrics(model: DBAPI.Model, modelMetrics: DBAPI.Model): void {
-        if (!model.Title)
-            model.Title = modelMetrics.Title;
-        model.CountAnimations = modelMetrics.CountAnimations;
-        model.CountCameras = modelMetrics.CountCameras;
-        model.CountFaces = modelMetrics.CountFaces;
-        model.CountTriangles = modelMetrics.CountTriangles;
-        model.CountLights = modelMetrics.CountLights;
-        model.CountMaterials = modelMetrics.CountMaterials;
-        model.CountMeshes = modelMetrics.CountMeshes;
-        model.CountVertices = modelMetrics.CountVertices;
-        model.CountEmbeddedTextures = modelMetrics.CountEmbeddedTextures;
-        model.CountLinkedTextures = modelMetrics.CountLinkedTextures;
-        model.FileEncoding = modelMetrics.FileEncoding;
-        model.IsDracoCompressed = modelMetrics.IsDracoCompressed;
     }
 
     private async createWorkflow(): Promise<IWorkflowHelper> {

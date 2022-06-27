@@ -10,7 +10,8 @@ When searching, the display of repository contents is updated with objects that 
 
 Search tips:
 * Packrat's keyword search uses the [Extended DisMax Query Parser](https://solr.apache.org/guide/8_11/the-extended-dismax-query-parser.html)
-* Surround text with double quotes to require that exact text to be matched
+* Prefix text with "+" to require that exact text to be matched
+* Surround multiple words with double quotes to search for that phrase
 * Use * and ? for wildcard searches
 * Packrat will search for objects with matching identifiers, such as ARK IDs and EDAN MDM IDs
 * Capitalization is ignored
