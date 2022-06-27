@@ -102,15 +102,8 @@ export type IngestStreamOrFileInput = {
     idUserCreator: number;
     SOBased: DBAPI.SystemObjectBased;
     Comment: string | null;
+    doNotSendIngestionEvent?: boolean | undefined;
     doNotUpdateParentVersion?: boolean | undefined;
-};
-
-export type IngestStreamOrFileResult = {
-    success: boolean;
-    error?: string;
-    asset?: DBAPI.Asset | null | undefined;
-    assetVersion?: DBAPI.AssetVersion | null | undefined;
-    systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined;
 };
 
 type AssetFileOrStreamResult = {
@@ -527,7 +520,7 @@ export class AssetStorageAdapter {
 
         // Send Workflow Ingestion event
         if (ingestAssetInput.doNotSendIngestionEvent === undefined || ingestAssetInput.doNotSendIngestionEvent === false)
-            AssetStorageAdapter.sendWorkflowIngestionEvent(IAR, opInfo.idUser);
+            await AssetStorageAdapter.sendWorkflowIngestionEvent(IAR, opInfo.idUser);
         return IAR;
     }
 
@@ -981,7 +974,7 @@ export class AssetStorageAdapter {
         return { asset, assetVersion, success: res.success };
     }
 
-    static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestStreamOrFileResult> {
+    static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestAssetResult> {
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} starting`, LOG.LS.eSTR);
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
@@ -1063,12 +1056,12 @@ export class AssetStorageAdapter {
             idSystemObject: null,
             opInfo,
             Comment: ISI.Comment,
+            doNotSendIngestionEvent: ISI.doNotSendIngestionEvent,
             doNotUpdateParentVersion: ISI.doNotUpdateParentVersion
         };
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
-        return { success: IAR.success, error: IAR.error, asset: comRes.assets[0] || null,
-            assetVersion: comRes.assetVersions[0] || null, systemObjectVersion: IAR.systemObjectVersion };
+        return IAR;
     }
 
     static async renameAsset(asset: DBAPI.Asset, fileNameNew: string, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
