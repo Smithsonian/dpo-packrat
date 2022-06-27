@@ -120,6 +120,32 @@ export class EdanCollection implements COL.ICollection {
         return result;
     }
 
+    async fetchContent(id?: string, url?: string): Promise<COL.EdanRecord | null> {
+        LOG.info(`EdanCollection.fetchContent(${id}, ${url})`, LOG.LS.eCOLL);
+        let params: string = '';
+        if (id)
+            params = `id=${encodeURIComponent(id)}`;
+        else if (url)
+            params = `url=${encodeURIComponent(url)}`;
+        else
+            return null;
+
+        const reqResult: HttpRequestResult  = await this.sendRequest(eAPIType.eEDAN, eHTTPMethod.eGet, 'content/v2.0/content/getContent.htm', params);
+        if (!reqResult.success) {
+            LOG.error(`EdanCollection.fetchContent(${id}, ${url})`, LOG.LS.eCOLL);
+            return null;
+        }
+
+        let jsonResult: any | null  = null;
+        try {
+            jsonResult              = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error(`EdanCollection.fetchContent(${id}, ${url})`, LOG.LS.eCOLL, error);
+            return null;
+        }
+        return jsonResult;
+    }
+
     async publish(idSystemObject: number, ePublishState: number): Promise<boolean> {
         switch (ePublishState) {
             case COMMON.ePublishedState.eNotPublished:

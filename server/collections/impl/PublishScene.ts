@@ -528,6 +528,43 @@ export class PublishScene {
         return true;
     }
 
+    static async mapEdanUnitsToPackratVocabulary(units: COL.Edan3DResourceAttributeUnits): Promise<DBAPI.Vocabulary | undefined> {
+        let eVocabID: COMMON.eVocabularyID | undefined = undefined;
+        switch (units) {
+            case 'mm': eVocabID = COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsmm; break;
+            case 'cm': eVocabID = COMMON.eVocabularyID.eEdan3DResourceAttributeUnitscm; break;
+            case 'm':  eVocabID = COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsm;  break;
+            case 'km': eVocabID = COMMON.eVocabularyID.eEdan3DResourceAttributeUnitskm; break;
+            case 'in': eVocabID = COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsin; break;
+            case 'ft': eVocabID = COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsft; break;
+            case 'yd': eVocabID = COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsyd; break;
+            case 'mi': eVocabID = COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsmi; break;
+        }
+        return eVocabID ? await CACHE.VocabularyCache.vocabularyByEnum(eVocabID) : undefined;
+    }
+
+    static computeDownloadType(category?: COL.Edan3DResourceCategory | undefined,
+        MODEL_FILE_TYPE?: COL.Edan3DResourceAttributeModelFileType | undefined, DRACO_COMPRESSED?: boolean | undefined): string {
+
+        let tag: string = '';
+        switch (category) {
+            case 'Low resolution':
+                switch (MODEL_FILE_TYPE) {
+                    case 'glb':  tag = DRACO_COMPRESSED ? 'webassetglbarcompressed' : 'webassetglblowuncompressed'; break;
+                    case 'obj':  tag = 'objziplow'; break;
+                    case 'gltf': tag = 'gltfziplow'; break;
+                }
+                break;
+            case 'iOS AR model':
+                tag =  (MODEL_FILE_TYPE === 'usdz') ? 'usdz' : '';
+                break;
+            case 'Full resolution':
+                tag = (MODEL_FILE_TYPE === 'obj') ? 'objzipfull' : '';
+                break;
+        }
+        return tag;
+    }
+
     private async extractResource(SAC: SceneAssetCollector, uuid: string): Promise<COL.Edan3DResource | null> {
         let type: COL.Edan3DResourceType | undefined = undefined;
         let UNITS: COL.Edan3DResourceAttributeUnits | undefined = undefined;
