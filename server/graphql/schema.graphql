@@ -371,6 +371,7 @@ type GetModelConstellationForAssetVersionResult {
 input GetSceneForAssetVersionInput {
   idAssetVersion: Int!
   directory: String
+  idScene: Int!
 }
 
 type GetSceneForAssetVersionResult {
