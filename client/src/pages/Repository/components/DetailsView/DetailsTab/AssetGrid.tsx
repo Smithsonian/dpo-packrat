@@ -291,6 +291,15 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                 case eAssetGridColumnType.eHyperLink:
                     gridColumnObject.options = {
                         ...gridColumnObject.options,
+                        sortCompare: (order) => {
+                            return (obj1, obj2) => {
+                                const label1 = typeof obj1.data.label === 'string' ? obj1.data.label.toLowerCase() : obj1.data.path;
+                                const label2 = typeof obj2.data.label === 'string' ? obj2.data.label.toLowerCase() : obj2.data.path;
+                                let comparisonVal = 1;
+                                if (label1 < label2) comparisonVal = -1;
+                                return order === 'asc' ? 1 * comparisonVal: -1 * comparisonVal;
+                            };
+                        },
                         customBodyRender(value) {
                             if (value.label) {
                                 if (value.origin === eLinkOrigin.eClient) {
