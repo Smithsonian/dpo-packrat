@@ -20,6 +20,8 @@ const eTYPE: eTestType = +eTestType.eNone; // + needed here so that compiler sto
 const sceneUserEmail: string = 'scenetest@si.edu';
 
 describe('Utils > Migration: SceneMigration', () => {
+    test('Utils > Migration: Empty Test', async () => { });
+
     switch (eTYPE) {
         case eTestType.eNone:
             break;
@@ -34,7 +36,7 @@ function executeProductionMigration(): void {
     let user: DBAPI.User | null = null;
     for (const scenePackage of SceneMigrationPackages) {
         test('Utils > Migration: SceneMigration', async () => {
-            jest.setTimeout(1200000);
+            jest.setTimeout(14400000);
 
             if (!user)
                 user = await fetchOrCreateTestUser();
