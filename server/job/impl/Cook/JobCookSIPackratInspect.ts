@@ -726,12 +726,6 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
 
         // LOG.info(`JobCookSIPackratInspect.testForZipOrStream parameters ${H.Helpers.JSONStringify(this.parameters)}`, LOG.LS.eJOB);
-        // if (path.extname(this.parameters.sourceMeshFile).toLowerCase() !== '.zip') {
-        //     LOG.info('JobCookSIPackratInspect.testForZipOrStream processing non-zip file', LOG.LS.eJOB);
-        //     return false;
-        // }
-        //
-        // LOG.info('JobCookSIPackratInspect.testForZipOrStream processing zip file', LOG.LS.eJOB);
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(this._idAssetVersions[0]);
         if (!RSR.success || !RSR.readStream) {
             LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to read asset version ${this._idAssetVersions[0]}: ${RSR.error}`, LOG.LS.eJOB);
