@@ -726,11 +726,11 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
 
         // LOG.info(`JobCookSIPackratInspect.testForZipOrStream parameters ${H.Helpers.JSONStringify(this.parameters)}`, LOG.LS.eJOB);
-        if (path.extname(this.parameters.sourceMeshFile).toLowerCase() !== '.zip') {
-            // LOG.info('JobCookSIPackratInspect.testForZipOrStream processing non-zip file', LOG.LS.eJOB);
-            return false;
-        }
-
+        // if (path.extname(this.parameters.sourceMeshFile).toLowerCase() !== '.zip') {
+        //     LOG.info('JobCookSIPackratInspect.testForZipOrStream processing non-zip file', LOG.LS.eJOB);
+        //     return false;
+        // }
+        //
         // LOG.info('JobCookSIPackratInspect.testForZipOrStream processing zip file', LOG.LS.eJOB);
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(this._idAssetVersions[0]);
         if (!RSR.success || !RSR.readStream) {
@@ -738,6 +738,12 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             return false;
         }
 
+        if (!RSR.fileName || path.extname(RSR.fileName).toLowerCase() !== '.zip') {
+            // LOG.info(`JobCookSIPackratInspect.testForZipOrStream processing non-zip file ${RSR.fileName}`, LOG.LS.eJOB);
+            return false;
+        }
+
+        // LOG.info(`JobCookSIPackratInspect.testForZipOrStream processing zip file ${RSR.fileName}`, LOG.LS.eJOB);
         const ZS: ZipStream = new ZipStream(RSR.readStream);
         const zipRes: H.IOResults = await ZS.load();
         if (!zipRes.success) {
@@ -751,7 +757,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         for (const file of files) {
             const eVocabID: COMMON.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
             const extension: string = path.extname(file).toLowerCase() || file.toLowerCase();
-            // LOG.info(`JobCookSIPackratInspect.testForZipOrStream consdiering zip file entry ${file}, extension ${extension}, VocabID ${eVocabID ? COMMON.eVocabularyID[eVocabID] : 'undefined'}`, LOG.LS.eJOB);
+            // LOG.info(`JobCookSIPackratInspect.testForZipOrStream considering zip file entry ${file}, extension ${extension}, VocabID ${eVocabID ? COMMON.eVocabularyID[eVocabID] : 'undefined'}`, LOG.LS.eJOB);
 
             // for the time being, only handle model geometry files, OBJ .mtl files, and GLTF .bin files
             if (eVocabID === undefined && extension !== '.mtl' && extension !== '.bin')
