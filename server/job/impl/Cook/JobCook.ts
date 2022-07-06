@@ -287,12 +287,12 @@ export abstract class JobCook<T> extends JobPackrat {
             if (pollNumber <= 10 || ((pollNumber % 5) == 0))
                 LOG.info(`JobCook [${this.name()}] polling [${pollNumber}], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
             switch (cookJobReport['state']) {
-                case 'created':     await this.recordCreated();                                 break;
-                case 'waiting':     await this.recordWaiting();                                 break;
-                case 'running':     await this.recordStart();                                   break;
-                case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));    return true;
-                case 'error':       await this.recordFailure(cookJobReport['error']);           return true;
-                case 'cancelled':   await this.recordCancel(cookJobReport['error']);            return true;
+                case 'created':     await this.recordCreated();                                                         break;
+                case 'waiting':     await this.recordWaiting();                                                         break;
+                case 'running':     await this.recordStart();                                                           break;
+                case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));                            return true;
+                case 'error':       await this.recordFailure(JSON.stringify(cookJobReport), cookJobReport['error']);    return true;
+                case 'cancelled':   await this.recordCancel(JSON.stringify(cookJobReport), cookJobReport['error']);     return true;
             }
         } catch (error) {
             // only log errors after first attempt, as job creation may not be complete on Cook server
