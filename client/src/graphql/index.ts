@@ -42,6 +42,7 @@ class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
     private handleException(error: any): void {
         const message: string = (error instanceof Error) ? `: ${error.message}` : '';
         console.log(`Apollo Client Error${message}`);
+        // console.log(`Apollo Client Error${message}: ${JSON.stringify(error)}`);
         throw error;
     }
 }
@@ -65,12 +66,24 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     }
 
     if (networkError) {
-        console.log(`[Network error]: ${networkError}`);
-        const errMessage: string = networkError.toString();
-        if (errMessage !== 'TypeError: Failed to fetch' &&
-            errMessage !== 'ServerParseError: Unexpected token < in JSON at position 0' && // emitted on telework connections for unknown reasons
-            errMessage !== `TypeError: ${uploadFailureMessage}`) {
-            if (!sentToLogin) {
+        console.log(`[Network error]: ${JSON.stringify(networkError)}`);
+
+        if (!sentToLogin) {
+            let redirectToLogin: boolean = false;
+
+            if (networkError.name === 'ServerParseError') {
+                const bodyText = networkError['bodyText'];
+                if (bodyText && typeof(bodyText) === 'string' && bodyText.includes('saml/idp/profile/redirectorpost/sso'))
+                    redirectToLogin = true;
+            } else {
+                const errMessage: string = networkError.toString();
+                if (errMessage !== 'TypeError: Failed to fetch' &&
+                    errMessage !== 'ServerParseError: Unexpected token < in JSON at position 0' && // emitted on telework connections for unknown reasons
+                    errMessage !== `TypeError: ${uploadFailureMessage}`)
+                    redirectToLogin = true;
+            }
+
+            if (redirectToLogin) {
                 global.alert(loginMessage);
                 window.location.href = ROUTES.LOGIN;
                 sentToLogin = true;
