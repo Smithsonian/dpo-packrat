@@ -68,6 +68,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         console.log(`[Network error]: ${networkError}`);
         const errMessage: string = networkError.toString();
         if (errMessage !== 'TypeError: Failed to fetch' &&
+            errMessage !== 'ServerParseError: Unexpected token < in JSON at position 0' && // emitted on telework connections for unknown reasons
             errMessage !== `TypeError: ${uploadFailureMessage}`) {
             if (!sentToLogin) {
                 global.alert(loginMessage);
