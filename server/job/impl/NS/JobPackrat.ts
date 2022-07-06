@@ -31,7 +31,7 @@ export abstract class JobPackrat implements JOB.IJob {
         await this.recordCreated();
         this._results = await this.startJobWorker(fireDate);
         if (!this._results.success)
-            await this.recordFailure(this._results.error);
+            await this.recordFailure(null, this._results.error);
         return this._results;
     }
 
@@ -39,7 +39,7 @@ export abstract class JobPackrat implements JOB.IJob {
         if (this._nsJob)
             this._nsJob.cancel();
         this._results = await this.cancelJobWorker();
-        await this.recordCancel(this._results.error);
+        await this.recordCancel(null, this._results.error);
         return this._results;
     }
 
@@ -147,7 +147,7 @@ export abstract class JobPackrat implements JOB.IJob {
         }
     }
 
-    protected async recordFailure(errorMsg?: string): Promise<void> {
+    protected async recordFailure(output: string | null, errorMsg?: string): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eError);
         if (updated) {
             this.appendToReportAndLog(`JobPackrat [${this.name()}] Failure: ${errorMsg}`, true);
@@ -155,13 +155,14 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = false;
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eError);
+            this._dbJobRun.Output = output;
             this._dbJobRun.Error = errorMsg ?? '';
             await this._dbJobRun.update();
             this.updateEngines(true, true); // don't block
         }
     }
 
-    protected async recordCancel(errorMsg?: string): Promise<void> {
+    protected async recordCancel(output: string | null, errorMsg?: string): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eCancelled);
         if (!updated) {
             if (errorMsg) {
@@ -174,6 +175,7 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = false;
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eCancelled);
+            this._dbJobRun.Output = output;
             await this._dbJobRun.update();
             this.updateEngines(true, true); // don't block
         }
