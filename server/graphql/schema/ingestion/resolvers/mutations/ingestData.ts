@@ -66,6 +66,7 @@ class IngestDataWorker extends ResolverBase {
     private ingestUpdate: boolean = false;
     private ingestAttachment: boolean = false;
     private assetVersionSet: Set<number> = new Set<number>(); // set of idAssetVersions
+    private updateAssetSet: Set<number> = new Set<number>(); // set of idAsset used in update mode
 
     private assetVersionMap: Map<number, AssetVersionInfo> = new Map<number, AssetVersionInfo>();                   // map from idAssetVersion -> system object that "owns" the asset, plus details for ingestion -- populated during creation of asset-owning objects below
     private ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>();  // map from idAssetVersion -> photogrammetry input
@@ -160,9 +161,10 @@ class IngestDataWorker extends ResolverBase {
             // wire subjects to item
             if (!await this.wireSubjectsToItem(subjectsDB, itemDB))
                 return { success: false, message: 'failure to wire subjects to media group' };
-        } else if (this.ingestUpdate)
+        } else if (this.ingestUpdate) {
             await this.appendToWFReport('Ingesting content for updated object');
-        else if (this.ingestAttachment)
+            await this.computeUpdateUnits();
+        } else if (this.ingestAttachment)
             await this.appendToWFReport('Ingesting content for attachment');
 
         if (this.ingestPhotogrammetry) {
@@ -1399,9 +1401,10 @@ class IngestDataWorker extends ResolverBase {
 
                 if (photogrammetry.idAssetVersion)
                     this.assetVersionSet.add(photogrammetry.idAssetVersion);
-                if (photogrammetry.idAsset)
+                if (photogrammetry.idAsset) {
                     this.ingestUpdate = true;
-                else
+                    this.updateAssetSet.add(photogrammetry.idAsset);
+                } else
                     this.ingestNew = true;
             }
         }
@@ -1436,9 +1439,10 @@ class IngestDataWorker extends ResolverBase {
 
                 if (model.idAssetVersion)
                     this.assetVersionSet.add(model.idAssetVersion);
-                if (model.idAsset)
+                if (model.idAsset) {
                     this.ingestUpdate = true;
-                else
+                    this.updateAssetSet.add(model.idAsset);
+                } else
                     this.ingestNew = true;
             }
         }
@@ -1476,9 +1480,10 @@ class IngestDataWorker extends ResolverBase {
 
                 if (scene.idAssetVersion)
                     this.assetVersionSet.add(scene.idAssetVersion);
-                if (scene.idAsset)
+                if (scene.idAsset) {
                     this.ingestUpdate = true;
-                else
+                    this.updateAssetSet.add(scene.idAsset);
+                } else
                     this.ingestNew = true;
             }
         }
@@ -1491,9 +1496,10 @@ class IngestDataWorker extends ResolverBase {
 
                 if (other.idAssetVersion)
                     this.assetVersionSet.add(other.idAssetVersion);
-                if (other.idAsset)
+                if (other.idAsset) {
                     this.ingestUpdate = true;
-                else
+                    this.updateAssetSet.add(other.idAsset);
+                } else
                     this.ingestNew = true;
             }
         }
@@ -1584,6 +1590,34 @@ class IngestDataWorker extends ResolverBase {
 
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
         return { success: true, workflowEngine, workflow, workflowReport };
+    }
+
+    private async computeUpdateUnits(): Promise<boolean> {
+        let retValue: boolean = true;
+        for (const idObject of this.updateAssetSet.values()) {
+            const oID: DBAPI.ObjectIDAndType = {
+                idObject,
+                eObjectType: COMMON.eSystemObjectType.eAsset,
+            };
+            const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
+            if (SOI) {
+                const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(SOI.idSystemObject, DBAPI.eObjectGraphMode.eAncestors);
+                if (await OG.fetch()) {
+                    if (!this.unitsDB)
+                        this.unitsDB = OG.unit;
+                    else if (OG.unit)
+                        this.unitsDB = this.unitsDB.concat(OG.unit);
+                    // LOG.info(`ingestData computeUpdateSubjects computed ${H.Helpers.JSONStringify(this.unitsDB)}`, LOG.LS.eGQL);
+                } else {
+                    LOG.error(`ingestData computeUpdateSubjects unable to compute object graph for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                    retValue = false;
+                }
+            } else {
+                LOG.error(`ingestData computeUpdateSubjects unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                retValue = false;
+            }
+        }
+        return retValue;
     }
 }
 
