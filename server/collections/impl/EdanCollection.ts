@@ -21,7 +21,8 @@ interface HttpRequestResult {
 
 const NAME_MAPPING_AUTHORITY: string = 'http://n2t.net/';
 const NAME_ASSIGNING_AUTHORITY: string = '65665';
-const DEFAULT_ARK_SHOULDER: string = 'p2b'; // TODO: replace with real value
+const DEFAULT_ARK_SHOULDER_MEDIA: string = 'uj5';   // c.f. https://confluence.si.edu/pages/viewpage.action?spaceKey=SGWG&title=ARK+Implementation+Notes
+const DEFAULT_ARK_SHOULDER: string = 'hz4';         // and  https://confluence.si.edu/download/attachments/40698875/SI_ARK_DatasetIDs.xlsx?api=v2
 
 enum eAPIType {
     eEDAN = 1,
@@ -249,10 +250,10 @@ export class EdanCollection implements COL.ICollection {
      * prefix typically comes from the collecting unit or from the scanning organization (SI DPO);
      * specify true for prependNameAuthority to create an identifier which is a URL
      */
-    generateArk(prefix: string | null, prependNameAuthority: boolean): string {
+    generateArk(prefix: string | null, prependNameAuthority: boolean, isMedia: boolean): string {
         if (!prefix)
-            prefix = DEFAULT_ARK_SHOULDER;
-        const arkId: string = `ark:/${NAME_ASSIGNING_AUTHORITY}/${prefix}${uuidv4()}`;
+            prefix = isMedia ? DEFAULT_ARK_SHOULDER_MEDIA : DEFAULT_ARK_SHOULDER;
+        const arkId: string = `ark:${NAME_ASSIGNING_AUTHORITY}/${prefix}${uuidv4()}`;
         return prependNameAuthority ? this.transformArkIntoUrl(arkId) : arkId;
     }
 
