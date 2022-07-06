@@ -319,7 +319,7 @@ class IngestDataWorker extends ResolverBase {
 
         if (!identifier) {
             // create system identifier when needed
-            const arkId: string = this.getICollection().generateArk(null, false);
+            const arkId: string = this.getICollection().generateArk(null, false, true); /* true -> is media, as opposed to being a collection item */
             const identifierSystemDB: DBAPI.Identifier | null = await this.createIdentifier(arkId, SO, null, true);
             if (!identifierSystemDB) {
                 LOG.error(`ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
