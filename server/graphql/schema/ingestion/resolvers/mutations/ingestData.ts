@@ -73,6 +73,8 @@ class IngestDataWorker extends ResolverBase {
 
     private sceneSOI: DBAPI.SystemObjectInfo | undefined = undefined;
 
+    private unitsDB: DBAPI.Unit[] | null = null;
+
     private static vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
     private static vocabularyEdanRecordID: DBAPI.Vocabulary | undefined = undefined;
 
@@ -115,13 +117,13 @@ class IngestDataWorker extends ResolverBase {
             // retrieve/create subjects; if creating subjects, create related objects (Identifiers, possibly UnitEdan records, though unlikely)
             for (const subject of this.input.subjects) {
                 // fetch our understanding of EDAN's unit information:
-                const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(subject.unit);
+                this.unitsDB = await DBAPI.Unit.fetchFromNameSearch(subject.unit);
                 let subjectDB: DBAPI.Subject | null = null;
 
                 if (subject.id)     // if this subject exists, validate it
-                    subjectDB = await this.validateExistingSubject(subject, units);
+                    subjectDB = await this.validateExistingSubject(subject, this.unitsDB);
                 else                // otherwise create it and related objects, including possibly units
-                    subjectDB = await this.createSubjectAndRelated(subject, units);
+                    subjectDB = await this.createSubjectAndRelated(subject, this.unitsDB);
 
                 if (!subjectDB)
                     return { success: false, message: 'failure to retrieve or create subject' };
@@ -319,7 +321,12 @@ class IngestDataWorker extends ResolverBase {
 
         if (!identifier) {
             // create system identifier when needed
-            const arkId: string = this.getICollection().generateArk(null, false, true); /* true -> is media, as opposed to being a collection item */
+            let ARKShoulder: string | null = null;
+            if (this.unitsDB && this.unitsDB.length === 1)
+                ARKShoulder = this.unitsDB[0].ARKPrefix;
+            // LOG.info(`ingestData createIdentifierForObject computed shoulder ${ARKShoulder} from ${H.Helpers.JSONStringify(this.unitsDB)}`, LOG.LS.eGQL);
+
+            const arkId: string = this.getICollection().generateArk(ARKShoulder, false, true); /* true -> is media, as opposed to being a collection item */
             const identifierSystemDB: DBAPI.Identifier | null = await this.createIdentifier(arkId, SO, null, true);
             if (!identifierSystemDB) {
                 LOG.error(`ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
