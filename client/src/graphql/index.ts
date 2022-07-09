@@ -66,15 +66,18 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     }
 
     if (networkError) {
-        console.log(`[Network error]: ${JSON.stringify(networkError)}`);
+        console.log(`[Network error]: ${networkError}`);
+        // console.log(`[Network error]: ${JSON.stringify(networkError)}`);
 
         if (!sentToLogin) {
             let redirectToLogin: boolean = false;
 
             if (networkError.name === 'ServerParseError') {
                 const bodyText = networkError['bodyText'];
-                if (bodyText && typeof(bodyText) === 'string' && bodyText.includes('saml/idp/profile/redirectorpost/sso'))
-                    redirectToLogin = true;
+                if (bodyText && typeof(bodyText) === 'string' && bodyText.includes('saml/idp/profile/redirectorpost/sso')) {
+                    if (!handleTeleworkSAMLAuthRequest(bodyText))
+                        redirectToLogin = true;
+                }
             } else {
                 const errMessage: string = networkError.toString();
                 if (errMessage !== 'TypeError: Failed to fetch' &&
@@ -91,6 +94,27 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         }
     }
 });
+
+function handleTeleworkSAMLAuthRequest(bodyText: string): boolean {
+    try {
+        const parser: DOMParser = new DOMParser();
+        const document: Document = parser.parseFromString(bodyText, 'text/html');
+        const forms: HTMLCollectionOf<HTMLFormElement> = document.getElementsByTagName('form');
+        if (forms.length !== 1)
+            return false;
+
+        const form: HTMLFormElement = forms[0];
+        if (!form.action.endsWith('/saml/idp/profile/redirectorpost/sso'))
+            return false;
+
+        console.log(`Packrat executing telework SAML Auth Requestion via ${form.method} to ${form.action}`);
+        form.submit();
+        return true;
+    } catch (error) {
+        console.log(`handleTeleworkSAMLAuthRequest failed with ${error} handling ${bodyText}`);
+        return false;
+    }
+}
 
 function configureApolloClient(): ApolloClient<NormalizedCacheObject> {
     const serverEndpoint = API.serverEndpoint();
