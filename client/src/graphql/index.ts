@@ -76,8 +76,9 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
             if (networkError.name === 'ServerParseError') {
                 const bodyText = networkError['bodyText'];
                 if (bodyText && typeof(bodyText) === 'string' && bodyText.includes(SAMLRedirectPath)) {
-                    if (!handleTeleworkSAMLAuthRequest(bodyText))
-                        redirectToLogin = true;
+                    redirectToLogin = true;
+                    // if (!handleTeleworkSAMLAuthRequest(bodyText))
+                    //     redirectToLogin = true;
                 }
             } else {
                 const errMessage: string = networkError.toString();
@@ -96,6 +97,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     }
 });
 
+/*
 function handleTeleworkSAMLAuthRequest(bodyText: string): boolean {
     try {
         const parser: DOMParser = new DOMParser();
@@ -141,6 +143,7 @@ function handleTeleworkSAMLAuthRequest(bodyText: string): boolean {
         return false;
     }
 }
+*/
 
 function configureApolloClient(): ApolloClient<NormalizedCacheObject> {
     const serverEndpoint = API.serverEndpoint();
