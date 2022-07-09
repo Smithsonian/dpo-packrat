@@ -13,6 +13,8 @@ import { ROUTES } from '../constants';
 import { authenticationFailureMessage } from '@dpo-packrat/common';
 import API from '../api';
 
+import axios from 'axios';
+
 class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
     constructor(options: ApolloClientOptions<NormalizedCacheObject>) { // eslint-disable-line @typescript-eslint/no-useless-constructor
         super(options);
@@ -48,6 +50,7 @@ class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
 }
 
 const loginMessage: string = 'The Packrat user is no longer authenticated. Please login.';
+const SAMLRedirectPath: string = '/saml/idp/profile/redirectorpost/sso';
 
 const errorLink = onError(({ graphQLErrors, networkError }) => {
     let sentToLogin: boolean = false;
@@ -74,7 +77,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
             if (networkError.name === 'ServerParseError') {
                 const bodyText = networkError['bodyText'];
-                if (bodyText && typeof(bodyText) === 'string' && bodyText.includes('saml/idp/profile/redirectorpost/sso')) {
+                if (bodyText && typeof(bodyText) === 'string' && bodyText.includes(SAMLRedirectPath)) {
                     if (!handleTeleworkSAMLAuthRequest(bodyText))
                         redirectToLogin = true;
                 }
@@ -104,12 +107,31 @@ function handleTeleworkSAMLAuthRequest(bodyText: string): boolean {
             return false;
 
         const form: HTMLFormElement = forms[0];
-        if (!form.action.endsWith('/saml/idp/profile/redirectorpost/sso'))
+        if (!form.action.endsWith(SAMLRedirectPath))
             return false;
 
         console.log(`Packrat executing telework SAML Auth Requestion via ${form.method} to ${form.action}`);
-        form.submit();
-        return true;
+        let retVal: boolean = true;
+        // form.submit();
+        const formElements: HTMLFormControlsCollection = form.elements;
+        const SAMLRequestInput = formElements.namedItem('SAMLRequest');
+        const RelayStateInput  = formElements.namedItem('RelayState');
+        const SAMLRequest: string = (SAMLRequestInput instanceof HTMLInputElement) ? SAMLRequestInput.value : '';
+        const RelayState:  string = (RelayStateInput  instanceof HTMLInputElement) ? RelayStateInput.value  : '';
+        switch (form.method.toLowerCase()) {
+            case 'post':
+                axios.post(form.action, { SAMLRequest, RelayState })
+                    .then(res => { console.log(`SAMLAuthRequest statusCode: ${res.status}`); console.log(`SAMLAuthRequest response ${res}`); })
+                    .catch(error => { console.log(`SAMLAuthRequest failed ${error}`); retVal = false; });
+                break;
+            case 'get':
+                axios.get(`${form.action}?SAMLRequest=${encodeURIComponent(SAMLRequest)}&RelayState=${encodeURIComponent(RelayState)}`)
+                    .then(res => { console.log(`SAMLAuthRequest statusCode: ${res.status}`); console.log(`SAMLAuthRequest response ${res}`); })
+                    .catch(error => { console.log(`SAMLAuthRequest failed ${error}`); retVal = false; });
+                break;
+        }
+
+        return retVal;
     } catch (error) {
         console.log(`handleTeleworkSAMLAuthRequest failed with ${error} handling ${bodyText}`);
         return false;
