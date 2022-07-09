@@ -118,14 +118,15 @@ function handleTeleworkSAMLAuthRequest(bodyText: string): boolean {
         const RelayStateInput  = formElements.namedItem('RelayState');
         const SAMLRequest: string = (SAMLRequestInput instanceof HTMLInputElement) ? SAMLRequestInput.value : '';
         const RelayState:  string = (RelayStateInput  instanceof HTMLInputElement) ? RelayStateInput.value  : '';
+        const params: string = `SAMLRequest=${encodeURIComponent(SAMLRequest)}&RelayState=${encodeURIComponent(RelayState)}`;
         switch (form.method.toLowerCase()) {
             case 'post':
-                axios.post(form.action, { SAMLRequest, RelayState })
+                axios.post(form.action, params)
                     .then(res => { console.log(`SAMLAuthRequest statusCode: ${res.status}`); console.log(`SAMLAuthRequest response ${res}`); })
                     .catch(error => { console.log(`SAMLAuthRequest failed ${error}`); retVal = false; });
                 break;
             case 'get':
-                axios.get(`${form.action}?SAMLRequest=${encodeURIComponent(SAMLRequest)}&RelayState=${encodeURIComponent(RelayState)}`)
+                axios.get(`${form.action}?${params}`)
                     .then(res => { console.log(`SAMLAuthRequest statusCode: ${res.status}`); console.log(`SAMLAuthRequest response ${res}`); })
                     .catch(error => { console.log(`SAMLAuthRequest failed ${error}`); retVal = false; });
                 break;
