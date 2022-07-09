@@ -168,13 +168,16 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
     const onNodeToggle = useCallback(
         async (_, nodeIds: string[]) => {
-            if (!nodeIds.length) return;
+            if (!nodeIds.length)
+                return;
             const [nodeId] = nodeIds.slice();
-            const alreadyLoaded = tree.has(nodeId);
+            getChildren(nodeId);
 
-            if (!alreadyLoaded) {
-                getChildren(nodeId);
-            }
+            // const alreadyLoaded = tree.has(nodeId);
+            // if (!alreadyLoaded) {
+            //     getChildren(nodeId);
+            // }
+
         },
         [tree, getChildren]
     );
