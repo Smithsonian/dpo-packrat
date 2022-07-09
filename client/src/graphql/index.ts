@@ -13,8 +13,6 @@ import { ROUTES } from '../constants';
 import { authenticationFailureMessage } from '@dpo-packrat/common';
 import API from '../api';
 
-import axios from 'axios';
-
 class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
     constructor(options: ApolloClientOptions<NormalizedCacheObject>) { // eslint-disable-line @typescript-eslint/no-useless-constructor
         super(options);
@@ -111,7 +109,7 @@ function handleTeleworkSAMLAuthRequest(bodyText: string): boolean {
             return false;
 
         console.log(`Packrat executing telework SAML Auth Requestion via ${form.method} to ${form.action}`);
-        let retVal: boolean = true;
+        // Try 1: simply doesn't work
         // form.submit();
         const formElements: HTMLFormControlsCollection = form.elements;
         const SAMLRequestInput = formElements.namedItem('SAMLRequest');
@@ -119,20 +117,25 @@ function handleTeleworkSAMLAuthRequest(bodyText: string): boolean {
         const SAMLRequest: string = (SAMLRequestInput instanceof HTMLInputElement) ? SAMLRequestInput.value : '';
         const RelayState:  string = (RelayStateInput  instanceof HTMLInputElement) ? RelayStateInput.value  : '';
         const params: string = `SAMLRequest=${encodeURIComponent(SAMLRequest)}&RelayState=${encodeURIComponent(RelayState)}`;
-        switch (form.method.toLowerCase()) {
-            case 'post':
-                axios.post(form.action, params)
-                    .then(res => { console.log(`SAMLAuthRequest statusCode: ${res.status}`); console.log(`SAMLAuthRequest response ${res}`); })
-                    .catch(error => { console.log(`SAMLAuthRequest failed ${error}`); retVal = false; });
-                break;
-            case 'get':
-                axios.get(`${form.action}?${params}`)
-                    .then(res => { console.log(`SAMLAuthRequest statusCode: ${res.status}`); console.log(`SAMLAuthRequest response ${res}`); })
-                    .catch(error => { console.log(`SAMLAuthRequest failed ${error}`); retVal = false; });
-                break;
-        }
 
-        return retVal;
+        // Try 2:  doesn't work with "blocked by CORS policy" error
+        // let retVal: boolean = true;
+        // switch (form.method.toLowerCase()) {
+        //     case 'post':
+        //         axios.post(form.action, params)
+        //             .then(res => { console.log(`SAMLAuthRequest statusCode: ${res.status}`); console.log(`SAMLAuthRequest response ${res}`); })
+        //             .catch(error => { console.log(`SAMLAuthRequest failed ${error}`); retVal = false; });
+        //         break;
+        //     case 'get':
+        //         axios.get(`${form.action}?${params}`)
+        //             .then(res => { console.log(`SAMLAuthRequest statusCode: ${res.status}`); console.log(`SAMLAuthRequest response ${res}`); })
+        //             .catch(error => { console.log(`SAMLAuthRequest failed ${error}`); retVal = false; });
+        //         break;
+        // }
+        // return retVal;
+
+        window.location.href = `${form.action}?${params}`;
+        return true;
     } catch (error) {
         console.log(`handleTeleworkSAMLAuthRequest failed with ${error} handling ${bodyText}`);
         return false;
