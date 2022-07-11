@@ -17,7 +17,7 @@ import { updateCookie } from './treeColumns';
 const FILTER_POSITION_COOKIE = 'isFilterExpanded';
 
 export interface NavigationResultEntryState extends NavigationResultEntry {
-    index?: number;
+    hierarchy?: string;
 }
 
 const loadingEntry: NavigationResultEntryState = {
@@ -35,6 +35,7 @@ type RepositoryStore = {
     tree: Map<string, NavigationResultEntryState[]>;
     cursors: Map<string, string>;
     loading: boolean;
+    expandedCount: number;
     updateSearch: (value: string) => void;
     toggleFilter: () => void;
     repositoryRootType: eSystemObjectType[];
@@ -61,6 +62,7 @@ type RepositoryStore = {
     initializeTree: () => Promise<void>;
     getMoreRoot: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
+    deleteChildren: (nodeId: string) => Promise<void>;
     getMoreChildren: (nodeId: string, cursorMark: string) => Promise<void>;
     updateRepositoryFilter: (filter: RepositoryFilter, isModal: boolean) => void;
     setCookieToState: () => void;
@@ -70,7 +72,7 @@ type RepositoryStore = {
     resetRepositoryBrowserRoot: () => void;
     setLoading: (isLoading: boolean) => void;
     initializeFilterPosition: () => void;
-    getRowCount: () => number;
+    setExpandedCount: (expandedCountNew: number) => boolean; // returns true if we expanded and false if we contracted
 };
 
 export const treeRootKey: string = 'root';
@@ -83,6 +85,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     tree: new Map<string, NavigationResultEntryState[]>([[treeRootKey, []]]),
     cursors: new Map<string, string>(),
     loading: true,
+    expandedCount: 0,
     repositoryRootType: [],
     objectsToDisplay: [],
     metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
@@ -116,7 +119,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ isExpanded: !isExpanded });
     },
     initializeTree: async (): Promise<void> => {
-        const { getFilterState, getChildrenForIngestion, idRoot, getRowCount } = get();
+        const { getFilterState, getChildrenForIngestion, idRoot } = get();
         const filter = getFilterState();
         if (idRoot) {
             getChildrenForIngestion(idRoot);
@@ -131,21 +134,14 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                     set({ cursors: newCursors });
                 }
 
-                const rowCount = getRowCount();
-                const uniqueEntries = entries.map((entry, index) => {
-                    const entryCopy: NavigationResultEntryState = { ...entry };
-                    entryCopy.index = index + rowCount;
-                    return entryCopy;
-                });
-
-                const entry: [string, NavigationResultEntryState[]] = [treeRootKey, uniqueEntries];
+                const entry: [string, NavigationResultEntryState[]] = [treeRootKey, entries];
                 const updatedTree = new Map([entry]);
-                set({ tree: updatedTree, loading: false });
+                set({ tree: updatedTree, loading: false, expandedCount: 0 });
             }
         }
     },
     getMoreRoot: async (): Promise<void> => {
-        const { tree, cursors, getFilterState, getRowCount } = get();
+        const { tree, cursors, getFilterState } = get();
         const filter = getFilterState();
         const rootCursor = cursors.get(treeRootKey);
 
@@ -164,44 +160,36 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const { entries, cursorMark } = getObjectChildren;
             if (cursorMark) {
                 const newCursors = new Map(cursors);
-                if (cursorMark !== rootCursor) {
+                if (cursorMark !== rootCursor)
                     newCursors.set(treeRootKey, cursorMark);
-                } else {
+                else
                     newCursors.set(treeRootKey, '');
-                }
                 set({ cursors: newCursors });
             }
 
-            const rowCount = getRowCount();
-            const uniqueEntries = entries.map((entry, index) => {
-                const entryCopy: NavigationResultEntryState = { ...entry };
-                entryCopy.index = index + rowCount;
-                return entryCopy;
-            });
-
-            const updatedNode = rootWithoutLoader.concat(uniqueEntries) as NavigationResultEntryState[];
+            const updatedNode = rootWithoutLoader.concat(entries) as NavigationResultEntryState[];
             treeCopy.set(treeRootKey, updatedNode);
             set({ tree: treeCopy, loading: false });
         }
     },
     getChildren: async (nodeId: string): Promise<void> => {
-        const { tree, getFilterState, cursors, getRowCount } = get();
+        const { tree, getFilterState, cursors } = get();
         const filter = getFilterState();
-        const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
+        const { idSystemObject, hierarchy } = parseRepositoryTreeNodeId(nodeId);
         const { data, error } = await getObjectChildren(idSystemObject, filter);
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries, cursorMark } = getObjectChildren;
             const updatedTree: Map<string, NavigationResultEntryState[]> = new Map(tree);
 
-            const rowCount = getRowCount();
-            const uniqueEntries = entries.map((entry, index) => {
+            const uniqueEntries = entries.map((entry) => {
                 const entryCopy: NavigationResultEntryState = { ...entry };
-                entryCopy.index = index + rowCount;
+                entryCopy.hierarchy = (hierarchy ? hierarchy + '|' : '') + entryCopy.idSystemObject.toString();
                 return entryCopy;
             });
 
             updatedTree.set(nodeId, uniqueEntries);
+            // console.log('getChildren', updatedTree);
             set({ tree: updatedTree });
 
             if (cursorMark) {
@@ -211,10 +199,20 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             }
         }
     },
+    deleteChildren: async (nodeId: string): Promise<void> => {
+        const { tree } = get();
+
+        if (tree.has(nodeId)) {
+            const updatedTree: Map<string, NavigationResultEntryState[]> = new Map(tree);
+            updatedTree.delete(nodeId);
+            // console.log('deleteChildren', updatedTree);
+            set({ tree: updatedTree });
+        }
+    },
     getMoreChildren: async (nodeId: string, cursorMark: string): Promise<void> => {
-        const { tree, cursors, getFilterState, getRowCount } = get();
+        const { tree, cursors, getFilterState } = get();
         const filter = getFilterState();
-        const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
+        const { idSystemObject, hierarchy } = parseRepositoryTreeNodeId(nodeId);
 
         const treeCopy = new Map(tree);
         const nodeWithoutLoader = treeCopy.get(nodeId) ?? [];
@@ -228,10 +226,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const { getObjectChildren } = data;
             const { entries, cursorMark } = getObjectChildren;
 
-            const rowCount = getRowCount();
-            const uniqueEntries = entries.map((entry, index) => {
+            const uniqueEntries = entries.map((entry) => {
                 const entryCopy: NavigationResultEntryState = { ...entry };
-                entryCopy.index = index + rowCount;
+                entryCopy.hierarchy = (hierarchy ? hierarchy + '|' : '') + entryCopy.idSystemObject.toString();
                 return entryCopy;
             });
 
@@ -550,10 +547,10 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             set({ isExpanded: filterCookie === 'true' ? true : false });
         }
     },
-    getRowCount: (): number => {
-        const { tree } = get();
-        let result = 0;
-        tree.forEach(node => result += node.length);
-        return result;
+    setExpandedCount: (expandedCountNew: number): boolean => { // returns true if we expanded and false if we contracted
+        const { expandedCount } = get();
+        const retValue: boolean = expandedCountNew > expandedCount;
+        set({ expandedCount: expandedCountNew });
+        return retValue;
     }
 }));
