@@ -32,8 +32,9 @@ export const ModelMigrationFiles: ModelMigrationFile[] = [
 ];
 
 export const SceneMigrationPackages: SceneMigrationPackage[] = [
-    { EdanUUID: '88de08dd-b8ab-470a-b987-ed6fe35def04', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 277,  testData: false, SceneName: 'Figure of a Dancer' },
     /*
+    { EdanUUID: '88de08dd-b8ab-470a-b987-ed6fe35def04', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 277,  testData: false, SceneName: 'Figure of a Dancer' },
+    */
     { EdanUUID: '57d30b85-3549-40dc-99c3-255249867462', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 283,  testData: false, SceneName: 'Pergolesi Side Chair' },
     { EdanUUID: '2632d078-a354-412c-825e-e70d2f546793', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 289,  testData: false, SceneName: 'Armchair with Slip Seat (USA), CA 1820' },
     { EdanUUID: 'dc9e437b-461d-4248-86f8-4e55429f2363', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 293,  testData: false, SceneName: 'Panel for a Cabinet Door, Late 16th to Early 17th Century' },
@@ -44,6 +45,7 @@ export const SceneMigrationPackages: SceneMigrationPackage[] = [
     { EdanUUID: '6e717b82-6467-43aa-80f3-28203209946d', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 335,  testData: false, SceneName: 'Jamestown Chancel Burial D 170C' },
     { EdanUUID: '6ddc70e2-bdef-46fe-b5cb-90eb991afb15', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 337,  testData: false, SceneName: 'Jamestown Reliquary: As found' },
     { EdanUUID: '98d5f4e6-cd81-4806-9ef6-006d2af692d3', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 340,  testData: false, SceneName: 'Jamestown Reliquary: Contents' },
+    /*
     { EdanUUID: 'd8c6443e-4ebc-11ea-b77f-2e728ce88125', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 342,  testData: false, SceneName: 'Jamestown Chancel Burial Excavation Overall Site' },
     { EdanUUID: '297ef043-dfe2-4a68-978a-a570b2c3ab18', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 344,  testData: false, SceneName: 'Jamestown Chancel Burial A 2993B' },
     { EdanUUID: 'd8c6343a-4ebc-11ea-b77f-2e728ce88125', fetchRemote: true, PosedAndQCd: true, ApprovedForPublication: true, idSystemObjectItem: 346,  testData: false, SceneName: 'Killer Whale Hat' },
