@@ -39,7 +39,6 @@ module.exports = {
         // '**/tests/storage/impl/LocalStorage/OCFL.test.ts',
         // '**/tests/storage/impl/LocalStorage/LocalStorage.test.ts',
         // '**/tests/utils/helpers.test.ts',
-        // '**/tests/utils/migration/SceneMigration.test.ts',
         // '**/tests/utils/parser/bagitReader.test.ts',
         // '**/tests/utils/parser/bulkIngestReader.test.ts',
         // '**/tests/utils/parser/csvParser.test.ts',
