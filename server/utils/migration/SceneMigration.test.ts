@@ -1,10 +1,10 @@
-import * as DBAPI from '../../../db';
-import * as LOG from '../../../utils/logger';
-import * as H from '../../../utils/helpers';
-import { SceneMigration, SceneMigrationResults } from '../../../utils/migration/SceneMigration';
-// import { SceneMigrationPackage } from '../../../utils/migration/SceneMigrationPackage';
-import { SceneMigrationPackages } from '../../../utils/migration/MigrationData';
-import * as UTIL from '../../db/api';
+import * as DBAPI from '../../db';
+import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { SceneMigration, SceneMigrationResults } from '../../utils/migration/SceneMigration';
+// import { SceneMigrationPackage } from '../../utils/migration/SceneMigrationPackage';
+import { SceneMigrationPackages } from '../../utils/migration/MigrationData';
+import * as UTIL from '../../tests/db/api';
 
 afterAll(async done => {
     await H.Helpers.sleep(3000);
@@ -16,8 +16,8 @@ enum eTestType {
     eProductionMigration
 }
 
-const eTYPE: eTestType = +eTestType.eNone; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eProductionMigration!
-const sceneUserEmail: string = 'scenetest@si.edu';
+const eTYPE: eTestType = +eTestType.eProductionMigration; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eProductionMigration!
+const sceneUserEmail: string = 'tysonj@si.edu';
 
 describe('Utils > Migration: SceneMigration', () => {
     test('Utils > Migration: Empty Test', async () => { });
