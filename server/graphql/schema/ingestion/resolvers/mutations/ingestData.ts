@@ -547,14 +547,9 @@ class IngestDataWorker extends ResolverBase {
             return false;
         }
 
-        LOG.info(`--------createPhotogrammetryObjects photogrammetry ${JSON.stringify(photogrammetry)}`, LOG.LS.eWF);
-
-        // TODO: if we're updating an existing Capture Data Set, we should update these records instead of creating new ones
-        // create photogrammetry objects, identifiers, etc.
         let idCaptureData: number = 0;
         if (photogrammetry.idAsset) {
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(photogrammetry.idAsset);
-            LOG.info(`~~~~~~~~Asset ${JSON.stringify(asset)}`, LOG.LS.eGQL);
             if (!asset) {
                 LOG.error(`ingestData createPhotogrammetryObjects unable to fetch asset from ${JSON.stringify(photogrammetry, H.Helpers.saferStringify)}, idAsset ${photogrammetry.idAsset}`, LOG.LS.eGQL);
                 return false;
@@ -563,19 +558,17 @@ class IngestDataWorker extends ResolverBase {
             const assetType: COMMON.eVocabularyID | undefined = await asset.assetType();
             if (assetType === COMMON.eVocabularyID.eAssetAssetTypeCaptureDataFile ||
                 assetType === COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry) {
-                    const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
-                    if (!SO) {
-                        LOG.error(`ingestData createPhotogrammetryObjects unable to fetch photogrammetry's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
-                        return false;
-                    }
-                    LOG.info(`~~~~~~~~~~~~~~~~SO ${JSON.stringify(SO)} idCD ${SO.idCaptureData}`, LOG.LS.eGQL);
-                    if (SO.idCaptureData)                   // Is this a CD - Photo?
-                        idCaptureData = SO.idCaptureData;   // Yes: Use it!
+                const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
+                if (!SO) {
+                    LOG.error(`ingestData createPhotogrammetryObjects unable to fetch photogrammetry's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    return false;
                 }
+                if (SO.idCaptureData)                   // Is this a CD - Photo?
+                    idCaptureData = SO.idCaptureData;   // Yes: Use it!
+            }
         }
 
         let CDDB: DBAPI.CaptureData | null = idCaptureData ? await DBAPI.CaptureData.fetch(idCaptureData) : null;
-        LOG.info(`~~~~~~~~~~~~~~~~~CDDB ${JSON.stringify(CDDB)}`, LOG.LS.eWF);
         if (CDDB) {
             CDDB.Name = photogrammetry.name;
             if (H.Helpers.convertStringToDate(photogrammetry.dateCaptured) instanceof Date) CDDB.DateCaptured = H.Helpers.convertStringToDate(photogrammetry.dateCaptured) as Date;
@@ -590,13 +583,11 @@ class IngestDataWorker extends ResolverBase {
                 idCaptureData: 0
             });
         }
-
         const CDDBRes: boolean = idCaptureData ? await CDDB.update() : await CDDB.create();
         if (!CDDBRes) {
             LOG.error(`ingestData unable to ${idCaptureData ? 'update' : 'create'} CaptureData for photogrammetry data ${JSON.stringify(photogrammetry)}`, LOG.LS.eGQL);
             return false;
         }
-        LOG.info(`~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~CDDB post-creation ${JSON.stringify(CDDB)}`, LOG.LS.eGQL);
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromCaptureData(CDDB);
         const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
         const href: string = H.Helpers.computeHref(path, CDDB.Name);
@@ -604,8 +595,8 @@ class IngestDataWorker extends ResolverBase {
 
         let photoDB: DBAPI.CaptureDataPhoto;
         const photosDB: DBAPI.CaptureDataPhoto[] | DBAPI.CaptureDataPhoto | null = idCaptureData ? await DBAPI.CaptureDataPhoto.fetchFromCaptureData(idCaptureData) : null;
-        LOG.info(`~~~~~~~~~~~~~~~~~CD PHOTOS ${JSON.stringify(photosDB)}`, LOG.LS.eWF);
-        
+
+        // Usually expect 1 entry in the photosDB result
         if (photosDB && photosDB.length) {
             if (photosDB.length > 1)
                 LOG.error(`ingestData createPhotoGrammetryObjects detected multiple photogrammetry for idCD ${idCaptureData}`, LOG.LS.eGQL);
@@ -619,8 +610,8 @@ class IngestDataWorker extends ResolverBase {
             photoDB.idVLightSourceType = photogrammetry.lightsourceType ? photogrammetry.lightsourceType : null;
             photoDB.idVBackgroundRemovalMethod = photogrammetry.backgroundRemovalMethod ? photogrammetry.backgroundRemovalMethod : null;
             photoDB.idVClusterType = photogrammetry.clusterType ? photogrammetry.clusterType : null;
-            photoDB.ClusterGeometryFieldID = photogrammetry.clusterGeometryFieldId ? photogrammetry.clusterGeometryFieldId : null;          
-            photoDB.CameraSettingsUniform = photogrammetry.cameraSettingUniform ? photogrammetry.cameraSettingUniform : false;            
+            photoDB.ClusterGeometryFieldID = photogrammetry.clusterGeometryFieldId ? photogrammetry.clusterGeometryFieldId : null;
+            photoDB.CameraSettingsUniform = photogrammetry.cameraSettingUniform ? photogrammetry.cameraSettingUniform : false;
         } else {
             photoDB = new DBAPI.CaptureDataPhoto({
                 idVCaptureDatasetType: photogrammetry.datasetType,
@@ -638,20 +629,19 @@ class IngestDataWorker extends ResolverBase {
                 idCaptureDataPhoto: 0
             });
         }
-
-        LOG.info(`~~~~~~~~~~~~~~~~~~~~~~~~ACTION: ${idCaptureData ? 'update' : 'create'}`, LOG.LS.eGQL);
         const CDPhotoRes = idCaptureData ? photoDB.update() : photoDB.create();
         if (!CDPhotoRes) {
             LOG.error(`ingestData unable to ${idCaptureData ? 'update' : 'create'} CaptureDataPhoto for photogrammetry data ${JSON.stringify(photogrammetry)}`, LOG.LS.eGQL);
             return false;
         }
 
+        // If updating, also apply changes to folders
         if (idCaptureData && photogrammetry.folders && photogrammetry.folders.length) {
             const foldersMap = new Map<string, number>();
             photogrammetry.folders.forEach((folder) => foldersMap.set(folder.name, folder.variantType ?? 0));
             const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(idCaptureData);
             if (!CDFiles) {
-                LOG.error(`ingestData createPhotogrammetryObjects could not fetch Capture Data Files for idCaptureData ${idCaptureData}`, LOG.LS.eGQL)
+                LOG.error(`ingestData createPhotogrammetryObjects could not fetch Capture Data Files for idCaptureData ${idCaptureData}`, LOG.LS.eGQL);
                 return false;
             }
             for (const file of CDFiles) {

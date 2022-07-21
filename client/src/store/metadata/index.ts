@@ -516,7 +516,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         photogrammetry.folders = photogrammetry.folders.map((folder, index) => ({
                             ...folder,
                             id: index
-                        }))
+                        }));
                         return metadata;
                     }
 
