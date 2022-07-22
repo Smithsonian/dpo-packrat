@@ -117,14 +117,14 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
                     updated={isFieldUpdated(SceneDetails, sceneData,'ApprovedForPublication')}
                 />
-                <FieldType 
+                <FieldType
                     required
                     label="Posed and QC'd"
                     direction='row'
                     containerProps={{ alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } }}
                     padding='1px 10px'
                 >
-                    <div style={{ display: 'flex' }}> 
+                    <div style={{ display: 'flex' }}>
                         <Tooltip title='When checked, downloads will be generated if this scene has a master model as a parent, as well as every time the scene is re-posed. This item is disabled if the scene is missing thumbnails (either in the svx.json or among its ingested assets)' placement='left'>
                             <HelpOutline
                                 style={{ alignSelf: 'center', cursor: 'pointer', fontSize: '18px' }}
