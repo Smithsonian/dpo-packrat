@@ -180,7 +180,7 @@ export const modelFieldsSchemaUpdate = yup.object().shape({
     systemCreated: yup.boolean().required(),
     uvMaps: yup.array().of(uvMapSchema),
     sourceObjects: yup.array().of(sourceObjectSchema),
-    dateCreated: yup.date().typeError('Date Created is required'),
+    dateCreated: yup.date().typeError('Date Created is required').max(Date(), 'Date Created cannot be set in the future'),
     creationMethod: yup.number().typeError('Creation method is required'),
     modality: yup.number().typeError('Modality is required'),
     units: yup.number().typeError('Units is required'),
