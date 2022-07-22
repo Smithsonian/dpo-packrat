@@ -22,7 +22,8 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        flexDirection: 'column'
+        flexDirection: 'column',
+        marginBottom: '50px'
     },
     list: {
         display: 'flex',
