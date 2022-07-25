@@ -127,18 +127,28 @@ export function parseSubtitlesToState(titles: IngestTitle): SubtitleFields {
         subtitle.forEach((subtitleVal, key) => {
             // Supply "None" as an option
             if (subtitleVal === '<None>') {
-                result.push({ value: '', selected: false, subtitleOption: eSubtitleOption.eNone, id: key });
+                result.push({ value: '', selected: true, subtitleOption: eSubtitleOption.eNone, id: key });
             }
             // User Input
             if (subtitleVal === null) {
-                result.push({ value: '', selected: true, subtitleOption: eSubtitleOption.eInput, id: key });
+                result.push({ value: '', selected: false, subtitleOption: eSubtitleOption.eInput, id: key });
             }
             // Inherited Value
             if (typeof subtitleVal === 'string' && subtitleVal !== '<None>') {
                 result.push({ value: subtitleVal, selected: false, subtitleOption: eSubtitleOption.eInherit, id: key });
             }
-
         });
+
+        // handle selecting in case for empty string inherit and input, which would normally both be unselected
+        const hasSelectedOption = result.some((entry) => entry.selected);
+        if (!hasSelectedOption) {
+            for (let i = 0; i < result.length; i++) {
+                if (result[i].subtitleOption === eSubtitleOption.eInherit && result[i].value === '') {
+                    result[i].selected = true;
+                    break;
+                }
+            }
+        }
     }
 
     return result;
