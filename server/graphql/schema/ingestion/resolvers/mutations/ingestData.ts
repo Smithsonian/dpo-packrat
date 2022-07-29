@@ -567,7 +567,7 @@ class IngestDataWorker extends ResolverBase {
                     idCaptureData = SO.idCaptureData;   // Yes: Use it!
             }
         }
-
+        let updateRecord: boolean = true;
         let CDDB: DBAPI.CaptureData | null = idCaptureData ? await DBAPI.CaptureData.fetch(idCaptureData) : null;
         if (CDDB) {
             CDDB.Name = photogrammetry.name;
@@ -582,10 +582,11 @@ class IngestDataWorker extends ResolverBase {
                 idAssetThumbnail: null,
                 idCaptureData: 0
             });
+            updateRecord = false;
         }
-        const CDDBRes: boolean = idCaptureData ? await CDDB.update() : await CDDB.create();
+        const CDDBRes: boolean = updateRecord ? await CDDB.update() : await CDDB.create();
         if (!CDDBRes) {
-            LOG.error(`ingestData unable to ${idCaptureData ? 'update' : 'create'} CaptureData for photogrammetry data ${JSON.stringify(photogrammetry)}`, LOG.LS.eGQL);
+            LOG.error(`ingestData unable to ${updateRecord ? 'update' : 'create'} CaptureData for photogrammetry data ${H.Helpers.JSONStringify(photogrammetry)}`, LOG.LS.eGQL);
             return false;
         }
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromCaptureData(CDDB);
@@ -652,7 +653,7 @@ class IngestDataWorker extends ResolverBase {
                 }
 
                 const newVariantType = foldersMap.get(assetVersion.FilePath);
-                file.idVVariantType = newVariantType || null;
+                file.idVVariantType = newVariantType ?? null;
                 if (!await file.update())
                     LOG.error(`ingestData createPhotogrammetryObjects failed to update Capture Data File with id ${file.idCaptureDataFile}`, LOG.LS.eGQL);
             }
