@@ -115,7 +115,7 @@ export class WorkflowUpload implements WF.IWorkflow {
 
                 const files: string[] = await ZS.getJustFiles(null);
                 if (!files || files.length === 0)
-                    return this.handleError(`WorkflowUpload.validateFiles unable to detect files in zip of asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`);
+                    return this.handleError('Zip file is unexpectedly empty');
                 for (const fileName of files) {
                     const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(fileName);
                     if (!readStream)
