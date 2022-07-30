@@ -560,7 +560,7 @@ class IngestDataWorker extends ResolverBase {
                 assetType === COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry) {
                 const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
                 if (!SO) {
-                    LOG.error(`ingestData createPhotogrammetryObjects unable to fetch photogrammetry's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData createPhotogrammetryObjects unable to fetch photogrammetry's asset's system object ${H.Helpers.JSONStringify(asset)}`, LOG.LS.eGQL);
                     return false;
                 }
                 if (SO.idCaptureData)                   // Is this a CD - Photo?
