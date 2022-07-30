@@ -118,6 +118,36 @@ export class SceneMigration {
             return this.recordError(`migrateScene failed to create scene DB record ${H.Helpers.JSONStringify(this.scene)}`);
         LOG.info(`SceneMigration.migrateScene created scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
 
+        // wire item to scene
+        if (this.scenePackage.idSystemObjectItem) {
+            if (!await this.wireItemToScene(this.scenePackage.idSystemObjectItem))
+                return this.recordError(`migrateScene failed to wire media group to scene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
+            LOG.info(`SceneMigration.migrateScene wired scene to idSystemObject ${this.scenePackage.idSystemObjectItem}`, LOG.LS.eSYS);
+        }
+
+        const sceneFileName: string = this.scenePackage.PackageName ? this.scenePackage.PackageName : `${this.scenePackage.EdanUUID}.zip`;
+        const IAR: STORE.IngestAssetResult = await this.ingestStream(readStream, sceneFileName, true, this.scene, SceneMigration.vocabScene?.idVocabulary, doNotSendIngestionEvent); /* true -> allow zip containing scene package to be cracked open */
+        if (!IAR.success)
+            return this.recordError(`migrateScene failed to ingest ${H.Helpers.JSONStringify(this.scenePackage)}: ${IAR.error}`);
+        if (IAR.assets)
+            asset = IAR.assets;
+        if (IAR.assetVersions)
+            assetVersion = IAR.assetVersions;
+
+        const { success } = await SceneHelpers.handleComplexIngestionScene(this.scene, IAR, this.userOwner.idUser, undefined);
+        if (!success)
+            return this.recordError(`migrateScene failed in handleComplexIngestionScene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
+
+        // Extract scene metrics; Trim excess objects that were present in scene zip (EDAN seems to have scenes published with all sorts of extraneous crap)
+        const metricsRes: H.IOResults = await this.extractSceneDetails(asset, assetVersion);
+        if (!metricsRes.success)
+            return metricsRes;
+
+        // Fetch and Ingest Resources
+        const resourceRes: H.IOResults = await this.fetchAndIngestResources(doNotSendIngestionEvent);
+        if (!resourceRes.success)
+            return resourceRes;
+
         let sceneSO: DBAPI.SystemObject | null = null;
         // set license
         if (this.scenePackage.License) {
@@ -150,36 +180,6 @@ export class SceneMigration {
             if (!await sceneSOVersion.update())
                 return this.recordError(`migrateScene failed to set scene system object version published state to ${this.scenePackage.PublishedState} for ${H.Helpers.JSONStringify(this.scene)}`);
         }
-
-        // wire item to scene
-        if (this.scenePackage.idSystemObjectItem) {
-            if (!await this.wireItemToScene(this.scenePackage.idSystemObjectItem))
-                return this.recordError(`migrateScene failed to wire media group to scene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
-            LOG.info(`SceneMigration.migrateScene wired scene to idSystemObject ${this.scenePackage.idSystemObjectItem}`, LOG.LS.eSYS);
-        }
-
-        const sceneFileName: string = this.scenePackage.PackageName ? this.scenePackage.PackageName : `${this.scenePackage.EdanUUID}.zip`;
-        const IAR: STORE.IngestAssetResult = await this.ingestStream(readStream, sceneFileName, true, this.scene, SceneMigration.vocabScene?.idVocabulary, doNotSendIngestionEvent); /* true -> allow zip containing scene package to be cracked open */
-        if (!IAR.success)
-            return this.recordError(`migrateScene failed to ingest ${H.Helpers.JSONStringify(this.scenePackage)}: ${IAR.error}`);
-        if (IAR.assets)
-            asset = IAR.assets;
-        if (IAR.assetVersions)
-            assetVersion = IAR.assetVersions;
-
-        const { success } = await SceneHelpers.handleComplexIngestionScene(this.scene, IAR, this.userOwner.idUser, undefined);
-        if (!success)
-            return this.recordError(`migrateScene failed in handleComplexIngestionScene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
-
-        // Extract scene metrics; Trim excess objects that were present in scene zip (EDAN seems to have scenes published with all sorts of extraneous crap)
-        const metricsRes: H.IOResults = await this.extractSceneDetails(asset, assetVersion);
-        if (!metricsRes.success)
-            return metricsRes;
-
-        // Fetch and Ingest Resources
-        const resourceRes: H.IOResults = await this.fetchAndIngestResources(doNotSendIngestionEvent);
-        if (!resourceRes.success)
-            return resourceRes;
 
         if (this.scenePackage.idSystemObjectItem)
             await this.postItemWiring();
