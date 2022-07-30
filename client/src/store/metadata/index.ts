@@ -513,6 +513,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
                 if (fileId === idAssetVersion) {
                     if (photogrammetry.folders.length) {
+                        photogrammetry.folders = photogrammetry.folders.map((folder, index) => ({
+                            ...folder,
+                            id: index
+                        }));
                         return metadata;
                     }
 
