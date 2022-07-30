@@ -837,7 +837,7 @@ class IngestDataWorker extends ResolverBase {
         }
 
         if (!updateMode) modelDB.Name = itemDB ? NameHelpers.modelDisplayName(model.subtitle, itemDB, subjectsDB) : model.subtitle;
-        if (!updateMode) modelDB.Title = model.subtitle.length > 1 ? model.subtitle : modelDB.Title;
+        if (!updateMode) modelDB.Title = model.subtitle.length > 0 ? model.subtitle : modelDB.Title;
         modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCreated) || new Date();
         modelDB.idVCreationMethod = model.creationMethod;
         modelDB.idVModality = model.modality;
