@@ -349,6 +349,7 @@ function Model(props: ModelProps): React.ReactElement {
                                 onSelectSubtitle={onSelectSubtitle}
                                 onUpdateCustomSubtitle={onUpdateCustomSubtitle}
                                 hasPrimaryTheme={false}
+                                hasError={fieldErrors?.model.subtitles ?? false}
                             />
                         </Box>
                     )}

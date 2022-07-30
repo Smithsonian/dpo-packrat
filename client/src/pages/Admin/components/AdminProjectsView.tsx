@@ -238,7 +238,8 @@ function AdminProjectsView(): React.ReactElement {
                 input: {
                     search: newSearchText
                 }
-            }
+            },
+            fetchPolicy: 'no-cache'
         });
 
         const {
