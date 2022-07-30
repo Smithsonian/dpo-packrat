@@ -56,7 +56,11 @@ export type FieldErrors = {
         units: boolean;
         purpose: boolean;
         modelFileType: boolean;
+        subtitles: boolean;
     };
+    scene: {
+        subtitles: boolean;
+    }
 };
 
 export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateRelatedObject[] | SubtitleFields;
