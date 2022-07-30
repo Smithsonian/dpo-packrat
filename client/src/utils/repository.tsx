@@ -243,6 +243,8 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
         case eSystemObjectType.eActor:                  iconProps.overrideText = 'AC'; break;
         case eSystemObjectType.eStakeholder:            iconProps.overrideText = 'ST'; break;
         case eSystemObjectType.eItem:                   iconProps.overrideText = 'MG'; break;
+        case eSystemObjectType.eSubject:                iconProps.overrideText = 'SU'; break;
+        case eSystemObjectType.eCaptureData:            iconProps.overrideText = 'CD'; break;
         case eSystemObjectType.eAsset:
         case eSystemObjectType.eAssetVersion:
             return { icon: fileIcon, color };
