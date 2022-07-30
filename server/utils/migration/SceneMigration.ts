@@ -118,6 +118,39 @@ export class SceneMigration {
             return this.recordError(`migrateScene failed to create scene DB record ${H.Helpers.JSONStringify(this.scene)}`);
         LOG.info(`SceneMigration.migrateScene created scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
 
+        let sceneSO: DBAPI.SystemObject | null = null;
+        // set license
+        if (this.scenePackage.License) {
+            if (!sceneSO)
+                sceneSO = await this.scene.fetchSystemObject();
+            if (!sceneSO)
+                return this.recordError(`migrateScene failed to fetch scene system object for ${H.Helpers.JSONStringify(this.scene)}`);
+
+            const License: DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByEnum(this.scenePackage.License);
+            if (!License)
+                return this.recordError(`migrateScene failed to fetch scene license from enum ${this.scenePackage.License} for ${H.Helpers.JSONStringify(this.scene)}`);
+
+            const assignmentSuccess: boolean = await DBAPI.LicenseManager.setAssignment(sceneSO.idSystemObject, License);
+            if (!assignmentSuccess)
+                return this.recordError(`migrateScene failed to assign license ${this.scenePackage.License} for ${H.Helpers.JSONStringify(this.scene)}`);
+        }
+
+        // set publication status
+        if (this.scenePackage.PublishedState) {
+            if (!sceneSO)
+                sceneSO = await this.scene.fetchSystemObject();
+            if (!sceneSO)
+                return this.recordError(`migrateScene failed to fetch scene system object for ${H.Helpers.JSONStringify(this.scene)}`);
+
+            const sceneSOVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(sceneSO.idSystemObject);
+            if (!sceneSOVersion)
+                return this.recordError(`migrateScene failed to fetch scene system object version for ${H.Helpers.JSONStringify(this.scene)}`);
+
+            sceneSOVersion.setPublishedState(this.scenePackage.PublishedState);
+            if (!await sceneSOVersion.update())
+                return this.recordError(`migrateScene failed to set scene system object version published state to ${this.scenePackage.PublishedState} for ${H.Helpers.JSONStringify(this.scene)}`);
+        }
+
         // wire item to scene
         if (this.scenePackage.idSystemObjectItem) {
             if (!await this.wireItemToScene(this.scenePackage.idSystemObjectItem))
@@ -405,13 +438,22 @@ export class SceneMigration {
             return this.recordError('extractSceneDetails unable to locate asset for scene svx.json');
 
         // retire assets and asset versions for objects not referenced by scene's svx.jxon
+        // extract base path used by articles, as we'll allow all assets in those paths (in order to pick up assets referenced by HTML, which won't be explicitly listed in the svx.json)
         const referencedAssetUris: Set<string> = new Set<string>();
+        const referencedArticleBaseUris: Set<string> = new Set<string>();
         if (svx.SvxExtraction.modelAssets)
             for (const asset of svx.SvxExtraction.modelAssets)
                 referencedAssetUris.add(this.normalizePath(assetVersionScene, asset.uri));
-        if (svx.SvxExtraction.nonModelAssets)
-            for (const asset of svx.SvxExtraction.nonModelAssets)
+        if (svx.SvxExtraction.nonModelAssets) {
+            for (const asset of svx.SvxExtraction.nonModelAssets) {
                 referencedAssetUris.add(this.normalizePath(assetVersionScene, asset.uri));
+                if (asset.type === 'Article') {
+                    const baseUri: string = path.dirname(asset.uri).toLowerCase();
+                    if (baseUri)
+                        referencedArticleBaseUris.add(baseUri);
+                }
+            }
+        }
 
         // LOG.info(`SceneMigration.extractSceneDetails testing assets against ${H.Helpers.JSONStringify(referencedAssetUris)}`, LOG.LS.eSYS);
 
@@ -422,9 +464,10 @@ export class SceneMigration {
             const assetVersion: DBAPI.AssetVersion | undefined = assetIDToVersionMap.get(asset.idAsset);
             if (!assetVersion)
                 return this.recordError(`extractSceneDetails could not find asset version for asset ${H.Helpers.JSONStringify(asset)}`);
-            const normalizedUri: string = this.normalizePath(assetVersion);
 
-            if (!referencedAssetUris.has(normalizedUri)) {
+            const normalizedUri: string = this.normalizePath(assetVersion);
+            const baseUri: string = path.dirname(normalizedUri);
+            if (!referencedAssetUris.has(normalizedUri) && !referencedArticleBaseUris.has(baseUri)) {
                 LOG.info(`SceneMigration.extractSceneDetails retiring unreferenced asset ${normalizedUri} for asset version ${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eSYS);
 
                 let retired: boolean = false;
