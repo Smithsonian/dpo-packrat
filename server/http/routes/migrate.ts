@@ -40,8 +40,8 @@ class Migrator {
         // /migrate                     Performs full migration
         // /migrate/scenes              Performs full scene migration
         // /migrate/models              Performs full model migration
-        // /migrate/scene/ID            Performs scene migration for scene with EdanUUID of ID
-        // /migrate/model/ID            Performs model migration for model with Unique ID of ID
+        // /migrate/scene/ID            Performs scene migration for scene with EdanUUID of ID (comma-separated list)
+        // /migrate/model/ID            Performs model migration for model with Unique ID of ID (comma-separated list)
 
         const requestPath: string = this.request.path;
         let handled: boolean = true;
@@ -55,21 +55,28 @@ class Migrator {
             return true;
 
         let flavor: string | null = null;
-        let id: string | null = null;
+        let idList: string | null = null;
         const regexIDMatcher: RegExp = new RegExp('/migrate/(scene|model)/(.*)', 'i');
         const downloadMatch: RegExpMatchArray | null = requestPath.match(regexIDMatcher);
         if (downloadMatch && downloadMatch.length === 3) {
             flavor = downloadMatch[1];
-            id = downloadMatch[2];
+            idList = downloadMatch[2];
         }
 
-        if ((flavor !== 'scene' && flavor !== 'model') || id === null)
+        if ((flavor !== 'scene' && flavor !== 'model') || idList === null)
             return this.sendError(404, `/migrate called with invalid url ${requestPath}`);
 
+        let idSet: Set<string> | undefined = undefined;
         switch (flavor) {
-            case 'scene': this.sceneIDSet = new Set<string>(); this.sceneIDSet.add(id); break;
-            case 'model': this.modelIDSet = new Set<string>(); this.modelIDSet.add(id); break;
+            case 'scene': idSet = this.sceneIDSet = new Set<string>(); break;
+            case 'model': idSet = this.modelIDSet = new Set<string>(); break;
         }
+
+        if (idSet) {
+            for (const id of idList.split(','))
+                idSet.add(id);
+        }
+        // LOG.info(`SceneMigration handling ${idList} with idSet ${H.Helpers.JSONStringify(idSet)})`, LOG.LS.eMIG);
         return true;
     }
 
@@ -82,14 +89,13 @@ class Migrator {
             for (const scenePackage of SceneMigrationPackages) {
                 if (this.sceneIDSet && !this.sceneIDSet.has(scenePackage.EdanUUID))
                     continue;
-
                 const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchByUUID(scenePackage.EdanUUID);
                 if (scenes && scenes.length > 0) {
                     this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) skipped: already migrated`);
                     continue;
                 }
 
-                LOG.info(`SceneMigration (${scenePackage.EdanUUID}) Starting`, LOG.LS.eMIG);
+                this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) Starting`);
                 const SM: SceneMigration = new SceneMigration();
                 const SMR: SceneMigrationResults = await SM.migrateScene(user.idUser, scenePackage, true);
                 if (!SMR.success)
