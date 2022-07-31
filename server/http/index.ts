@@ -7,6 +7,7 @@ import * as LOG from '../utils/logger';
 
 import { logtest } from './routes/logtest';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
+import { migrate } from './routes/migrate';
 import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
@@ -67,6 +68,7 @@ export class HttpServer {
         this.app.get('/logtest', logtest);
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
+        this.app.get('/migrate/*', migrate);
         this.app.get(`${Downloader.httpRoute}*`, HttpServer.idRequestMiddleware2);
         this.app.get(`${Downloader.httpRoute}*`, download);
 

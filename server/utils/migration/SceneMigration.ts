@@ -116,13 +116,13 @@ export class SceneMigration {
 
         if (!await this.scene.create())
             return this.recordError(`migrateScene failed to create scene DB record ${H.Helpers.JSONStringify(this.scene)}`);
-        LOG.info(`SceneMigration.migrateScene created scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+        LOG.info(`SceneMigration.migrateScene created scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eMIG);
 
         // wire item to scene
         if (this.scenePackage.idSystemObjectItem) {
             if (!await this.wireItemToScene(this.scenePackage.idSystemObjectItem))
                 return this.recordError(`migrateScene failed to wire media group to scene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
-            LOG.info(`SceneMigration.migrateScene wired scene to idSystemObject ${this.scenePackage.idSystemObjectItem}`, LOG.LS.eSYS);
+            LOG.info(`SceneMigration.migrateScene wired scene to idSystemObject ${this.scenePackage.idSystemObjectItem}`, LOG.LS.eMIG);
         }
 
         const sceneFileName: string = this.scenePackage.PackageName ? this.scenePackage.PackageName : `${this.scenePackage.EdanUUID}.zip`;
@@ -196,12 +196,12 @@ export class SceneMigration {
     }
 
     private async fetchRemoteStream(url: string): Promise<NodeJS.ReadableStream | null> {
-        LOG.info(`SceneMigration.fetchRemoteStream fetching ${url}`, LOG.LS.eSYS);
+        LOG.info(`SceneMigration.fetchRemoteStream fetching ${url}`, LOG.LS.eMIG);
         try {
             const res = await fetch(url);
             return res.body;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('SceneMigration.fetchRemoteStream', LOG.LS.eSYS, error);
+            LOG.error('SceneMigration.fetchRemoteStream', LOG.LS.eMIG, error);
             return null;
         }
     }
@@ -212,7 +212,7 @@ export class SceneMigration {
             return { success: false };
 
         const localFilePath: string | null = readStream ? null : this.computeFilePath(FileName);
-        LOG.info(`SceneMigration.ingestStream using ${readStream ? 'stream' : 'file ' + localFilePath} for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+        LOG.info(`SceneMigration.ingestStream using ${readStream ? 'stream' : 'file ' + localFilePath} for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eMIG);
 
         if (!idVAssetType)
             idVAssetType = SceneMigration.vocabScene.idVocabulary;
@@ -253,12 +253,12 @@ export class SceneMigration {
         if (!xref)
             return this.recordError(`wireItemToScene unable to wire item ${JSON.stringify(itemDB)} to scene ${H.Helpers.JSONStringify(this.scene)}`);
 
-        LOG.info(`SceneMigration.wireItemToScene ${JSON.stringify(itemDB)} to scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+        LOG.info(`SceneMigration.wireItemToScene ${JSON.stringify(itemDB)} to scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eMIG);
         return { success: true };
     }
 
     private async postItemWiring(): Promise<H.IOResults> {
-        LOG.info('SceneMigration.postItemWiring', LOG.LS.eSYS);
+        LOG.info('SceneMigration.postItemWiring', LOG.LS.eMIG);
         if (!this.scene)
             return this.recordError('postItemWiring called without scene defined');
 
@@ -299,7 +299,7 @@ export class SceneMigration {
         if (SceneMigration.idSystemObjectTest)
             return { success: true };
 
-        LOG.info('SceneMigration.createTestObjects', LOG.LS.eSYS);
+        LOG.info('SceneMigration.createTestObjects', LOG.LS.eMIG);
         const unitDB: DBAPI.Unit | null = await DBAPI.Unit.fetch(1); // Unknown Unit
         if (!unitDB)
             return this.recordError('createTestObjects unable to fetch unit with ID=1 for test data');
@@ -363,16 +363,16 @@ export class SceneMigration {
         if (sceneEntry.hash) {
             const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
             if (!hashRes.success) {
-                LOG.error(`SceneMigration.testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`, LOG.LS.eSYS);
+                LOG.error(`SceneMigration.testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`, LOG.LS.eMIG);
                 success = false;
             } else if (hashRes.hash != sceneEntry.hash) {
-                LOG.error(`SceneMigration.testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${sceneEntry.hash}`, LOG.LS.eSYS);
+                LOG.error(`SceneMigration.testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${sceneEntry.hash}`, LOG.LS.eMIG);
                 success = false;
             }
         }
         */
 
-        LOG.info(`SceneMigration.testFileExistience('${filePath}') = ${success}`, LOG.LS.eSYS);
+        LOG.info(`SceneMigration.testFileExistience('${filePath}') = ${success}`, LOG.LS.eMIG);
         return success;
     }
 
@@ -380,7 +380,7 @@ export class SceneMigration {
         if (!assets || !assetVersions || !this.scene)
             return this.recordError('extractSceneDetails called without assets and/or asset versions');
 
-        LOG.info(`SceneMigration.extractSceneDetails called for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+        LOG.info(`SceneMigration.extractSceneDetails called for scene ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eMIG);
         // Build map of asset ID -> asset version
         const assetIDToVersionMap: Map<number, DBAPI.AssetVersion> = new Map<number, DBAPI.AssetVersion>();
         for (const assetVersion of assetVersions)
@@ -407,7 +407,7 @@ export class SceneMigration {
                 assetScene = asset;
                 assetVersionScene = assetVersion;
 
-                LOG.info(`SceneMigration.extractSceneDetails extracting svx.json from ${H.Helpers.JSONStringify(assetScene)}`, LOG.LS.eSYS);
+                LOG.info(`SceneMigration.extractSceneDetails extracting svx.json from ${H.Helpers.JSONStringify(assetScene)}`, LOG.LS.eMIG);
                 const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(assetScene, assetVersion);
                 if (!RSR.success)
                     return this.recordError(`extractSceneDetails failed to read scene asset ${H.Helpers.JSONStringify(assetScene)}: ${RSR.error}`);
@@ -430,7 +430,7 @@ export class SceneMigration {
                 if (!await this.scene.update())
                     return this.recordError(`extractSceneDetails unable to update scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
 
-                LOG.info(`SceneMigration.extractSceneDetails updated scene metrics for ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eSYS);
+                LOG.info(`SceneMigration.extractSceneDetails updated scene metrics for ${H.Helpers.JSONStringify(this.scene)}`, LOG.LS.eMIG);
             }
         }
 
@@ -446,16 +446,17 @@ export class SceneMigration {
                 referencedAssetUris.add(this.normalizePath(assetVersionScene, asset.uri));
         if (svx.SvxExtraction.nonModelAssets) {
             for (const asset of svx.SvxExtraction.nonModelAssets) {
-                referencedAssetUris.add(this.normalizePath(assetVersionScene, asset.uri));
+                const normalizedUri: string = this.normalizePath(assetVersionScene, asset.uri);
+                referencedAssetUris.add(normalizedUri);
                 if (asset.type === 'Article') {
-                    const baseUri: string = path.dirname(asset.uri).toLowerCase();
+                    const baseUri: string = path.dirname(normalizedUri);
                     if (baseUri)
                         referencedArticleBaseUris.add(baseUri);
                 }
             }
         }
 
-        // LOG.info(`SceneMigration.extractSceneDetails testing assets against ${H.Helpers.JSONStringify(referencedAssetUris)}`, LOG.LS.eSYS);
+        // LOG.info(`SceneMigration.extractSceneDetails testing assets against ${H.Helpers.JSONStringify(referencedAssetUris)}\narticle base URIs ${H.Helpers.JSONStringify(referencedArticleBaseUris)}`, LOG.LS.eMIG);
 
         let assetVersionOverrideMap: Map<number, number> | undefined = undefined;
         for (const asset of assets) {
@@ -468,7 +469,7 @@ export class SceneMigration {
             const normalizedUri: string = this.normalizePath(assetVersion);
             const baseUri: string = path.dirname(normalizedUri);
             if (!referencedAssetUris.has(normalizedUri) && !referencedArticleBaseUris.has(baseUri)) {
-                LOG.info(`SceneMigration.extractSceneDetails retiring unreferenced asset ${normalizedUri} for asset version ${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eSYS);
+                LOG.info(`SceneMigration.extractSceneDetails retiring unreferenced asset ${normalizedUri} for asset version ${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eMIG);
 
                 let retired: boolean = false;
                 const SOAV: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
@@ -517,7 +518,7 @@ export class SceneMigration {
         if (!edanRecord)
             return this.recordError(`fetchAndIngestResources unable to fetch EDAN record for ${edanURL}`);
 
-        LOG.info(`fetchAndIngestResources ${edanURL}: ${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eSYS);
+        LOG.info(`fetchAndIngestResources ${edanURL}: ${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eMIG);
 
         // record updated asset -> asset version, for use in rolling a new SystemObjectVersion for the scene
         const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
@@ -531,7 +532,7 @@ export class SceneMigration {
             idSystemObjectScene = SO.idSystemObject;
 
             for (const resource of edan3DResources) {
-                LOG.info(`fetchAndIngestResources ${edanURL}: Handling resource ${H.Helpers.JSONStringify(resource)}`, LOG.LS.eSYS);
+                LOG.info(`fetchAndIngestResources ${edanURL}: Handling resource ${H.Helpers.JSONStringify(resource)}`, LOG.LS.eMIG);
                 if (!resource.url || !resource.filename)
                     continue;
                 const readStream: NodeJS.ReadableStream | null = await this.fetchRemoteStream(resource.url);
@@ -563,7 +564,7 @@ export class SceneMigration {
 
                 const metadataRes: H.IOResults = await SceneHelpers.recordResourceMetadata(resource, idSystemObject, SO.idSystemObject, this.userOwner?.idUser ?? null);
                 if (!metadataRes.success)
-                    LOG.error('fetchAndIngestResources could not persist attachment metadata', LOG.LS.eSYS);
+                    LOG.error('fetchAndIngestResources could not persist attachment metadata', LOG.LS.eMIG);
 
                 // create/update ModelSceneXref for each download generated ... do after ingest so that we have the storage size available
                 if (model) {
@@ -686,7 +687,7 @@ export class SceneMigration {
 
 
     private recordError(error: string, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
-        LOG.error(`SceneMigration.${error}`, LOG.LS.eSYS);
+        LOG.error(`SceneMigration.${error}`, LOG.LS.eMIG);
         return { success: false, error, ...props };
     }
 }
