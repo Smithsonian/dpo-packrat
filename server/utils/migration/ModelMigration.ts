@@ -156,7 +156,7 @@ export class ModelMigration {
             return { success: false };
 
         const LocalFilePath: string = this.computeFilePath(modelFile);
-        LOG.info(`ModelMigration.ingestFile ${LocalFilePath} for model ${this.model}`, LOG.LS.eSYS);
+        LOG.info(`ModelMigration.ingestFile ${LocalFilePath} for model ${this.model}`, LOG.LS.eMIG);
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream: null,
             localFilePath: LocalFilePath,
@@ -193,12 +193,12 @@ export class ModelMigration {
         if (!xref)
             return this.recordError(`wireItemToModel unable to wire item ${JSON.stringify(itemDB)} to model ${this.model}`);
 
-        LOG.info(`ModelMigration.wireItemToModel ${JSON.stringify(itemDB)} to model ${this.model}`, LOG.LS.eSYS);
+        LOG.info(`ModelMigration.wireItemToModel ${JSON.stringify(itemDB)} to model ${this.model}`, LOG.LS.eMIG);
         return { success: true };
     }
 
     private async postItemWiring(): Promise<H.IOResults> {
-        LOG.info('ModelMigration.postItemWiring', LOG.LS.eSYS);
+        LOG.info('ModelMigration.postItemWiring', LOG.LS.eMIG);
         if (!this.model)
             return this.recordError('postItemWiring called without model defined');
 
@@ -225,7 +225,7 @@ export class ModelMigration {
         if (ModelMigration.idSystemObjectTest)
             return { success: true };
 
-        LOG.info('ModelMigration.createTestObjects', LOG.LS.eSYS);
+        LOG.info('ModelMigration.createTestObjects', LOG.LS.eMIG);
         const unitDB: DBAPI.Unit | null = await DBAPI.Unit.fetch(1); // Unknown Unit
         if (!unitDB)
             return this.recordError('createTestObjects unable to fetch unit with ID=1 for test data');
@@ -279,20 +279,20 @@ export class ModelMigration {
         if (modelFile.hash) {
             const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
             if (!hashRes.success) {
-                LOG.error(`ModelMigration.testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`, LOG.LS.eSYS);
+                LOG.error(`ModelMigration.testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`, LOG.LS.eMIG);
                 success = false;
             } else if (hashRes.hash != modelFile.hash) {
-                LOG.error(`ModelMigration.testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${modelFile.hash}`, LOG.LS.eSYS);
+                LOG.error(`ModelMigration.testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${modelFile.hash}`, LOG.LS.eMIG);
                 success = false;
             }
         }
 
-        LOG.info(`ModelMigration.testFileExistience('${filePath}') = ${success}`, LOG.LS.eSYS);
+        LOG.info(`ModelMigration.testFileExistience('${filePath}') = ${success}`, LOG.LS.eMIG);
         return success;
     }
 
     private recordError(error: string, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
-        LOG.error(`ModelMigration.${error}`, LOG.LS.eSYS);
+        LOG.error(`ModelMigration.${error}`, LOG.LS.eMIG);
         return { success: false, error, ...props };
     }
 }
