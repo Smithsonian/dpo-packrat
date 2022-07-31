@@ -19,6 +19,7 @@ export enum LS { // logger section
     eHTTP,  // http
     eJOB,   // job
     eMETA,  // metadata
+    eMIG,   // migration
     eNAV,   // navigation
     eRPT,   // report
     eSTR,   // storage
@@ -53,6 +54,7 @@ function loggerSectionName(eLogSection: LS | undefined): string {
         case LS.eHTTP:  return 'HTP';
         case LS.eJOB:   return 'JOB';
         case LS.eMETA:  return 'MET';
+        case LS.eMIG:   return 'MIG';
         case LS.eNAV:   return 'NAV';
         case LS.eRPT:   return 'RPT';
         case LS.eSTR:   return 'STR';
