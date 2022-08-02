@@ -570,13 +570,10 @@ export class SceneMigration {
                 if (model) {
                     await this.createModelSceneXref(model, downloadType, FileSize);
                     const SOModel: DBAPI.SystemObject | null = await model.fetchSystemObject();
-                    if (SOModel) {
-                        // run si-packrat-inspect on this model
-                        const results: H.IOResults = await WorkflowUtil.computeModelMetrics(model.Name, model.idModel, SOModel.idSystemObject, undefined,
-                            undefined, undefined /* FIXME */, this.userOwner?.idUser);
-                        if (results.error)
-                            this.recordError(`fetchAndIngestResources failed to compute model metrics: ${results.error}`);
-                    } else
+                    if (SOModel)
+                        // launch si-packrat-inspect on this model -- do not await results
+                        WorkflowUtil.computeModelMetrics(model.Name, model.idModel, SOModel.idSystemObject, undefined, undefined, undefined /* FIXME */, this.userOwner?.idUser);
+                    else
                         this.recordError(`fetchAndIngestResources failed to fetch system object for model ${H.Helpers.JSONStringify(model)}`);
                 }
             }
