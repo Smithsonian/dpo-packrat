@@ -80,8 +80,16 @@ export type ConfigType = {
     },
     job: {
         type: JOB_TYPE;
-        cookServerUrl: string;
+        cookServerUrls: string[];
         cookClientId: string;
+    },
+    it: {
+        itopsEmail: string[];
+        smtpHost?: string | undefined;
+        smtpPort?: number | undefined;
+        smtpSecure?: boolean | undefined;
+        smtpAuthUser?: string | undefined;
+        smtpAuthPassword?: string | undefined;
     },
     log: {
         root: string;
@@ -143,8 +151,16 @@ export const Config: ConfigType = {
     },
     job: {
         type: JOB_TYPE.NODE_SCHEDULE,
-        cookServerUrl: process.env.PACKRAT_COOK_SERVER_URL ? process.env.PACKRAT_COOK_SERVER_URL : /* istanbul ignore next */ 'http://si-3ddigip01.si.edu:8000/',
+        cookServerUrls: process.env.PACKRAT_COOK_SERVER_URL ? process.env.PACKRAT_COOK_SERVER_URL.split(',') : /* istanbul ignore next */ ['http://si-3ddigip01.si.edu:8000/'],
         cookClientId: '5b258c8e-108c-4990-a088-17ffd6e22852', // Concierge's client ID; taken from C:\Tools\CookDev\server\clients.json on Cook server
+    },
+    it: {
+        itopsEmail: process.env.PACKRAT_ITOPS_EMAIL ? process.env.PACKRAT_ITOPS_EMAIL.split(',') : /* istanbul ignore next */ [],
+        smtpHost: process.env.PACKRAT_SMTP_HOST ? process.env.PACKRAT_SMTP_HOST : /* istanbul ignore next */ 'smtp.si.edu',
+        smtpPort: process.env.PACKRAT_SMTP_PORT ? parseInt(process.env.PACKRAT_SMTP_PORT) : /* istanbul ignore next */ undefined,
+        smtpSecure: process.env.PACKRAT_SMTP_SECURE ? convertStringSettingToBoolean(process.env.PACKRAT_SMTP_SECURE) : /* istanbul ignore next */ undefined,
+        smtpAuthUser: process.env.PACKRAT_SMTP_AUTHUSER ? process.env.PACKRAT_SMTP_AUTHUSER : /* istanbul ignore next */ undefined,
+        smtpAuthPassword: process.env.PACKRAT_SMTP_AUTHPASSWORD ? process.env.PACKRAT_SMTP_AUTHPASSWORD : /* istanbul ignore next */ undefined,
     },
     log: {
         root: process.env.PACKRAT_LOG_ROOT ? process.env.PACKRAT_LOG_ROOT : /* istanbul ignore next */ './var/logs'
@@ -161,3 +177,16 @@ export const Config: ConfigType = {
         type: WORKFLOW_TYPE.PACKRAT,
     }
 };
+
+function convertStringSettingToBoolean(input: string): boolean {
+    switch (input.toLowerCase()) {
+        case '': return false;
+        case '0': return false;
+        case '1': return true;
+        case 'no': return false;
+        case 'yes': return true;
+        case 'false': return false;
+        case 'true': return true;
+        default: return false;
+    }
+}
