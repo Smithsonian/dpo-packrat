@@ -6,14 +6,17 @@ import { SceneMigrationPackages } from '../../utils/migration/MigrationData';
 import * as UTIL from '../../tests/db/api';
 
 import { Request, Response } from 'express';
+import * as NS from 'node-schedule';
 
 export async function migrate(request: Request, response: Response): Promise<void> {
-    const migrator: Migrator = new Migrator(request, response);
     try {
+        const migrator: Migrator = new Migrator(request, response);
         if (!await migrator.parseArguments())
             return;
-        await migrator.migrate();
-        response.send(`Migration ${migrator.success ? 'Succeeded' : 'Failed'}<br/>\n${migrator.results}`);
+
+        const soon: Date = new Date(new Date().getTime() + 1000); // start 1 second from now
+        NS.scheduleJob(soon, () => Migrator.launcher(migrator));
+        response.send('Migration Scheduled');
     } catch (error) {
         LOG.error('migrate', LOG.LS.eMIG, error);
     }
@@ -32,6 +35,12 @@ class Migrator {
     constructor(request: Request, response: Response) {
         this.request = request;
         this.response = response;
+    }
+
+    static async launcher(migrator: Migrator): Promise<boolean> {
+        if (!await migrator.parseArguments())
+            return false;
+        return await migrator.migrate();
     }
 
     /** Returns false if arguments are invalid */
