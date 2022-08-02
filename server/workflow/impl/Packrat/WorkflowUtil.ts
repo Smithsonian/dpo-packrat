@@ -108,7 +108,7 @@ export class WorkflowUtil {
         if (!workflow)
             return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}` };
 
-        const results = await workflow.waitForCompletion(3600000);
+        const results = await workflow.waitForCompletion(10 * 60 * 60 * 1000); // 10 hours
         if (!results.success)
             return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} post-upload workflow error: ${results.error}` };
 
