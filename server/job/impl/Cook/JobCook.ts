@@ -16,12 +16,12 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
 import * as path from 'path';
 
-const CookWebDAVSimultaneousTransfers: number = 2;
+const CookWebDAVSimultaneousTransfers: number = 10;
 const CookRequestRetryCount: number = 5;
 const CookWebDAVTransmitRetryCount: number = 5;
 const CookWebDAVStatRetryCount: number = 100;
 const CookRetryDelay: number = 5000;
-const CookTimeout: number = 36000000; // ten hours
+const CookTimeout: number = 10 * 60 * 60 * 1000; // ten hours
 const CookFailureNotificationTime: number = 60 * 60 * 1000; // 1 hour
 
 type CookIOResults = H.IOResults & { allowRetry?: boolean | undefined, connectFailure?: boolean | undefined };
@@ -372,7 +372,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
                         const webdavClient: WebDAVClient = createClient(JobCook.CookServerURL(), {
                             authType: AuthType.None,
-                            maxBodyLength: 10 * 1024 * 1024 * 1024,
+                            maxBodyLength: 100 * 1024 * 1024 * 1024,
                             withCredentials: false
                         });
                         const webdavWSOpts: CreateWriteStreamOptions = {
@@ -382,21 +382,21 @@ export abstract class JobCook<T> extends JobPackrat {
                         let res: H.IOResultsSized = { success: false, error: 'Not Executed', size: -1 };
                         for (let transmitCount: number = 0; transmitCount < CookWebDAVTransmitRetryCount; transmitCount++) {
                             const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
-                            WS.on('error', error => { LOG.error(`JobCook [${this.name()}] JobCook.stageFiles stream error`, LOG.LS.eJOB, error); });
+                            WS.on('error', error => { LOG.error(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV stream error`, LOG.LS.eJOB, error); });
 
-                            res = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
+                            res = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true, 2 * 1024 * 1024 * 1024, `JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV wrote`);
                             if (res.success)
                                 break;
                             await H.Helpers.sleep(CookRetryDelay);
                         }
 
                         if (!res.success) {
-                            const error = `JobCook [${this.name()}] JobCook.stageFiles unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
+                            const error = `JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
                             LOG.error(error, LOG.LS.eJOB);
                             return { success: false, error };
                         }
 
-                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}: completed`, LOG.LS.eJOB);
+                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}: transmitted ${res.size} bytes`, LOG.LS.eJOB);
 
                         // use WebDAV client's stat to detect when file is fully staged and available on the server
                         // poll for filesize of remote file.  Continue polling:
@@ -410,7 +410,7 @@ export abstract class JobCook<T> extends JobPackrat {
                                 const stat: any = await webdavClient.stat(destination);
                                 const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
                                 const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
-                                LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging polling ${pollingLocation}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
+                                LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV polling ${pollingLocation}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
                                 if (size >= res.size) {
                                     stagingSuccess = (baseName === fileName);
                                     break;
@@ -425,10 +425,11 @@ export abstract class JobCook<T> extends JobPackrat {
                             }
                             await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                         }
-
-                        if (!stagingSuccess) {
+                        if (stagingSuccess) {
+                            LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}: success`, LOG.LS.eJOB);
+                        } else {
                             error = `Unable to verify existence of staged file ${fileName}`;
-                            LOG.error(error, LOG.LS.eJOB);
+                            LOG.error(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}: ${error}`, LOG.LS.eJOB);
                             success = false;
                             break;
                         }
