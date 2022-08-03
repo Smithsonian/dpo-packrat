@@ -382,7 +382,6 @@ export class Helpers {
                     writeStream.on('finish', () => { resolve({ success: true, size }); }); /* istanbul ignore next */
                     writeStream.on('end', () => { resolve({ success: true, size }); }); /* istanbul ignore next */
                 } else {
-                    readStream.on('close', () => { resolve({ success: true, size }); });
                     readStream.on('end', () => { resolve({ success: true, size }); });
                     writeStream.on('end', () => { resolve({ success: true, size }); });
                 } /* istanbul ignore next */
