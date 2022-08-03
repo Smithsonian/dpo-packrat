@@ -371,18 +371,19 @@ export class Helpers {
         return Helpers.writeStreamToStreamComputeSize(readStream, writeStream, waitOnEnd);
     }
 
-    static async writeStreamToStreamComputeSize(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream,
-        waitOnEnd: boolean = false, loggingSizeMin?: number, loggingPrefix?: string): Promise<IOResultsSized> {
+    static async writeStreamToStreamComputeSize(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream, waitOnEnd: boolean = false): Promise<IOResultsSized> {
         try {
             return new Promise<IOResultsSized>((resolve) => {
                 let size: number = 0;
 
-                readStream.on('data', (chunk: Buffer) => { size += chunk.length; if (loggingSizeMin && loggingSizeMin < size) LOG.info(`${loggingPrefix} ${size}`, LOG.LS.eSYS); });
+                readStream.on('data', (chunk: Buffer) => { size += chunk.length; });
                 /* istanbul ignore else */
                 if (!waitOnEnd) {
                     writeStream.on('finish', () => { resolve({ success: true, size }); }); /* istanbul ignore next */
                     writeStream.on('end', () => { resolve({ success: true, size }); }); /* istanbul ignore next */
                 } else {
+                    readStream.on('close', () => { resolve({ success: true, size }); });
+                    readStream.on('end', () => { resolve({ success: true, size }); });
                     writeStream.on('end', () => { resolve({ success: true, size }); });
                 } /* istanbul ignore next */
                 readStream.on('error', () => { resolve({ success: false, error: 'Unknown readstream error', size }); });
