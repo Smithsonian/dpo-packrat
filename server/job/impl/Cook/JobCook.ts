@@ -384,7 +384,7 @@ export abstract class JobCook<T> extends JobPackrat {
                             const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
                             WS.on('error', error => { LOG.error(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV stream error`, LOG.LS.eJOB, error); });
 
-                            res = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true, 2 * 1024 * 1024 * 1024, `JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV wrote`);
+                            res = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
                             if (res.success)
                                 break;
                             await H.Helpers.sleep(CookRetryDelay);
