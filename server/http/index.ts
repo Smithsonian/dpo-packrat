@@ -6,6 +6,7 @@ import { Config } from '../config';
 import * as LOG from '../utils/logger';
 
 import { logtest } from './routes/logtest';
+import { heartbeat } from './routes/heartbeat';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
 import { migrate } from './routes/migrate';
 import { Downloader, download } from './routes/download';
@@ -66,6 +67,7 @@ export class HttpServer {
         server.applyMiddleware({ app: this.app, cors: false });
 
         this.app.get('/logtest', logtest);
+        this.app.get('/heartbeat', heartbeat);
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
         this.app.get('/migrate/*', migrate);
