@@ -175,7 +175,8 @@ export const defaultModelFields: ModelFields = {
         selected: true,
         subtitleOption: eSubtitleOption.eNone,
         id: 0
-    }]
+    }],
+    skipSceneGenerate: false
 };
 
 export const modelFieldsSchemaUpdate = yup.object().shape({

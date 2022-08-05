@@ -5,9 +5,11 @@
  */
 import { AssetVersion, IngestFolder, IngestIdentifier, Item, Project, SubjectUnitIdentifier, Vocabulary, IngestionItem, IngestTitle } from '../types/graphql';
 import { StateItem, StateProject } from './item';
-import { StateFolder, StateIdentifier, SubtitleFields, eSubtitleOption } from './metadata';
+import { StateFolder, StateIdentifier, SubtitleFields, eSubtitleOption, ModelFields } from './metadata';
 import { StateSubject } from './subject';
 import { FileId, FileUploadStatus, IngestionFile } from './upload';
+import { eVocabularyID } from '@dpo-packrat/common';
+import { VocabularyOption } from './vocabulary';
 
 export function parseFileId(id: FileId): number {
     return Number.parseInt(id, 10);
@@ -150,6 +152,31 @@ export function parseSubtitlesToState(titles: IngestTitle): SubtitleFields {
             }
         }
     }
+
+    return result;
+}
+
+const eVocabUnitSet = new Set([eVocabularyID.eModelUnitsMillimeter, eVocabularyID.eModelUnitsCentimeter, eVocabularyID.eModelUnitsMeter, eVocabularyID.eModelUnitsInch, eVocabularyID.eModelUnitsFoot, eVocabularyID.eModelUnitsYard]);
+const eVocabPurposeSet = new Set([eVocabularyID.eModelPurposeMaster]);
+const eVocabFileTypeSet = new Set([eVocabularyID.eModelFileTypeobj, eVocabularyID.eModelFileTypestl, eVocabularyID.eModelFileTypeply, eVocabularyID.eModelFileTypefbx, eVocabularyID.eModelFileTypewrl, eVocabularyID.eModelFileTypex3d, eVocabularyID.eModelFileTypedae]);
+
+export function enableSceneGenerateCheck(metadata: ModelFields, unitsEntries: VocabularyOption[], purposeEntries: VocabularyOption[], typeEntries: VocabularyOption[]): boolean {
+    const { units, purpose, modelFileType } = metadata;
+    if (!units || !purpose || !modelFileType) return false;
+    const idVUnitSet = new Set();
+    const idVPurposeSet = new Set();
+    const idVFileTypeSet = new Set();
+    unitsEntries.forEach(entry => {
+        if (entry.eVocabID && eVocabUnitSet.has(entry.eVocabID)) idVUnitSet.add(entry.idVocabulary);
+    });
+    purposeEntries.forEach(entry => {
+        if (entry.eVocabID && eVocabPurposeSet.has(entry.eVocabID)) idVPurposeSet.add(entry.idVocabulary);
+    });
+    typeEntries.forEach(entry => {
+        if (entry.eVocabID && eVocabFileTypeSet.has(entry.eVocabID)) idVFileTypeSet.add(entry.idVocabulary);
+    });
+
+    const result = idVUnitSet.has(units) && idVPurposeSet.has(purpose) && idVFileTypeSet.has(modelFileType);
 
     return result;
 }

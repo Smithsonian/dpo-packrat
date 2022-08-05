@@ -126,6 +126,7 @@ export type ModelFields = {
     idAsset?: number;
     updateNotes?: string;
     subtitles: SubtitleFields;
+    skipSceneGenerate: boolean;
 };
 
 export type SceneFields = {
