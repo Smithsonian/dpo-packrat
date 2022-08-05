@@ -40,7 +40,7 @@ type AssetVersionInfo = {
 };
 
 interface IngestAssetResultCook extends IngestAssetResult {
-    skipSceneGenerate?: boolean;
+    skipSceneGenerate?: boolean | null;
 }
 
 type IdentifierResults = {
@@ -1364,7 +1364,7 @@ class IngestDataWorker extends ResolverBase {
                     }
                 }
             }
-            if (typeof AVInfo.skipSceneGenerate === 'boolean') IAR.skipSceneGenerate = AVInfo.skipSceneGenerate;
+            IAR.skipSceneGenerate = AVInfo.skipSceneGenerate;
             ingestResMap.set(idAssetVersion, IAR);
         }
         if (transformUpdated)
