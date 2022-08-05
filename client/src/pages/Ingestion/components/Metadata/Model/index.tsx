@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/jsx-max-props-per-line */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 /**
  * Metadata - Model
@@ -192,10 +193,9 @@ function Model(props: ModelProps): React.ReactElement {
     useEffect(() => {
         const shouldEnable = enableSceneGenerateCheck(metadata.model, getEntries(eVocabularySetID.eModelUnits), getEntries(eVocabularySetID.eModelPurpose), getEntries(eVocabularySetID.eModelFileType));
         if (!shouldEnable) {
-            updateMetadataField(metadataIndex, 'skipSceneGenerate', true, MetadataType.model)
+            updateMetadataField(metadataIndex, 'skipSceneGenerate', true, MetadataType.model);
             setSceneGenerateDisabled(true);
-        }
-        else {
+        } else {
             updateMetadataField(metadataIndex, 'skipSceneGenerate', false, MetadataType.model);
             setSceneGenerateDisabled(false);
         }

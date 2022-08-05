@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+
 /**
  * Utils
  *
@@ -158,25 +160,24 @@ export function parseSubtitlesToState(titles: IngestTitle): SubtitleFields {
 export function enableSceneGenerateCheck(metadata: ModelFields, unitsEntries, purposeEntries, typeEntries ): boolean {
     const { units, purpose, modelFileType } = metadata;
     if (!units || !purpose || !modelFileType) return false;
-    
     const eVocabUnitSet = new Set([eVocabularyID.eModelUnitsMillimeter as number, eVocabularyID.eModelUnitsCentimeter, eVocabularyID.eModelUnitsMeter, eVocabularyID.eModelUnitsInch, eVocabularyID.eModelUnitsFoot, eVocabularyID.eModelUnitsYard]);
     const eVocabPurposeSet = new Set([eVocabularyID.eModelPurposeMaster]);
-    const eVocabFileTypeSet = new Set([eVocabularyID.eModelFileTypeobj, eVocabularyID.eModelFileTypestl, eVocabularyID.eModelFileTypeply, eVocabularyID.eModelFileTypefbx, eVocabularyID.eModelFileTypewrl, eVocabularyID.eModelFileTypex3d, eVocabularyID.eModelFileTypedae])
+    const eVocabFileTypeSet = new Set([eVocabularyID.eModelFileTypeobj, eVocabularyID.eModelFileTypestl, eVocabularyID.eModelFileTypeply, eVocabularyID.eModelFileTypefbx, eVocabularyID.eModelFileTypewrl, eVocabularyID.eModelFileTypex3d, eVocabularyID.eModelFileTypedae]);
     const idVUnitSet = new Set();
     const idVPurposeSet = new Set();
     const idVFileTypeSet = new Set();
 
     unitsEntries.forEach(entry => {
-        if (eVocabUnitSet.has(entry.eVocabID)) idVUnitSet.add(entry.idVocabulary)}
-    );
+        if (entry.eVocabID && eVocabUnitSet.has(entry.eVocabID)) idVUnitSet.add(entry.idVocabulary);
+    });
     purposeEntries.forEach(entry => {
-        if (eVocabPurposeSet.has(entry.eVocabID)) idVPurposeSet.add(entry.idVocabulary)}
-    );
+        if (entry.eVocabID && eVocabPurposeSet.has(entry.eVocabID)) idVPurposeSet.add(entry.idVocabulary);
+    });
     typeEntries.forEach(entry => {
-        if (eVocabFileTypeSet.has(entry.eVocabID)) idVFileTypeSet.add(entry.idVocabulary)}
-    );
+        if (entry.eVocabID && eVocabFileTypeSet.has(entry.eVocabID)) idVFileTypeSet.add(entry.idVocabulary);
+    });
 
     const result = idVUnitSet.has(units) && idVPurposeSet.has(purpose) && idVFileTypeSet.has(modelFileType);
-    
+
     return result;
 }
