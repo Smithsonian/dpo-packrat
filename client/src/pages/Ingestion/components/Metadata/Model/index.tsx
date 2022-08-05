@@ -22,6 +22,8 @@ import { apolloClient } from '../../../../../graphql/index';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import { errorFieldStyling } from '../Photogrammetry';
 import SubtitleControl from '../Control/SubtitleControl';
+import GenerateModelControl from '../Control/GenerateModelControl';
+import { enableSceneGenerateCheck } from '../../../../../store/utils';
 import clsx from 'clsx';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
@@ -144,6 +146,7 @@ function Model(props: ModelProps): React.ReactElement {
             ModelMaterials: []
         }
     ]);
+    const [sceneGenerateDisabled, setSceneGenerateDisabled] = useState<boolean>(false);
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
@@ -185,6 +188,19 @@ function Model(props: ModelProps): React.ReactElement {
         fetchModelConstellation();
     }, [idAssetVersion, idAsset, metadataIndex, updateMetadataField]);
 
+    // handles enable/disable logic for scene generate control
+    useEffect(() => {
+        const shouldEnable = enableSceneGenerateCheck(metadata.model, getEntries(eVocabularySetID.eModelUnits), getEntries(eVocabularySetID.eModelPurpose), getEntries(eVocabularySetID.eModelFileType));
+        if (!shouldEnable) {
+            updateMetadataField(metadataIndex, 'skipSceneGenerate', true, MetadataType.model)
+            setSceneGenerateDisabled(true);
+        }
+        else {
+            updateMetadataField(metadataIndex, 'skipSceneGenerate', false, MetadataType.model);
+            setSceneGenerateDisabled(false);
+        }
+    }, [metadata.model.modelFileType, metadata.model.units, metadata.model.purpose]);
+
     // use subject's idSystemObject as the root to initialize the repository browser
     const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
     const subjectIdSystemObject = useGetSubjectQuery({
@@ -203,6 +219,11 @@ function Model(props: ModelProps): React.ReactElement {
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
         updateMetadataField(metadataIndex, name, checked, MetadataType.model);
+    };
+
+    const setSceneGenerate = ({ target }): void => {
+        const { name, checked } = target;
+        updateMetadataField(metadataIndex, name, !checked, MetadataType.model);
     };
 
     const setIdField = ({ target }): void => {
@@ -342,16 +363,25 @@ function Model(props: ModelProps): React.ReactElement {
                 )}
                 <Box className={classes.modelDetailsAndSubtitleContainer}>
                     {!idAsset && (
-                        <Box style={{ marginBottom: 10 }}>
-                            <SubtitleControl
-                                subtitles={model.subtitles}
-                                objectName={model.name}
-                                onSelectSubtitle={onSelectSubtitle}
-                                onUpdateCustomSubtitle={onUpdateCustomSubtitle}
-                                hasPrimaryTheme={false}
-                                hasError={fieldErrors?.model.subtitles ?? false}
-                            />
-                        </Box>
+                        <>
+                            <Box style={{ marginBottom: 10 }}>
+                                <SubtitleControl
+                                    subtitles={model.subtitles}
+                                    objectName={model.name}
+                                    onSelectSubtitle={onSelectSubtitle}
+                                    onUpdateCustomSubtitle={onUpdateCustomSubtitle}
+                                    hasPrimaryTheme={false}
+                                    hasError={fieldErrors?.model.subtitles ?? false}
+                                />
+                            </Box>
+                            <Box style={{ marginBottom: 10 }}>
+                                <GenerateModelControl
+                                    selected={model.skipSceneGenerate}
+                                    disabled={sceneGenerateDisabled}
+                                    setCheckboxField={setSceneGenerate}
+                                />
+                            </Box>
+                        </>
                     )}
                     <Box className={classes.modelDetailsContainer}>
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
