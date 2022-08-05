@@ -12,7 +12,7 @@ function GenerateModelControl(props: GenerateModelControlProps): React.ReactElem
     const { disabled, selected, setCheckboxField } = props;
     return (
         <Box style={{ display: 'flex', alignItems: 'center', width: 'fit-content', borderRadius: 5, backgroundColor: '#FFFCD1', outline: '1px solid rgba(141, 171, 196, 0.4)', paddingRight: '9px' }}>
-            <Checkbox 
+            <Checkbox
                 disabled={disabled}
                 checked={!selected}
                 onChange={setCheckboxField}
