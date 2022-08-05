@@ -36,7 +36,12 @@ type AssetVersionInfo = {
     SOOwner: DBAPI.SystemObjectBased;
     isAttachment: boolean;
     Comment: string | null;
+    skipSceneGenerate?: boolean | null;
 };
+
+interface IngestAssetResultCook extends IngestAssetResult {
+    skipSceneGenerate?: boolean;
+}
 
 type IdentifierResults = {
     success: boolean;
@@ -856,7 +861,7 @@ class IngestDataWorker extends ResolverBase {
 
         // LOG.info(`ingestData createModelObjects model=${JSON.stringify(model, H.Helpers.saferStringify)} vs asset=${JSON.stringify(asset, H.Helpers.saferStringify)}vs assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         if (model.idAssetVersion) {
-            this.assetVersionMap.set(model.idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: model.updateNotes ?? null });
+            this.assetVersionMap.set(model.idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: model.updateNotes ?? null, skipSceneGenerate: model.skipSceneGenerate });
             const MI: ModelInfo = { model, idModel: modelDB.idModel, JCOutput };
             this.ingestModelMap.set(model.idAssetVersion, MI);
             LOG.info(`ingestData createModelObjects computed ${JSON.stringify(MI, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
@@ -1291,7 +1296,7 @@ class IngestDataWorker extends ResolverBase {
         const user: User = this.user!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
         // map from idAssetVersion -> object that "owns" the asset
-        const ingestResMap: Map<number, IngestAssetResult | null> = new Map<number, IngestAssetResult | null>();
+        const ingestResMap: Map<number, IngestAssetResultCook | null> = new Map<number, IngestAssetResult | null>();
         let transformUpdated: boolean = false;
         for (const [idAssetVersion, AVInfo] of this.assetVersionMap) {
             const SOBased: DBAPI.SystemObjectBased = AVInfo.SOOwner;
@@ -1331,7 +1336,7 @@ class IngestDataWorker extends ResolverBase {
                 doNotSendIngestionEvent: true
             };
 
-            const IAR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
+            const IAR: IngestAssetResultCook = await AssetStorageAdapter.ingestAsset(ingestAssetInput);
             if (!IAR.success) {
                 LOG.error(`ingestData unable to ingest assetVersion ${idAssetVersion}: ${IAR.error}`, LOG.LS.eGQL);
                 await this.appendToWFReport(`<b>Asset Ingestion Failed</b>: ${IAR.error}`);
@@ -1359,6 +1364,7 @@ class IngestDataWorker extends ResolverBase {
                     }
                 }
             }
+            if (typeof AVInfo.skipSceneGenerate === 'boolean') IAR.skipSceneGenerate = AVInfo.skipSceneGenerate;
             ingestResMap.set(idAssetVersion, IAR);
         }
         if (transformUpdated)
@@ -1366,7 +1372,7 @@ class IngestDataWorker extends ResolverBase {
         return { ingestResMap, transformUpdated };
     }
 
-    private async sendWorkflowIngestionEvent(ingestResMap: Map<number, IngestAssetResult | null>, modelTransformUpdated: boolean): Promise<boolean> {
+    private async sendWorkflowIngestionEvent(ingestResMap: Map<number, IngestAssetResultCook | null>, modelTransformUpdated: boolean): Promise<boolean> {
         const workflowEngine: WF.IWorkflowEngine | null | undefined = this.workflowHelper?.workflowEngine;
         if (!workflowEngine) {
             LOG.error('ingestData sendWorkflowIngestionEvent could not load WorkflowEngine', LOG.LS.eGQL);
@@ -1424,7 +1430,8 @@ class IngestDataWorker extends ResolverBase {
 
             const parameters = {
                 modelTransformUpdated,
-                assetsIngested: IAR.assetsIngested
+                assetsIngested: IAR.assetsIngested,
+                skipSceneGenerate: IAR.skipSceneGenerate
             };
 
             const workflowParams: WF.WorkflowParameters = {
