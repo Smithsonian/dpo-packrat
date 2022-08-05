@@ -222,7 +222,7 @@ export class SceneHelpers {
                 // scene.idScene, MSX.Name, .Usage, .Quality, .UVResolution
                 // if not found, create model and MSX
                 // if found, determine if MSX transform has changed; if so, update MSX, and return a status that can be used to kick off download generation workflow
-                let JCOutput: JobCookSIPackratInspectOutput | null = idAssetVersion ? await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion, MSX.Name) : null;
+                const JCOutput: JobCookSIPackratInspectOutput | null = idAssetVersion ? await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion, MSX.Name) : null;
                 if (JCOutput && !JCOutput.success)
                     LOG.error(`sceneHelper handleComplexIngestionScene failed to extract JobCookSIPackratInspectOutput from idAssetVersion ${idAssetVersion}, model ${MSX.Name}`, LOG.LS.eSYS);
 
@@ -293,28 +293,8 @@ export class SceneHelpers {
                     continue;
                 }
 
-                // If we don't have si-packrat-inspect output available, explicitly run that workflow:
-                if (!JCOutput) {
-                    const SOModelAssetVersion: DBAPI.SystemObject | null = await assetPair.assetVersion.fetchSystemObject();
-                    if (!SOModelAssetVersion) {
-                        LOG.error(`sceneHelper handleComplexIngestionScene unable to fetch system object from model asset version ${H.Helpers.JSONStringify(assetPair.assetVersion)}`, LOG.LS.eSYS);
-                        continue;
-                    }
-
-                    const results: H.IOResults = await WorkflowUtil.computeModelMetrics(MSX.Name, undefined, undefined, SOModelAssetVersion.idSystemObject, undefined, undefined /* idProject */, idUser);
-                    if (!results.success)
-                        LOG.error(`sceneHelper handleComplexIngestionScene failed to compute JobCookSIPackratInspectOutput from idAssetVersion ${assetPair.assetVersion.idAssetVersion}, model ${MSX.Name}: ${results.error}`, LOG.LS.eSYS);
-
-                    JCOutput = await JobCookSIPackratInspectOutput.extractFromAssetVersion(assetPair.assetVersion.idAssetVersion, MSX.Name);
-                    if (JCOutput && !JCOutput.success)
-                        LOG.error(`sceneHelper handleComplexIngestionScene failed to extract JobCookSIPackratInspectOutput from idAssetVersion ${assetPair.assetVersion.idAssetVersion}, model ${MSX.Name}`, LOG.LS.eSYS);
-
-                    if (JCOutput && JCOutput.success && JCOutput.modelConstellation && JCOutput.modelConstellation.Model) {
-                        SceneHelpers.extractModelMetrics(model, JCOutput.modelConstellation.Model);
-                        if (!await model.update())
-                            LOG.error(`sceneHelper handleComplexIngestionScene unable to update model ${model.idModel} with metrics`, LOG.LS.eSYS);
-                    }
-                }
+                // If we don't have si-packrat-inspect output available, explicitly run that workflow ... but do not await results
+                SceneHelpers.populateModelMetrics(model.idModel, assetPair, MSX, idUser);
 
                 // reassign asset to model; create SystemObjectVersion and SystemObjectVersionAssetVersionXref
                 const SO: DBAPI.SystemObject | null = await model.fetchSystemObject();
@@ -358,6 +338,45 @@ export class SceneHelpers {
         }
 
         return { success, transformUpdated };
+    }
+
+    private static async populateModelMetrics(idModel: number, assetPair: AssetPair, MSX: DBAPI.ModelSceneXref, idUser: number | undefined): Promise<boolean> {
+        if (!assetPair.assetVersion) {
+            LOG.error('sceneHelper populateModelMetrics called without assetVersion', LOG.LS.eSYS);
+            return false;
+        }
+        if (!MSX.Name) {
+            LOG.error('sceneHelper populateModelMetrics called without ModelSceneXref Name', LOG.LS.eSYS);
+            return false;
+        }
+
+        const SOModelAssetVersion: DBAPI.SystemObject | null = await assetPair.assetVersion.fetchSystemObject();
+        if (!SOModelAssetVersion) {
+            LOG.error(`sceneHelper populateModelMetrics unable to fetch system object from model asset version ${H.Helpers.JSONStringify(assetPair.assetVersion)}`, LOG.LS.eSYS);
+            return false;
+        }
+
+        const results: H.IOResults = await WorkflowUtil.computeModelMetrics(MSX.Name, undefined, undefined, SOModelAssetVersion.idSystemObject, undefined, undefined /* idProject */, idUser);
+        if (!results.success)
+            LOG.error(`sceneHelper populateModelMetrics failed to compute JobCookSIPackratInspectOutput from idAssetVersion ${assetPair.assetVersion.idAssetVersion}, model ${MSX.Name}: ${results.error}`, LOG.LS.eSYS);
+
+        const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(assetPair.assetVersion.idAssetVersion, MSX.Name);
+        if (JCOutput && !JCOutput.success)
+            LOG.error(`sceneHelper populateModelMetrics failed to extract JobCookSIPackratInspectOutput from idAssetVersion ${assetPair.assetVersion.idAssetVersion}, model ${MSX.Name}`, LOG.LS.eSYS);
+
+        if (JCOutput && JCOutput.success && JCOutput.modelConstellation && JCOutput.modelConstellation.Model) {
+            const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
+            if (!model) {
+                LOG.error(`sceneHelper populateModelMetrics unable to fetch model ${idModel}`, LOG.LS.eSYS);
+                return false;
+            }
+            SceneHelpers.extractModelMetrics(model, JCOutput.modelConstellation.Model);
+            if (!await model.update()) {
+                LOG.error(`sceneHelper handleComplexIngestionScene unable to update model ${model.idModel} with metrics`, LOG.LS.eSYS);
+                return false;
+            }
+        }
+        return true;
     }
 
     private static extractSceneMetrics(scene: DBAPI.Scene, svxExtraction: SvxExtraction): void {
