@@ -2,13 +2,13 @@ import React from 'react';
 import { Box, Checkbox, Typography } from '@material-ui/core';
 
 
-interface GenerateModelControlProps {
+interface SceneGenerateWorkflowControlProps {
     disabled: boolean;
     selected: boolean;
     setCheckboxField: ({ target }: { target: EventTarget }) => void;
 }
 
-function GenerateModelControl(props: GenerateModelControlProps): React.ReactElement {
+function SceneGenerateWorkflowControl(props: SceneGenerateWorkflowControlProps): React.ReactElement {
     const { disabled, selected, setCheckboxField } = props;
     return (
         <Box style={{ display: 'flex', alignItems: 'center', width: 'fit-content', borderRadius: 5, backgroundColor: '#FFFCD1', outline: '1px solid rgba(141, 171, 196, 0.4)', paddingRight: '9px' }}>
@@ -29,4 +29,4 @@ function GenerateModelControl(props: GenerateModelControlProps): React.ReactElem
     );
 }
 
-export default GenerateModelControl;
+export default SceneGenerateWorkflowControl;

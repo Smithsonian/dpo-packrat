@@ -156,12 +156,13 @@ export function parseSubtitlesToState(titles: IngestTitle): SubtitleFields {
     return result;
 }
 
+const eVocabUnitSet = new Set([eVocabularyID.eModelUnitsMillimeter, eVocabularyID.eModelUnitsCentimeter, eVocabularyID.eModelUnitsMeter, eVocabularyID.eModelUnitsInch, eVocabularyID.eModelUnitsFoot, eVocabularyID.eModelUnitsYard]);
+const eVocabPurposeSet = new Set([eVocabularyID.eModelPurposeMaster]);
+const eVocabFileTypeSet = new Set([eVocabularyID.eModelFileTypeobj, eVocabularyID.eModelFileTypestl, eVocabularyID.eModelFileTypeply, eVocabularyID.eModelFileTypefbx, eVocabularyID.eModelFileTypewrl, eVocabularyID.eModelFileTypex3d, eVocabularyID.eModelFileTypedae]);
+
 export function enableSceneGenerateCheck(metadata: ModelFields, unitsEntries: VocabularyOption[], purposeEntries: VocabularyOption[], typeEntries: VocabularyOption[]): boolean {
     const { units, purpose, modelFileType } = metadata;
     if (!units || !purpose || !modelFileType) return false;
-    const eVocabUnitSet = new Set([eVocabularyID.eModelUnitsMillimeter as number, eVocabularyID.eModelUnitsCentimeter, eVocabularyID.eModelUnitsMeter, eVocabularyID.eModelUnitsInch, eVocabularyID.eModelUnitsFoot, eVocabularyID.eModelUnitsYard]);
-    const eVocabPurposeSet = new Set([eVocabularyID.eModelPurposeMaster]);
-    const eVocabFileTypeSet = new Set([eVocabularyID.eModelFileTypeobj, eVocabularyID.eModelFileTypestl, eVocabularyID.eModelFileTypeply, eVocabularyID.eModelFileTypefbx, eVocabularyID.eModelFileTypewrl, eVocabularyID.eModelFileTypex3d, eVocabularyID.eModelFileTypedae]);
     const idVUnitSet = new Set();
     const idVPurposeSet = new Set();
     const idVFileTypeSet = new Set();
