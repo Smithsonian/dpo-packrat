@@ -9,7 +9,7 @@ import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
 import { eVocabularyID, eVocabularySetID } from '@dpo-packrat/common';
 
-export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
+export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term' | 'eVocabID'>;
 export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
 
 type AssetType = {
