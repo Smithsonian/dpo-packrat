@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-
 /**
  * Utils
  *
@@ -11,6 +9,7 @@ import { StateFolder, StateIdentifier, SubtitleFields, eSubtitleOption, ModelFie
 import { StateSubject } from './subject';
 import { FileId, FileUploadStatus, IngestionFile } from './upload';
 import { eVocabularyID } from '@dpo-packrat/common';
+import { VocabularyOption } from './vocabulary';
 
 export function parseFileId(id: FileId): number {
     return Number.parseInt(id, 10);
@@ -157,7 +156,7 @@ export function parseSubtitlesToState(titles: IngestTitle): SubtitleFields {
     return result;
 }
 
-export function enableSceneGenerateCheck(metadata: ModelFields, unitsEntries, purposeEntries, typeEntries ): boolean {
+export function enableSceneGenerateCheck(metadata: ModelFields, unitsEntries: VocabularyOption[], purposeEntries: VocabularyOption[], typeEntries: VocabularyOption[]): boolean {
     const { units, purpose, modelFileType } = metadata;
     if (!units || !purpose || !modelFileType) return false;
     const eVocabUnitSet = new Set([eVocabularyID.eModelUnitsMillimeter as number, eVocabularyID.eModelUnitsCentimeter, eVocabularyID.eModelUnitsMeter, eVocabularyID.eModelUnitsInch, eVocabularyID.eModelUnitsFoot, eVocabularyID.eModelUnitsYard]);
@@ -166,7 +165,6 @@ export function enableSceneGenerateCheck(metadata: ModelFields, unitsEntries, pu
     const idVUnitSet = new Set();
     const idVPurposeSet = new Set();
     const idVFileTypeSet = new Set();
-
     unitsEntries.forEach(entry => {
         if (entry.eVocabID && eVocabUnitSet.has(entry.eVocabID)) idVUnitSet.add(entry.idVocabulary);
     });
