@@ -24,7 +24,11 @@ const CookRetryDelay: number = 5000;
 const CookTimeout: number = 10 * 60 * 60 * 1000; // ten hours
 const CookFailureNotificationTime: number = 60 * 60 * 1000; // 1 hour
 
-type CookIOResults = H.IOResults & { allowRetry?: boolean | undefined, connectFailure?: boolean | undefined };
+type CookIOResults = H.IOResults & {
+    allowRetry?: boolean | undefined,
+    connectFailure?: boolean | undefined,
+    otherCookError?: boolean | undefined
+};
 
 class JobCookConfiguration {
     clientId: string;
@@ -151,7 +155,7 @@ export abstract class JobCook<T> extends JobPackrat {
         try {
             const startTime: Date = new Date();
             let pollNumber: number = 0;
-            let connectRetryCount: number = 0;
+            let errorCount: number = 0;
             let polling: boolean = true;
             while (polling) {
                 // poll for completion every CookRetryDelay milleseconds:
@@ -160,10 +164,18 @@ export abstract class JobCook<T> extends JobPackrat {
                 if (!polling)
                     return this._results;
 
+                let error: string = '';
                 if (res.connectFailure) {
-                    if (++connectRetryCount > CookRequestRetryCount)                                    // if we've had too many connection errors,
-                        return this._results = { success: false, error: 'Cook connection failure' };    // exit the pollingLoop with a failure
+                    ++errorCount;
+                    error = 'Cook connection failure';
                 }
+                if (res.otherCookError) {
+                    ++errorCount;
+                    error = 'Cook error';
+                }
+                if (errorCount > CookRequestRetryCount)                 // if we've had too many errors,
+                    return this._results = { success: false, error };   // exit the pollingLoop with a failure
+
                 if ((timeout > 0) &&
                     ((new Date().getTime() - startTime.getTime()) >= timeout))
                     return this._results = { success: false, error: 'Cook timeout expired' };
@@ -182,7 +194,7 @@ export abstract class JobCook<T> extends JobPackrat {
     // #region JobPackrat interface
     async startJobWorker(_fireDate: Date): Promise<H.IOResults> {
         let requestCount: number = 0;
-        let res: CookIOResults = { success: false, allowRetry: true, connectFailure: false };
+        let res: CookIOResults = { success: false, allowRetry: true, connectFailure: false, otherCookError: false };
 
         try {
             // Create job via POST to /job
@@ -293,7 +305,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 const error: string = JSON.stringify(axiosResponse);
                 if (pollNumber > 1)
                     LOG.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${error}`, LOG.LS.eJOB);
-                return { success: false, allowRetry: true, connectFailure: false, error };
+                return { success: false, allowRetry: true, connectFailure: false, otherCookError: false, error };
             }
 
             // look for completion in 'state' member, via value of 'done', 'error', or 'cancelled'; update eJobRunStatus and terminate polling job
@@ -304,14 +316,14 @@ export abstract class JobCook<T> extends JobPackrat {
                 case 'created':     await this.recordCreated();                                                         break;
                 case 'waiting':     await this.recordWaiting();                                                         break;
                 case 'running':     await this.recordStart();                                                           break;
-                case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));                            return { success: true, allowRetry: false, connectFailure: false };
-                case 'error':       await this.recordFailure(JSON.stringify(cookJobReport), cookJobReport['error']);    return { success: false, allowRetry: false, connectFailure: false, error: cookJobReport['error'] };
-                case 'cancelled':   await this.recordCancel(JSON.stringify(cookJobReport), cookJobReport['error']);     return { success: false, allowRetry: false, connectFailure: false, error: cookJobReport['error'] };
+                case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));                            return { success: true, allowRetry: false, connectFailure: false, otherCookError: false };
+                case 'error':       await this.recordFailure(JSON.stringify(cookJobReport), cookJobReport['error']);    return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };
+                case 'cancelled':   await this.recordCancel(JSON.stringify(cookJobReport), cookJobReport['error']);     return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };
             }
         } catch (err) {
             return this.handleRequestException(err, requestUrl, 'get', undefined);
         }
-        return { success: false, allowRetry: true, connectFailure: false };
+        return { success: false, allowRetry: true, connectFailure: false, otherCookError: false };
     }
 
     protected async fetchFile(fileName: string): Promise<STORE.ReadStreamResult> {
@@ -486,7 +498,7 @@ export abstract class JobCook<T> extends JobPackrat {
             if ((++JobCook._cookConnectFailures % CookRequestRetryCount) === 0) // if we are experiencing too many connection errors,
                 this.handleCookConnectionFailure();                             // inform IT-OPS email alias and attempt to switch to "next" Cook server, if any
 
-            return { allowRetry: true, connectFailure: true, success: false, error };
+            return { allowRetry: true, connectFailure: true, otherCookError: false, success: false, error };
         }
 
         const axiosResponse: AxiosResponse<any> | undefined = (err as AxiosError)?.response;
@@ -500,13 +512,17 @@ export abstract class JobCook<T> extends JobPackrat {
             error = `JobCook [${this.name()}] polling [${pollNumber}] ${method} ${requestUrl} failed with error ${message}`;
         }
 
-        const res: CookIOResults = { success: false, allowRetry: true, connectFailure: false, error };
+        const res: CookIOResults = { success: false, allowRetry: true, connectFailure: false, otherCookError: false, error };
 
         // if we receive a 500 status, log this as an error and avoid retrying
-        if (status === 500) {
-            LOG.error(error, LOG.LS.eJOB);
-            res.allowRetry = false;
-            return res;
+        switch (status) {
+            case 500:
+                LOG.error(error, LOG.LS.eJOB);
+                res.allowRetry = false;
+                return res;
+            case 400:
+                res.otherCookError = true;
+                break;
         }
         if (emitLog)
             LOG.info(error, LOG.LS.eJOB);
