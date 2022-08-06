@@ -9,12 +9,18 @@ import * as NS from 'node-schedule';
 import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 import * as COMMON from '@dpo-packrat/common';
 
+export type JobIOResults = H.IOResults & {
+    allowRetry?: boolean | undefined,
+};
+
+const JOB_RETRY_COUNT = 2;
+
 export abstract class JobPackrat implements JOB.IJob {
     protected _jobEngine: JOB.IJobEngine;
     protected _dbJobRun: DBAPI.JobRun;
     protected _nsJob: NS.Job | null = null;
     protected _report: REP.IReport | null = null;
-    protected _results: H.IOResults = { success: false,  error: 'Not Started' };
+    protected _results: JobIOResults = { success: false,  error: 'Not Started' };
 
     constructor(jobEngine: JOB.IJobEngine, dbJobRun: DBAPI.JobRun, report: REP.IReport | null) {
         this._jobEngine = jobEngine;
@@ -28,10 +34,15 @@ export abstract class JobPackrat implements JOB.IJob {
     waitForCompletion(timeout: number): Promise<H.IOResults> { timeout; throw new Error('JobPackrat.waitForCompletion() called but is only implemented in derived classes'); }
 
     async executeJob(fireDate: Date): Promise<H.IOResults> {
-        await this.recordCreated();
-        this._results = await this.startJobWorker(fireDate);
-        if (!this._results.success)
-            await this.recordFailure(null, this._results.error);
+        for (let attempt: number = 0; attempt < JOB_RETRY_COUNT; attempt++) {
+            await this.recordCreated();
+            this._results = await this.startJobWorker(fireDate);
+            if (!this._results.success)
+                await this.recordFailure(null, this._results.error);
+
+            if (this._results.success || !this._results.allowRetry)
+                break;
+        }
         return this._results;
     }
 
@@ -50,7 +61,7 @@ export abstract class JobPackrat implements JOB.IJob {
 
     // #region JobPackrat interface
     // To be implemented by derived classes
-    protected abstract startJobWorker(fireDate: Date): Promise<H.IOResults>;
+    protected abstract startJobWorker(fireDate: Date): Promise<JobIOResults>;
     protected abstract cancelJobWorker(): Promise<H.IOResults>;
     protected abstract cleanupJob(): Promise<H.IOResults>;
     // #endregion

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types, no-constant-condition */
 import * as JOB from '../../interface';
-import { JobPackrat } from  '../NS/JobPackrat';
+import { JobPackrat, JobIOResults } from  '../NS/JobPackrat';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as STORE from '../../../storage/interface';
@@ -17,6 +17,7 @@ import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } 
 import * as path from 'path';
 
 const CookWebDAVSimultaneousTransfers: number = 10;
+const CookSimultaneousJobs: number = 25;
 const CookRequestRetryCount: number = 5;
 const CookWebDAVTransmitRetryCount: number = 5;
 const CookWebDAVStatRetryCount: number = 100;
@@ -84,6 +85,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
     private static _stagingSempaphoreWrite = new Semaphore(CookWebDAVSimultaneousTransfers);
     private static _stagingSempaphoreRead = new Semaphore(CookWebDAVSimultaneousTransfers);
+    private static _cookJobSempaphore = new Semaphore(CookSimultaneousJobs);
     private static _cookServerURLs: string[] = [];
     private static _cookServerURLIndex: number = 0;
     private static _cookServerFailureNotificationDate: Date | null = null;
@@ -151,7 +153,7 @@ export abstract class JobCook<T> extends JobPackrat {
         return { success: true };
     }
 
-    private async pollingLoop(timeout: number): Promise<H.IOResults> {
+    private async pollingLoop(timeout: number): Promise<JobIOResults> {
         try {
             const startTime: Date = new Date();
             let pollNumber: number = 0;
@@ -173,8 +175,10 @@ export abstract class JobCook<T> extends JobPackrat {
                     ++errorCount;
                     error = 'Cook error';
                 }
-                if (errorCount > CookRequestRetryCount)                 // if we've had too many errors,
-                    return this._results = { success: false, error };   // exit the pollingLoop with a failure
+                if (errorCount > CookRequestRetryCount) {               // if we've had too many errors,
+                    this._results = { success: false, error };          // exit the pollingLoop with a failure
+                    return res;
+                }
 
                 if ((timeout > 0) &&
                     ((new Date().getTime() - startTime.getTime()) >= timeout))
@@ -192,7 +196,15 @@ export abstract class JobCook<T> extends JobPackrat {
     // #endregion
 
     // #region JobPackrat interface
-    async startJobWorker(_fireDate: Date): Promise<H.IOResults> {
+    async startJobWorker(fireDate: Date): Promise<JobIOResults> {
+        const res: H.IOResults = await JobCook._cookJobSempaphore.runExclusive(async (value) => {
+            LOG.info(`JobCook [${this.name()}] starting job; semaphore count ${value}`, LOG.LS.eJOB);
+            return this.startJobWorkerInternal(fireDate);
+        });
+        return res;
+    }
+
+    private async startJobWorkerInternal(_fireDate: Date): Promise<JobIOResults> {
         let requestCount: number = 0;
         let res: CookIOResults = { success: false, allowRetry: true, connectFailure: false, otherCookError: false };
 
@@ -220,6 +232,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
                 if (++requestCount >= CookRequestRetryCount) {
                     LOG.error(`${res.error} failed after ${CookRequestRetryCount} retries`, LOG.LS.eJOB);
+                    res.allowRetry = true; // allow outer level to retry job creation
                     return res;
                 } else
                     await H.Helpers.sleep(CookRetryDelay);
@@ -249,6 +262,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
                 if (++requestCount >= CookRequestRetryCount) {
                     LOG.error(`${res.error} failed to start after ${CookRequestRetryCount} retries`, LOG.LS.eJOB);
+                    res.allowRetry = true; // allow outer level to retry job initiation
                     return res;
                 } else
                     await H.Helpers.sleep(CookRetryDelay);
