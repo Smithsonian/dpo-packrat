@@ -89,6 +89,7 @@ export abstract class JobCook<T> extends JobPackrat {
     private static _cookServerURLs: string[] = [];
     private static _cookServerURLIndex: number = 0;
     private static _cookServerFailureNotificationDate: Date | null = null;
+    private static _cookServerFailureNotificationList: Set<string> = new Set<string>();
     private static _cookConnectFailures: number = 0;
 
     protected abstract getParameters(): Promise<T>;
@@ -478,6 +479,11 @@ export abstract class JobCook<T> extends JobPackrat {
         if (++JobCook._cookServerURLIndex >= JobCook._cookServerURLs.length)
             JobCook._cookServerURLIndex = 0;
         LOG.info(`JobCook.handleCookConnectionFailure switching from ${cookServerURL} to ${JobCook._cookServerURLs[JobCook._cookServerURLIndex]}`, LOG.LS.eJOB);
+
+        // only notify once about a specific server
+        if (JobCook._cookServerFailureNotificationList.has(cookServerURL))
+            return;
+        JobCook._cookServerFailureNotificationList.add(cookServerURL);
 
         let sendNotification: boolean = true;
         let timeSinceLastNotification: number = CookFailureNotificationTime + 1;
