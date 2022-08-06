@@ -17,6 +17,7 @@ import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } 
 import * as path from 'path';
 
 const CookWebDAVSimultaneousTransfers: number = 10;
+const CookSimultaneousJobs: number = 25;
 const CookRequestRetryCount: number = 5;
 const CookWebDAVTransmitRetryCount: number = 5;
 const CookWebDAVStatRetryCount: number = 100;
@@ -84,6 +85,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
     private static _stagingSempaphoreWrite = new Semaphore(CookWebDAVSimultaneousTransfers);
     private static _stagingSempaphoreRead = new Semaphore(CookWebDAVSimultaneousTransfers);
+    private static _cookJobSempaphore = new Semaphore(CookSimultaneousJobs);
     private static _cookServerURLs: string[] = [];
     private static _cookServerURLIndex: number = 0;
     private static _cookServerFailureNotificationDate: Date | null = null;
@@ -192,7 +194,15 @@ export abstract class JobCook<T> extends JobPackrat {
     // #endregion
 
     // #region JobPackrat interface
-    async startJobWorker(_fireDate: Date): Promise<H.IOResults> {
+    async startJobWorker(fireDate: Date): Promise<H.IOResults> {
+        const res: H.IOResults = await JobCook._cookJobSempaphore.runExclusive(async (value) => {
+            LOG.info(`JobCook [${this.name()}] starting job; semaphore count ${value}`, LOG.LS.eJOB);
+            return this.startJobWorkerInternal(fireDate);
+        });
+        return res;
+    }
+
+    private async startJobWorkerInternal(_fireDate: Date): Promise<H.IOResults> {
         let requestCount: number = 0;
         let res: CookIOResults = { success: false, allowRetry: true, connectFailure: false, otherCookError: false };
 
