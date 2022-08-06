@@ -101,12 +101,12 @@ function configureLogger(logPath: string | null): void {
         transports: [
             new winston.transports.File({
                 filename: path.join(logPath, 'PackratCombined.log'),
-                maxsize: 10485760 // 10MB
+                maxsize: 100 * 1024 * 1024 // 100 MB
             }),
             new winston.transports.File({
                 filename: path.join(logPath, 'PackratError.log'),
                 level: 'error',
-                maxsize: 10485760 // 10MB
+                maxsize: 100 * 1024 * 1024 // 100 MB
             }),
         ]
     });

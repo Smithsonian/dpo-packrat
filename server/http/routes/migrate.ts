@@ -7,6 +7,10 @@ import * as UTIL from '../../tests/db/api';
 
 import { Request, Response } from 'express';
 import * as NS from 'node-schedule';
+import { Semaphore } from 'async-mutex';
+import { SceneMigrationPackage } from '../../utils/migration/SceneMigrationPackage';
+
+const SimultaneousMigrations: number = 10;
 
 export async function migrate(request: Request, response: Response): Promise<void> {
     try {
@@ -31,6 +35,8 @@ class Migrator {
     private sceneIDSet: Set<string> | undefined | null = undefined; // undefined means do not migrate; null means migrate all; non-null means migrate only matches
     private modelIDSet: Set<string> | undefined | null = undefined; // undefined means do not migrate; null means migrate all; non-null means migrate only matches
     private migrationUserEmail: string = 'tysonj@si.edu';
+
+    private static semaphoreMigrations: Semaphore = new Semaphore(SimultaneousMigrations);
 
     constructor(request: Request, response: Response) {
         this.request = request;
@@ -104,13 +110,7 @@ class Migrator {
                     continue;
                 }
 
-                this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) Starting`);
-                const SM: SceneMigration = new SceneMigration();
-                const SMR: SceneMigrationResults = await SM.migrateScene(user.idUser, scenePackage, true);
-                if (!SMR.success)
-                    this.recordMigrationResult(false, `SceneMigration (${scenePackage.EdanUUID}) failed for ${H.Helpers.JSONStringify(scenePackage)}: ${SMR.error}`);
-                else
-                    this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) succeeded: ${H.Helpers.JSONStringify(SMR)}`);
+                await this.migrateScene(scenePackage, user);
             }
         }
 
@@ -118,6 +118,21 @@ class Migrator {
             this.results += 'Migrating Models Not Yet Implemented<br/>\n';
 
         return true;
+    }
+
+    private async migrateScene(scenePackage: SceneMigrationPackage, user: DBAPI.User): Promise<SceneMigrationResults> {
+        const res: SceneMigrationResults = await Migrator.semaphoreMigrations.runExclusive(async (value) => {
+            this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) Starting; semaphore count ${value}`);
+            const SM: SceneMigration = new SceneMigration();
+            const SMR: SceneMigrationResults = await SM.migrateScene(user.idUser, scenePackage, true);
+            if (!SMR.success)
+                this.recordMigrationResult(false, `SceneMigration (${scenePackage.EdanUUID}) failed for ${H.Helpers.JSONStringify(scenePackage)}: ${SMR.error}`);
+            else
+                this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) succeeded: ${H.Helpers.JSONStringify(SMR)}`);
+
+            return SMR;
+        });
+        return res;
     }
 
     private async fetchMigrationUser(): Promise<DBAPI.User> {
