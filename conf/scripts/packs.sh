@@ -15,6 +15,9 @@ fi
 if [[ $2 == "prod" ]]
 then
   ENV="prod"
+elif [[ $2 == "inspect" ]]
+then
+  ENV="inspect"
 else
   ENV="dev"
 fi
