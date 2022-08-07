@@ -21,5 +21,5 @@ RUN yarn build:dev
 
 # Expose port, and provide start command on execution
 EXPOSE 4000
-EXPOSE 9229
-CMD [ "yarn", "start:server" ]
+# EXPOSE 9229
+CMD [ "yarn", "start:server:inspect"" ]
