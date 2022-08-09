@@ -200,6 +200,7 @@ describe('Utils: Helpers', () => {
             const WS: NodeJS.WritableStream = fs.createWriteStream(filePathRandom);
             expect(WS).toBeTruthy();
             const hash: string = await H.Helpers.createRandomFile(WS, RANDOM_FILE_SIZE);
+            WS.end();
             expect(hash).toBeTruthy();
         } catch (error) {
             LOG.error(`Helpers.createRandomeFile test failed: ${JSON.stringify(error)}`, LOG.LS.eTEST);
@@ -240,8 +241,9 @@ describe('Utils: Helpers', () => {
 
     test('Utils: Helpers.writeFileToStream', async () => {
         const filePathTemp: string = H.Helpers.randomFilename(directoryPath, '');
-        const stream: NodeJS.WritableStream = fs.createWriteStream(filePathTemp);
-        let ioResults: H.IOResults = await H.Helpers.writeFileToStream(filePath, stream);
+        const writeStream: NodeJS.WritableStream = fs.createWriteStream(filePathTemp);
+        let ioResults: H.IOResults = await H.Helpers.writeFileToStream(filePath, writeStream);
+        writeStream.end();
         if (!ioResults.success)
             LOG.info(ioResults.error, LOG.LS.eTEST);
         expect(ioResults.success).toBeTruthy();
@@ -256,6 +258,7 @@ describe('Utils: Helpers', () => {
         const readStream: NodeJS.ReadableStream = fs.createReadStream(filePath);
 
         let ioResults: H.IOResults = await H.Helpers.writeStreamToStream(readStream, writeStream);
+        writeStream.end();
         if (!ioResults.success)
             LOG.info(ioResults.error, LOG.LS.eTEST);
         expect(ioResults.success).toBeTruthy();
@@ -270,6 +273,7 @@ describe('Utils: Helpers', () => {
         const readStream: NodeJS.ReadableStream = fs.createReadStream(filePathRandom);
 
         const ioResultsSized: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(readStream, writeStream);
+        writeStream.end();
         if (!ioResultsSized.success)
             LOG.info(ioResultsSized.error, LOG.LS.eTEST);
         expect(ioResultsSized.success).toBeTruthy();
