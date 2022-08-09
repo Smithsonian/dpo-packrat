@@ -235,49 +235,56 @@ const EDAN_SIMUL: number = 4; // set to a higher number only with permission fro
 
 export async function executeScrapeQuery(ICol: COL.ICollection, fileName: string, rowStart: number): Promise<void> {
     jest.setTimeout(1000 * 60 * 60 * 24 * 7);   // 1 week
+    let writeStream: NodeJS.WritableStream | null = null;
 
-    let scrapeEndRecord: number = EDAN_SCRAPE_MAX_INIT;
-    let queryNumber: number = 0;
-    let resultCount: number = 0;
-    const unitMap: Map<string, number> = new Map<string, number>();
-    const writeStream: NodeJS.WritableStream = await fs.createWriteStream(fileName, { 'flags': 'a' });
-    if (!writeStream)
-        LOG.info(`Unable to create writeStream for ${fileName}`, LOG.LS.eTEST);
+    try {
+        let scrapeEndRecord: number = EDAN_SCRAPE_MAX_INIT;
+        let queryNumber: number = 0;
+        let resultCount: number = 0;
+        const unitMap: Map<string, number> = new Map<string, number>();
+        writeStream = await fs.createWriteStream(fileName, { 'flags': 'a' });
+        if (!writeStream)
+            LOG.info(`Unable to create writeStream for ${fileName}`, LOG.LS.eTEST);
 
-    for (; rowStart < scrapeEndRecord; ) {
-        // run EDAN_SIMUL requests at once:
-        const promiseArray: Promise<COL.CollectionQueryResults | null>[] = [];
-        for (let simulReq: number = 0; simulReq < EDAN_SIMUL && rowStart < scrapeEndRecord; simulReq++) {
-            promiseArray.push(ICol.queryCollection('*.*', EDAN_QUERY_MAX_ROWS, rowStart, null));
-            rowStart += EDAN_QUERY_MAX_ROWS;
-        }
-
-        await Promise.all(promiseArray).then(resultArray => {
-            for (const results of resultArray) {
-                if (!results) {
-                    LOG.info('*** Edan Scrape: query returned no results', LOG.LS.eTEST);
-                    continue;
-                }
-
-                if (results.error)
-                    LOG.info(`*** Edan Scrape: encountered error ${results.error}`, LOG.LS.eTEST);
-                else if (scrapeEndRecord < results.rowCount) {
-                    scrapeEndRecord = results.rowCount;
-                    LOG.info(`*** Edan Scrape: Increasing scrape end record to ${scrapeEndRecord}`, LOG.LS.eTEST);
-                }
-
-                for (const record of results.records) {
-                    writeStream.write(`${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${record.name}\n`);
-                    const unitRecordCount: number | undefined = unitMap.get(record.unit);
-                    unitMap.set(record.unit, (unitRecordCount ? unitRecordCount : 0) + 1);
-                }
-                resultCount += results.records.length;
-                queryNumber++;
+        for (; rowStart < scrapeEndRecord; ) {
+            // run EDAN_SIMUL requests at once:
+            const promiseArray: Promise<COL.CollectionQueryResults | null>[] = [];
+            for (let simulReq: number = 0; simulReq < EDAN_SIMUL && rowStart < scrapeEndRecord; simulReq++) {
+                promiseArray.push(ICol.queryCollection('*.*', EDAN_QUERY_MAX_ROWS, rowStart, null));
+                rowStart += EDAN_QUERY_MAX_ROWS;
             }
-            logUnitMap(unitMap, queryNumber, resultCount);
-        });
+
+            await Promise.all(promiseArray).then(resultArray => {
+                for (const results of resultArray) {
+                    if (!results) {
+                        LOG.info('*** Edan Scrape: query returned no results', LOG.LS.eTEST);
+                        continue;
+                    }
+
+                    if (results.error)
+                        LOG.info(`*** Edan Scrape: encountered error ${results.error}`, LOG.LS.eTEST);
+                    else if (scrapeEndRecord < results.rowCount) {
+                        scrapeEndRecord = results.rowCount;
+                        LOG.info(`*** Edan Scrape: Increasing scrape end record to ${scrapeEndRecord}`, LOG.LS.eTEST);
+                    }
+
+                    for (const record of results.records) {
+                        if (writeStream)
+                            writeStream.write(`${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${record.name}\n`);
+                        const unitRecordCount: number | undefined = unitMap.get(record.unit);
+                        unitMap.set(record.unit, (unitRecordCount ? unitRecordCount : 0) + 1);
+                    }
+                    resultCount += results.records.length;
+                    queryNumber++;
+                }
+                logUnitMap(unitMap, queryNumber, resultCount);
+            });
+        }
+        logUnitMap(unitMap, queryNumber, resultCount);
+    } finally {
+        if (writeStream)
+            writeStream.end();
     }
-    logUnitMap(unitMap, queryNumber, resultCount);
 }
 
 function logUnitMap(unitMap: Map<string, number>, queryNumber: number, resultCount: number): void {
@@ -540,6 +547,9 @@ export async function scrapeDPOEdanMDM(ICol: COL.ICollection, fileName: string):
     await handleResults(ICol, WS, 'edanmdm:dpo_3d_200148', 'dpo_3d_200148');
     await handleResults(ICol, WS, 'edanmdm:dpo_3d_200149', 'dpo_3d_200149');
     await handleResults(ICol, WS, 'edanmdm:dpo_3d_200150', 'dpo_3d_200150');
+
+    if (WS)
+        WS.end();
 }
 
 
@@ -560,6 +570,9 @@ export async function executeScrapeSpecial(ICol: COL.ICollection, fileName: stri
     await handleResults(ICol, WS, 'Stradivari Vn \'Betts\' 1704 LOC', '550');
     await handleResults(ICol, WS, 'Stradivari Vn \'Castelbarco\' 1699 LOC', '551');
     await handleResults(ICol, WS, 'Stradivari Vn \'Ward\' 1700 LOC', '559');
+
+    if (WS)
+        WS.end();
 }
 
 export async function scrapeDPOMigrationMDM(ICol: COL.ICollection, fileName: string): Promise<void> {
@@ -1387,6 +1400,9 @@ export async function scrapeDPOMigrationMDM(ICol: COL.ICollection, fileName: str
     await handleResults(ICol, WS, 'Winter Wonderland of Innovation Ornament', '868');
     await handleResults(ICol, WS, 'Wooly shirt', '125');
     await handleResults(ICol, WS, 'Wright Bicycle', '203');
+
+    if (WS)
+        WS.end();
 }
 // #endregion
 

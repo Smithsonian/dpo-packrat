@@ -1005,11 +1005,15 @@ export class AssetStorageAdapter {
             ISI.readStream = fs.createReadStream(ISI.localFilePath);
         }
 
-        const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.readStream, wsRes.writeStream);
-        if (!wrRes.success) {
-            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to write to stream: ${wrRes.error}`;
-            LOG.error(error, LOG.LS.eSTR);
-            return { success: false, error };
+        try {
+            const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.readStream, wsRes.writeStream);
+            if (!wrRes.success) {
+                const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to write to stream: ${wrRes.error}`;
+                LOG.error(error, LOG.LS.eSTR);
+                return { success: false, error };
+            }
+        } finally {
+            wsRes.writeStream.end();
         }
 
         let comRes: STORE.AssetStorageResultCommit | null = null;

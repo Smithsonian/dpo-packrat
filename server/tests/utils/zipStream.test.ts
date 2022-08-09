@@ -109,6 +109,7 @@ describe('ZipStream', () => {
         const WS: NodeJS.WritableStream = fs.createWriteStream(filePathRandom);
         expect(WS).toBeTruthy();
         const hash: string = await H.Helpers.createRandomFile(WS, 10000);
+        WS.end();
         expect(hash).toBeTruthy();
 
         res = await zipAdd.add('random1.txt', fs.createReadStream(filePathRandom));
@@ -132,6 +133,7 @@ describe('ZipStream', () => {
             res = await H.Helpers.writeStreamToStream(RS, WSOutput);
             expect(res.success).toBeTruthy();
         }
+        WSOutput.end();
 
         res = await H.Helpers.removeDirectory(directoryPath, true);
         expect(res.success).toBeTruthy();

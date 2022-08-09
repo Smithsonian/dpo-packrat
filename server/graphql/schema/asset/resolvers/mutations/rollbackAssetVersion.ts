@@ -43,9 +43,13 @@ export default async function rollbackAssetVersion(_: Parent, args: MutationRoll
         return sendResponse(false, `unable to obtain storage write stream: ${wsRes.error}`);
 
     // write bits to writeStream
-    const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(RSR.readStream, wsRes.writeStream);
-    if (!wrRes.success)
-        return sendResponse(false, `unable to write rollback bits to storage: ${wrRes.error}`);
+    try {
+        const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(RSR.readStream, wsRes.writeStream);
+        if (!wrRes.success)
+            return sendResponse(false, `unable to write rollback bits to storage: ${wrRes.error}`);
+    } finally {
+        wsRes.writeStream.end();
+    }
 
     const opInfo: STORE.OperationInfo = {
         message: rollbackNotes ? rollbackNotes : `Rolling back ${assetVersionOrig.FileName} to version ${assetVersionOrig.Version}`,
