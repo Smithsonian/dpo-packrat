@@ -345,14 +345,17 @@ export class Helpers {
     }
 
     static async writeStreamToFile(readStream: NodeJS.ReadableStream, fileName: string): Promise<IOResults> {
+        let writeStream: NodeJS.WritableStream | null = null;
         try {
-            const writeStream: NodeJS.WritableStream = await fs.createWriteStream(fileName);
+            writeStream = await fs.createWriteStream(fileName);
             const retValue: IOResults = await Helpers.writeStreamToStream(readStream, writeStream);
-            writeStream.end();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.writeStreamToFile', LOG.LS.eSYS, error);
             return { success: false, error: `Helpers.writeStreamToFile: ${JSON.stringify(error)}` };
+        } finally {
+            if (writeStream)
+                writeStream.end();
         }
     }
 
