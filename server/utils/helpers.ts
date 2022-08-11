@@ -10,6 +10,7 @@ import { promises as fsp } from 'fs';
 import * as crypto from 'crypto';
 
 import * as LOG from './logger';
+import { Readable, Writable } from 'stream';
 
 export type IOResults = {
     success: boolean;
@@ -397,6 +398,18 @@ export class Helpers {
             LOG.error('Helpers.writeStreamToStream', LOG.LS.eSYS, error);
             return { success: false, error: `Helpers.writeFileToStream: ${JSON.stringify(error)}`, size: 0 };
         }
+    }
+
+    static destroyReadStream(stream: NodeJS.ReadableStream): void {
+        const read: Readable = stream as Readable;
+        if (read)
+            read.destroy();
+    }
+
+    static destroyWriteStream(stream: NodeJS.WritableStream): void {
+        const write: Writable = stream as Writable;
+        if (write)
+            write.destroy();
     }
 
     static async writeJsonAndComputeHash(dest: string, obj: any, hashMethod: string, replacer: any | null = null): Promise<HashResults> {

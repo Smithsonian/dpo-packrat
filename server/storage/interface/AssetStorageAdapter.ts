@@ -953,9 +953,11 @@ export class AssetStorageAdapter {
         let res: H.IOResults = { success: true };
         const extractor: META.MetadataExtractor = new META.MetadataExtractor();
         const AFOSR: AssetFileOrStreamResult = await AssetStorageAdapter.assetFileOrStream(storage, asset, assetVersion);
-        if (AFOSR.success && (AFOSR.fileName || AFOSR.stream))
+        if (AFOSR.success && (AFOSR.fileName || AFOSR.stream)) {
             res = await extractor.extractMetadata(AFOSR.fileName ?? '', AFOSR.stream);
-        else
+            if (AFOSR.stream)
+                H.Helpers.destroyReadStream(AFOSR.stream);
+        } else
             LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to compute metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${AFOSR.error}`, LOG.LS.eSTR);
 
         // Persist extracted metadata
