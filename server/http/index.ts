@@ -22,6 +22,7 @@ import { graphqlUploadExpress } from 'graphql-upload';
 import { v2 as webdav } from 'webdav-server';
 
 const monitorCPU: boolean = true;
+const monitorVerbose: boolean = true;
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
@@ -47,7 +48,7 @@ export class HttpServer {
         // call to initalize the EventFactory, which in turn will initialize the AuditEventGenerator, supplying the IEventEngine
         EventFactory.getInstance();
         if (monitorCPU) {
-            const monitor: CPUMonitor = new CPUMonitor(1000, 90, 10); // sample every second, alert if > 90% for more than 10 samples in a row
+            const monitor: CPUMonitor = new CPUMonitor(1000, 90, 10, monitorVerbose); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerbose -> verbose logging
             monitor.start();
         }
         return res;

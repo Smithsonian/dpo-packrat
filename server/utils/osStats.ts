@@ -77,19 +77,23 @@ export class CPUMonitor {
     private monitorTimeout: number;
     private alertThreshold: number;
     private alertAlarm: number;
+    private verbose: boolean;
 
     private alertCount: number = 0;
+    private verboseCount: number = 0;
     private timer: NodeJS.Timeout | null = null;
     private OS: osStats = new osStats();
 
     /**
      * @monitorTimeout in milleseconds -- how often we sample CPU utilization
      * @alertThreshold busy percentage above which we'll be alerted; 100 is the maximum
-     * @alertAlarm count of consequetive samples above alertThreshold that indicate an alarm status */
-    constructor(monitorTimeout: number, alertThreshold: number, alertAlarm: number) {
+     * @alertAlarm count of consequetive samples above alertThreshold that indicate an alarm status
+     * @verbose true results in logging of cpu utlitization every alertAlarm samples */
+    constructor(monitorTimeout: number, alertThreshold: number, alertAlarm: number, verbose?: boolean | undefined) {
         this.monitorTimeout = monitorTimeout;
         this.alertThreshold = alertThreshold;
         this.alertAlarm = alertAlarm;
+        this.verbose = verbose ?? false;
     }
 
     start(): void {
@@ -108,7 +112,13 @@ export class CPUMonitor {
                 this.alert();
         } else
             this.alertCount = 0;
-        // LOG.info(`CPUMonitor.sample ${this.OS.emitInfo()}; alert count ${this.alertCount};`, LOG.LS.eSYS);
+
+        if (this.verbose) {
+            if (++this.verboseCount >= this.alertAlarm) {
+                this.verboseCount = 0;
+                LOG.info(`CPUMonitor.sample ${this.OS.emitInfo()}`, LOG.LS.eSYS);
+            }
+        }
     }
 
     alert(): void {
