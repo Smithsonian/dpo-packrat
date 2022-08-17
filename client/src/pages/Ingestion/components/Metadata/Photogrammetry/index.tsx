@@ -251,6 +251,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
                 <AssetContents
                     folders={photogrammetry.folders}
+                    originalFolders={[...photogrammetry.folders]}
                     options={getEntries(eVocabularySetID.eCaptureDataFileVariantType)}
                     onUpdate={updateFolderVariant}
                 />

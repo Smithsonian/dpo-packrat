@@ -42,11 +42,13 @@ class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
     private handleException(error: any): void {
         const message: string = (error instanceof Error) ? `: ${error.message}` : '';
         console.log(`Apollo Client Error${message}`);
+        // console.log(`Apollo Client Error${message}: ${JSON.stringify(error)}`);
         throw error;
     }
 }
 
 const loginMessage: string = 'The Packrat user is no longer authenticated. Please login.';
+const SAMLRedirectPath: string = '/saml/idp/profile/redirectorpost/sso';
 
 const errorLink = onError(({ graphQLErrors, networkError }) => {
     let sentToLogin: boolean = false;
@@ -66,10 +68,27 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
     if (networkError) {
         console.log(`[Network error]: ${networkError}`);
-        const errMessage: string = networkError.toString();
-        if (errMessage !== 'TypeError: Failed to fetch' &&
-            errMessage !== `TypeError: ${uploadFailureMessage}`) {
-            if (!sentToLogin) {
+        // console.log(`[Network error]: ${JSON.stringify(networkError)}`);
+
+        if (!sentToLogin) {
+            let redirectToLogin: boolean = false;
+
+            if (networkError.name === 'ServerParseError') {
+                const bodyText = networkError['bodyText'];
+                if (bodyText && typeof(bodyText) === 'string' && bodyText.includes(SAMLRedirectPath)) {
+                    redirectToLogin = true;
+                    // if (!handleTeleworkSAMLAuthRequest(bodyText))
+                    //     redirectToLogin = true;
+                }
+            } else {
+                const errMessage: string = networkError.toString();
+                if (errMessage !== 'TypeError: Failed to fetch' &&
+                    errMessage !== 'ServerParseError: Unexpected token < in JSON at position 0' && // emitted on telework connections for unknown reasons
+                    errMessage !== `TypeError: ${uploadFailureMessage}`)
+                    redirectToLogin = true;
+            }
+
+            if (redirectToLogin) {
                 global.alert(loginMessage);
                 window.location.href = ROUTES.LOGIN;
                 sentToLogin = true;
@@ -77,6 +96,54 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         }
     }
 });
+
+/*
+function handleTeleworkSAMLAuthRequest(bodyText: string): boolean {
+    try {
+        const parser: DOMParser = new DOMParser();
+        const document: Document = parser.parseFromString(bodyText, 'text/html');
+        const forms: HTMLCollectionOf<HTMLFormElement> = document.getElementsByTagName('form');
+        if (forms.length !== 1)
+            return false;
+
+        const form: HTMLFormElement = forms[0];
+        if (!form.action.endsWith(SAMLRedirectPath))
+            return false;
+
+        console.log(`Packrat executing telework SAML Auth Requestion via ${form.method} to ${form.action}`);
+        // Try 1: simply doesn't work
+        // form.submit();
+        const formElements: HTMLFormControlsCollection = form.elements;
+        const SAMLRequestInput = formElements.namedItem('SAMLRequest');
+        const RelayStateInput  = formElements.namedItem('RelayState');
+        const SAMLRequest: string = (SAMLRequestInput instanceof HTMLInputElement) ? SAMLRequestInput.value : '';
+        const RelayState:  string = (RelayStateInput  instanceof HTMLInputElement) ? RelayStateInput.value  : '';
+        const params: string = `SAMLRequest=${encodeURIComponent(SAMLRequest)}&RelayState=${encodeURIComponent(RelayState)}`;
+
+        // Try 2:  doesn't work with "blocked by CORS policy" error
+        // let retVal: boolean = true;
+        // switch (form.method.toLowerCase()) {
+        //     case 'post':
+        //         axios.post(form.action, params)
+        //             .then(res => { console.log(`SAMLAuthRequest statusCode: ${res.status}`); console.log(`SAMLAuthRequest response ${res}`); })
+        //             .catch(error => { console.log(`SAMLAuthRequest failed ${error}`); retVal = false; });
+        //         break;
+        //     case 'get':
+        //         axios.get(`${form.action}?${params}`)
+        //             .then(res => { console.log(`SAMLAuthRequest statusCode: ${res.status}`); console.log(`SAMLAuthRequest response ${res}`); })
+        //             .catch(error => { console.log(`SAMLAuthRequest failed ${error}`); retVal = false; });
+        //         break;
+        // }
+        // return retVal;
+
+        window.location.href = `${form.action}?${params}`;
+        return true;
+    } catch (error) {
+        console.log(`handleTeleworkSAMLAuthRequest failed with ${error} handling ${bodyText}`);
+        return false;
+    }
+}
+*/
 
 function configureApolloClient(): ApolloClient<NormalizedCacheObject> {
     const serverEndpoint = API.serverEndpoint();

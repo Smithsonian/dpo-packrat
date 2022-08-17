@@ -28,7 +28,7 @@ function VoyagerExplorer(props: VoyagerExplorerProps): React.ReactElement {
     const { root, document, width, height } = props;
 
     // this is the script required to run voyager-explorer component
-    useScript(Config.voyager.explorer);
+    useScript(Config.voyager.explorerJS);
 
     return <voyager-explorer id='Voyager-Explorer' root={root} document={document} style={{ width: width || '300px', height: height || '300px', display: 'block', position: 'relative' }} />;
 }

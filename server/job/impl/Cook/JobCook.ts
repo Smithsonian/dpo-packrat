@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types, no-constant-condition */
 import * as JOB from '../../interface';
-import { JobPackrat } from  '../NS/JobPackrat';
+import { JobPackrat, JobIOResults } from  '../NS/JobPackrat';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import { Config } from '../../../config';
-// import * as CACHE from '../../cache';
 import * as H from '../../../utils/helpers';
+import { Email } from '../../../utils/email';
 
 import { v4 as uuidv4 } from 'uuid';
 import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions, CreateReadStreamOptions } from 'webdav';
@@ -16,12 +16,20 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
 import * as path from 'path';
 
-const CookWebDAVSimultaneousTransfers: number = 2;
+const CookWebDAVSimultaneousTransfers: number = 10;
+const CookSimultaneousJobs: number = 25;
 const CookRequestRetryCount: number = 5;
 const CookWebDAVTransmitRetryCount: number = 5;
 const CookWebDAVStatRetryCount: number = 100;
 const CookRetryDelay: number = 5000;
-const CookTimeout: number = 36000000; // ten hours
+const CookTimeout: number = 10 * 60 * 60 * 1000; // ten hours
+const CookFailureNotificationTime: number = 60 * 60 * 1000; // 1 hour
+
+type CookIOResults = H.IOResults & {
+    allowRetry?: boolean | undefined,
+    connectFailure?: boolean | undefined,
+    otherCookError?: boolean | undefined
+};
 
 class JobCookConfiguration {
     clientId: string;
@@ -77,6 +85,12 @@ export abstract class JobCook<T> extends JobPackrat {
 
     private static _stagingSempaphoreWrite = new Semaphore(CookWebDAVSimultaneousTransfers);
     private static _stagingSempaphoreRead = new Semaphore(CookWebDAVSimultaneousTransfers);
+    private static _cookJobSempaphore = new Semaphore(CookSimultaneousJobs);
+    private static _cookServerURLs: string[] = [];
+    private static _cookServerURLIndex: number = 0;
+    private static _cookServerFailureNotificationDate: Date | null = null;
+    private static _cookServerFailureNotificationList: Set<string> = new Set<string>();
+    private static _cookConnectFailures: number = 0;
 
     protected abstract getParameters(): Promise<T>;
 
@@ -85,8 +99,20 @@ export abstract class JobCook<T> extends JobPackrat {
         recipeId: string, jobId: string | null, idAssetVersions: number[] | null,
         report: REP.IReport | null, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, dbJobRun, report);
+        JobCook.initialize();
         this._configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId, dbJobRun);
         this._idAssetVersions = idAssetVersions;
+    }
+
+    static initialize() {
+        if (JobCook._cookServerURLs.length === 0) {
+            JobCook._cookServerURLs = Config.job.cookServerUrls;
+            JobCook._cookServerURLIndex = 0;
+        }
+    }
+
+    static CookServerURL(): string {
+        return JobCook._cookServerURLs[JobCook._cookServerURLIndex];
     }
 
     // #region IJob interface
@@ -128,20 +154,36 @@ export abstract class JobCook<T> extends JobPackrat {
         return { success: true };
     }
 
-    private async pollingLoop(timeout: number): Promise<H.IOResults> {
+    private async pollingLoop(timeout: number): Promise<JobIOResults> {
         try {
             const startTime: Date = new Date();
             let pollNumber: number = 0;
+            let errorCount: number = 0;
             let polling: boolean = true;
             while (polling) {
                 // poll for completion every CookRetryDelay milleseconds:
-                polling = !await this.pollingCallback(++pollNumber);
+                const res: CookIOResults = await this.pollingCallback(++pollNumber);
+                polling = (res.allowRetry !== undefined) ? res.allowRetry : true;
                 if (!polling)
                     return this._results;
 
+                let error: string = '';
+                if (res.connectFailure) {
+                    ++errorCount;
+                    error = 'Cook connection failure';
+                }
+                if (res.otherCookError) {
+                    ++errorCount;
+                    error = 'Cook error';
+                }
+                if (errorCount > CookRequestRetryCount) {               // if we've had too many errors,
+                    this._results = { success: false, error };          // exit the pollingLoop with a failure
+                    return res;
+                }
+
                 if ((timeout > 0) &&
                     ((new Date().getTime() - startTime.getTime()) >= timeout))
-                    return { success: false, error: 'timeout expired' };
+                    return this._results = { success: false, error: 'Cook timeout expired' };
                 await H.Helpers.sleep(CookRetryDelay);
             }
         } catch (error) {
@@ -155,13 +197,21 @@ export abstract class JobCook<T> extends JobPackrat {
     // #endregion
 
     // #region JobPackrat interface
-    async startJobWorker(_fireDate: Date): Promise<H.IOResults> {
+    async startJobWorker(fireDate: Date): Promise<JobIOResults> {
+        const res: H.IOResults = await JobCook._cookJobSempaphore.runExclusive(async (value) => {
+            LOG.info(`JobCook [${this.name()}] starting job; semaphore count ${value}`, LOG.LS.eJOB);
+            return this.startJobWorkerInternal(fireDate);
+        });
+        return res;
+    }
+
+    private async startJobWorkerInternal(_fireDate: Date): Promise<JobIOResults> {
         let requestCount: number = 0;
-        let res: H.IOResults = { success: false };
+        let res: CookIOResults = { success: false, allowRetry: true, connectFailure: false, otherCookError: false };
 
         try {
             // Create job via POST to /job
-            let requestUrl: string = Config.job.cookServerUrl + 'job';
+            let requestUrl: string = JobCook.CookServerURL() + 'job';
             const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, await this.getParameters(), eJobCookPriority.eNormal);
 
             while (true) {
@@ -176,27 +226,14 @@ export abstract class JobCook<T> extends JobPackrat {
                         LOG.info(res.error, LOG.LS.eJOB);
                     }
                 } catch (err) {
-                    const message: string | null = (err instanceof Error) ? err.message : null;
-                    // if we cannot connect to Cook, try again:
-                    if (message && message.indexOf('getaddrinfo ENOTFOUND') > -1) {
-                        res = { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(err)}` };
-                    } else {
-                        const axiosResponse: AxiosResponse<any> | undefined = (err as AxiosError)?.response;
-                        const status: number | undefined = axiosResponse?.status;
-                        const error: string = `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed with error ${message}: ${JSON.stringify(axiosResponse?.data)}`;
-                        res = { success: false, error };
-
-                        // if we receive a 500 status, log this as an error and avoid retrying
-                        if (status === 500) {
-                            LOG.error(error, LOG.LS.eJOB);
-                            return res;
-                        }
-                        LOG.info(error, LOG.LS.eJOB);
-                    }
+                    res = this.handleRequestException(err, requestUrl, 'post', jobCookPostBody);
+                    if (res.allowRetry === false)
+                        return res;
                 }
 
                 if (++requestCount >= CookRequestRetryCount) {
                     LOG.error(`${res.error} failed after ${CookRequestRetryCount} retries`, LOG.LS.eJOB);
+                    res.allowRetry = true; // allow outer level to retry job creation
                     return res;
                 } else
                     await H.Helpers.sleep(CookRetryDelay);
@@ -209,8 +246,8 @@ export abstract class JobCook<T> extends JobPackrat {
 
             // Initiate job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/run
             requestCount = 0;
-            res = { success: false };
-            requestUrl = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
+            res = { success: false, allowRetry: true };
+            requestUrl = JobCook.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
             LOG.info(`JobCook [${this.name()}] running job: ${requestUrl}`, LOG.LS.eJOB);
             while (true) {
                 try {
@@ -218,12 +255,15 @@ export abstract class JobCook<T> extends JobPackrat {
                     if (axiosResponse.status === 202)
                         break; // success, continue
                     res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
-                } catch (error) {
-                    res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(error)}` };
+                } catch (err) {
+                    res = this.handleRequestException(err, requestUrl, 'patch', jobCookPostBody);
+                    if (res.allowRetry === false)
+                        return res;
                 }
 
                 if (++requestCount >= CookRequestRetryCount) {
                     LOG.error(`${res.error} failed to start after ${CookRequestRetryCount} retries`, LOG.LS.eJOB);
+                    res.allowRetry = true; // allow outer level to retry job initiation
                     return res;
                 } else
                     await H.Helpers.sleep(CookRetryDelay);
@@ -243,7 +283,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // Cancel job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/cancel
         let requestCount: number = 0;
         let res: H.IOResults = { success: false };
-        const requestUrl: string = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/cancel`;
+        const requestUrl: string = JobCook.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/cancel`;
         LOG.info(`JobCook [${this.name()}] cancelling job: ${requestUrl}`, LOG.LS.eJOB);
         while (true) {
             try {
@@ -268,18 +308,19 @@ export abstract class JobCook<T> extends JobPackrat {
     // #endregion
 
     // returns true if polling indicates we're done; false if polling should continue
-    private async pollingCallback(pollNumber: number): Promise<boolean> {
+    private async pollingCallback(pollNumber: number): Promise<CookIOResults> {
         // LOG.info(`JobCook [${this.name()}] polling [${pollNumber}]`, LOG.LS.eJOB);
         // poll server for status update
         // Get job report via GET to /clients/<CLIENTID>/jobs/<JOBID>/report
-        const requestUrl: string = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/report`;
+        const requestUrl: string = JobCook.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/report`;
         try {
             const axiosResponse = await axios.get(requestUrl);
             if (axiosResponse.status !== 200) {
                 // only log errors after first attempt, as job creation may not be complete on Cook server
+                const error: string = JSON.stringify(axiosResponse);
                 if (pollNumber > 1)
-                    LOG.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${JSON.stringify(axiosResponse)}`, LOG.LS.eJOB);
-                return false;
+                    LOG.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${error}`, LOG.LS.eJOB);
+                return { success: false, allowRetry: true, connectFailure: false, otherCookError: false, error };
             }
 
             // look for completion in 'state' member, via value of 'done', 'error', or 'cancelled'; update eJobRunStatus and terminate polling job
@@ -287,19 +328,17 @@ export abstract class JobCook<T> extends JobPackrat {
             if (pollNumber <= 10 || ((pollNumber % 5) == 0))
                 LOG.info(`JobCook [${this.name()}] polling [${pollNumber}], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
             switch (cookJobReport['state']) {
-                case 'created':     await this.recordCreated();                                 break;
-                case 'waiting':     await this.recordWaiting();                                 break;
-                case 'running':     await this.recordStart();                                   break;
-                case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));    return true;
-                case 'error':       await this.recordFailure(cookJobReport['error']);           return true;
-                case 'cancelled':   await this.recordCancel(cookJobReport['error']);            return true;
+                case 'created':     await this.recordCreated();                                                         break;
+                case 'waiting':     await this.recordWaiting();                                                         break;
+                case 'running':     await this.recordStart();                                                           break;
+                case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));                            return { success: true, allowRetry: false, connectFailure: false, otherCookError: false };
+                case 'error':       await this.recordFailure(JSON.stringify(cookJobReport), cookJobReport['error']);    return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };
+                case 'cancelled':   await this.recordCancel(JSON.stringify(cookJobReport), cookJobReport['error']);     return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };
             }
-        } catch (error) {
-            // only log errors after first attempt, as job creation may not be complete on Cook server
-            if (pollNumber > 1)
-                LOG.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${JSON.stringify(error)}`, LOG.LS.eJOB);
+        } catch (err) {
+            return this.handleRequestException(err, requestUrl, 'get', undefined);
         }
-        return false;
+        return { success: false, allowRetry: true, connectFailure: false, otherCookError: false };
     }
 
     protected async fetchFile(fileName: string): Promise<STORE.ReadStreamResult> {
@@ -307,9 +346,9 @@ export abstract class JobCook<T> extends JobPackrat {
             try {
                 // transmit file to Cook work folder via WebDAV
                 const destination: string = `/${this._configuration.jobId}/${fileName}`;
-                LOG.info(`JobCook [${this.name()}] JobCook.fetchFile via WebDAV from ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
+                LOG.info(`JobCook [${this.name()}] JobCook.fetchFile via WebDAV from ${JobCook.CookServerURL()}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
 
-                const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl, {
+                const webdavClient: WebDAVClient = createClient(JobCook.CookServerURL(), {
                     authType: AuthType.None,
                     maxBodyLength: 10 * 1024 * 1024 * 1024,
                     withCredentials: false
@@ -318,6 +357,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     headers: { 'Content-Type': 'application/octet-stream' }
                 };
                 const RS: Readable = webdavClient.createReadStream(destination, webdavWSOpts);
+                RS.on('error', error => { LOG.error(`JobCook [${this.name()}] JobCook.fetchFile stream error`, LOG.LS.eJOB, error); });
                 return { readStream: RS, fileName, storageHash: null, success: true };
             } catch (error) {
                 LOG.error('JobCook [${this.name()}] JobCook.fetchFile', LOG.LS.eJOB, error);
@@ -355,11 +395,11 @@ export abstract class JobCook<T> extends JobPackrat {
 
                         // transmit file to Cook work folder via WebDAV
                         const destination: string = `/${this._configuration.jobId}/${fileName}`;
-                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
+                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
 
-                        const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl, {
+                        const webdavClient: WebDAVClient = createClient(JobCook.CookServerURL(), {
                             authType: AuthType.None,
-                            maxBodyLength: 10 * 1024 * 1024 * 1024,
+                            maxBodyLength: 100 * 1024 * 1024 * 1024,
                             withCredentials: false
                         });
                         const webdavWSOpts: CreateWriteStreamOptions = {
@@ -368,20 +408,28 @@ export abstract class JobCook<T> extends JobPackrat {
 
                         let res: H.IOResultsSized = { success: false, error: 'Not Executed', size: -1 };
                         for (let transmitCount: number = 0; transmitCount < CookWebDAVTransmitRetryCount; transmitCount++) {
-                            const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
-                            res = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
-                            if (res.success)
-                                break;
+                            let WS: Writable | null = null;
+                            try {
+                                WS = webdavClient.createWriteStream(destination, webdavWSOpts);
+                                WS.on('error', error => { LOG.error(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV stream error`, LOG.LS.eJOB, error); });
+
+                                res = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
+                                if (res.success)
+                                    break;
+                            } finally {
+                                if (WS)
+                                    WS.end();
+                            }
                             await H.Helpers.sleep(CookRetryDelay);
                         }
 
                         if (!res.success) {
-                            const error = `JobCook [${this.name()}] JobCook.stageFiles unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
+                            const error = `JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
                             LOG.error(error, LOG.LS.eJOB);
                             return { success: false, error };
                         }
 
-                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}: completed`, LOG.LS.eJOB);
+                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}: transmitted ${res.size} bytes`, LOG.LS.eJOB);
 
                         // use WebDAV client's stat to detect when file is fully staged and available on the server
                         // poll for filesize of remote file.  Continue polling:
@@ -390,12 +438,12 @@ export abstract class JobCook<T> extends JobPackrat {
                         // - pause CookRetryDelay ms between stat polls
                         let stagingSuccess: boolean = false;
                         for (let statCount: number = 0; statCount < CookWebDAVStatRetryCount; statCount++) {
-                            const pollingLocation: string = `${Config.job.cookServerUrl}${destination.substring(1)} [${statCount + 1}/${CookWebDAVStatRetryCount}]`;
+                            const pollingLocation: string = `${JobCook.CookServerURL()}${destination.substring(1)} [${statCount + 1}/${CookWebDAVStatRetryCount}]`;
                             try {
                                 const stat: any = await webdavClient.stat(destination);
                                 const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
                                 const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
-                                LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging polling ${pollingLocation}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
+                                LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV polling ${pollingLocation}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
                                 if (size >= res.size) {
                                     stagingSuccess = (baseName === fileName);
                                     break;
@@ -410,10 +458,11 @@ export abstract class JobCook<T> extends JobPackrat {
                             }
                             await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                         }
-
-                        if (!stagingSuccess) {
+                        if (stagingSuccess) {
+                            LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}: success`, LOG.LS.eJOB);
+                        } else {
                             error = `Unable to verify existence of staged file ${fileName}`;
-                            LOG.error(error, LOG.LS.eJOB);
+                            LOG.error(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}: ${error}`, LOG.LS.eJOB);
                             success = false;
                             break;
                         }
@@ -428,5 +477,81 @@ export abstract class JobCook<T> extends JobPackrat {
                 resOuter = resInner;
         }
         return resOuter;
+    }
+
+    private async handleCookConnectionFailure(): Promise<void> {
+        // inform IT-OPS email alias and attempt to switch to "next" Cook server, if any
+        const cookServerURL: string = JobCook._cookServerURLs[JobCook._cookServerURLIndex];
+        if (++JobCook._cookServerURLIndex >= JobCook._cookServerURLs.length)
+            JobCook._cookServerURLIndex = 0;
+        LOG.info(`JobCook.handleCookConnectionFailure switching from ${cookServerURL} to ${JobCook._cookServerURLs[JobCook._cookServerURLIndex]}`, LOG.LS.eJOB);
+
+        // only notify once about a specific server
+        if (JobCook._cookServerFailureNotificationList.has(cookServerURL))
+            return;
+        JobCook._cookServerFailureNotificationList.add(cookServerURL);
+
+        let sendNotification: boolean = true;
+        let timeSinceLastNotification: number = CookFailureNotificationTime + 1;
+        const now: Date = new Date();
+        if (JobCook._cookServerFailureNotificationDate) {
+            timeSinceLastNotification = (now.getTime() - JobCook._cookServerFailureNotificationDate.getTime());
+            if (timeSinceLastNotification < CookFailureNotificationTime) // only send notifications once per hour
+                sendNotification = false;
+            else
+                JobCook._cookServerFailureNotificationDate = now;
+        }
+
+        if (sendNotification) {
+            const res: H.IOResults = await Email.Send(undefined, undefined, 'Cook Connection Failure', `Packrat was unable to connect to ${cookServerURL}`, undefined);
+            if (!res.success)
+                LOG.error(`JobCook.handleCookConnectionFailure unable to send email notification: ${res.error}`, LOG.LS.eJOB);
+        }
+    }
+
+    private handleRequestException(err: unknown, requestUrl: string, method: string,
+        jobCookPostBody?: JobCookPostBody<T> | undefined, pollNumber?: number | undefined): CookIOResults {
+
+        const message: string | null = (err instanceof Error) ? err.message : null;
+        // if we cannot connect to Cook, try again:
+        const connectFailure: boolean = (message !== null) &&
+                                        (message.indexOf('getaddrinfo ENOTFOUND') > -1 ||
+                                         message.indexOf('connect EHOSTUNREACH') > -1);
+        if (connectFailure) {
+            const error: string = `Cannot connect to Cook on ${requestUrl}: ${message}`;
+            LOG.error(`JobCook [${this.name()}] ${method} ${error}`, LOG.LS.eJOB);
+
+            if ((++JobCook._cookConnectFailures % CookRequestRetryCount) === 0) // if we are experiencing too many connection errors,
+                this.handleCookConnectionFailure();                             // inform IT-OPS email alias and attempt to switch to "next" Cook server, if any
+
+            return { allowRetry: true, connectFailure: true, otherCookError: false, success: false, error };
+        }
+
+        const axiosResponse: AxiosResponse<any> | undefined = (err as AxiosError)?.response;
+        const status: number | undefined = axiosResponse?.status;
+        let emitLog: boolean = true;
+        let error: string;
+        if (!pollNumber)
+            error = `JobCook [${this.name()}] ${method} ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed with error ${message}: ${JSON.stringify(axiosResponse?.data)}`;
+        else {
+            emitLog = (pollNumber >= 1);
+            error = `JobCook [${this.name()}] polling [${pollNumber}] ${method} ${requestUrl} failed with error ${message}`;
+        }
+
+        const res: CookIOResults = { success: false, allowRetry: true, connectFailure: false, otherCookError: false, error };
+
+        // if we receive a 500 status, log this as an error and avoid retrying
+        switch (status) {
+            case 500:
+                LOG.error(error, LOG.LS.eJOB);
+                res.allowRetry = false;
+                return res;
+            case 400:
+                res.otherCookError = true;
+                break;
+        }
+        if (emitLog)
+            LOG.info(error, LOG.LS.eJOB);
+        return res;
     }
 }

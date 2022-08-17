@@ -16,6 +16,8 @@ import { DetailComponentProps } from './index';
 import { useStyles as useSelectStyles, SelectFieldProps } from '../../../../../components/controls/SelectField';
 import { DebounceInput } from 'react-debounce-input';
 import ObjectMeshTable from '../../../../Ingestion/components/Metadata/Model/ObjectMeshTable';
+import { updatedFieldStyling } from './CaptureDataDetails';
+import { isFieldUpdated } from '../../../../../utils/repository';
 
 export const useStyles = makeStyles(({ palette, typography }) => ({
     notRequiredFields: {
@@ -85,7 +87,7 @@ export const useStyles = makeStyles(({ palette, typography }) => ({
 
 function ModelDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
-    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate } = props;
+    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle } = props;
 
     const { ingestionModel, modelObjects } = extractModelConstellation(data?.getDetailsTabDataForObject?.Model);
     const [ModelDetails, updateDetailField] = useDetailTabStore(state => [state.ModelDetails, state.updateDetailField]);
@@ -132,7 +134,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                             </Typography>
                         </div>
                         <div style={{ gridColumnStart: 2, gridColumnEnd: 3 }}>
-                            <DebounceInput value={subtitle} onChange={onSubtitleUpdate} className={classes.input} />
+                            <DebounceInput value={subtitle} onChange={onSubtitleUpdate} className={classes.input} style={{ ...updatedFieldStyling(subtitle !== originalSubtitle) }} />
                         </div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px', height: 20 }}>
@@ -141,8 +143,8 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                                 Date Created
                             </Typography>
                         </div>
-                        <div style={{ gridColumnStart: 2, gridColumnEnd: 3 }}>
-                            <DateInputField value={ModelDetails.DateCreated} onChange={date => setDateField(date)} dateHeight='22px' />
+                        <div style={{ gridColumnStart: 2, gridColumnEnd: 3 }} >
+                            <DateInputField value={ModelDetails.DateCreated} onChange={date => setDateField(date)} dateHeight='22px' updated={new Date(ingestionModel.DateCreated).toString() !== new Date(ModelDetails?.DateCreated as string)?.toString()} />
                         </div>
                     </div>
                     <SelectField
@@ -155,6 +157,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         selectHeight='24px'
                         valueLeftAligned
                         selectFitContent
+                        updated={isFieldUpdated(ModelDetails, ingestionModel, 'idVCreationMethod')}
                     />
                     <SelectField
                         required
@@ -166,6 +169,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         selectHeight='24px'
                         valueLeftAligned
                         selectFitContent
+                        updated={isFieldUpdated(ModelDetails, ingestionModel, 'idVModality')}
                     />
 
                     <SelectField
@@ -178,6 +182,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         selectHeight='24px'
                         valueLeftAligned
                         selectFitContent
+                        updated={isFieldUpdated(ModelDetails, ingestionModel, 'idVUnits')}
                     />
 
                     <SelectField
@@ -190,6 +195,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         selectHeight='24px'
                         valueLeftAligned
                         selectFitContent
+                        updated={isFieldUpdated(ModelDetails, ingestionModel, 'idVPurpose')}
                     />
 
                     <SelectField
@@ -202,6 +208,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         selectHeight='24px'
                         valueLeftAligned
                         selectFitContent
+                        updated={isFieldUpdated(ModelDetails, ingestionModel, 'idVFileType')}
                     />
                 </Box>
 
@@ -235,7 +242,7 @@ export default ModelDetails;
 
 
 function SelectField(props: SelectFieldProps): React.ReactElement {
-    const { value, name, options, onChange, disabled = false, label } = props;
+    const { value, name, options, onChange, disabled = false, label, updated = false } = props;
     const classes = useSelectStyles(props);
 
     return (
@@ -253,7 +260,7 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
                 disabled={disabled}
                 disableUnderline
                 inputProps={{ 'title': `${name} select`, style: { width: '100%' } }}
-                style={{ minWidth: '100%', width: 'fit-content' }}
+                style={{ minWidth: '100%', width: 'fit-content', ...updatedFieldStyling(updated) }}
                 SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
             >
                 {options.map(({ idVocabulary, Term }, index) => (

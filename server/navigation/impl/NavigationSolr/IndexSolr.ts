@@ -8,10 +8,13 @@ import { ObjectGraphDataEntry } from '../../../db';
 import { SolrClient, eSolrCore } from './SolrClient';
 import * as COMMON from '@dpo-packrat/common';
 
+import * as NS from 'node-schedule';
+
 export class IndexSolr implements NAV.IIndexer {
     private objectGraphDatabase: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
     private hierarchyNameMap: Map<number, string> = new Map<number, string>(); // map of idSystemObject -> object name
     private static fullIndexUnderway: boolean = false;
+    private static reindexJob: NS.Job | null = null;
 
     private countUnit:                  number = 0;
     private countProject:               number = 0;
@@ -28,6 +31,13 @@ export class IndexSolr implements NAV.IIndexer {
     private countStakeholder:           number = 0;
     private countUnknown:               number = 0;
     private countMetadata:              number = 0;
+
+    constructor() {
+        if (IndexSolr.reindexJob === null) {
+            IndexSolr.reindexJob = NS.scheduleJob('Packrat Solr Full Reindex', '*/30 * * * *', IndexSolr.fullIndexScheduled);
+            LOG.info('IndexSolr reindex job scheduled', LOG.LS.eNAV);
+        }
+    }
 
     async fullIndex(profiled?: boolean | undefined): Promise<boolean> {
         if (profiled)
@@ -176,6 +186,12 @@ export class IndexSolr implements NAV.IIndexer {
             // LOG.info(`IndexSolr.handleAncestors prepping to update ${JSON.stringify(doc)}`, LOG.LS.eNAV);
         }
         return true;
+    }
+
+    private static async fullIndexScheduled(): Promise<boolean> {
+        LOG.info('IndexSolr reindex job starting', LOG.LS.eNAV);
+        const IS: IndexSolr = new IndexSolr();
+        return IS.fullIndex();
     }
 
     private async fullIndexWorker(): Promise<boolean> {

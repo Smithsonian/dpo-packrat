@@ -49,7 +49,8 @@ function AdminUsersView(): React.ReactElement {
                         active: User_Status.EAll,
                         search: ''
                     }
-                }
+                },
+                fetchPolicy: 'no-cache'
             });
             const {
                 data: {
@@ -70,7 +71,8 @@ function AdminUsersView(): React.ReactElement {
                     active: newActive,
                     search: newSearchText
                 }
-            }
+            },
+            fetchPolicy: 'no-cache'
         });
         const {
             data: {

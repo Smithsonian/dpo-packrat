@@ -434,7 +434,7 @@ describe('DB Creation Test Suite', () => {
                 CountMeta: 0,
                 CountSetup: 0,
                 CountTour: 0,
-                EdanUUID: null,
+                EdanUUID: H.Helpers.randomSlug(),
                 PosedAndQCd: true,
                 ApprovedForPublication: true,
                 idScene: 0
@@ -4587,6 +4587,19 @@ describe('DB Fetch Xref Test Suite', () => {
         expect(SC).toBeTruthy();
     });
 
+    test('DB Fetch Xref: Scene.fetchByUUID', async () => {
+        let SC: DBAPI.Scene[] | null = null;
+        if (scene && scene.EdanUUID) {
+            SC = await DBAPI.Scene.fetchByUUID(scene.EdanUUID);
+            if (SC) {
+                expect(SC.length).toBeGreaterThan(0);
+                if (SC.length > 0)
+                    expect(SC).toEqual(expect.arrayContaining([scene]));
+            }
+        }
+        expect(SC).toBeTruthy();
+    });
+
     test('DB Fetch Xref: fetchWorkflowStepFromXref', async () => {
         let WFS: DBAPI.WorkflowStep[] | null = null;
         if (systemObjectAssetVersion && workflowStep) {
@@ -7919,6 +7932,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ProjectDocumentation.fetchDerivedFromProjects([])).toBeNull();
         expect(await DBAPI.Scene.fetch(0)).toBeNull();
         expect(await DBAPI.Scene.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.Scene.fetchByUUID('')).toBeNull();
         expect(await DBAPI.Scene.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.Scene.fetchChildrenScenes(0)).toBeNull();
         expect(await DBAPI.Sentinel.fetch(0)).toBeNull();

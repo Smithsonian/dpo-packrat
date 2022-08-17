@@ -9,7 +9,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState, Fragment } from 'react';
 import { AssetIdentifiers } from '../../../../../components';
 import { StateIdentifier, useMetadataStore, StateRelatedObject, useRepositoryStore, useSubjectStore } from '../../../../../store';
-import { MetadataType } from '../../../../../store/metadata';
+import { FieldErrors, MetadataType } from '../../../../../store/metadata';
 import ReferenceModels from './ReferenceModels';
 import NonModelAssets from './NonModelAssets';
 import SceneDataForm from './SceneDataForm';
@@ -35,10 +35,11 @@ const useStyles = makeStyles(() => ({
 interface SceneProps {
     readonly metadataIndex: number;
     setInvalidMetadataStep: (valid: boolean) => void;
+    fieldErrors?: FieldErrors;
 }
 
 function Scene(props: SceneProps): React.ReactElement {
-    const { metadataIndex, setInvalidMetadataStep } = props;
+    const { metadataIndex, setInvalidMetadataStep, fieldErrors } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { scene, file } = metadata;
@@ -318,6 +319,7 @@ function Scene(props: SceneProps): React.ReactElement {
                             onSelectSubtitle={onSelectSubtitle}
                             onUpdateCustomSubtitle={onUpdateCustomSubtitle}
                             hasPrimaryTheme
+                            hasError={fieldErrors?.scene.subtitles ?? false}
                         />
                     </Box>
                 </Fragment>

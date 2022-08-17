@@ -114,6 +114,8 @@ export class WorkflowUpload implements WF.IWorkflow {
                     return this.handleError(`WorkflowUpload.validateFiles unable to unzip asset version ${RSR.fileName}: ${zipRes.error}`);
 
                 const files: string[] = await ZS.getJustFiles(null);
+                if (!files || files.length === 0)
+                    return this.handleError('Zip file is unexpectedly empty');
                 for (const fileName of files) {
                     const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(fileName);
                     if (!readStream)
