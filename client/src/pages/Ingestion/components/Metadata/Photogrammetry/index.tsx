@@ -176,7 +176,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             relatedObjects={photogrammetry.sourceObjects}
                             onAdd={openSourceObjectModal}
                             onRemove={onRemoveSourceObject}
-                            relationshipLanguage='Parents'
+                            relationshipLanguage='Source Objects For This Ingest'
                         />
                     </Box>
                     <Box mb={2}>
@@ -185,7 +185,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             relatedObjects={photogrammetry.derivedObjects}
                             onAdd={openDerivedObjectModal}
                             onRemove={onRemoveDerivedObject}
-                            relationshipLanguage='Children'
+                            relationshipLanguage='Objects Derived From This Ingest'
                         />
                     </Box>
                 </React.Fragment>

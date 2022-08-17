@@ -764,7 +764,6 @@ export type GetModelConstellationForAssetVersionResult = {
 export type GetSceneForAssetVersionInput = {
   idAssetVersion: Scalars['Int'];
   directory?: Maybe<Scalars['String']>;
-  idScene: Scalars['Int'];
 };
 
 export type GetSceneForAssetVersionResult = {
