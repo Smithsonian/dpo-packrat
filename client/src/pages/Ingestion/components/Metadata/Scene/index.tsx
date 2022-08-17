@@ -82,7 +82,7 @@ function Scene(props: SceneProps): React.ReactElement {
 
     // state responsible for SceneDataForm
     const [sceneData, setSceneData] = useState({
-        idScene: 1,
+        idScene: 0,
         idAssetThumbnail: 0,
         Name: '',
         CountScene: 0,
@@ -104,6 +104,7 @@ function Scene(props: SceneProps): React.ReactElement {
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
+
     useEffect(() => {
         if (idAsset)
             updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.scene);
@@ -124,6 +125,7 @@ function Scene(props: SceneProps): React.ReactElement {
             // console.log(`Scene Metadata Non-Model-Assets: ${JSON.stringify(data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets)}`);
             const ModelSceneXref: any = data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref;
             const SvxNonModelAssets: any = data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets;
+
             setReferenceModels(ModelSceneXref);
             setNonModelAssets(SvxNonModelAssets);
             setSceneData(data.getSceneForAssetVersion?.SceneConstellation?.Scene);
