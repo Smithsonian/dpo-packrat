@@ -65,11 +65,12 @@ export class osStats {
     emitInfo(): string {
         const totalTime: number = this.userTotal + this.niceTotal + this.sysTotal + this.idleTotal + this.irqTotal;
         const deltaTime: number = this.userDelta + this.niceDelta + this.sysDelta + this.idleDelta + this.irqDelta;
-        return `CPU Count ${this.CPUs.length}; busy percentage ${this.emitBusyPerc()}; delta time ${deltaTime}; total time ${totalTime}`;
+        return `CPU Count ${this.CPUs.length}; busy ${this.emitBusyPerc()}; delta time ${deltaTime}; total time ${totalTime}`;
     }
 
     emitBusyPerc(): string {
-        return (this.busyPerc * 100).toFixed(2) + '%';
+        const perc: string = (this.busyPerc * 100).toFixed(2) + '%'; // pre-pad to get fixed width number
+        return ('       ' + perc).substring(perc.length);
     }
 }
 

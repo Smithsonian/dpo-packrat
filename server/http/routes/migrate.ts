@@ -3,6 +3,7 @@ import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
 import { SceneMigration, SceneMigrationResults } from '../../utils/migration/SceneMigration';
 import { SceneMigrationPackages } from '../../utils/migration/MigrationData';
+import { ASL, LocalStore } from '../../utils/localStore';
 import * as UTIL from '../../tests/db/api';
 
 import { Request, Response } from 'express';
@@ -122,6 +123,9 @@ class Migrator {
 
     private async migrateScene(scenePackage: SceneMigrationPackage, user: DBAPI.User): Promise<SceneMigrationResults> {
         const res: SceneMigrationResults = await Migrator.semaphoreMigrations.runExclusive(async (value) => {
+            const LS: LocalStore = await ASL.getOrCreateStore();
+            LS.incrementRequestID();
+
             this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) Starting; semaphore count ${value}`);
             const SM: SceneMigration = new SceneMigration();
             const SMR: SceneMigrationResults = await SM.migrateScene(user.idUser, scenePackage, true);
