@@ -214,4 +214,6 @@ input GetSceneForAssetVersionInput {
 type GetSceneForAssetVersionResult {
     idAssetVersion: Int!
     SceneConstellation: SceneConstellation
+    success: Boolean!
+    message: String
 }

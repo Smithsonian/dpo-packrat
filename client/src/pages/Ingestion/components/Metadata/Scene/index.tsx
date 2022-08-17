@@ -121,8 +121,9 @@ function Scene(props: SceneProps): React.ReactElement {
                     }
                 }
             });
-            // console.log(`Scene Metadata MSX: ${JSON.stringify(data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref)}`);
-            // console.log(`Scene Metadata Non-Model-Assets: ${JSON.stringify(data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets)}`);
+            if (!data.getSceneForAssetVersion.success) {
+                toast.error(`Error: unable to fetch scene; Message ${data.getSceneForAssetVersion.message}`, { autoClose: false });
+            }
             const ModelSceneXref: any = data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref;
             const SvxNonModelAssets: any = data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets;
 
@@ -133,7 +134,7 @@ function Scene(props: SceneProps): React.ReactElement {
             const missingModels: boolean = ModelSceneXref ? ModelSceneXref.some(reference => reference.idModel === 0) : false;
             const missingNonModelAssets: boolean = SvxNonModelAssets ? SvxNonModelAssets.some(reference => (reference.idAssetVersion ?? 0) === 0) : false;
             const invalidMetadataStep: boolean = missingModels || missingNonModelAssets;
-            setInvalidMetadataStep(invalidMetadataStep);
+            setInvalidMetadataStep(invalidMetadataStep || !data.getSceneForAssetVersion.success);
             if (invalidMetadataStep)
                 toast.warning('Unable to ingest scene because some or all referenced assets cannot be found', { autoClose: false });
         }
