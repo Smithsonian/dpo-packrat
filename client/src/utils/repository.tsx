@@ -58,18 +58,19 @@ export function getTermForSystemObjectType(objectType: eSystemObjectType): strin
     }
 }
 
-export function getRepositoryTreeNodeId(idSystemObject: number, objectType: eSystemObjectType, idObject: number, index: number): string {
-    return `${idSystemObject}-${eSystemObjectType[objectType]}-${idObject}-${index}`;
+export function getRepositoryTreeNodeId(idSystemObject: number, objectType: eSystemObjectType, idObject: number, hierarchy: string): string {
+    return `${idSystemObject}-${eSystemObjectType[objectType]}-${idObject}-${hierarchy}`;
 }
 
 type ParsedNodeId = {
     idSystemObject: number;
     idObject: number;
     objectType: eSystemObjectType;
+    hierarchy: string;
 };
 
 export function parseRepositoryTreeNodeId(nodeId: string): ParsedNodeId {
-    const [nodeSystemObjectId, nodeObjectType, nodeObjectId] = nodeId.split('-');
+    const [nodeSystemObjectId, nodeObjectType, nodeObjectId, hierarchy] = nodeId.split('-');
     const idSystemObject = Number.parseInt(nodeSystemObjectId, 10);
     const objectType = Number.parseInt(nodeObjectType, 10);
     const idObject = Number.parseInt(nodeObjectId, 10);
@@ -77,7 +78,8 @@ export function parseRepositoryTreeNodeId(nodeId: string): ParsedNodeId {
     return {
         idSystemObject,
         objectType,
-        idObject
+        idObject,
+        hierarchy
     };
 }
 
@@ -114,6 +116,18 @@ export function parseRepositoryUrl(search: string): any {
         const dateString: string = decodeURIComponent(dateCreatedToS[1]);
         const dateCreatedTo: Date = convertLocalDateToUTC(new Date(dateString));
         filter.dateCreatedTo = safeDate(dateCreatedTo);
+    }
+
+    const searchS: RegExpMatchArray | null = search.match(/search=(.*?)([&]|$)/);
+    if (searchS && searchS.length >= 2) {
+        const searchString: string = decodeURIComponent(searchS[1]);
+        filter.search = searchString;
+    }
+
+    const keywordS: RegExpMatchArray | null = search.match(/keyword=(.*?)([&]|$)/);
+    if (keywordS && keywordS.length >= 2) {
+        const keywordString: string = decodeURIComponent(keywordS[1]);
+        filter.keyword = keywordString;
     }
     return filter;
 }
@@ -229,6 +243,8 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
         case eSystemObjectType.eActor:                  iconProps.overrideText = 'AC'; break;
         case eSystemObjectType.eStakeholder:            iconProps.overrideText = 'ST'; break;
         case eSystemObjectType.eItem:                   iconProps.overrideText = 'MG'; break;
+        case eSystemObjectType.eSubject:                iconProps.overrideText = 'SU'; break;
+        case eSystemObjectType.eCaptureData:            iconProps.overrideText = 'CD'; break;
         case eSystemObjectType.eAsset:
         case eSystemObjectType.eAssetVersion:
             return { icon: fileIcon, color };

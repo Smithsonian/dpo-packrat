@@ -186,7 +186,8 @@ function useIngest(): UseIngest {
                         sourceObjects,
                         derivedObjects,
                         updateNotes,
-                        subtitles
+                        subtitles,
+                        skipSceneGenerate
                     } = model;
 
                     let {
@@ -214,7 +215,8 @@ function useIngest(): UseIngest {
                         directory,
                         systemCreated,
                         sourceObjects,
-                        derivedObjects
+                        derivedObjects,
+                        skipSceneGenerate
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);

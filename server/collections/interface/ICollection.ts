@@ -45,6 +45,7 @@ export type CollectionQueryOptions = {
  */
 export interface ICollection {
     queryCollection(query: string, rows: number, start: number, options: CollectionQueryOptions | null): Promise<CollectionQueryResults | null>;
+    fetchContent(id?: string, url?: string): Promise<EdanRecord | null>;
     publish(idSystemObject: number, ePublishState: number): Promise<boolean>;
     createEdanMDM(edanmdm: EdanMDMContent, status: number, publicSearch: boolean): Promise<EdanRecord | null>;
     createEdan3DPackage(path: string, sceneFile?: string | undefined): Promise<EdanRecord | null>;
@@ -53,7 +54,7 @@ export interface ICollection {
 
     /** Identifier services */
     /** Pass in a null shoulder to use the system shoulder */
-    generateArk(shoulder: string | null, prependNameAuthority: boolean): string;
+    generateArk(shoulder: string | null, prependNameAuthority: boolean, isMedia: boolean): string;
     extractArkFromUrl(url: string): string | null;
     transformArkIntoUrl(arkId: string): string
     getArkNameMappingAuthority(): string;

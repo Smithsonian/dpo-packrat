@@ -470,3 +470,12 @@ INSERT INTO Project (idProject, Name) VALUES (99, 'Lineages'); INSERT INTO Syste
 INSERT INTO Project (idProject, Name) VALUES (100, 'Awhi-Girlhood'); INSERT INTO SystemObject (idProject, Retired) VALUES (100, 0);
 INSERT INTO Project (idProject, Name) VALUES (101, 'Searchable Museum Pottery'); INSERT INTO SystemObject (idProject, Retired) VALUES (101, 0);
 INSERT INTO UnitEdan (idUnit, Name, Abbreviation) VALUES (24, NULL, 'SAAMPAIK');
+
+-- 2022-07-01 Jon
+INSERT INTO Project (idProject, Name) VALUES (102, 'Awhi-Girlhood Phase2'); INSERT INTO SystemObject (idProject, Retired) VALUES (102, 0);
+INSERT INTO Project (idProject, Name) VALUES (103, 'Chandra X-Ray Observatory-2021'); INSERT INTO SystemObject (idProject, Retired) VALUES (103, 0);
+INSERT INTO Project (idProject, Name) VALUES (104, 'Triceratops Cds'); INSERT INTO SystemObject (idProject, Retired) VALUES (104, 0);
+INSERT INTO Project (idProject, Name) VALUES (105, 'Nps-Devils Tower'); INSERT INTO SystemObject (idProject, Retired) VALUES (105, 0);
+INSERT INTO Project (idProject, Name) VALUES (106, 'Pullman Car'); INSERT INTO SystemObject (idProject, Retired) VALUES (106, 0);
+UPDATE Unit SET ARKPrefix = 'ch5' WHERE Abbreviation = 'CFCH';
+UPDATE Unit SET ARKPrefix = 'uj5' WHERE Abbreviation = 'OCIO';

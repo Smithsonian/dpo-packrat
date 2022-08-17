@@ -7,7 +7,7 @@ import * as THREE from 'three';
 
 export type SvxNonModelAsset = {
     uri: string;
-    type: string;
+    type: 'Image' | 'Article';
     description?: string | undefined;
     size?: number | undefined;
     idAssetVersion?: number | undefined;
@@ -28,6 +28,7 @@ export class SvxExtraction {
 
     metaImages: SVX.IImage[] | null = null;
     metaArticles: SVX.IArticle[] | null = null;
+    modelAssets: SVX.IAsset[] | null = null;
     nonModelAssets: SvxNonModelAsset[] | null = null;
 
     extractScene(): DBAPI.Scene {
@@ -92,6 +93,7 @@ export class SvxExtraction {
         if (!this.document.models)
             return false;
         this.modelDetails = [];
+        this.modelAssets = [];
 
         // extract nodes that correspond to our models, for use in determining tranlation, scale, and rotation
         const nodeModelMap: Map<number, SVX.INode> = new Map<number, SVX.INode>();
@@ -166,8 +168,10 @@ export class SvxExtraction {
                 }
             }
             for (const derivative of model.derivatives) {
-                if (derivative.usage !== 'Image2D') {   // Skip image derivatives here
-                    for (const asset of derivative.assets) {
+                for (const asset of derivative.assets) {
+                    this.modelAssets.push(asset);
+
+                    if (derivative.usage !== 'Image2D') {   // Skip image derivatives here
                         const xref: DBAPI.ModelSceneXref = new DBAPI.ModelSceneXref({
                             idModelSceneXref: 0, idModel: 0, idScene: 0, Name: asset.uri, Usage: derivative.usage, Quality: derivative.quality,
                             FileSize: asset.byteSize !== undefined ? BigInt(asset.byteSize) : null, UVResolution: asset.imageSize || null,

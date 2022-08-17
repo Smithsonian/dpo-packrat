@@ -27,6 +27,7 @@ interface headerColumn {
     name: string;
     width?: number | string;
     flex?: string;
+    align?: 'left' | 'center' | 'right';
 }
 
 function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElement {
@@ -51,7 +52,8 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
             width: '70px',
         }, {
             name: 'Notes',
-            flex: '1'
+            flex: '1',
+            align: 'left'
         }
     ];
 
@@ -95,8 +97,8 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
             <table className={clsx(classes.container, classes.fixedTable)}>
                 <thead>
                     <tr style={{ borderBottom: '1px solid grey' }}>
-                        {headers.map(({ name, width, flex }, index: number) => (
-                            <th key={index} align='center' style={{ width, padding: 5, flex }}>
+                        {headers.map(({ name, width, flex, align }, index: number) => (
+                            <th key={index} align={align} style={{ width, padding: 5, flex }}>
                                 <Typography className={classes.header}>{name}</Typography>
                             </th>
                         ))}

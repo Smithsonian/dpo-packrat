@@ -13,6 +13,12 @@ import { SolrClient, eSolrCore } from './SolrClient';
 import { IndexSolr } from './IndexSolr';
 import { Vocabulary } from '../../../types/graphql';
 
+enum eArkIDIdentifier {
+    eNone,
+    ePartial,
+    eFull
+}
+
 interface SolrQueryResult {
     result: any;
     error: any;
@@ -52,11 +58,20 @@ export class NavigationSolr implements NAV.INavigation {
 
         // search: string;                         // search string from the user -- for now, only apply to root-level queries, as well as queries of units, projects, and subjects
         if (filter.search && !filter.idRoot) {     // if we have a search string, apply it to root-level queries (i.e. with no specified filter root ID)
-            SQ = SQ.q(filter.search.replace(/:/g, '\\:'));      // search text, escaping :
-            if (!this.testSearchStringForArkID(filter.search))
-                SQ = SQ.qf({ CommonIdentifier: 5, _text_: 1 }); // match both common identifiers, boosted, and general text, unboosted
-            else
-                SQ = SQ.qf({ CommonIdentifier: 5 });            // match only common identifiers
+            switch (this.testSearchStringForArkID(filter.search)) {
+                case eArkIDIdentifier.eNone:                                // Not an ARK ID
+                    SQ = SQ.q(filter.search.replace(/:/g, '\\:'));          // search text, escaping :
+                    SQ = SQ.qf({ CommonIdentifier: 5, _text_: 1 });         // match both common identifiers, boosted, and general text, unboosted
+                    break;
+                case eArkIDIdentifier.ePartial:                             // Partial ARK ID (ark:.*)
+                    SQ = SQ.q(`*${filter.search.replace(/:/g, '\\:')}*`);   // search text, escaping :, wrapped in wildcards
+                    SQ = SQ.qf({ CommonIdentifier: 5 });                    // match only common identifiers
+                    break;
+                case eArkIDIdentifier.eFull:                                // Full ARK ID (http://n2t.net/ark:.*)
+                    SQ = SQ.q(filter.search.replace(/:/g, '\\:'));          // search text, escaping :
+                    SQ = SQ.qf({ CommonIdentifier: 5 });                    // match only common identifiers
+                    break;
+            }
             SQ = SQ.sort({ CommonOTNumber: 'asc', score: 'desc' }); // sort by the object type enumeration, then by Solr score pseudofield
         } else {
             SQ = SQ.q('*:*');
@@ -137,15 +152,21 @@ export class NavigationSolr implements NAV.INavigation {
         return SQ;
     }
 
-    /** returns true if search appears to only be an ARKID (no whitespace, starts with ark:/ or starts with http://n2t.net/ark: ) */
-    private testSearchStringForArkID(search: string): boolean {
-        // http://n2t.net/ark:/65665/ye38ff23cd0-11a9-4b72-a24b-fdcc267dd296
+    /** if search appears to only be an ARKID (no whitespace, and starts with)
+     *      "http://n2t.net/ark:"  -- returns eArkIDIdentifier.eFull
+     *      "ark:"                 -- returns eArkIDIdentifier.ePartial
+     *  otherwise returns eArkIDIdentifier.eNone
+     */
+    private testSearchStringForArkID(search: string): eArkIDIdentifier {
+        // http://n2t.net/ark:/65665/ye38ff23cd0-11a9-4b72-a24b-fdcc267dd296 or
+        // http://n2t.net/ark:65665/ye38ff23cd0-11a9-4b72-a24b-fdcc267dd296
         const searchNormalized: string = search.toLowerCase();
-        if (!searchNormalized.startsWith('http://n2t.net/ark:/') && !searchNormalized.startsWith('ark:/'))
-            return false;
+        const fullArkID: boolean = searchNormalized.startsWith('http://n2t.net/ark:');
+        if (!fullArkID && !searchNormalized.startsWith('ark:'))
+            return eArkIDIdentifier.eNone;
         if (search.indexOf(' ') != -1)
-            return false;
-        return true;
+            return eArkIDIdentifier.eNone;
+        return fullArkID ? eArkIDIdentifier.eFull : eArkIDIdentifier.ePartial;
     }
 
     private async computeFilterParamFromSystemObjectType(SQ: solr.Query, systemObjectTypes: COMMON.eSystemObjectType[], filterSchema: string, operator: string): Promise<solr.Query> {

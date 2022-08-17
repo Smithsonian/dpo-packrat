@@ -52,6 +52,7 @@ interface SubjectFieldsProps extends SubjectDetailFields {
     ItemDetails?: any;
     itemData?: any;
     subtitle?: string;
+    originalSubtitle?: string;
     onSubtitleUpdate?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -75,6 +76,7 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
         ItemDetails,
         itemData,
         subtitle,
+        originalSubtitle,
         onSubtitleUpdate
     } = props;
     const classes = useStyles();
@@ -119,7 +121,7 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                                     padding: '0px 10px',
                                                     borderRadius: 5,
                                                     border: '1px solid rgba(141, 171, 196, 0.4)',
-                                                    ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Subtitle'))
+                                                    ...updatedFieldStyling(subtitle !== originalSubtitle)
                                                 }}
                                             />
                                         </TableCell>

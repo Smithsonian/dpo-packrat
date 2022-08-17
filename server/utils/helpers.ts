@@ -10,6 +10,7 @@ import { promises as fsp } from 'fs';
 import * as crypto from 'crypto';
 
 import * as LOG from './logger';
+import { Readable, Writable } from 'stream';
 
 export type IOResults = {
     success: boolean;
@@ -282,14 +283,14 @@ export class Helpers {
     /** Computes a hash from a stream. @param hashMethod Pass in 'sha512' or 'sha1', for example */
     static async computeHashFromStream(stream: NodeJS.ReadableStream, hashMethod: string): Promise<HashResults> {
         try {
-            let dataLength: number = 0;
-            const hash = crypto.createHash(hashMethod);
-            stream.pipe(hash);
-
             return new Promise<HashResults>((resolve) => {
+                let dataLength: number = 0;
+                const hash = crypto.createHash(hashMethod);
+
                 stream.on('data', (chunk: Buffer) => { dataLength += chunk.length; });
                 stream.on('end', () => { resolve({ hash: hash.digest('hex'), dataLength, success: true }); });
                 stream.on('error', () => { resolve({ hash: '', dataLength: 0, success: false, error: 'Helpers.computeHashFromFile() Stream Error' }); });
+                stream.pipe(hash);
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.computeHashFromFile', LOG.LS.eSYS, error);
@@ -345,14 +346,17 @@ export class Helpers {
     }
 
     static async writeStreamToFile(readStream: NodeJS.ReadableStream, fileName: string): Promise<IOResults> {
+        let writeStream: NodeJS.WritableStream | null = null;
         try {
-            const writeStream: NodeJS.WritableStream = await fs.createWriteStream(fileName);
+            writeStream = await fs.createWriteStream(fileName);
             const retValue: IOResults = await Helpers.writeStreamToStream(readStream, writeStream);
-            writeStream.end();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.writeStreamToFile', LOG.LS.eSYS, error);
             return { success: false, error: `Helpers.writeStreamToFile: ${JSON.stringify(error)}` };
+        } finally {
+            if (writeStream)
+                writeStream.end();
         }
     }
 
@@ -373,23 +377,39 @@ export class Helpers {
 
     static async writeStreamToStreamComputeSize(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream, waitOnEnd: boolean = false): Promise<IOResultsSized> {
         try {
-            let size: number = 0;
-            readStream.pipe(writeStream);
             return new Promise<IOResultsSized>((resolve) => {
+                let size: number = 0;
+
                 readStream.on('data', (chunk: Buffer) => { size += chunk.length; });
                 /* istanbul ignore else */
                 if (!waitOnEnd) {
                     writeStream.on('finish', () => { resolve({ success: true, size }); }); /* istanbul ignore next */
                     writeStream.on('end', () => { resolve({ success: true, size }); }); /* istanbul ignore next */
                 } else {
+                    readStream.on('end', () => { resolve({ success: true, size }); });
                     writeStream.on('end', () => { resolve({ success: true, size }); });
                 } /* istanbul ignore next */
-                writeStream.on('error', () => { resolve({ success: false, error: 'Unknown stream error', size }); });
+                readStream.on('error', () => { resolve({ success: false, error: 'Unknown readstream error', size }); });
+                writeStream.on('error', () => { resolve({ success: false, error: 'Unknown writestream error', size }); });
+
+                readStream.pipe(writeStream);
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.writeStreamToStream', LOG.LS.eSYS, error);
             return { success: false, error: `Helpers.writeFileToStream: ${JSON.stringify(error)}`, size: 0 };
         }
+    }
+
+    static destroyReadStream(stream: NodeJS.ReadableStream): void {
+        const read: Readable = stream as Readable;
+        if (read)
+            read.destroy();
+    }
+
+    static destroyWriteStream(stream: NodeJS.WritableStream): void {
+        const write: Writable = stream as Writable;
+        if (write)
+            write.destroy();
     }
 
     static async writeJsonAndComputeHash(dest: string, obj: any, hashMethod: string, replacer: any | null = null): Promise<HashResults> {

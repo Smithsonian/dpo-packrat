@@ -4,7 +4,7 @@
  *
  * This component renders object details for the Repository Details UI.
  */
-import { Box, Checkbox, Typography, Select, MenuItem } from '@material-ui/core';
+import { Box, Checkbox, Typography, Select, MenuItem, Tooltip } from '@material-ui/core';
 import { withStyles, makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../components';
@@ -17,6 +17,8 @@ import { getTermForSystemObjectType } from '../../../../utils/repository';
 import { LoadingButton } from '../../../../components';
 import { toast } from 'react-toastify';
 import { eSystemObjectType, ePublishedState } from '@dpo-packrat/common';
+import { ToolTip } from '../../../../components';
+import { HelpOutline } from '@material-ui/icons';
 
 const useStyles = makeStyles(({ typography, palette }) => ({
     detail: {
@@ -232,6 +234,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Publish</LoadingButton>
                             &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>API Only</LoadingButton>
                             &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
+                            &nbsp;<Tooltip arrow title={ <ToolTip text={scenePublishNotes} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
                         </Box>
                     }
                 />
@@ -349,3 +352,15 @@ function Detail(props: DetailProps): React.ReactElement {
 }
 
 export default ObjectDetails;
+
+const scenePublishNotes =
+`In order to publish a scene to EDAN, the following criteria must be met:
+-The scene must have thumbnails.
+-The scene must be Posed and QC'd (and marked as such on the Details tab).
+-The scene must be Approved for Publishing (and marked as such on the Details tab).
+-The license controlling the scene must allow for publishing (i.e. not "None" and not "Restricted").
+Clicking "Publish" transmits the scene package to EDAN and marks the EDAN record as searchable. Scene downloads will be sent, too, if the license allows it.
+Clicking "API Only" transmits the scene package to EDAN, but marks the EDAN record as not searchable.  As well, scene downloads are sent if allowed by the license.
+For published scenes, clicking "Unpublish" marks the scene package as inactive and not searchable.
+Changes made to scenes are only published to EDAN when the user makes use of "Publish", "API Only", or "Unpublish".
+Users must explicitly publish these changes to EDAN.`;

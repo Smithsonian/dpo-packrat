@@ -1007,6 +1007,7 @@ export type IngestModelInput = {
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
   updateNotes?: Maybe<Scalars['String']>;
+  skipSceneGenerate?: Maybe<Scalars['Boolean']>;
 };
 
 export type IngestSceneInput = {

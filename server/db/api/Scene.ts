@@ -136,6 +136,18 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
         }
     }
 
+    static async fetchByUUID(EdanUUID: string): Promise<Scene[] | null> {
+        if (!EdanUUID)
+            return null;
+        try {
+            return DBC.CopyArray<SceneBase, Scene>(
+                await DBC.DBConnection.prisma.scene.findMany({ where: { EdanUUID }, }), Scene);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.fetchByUUID', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
     /**
      * Computes the array of Scenes that are connected to any of the specified items.
      * Scenes are connected to system objects; we examine those system objects which are in a *derived* relationship
