@@ -184,7 +184,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 if ((timeout > 0) &&
                     ((new Date().getTime() - startTime.getTime()) >= timeout))
                     return this._results = { success: false, error: 'Cook timeout expired' };
-                LOG.info(`JobCook [${this.name()}] JobCook.pollingLoop sleeping [${pollNumber}]`, LOG.LS.eJOB);
+                // LOG.info(`JobCook [${this.name()}] JobCook.pollingLoop sleeping [${pollNumber}]`, LOG.LS.eJOB);
                 await H.Helpers.sleep(CookRetryDelay);
             }
         } catch (error) {
