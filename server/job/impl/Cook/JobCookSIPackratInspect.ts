@@ -820,7 +820,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             }
             return new ZipFile(tempFile.path, true);
         } catch (err) {
-            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally  to ${tempFile.path}`, LOG.LS.eJOB, err);
+            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}`, LOG.LS.eJOB, err);
             return null;
         } finally {
             await tempFile.cleanup();
