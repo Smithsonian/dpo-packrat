@@ -128,7 +128,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     mappedId = assetMap.get(path.basename(fileName));
                 if (!mappedId) {
                     const error: string = `Missing ${fileName} and ${path.basename(fileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.saferStringify)}`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -220,7 +220,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedAssetId: number | undefined = assetIDMap.get(modelMaterialUVMap.idAsset);
                 if (!mappedAssetId) {
                     const error: string = `Missing ${modelMaterialUVMap.idAsset} from asset ID Map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -241,7 +241,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelMaterialChannel.idModelMaterial);
                 if (!mappedModelMaterialId) {
                     const error: string = `Missing ${modelMaterialChannel.idModelMaterial} from model material ID map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -251,7 +251,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     mappedModelMaterialUVMapId = modelMaterialUVMapIDMap.get(modelMaterialChannel.idModelMaterialUVMap);
                     if (!mappedModelMaterialUVMapId) {
                         const error: string = `Missing ${modelMaterialChannel.idModelMaterialUVMap} from model material UV ID map`;
-                        LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                        LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                         // return { success: false, error };
                         continue;
                     }
@@ -271,7 +271,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelObjectModelMaterialXref.idModelMaterial);
                 if (!mappedModelMaterialId) {
                     const error: string = `Missing ${modelObjectModelMaterialXref.idModelMaterial} from model material ID map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -279,7 +279,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelObjectId: number | undefined = modelObjectIDMap.get(modelObjectModelMaterialXref.idModelObject);
                 if (!mappedModelObjectId) {
                     const error: string = `Missing ${modelObjectModelMaterialXref.idModelObject} from model object ID map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }

@@ -973,7 +973,7 @@ export class AssetStorageAdapter {
         } else
             LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to extract metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
 
-        return { asset, assetVersion, success: res.success };
+        return { asset, assetVersion, success: true }; // we always return true at this point; i.e. we do not treat metadata extraction failures as ingestion failure
     }
 
     static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestAssetResult> {
