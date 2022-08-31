@@ -9,7 +9,7 @@
 import { Box, Tab, TabProps, Tabs, Button, Typography } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
-import { StateRelatedObject, eObjectMetadataType } from '../../../../../store';
+import { StateRelatedObject, eObjectMetadataType, UploadReferences } from '../../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -50,8 +50,7 @@ import { deleteObjectConnection } from '../../../hooks/useDetailsView';
 import { sharedButtonProps } from '../../../../../utils/shared';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
 import { NewTabLink } from '../../../../../components';
-import { useHistory } from 'react-router-dom';
-import { updateSystemObjectUploadRedirect } from '../../../../../constants';
+import { eIngestionMode } from '../../../../../constants';
 import AssetGrid from './AssetGrid';
 import MetadataControlTable from './MetadataControlTable';
 import MetadataDisplayTable from './MetadataDisplayTable';
@@ -117,7 +116,8 @@ type DetailsTabParams = {
     originalSubtitle?: string;
     objectVersions: SystemObjectVersion[];
     detailQuery: any;
-    metadata: Metadata[]
+    metadata: Metadata[];
+    onUploaderOpen: (objectType: eIngestionMode, references: UploadReferences) => void;
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
@@ -136,11 +136,11 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         originalSubtitle,
         objectVersions,
         detailQuery,
-        metadata
+        metadata,
+        onUploaderOpen
     } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
-    const history = useHistory();
 
     const handleTabChange = (_, nextTab: number) => {
         setTab(nextTab);
@@ -191,13 +191,13 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     const ObjectVersionTableTab = (index: number, systemObjectType?: eSystemObjectType) => (
         <TabPanel value={tab} index={index} id={`tab-${index}`}>
-            <ObjectVersionTable idSystemObject={idSystemObject} objectVersions={objectVersions} systemObjectType={systemObjectType} />
+            <ObjectVersionTable idSystemObject={idSystemObject} objectVersions={objectVersions} systemObjectType={systemObjectType} onUploaderOpen={onUploaderOpen} />
         </TabPanel>
     );
 
     const AssetDetailsTableTab = (index: number, idSystemObject: number, systemObjectType?: eSystemObjectType) => (
         <TabPanel value={tab} index={index} id={`tab-${index}`}>
-            <AssetGrid idSystemObject={idSystemObject} systemObjectType={systemObjectType} />
+            <AssetGrid idSystemObject={idSystemObject} systemObjectType={systemObjectType} onUploaderOpen={onUploaderOpen} />
         </TabPanel>
     );
 
@@ -226,19 +226,10 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         ...sharedProps
     };
 
-    let redirect = () => {};
+    let onAddVersion = () => {};
     if (detailsQueryResult.data?.getDetailsTabDataForObject.Asset?.idAsset) {
-        redirect = () => {
-            const newEndpoint = updateSystemObjectUploadRedirect(
-                detailsQueryResult.data?.getDetailsTabDataForObject.Asset?.idAsset,
-                null,
-                eSystemObjectType.eAsset,
-                detailsQueryResult.data?.getDetailsTabDataForObject.Asset?.AssetType
-            );
-            history.push(newEndpoint);
-        };
+        onAddVersion = () => onUploaderOpen(eIngestionMode.eUpdate, { idAsset: detailsQueryResult.data?.getDetailsTabDataForObject.Asset?.idAsset });
     }
-
     switch (objectType) {
         case eSystemObjectType.eUnit:
             tabs = ['Details', 'Related', 'Metadata'];
@@ -364,7 +355,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                 <React.Fragment>
                     <TabPanel value={tab} index={0} id='tab-0'>
                         <AssetVersionsTable idSystemObject={idSystemObject} />
-                        <Button className={classes.updateButton} variant='contained' disableElevation color='primary' style={{ width: 'fit-content' }} onClick={redirect}>
+                        <Button className={classes.updateButton} variant='contained' disableElevation color='primary' style={{ width: 'fit-content' }} onClick={onAddVersion}>
                             Add Version
                         </Button>
                     </TabPanel>
@@ -381,7 +372,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0} id='tab-0'>
-                        <AssetVersionDetails {...detailsProps} />
+                        <AssetVersionDetails {...detailsProps} onUploaderOpen={onUploaderOpen} />
                     </TabPanel>
                     {RelatedTab(1)}
                     {MetadataTab(2, eObjectMetadataType.eDetailView, metadata)}

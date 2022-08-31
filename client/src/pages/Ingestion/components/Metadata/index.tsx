@@ -29,7 +29,6 @@ import {
     useItemStore,
     useMetadataStore,
     useVocabularyStore,
-    useUploadStore,
     useSubjectStore,
     FieldErrors
 } from '../../../../store';
@@ -81,7 +80,6 @@ function Metadata(): React.ReactElement {
     const [metadatas, getMetadataInfo, validateFields, getFieldErrors] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields, state.getFieldErrors]);
     const { ingestionStart, ingestionComplete } = useIngest();
     const getAssetType = useVocabularyStore(state => state.getAssetType);
-    const [setUpdateMode] = useUploadStore(state => [state.setUpdateMode]);
     const metadataLength = metadatas.length;
     const query = qs.parse(location.search) as QueryParams;
     const { fileId, type } = query;
@@ -165,7 +163,6 @@ function Metadata(): React.ReactElement {
             if (success) {
                 toast.success('Ingestion complete');
                 ingestionComplete();
-                setUpdateMode(false);
             } else {
                 setDisableNavigation(false);
                 toast.error(`Ingestion failed, please try again later. Error: ${message}`);
