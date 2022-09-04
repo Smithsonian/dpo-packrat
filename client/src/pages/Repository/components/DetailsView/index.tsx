@@ -159,8 +159,8 @@ function DetailsView(): React.ReactElement {
 
     const onUploaderOpen = (uploadType: eIngestionMode, references: UploadReferences) => {
         if (references.idAsset !== uploadReferences?.idAsset || references.idSOAttachment !== uploadReferences?.idSOAttachment) onUploaderReset();
-        if (uploadType === eIngestionMode.eAttach && references.idSOAttachment)setUploadReferences({ idSOAttachment: references.idSOAttachment });
-        if (uploadType === eIngestionMode.eUpdate && references.idAsset) setUploadReferences({ idAsset: references.idAsset });
+        if (uploadType === eIngestionMode.eAttach) setUploadReferences({ idSOAttachment: references.idSOAttachment });
+        if (uploadType === eIngestionMode.eUpdate) setUploadReferences({ idAsset: references.idAsset, idSOAttachment: references.idSOAttachment });
     };
 
     useEffect(() => {
@@ -603,7 +603,15 @@ function DetailsView(): React.ReactElement {
                         onUploaderOpen={onUploaderOpen}
                     />
                 </Box>
-                {(uploadReferences && uploadReferences.idAsset) && <SpecialUploadList uploadType={eIngestionMode.eUpdate} onUploaderClose={onUploaderReset} idAsset={uploadReferences?.idAsset} idSO={idSystemObject} />}
+                {(uploadReferences && uploadReferences.idAsset) && (
+                    <SpecialUploadList
+                        uploadType={eIngestionMode.eUpdate}
+                        onUploaderClose={onUploaderReset}
+                        idAsset={uploadReferences?.idAsset}
+                        idSOAttachment={idSystemObject}
+                        idSO={idSystemObject}
+                    />
+                )}
                 {(uploadReferences && uploadReferences.idSOAttachment) && <SpecialUploadList uploadType={eIngestionMode.eAttach} onUploaderClose={onUploaderReset} idSOAttachment={uploadReferences?.idSOAttachment} idSO={idSystemObject} />}
 
                 <Box display='flex' flex={1} padding={2}>

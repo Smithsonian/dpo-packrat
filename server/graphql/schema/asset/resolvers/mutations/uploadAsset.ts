@@ -70,11 +70,10 @@ class UploadAssetWorker extends ResolverBase {
             LOG.error('uploadAsset unable to retrieve user context', LOG.LS.eGQL);
             return { status: UploadStatus.Noauth, error: 'User not authenticated' };
         }
-
-        if (this.idSOAttachment)
-            await this.appendToWFReport(`<b>Upload starting</b>: ATTACH ${filename}`, true);
-        else if (!this.idAsset)
+        if (this.idAsset)
             await this.appendToWFReport(`<b>Upload starting</b>: ADD ${filename}`, true);
+        else if (this.idSOAttachment)
+            await this.appendToWFReport(`<b>Upload starting</b>: ATTACH ${filename}`, true);
         else
             await this.appendToWFReport(`<b>Upload starting</b>: UPDATE ${filename}`, true);
 
