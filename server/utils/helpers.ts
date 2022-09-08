@@ -201,7 +201,7 @@ export class Helpers {
 
     static async removeDirectory(directory: string, recursive: boolean = false, logErrors: boolean = true): Promise<IOResults> {
         try {
-            await fsp.rmdir(directory, { recursive });
+            await fsp.rmdir(directory, { recursive }); // await fsp.rm(directory, { recursive });
         } catch (error) /* istanbul ignore next */ {
             if (logErrors)
                 LOG.error('Helpers.removeDirectory', LOG.LS.eSYS, error);

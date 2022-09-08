@@ -39,9 +39,9 @@
     "@testing-library/user-event": "12.1.4",
     "@types/jest": "26.0.13",
     "@types/lodash": "4.14.161",
-    "@types/node": "14.10.1",
+    "@types/node": "16.11.49",
     "@types/react": "16.9.49",
-    "@types/react-dom": "16.9.8",
+    "@types/react-dom": "16.9.9",
     "@types/react-router": "5.1.8",
     "@types/react-router-dom": "5.1.5",
     "@types/yup": "0.29.7",
@@ -60,12 +60,12 @@
     "prop-types": "15.7.2",
     "query-string": "6.13.2",
     "randomatic": "3.1.1",
-    "react": "16.13.1",
+    "react": "16.14.0",
     "react-activation": "0.5.5",
     "react-app-rewired": "2.1.6",
     "react-datepicker": "3.8.0",
     "react-debounce-input": "3.2.2",
-    "react-dom": "16.13.1",
+    "react-dom": "16.14.0",
     "react-dropzone": "11.1.0",
     "react-helmet": "6.1.0",
     "react-icons": "3.11.0",
@@ -109,7 +109,7 @@
     ]
   },
   "volta": {
-    "node": "14.17.1",
-    "yarn": "1.22.10"
+    "node": "16.17.0",
+    "yarn": "1.22.19"
   }
 }

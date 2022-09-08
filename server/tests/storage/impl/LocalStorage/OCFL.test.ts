@@ -27,8 +27,8 @@ beforeAll(() => {
 
 afterAll(async done => {
     LOG.info(`Removing test storage root from ${path.resolve(testStorageRoot)}`, LOG.LS.eTEST);
-    await H.Helpers.removeDirectory(testStorageRoot, true);
-    // await H.Helpers.sleep(2000);
+    // await H.Helpers.removeDirectory(testStorageRoot, true);
+    await H.Helpers.sleep(2000);
     done();
 });
 
@@ -223,6 +223,7 @@ describe('OCFL Object', () => {
         // test with an input stream
         await testAddOrUpdate(ocflObject, OHTS.captureData1, 505, true, true);
         await testAddOrUpdate(ocflObject, OHTS.captureData1, 1110, false, true, true); // manually "add" using both filename and inputstream -- should fail
+        LOG.info('** force just metadata **', LOG.LS.eTEST);
         await testAddOrUpdate(ocflObject, OHTS.model1, 0, true, false, false, true); // force just metadata
     });
 
@@ -387,7 +388,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     }
 
     // Internal Validation
-    ioResults = await ocflObject.validate();
+    ioResults = await ocflObject.validate(forceJustMetadata);
     if (!ioResults.success)
         LOG.error(ioResults.error, LOG.LS.eTEST);
     expect(ioResults.success).toBeTruthy();
