@@ -17,6 +17,7 @@ import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore, u
 import {
     getObjectInterfaceDetails,
     getRepositoryTreeNodeId,
+    parseRepositoryTreeNodeId,
     getTreeColorVariant,
     getTreeViewColumns,
     isRepositoryItemSelected
@@ -148,11 +149,13 @@ interface RepositoryTreeViewProps {
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { isModal = false, selectedItems = [], onSelect, onUnSelect } = props;
-    const [tree, getChildren, getMoreRoot, getMoreChildren, cursors] = useRepositoryStore(state => [
+    const [tree, getChildren, deleteChildren, getMoreRoot, getMoreChildren, setExpandedCount, cursors] = useRepositoryStore(state => [
         state.tree,
         state.getChildren,
+        state.deleteChildren,
         state.getMoreRoot,
         state.getMoreChildren,
+        state.setExpandedCount,
         state.cursors
     ]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
@@ -168,15 +171,17 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
     const onNodeToggle = useCallback(
         async (_, nodeIds: string[]) => {
-            if (!nodeIds.length) return;
-            const [nodeId] = nodeIds.slice();
-            const alreadyLoaded = tree.has(nodeId);
+            if (!nodeIds.length)
+                return;
+            const [nodeId] = nodeIds.slice(); // when expanding, nodeId is from the most recently expanded node. When contracting, nodeId is from the last expanded node that is still expanded.
+            const expanded: boolean = setExpandedCount(nodeIds.length);
+            // console.log(`onNodeToggle nodeId=${nodeId} expanded=${expanded} nodeIds=${JSON.stringify(nodeIds)}`);
+            if (expanded)
+                deleteChildren(nodeId);
 
-            if (!alreadyLoaded) {
-                getChildren(nodeId);
-            }
+            getChildren(nodeId);
         },
-        [tree, getChildren]
+        [tree, getChildren, deleteChildren]
     );
 
     // recursive
@@ -184,9 +189,15 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
         if (!children) return null;
         return children.map((child: NavigationResultEntryState, index: number) => {
-            const { idSystemObject, objectType, idObject, name, metadata } = child;
-            const nodeIndex = child.index;
-            const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject, nodeIndex ? nodeIndex : 0);
+            const { idSystemObject, objectType, idObject, name, metadata, hierarchy } = child;
+            let idSystemObjectParent: number = 0;
+            if (parentNodeId) {
+                const { idSystemObject: idSystemObjectParentUpdated } = parseRepositoryTreeNodeId(parentNodeId);
+                idSystemObjectParent = idSystemObjectParentUpdated;
+            }
+
+            const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject,
+                (hierarchy ? hierarchy + '|' : '') + idSystemObjectParent.toString() );
             const childNodes = tree.get(nodeId);
 
             let childNodesContent: React.ReactNode = <TreeLabelLoading />;

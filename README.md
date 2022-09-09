@@ -2,13 +2,12 @@
 Data Repository and Workflow Management for 3D data captures, models, and scenes
 
 ## Setup instructions (Development):
-
 *Note: `.env.dev` is required and it follows `.env.template`*
 
-### Development:
-
 #### Prerequisites:
-It is recommended to install [Volta](https://volta.sh/) which keeps node version in check. The versions can be specified in `package.json` and when switched to the directory of the project, volta automatically switches to the correct node version.
+* It is recommended to install [Volta](https://volta.sh/) which keeps node version in check. The versions can be specified in `package.json` and when switched to the directory of the project, volta automatically switches to the correct node version.
+* It is also recommended to use [Yarn](https://yarnpkg.com/) as the primary package manager for Packrat.
+
 
 ```
 cd ~
@@ -16,26 +15,61 @@ curl https://get.volta.sh | bash
 volta install node
 volta install yarn
 ```
-Now when you switch to the `dpo-packrat` repo, your node version would automatically pinned to the correct version by volta.
+When switching to the `dpo-packrat` repo, the node version will automatically be pinned to the correct version by volta.
 
-
-1. Install the dependencies:
+#### Steps:
+1. Install the dependencies *(at the root level)*. [Lerna](https://lerna.js.org/) will ensure the subdirectories’ packages are also installed.
 
 ``` 
 yarn
 ```
 
-2. Build the docker images, if they're already available then this would just start them (if you're on a mac then make sure Docker for mac is running):
+2. Export the environment variables *(at the root level)* after `.env.dev` has been configured.
+```
+export $(grep -v ‘^#’ .env.dev | xargs)
+```
 
-``` 
+3. Generate GraphQL and Prisma code *(in the server directory)*.
+*Note: make sure to generate them whenever changes have been made to the GraphQL schemas.*
+
+```
+cd server
+yarn generate
+```
+
+4. If using Docker, build the Docker images and containers *(at the root)*. If they're already available then issuing the following command would start the containers.
+*Note: if building the images and containers, this process can take an upwards of 20 minutes.*
+
+**If setting up Packrat without Docker, skip to step 9**
+
+```
+cd .. 
 yarn dev
 ```
 
-3. Now the docker containers should start in 10s-20s. The client should be reachable at `http://localhost:3000` and server should be reachable at `http://localhost:4000` or the ports you specified in `.env.dev` following `.env.template`
+5. Once the Docker images and containers are built, they should start in 10s-20s. The client should be reachable at `http://localhost:3000` and server should be reachable at `http://localhost:4000`, or the ports specified in `.env.dev`.
 
-4. If you want to follow debug logs for `client` or `server` container then just run `yarn log:client` or `yarn log:server`
+6. To follow debug logs for `client` or `server` container, run `yarn log:client` or `yarn log:server` *(at the root)*.
 
-5. If not using docker run each command in a separate terminal for the package you're developing:
+7. To log in and use Packrat, the database must be first initialized with data and user info *(in the server directory)*.
+
+```
+cd server
+yarn initdbdock
+```
+
+8. After the database has been initialized, Solr enterprise-search needs to be indexed in order to populate the repository.
+Navigate to `localhost:4000/solrindex` in the browser and wait for the result to appear. Once Solr finishes indexing, set up via Docker is complete!
+
+*Note: sometimes a failure message will appear even upon successful indexing. Successful indexing can be seen in the server container logs and by visiting the repository and finding the newly populated entries.*
+
+9. If setting up Packrat without Docker, compile the typescript code in a separate terminal *(for the common directory)*.
+```
+cd common
+yarn start
+```
+
+10. Run each command in separate terminals *(at the root level)*:
 
 **For client:**
 
@@ -49,10 +83,16 @@ yarn start:client
 yarn start:server
 ``` 
 
+11. Setting up Packrat without Docker gives users the flexbility to install and configure their own database and Solr caching as needed.
+
+
+**Congratulations, Packrat is now ready for use!**
+
+
 # Alternative docker workflow:
 
 ```
-# If step 2. wasn't working, follow this alternative instead.
+# If step 4 for building and starting the docker containers are failing, follow this alternative instead.
 # Creates Devbox for packrat
 yarn devbox:up
 # Creates DB for devbox
@@ -106,20 +146,3 @@ sudo mount /tmp -o remount,exec
 5. Wait for the images to be build/updated, then use `./conf/scripts/cleanup.sh` script to cleanup any residual docker images are left (optional)
 
 6. Make sure nginx is active using `sudo service nginx status --no-pager`
-
-## Start databases (Production server only):
-
-1. Start `dev` or `prod` databases using `./conf/scripts/initdb.sh` script
-```
-MYSQL_ROOT_PASSWORD=<your_mysql_password> ./conf/scripts/initdb.sh dev
-```
-*Note: `MYSQL_ROOT_PASSWORD` be same what you mentioned in the `.env.dev` or `.env.prod` file for that particular environment. Mostly would be used for `dev` environment.*
-
-## Update production nginx configuration (Production server only):
-
-1. Make the changes to production nginx configuration is located at `scripts/proxy/nginx.conf`
-
-2. Use `conf/scripts/refreshProxy.sh` script to restart/update nginx service
-```
-./conf/scripts/refreshProxy.sh
-```

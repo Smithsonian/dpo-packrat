@@ -52,7 +52,7 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
         updateProjectsAndItemsForSubjects(selectedSubjects);
     },
     updateProjectsAndItemsForSubjects: async (selectedSubjects: StateSubject[]): Promise<void> => {
-        const { addItems, fetchIngestionItems, updateNewItemEntireSubject } = useItemStore.getState();
+        const { addItems, fetchAndInitializeIngestionItems, updateNewItemEntireSubject } = useItemStore.getState();
 
         if (!selectedSubjects.length) {
             addItems([]);
@@ -63,7 +63,7 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
             updateNewItemEntireSubject(false);
 
         try {
-            await fetchIngestionItems(selectedSubjects.map(subject => subject.id));
+            await fetchAndInitializeIngestionItems(selectedSubjects.map(subject => subject.id));
         } catch (error) {
             toast.error('Failed to get ingestion items');
         }

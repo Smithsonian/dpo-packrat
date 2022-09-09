@@ -38,6 +38,7 @@ module.exports = {
         // '**/tests/storage/interface/AssetStorageAdapter.test.ts',
         // '**/tests/storage/impl/LocalStorage/OCFL.test.ts',
         // '**/tests/storage/impl/LocalStorage/LocalStorage.test.ts',
+        // '**/tests/utils/email.test.ts',
         // '**/tests/utils/helpers.test.ts',
         // '**/tests/utils/parser/bagitReader.test.ts',
         // '**/tests/utils/parser/bulkIngestReader.test.ts',

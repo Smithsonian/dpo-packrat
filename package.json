@@ -1,6 +1,6 @@
 {
   "name": "dpo-packrat",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "private": true,
   "license": "Apache-2.0",
   "description": "Data Repository and Workflow Management for 3D data captures, models, and scenes",
@@ -29,6 +29,7 @@
   "scripts": {
     "start:client": "yarn workspace @dpo-packrat/client start",
     "start:server": "yarn workspace @dpo-packrat/server start",
+    "start:server:inspect": "yarn workspace @dpo-packrat/server start:inspect",
     "log:client": "docker logs -f packrat-client",
     "log:server": "docker logs -f packrat-server",
     "start:client:prod": "yarn workspace @dpo-packrat/client start:prod",

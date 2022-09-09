@@ -4,9 +4,12 @@ import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Config } from '../config';
 import * as LOG from '../utils/logger';
+import { CPUMonitor } from '../utils/osStats';
 
 import { logtest } from './routes/logtest';
+import { heartbeat } from './routes/heartbeat';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
+import { migrate } from './routes/migrate';
 import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
@@ -17,6 +20,9 @@ import { ApolloServer } from 'apollo-server-express';
 import cookieParser from 'cookie-parser';
 import { graphqlUploadExpress } from 'graphql-upload';
 import { v2 as webdav } from 'webdav-server';
+
+const monitorCPU: boolean = true;
+const monitorVerbose: boolean = true;
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
@@ -41,6 +47,10 @@ export class HttpServer {
 
         // call to initalize the EventFactory, which in turn will initialize the AuditEventGenerator, supplying the IEventEngine
         EventFactory.getInstance();
+        if (monitorCPU) {
+            const monitor: CPUMonitor = new CPUMonitor(1000, 90, 10, monitorVerbose); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerbose -> verbose logging
+            monitor.start();
+        }
         return res;
     }
 
@@ -65,8 +75,10 @@ export class HttpServer {
         server.applyMiddleware({ app: this.app, cors: false });
 
         this.app.get('/logtest', logtest);
+        this.app.get('/heartbeat', heartbeat);
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
+        this.app.get('/migrate/*', migrate);
         this.app.get(`${Downloader.httpRoute}*`, HttpServer.idRequestMiddleware2);
         this.app.get(`${Downloader.httpRoute}*`, download);
 

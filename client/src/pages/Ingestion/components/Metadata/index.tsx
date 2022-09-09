@@ -187,11 +187,10 @@ function Metadata(): React.ReactElement {
         }
 
         if (assetType.scene) {
-            return <Scene metadataIndex={metadataIndex} setInvalidMetadataStep={setInvalidMetadataStep} />;
+            return <Scene metadataIndex={metadataIndex} setInvalidMetadataStep={setInvalidMetadataStep} fieldErrors={fieldErrors} />;
         }
 
         if (assetType.model) {
-            // Model takes in additional props for onPrevious, onClickRight, isLast, and rightLoading because it imports an additional copy of <SidebarBottomNavigator />
             return <Model metadataIndex={metadataIndex} fieldErrors={fieldErrors} />;
         }
 

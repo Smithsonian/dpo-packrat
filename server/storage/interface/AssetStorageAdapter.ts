@@ -106,14 +106,6 @@ export type IngestStreamOrFileInput = {
     doNotUpdateParentVersion?: boolean | undefined;
 };
 
-export type IngestStreamOrFileResult = {
-    success: boolean;
-    error?: string;
-    asset?: DBAPI.Asset | null | undefined;
-    assetVersion?: DBAPI.AssetVersion | null | undefined;
-    systemObjectVersion?: DBAPI.SystemObjectVersion | null | undefined;
-};
-
 type AssetFileOrStreamResult = {
     success: boolean;
     fileName?: string;
@@ -961,9 +953,11 @@ export class AssetStorageAdapter {
         let res: H.IOResults = { success: true };
         const extractor: META.MetadataExtractor = new META.MetadataExtractor();
         const AFOSR: AssetFileOrStreamResult = await AssetStorageAdapter.assetFileOrStream(storage, asset, assetVersion);
-        if (AFOSR.success && (AFOSR.fileName || AFOSR.stream))
+        if (AFOSR.success && (AFOSR.fileName || AFOSR.stream)) {
             res = await extractor.extractMetadata(AFOSR.fileName ?? '', AFOSR.stream);
-        else
+            if (AFOSR.stream)
+                H.Helpers.destroyReadStream(AFOSR.stream);
+        } else
             LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to compute metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${AFOSR.error}`, LOG.LS.eSTR);
 
         // Persist extracted metadata
@@ -979,10 +973,10 @@ export class AssetStorageAdapter {
         } else
             LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to extract metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
 
-        return { asset, assetVersion, success: res.success };
+        return { asset, assetVersion, success: true }; // we always return true at this point; i.e. we do not treat metadata extraction failures as ingestion failure
     }
 
-    static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestStreamOrFileResult> {
+    static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestAssetResult> {
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} starting`, LOG.LS.eSTR);
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
@@ -1013,11 +1007,15 @@ export class AssetStorageAdapter {
             ISI.readStream = fs.createReadStream(ISI.localFilePath);
         }
 
-        const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.readStream, wsRes.writeStream);
-        if (!wrRes.success) {
-            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to write to stream: ${wrRes.error}`;
-            LOG.error(error, LOG.LS.eSTR);
-            return { success: false, error };
+        try {
+            const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.readStream, wsRes.writeStream);
+            if (!wrRes.success) {
+                const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to write to stream: ${wrRes.error}`;
+                LOG.error(error, LOG.LS.eSTR);
+                return { success: false, error };
+            }
+        } finally {
+            wsRes.writeStream.end();
         }
 
         let comRes: STORE.AssetStorageResultCommit | null = null;
@@ -1069,8 +1067,7 @@ export class AssetStorageAdapter {
         };
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
         LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
-        return { success: IAR.success, error: IAR.error, asset: comRes.assets[0] || null,
-            assetVersion: comRes.assetVersions[0] || null, systemObjectVersion: IAR.systemObjectVersion };
+        return IAR;
     }
 
     static async renameAsset(asset: DBAPI.Asset, fileNameNew: string, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {

@@ -34,6 +34,17 @@ const subtitleSchema = yup.object().shape({
     id: yup.number()
 });
 
+const selectedSubtitleValidation = {
+    test: array => {
+        const selectedSubtitle = array.find(subtitle => subtitle.selected);
+        if (!selectedSubtitle) return false;
+        if (selectedSubtitle.subtitleOption === eSubtitleOption.eInput)
+            return !!selectedSubtitle.value;
+        return true;
+    },
+    message: 'Should provide a valid subtitle/name for ingestion'
+};
+
 const identifierValidation = {
     test: array => array.length && array.every(identifier => identifier.identifier.length),
     message: 'Should provide at least 1 identifier with valid identifier ID'
@@ -54,16 +65,7 @@ const notesWhenUpdate = {
     then: yup.string().required()
 };
 
-const selectedSubtitleValidation = {
-    test: array => {
-        const selectedSubtitle = array.find(subtitle => subtitle.selected);
-        if (!selectedSubtitle) return false;
-        if (selectedSubtitle.subtitleOption === eSubtitleOption.eInput)
-            return !!selectedSubtitle.value;
-        return true;
-    },
-    message: 'Should provide a valid subtitle/name for ingestion'
-};
+export const subtitleFieldsSchema = yup.array().of(subtitleSchema).test(selectedSubtitleValidation);
 
 export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     systemCreated: true,
@@ -165,22 +167,23 @@ export const defaultModelFields: ModelFields = {
     idAsset: 0,
     subtitles: [{
         value: '',
-        selected: true,
+        selected: false,
         subtitleOption: eSubtitleOption.eInput,
         id: 1
     }, {
         value: '',
-        selected: false,
+        selected: true,
         subtitleOption: eSubtitleOption.eNone,
         id: 0
-    }]
+    }],
+    skipSceneGenerate: false
 };
 
 export const modelFieldsSchemaUpdate = yup.object().shape({
     systemCreated: yup.boolean().required(),
     uvMaps: yup.array().of(uvMapSchema),
     sourceObjects: yup.array().of(sourceObjectSchema),
-    dateCreated: yup.date().typeError('Date Created is required'),
+    dateCreated: yup.date().typeError('Date Created is required').max(Date(), 'Date Created cannot be set in the future'),
     creationMethod: yup.number().typeError('Creation method is required'),
     modality: yup.number().typeError('Modality is required'),
     units: yup.number().typeError('Units is required'),

@@ -9,7 +9,7 @@ import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
 import { eVocabularyID, eVocabularySetID } from '@dpo-packrat/common';
 
-export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
+export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term' | 'eVocabID'>;
 export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
 
 type AssetType = {
@@ -149,7 +149,7 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             if (foundVocabulary) {
                 const { Term } = foundVocabulary;
 
-                assetType.photogrammetry = (Term === 'Capture Data Set: Photogrammetry');
+                assetType.photogrammetry = (Term === 'Capture Data Set: Photogrammetry' || Term === 'Capture Data File');
                 assetType.scene = (Term === 'Scene');
                 assetType.model = (Term === 'Model' || Term === 'Model Geometry File');
                 assetType.attachment = (Term === 'Attachment');
