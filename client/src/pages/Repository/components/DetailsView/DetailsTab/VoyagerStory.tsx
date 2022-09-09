@@ -6,8 +6,7 @@
 
 import * as React from 'react';
 import useScript from '../../../hooks/useScript';
-import '../../../../../global/quill.snow.css';
-import useVoyagerStyling from '../../../hooks/useVoyagerStoryStyling';
+import useLink from '../../../hooks/useLink';
 import Config from '../../../../../config';
 
 declare global {
@@ -30,14 +29,11 @@ type VoyagerStoryProps = {
 function VoyagerStory(props: VoyagerStoryProps): React.ReactElement {
     const { root, document, width, height, mode } = props;
 
-
-    useVoyagerStyling();
-    // Note: This script is used to fetch styling. In future versions of voyager this script may not be necessary
-    useScript(Config.voyager.quill);
+    useLink({ rel: 'stylesheet', href: Config.voyager.storyCSS });
 
     // Note that this script is in a location maintained by Andrew Gunther ...
     // Our non-prod builds should use a location that is accessible and updatable by our DEV team
-    useScript(Config.voyager.story);
+    useScript(Config.voyager.storyJS);
 
     // NOTE:  root and document are *not* properties of voyager-story
     // Instead, they need to be present as arguments to the URL for the page

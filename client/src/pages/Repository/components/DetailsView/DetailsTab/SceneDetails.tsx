@@ -4,15 +4,20 @@
  *
  * This component renders details tab for Scene specific details used in DetailsTab component.
  */
-import { Box, makeStyles } from '@material-ui/core';
+import { Box, makeStyles, Tooltip } from '@material-ui/core';
 import React, { useEffect, useRef } from 'react';
 import { Loader } from '../../../../../components';
 import { GetSceneDocument } from '../../../../../types/graphql';
 import { DetailComponentProps } from './index';
 import { apolloClient } from '../../../../../graphql/index';
-import { ReadOnlyRow, CheckboxField, InputField } from '../../../../../components/index';
+import { ReadOnlyRow, CheckboxField, InputField, FieldType } from '../../../../../components/index';
 import { useDetailTabStore } from '../../../../../store';
 import { eSystemObjectType } from '@dpo-packrat/common';
+import { isFieldUpdated } from '../../../../../utils/repository';
+import { CheckboxNoPadding } from '../../../../../components/controls/CheckboxField';
+import { getUpdatedCheckboxProps } from '../../../../../utils/repository';
+import { withDefaultValueBoolean } from '../../../../../utils/shared';
+import { HelpOutline } from '@material-ui/icons';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {
@@ -36,9 +41,9 @@ export const useStyles = makeStyles(({ palette }) => ({
 function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const isMounted = useRef(false);
-    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate } = props;
+    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle } = props;
     const [SceneDetails, updateDetailField] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField]);
-
+    const sceneData = data?.getDetailsTabDataForObject.Scene;
     useEffect(() => {
         const retrieveSceneData = async () => {
             if (data && !loading) {
@@ -100,6 +105,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     required
                     padding='3px 10px 1px 10px'
                     containerStyle={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', paddingTop: '4px' }}
+                    updated={subtitle !== originalSubtitle}
                 />
                 <CheckboxField
                     label='Approved for Publication'
@@ -109,18 +115,31 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     required
                     padding='1px 10px'
                     containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+                    updated={isFieldUpdated(SceneDetails, sceneData,'ApprovedForPublication')}
                 />
-                <CheckboxField
-                    label="Posed and QC'd"
-                    name='PosedAndQCd'
-                    value={SceneDetails.PosedAndQCd}
-                    onChange={setCheckboxField}
-                    disabled={!SceneDetails.CanBeQCd}
-                    tooltip={{ title: 'When checked, downloads will be generated if this scene has a master model as a parent, as well as every time the scene is re-posed. This item is disabled if the scene is missing thumbnails (either in the svx.json or among its ingested assets)', placement: 'left' }}
+                <FieldType
                     required
+                    label="Posed and QC'd"
+                    direction='row'
+                    containerProps={{ alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } }}
                     padding='1px 10px'
-                    containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-                />
+                >
+                    <div style={{ display: 'flex' }}>
+                        <Tooltip title='When checked, downloads will be generated if this scene has a master model as a parent, as well as every time the scene is re-posed. This item is disabled if the scene is missing thumbnails (either in the svx.json or among its ingested assets)' placement='left'>
+                            <HelpOutline
+                                style={{ alignSelf: 'center', cursor: 'pointer', fontSize: '18px' }}
+                            />
+                        </Tooltip>
+                        <CheckboxNoPadding
+                            name='PosedAndQCd'
+                            disabled={!SceneDetails.CanBeQCd}
+                            checked={withDefaultValueBoolean(SceneDetails.PosedAndQCd, false)}
+                            onChange={setCheckboxField}
+                            {...getUpdatedCheckboxProps(isFieldUpdated(SceneDetails, sceneData,'PosedAndQCd'))}
+                            size='small'
+                        />
+                    </div>
+                </FieldType>
                 <ReadOnlyRow
                     label='EDAN UUID'
                     value={SceneDetails.EdanUUID}

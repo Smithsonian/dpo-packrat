@@ -12,14 +12,15 @@ interface SubtitleControlProps {
     objectName: string;
     onSelectSubtitle: (id: number) => void;
     onUpdateCustomSubtitle: (event: React.ChangeEvent<HTMLInputElement>, id: number) => void;
-    hasPrimaryTheme: boolean
+    hasPrimaryTheme: boolean;
+    hasError: boolean;
 }
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: (hasPrimaryTheme) => hasPrimaryTheme ? palette.primary.light : palette.secondary.light,
+        backgroundColor: ({ hasPrimaryTheme, hasError }: { hasPrimaryTheme: boolean, hasError: boolean }) => hasError ? '#e57373' : hasPrimaryTheme ? palette.primary.light : palette.secondary.light,
         width: 'fit-content',
         minWidth: 300,
         borderRadius: 5
@@ -54,15 +55,14 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 }));
 
 function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
-    const { objectName, subtitles, onUpdateCustomSubtitle, onSelectSubtitle, hasPrimaryTheme } = props;
-    const classes = useStyles(hasPrimaryTheme);
+    const { objectName, subtitles, onUpdateCustomSubtitle, onSelectSubtitle, hasPrimaryTheme, hasError } = props;
+    const classes = useStyles({ hasError, hasPrimaryTheme });
     const selectedSubtitle = subtitles.find(subtitle => subtitle.selected === true)?.value;
     const selectedSubtitlesName = selectedSubtitle ? `: ${selectedSubtitle}` : '';
     const sortedSubtitles: SubtitleFields = subtitles.sort((a, b) => a.subtitleOption - b.subtitleOption);
 
 
     const renderSubtitleOptions = (subtitles: SubtitleFields): React.ReactElement => {
-        // console.log('subtitles', subtitles,'objectName', objectName);
         // Case: forced
         if (subtitles.some(option => option.subtitleOption === eSubtitleOption.eForced))
             return (

@@ -250,7 +250,7 @@ class UploadAssetWorker extends ResolverBase {
         }
 
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
-        const results: H.IOResults = workflow ? await workflow.waitForCompletion(3600000) : { success: true };
+        const results: H.IOResults = workflow ? await workflow.waitForCompletion(1 * 60 * 60 * 1000) : { success: true }; // 1 hour
         if (!results.success) {
             for (const assetVersion of assetVersions)
                 await UploadAssetWorker.retireFailedUpload(assetVersion);

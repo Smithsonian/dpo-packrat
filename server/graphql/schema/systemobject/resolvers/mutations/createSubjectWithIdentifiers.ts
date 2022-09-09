@@ -25,7 +25,7 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
 
     if (systemCreated) {
         const ICOL: COL.ICollection = COL.CollectionFactory.getInstance();
-        const ARKId: string = ICOL.generateArk(null, false);
+        const ARKId: string = ICOL.generateArk(null, false, true);
         const Identifier = new DBAPI.Identifier({
             idIdentifier: 0,
             idVIdentifierType: idIentifierType,

@@ -94,7 +94,7 @@ function Uploads(): React.ReactElement {
 
     // Responsible for setting UpdateMode state and file type so that it files to be updated will have the appropriate file type
     useEffect(() => {
-        setUpdateMode(Number(urlParams.get('mode')) === eIngestionMode.eIngest);
+        setUpdateMode(Number(urlParams.get('mode')) === eIngestionMode.eUpdate);
         const fileType = urlParams.get('fileType');
         if (fileType && typeof fileType === 'string') {
             for (let i = 0; i < assetTypes.length; i++) {

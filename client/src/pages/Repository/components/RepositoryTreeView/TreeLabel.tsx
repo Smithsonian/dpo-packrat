@@ -4,7 +4,7 @@
  * This component renders a tree label for StyledTreeItem.
  * The label includes the SO type icon, SO name, and external link icon
  */
-import { Box } from '@material-ui/core';
+import { Box, Tooltip } from '@material-ui/core';
 import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
@@ -61,20 +61,22 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
     }, [waitTime]);
 
     return (
-        <div className={makeStyles?.container}>
-            <div className={makeStyles?.label}>
-                {renderSelected && (
-                    <Box display='flex' alignItems='center' mr='10px'>
-                        {!selected && <FaRegCircle size={16} color={grey[400]} onClick={onSelect} />}
-                        {selected && <FaCheckCircle size={16} color={palette.primary.main} onClick={onUnSelect} />}
-                    </Box>
-                )}
-                <div className={makeStyles?.labelText} style={{ backgroundColor: color }}>
-                    <span title={objectTitle} onClick={onClick}>{label}</span>
+        <Tooltip placement='left' title={getTermForSystemObjectType(objectType)}>
+            <div className={makeStyles?.container}>
+                <div className={makeStyles?.label}>
+                    {renderSelected && (
+                        <Box display='flex' alignItems='center' mr='10px'>
+                            {!selected && <FaRegCircle size={16} color={grey[400]} onClick={onSelect} />}
+                            {selected && <FaCheckCircle size={16} color={palette.primary.main} onClick={onUnSelect} />}
+                        </Box>
+                    )}
+                    <div className={makeStyles?.labelText} style={{ backgroundColor: color }}>
+                        <span title={objectTitle} onClick={onClick}>{label}</span>
+                    </div>
                 </div>
+                <MetadataView header={false} treeColumns={treeColumns} makeStyles={{ text: makeStyles?.text || '', column: makeStyles?.column || '' }} />
             </div>
-            <MetadataView header={false} treeColumns={treeColumns} makeStyles={{ text: makeStyles?.text || '', column: makeStyles?.column || '' }} />
-        </div>
+        </Tooltip>
     );
 }
 

@@ -70,7 +70,7 @@ export class SceneConstellation {
 
             handledAssetSet.add(normalizedName);
 
-            let type: string | null = null;
+            let type: 'Image' | 'Article' | null = null;
             const extension: string = path.extname(assetVersion.FileName).toLowerCase() || assetVersion.FileName.toLowerCase();
             switch (extension) {
                 case '.jpg':

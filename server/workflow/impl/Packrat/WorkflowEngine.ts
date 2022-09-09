@@ -287,24 +287,27 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if (CMIR.units !== undefined) {
             const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CMIR.idModel);
             if (parameterHelper) {
-                const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
-                    new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
-                        new COOK.JobCookSIVoyagerSceneParameters(parameterHelper, CMIR.assetVersionGeometry.FileName, CMIR.units,
-                        CMIR.assetVersionDiffuse?.FileName, sceneBaseName + '.svx.json', undefined, sceneBaseName));
+                if (workflowParams.parameters.skipSceneGenerate) {
+                    LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene per user instruction idSO ${workflowParams.idSystemObject}`, LOG.LS.eWF);
+                } else {
+                    const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
+                        new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
+                            new COOK.JobCookSIVoyagerSceneParameters(parameterHelper, CMIR.assetVersionGeometry.FileName, CMIR.units,
+                            CMIR.assetVersionDiffuse?.FileName, sceneBaseName + '.svx.json', undefined, sceneBaseName));
 
-                const wfParamSIVoyagerScene: WF.WorkflowParameters = {
-                    eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
-                    idSystemObject,
-                    idProject: workflowParams.idProject,
-                    idUserInitiator: workflowParams.idUserInitiator,
-                    parameters: jobParamSIVoyagerScene,
-                };
-
-                const wfSIVoyagerScene: WF.IWorkflow | null = await this.create(wfParamSIVoyagerScene);
-                if (wfSIVoyagerScene)
-                    workflows.push(wfSIVoyagerScene);
-                else
-                    LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIVoyagerScene)}`, LOG.LS.eWF);
+                    const wfParamSIVoyagerScene: WF.WorkflowParameters = {
+                        eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
+                        idSystemObject,
+                        idProject: workflowParams.idProject,
+                        idUserInitiator: workflowParams.idUserInitiator,
+                        parameters: jobParamSIVoyagerScene,
+                    };
+                    const wfSIVoyagerScene: WF.IWorkflow | null = await this.create(wfParamSIVoyagerScene);
+                    if (wfSIVoyagerScene)
+                        workflows.push(wfSIVoyagerScene);
+                    else
+                        LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIVoyagerScene)}`, LOG.LS.eWF);
+                }
             } else
                 LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute parameter info needed by Cook si-voyager-scene workflow from model: ${CMIR.idModel}`, LOG.LS.eWF);
         } else

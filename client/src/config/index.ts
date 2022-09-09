@@ -17,9 +17,9 @@ const Config = {
             -See releases @ https://github.com/Smithsonian/dpo-voyager/releases
     */
     voyager: {
-        story: process.env.NODE_ENV === 'development' ? 'https://3d-api.si.edu/resources/js/voyager-story.min.js': 'https://3d-api.si.edu/resources/js/voyager-story.min.js',
-        explorer: process.env.NODE_ENV === 'development' ? 'https://3d-api.si.edu/resources/js/voyager-explorer.min.js' : 'https://3d-api.si.edu/resources/js/voyager-explorer.min.js',
-        quill: process.env.NODE_ENV === 'development' ? 'https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js' : 'https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js'
+        storyJS: process.env.NODE_ENV === 'development' ? 'https://3d-api.si.edu/resources/js/voyager-story.min.js': 'https://3d-api.si.edu/resources/js/voyager-story.min.js',
+        storyCSS: process.env.NODE_ENV === 'development' ? 'https://3d-api.si.edu/resources/css/voyager-story.min.css' : 'https://3d-api.si.edu/resources/css/voyager-story.min.css',
+        explorerJS: process.env.NODE_ENV === 'development' ? 'https://3d-api.si.edu/resources/js/voyager-explorer.min.js' : 'https://3d-api.si.edu/resources/js/voyager-explorer.min.js',
     }
 };
 

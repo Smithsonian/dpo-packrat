@@ -63,11 +63,11 @@ export class NavigationSolr implements NAV.INavigation {
                     SQ = SQ.q(filter.search.replace(/:/g, '\\:'));          // search text, escaping :
                     SQ = SQ.qf({ CommonIdentifier: 5, _text_: 1 });         // match both common identifiers, boosted, and general text, unboosted
                     break;
-                case eArkIDIdentifier.ePartial:                             // Partial ARK ID (ark:/.*)
+                case eArkIDIdentifier.ePartial:                             // Partial ARK ID (ark:.*)
                     SQ = SQ.q(`*${filter.search.replace(/:/g, '\\:')}*`);   // search text, escaping :, wrapped in wildcards
                     SQ = SQ.qf({ CommonIdentifier: 5 });                    // match only common identifiers
                     break;
-                case eArkIDIdentifier.eFull:                                // Full ARK ID (http://n2t.net/ark:/.*)
+                case eArkIDIdentifier.eFull:                                // Full ARK ID (http://n2t.net/ark:.*)
                     SQ = SQ.q(filter.search.replace(/:/g, '\\:'));          // search text, escaping :
                     SQ = SQ.qf({ CommonIdentifier: 5 });                    // match only common identifiers
                     break;
@@ -153,15 +153,16 @@ export class NavigationSolr implements NAV.INavigation {
     }
 
     /** if search appears to only be an ARKID (no whitespace, and starts with)
-     *      "http://n2t.net/ark:/"  -- returns eArkIDIdentifier.eFull
-     *      "ark:/"                 -- returns eArkIDIdentifier.ePartial
+     *      "http://n2t.net/ark:"  -- returns eArkIDIdentifier.eFull
+     *      "ark:"                 -- returns eArkIDIdentifier.ePartial
      *  otherwise returns eArkIDIdentifier.eNone
      */
     private testSearchStringForArkID(search: string): eArkIDIdentifier {
-        // http://n2t.net/ark:/65665/ye38ff23cd0-11a9-4b72-a24b-fdcc267dd296
+        // http://n2t.net/ark:/65665/ye38ff23cd0-11a9-4b72-a24b-fdcc267dd296 or
+        // http://n2t.net/ark:65665/ye38ff23cd0-11a9-4b72-a24b-fdcc267dd296
         const searchNormalized: string = search.toLowerCase();
-        const fullArkID: boolean = searchNormalized.startsWith('http://n2t.net/ark:/');
-        if (!fullArkID && !searchNormalized.startsWith('ark:/'))
+        const fullArkID: boolean = searchNormalized.startsWith('http://n2t.net/ark:');
+        if (!fullArkID && !searchNormalized.startsWith('ark:'))
             return eArkIDIdentifier.eNone;
         if (search.indexOf(' ') != -1)
             return eArkIDIdentifier.eNone;
