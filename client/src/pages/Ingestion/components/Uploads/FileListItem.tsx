@@ -240,14 +240,14 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     };
 
     let content;
-    // completed list || pending list
-    if ((references && references.idAsset) || idAsset) {
+    // pending list mode || completed list mode
+    if ((references && references.idAsset && references.idSOAttachment) || idAsset && idSOAttachment) {
         content =  (
             <Select value={type} disabled className={classes.typeSelect} disableUnderline SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}>
                 <MenuItem value={type}>Update</MenuItem>
             </Select>
         );
-    } else if ((references && references.idSOAttachment) || idSOAttachment) {
+    } else if (idSOAttachment || (references && references.idSOAttachment)) {
         content = (
             <Select value={type} disabled className={classes.typeSelect} disableUnderline SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}>
                 <MenuItem value={type}>Attachment</MenuItem>

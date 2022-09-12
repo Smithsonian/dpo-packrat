@@ -12,7 +12,7 @@ import { eVocabularyID, eVocabularySetID } from '@dpo-packrat/common';
 export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term' | 'eVocabID'>;
 export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
 
-type AssetType = {
+export type AssetType = {
     photogrammetry: boolean;
     scene: boolean;
     model: boolean;
