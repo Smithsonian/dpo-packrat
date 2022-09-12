@@ -15,10 +15,9 @@ import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../../components';
 import { getDetailsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
-import { updateSystemObjectUploadRedirect, ingestSystemObjectUploadRedirect } from '../../../../../constants';
-import { eSystemObjectType } from '@dpo-packrat/common';
 import { apolloClient } from '../../../../../graphql';
 import { GetModelDocument, GetAssetDetailsForSystemObjectDocument } from '../../../../../types/graphql';
+import { HOME_ROUTES, resolveRoute } from '../../../../../constants';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -156,7 +155,6 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
     const { BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z } = referenceModel;
     const [idAsset, setIdAsset] = useState<null | number>(null);
     const [idSystemObject, setIdSystemObject] = useState<null | number>(null);
-    const [assetType, setAssetType] = useState<null | number>(null);
     const classes = useStyles();
 
     useEffect(() => {
@@ -180,7 +178,6 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
                     }
                 });
                 setIdAsset(assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.idAsset);
-                setAssetType(assetDetail?.data?.getAssetDetailsForSystemObject?.assetDetails?.[0]?.assetType);
             }
         };
 
@@ -230,12 +227,12 @@ function Item(props: ReferenceModelItemProps): React.ReactElement {
                 )}
                 {!isModelInUpload && !isModelInSystem && (
                     <Typography className={clsx(classes.label, classes.labelUnderline)}>
-                        <NewTabLink to={ingestSystemObjectUploadRedirect(Name)}>Ingest</NewTabLink>
+                        <NewTabLink to={resolveRoute(HOME_ROUTES.INGESTION)}>Ingest</NewTabLink>
                     </Typography>
                 )}
-                {!isModelInUpload && isModelInSystem && (
+                {!isModelInUpload && isModelInSystem && idSystemObject && (
                     <Typography className={clsx(classes.label, classes.labelUnderline)}>
-                        <NewTabLink to={updateSystemObjectUploadRedirect(idAsset, idAssetVersion, eSystemObjectType.eModel, assetType)}>Update</NewTabLink>
+                        <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>Update</NewTabLink>
                     </Typography>
                 )}
             </Box>
