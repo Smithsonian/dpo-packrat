@@ -17,8 +17,9 @@ import { FieldType } from '../../../../components';
 import { scrollBarProperties } from '../../../../utils/shared';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
+import { eIngestionMode } from '../../../../constants';
 
-export const useUploadListStyles = makeStyles(({ palette, typography, spacing /*, breakpoints*/ }) => ({
+export const useUploadListStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -86,7 +87,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
             >
                 <UploadListHeader />
                 <Box className={classes.list}>
-                    <FileList files={pending} uploadPendingList />
+                    <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
                     <Typography className={classes.title}>Drag and drop files here or click the button</Typography>
                     <BsCloudUpload className={classes.icon} size='50px' />
                     <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
