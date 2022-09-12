@@ -5,22 +5,23 @@ import clsx from 'clsx';
 import React, { useState } from 'react';
 import { EmptyTable, TextArea, ToolTip } from '../../../../../components';
 import { getDownloadObjectVersionUrlForObject } from '../../../../../utils/repository';
-import { updateSystemObjectUploadRedirect, truncateWithEllipses } from '../../../../../constants/helperfunctions';
+import { truncateWithEllipses, eIngestionMode } from '../../../../../constants/helperfunctions';
 import { rollbackSystemObjectVersion, useObjectAssets } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetGrid';
 import { PublishedStateEnumToString, eSystemObjectType } from '@dpo-packrat/common';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { SystemObjectVersion } from '../../../../../types/graphql';
 import { toast } from 'react-toastify';
-import { useHistory } from 'react-router-dom';
 import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 import API from '../../../../../api';
 import { formatDateAndTime } from '../../../../../utils/shared';
+import { UploadReferences } from '../../../../../store';
 
 interface ObjectVersionsTableProps {
     idSystemObject: number;
     objectVersions: SystemObjectVersion[];
     systemObjectType?: eSystemObjectType | undefined;
+    onUploaderOpen: (objectType: eIngestionMode, references: UploadReferences) => void;
 }
 
 interface headerColumn {
@@ -32,9 +33,8 @@ interface headerColumn {
 
 function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElement {
     const classes = useStyles();
-    const { objectVersions, idSystemObject, systemObjectType } = props;
+    const { objectVersions, idSystemObject, onUploaderOpen } = props;
     const serverEndpoint = API.serverEndpoint();
-    const history = useHistory();
     const [expanded, setExpanded] = useState<number>(-1);
     const [rollbackNotes, setRollbackNotes] = useState<string>('');
     const headers: headerColumn[] = [
@@ -78,12 +78,11 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
         }
     };
 
-    let redirect = () => {};
+    let onAddVersion = () => {};
     if (data && data.getAssetDetailsForSystemObject?.assetDetailRows?.[0]) {
-        const { idAsset, idAssetVersion, assetType } = data.getAssetDetailsForSystemObject?.assetDetailRows?.[0];
-        redirect = () => {
-            const newEndpoint = updateSystemObjectUploadRedirect(idAsset, idAssetVersion, systemObjectType, assetType);
-            history.push(newEndpoint);
+        const { idAsset } = data.getAssetDetailsForSystemObject?.assetDetailRows?.[0];
+        onAddVersion = () => {
+            onUploaderOpen(eIngestionMode.eUpdate, { idAsset });
         };
     }
 
@@ -185,7 +184,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
                     )}
                 </tbody>
             </table>
-            <Button className={classes.btn} variant='contained' disableElevation color='primary' style={{ width: 'fit-content' }} onClick={redirect}>
+            <Button className={classes.btn} variant='contained' disableElevation color='primary' style={{ width: 'fit-content' }} onClick={onAddVersion}>
                 Add Version
             </Button>
         </Box>

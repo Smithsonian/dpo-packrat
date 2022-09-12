@@ -39,7 +39,6 @@ export function parseItemToState(item: Item, selected: boolean, position: number
         entireSubject: EntireSubject,
         subtitle: Name,
         selected,
-        // TODO
         idProject: 0,
         projectName: ''
     };

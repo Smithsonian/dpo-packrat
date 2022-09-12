@@ -10,33 +10,31 @@ import { Box, MenuItem, Select, Typography } from '@material-ui/core';
 import { green, grey, red, yellow } from '@material-ui/core/colors';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import { motion } from 'framer-motion';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FaCheckCircle, FaRedo, FaRegCircle } from 'react-icons/fa';
 import { IoIosCloseCircle } from 'react-icons/io';
 import { MdFileUpload } from 'react-icons/md';
 import { Progress } from '../../../../components';
-import { FileId, VocabularyOption, useUploadStore } from '../../../../store';
+import { FileId, VocabularyOption } from '../../../../store';
 import { palette } from '../../../../theme';
 import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
 import { eIngestionMode } from '../../../../constants';
+import { UploadReferences } from '../../../../store';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
         position: 'relative',
         display: 'flex',
-        minHeight: 60,
         alignItems: 'center',
         backgroundColor: palette.background.paper,
         marginTop: 10,
         borderRadius: 5,
         width: '100%',
         zIndex: 10,
-        overflow: 'hidden',
         [breakpoints.down('lg')]: {
-            minHeight: 50,
             marginTop: 5
-        }
+        },
     },
     item: {
         display: 'flex',
@@ -150,15 +148,20 @@ interface FileListItemProps {
     cancelled: boolean;
     type: number;
     status: string;
-    idAsset: number | undefined;
-    idSOAttachment: number | undefined;
+    idSystemObject?: number;
+    references?: UploadReferences;
+    idAsset?: number;
+    idSOAttachment?: number;
     uploadPendingList: boolean | undefined;
     updateContext: string | undefined;
     onSelect: (id: FileId, selected: boolean) => void;
     onUpload: (id: FileId) => void;
     onCancel: (id: FileId) => void;
+    onCancelSpecial: (uploadType: eIngestionMode, idSO: number) => void;
     onRetry: (id: FileId) => void;
+    onRetrySpecial: (uploadType: eIngestionMode, idSO: number) => void;
     onRemove: (id: FileId) => void;
+    onRemoveSpecial: (uploadType: eIngestionMode, idSO: number) => void;
     onChangeType: (id: FileId, type: number) => void;
 }
 
@@ -175,32 +178,39 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         selected,
         failed,
         uploading,
+        references,
         idAsset,
         idSOAttachment,
-        uploadPendingList,
+        idSystemObject,
         updateContext,
         onChangeType,
         onUpload,
         onCancel,
+        onCancelSpecial,
         onRemove,
+        onRemoveSpecial,
         onRetry,
+        onRetrySpecial,
         onSelect
     } = props;
     const classes = useStyles(props);
-    const [updateWorkflowFileType] = useUploadStore(state => [state.updateWorkflowFileType]);
     const upload = () => onUpload(id);
-    const remove = () => (uploading ? onCancel(id) : onRemove(id));
-    const retry = () => onRetry(id);
+    const remove = () => {
+        const isUpdate = references?.idAsset;
+        const isAttachment = references?.idSOAttachment;
+        const isSpecialUpload = isUpdate || isAttachment;
+        if (uploading && isSpecialUpload) return isUpdate ? onCancelSpecial(eIngestionMode.eUpdate, idSystemObject as number) : onCancelSpecial(eIngestionMode.eAttach, idSystemObject as number);
+        if (!uploading && isSpecialUpload && idSystemObject) return isUpdate ? onRemoveSpecial(eIngestionMode.eUpdate, idSystemObject) : onRemoveSpecial(eIngestionMode.eAttach, idSystemObject);
+        if (uploading && !isSpecialUpload) return onCancel(id);
+        if (!uploading && !isSpecialUpload) return onRemove(id);
+    };
+    const retry = () => {
+        const isUpdate = references?.idAsset;
+        const isAttachment = references?.idSOAttachment;
+        return isUpdate ? onRetrySpecial(eIngestionMode.eUpdate, idSystemObject as number) : isAttachment ? onRetrySpecial(eIngestionMode.eAttach, idSystemObject as number) : onRetry(id);
+    };
     const select = () => (complete ? onSelect(id, !selected) : null);
-    const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode');
-
     let options: React.ReactNode = null;
-
-    // This useEffect block automatically sets the file type of a FileListItem based on the correct type
-    useEffect(() => {
-        if (updateWorkflowFileType) onChangeType(id, updateWorkflowFileType);
-    }, [updateWorkflowFileType]);
 
     if (!complete) {
         options = (
@@ -230,18 +240,17 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     };
 
     let content;
-
     // completed list || pending list
-    if (idAsset || (uploadPendingList && mode === String(eIngestionMode.eUpdate))) {
+    if ((references && references.idAsset) || idAsset) {
         content =  (
-            <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}>
-                <MenuItem value={updateWorkflowFileType || type}>Update</MenuItem>
+            <Select value={type} disabled className={classes.typeSelect} disableUnderline SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}>
+                <MenuItem value={type}>Update</MenuItem>
             </Select>
         );
-    } else if (idSOAttachment || (uploadPendingList && mode === String(eIngestionMode.eAttach))) {
+    } else if ((references && references.idSOAttachment) || idSOAttachment) {
         content = (
-            <Select value={updateWorkflowFileType || type} disabled className={classes.typeSelect} disableUnderline SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}>
-                <MenuItem value={updateWorkflowFileType || type}>Attachment</MenuItem>
+            <Select value={type} disabled className={classes.typeSelect} disableUnderline SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}>
+                <MenuItem value={type}>Attachment</MenuItem>
             </Select>
         );
     } else {
