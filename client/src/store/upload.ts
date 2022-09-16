@@ -140,7 +140,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const isUpdate = references.idAsset;
         const isAttachment = references.idSOAttachment;
 
-        if (acceptedFiles.length > 1) {
+        if (acceptedFiles.length > 1 || acceptedFiles.length === 0) {
             toast.warning(`${isUpdate ? 'Update' : 'Attachment'} upload only accepts 1 file.`);
             return;
         }
