@@ -41,6 +41,10 @@ export function error(message: string | undefined, eLogSection: LS, obj: any | n
         logger.error(message ?? '', { eLS: eLogSection });
 }
 
+export function end(): void {
+    logger.end();
+}
+
 function loggerSectionName(eLogSection: LS | undefined): string {
     switch (eLogSection) {
         case LS.eAUDIT: return 'AUD';
