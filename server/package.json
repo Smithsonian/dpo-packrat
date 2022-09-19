@@ -62,7 +62,7 @@
     "exiftool-vendored": "15.2.0",
     "express": "4.17.1",
     "express-session": "1.17.1",
-    "fs-extra": "9.1.0",
+    "fs-extra": "10.1.0",
     "graphql": "15.5.0",
     "graphql-scalars": "1.9.0",
     "graphql-tools": "7.0.4",

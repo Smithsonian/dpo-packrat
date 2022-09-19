@@ -515,7 +515,7 @@ export class OCFLInventory implements OCFLInventoryType {
             LOG.error('OCFLInventory.readFromDisk', LOG.LS.eSTR, error);
             retValue.success = false;
             retValue.error = JSON.stringify(error);
-            LOG.error(retValue.error, LOG.LS.eSTR);
+            // LOG.error(retValue.error, LOG.LS.eSTR);
         }
 
         // LOG.info(`OCFLInventory.readFromDiskWorker ${dest} done`, LOG.LS.eSTR);

@@ -1,7 +1,3 @@
-import * as path from 'path';
-import * as fs from 'fs-extra';
-import * as crypto from 'crypto';
-
 import { OperationInfo } from '../../../../storage/interface/IStorage';
 import * as OR from '../../../../storage/impl/LocalStorage/OCFLRoot';
 import * as OO from '../../../../storage/impl/LocalStorage/OCFLObject';
@@ -10,6 +6,10 @@ import * as DBAPI from '../../../../db';
 import * as H from '../../../../utils/helpers';
 import * as LOG from '../../../../utils/logger';
 import { ObjectGraphTestSetup } from '../../../db/composite/ObjectGraph.setup';
+
+import * as path from 'path';
+import * as fs from 'fs-extra';
+import * as crypto from 'crypto';
 
 const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
 const ocflRoot: OR.OCFLRoot = new OR.OCFLRoot();
@@ -27,8 +27,8 @@ beforeAll(() => {
 
 afterAll(async done => {
     LOG.info(`Removing test storage root from ${path.resolve(testStorageRoot)}`, LOG.LS.eTEST);
-    // await H.Helpers.removeDirectory(testStorageRoot, true);
-    await H.Helpers.sleep(2000);
+    await H.Helpers.removeDirectory(testStorageRoot, true);
+    // await H.Helpers.sleep(2000);
     done();
 });
 
@@ -250,6 +250,7 @@ describe('OCFL Object', () => {
         const fileLocationExplicit: string = ocflObject.fileLocationExplicit(fileName1, 1);
         expect(fileLocationExplicit).toEqual(path.join(objectRoot, versionContentPartialPath, fileName1));
 
+        // LOG.info(`ocflObject = ${H.Helpers.JSONStringify(ocflObject)}`, LOG.LS.eTEST);
         const headVersion: number = ocflObject.headVersion();
         expect(headVersion).toEqual(19);
     });
@@ -285,18 +286,21 @@ describe('OCFL Teardown', () => {
         let filename: string;
 
         filename = path.join(ocflRoot.computeLocationRepoRoot(), ST.OCFLStorageRootSpecFilename);
+        // LOG.info(`OCFL Teardown ${filename}`, LOG.LS.eTEST);
         results = await H.Helpers.removeFile(filename);
         expect(results.success).toBeTruthy();
         results = await ocflRoot.validate();
         expect(results.success).toBeFalsy();
 
         filename = path.join(ocflRoot.computeLocationRepoRoot(), ST.OCFLStorageRootLayoutFilename);
+        // LOG.info(`OCFL Teardown ${filename}`, LOG.LS.eTEST);
         results = await H.Helpers.removeFile(filename);
         expect(results.success).toBeTruthy();
         results = await ocflRoot.validate();
         expect(results.success).toBeFalsy();
 
         filename = path.join(ocflRoot.computeLocationRepoRoot(), ST.OCFLStorageRootNamasteFilename);
+        // LOG.info(`OCFL Teardown ${filename}`, LOG.LS.eTEST);
         results = await H.Helpers.removeFile(filename);
         expect(results.success).toBeTruthy();
         results = await ocflRoot.validate();
@@ -360,12 +364,11 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
         ? await createRandomFile(directoryName, fileName, fileSize) // create a file
         : path.join(directoryName, fileName);                       // just yield a filename
 
-    let inputStream: fs.ReadStream | null = null;
-    if (useInputStream)
-        inputStream = fs.createReadStream(pathOnDisk);
+    let inputStream: fs.ReadStream | null = useInputStream ? fs.createReadStream(pathOnDisk) : null;
 
     // Add content
     LOG.info(`addOrUpdate ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}${useInputStream ? ' (use inputstream)' : ''}${forceJustMetadata ? ' (just metadata)': ''}`, LOG.LS.eTEST);
+    // LOG.info(`ocflObject 1 forceJustMetadata=${forceJustMetadata} fileSize=${fileSize} ${H.Helpers.JSONStringify(ocflObject)}`, LOG.LS.eTEST);
     let ioResults: H.IOResults;
     if (!forceJustMetadata)
         ioResults = await ocflObject.addOrUpdate(inputStream && !specifyBothPathAndStream ? null : pathOnDisk, inputStream, fileName, metadataOA, opInfo);
@@ -376,7 +379,13 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
         if (!expectSuccess && inputStream)
             inputStream.destroy();
         inputStream = null;
-        await H.Helpers.removeFile(pathOnDisk);
+
+        if (fileSize > 0) {
+            if (specifyBothPathAndStream)
+                await H.Helpers.sleep(0); // needed to avoid unexpected, unhandled exception ENOENT trying to open file represented by pathOnDisk ... and subsequent test failures!
+            LOG.info(`removing ${pathOnDisk}`, LOG.LS.eTEST);
+            await H.Helpers.removeFile(pathOnDisk);
+        }
     }
 
     expect(expectSuccess === ioResults.success).toBeTruthy();
@@ -388,6 +397,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     }
 
     // Internal Validation
+    // LOG.info(`ocflObject 2 forceJustMetadata=${forceJustMetadata} ${H.Helpers.JSONStringify(ocflObject)}`, LOG.LS.eTEST);
     ioResults = await ocflObject.validate(forceJustMetadata);
     if (!ioResults.success)
         LOG.error(ioResults.error, LOG.LS.eTEST);

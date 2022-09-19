@@ -111,7 +111,7 @@ export class OCFLObject {
         const version: number = this._ocflInventory.headVersion;
         const destFolder: string = this.versionContentFullPath(version);
         const contentPath: string = OCFLObject.versionContentPartialPath(version);
-        let results: H.IOResults = { success: false, error: 'Unititalized' };
+        let results: H.IOResults = { success: false, error: 'Uninitialized' };
 
         if (fileName) {
             const destName = path.join(destFolder, fileName);
