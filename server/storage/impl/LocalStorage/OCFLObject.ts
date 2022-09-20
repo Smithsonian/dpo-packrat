@@ -111,7 +111,7 @@ export class OCFLObject {
         const version: number = this._ocflInventory.headVersion;
         const destFolder: string = this.versionContentFullPath(version);
         const contentPath: string = OCFLObject.versionContentPartialPath(version);
-        let results: H.IOResults = { success: false, error: 'Unititalized' };
+        let results: H.IOResults = { success: false, error: 'Uninitialized' };
 
         if (fileName) {
             const destName = path.join(destFolder, fileName);
@@ -395,7 +395,7 @@ export class OCFLObject {
         return results;
     }
 
-    async validate(): Promise<H.IOResults> {
+    async validate(verbose?: boolean): Promise<H.IOResults> {
         let ioResults: H.IOResults;
         let dest: string = this._objectRoot;
 
@@ -477,6 +477,8 @@ export class OCFLObject {
         // Confirm all files on disk are present in root inventory and have correct hashes
         const fileMap: Map<string, string> = ocflInventoryRoot.manifest.getFileMap();
         const fileList: string[] | null = await H.Helpers.getDirectoryEntriesRecursive(this._objectRoot);
+        if (verbose)
+            LOG.info(`fileMap = ${H.Helpers.JSONStringify(fileMap)}\nfileList = ${H.Helpers.JSONStringify(fileList)}`, LOG.LS.eSTR);
         /* istanbul ignore if */
         if (!fileList) {
             ioResults.success = false;
@@ -488,7 +490,8 @@ export class OCFLObject {
         for (const fileName of fileList) {
             const relName: string = path.relative(this._objectRoot, fileName);
             const baseName: string = path.basename(fileName);
-            // LOG.info(`Examining ${fileName}; relName ${relName}; basename ${baseName}`, LOG.LS.eSTR);
+            if (verbose)
+                LOG.info(`Examining ${fileName}; relName ${relName}; basename ${baseName}`, LOG.LS.eSTR);
 
             // Skip Inventory, Inventory Digest, and Namaste file
             if (baseName == ST.OCFLStorageObjectInventoryFilename ||
@@ -499,7 +502,7 @@ export class OCFLObject {
             const hash: string | undefined = fileMap.get(relName);
             if (!hash) {
                 ioResults.success = false;
-                ioResults.error = `No hash found for ${relName} in manifest ${JSON.stringify(fileMap)}`;
+                ioResults.error = `No hash found for ${relName} in manifest ${H.Helpers.JSONStringify(fileMap)}`;
                 LOG.error(ioResults.error, LOG.LS.eSTR);
                 return ioResults;
             }

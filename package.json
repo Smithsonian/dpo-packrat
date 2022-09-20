@@ -51,7 +51,7 @@
     "deploy:prod": "sh ./conf/scripts/deploy.sh prod",
     "build:dev": "lerna run build:dev",
     "build:prod": "lerna run build:prod",
-    "clean": "lerna run clean && rm -rf node_modules/ && rm -rf docs/public && rm -rf docs/resources/_gen && rm docs/.hugo_build.lock",
+    "clean": "lerna run clean && rm -rf node_modules/ && rm -rf docs/public && rm -rf docs/resources/_gen && rm -f docs/.hugo_build.lock",
     "clean:docker": "docker-compose -f ./conf/docker/docker-compose.dev.yml down && docker system prune -f",
     "generate:server:prisma": "yarn workspace @dpo-packrat/server generate:prisma",
     "postinstall": "lerna run postinstall && yarn install:e2e",
@@ -61,7 +61,8 @@
     "test": "yarn workspaces run test",
     "test:e2e": "cd e2e && yarn test",
     "docs": "rm -rf docs/public && cd docs && hugo",
-    "docs:clean": "rm -rf docs/public && rm -rf docs/resources/_gen && rm docs/.hugo_build.lock"
+    "docs:clean": "rm -rf docs/public && rm -rf docs/resources/_gen && rm docs/.hugo_build.lock",
+    "upgradelatest": "lerna exec -- yarn upgrade --latest"
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "4.1.0",
@@ -99,7 +100,7 @@
     ]
   },
   "volta": {
-    "node": "14.17.1",
-    "yarn": "1.22.10"
+    "node": "16.17.0",
+    "yarn": "1.22.19"
   }
 }

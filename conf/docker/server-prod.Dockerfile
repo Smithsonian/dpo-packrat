@@ -1,4 +1,4 @@
-FROM node:14.17.1-alpine AS base
+FROM node:16.17.0-alpine AS base
 # Add a work directory, copy package.json for caching, copy app files
 WORKDIR /app
 ADD package.json yarn.lock ./
@@ -16,7 +16,7 @@ RUN yarn install --frozen-lockfile
 RUN yarn build:prod
 
 # Server's production image; add a work directory and copy from base
-FROM node:14.17.1-alpine AS server
+FROM node:16.17.0-alpine AS server
 WORKDIR /app
 
 # Install perl, needed by exiftool

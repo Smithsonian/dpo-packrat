@@ -13,7 +13,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType } from '../../../../store';
+import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -41,6 +41,9 @@ import DetailsTab, { UpdateDataFields } from './DetailsTab';
 import DetailsThumbnail from './DetailsThumbnail';
 import ObjectDetails from './ObjectDetails';
 import ObjectNotFoundView from './ObjectNotFoundView';
+import { eIngestionMode } from '../../../../constants';
+import SpecialUploadList from '../../../Ingestion/components/Uploads/SpecialUploadList';
+import { UploadReferences } from '../../../../store';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -105,6 +108,7 @@ function DetailsView(): React.ReactElement {
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
     const [updatedMetadata, setUpdatedMetadata] = useState(false);
+    const [uploadReferences, setUploadReferences] = useState<UploadReferences | null>(null);
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [
         stateIdentifiers,
@@ -134,6 +138,7 @@ function DetailsView(): React.ReactElement {
         state.getDetailsViewFieldErrors
     ]);
     const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields, initializeMetadata, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields, state.initializeMetadata, state.resetMetadata]);
+    const [resetSpecialPending] = useUploadStore(state => [state.resetSpecialPending]);
 
     const objectDetailsData = data;
     const fetchDetailTabDataAndSetState = async () => {
@@ -144,6 +149,18 @@ function DetailsView(): React.ReactElement {
             initializePreferredIdentifier(detailsTabData?.data?.getDetailsTabDataForObject?.Subject?.idIdentifierPreferred);
             setLoadingIdentifiers(false);
         }
+    };
+
+    const onUploaderReset = () => {
+        resetSpecialPending(eIngestionMode.eAttach);
+        resetSpecialPending(eIngestionMode.eUpdate);
+        setUploadReferences(null);
+    };
+
+    const onUploaderOpen = (uploadType: eIngestionMode, references: UploadReferences) => {
+        if (references.idAsset !== uploadReferences?.idAsset || references.idSOAttachment !== uploadReferences?.idSOAttachment) onUploaderReset();
+        if (uploadType === eIngestionMode.eAttach) setUploadReferences({ idSOAttachment: references.idSOAttachment });
+        if (uploadType === eIngestionMode.eUpdate) setUploadReferences({ idAsset: references.idAsset, idSOAttachment: references.idSOAttachment });
     };
 
     useEffect(() => {
@@ -182,6 +199,12 @@ function DetailsView(): React.ReactElement {
         return () => {
             resetMetadata();
         };
+    }, []);
+
+    useEffect(() => {
+        onUploaderReset();
+
+        return () => onUploaderReset();
     }, []);
 
     if (!data || !params.idSystemObject) {
@@ -577,8 +600,19 @@ function DetailsView(): React.ReactElement {
                         objectVersions={objectVersions}
                         detailQuery={detailQuery}
                         metadata={metadata}
+                        onUploaderOpen={onUploaderOpen}
                     />
                 </Box>
+                {(uploadReferences && uploadReferences.idAsset) && (
+                    <SpecialUploadList
+                        uploadType={eIngestionMode.eUpdate}
+                        onUploaderClose={onUploaderReset}
+                        idAsset={uploadReferences?.idAsset}
+                        idSOAttachment={idSystemObject}
+                        idSO={idSystemObject}
+                    />
+                )}
+                {(uploadReferences && uploadReferences.idSOAttachment) && <SpecialUploadList uploadType={eIngestionMode.eAttach} onUploaderClose={onUploaderReset} idSOAttachment={uploadReferences?.idSOAttachment} idSO={idSystemObject} />}
 
                 <Box display='flex' flex={1} padding={2}>
                     <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />

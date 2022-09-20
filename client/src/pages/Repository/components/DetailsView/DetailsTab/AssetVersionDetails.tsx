@@ -7,19 +7,16 @@
  */
 import { Box, makeStyles, Typography, Button, Table, TableBody, TableCell, TableContainer, TableRow, Checkbox } from '@material-ui/core';
 import React, { useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
 import { Loader } from '../../../../../components';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { DetailComponentProps } from './index';
 import { sharedButtonProps } from '../../../../../utils/shared';
-import { updateSystemObjectUploadRedirect } from '../../../../../constants';
 import { eSystemObjectType } from '@dpo-packrat/common';
-import { apolloClient } from '../../../../../graphql';
-import { GetAssetDocument } from '../../../../../types/graphql';
-import { useDetailTabStore } from '../../../../../store';
+import { useDetailTabStore, UploadReferences } from '../../../../../store';
 import { DebounceInput } from 'react-debounce-input';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
+import { eIngestionMode } from '../../../../../constants';
 
 export const useAVDetailsStyles = makeStyles(() => ({
     value: {
@@ -32,11 +29,14 @@ export const useAVDetailsStyles = makeStyles(() => ({
     }
 }));
 
-function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
+interface AVDetailProps extends DetailComponentProps {
+    onUploaderOpen: (objectType: eIngestionMode, references: UploadReferences) => void;
+}
+
+function AssetVersionDetails(props: AVDetailProps): React.ReactElement {
     const AVclasses = useAVDetailsStyles();
     const tableClasses = useStyles();
-    const { data, loading, onUpdateDetail, objectType } = props;
-    const history = useHistory();
+    const { data, loading, onUpdateDetail, objectType, onUploaderOpen } = props;
     const [AssetVersionDetails, updateDetailField] = useDetailTabStore(state => [state.AssetVersionDetails, state.updateDetailField]);
 
     useEffect(() => {
@@ -53,23 +53,9 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
     };
 
     const assetVersionData = data.getDetailsTabDataForObject?.AssetVersion;
-    let redirect = () => {};
-    if (assetVersionData) {
-        // redirect function fetches assetType so that uploads remembers the assetType for uploads
-        redirect = async () => {
-            const {
-                data: {
-                    getAsset: {
-                        Asset: { idVAssetType }
-                    }
-                }
-            } = await apolloClient.query({
-                query: GetAssetDocument,
-                variables: { input: { idAsset: assetVersionData.idAsset } }
-            });
-            const newEndpoint = updateSystemObjectUploadRedirect(assetVersionData.idAsset, assetVersionData.idAssetVersion, eSystemObjectType.eAssetVersion, idVAssetType);
-            history.push(newEndpoint);
-        };
+    let onAddVersion = () => {};
+    if (assetVersionData && assetVersionData.idAsset) {
+        onAddVersion = () => onUploaderOpen(eIngestionMode.eUpdate, { idAsset: assetVersionData.idAsset as number });
     }
 
     return (
@@ -155,7 +141,7 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
                     </TableBody>
                 </Table>
             </TableContainer>
-            <Button className={AVclasses.button} variant='contained' disableElevation color='primary' style={{ width: 'fit-content', marginTop: '7px' }} onClick={redirect}>
+            <Button className={AVclasses.button} variant='contained' disableElevation color='primary' style={{ width: 'fit-content', marginTop: '7px' }} onClick={onAddVersion}>
                 Add Version
             </Button>
         </Box>

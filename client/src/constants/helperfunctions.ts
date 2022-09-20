@@ -109,29 +109,6 @@ export function extractModelConstellation(data: any) {
     return { ingestionModel, modelObjects, assets };
 }
 
-
-export const updateSystemObjectUploadRedirect = (idAsset: number | undefined | null, idAssetVersion: number | undefined | null, ObjectType: number | undefined | null, assetType: number | undefined | null = null) => {
-    if (!idAsset || !ObjectType) return '/';
-
-    let assetVersion = '';
-    let asset = '';
-    let fileType = '';
-
-    if (idAsset) asset = `idAsset=${idAsset}`;
-    if (idAssetVersion) assetVersion = `&idAssetVersion=${idAssetVersion}`;
-    if (assetType) fileType = `&fileType=${assetType}`;
-
-    return `/ingestion/uploads?${asset}${assetVersion}${fileType}&type=${ObjectType}&mode=${eIngestionMode.eUpdate}`;
-};
-
-export const ingestSystemObjectUploadRedirect = (fileName: string) => {
-    return `/ingestion/uploads?name=${fileName}&mode=${eIngestionMode.eIngest}`;
-};
-
-export const attachSystemObjectUploadRedirect = (idSystemObject: number, ObjectType: number | undefined | null) => {
-    return `/ingestion/uploads?idSOAttachment=${idSystemObject}&fileType=${ObjectType}&mode=${eIngestionMode.eAttach}`;
-};
-
 export const truncateWithEllipses = (text: string, max: number) => text.slice(0, max - 1) + (text.length > max ? ' ...' : '');
 
 export const truncateMiddleWithEllipses = (text: string, firstHalf: number, secondHalf: number) => {

@@ -1,4 +1,5 @@
 /* eslint-disable react/jsx-max-props-per-line */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 /**
  * Metadata
@@ -29,9 +30,9 @@ import {
     useItemStore,
     useMetadataStore,
     useVocabularyStore,
-    useUploadStore,
     useSubjectStore,
-    FieldErrors
+    FieldErrors,
+    AssetType
 } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
 import Model from './Model';
@@ -42,6 +43,8 @@ import Attachment from './Attachment';
 import { Helmet } from 'react-helmet';
 import { apolloClient } from '../../../../graphql';
 import { GetSystemObjectDetailsDocument } from '../../../../types/graphql';
+import { eSystemObjectType } from '@dpo-packrat/common';
+import { Loader } from '../../../../components';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -74,14 +77,14 @@ function Metadata(): React.ReactElement {
     const [ingestionLoading, setIngestionLoading] = useState(false);
     const [disableNavigation, setDisableNavigation] = useState(false);
     const [invalidMetadataStep, setInvalidMetadataStep] = useState<boolean>(false);
+    const [loadingAssetType, setLoadingAssetType] = useState<boolean>(true);
     const [breadcrumbNames, setBreadcrumbNames] = useState<string[]>([]);
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>();
-
+    const [assetType, setAssetType] = useState<AssetType>({ photogrammetry: false, model: false, scene: false, attachment: false, other: false });
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
     const [metadatas, getMetadataInfo, validateFields, getFieldErrors] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields, state.getFieldErrors]);
     const { ingestionStart, ingestionComplete } = useIngest();
     const getAssetType = useVocabularyStore(state => state.getAssetType);
-    const [setUpdateMode] = useUploadStore(state => [state.setUpdateMode]);
     const metadataLength = metadatas.length;
     const query = qs.parse(location.search) as QueryParams;
     const { fileId, type } = query;
@@ -89,9 +92,12 @@ function Metadata(): React.ReactElement {
 
     useEffect(() => {
         const fetchAndSetBreadcrumbName = async () => {
-            // attachment case
-            if (metadatas[metadataIndex]?.file?.idSOAttachment) {
-                const { data: { getSystemObjectDetails: { name: parentName } } } = await apolloClient.query({
+            const metadata = metadatas[metadataIndex]?.file;
+
+            // we only want to fetch if it's a system object (ie for attachment or updates)
+            // otherwise a fresh ingestion will not have an existing system object to fetch
+            if (metadata && (metadata.idSOAttachment || metadata.idAsset)) {
+                const { data: { getSystemObjectDetails: { objectType, name: parentName } } } = await apolloClient.query({
                     query: GetSystemObjectDetailsDocument,
                     variables: {
                         input: {
@@ -99,14 +105,43 @@ function Metadata(): React.ReactElement {
                         }
                     }
                 });
-                // set breadcrumb name to attachment parent
-                setBreadcrumbNames([parentName ?? 'Unknown', `Attachment ${metadatas[metadataIndex]?.file?.name}`]);
-            } else if (metadatas[metadataIndex]?.file?.idAsset) {
-                // update case
-                setBreadcrumbNames([metadatas[metadataIndex]?.file?.name]);
+                if (metadata.idSOAttachment && metadata.idAsset) {
+                    switch (objectType) {
+                        case eSystemObjectType.eCaptureData: {
+                            setAssetType({
+                                ...assetType,
+                                photogrammetry: true
+                            });
+                            break;
+                        } case eSystemObjectType.eModel: {
+                            setAssetType({
+                                ...assetType,
+                                model: true
+                            });
+                            break;
+                        } case eSystemObjectType.eScene: {
+                            setAssetType({
+                                ...assetType,
+                                scene: true
+                            });
+                            break;
+                        } default: {
+                            setAssetType({
+                                ...assetType,
+                                other: true
+                            });
+                        }
+                    }
+                    setBreadcrumbNames([metadatas[metadataIndex]?.file?.name]);
+                } else if (metadata.idSOAttachment) {
+                    setAssetType(getAssetType(Number.parseInt(type, 10)));
+                    setBreadcrumbNames([parentName ?? 'Unknown', `Attachment ${metadatas[metadataIndex]?.file?.name}`]);
+                }
             } else {
+                setAssetType(getAssetType(Number.parseInt(type, 10)));
                 setBreadcrumbNames([]);
             }
+            setLoadingAssetType(false);
         };
         fetchAndSetBreadcrumbName();
     }, [metadatas, metadataIndex]);
@@ -115,9 +150,11 @@ function Metadata(): React.ReactElement {
         return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
     }
 
+    if (loadingAssetType)
+        return <Loader minHeight='15vh' />;
+
     const item = getSelectedItem();
     const project = item?.projectName;
-    const assetType = getAssetType(Number.parseInt(type, 10));
 
     const onPrevious = async () => {
         toast.dismiss();
@@ -165,7 +202,6 @@ function Metadata(): React.ReactElement {
             if (success) {
                 toast.success('Ingestion complete');
                 ingestionComplete();
-                setUpdateMode(false);
             } else {
                 setDisableNavigation(false);
                 toast.error(`Ingestion failed, please try again later. Error: ${message}`);
