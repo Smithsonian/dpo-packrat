@@ -39,7 +39,7 @@
     "test": "jest --passWithNoTests"
   },
   "volta": {
-    "node": "14.17.1",
-    "yarn": "1.22.10"
+    "node": "16.17.0",
+    "yarn": "1.22.19"
   }
 }

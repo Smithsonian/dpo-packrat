@@ -211,6 +211,11 @@ export class SceneConstellation {
 
             let nonModelAssets: SvxNonModelAsset[] | null = null;
             if (svx.SvxExtraction.nonModelAssets) {
+                const AV = await AssetVersion.fetch(idAssetVersion);
+                if (!AV) {
+                    LOG.error(`SceneConstellation.fetchFromAssetVersion unable fetch Asset Version for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
+                    return null;
+                }
                 nonModelAssets = [];
                 for (const NMA of svx.SvxExtraction.nonModelAssets) {
                     LOG.info(`SceneConstellation.fetchFromAssetVersion processing nonModelAsset ${H.Helpers.JSONStringify(NMA)}`, LOG.LS.eDB);
@@ -223,8 +228,7 @@ export class SceneConstellation {
                             continue;
                         }
                     }
-
-                    const idAssetVersion: number | undefined = assetExistingNameMap.get(NMA.uri);
+                    const idAssetVersion: number | undefined = assetExistingNameMap.get(`${AV ? AV.FilePath + '/' : ''}${NMA.uri}`);
                     if (idAssetVersion)
                         NMA.idAssetVersion = idAssetVersion;
                     nonModelAssets.push(NMA);
