@@ -16,7 +16,6 @@ const unauthenticatedGQLQueries: Set<string> = new Set<string>([
 
 const ApolloServerOptions: ApolloServerExpressConfig = {
     schema,
-    uploads: false,
     context: ({ req }) => {
         if (!isAuthenticated(req)) {
             const gqlQuery: string = computeGQLQuery(req) || '';

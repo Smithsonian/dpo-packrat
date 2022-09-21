@@ -114,12 +114,12 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         if (!idAsset)
             return null;
         try {
-            const VersionInfo: [{ Version: number }] =
-                await DBC.DBConnection.prisma.$queryRaw<[{ Version: number }]>`
+            const VersionInfo: [{ Version: BigInt }] =
+                await DBC.DBConnection.prisma.$queryRaw<[{ Version: BigInt }]>`
                 SELECT IFNULL(MAX(AV.Version), 0) + 1 AS 'Version'
                 FROM AssetVersion AS AV
                 WHERE AV.idAsset = ${idAsset};`;
-            return (VersionInfo && VersionInfo.length > 0) ? VersionInfo[0].Version : /* istanbul ignore next */ null;
+            return (VersionInfo && VersionInfo.length > 0) ? Number(VersionInfo[0].Version) : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.AssetVersion.computeNextVersionNumber', LOG.LS.eDB, error);
             return null;
@@ -424,8 +424,8 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
     static async countStorageKeyStaging(StorageKeyStaging: string, Ingested: boolean | null = false, Retired: boolean = false): Promise<number | null> {
         try {
-            const storageKeyStagingCount: { RowCount: number }[] =
-                await DBC.DBConnection.prisma.$queryRaw<{ RowCount: number }[]>`
+            const storageKeyStagingCount: { RowCount: BigInt }[] =
+                await DBC.DBConnection.prisma.$queryRaw<{ RowCount: BigInt }[]>`
                 SELECT COUNT(*) AS 'RowCount'
                 FROM AssetVersion AS AV
                 JOIN SystemObject AS SO ON (AV.idAssetVersion = SO.idAssetVersion)
@@ -440,7 +440,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 return null;
             }
 
-            return storageKeyStagingCount[0].RowCount;
+            return Number(storageKeyStagingCount[0].RowCount);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.AssetVersion.countStorageKeyStaging', LOG.LS.eDB, error);
             return null;

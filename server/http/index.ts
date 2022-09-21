@@ -22,7 +22,7 @@ import { graphqlUploadExpress } from 'graphql-upload';
 import { v2 as webdav } from 'webdav-server';
 
 const monitorCPU: boolean = true;
-const monitorVerbose: boolean = true;
+const monitorVerbose: boolean = false;
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
@@ -72,6 +72,7 @@ export class HttpServer {
         this.app.use('/graphql', graphqlUploadExpress());
 
         const server = new ApolloServer(ApolloServerOptions);
+        await server.start();
         server.applyMiddleware({ app: this.app, cors: false });
 
         this.app.get('/logtest', logtest);

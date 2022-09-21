@@ -26,7 +26,6 @@
       "url": "https://github.com/shintung00"
     }
   ],
-  "main": "build/index.js",
   "typings": "build/index.d.ts",
   "scripts": {
     "start": "yarn build:dev && concurrently 'yarn build:watch' 'yarn server:start'",
