@@ -240,8 +240,15 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     };
 
     let content;
-    // pending list mode || completed list mode
-    if ((references && references.idAsset && references.idSOAttachment) || idAsset && idSOAttachment) {
+
+    // CASE: pending list mode (upload) || CASE: completed list mode (ingestion)
+    // When performing an upload, a FileListItem may have a "references" object
+    // The "references" object indicates whether a file is an update (idAsset + idSOAttachment) or an attachment (idSOAttachment)
+    // Lack of "references" indicates fresh upload
+
+    // When starting the ingestion process, the FileListItem can supply idAsset, idSOAttachment, both, or none
+    // idAsset + idSOAttachment indicates an update, idSOAttachment indicates an attachment, and none indicates a normal ingestion
+    if ((references && references.idAsset && references.idSOAttachment) || (idAsset && idSOAttachment)) {
         content =  (
             <Select value={type} disabled className={classes.typeSelect} disableUnderline SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}>
                 <MenuItem value={type}>Update</MenuItem>
