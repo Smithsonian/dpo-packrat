@@ -68,8 +68,8 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
         try {
             // Xref records can be removed as long as this is not the final subject "master" for an item "derived"
             // The query below counts how many xref records match this criteria for the this.idSystemObjectDerived
-            const subjectItemLinkCount: { RowCount: number }[] =
-                await DBC.DBConnection.prisma.$queryRaw<{ RowCount: number }[]>`
+            const subjectItemLinkCount: { RowCount: BigInt }[] =
+                await DBC.DBConnection.prisma.$queryRaw<{ RowCount: BigInt }[]>`
                 SELECT COUNT(*) AS 'RowCount'
                 FROM SystemObjectXref AS SOX
                 JOIN SystemObject AS SOMaster ON (SOX.idSystemObjectMaster = SOMaster.idSystemObject)
@@ -83,7 +83,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
             if (subjectItemLinkCount.length != 1) // array of wrong length returned, error ... should never happen
                 return { success: false, error: `Unable to remove final subject from Item ${this.idSystemObjectDerived}` };
 
-            if (subjectItemLinkCount[0].RowCount === 1) {
+            if (Number(subjectItemLinkCount[0].RowCount) === 1) {
                 // determine if this.idSystemObjectMaster points to a subject (if so, it's the only one linked!)
                 const SO: SystemObject | null = await SystemObject.fetch(this.idSystemObjectMaster);
                 if (SO && SO.idSubject)

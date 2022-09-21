@@ -114,8 +114,8 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
         if (!idSystemObjectVersion)
             return null;
         try {
-            const versions: { idAsset: number, idAssetVersion: number }[] | null =
-                await DBC.DBConnection.prisma.$queryRaw<{ idAsset: number, idAssetVersion: number }[]>`
+            const versions: { idAsset: number, idAssetVersion: BigInt }[] | null =
+                await DBC.DBConnection.prisma.$queryRaw<{ idAsset: number, idAssetVersion: BigInt }[]>`
                 SELECT AV.idAsset AS 'idAsset', MAX(AV.idAssetVersion) AS 'idAssetVersion'
                 FROM SystemObjectVersionAssetVersionXref AS SOX
                 JOIN AssetVersion AS AV ON (SOX.idAssetVersion = AV.idAssetVersion)
@@ -127,7 +127,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
 
             const assetVersionMap: Map<number, number> = new Map<number, number>(); // map from idAsset -> idAssetVersion
             for (const assetPair of versions)
-                assetVersionMap.set(assetPair.idAsset, assetPair.idAssetVersion);
+                assetVersionMap.set(assetPair.idAsset, Number(assetPair.idAssetVersion));
             // LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(${idSystemObjectVersion}) = ${JSON.stringify(versions)} -> ${JSON.stringify(assetVersionMap, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eDB);
             return assetVersionMap;
         } catch (error) /* istanbul ignore next */ {
@@ -142,8 +142,8 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
         if (!idSystemObject)
             return null;
         try {
-            const versions: { idAsset: number, idAssetVersion: number }[] | null =
-                await DBC.DBConnection.prisma.$queryRaw<{ idAsset: number, idAssetVersion: number }[]>`
+            const versions: { idAsset: number, idAssetVersion: BigInt }[] | null =
+                await DBC.DBConnection.prisma.$queryRaw<{ idAsset: number, idAssetVersion: BigInt }[]>`
                 SELECT AV.idAsset AS 'idAsset', MAX(AV.idAssetVersion) AS 'idAssetVersion'
                 FROM SystemObjectVersionAssetVersionXref AS SOX
                 JOIN AssetVersion AS AV ON (SOX.idAssetVersion = AV.idAssetVersion)
@@ -157,7 +157,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
 
             const assetVersionMap: Map<number, number> = new Map<number, number>(); // map from idAsset -> idAssetVersion
             for (const assetPair of versions)
-                assetVersionMap.set(assetPair.idAsset, assetPair.idAssetVersion);
+                assetVersionMap.set(assetPair.idAsset, Number(assetPair.idAssetVersion));
             // LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(${idSystemObject}) = ${JSON.stringify(versions)} -> ${JSON.stringify(assetVersionMap, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eDB);
             return assetVersionMap;
         } catch (error) /* istanbul ignore next */ {
