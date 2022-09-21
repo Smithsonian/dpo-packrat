@@ -161,6 +161,11 @@ function DetailsView(): React.ReactElement {
         if (references.idAsset !== uploadReferences?.idAsset || references.idSOAttachment !== uploadReferences?.idSOAttachment) onUploaderReset();
         if (uploadType === eIngestionMode.eAttach) setUploadReferences({ idSOAttachment: references.idSOAttachment });
         if (uploadType === eIngestionMode.eUpdate) setUploadReferences({ idAsset: references.idAsset, idSOAttachment: references.idSOAttachment });
+        setTimeout(() => {
+            const specialUploader = document.getElementById('special-uploader');
+            specialUploader?.scrollIntoView();
+        }, 300);
+
     };
 
     useEffect(() => {

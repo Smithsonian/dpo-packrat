@@ -15,7 +15,6 @@ import { FieldType } from '../../../../components';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 import { eIngestionMode, HOME_ROUTES, resolveSubRoute, INGESTION_ROUTE } from '../../../../constants';
-import { toast } from 'react-toastify';
 import { UploadReferences, IngestionFile, useUploadStore } from '../../../../store';
 import CloseIcon from '@material-ui/icons/Close';
 import KeepAlive from 'react-activation';
@@ -48,7 +47,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
     const files: IngestionFile[] = file ? [file] : [];
 
     return (
-        <Box className={classes.container}>
+        <Box className={classes.container} id='special-uploader'>
             <IconButton color='inherit' onClick={onUploaderClose} style={{ alignSelf: 'end' }}>
                 <CloseIcon />
             </IconButton>
@@ -134,7 +133,7 @@ function SpecialUploadList(props: SpecialUploadListProps): React.ReactElement {
 
     return (
         <KeepAlive>
-            <Dropzone noClick onDrop={onDrop} multiple={false} onDropRejected={() => toast.warning('Only one file is allowed')}>
+            <Dropzone noClick onDrop={onDrop} multiple={false}>
                 {({ getRootProps, getInputProps, open }) => (
                     <div {...getRootProps()}>
                         <UploadList open={open} uploadType={uploadType} references={uploadReferences} onUploaderClose={onUploaderClose} idSO={idSO} />
