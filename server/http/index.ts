@@ -18,8 +18,8 @@ import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import cookieParser from 'cookie-parser';
-import { graphqlUploadExpress } from 'graphql-upload';
 import { v2 as webdav } from 'webdav-server';
+import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
 
 const monitorCPU: boolean = true;
 const monitorVerbose: boolean = false;

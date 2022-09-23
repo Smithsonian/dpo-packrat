@@ -20,7 +20,7 @@ import * as COMMON from '@dpo-packrat/common';
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import mime from 'mime';
+import * as mime from 'mime-types';
 
 export type AssetStorageResult = {
     asset: DBAPI.Asset | null;
@@ -756,8 +756,8 @@ export class AssetStorageAdapter {
                     if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
                         eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile;
                     else {
-                        const mimeType: string = mime.lookup(unzippedFileName);
-                        if (mimeType.startsWith('image/'))
+                        const mimeType: string | null = mime.lookup(unzippedFileName);
+                        if (mimeType && mimeType.startsWith('image/'))
                             eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile;
                         else
                             eAssetType = COMMON.eVocabularyID.eAssetAssetTypeOther;

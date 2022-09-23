@@ -54,13 +54,8 @@ export class SolrClient {
 
     async add(docs: any[]): Promise<H.IOResults> {
         try {
-            const AR = await this._client.add(docs, undefined);
-            if (AR.responseHeader.status === 200)
-                return { success: true };
-
-            const error: string = `SolrClient add failed with error status ${AR.responseHeader.status}`;
-            LOG.error(error, LOG.LS.eNAV);
-            return { success: false, error };
+            await this._client.add(docs, undefined);
+            return { success: true };
         } catch (err) /* istanbul ignore next */ {
             const error: string = `SolrClient.add failed: ${JSON.stringify(err)}`;
             LOG.error(error, LOG.LS.eNAV);
