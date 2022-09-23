@@ -14,7 +14,7 @@ import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 
-import express, { Request } from 'express';
+import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import cookieParser from 'cookie-parser';
@@ -29,7 +29,7 @@ const monitorVerbose: boolean = false;
  * This object instantiates express(), wires together middleware, and perform initialization tasks
  */
 export class HttpServer {
-    public app = express();
+    public app: Express = express();
     private static _singleton: HttpServer | null = null;
 
     static async getInstance(): Promise<HttpServer | null> {
@@ -58,8 +58,8 @@ export class HttpServer {
     private async configureMiddlewareAndRoutes(): Promise<boolean> {
         this.app.use(HttpServer.idRequestMiddleware);
         this.app.use(cors(authCorsConfig));
-        this.app.use(HttpServer.bodyProcessorExclusions, express.json()); // do not extract webdav PUT bodies into request.body element
-        this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true }));
+        this.app.use(HttpServer.bodyProcessorExclusions, express.json() as RequestHandler); // do not extract webdav PUT bodies into request.body element
+        this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true }) as RequestHandler);
         this.app.use(cookieParser());
         this.app.use(authSession);
         this.app.use(passport.initialize());
