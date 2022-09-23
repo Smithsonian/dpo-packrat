@@ -298,8 +298,8 @@ export class BulkIngestReader {
             return new DBAPI.Item({
                 idItem: 0,
                 EntireSubject: bagitItem.entire_subject != 0,
-                idAssetThumbnail!: null,
-                idGeoLocation!: null,
+                idAssetThumbnail: null,
+                idGeoLocation: null,
                 Name: bagitItem.item_name,
                 Title: bagitItem.item_subtitle,
             });

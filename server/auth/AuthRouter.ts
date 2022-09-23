@@ -1,7 +1,7 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, Router } from 'express';
 import { passport } from './framework';
 
-const AuthRouter = express.Router();
+const AuthRouter: Router = express.Router();
 
 AuthRouter.post('/login', (request: Request, response: Response, next: NextFunction) => {
     passport.authenticate('local', (error, user) => {

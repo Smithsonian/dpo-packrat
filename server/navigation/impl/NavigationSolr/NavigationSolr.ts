@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import solr from 'solr-client';
-import { ClientRequest } from 'http';
 
 import * as NAV from '../../interface';
 import * as LOG from '../../../utils/logger';
@@ -472,18 +471,14 @@ export class NavigationSolr implements NAV.INavigation {
     // #endregion
 
     // #region Execute Nav Helpers
-    private executeSolrQueryWorker(solrClient: SolrClient, SQ: solr.Query): Promise<SolrQueryResult> {
-        return new Promise<any>((resolve) => {
-            const request: ClientRequest = solrClient._client.search(SQ,
-                function (err, obj) {
-                    if (err) {
-                        LOG.error('NavigationSolr.executeSolrQueryWorker', LOG.LS.eNAV, err);
-                        resolve({ result: null, error: err });
-                    } else
-                        resolve({ result: obj });
-                });
-            request;
-        });
+    private async executeSolrQueryWorker(solrClient: SolrClient, SQ: solr.Query): Promise<SolrQueryResult> {
+        try {
+            const SR = await solrClient._client.search(SQ);
+            return { result: SR.response, error: null };
+        } catch (err) {
+            LOG.error('NavigationSolr.executeSolrQueryWorker', LOG.LS.eNAV, err);
+            return { result: null, error: (err instanceof Error) ? err.toString() : 'Unexpected error' };
+        }
     }
 
     private computeMetadataFromString(value: string | undefined): string {

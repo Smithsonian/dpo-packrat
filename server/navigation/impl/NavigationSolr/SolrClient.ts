@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import solr from 'solr-client';
+import * as solr from 'solr-client';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 
@@ -54,16 +54,13 @@ export class SolrClient {
 
     async add(docs: any[]): Promise<H.IOResults> {
         try {
-            return new Promise<H.IOResults>((resolve) => {
-                this._client.add(docs, undefined, function (err, _obj) {
-                    if (err) {
-                        const error: string = `SolrClient.add failed: ${JSON.stringify(err)}`;
-                        LOG.error(error, LOG.LS.eNAV);
-                        resolve({ success: false, error });
-                    } else
-                        resolve({ success: true });
-                });
-            });
+            const AR = await this._client.add(docs, undefined);
+            if (AR.responseHeader.status === 200)
+                return { success: true };
+
+            const error: string = `SolrClient add failed with error status ${AR.responseHeader.status}`;
+            LOG.error(error, LOG.LS.eNAV);
+            return { success: false, error };
         } catch (err) /* istanbul ignore next */ {
             const error: string = `SolrClient.add failed: ${JSON.stringify(err)}`;
             LOG.error(error, LOG.LS.eNAV);
@@ -73,16 +70,8 @@ export class SolrClient {
 
     async commit(): Promise<H.IOResults> {
         try {
-            return new Promise<H.IOResults>((resolve) => {
-                this._client.commit(undefined, function (err, _obj) {
-                    if (err) {
-                        const error: string = `SolrClient.commit failed: ${JSON.stringify(err)}`;
-                        LOG.error(error, LOG.LS.eNAV);
-                        resolve({ success: false, error });
-                    } else
-                        resolve({ success: true });
-                });
-            });
+            await this._client.commit(undefined);
+            return { success: true };
         } catch (err) /* istanbul ignore next */ {
             const error: string = `SolrClient.commit failed: ${JSON.stringify(err)}`;
             LOG.error(error, LOG.LS.eNAV);

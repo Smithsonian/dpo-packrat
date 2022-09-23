@@ -86,13 +86,13 @@
     "ts-jest": "24.3.0"
   },
   "scripts": {
-    "start": "cross-env TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling react-app-rewired start",
-    "start:watchcontainer": "cross-env TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling CHOKIDAR_USEPOLLING=1 react-app-rewired start",
-    "start:prod": "react-app-rewired start",
-    "build:dev": "yarn env-cmd -f ../.env.dev react-app-rewired build",
-    "build:prod": "yarn env-cmd -f ../.env.prod react-app-rewired build",
-    "test": "react-app-rewired test --watchAll=false --passWithNoTests",
-    "eject": "react-app-rewired eject",
+    "start": "cross-env TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling react-app-rewired --openssl-legacy-provider start",
+    "start:watchcontainer": "cross-env TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling CHOKIDAR_USEPOLLING=1 react-app-rewired --openssl-legacy-provider start",
+    "start:prod": "react-app-rewired --openssl-legacy-provider start",
+    "build:dev": "yarn env-cmd -f ../.env.dev react-app-rewired --openssl-legacy-provider build",
+    "build:prod": "yarn env-cmd -f ../.env.prod react-app-rewired --openssl-legacy-provider build",
+    "test": "react-app-rewired --openssl-legacy-provider test --watchAll=false --passWithNoTests",
+    "eject": "react-app-rewired --openssl-legacy-provider eject",
     "clean": "rm -rf node_modules/ build/",
     "postinstall": "echo \"postinstall client\""
   },
@@ -109,7 +109,7 @@
     ]
   },
   "volta": {
-    "node": "16.17.0",
+    "node": "18.9.0",
     "yarn": "1.22.19"
   }
 }
