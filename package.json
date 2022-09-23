@@ -62,6 +62,7 @@
     "test:e2e": "cd e2e && yarn test",
     "docs": "rm -rf docs/public && cd docs && hugo",
     "docs:clean": "rm -rf docs/public && rm -rf docs/resources/_gen && rm docs/.hugo_build.lock",
+    "install:husky": "husky install",
     "upgradelatest": "lerna exec -- yarn upgrade --latest"
   },
   "dependencies": {
