@@ -65,20 +65,20 @@
     "upgradelatest": "lerna exec -- yarn upgrade --latest"
   },
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "5.38.0",
-    "@typescript-eslint/parser": "5.38.0",
-    "@typescript-eslint/typescript-estree": "5.38.0",
+    "@typescript-eslint/eslint-plugin": "4.10.0",
+    "@typescript-eslint/parser": "4.10.0",
+    "@typescript-eslint/typescript-estree": "4.10.0",
     "eslint": "6.6.0",
-    "eslint-plugin-import": "2.26.0",
-    "eslint-plugin-prettier": "4.2.1",
-    "eslint-plugin-react": "7.31.8",
-    "eslint-plugin-react-hooks": "4.6.0"
+    "eslint-plugin-import": "2.22.0",
+    "eslint-plugin-prettier": "3.1.4",
+    "eslint-plugin-react": "7.20.6",
+    "eslint-plugin-react-hooks": "4.1.2"
   },
   "devDependencies": {
     "@types/node": "18.7.18",
     "concurrently": "7.4.0",
     "copyfiles": "2.4.1",
-    "husky": "8.0.1",
+    "husky": "^8.0.0",
     "lerna": "5.5.2",
     "nodemon": "2.0.20",
     "prettier": "2.7.1",
