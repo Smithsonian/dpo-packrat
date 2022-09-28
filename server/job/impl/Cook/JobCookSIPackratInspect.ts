@@ -538,7 +538,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         return JCOutput;
     }
 
-    static async extractFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<JobCookSIPackratInspectOutput | null> {
+    static async extractJobRunFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<DBAPI.JobRun | null> {
         // find JobCook results for this asset version
         const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         if (!idVJobType) {
@@ -551,6 +551,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             LOG.info(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}, sourceMeshFile ${sourceMeshFile}`, LOG.LS.eJOB);
             return null;
         }
+        return jobRuns[0];
+    }
+
+    static async extractFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<JobCookSIPackratInspectOutput | null> {
+        const jobRun: DBAPI.JobRun | null = await JobCookSIPackratInspectOutput.extractJobRunFromAssetVersion(idAssetVersion, sourceMeshFile);
+        if (!jobRun)
+            return null;
 
         // Determine filename, file type, and date created by computing asset version:
         let fileName: string | null = null;
@@ -564,14 +571,14 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
         let JCOutput: JobCookSIPackratInspectOutput | null = null;
         try {
-            JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRuns[0].Output || ''), fileName, dateCreated);
+            JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRun.Output || ''), fileName, dateCreated);
         } catch (error) {
             LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion${JCOutput ? ' ' + JCOutput.error : ''}`, LOG.LS.eJOB, error);
             return null;
         }
 
         if (!JCOutput.success) {
-            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed extracting job output [${JCOutput.error}]: ${jobRuns[0].Output}`, LOG.LS.eJOB);
+            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed extracting job output [${JCOutput.error}]: ${jobRun.Output}`, LOG.LS.eJOB);
             return null;
         }
 

@@ -3,8 +3,8 @@ import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
 import { SceneMigration, SceneMigrationResults } from '../../utils/migration/SceneMigration';
 import { SceneMigrationPackages } from '../../utils/migration/MigrationData';
+import { MigrationUtils } from '../../utils/migration/MigrationUtils';
 import { ASL, LocalStore } from '../../utils/localStore';
-import * as UTIL from '../../tests/db/api';
 
 import { Request, Response } from 'express';
 import * as NS from 'node-schedule';
@@ -35,7 +35,6 @@ class Migrator {
     private response: Response;
     private sceneIDSet: Set<string> | undefined | null = undefined; // undefined means do not migrate; null means migrate all; non-null means migrate only matches
     private modelIDSet: Set<string> | undefined | null = undefined; // undefined means do not migrate; null means migrate all; non-null means migrate only matches
-    private migrationUserEmail: string = 'tysonj@si.edu';
 
     private static semaphoreMigrations: Semaphore = new Semaphore(SimultaneousMigrations);
 
@@ -97,7 +96,7 @@ class Migrator {
     }
 
     async migrate(): Promise<boolean> {
-        const user: DBAPI.User = await this.fetchMigrationUser();
+        const user: DBAPI.User = await MigrationUtils.fetchMigrationUser();
 
         this.results += 'Migration Started<br/>\n';
         if (this.sceneIDSet !== undefined) {
@@ -137,13 +136,6 @@ class Migrator {
             return SMR;
         });
         return res;
-    }
-
-    private async fetchMigrationUser(): Promise<DBAPI.User> {
-        const users: DBAPI.User[] | null = await DBAPI.User.fetchByEmail(this.migrationUserEmail);
-        return (users && users.length > 0)
-            ? users[0]
-            : await UTIL.createUserTest({ Name: 'Migration User', EmailAddress: this.migrationUserEmail, SecurityID: 'Migration User', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0 });
     }
 
     private recordMigrationResult(success: boolean, message: string): void {
