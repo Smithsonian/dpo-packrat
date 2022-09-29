@@ -2,13 +2,14 @@
 import * as DBAPI from '../../db';
 import * as STORE from '../../storage/interface';
 import * as CACHE from '../../cache';
-import * as COMMON from '../../../common';
 import * as H from '../helpers';
 import * as LOG from '../logger';
 import * as path from 'path';
 import { MigrationUtils } from './MigrationUtils';
 import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
 import { JobCookSIPackratInspectOutput } from '../../job/impl/Cook';
+import * as COMMON from '@dpo-packrat/common';
+
 import { isArray } from 'lodash';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
