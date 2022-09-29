@@ -87,9 +87,7 @@
   },
   "workspaces": {
     "nohoist": [
-      "@dpo-packrat/client/*",
-      "@types/express-serve-static-core",
-      "@types/express"
+      "@dpo-packrat/client/*"
     ],
     "packages": [
       "client",
