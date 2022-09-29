@@ -4,6 +4,7 @@
 DEV="dev"
 PROD="prod"
 INSPECT="inspect"
+FRANKEN="franken"
 BRANCH=$(git branch --show-current)
 
 # Environment given by the user
@@ -37,8 +38,12 @@ elif [[ $1 == $INSPECT ]]
 then
   # check if the branch is develop
   branch_check $BRANCH "develop" $1
+elif [[ $1 == $FRANKEN ]]
+then
+  ENV="dev"
+  echo "ALERT: Frankenbuild of dev environment"
 else
-  echo "First argument should be one of dev,  prod, or inspect"
+  echo "First argument should be one of { dev, prod, inspect, franken }"
   exit 1
 fi
 
@@ -46,7 +51,7 @@ fi
 export IMAGE_TAG=$IMAGE_TAG
 export ENV=$ENV
 
-echo "Deploying docker images for env $1 with tag: $IMAGE_TAG"
+echo "Deploying docker images for env $ENV with tag: $IMAGE_TAG"
 
 # Build packrat-server and client dynamically for environment's requested
-docker-compose --env-file .env.$1 -f ./conf/docker/docker-compose.deploy.yml up --build -d packrat-server-$1 packrat-client-$1 packrat-solr-$1
+docker-compose --env-file .env.$ENV -f ./conf/docker/docker-compose.deploy.yml up --build -d packrat-server-$ENV packrat-client-$ENV packrat-solr-$ENV

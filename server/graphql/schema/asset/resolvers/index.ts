@@ -12,8 +12,9 @@ import discardUploadedAssetVersions from './mutations/discardUploadedAssetVersio
 import rollbackAssetVersion from './mutations/rollbackAssetVersion';
 
 import { BigIntResolver } from 'graphql-scalars';
-import { GraphQLUpload } from 'graphql-upload';
+import GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
 import * as L from 'lodash';
+
 
 const resolvers = {
     Query: {

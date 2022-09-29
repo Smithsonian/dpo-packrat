@@ -20,10 +20,10 @@ const Strategy = new PassportLocal.Strategy(options, verifyFunction);
 
 passport.use(Strategy);
 
-passport.serializeUser((user: DBAPI.User, done) => {
+passport.serializeUser((user: Express.User, done) => {
     if (!user)
         return done('Invalid user');
-    done(null, user.idUser);
+    done(null, Number(user['idUser']));
 });
 
 passport.deserializeUser(async (id: number, done) => {

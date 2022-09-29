@@ -15,7 +15,7 @@ import { DownloaderParser, DownloaderParserResults } from './DownloaderParser';
 import { Readable, Writable } from 'stream';
 
 import { v2 as webdav } from 'webdav-server';
-import mime from 'mime'; // const mime = require('mime-types'); // can't seem to make this work using "import * as mime from 'mime'"; subsequent calls to mime.lookup freeze!
+import * as mime from 'mime-types';
 import path from 'path';
 import { Semaphore, Mutex, withTimeout, SemaphoreInterface, E_TIMEOUT } from 'async-mutex';
 

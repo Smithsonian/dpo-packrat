@@ -26,7 +26,6 @@
       "url": "https://github.com/shintung00"
     }
   ],
-  "main": "build/index.js",
   "typings": "build/index.d.ts",
   "scripts": {
     "start": "yarn build:dev && concurrently 'yarn build:watch' 'yarn server:start'",
@@ -39,7 +38,7 @@
     "test": "jest --passWithNoTests"
   },
   "volta": {
-    "node": "14.17.1",
-    "yarn": "1.22.10"
+    "node": "18.9.0",
+    "yarn": "1.22.19"
   }
 }

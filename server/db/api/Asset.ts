@@ -179,8 +179,8 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
     static async computeVersionCountMap(idAssets: number[]): Promise<Map<number, number> | null> {
         const retValue: Map<number, number> = new Map<number, number>();
         try {
-            const versionCounts: { idAsset: number, RowCount: number }[] =
-                await DBC.DBConnection.prisma.$queryRaw<{ idAsset: number, RowCount: number }[]>`
+            const versionCounts: { idAsset: number, RowCount: BigInt }[] =
+                await DBC.DBConnection.prisma.$queryRaw<{ idAsset: number, RowCount: BigInt }[]>`
                 SELECT A.idAsset, COUNT(*) AS 'RowCount'
                 FROM Asset AS A
                 JOIN AssetVersion AS AV ON (AV.idAsset = A.idAsset)
@@ -188,7 +188,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                 GROUP BY A.idAsset`;
 
             for (const countInfo of versionCounts)
-                retValue.set(countInfo.idAsset, countInfo.RowCount);
+                retValue.set(countInfo.idAsset, Number(countInfo.RowCount));
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Asset.computeVersionCountMap', LOG.LS.eDB, error);

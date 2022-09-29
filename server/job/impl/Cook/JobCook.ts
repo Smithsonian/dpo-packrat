@@ -184,6 +184,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 if ((timeout > 0) &&
                     ((new Date().getTime() - startTime.getTime()) >= timeout))
                     return this._results = { success: false, error: 'Cook timeout expired' };
+                // LOG.info(`JobCook [${this.name()}] JobCook.pollingLoop sleeping [${pollNumber}]`, LOG.LS.eJOB);
                 await H.Helpers.sleep(CookRetryDelay);
             }
         } catch (error) {
@@ -235,8 +236,8 @@ export abstract class JobCook<T> extends JobPackrat {
                     LOG.error(`${res.error} failed after ${CookRequestRetryCount} retries`, LOG.LS.eJOB);
                     res.allowRetry = true; // allow outer level to retry job creation
                     return res;
-                } else
-                    await H.Helpers.sleep(CookRetryDelay);
+                }
+                await H.Helpers.sleep(CookRetryDelay);
             }
 
             // stage files
@@ -248,9 +249,9 @@ export abstract class JobCook<T> extends JobPackrat {
             requestCount = 0;
             res = { success: false, allowRetry: true };
             requestUrl = JobCook.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
-            LOG.info(`JobCook [${this.name()}] running job: ${requestUrl}`, LOG.LS.eJOB);
             while (true) {
                 try {
+                    LOG.info(`JobCook [${this.name()}] running job: ${requestUrl}`, LOG.LS.eJOB);
                     const axiosResponse = await axios.patch(requestUrl);
                     if (axiosResponse.status === 202)
                         break; // success, continue
@@ -265,8 +266,8 @@ export abstract class JobCook<T> extends JobPackrat {
                     LOG.error(`${res.error} failed to start after ${CookRequestRetryCount} retries`, LOG.LS.eJOB);
                     res.allowRetry = true; // allow outer level to retry job initiation
                     return res;
-                } else
-                    await H.Helpers.sleep(CookRetryDelay);
+                }
+                await H.Helpers.sleep(CookRetryDelay);
             }
 
             res = { success: true };
@@ -307,7 +308,7 @@ export abstract class JobCook<T> extends JobPackrat {
     }
     // #endregion
 
-    // returns true if polling indicates we're done; false if polling should continue
+    // returns success: true to indicate we're done polling; false if polling should continue
     private async pollingCallback(pollNumber: number): Promise<CookIOResults> {
         // LOG.info(`JobCook [${this.name()}] polling [${pollNumber}]`, LOG.LS.eJOB);
         // poll server for status update
@@ -516,7 +517,8 @@ export abstract class JobCook<T> extends JobPackrat {
         // if we cannot connect to Cook, try again:
         const connectFailure: boolean = (message !== null) &&
                                         (message.indexOf('getaddrinfo ENOTFOUND') > -1 ||
-                                         message.indexOf('connect EHOSTUNREACH') > -1);
+                                         message.indexOf('connect EHOSTUNREACH') > -1 ||
+                                         message.indexOf('connect ETIMEDOUT') > -1);
         if (connectFailure) {
             const error: string = `Cannot connect to Cook on ${requestUrl}: ${message}`;
             LOG.error(`JobCook [${this.name()}] ${method} ${error}`, LOG.LS.eJOB);

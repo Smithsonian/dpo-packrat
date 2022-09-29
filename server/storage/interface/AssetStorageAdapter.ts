@@ -20,7 +20,7 @@ import * as COMMON from '@dpo-packrat/common';
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import mime from 'mime';
+import * as mime from 'mime-types';
 
 export type AssetStorageResult = {
     asset: DBAPI.Asset | null;
@@ -756,8 +756,8 @@ export class AssetStorageAdapter {
                     if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
                         eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile;
                     else {
-                        const mimeType: string = mime.lookup(unzippedFileName);
-                        if (mimeType.startsWith('image/'))
+                        const mimeType: string | null = mime.lookup(unzippedFileName);
+                        if (mimeType && mimeType.startsWith('image/'))
                             eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile;
                         else
                             eAssetType = COMMON.eVocabularyID.eAssetAssetTypeOther;
@@ -973,7 +973,7 @@ export class AssetStorageAdapter {
         } else
             LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to extract metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
 
-        return { asset, assetVersion, success: res.success };
+        return { asset, assetVersion, success: true }; // we always return true at this point; i.e. we do not treat metadata extraction failures as ingestion failure
     }
 
     static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestAssetResult> {

@@ -14,21 +14,22 @@ import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 
-import express, { Request } from 'express';
+import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import cookieParser from 'cookie-parser';
-import { graphqlUploadExpress } from 'graphql-upload';
 import { v2 as webdav } from 'webdav-server';
+import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
 
 const monitorCPU: boolean = true;
+const monitorVerbose: boolean = false;
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
  * This object instantiates express(), wires together middleware, and perform initialization tasks
  */
 export class HttpServer {
-    public app = express();
+    public app: Express = express();
     private static _singleton: HttpServer | null = null;
 
     static async getInstance(): Promise<HttpServer | null> {
@@ -47,7 +48,7 @@ export class HttpServer {
         // call to initalize the EventFactory, which in turn will initialize the AuditEventGenerator, supplying the IEventEngine
         EventFactory.getInstance();
         if (monitorCPU) {
-            const monitor: CPUMonitor = new CPUMonitor(1000, 90, 10); // sample every second, alert if > 90% for more than 10 samples in a row
+            const monitor: CPUMonitor = new CPUMonitor(1000, 90, 10, monitorVerbose); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerbose -> verbose logging
             monitor.start();
         }
         return res;
@@ -57,8 +58,8 @@ export class HttpServer {
     private async configureMiddlewareAndRoutes(): Promise<boolean> {
         this.app.use(HttpServer.idRequestMiddleware);
         this.app.use(cors(authCorsConfig));
-        this.app.use(HttpServer.bodyProcessorExclusions, express.json()); // do not extract webdav PUT bodies into request.body element
-        this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true }));
+        this.app.use(HttpServer.bodyProcessorExclusions, express.json() as RequestHandler); // do not extract webdav PUT bodies into request.body element
+        this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true }) as RequestHandler);
         this.app.use(cookieParser());
         this.app.use(authSession);
         this.app.use(passport.initialize());
@@ -71,6 +72,7 @@ export class HttpServer {
         this.app.use('/graphql', graphqlUploadExpress());
 
         const server = new ApolloServer(ApolloServerOptions);
+        await server.start();
         server.applyMiddleware({ app: this.app, cors: false });
 
         this.app.get('/logtest', logtest);
