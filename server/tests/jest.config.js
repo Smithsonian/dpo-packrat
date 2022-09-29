@@ -48,5 +48,6 @@ module.exports = {
         // '**/tests/utils/zipStream.test.ts',
     ],
     testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/build/'],
-    setupFiles: ['<rootDir>/tests/setEnvVars.ts']
+    setupFiles: ['<rootDir>/tests/setEnvVars.ts'],
+    globalTeardown: '<rootDir>/tests/teardown.ts'
 };

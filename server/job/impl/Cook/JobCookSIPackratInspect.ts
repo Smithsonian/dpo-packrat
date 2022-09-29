@@ -128,7 +128,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     mappedId = assetMap.get(path.basename(fileName));
                 if (!mappedId) {
                     const error: string = `Missing ${fileName} and ${path.basename(fileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.saferStringify)}`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -220,7 +220,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedAssetId: number | undefined = assetIDMap.get(modelMaterialUVMap.idAsset);
                 if (!mappedAssetId) {
                     const error: string = `Missing ${modelMaterialUVMap.idAsset} from asset ID Map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -241,7 +241,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelMaterialChannel.idModelMaterial);
                 if (!mappedModelMaterialId) {
                     const error: string = `Missing ${modelMaterialChannel.idModelMaterial} from model material ID map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -251,7 +251,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     mappedModelMaterialUVMapId = modelMaterialUVMapIDMap.get(modelMaterialChannel.idModelMaterialUVMap);
                     if (!mappedModelMaterialUVMapId) {
                         const error: string = `Missing ${modelMaterialChannel.idModelMaterialUVMap} from model material UV ID map`;
-                        LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                        LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                         // return { success: false, error };
                         continue;
                     }
@@ -271,7 +271,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelObjectModelMaterialXref.idModelMaterial);
                 if (!mappedModelMaterialId) {
                     const error: string = `Missing ${modelObjectModelMaterialXref.idModelMaterial} from model material ID map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -279,7 +279,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelObjectId: number | undefined = modelObjectIDMap.get(modelObjectModelMaterialXref.idModelObject);
                 if (!mappedModelObjectId) {
                     const error: string = `Missing ${modelObjectModelMaterialXref.idModelObject} from model object ID map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -538,7 +538,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         return JCOutput;
     }
 
-    static async extractFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<JobCookSIPackratInspectOutput | null> {
+    static async extractJobRunFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<DBAPI.JobRun | null> {
         // find JobCook results for this asset version
         const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         if (!idVJobType) {
@@ -551,6 +551,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             LOG.info(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}, sourceMeshFile ${sourceMeshFile}`, LOG.LS.eJOB);
             return null;
         }
+        return jobRuns[0];
+    }
+
+    static async extractFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<JobCookSIPackratInspectOutput | null> {
+        const jobRun: DBAPI.JobRun | null = await JobCookSIPackratInspectOutput.extractJobRunFromAssetVersion(idAssetVersion, sourceMeshFile);
+        if (!jobRun)
+            return null;
 
         // Determine filename, file type, and date created by computing asset version:
         let fileName: string | null = null;
@@ -564,14 +571,14 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
         let JCOutput: JobCookSIPackratInspectOutput | null = null;
         try {
-            JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRuns[0].Output || ''), fileName, dateCreated);
+            JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRun.Output || ''), fileName, dateCreated);
         } catch (error) {
             LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion${JCOutput ? ' ' + JCOutput.error : ''}`, LOG.LS.eJOB, error);
             return null;
         }
 
         if (!JCOutput.success) {
-            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed extracting job output [${JCOutput.error}]: ${jobRuns[0].Output}`, LOG.LS.eJOB);
+            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed extracting job output [${JCOutput.error}]: ${jobRun.Output}`, LOG.LS.eJOB);
             return null;
         }
 
@@ -820,7 +827,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             }
             return new ZipFile(tempFile.path, true);
         } catch (err) {
-            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally  to ${tempFile.path}`, LOG.LS.eJOB, err);
+            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}`, LOG.LS.eJOB, err);
             return null;
         } finally {
             await tempFile.cleanup();

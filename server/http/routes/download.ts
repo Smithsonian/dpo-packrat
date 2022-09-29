@@ -11,7 +11,7 @@ import { SitemapGenerator } from './SitemapGenerator';
 import { isAuthenticated } from '../auth';
 
 import { Request, Response } from 'express';
-import mime from 'mime'; // const mime = require('mime-types'); // can't seem to make this work using "import * as mime from 'mime'"; subsequent calls to mime.lookup freeze!
+import * as mime from 'mime-types';
 import path from 'path';
 
 /** Used to provide download access to assets and reports. Access with one of the following URL patterns:
