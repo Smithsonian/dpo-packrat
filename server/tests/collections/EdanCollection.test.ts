@@ -16,6 +16,7 @@ enum eTestType {
     e3DPackageFetchTest,
     eScrapeDPO,
     eScrapeMigration,
+    eScrapeEDANListsMigration,
     eScrapeEDAN,
     eScrapeSpecial,
     eOneOff,
@@ -80,6 +81,12 @@ describe('Collections: EdanCollection', () => {
         case eTestType.eScrapeMigration:
             test('Collections: EdanCollection.scrape Migration', async () => {
                 await scrapeDPOMigrationMDM(ICol, 'd:\\Work\\SI\\EdanScrape.Migration.txt');
+            });
+            break;
+
+        case eTestType.eScrapeEDANListsMigration:
+            test('Collections: EdanCollection.scrape edanlists Migration', async () => {
+                await scrapeDPOEdanListsMigrationMDM(ICol, 'd:\\Work\\SI\\EdanScrape.EdanListsMigration.txt');
             });
             break;
 
@@ -560,16 +567,19 @@ export async function executeScrapeSpecial(ICol: COL.ICollection, fileName: stri
     if (!WS)
         LOG.info(`Unable to create writeStream for ${fileName}`, LOG.LS.eTEST);
 
-    await handleResults(ICol, WS, 'Amati, Nicolo Vn 1654, \'Brookings\' LOC', '484');
-    await handleResults(ICol, WS, 'Guarneri del Gesu Vn \'Baron Vitta\' 1730 SIL LOC', '494');
-    await handleResults(ICol, WS, 'Guarneri del Gesu Vn \'Kreisler\' 1732  LOC', '495');
-    await handleResults(ICol, WS, 'Stradivari Vn \'Hellier\' 1679 SIL', '553');
-    await handleResults(ICol, WS, 'Stradivari Vn \'Sunrise\' 1677 SIL', '556');
-    await handleResults(ICol, WS, 'Stradivari C \'Castelbarco\' 1697 LOC', '543');
-    await handleResults(ICol, WS, 'Stradivari Va \'Cassavetti\' 1727 LOC', '547');
-    await handleResults(ICol, WS, 'Stradivari Vn \'Betts\' 1704 LOC', '550');
-    await handleResults(ICol, WS, 'Stradivari Vn \'Castelbarco\' 1699 LOC', '551');
-    await handleResults(ICol, WS, 'Stradivari Vn \'Ward\' 1700 LOC', '559');
+    await handleResults(ICol, WS, 'edanmdm:dpo_3d_200036', '915');
+    await handleResults(ICol, WS, 'edanmdm:nasm_A19730040001', '902');
+    await handleResults(ICol, WS, 'edanmdm:nasm_A19730040002', '903');
+    await handleResults(ICol, WS, 'edanmdm:nasm_A19730040003', '904');
+    await handleResults(ICol, WS, 'edanmdm:nasm_A19730040003', '905');
+    await handleResults(ICol, WS, 'edanmdm:nmah_1449498', '910');
+    await handleResults(ICol, WS, 'edanmdm:nmah_1904641', '911');
+    await handleResults(ICol, WS, 'edanmdm:nmah_1904656', '912');
+    await handleResults(ICol, WS, 'edanmdm:nmah_1939648', '907');
+    await handleResults(ICol, WS, 'edanmdm:nmah_1939650', '908');
+    await handleResults(ICol, WS, 'edanmdm:nmah_1939654', '909');
+    await handleResults(ICol, WS, 'edanmdm:nmnhanthropology_8478070', '914');
+    await handleResults(ICol, WS, 'edanmdm:nmnhpaleobiology_3572783', '913');
 
     if (WS)
         WS.end();
@@ -1403,6 +1413,24 @@ export async function scrapeDPOMigrationMDM(ICol: COL.ICollection, fileName: str
 
     if (WS)
         WS.end();
+}
+
+export async function scrapeDPOEdanListsMigrationMDM(ICol: COL.ICollection, fileName: string): Promise<void> {
+    jest.setTimeout(1000 * 60 * 60);   // 1 hour
+
+    const WS: NodeJS.WritableStream = await fs.createWriteStream(fileName, { 'flags': 'a' });
+    if (!WS)
+        LOG.info(`Unable to create writeStream for ${fileName}`, LOG.LS.eTEST);
+
+    await handleResults(ICol, WS, 'edanlists:p2b-1601389276209-1602191757227-0', '115', { searchMetadata: true, gatherRaw: true });
+    await handleResults(ICol, WS, 'edanlists:p2b-1601388908954-1602191481746-0', '120', { searchMetadata: true, gatherRaw: true });
+    await handleResults(ICol, WS, 'edanlists:p2b-1601388908954-1602190270053-0', '121', { searchMetadata: true, gatherRaw: true });
+    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581618317463-0', '141', { searchMetadata: true, gatherRaw: true });
+    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581355895303-0', '173', { searchMetadata: true, gatherRaw: true });
+    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581618462852-0', '180', { searchMetadata: true, gatherRaw: true });
+    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581618944850-0', '204', { searchMetadata: true, gatherRaw: true });
+    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581628550322-0', '388', { searchMetadata: true, gatherRaw: true });
+    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581619988547-0', '399', { searchMetadata: true, gatherRaw: true });
 }
 // #endregion
 
