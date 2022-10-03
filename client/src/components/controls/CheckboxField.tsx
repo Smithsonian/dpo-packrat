@@ -5,7 +5,7 @@
  *
  * This component renders checkbox field used in ingestion and repository UI.
  */
-import { Checkbox, Tooltip } from '@material-ui/core';
+import { Checkbox } from '@material-ui/core';
 import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -20,7 +20,6 @@ interface CheckboxFieldProps extends ViewableProps {
     value: boolean | null;
     onChange: ((event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void) | undefined;
     required?: boolean;
-    tooltip?: any;
     valueLeftAligned?: boolean;
     gridValue?: number;
     gridLabel?: number;
@@ -37,7 +36,7 @@ export const CheckboxNoPadding = withStyles({
 })(Checkbox);
 
 function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
-    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, updated = false, tooltip, valueLeftAligned = false, gridValue, gridLabel, padding, gridGap, containerStyle } = props;
+    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, updated = false, valueLeftAligned = false, gridValue, gridLabel, padding, gridGap, containerStyle } = props;
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0, ...containerStyle } };
     const checkbox = (
         <CheckboxNoPadding
@@ -64,11 +63,7 @@ function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
             padding={padding}
             gridGap={gridGap}
         >
-            {tooltip ? (
-                <Tooltip {...tooltip}>
-                    {checkbox}
-                </Tooltip>
-            ) : checkbox}
+            {checkbox}
         </FieldType>
     );
 }

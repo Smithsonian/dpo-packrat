@@ -6,7 +6,7 @@
  *
  * This component renders the source object list with add capability.
  */
-import { Box, Button, Typography, Table, TableBody, TableCell, TableContainer, TableRow, TableHead } from '@material-ui/core';
+import { Box, Button, Typography, Table, TableBody, TableCell, TableContainer, TableRow, TableHead, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
@@ -19,6 +19,15 @@ import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../
 import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared';
 import { toast } from 'react-toastify';
 import { eSystemObjectType } from '@dpo-packrat/common';
+import { HelpOutline } from '@material-ui/icons';
+import { ToolTip } from '../../../../../components';
+
+const sourceTooltip = `Examples Include:
+-A list of the capture dataset(s) that were used to produce a master model that is being ingested
+-The master model that was used to create a scene that is being ingested`;
+
+const derivedTooltip = `Examples Include:
+-A master model that was created from a dataset that is being ingested`;
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -47,8 +56,7 @@ const useStyles = makeStyles(({ palette }) => ({
         cursor: 'pointer'
     },
     addButton: {
-        ...sharedButtonProps,
-        marginTop: 10
+        ...sharedButtonProps
     },
     nameCell: {
         padding: '0px 0px 0px 8px',
@@ -127,9 +135,12 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
                     )}
                 </Table>
             </TableContainer>
-            <Button className={classes.addButton} disableElevation color='primary' variant='contained' onClick={() => onAdd()} disabled={disabled}>
-                {buttonLabel}
-            </Button>
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: 10, columnGap: 10 }}>
+                <Button className={classes.addButton} disableElevation color='primary' variant='contained' onClick={() => onAdd()} disabled={disabled}>
+                    {buttonLabel}
+                </Button>
+                <Tooltip arrow title={ <ToolTip text={type === RelatedObjectType.Source ? sourceTooltip : derivedTooltip} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
+            </div>
         </Box>
     );
 }

@@ -70,13 +70,12 @@ class UploadAssetWorker extends ResolverBase {
             LOG.error('uploadAsset unable to retrieve user context', LOG.LS.eGQL);
             return { status: UploadStatus.Noauth, error: 'User not authenticated' };
         }
-
-        if (this.idSOAttachment)
-            await this.appendToWFReport(`<b>Upload starting</b>: ATTACH ${filename}`, true);
-        else if (!this.idAsset)
-            await this.appendToWFReport(`<b>Upload starting</b>: ADD ${filename}`, true);
-        else
+        if (this.idAsset)
             await this.appendToWFReport(`<b>Upload starting</b>: UPDATE ${filename}`, true);
+        else if (this.idSOAttachment)
+            await this.appendToWFReport(`<b>Upload starting</b>: ATTACH ${filename}`, true);
+        else
+            await this.appendToWFReport(`<b>Upload starting</b>: ADD ${filename}`, true);
 
         const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
@@ -250,7 +249,7 @@ class UploadAssetWorker extends ResolverBase {
         }
 
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
-        const results: H.IOResults = workflow ? await workflow.waitForCompletion(3600000) : { success: true };
+        const results: H.IOResults = workflow ? await workflow.waitForCompletion(1 * 60 * 60 * 1000) : { success: true }; // 1 hour
         if (!results.success) {
             for (const assetVersion of assetVersions)
                 await UploadAssetWorker.retireFailedUpload(assetVersion);

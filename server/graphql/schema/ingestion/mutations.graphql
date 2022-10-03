@@ -82,6 +82,7 @@ input IngestModelInput {
     sourceObjects: [RelatedObjectInput!]!
     derivedObjects: [RelatedObjectInput!]!
     updateNotes: String
+    skipSceneGenerate: Boolean
 }
 
 input IngestSceneInput {

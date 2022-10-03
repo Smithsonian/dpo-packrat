@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import solr from 'solr-client';
-import { ClientRequest } from 'http';
 
 import * as NAV from '../../interface';
 import * as LOG from '../../../utils/logger';
@@ -63,11 +62,11 @@ export class NavigationSolr implements NAV.INavigation {
                     SQ = SQ.q(filter.search.replace(/:/g, '\\:'));          // search text, escaping :
                     SQ = SQ.qf({ CommonIdentifier: 5, _text_: 1 });         // match both common identifiers, boosted, and general text, unboosted
                     break;
-                case eArkIDIdentifier.ePartial:                             // Partial ARK ID (ark:/.*)
+                case eArkIDIdentifier.ePartial:                             // Partial ARK ID (ark:.*)
                     SQ = SQ.q(`*${filter.search.replace(/:/g, '\\:')}*`);   // search text, escaping :, wrapped in wildcards
                     SQ = SQ.qf({ CommonIdentifier: 5 });                    // match only common identifiers
                     break;
-                case eArkIDIdentifier.eFull:                                // Full ARK ID (http://n2t.net/ark:/.*)
+                case eArkIDIdentifier.eFull:                                // Full ARK ID (http://n2t.net/ark:.*)
                     SQ = SQ.q(filter.search.replace(/:/g, '\\:'));          // search text, escaping :
                     SQ = SQ.qf({ CommonIdentifier: 5 });                    // match only common identifiers
                     break;
@@ -153,15 +152,16 @@ export class NavigationSolr implements NAV.INavigation {
     }
 
     /** if search appears to only be an ARKID (no whitespace, and starts with)
-     *      "http://n2t.net/ark:/"  -- returns eArkIDIdentifier.eFull
-     *      "ark:/"                 -- returns eArkIDIdentifier.ePartial
+     *      "http://n2t.net/ark:"  -- returns eArkIDIdentifier.eFull
+     *      "ark:"                 -- returns eArkIDIdentifier.ePartial
      *  otherwise returns eArkIDIdentifier.eNone
      */
     private testSearchStringForArkID(search: string): eArkIDIdentifier {
-        // http://n2t.net/ark:/65665/ye38ff23cd0-11a9-4b72-a24b-fdcc267dd296
+        // http://n2t.net/ark:/65665/ye38ff23cd0-11a9-4b72-a24b-fdcc267dd296 or
+        // http://n2t.net/ark:65665/ye38ff23cd0-11a9-4b72-a24b-fdcc267dd296
         const searchNormalized: string = search.toLowerCase();
-        const fullArkID: boolean = searchNormalized.startsWith('http://n2t.net/ark:/');
-        if (!fullArkID && !searchNormalized.startsWith('ark:/'))
+        const fullArkID: boolean = searchNormalized.startsWith('http://n2t.net/ark:');
+        if (!fullArkID && !searchNormalized.startsWith('ark:'))
             return eArkIDIdentifier.eNone;
         if (search.indexOf(' ') != -1)
             return eArkIDIdentifier.eNone;
@@ -245,18 +245,18 @@ export class NavigationSolr implements NAV.INavigation {
             LOG.error(`NavigationSolr.executeSolrNavQuery: ${error}`, LOG.LS.eNAV);
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
-        if (!queryResult.result || !queryResult.result.response || queryResult.result.response.numFound === undefined ||
-            (queryResult.result.response.numFound > 0 && !queryResult.result.response.docs)) {
+        if (!queryResult.result || queryResult.result.numFound === undefined ||
+            (queryResult.result.numFound > 0 && !queryResult.result.docs)) {
             error = `Solr Nav Query Response malformed: ${JSON.stringify(queryResult.result)}`;
             LOG.error(`NavigationSolr.executeSolrNavQuery: ${error}`, LOG.LS.eNAV);
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
 
-        LOG.info(`NavigationSolr.executeSolrNavQuery: { numFound: ${queryResult.result.response.numFound}, ` +
-            `start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length}, ` +
+        LOG.info(`NavigationSolr.executeSolrNavQuery: { numFound: ${queryResult.result.numFound}, ` +
+            `start: ${queryResult.result.start}, docsCount: ${queryResult.result.docs.length}, ` +
             `nextCursorMark: ${queryResult.result.nextCursorMark} }`, LOG.LS.eNAV);
         // let docNumber: number = 1;
-        for (const doc of queryResult.result.response.docs) {
+        for (const doc of queryResult.result.docs) {
             if (!doc.id || !doc.CommonObjectType || !doc.CommonidObject || (doc.CommonName === null)) {
                 LOG.error(`NavigationSolr.executeSolrNavQuery: malformed query response document ${JSON.stringify(doc)}`, LOG.LS.eNAV);
                 continue;
@@ -426,17 +426,17 @@ export class NavigationSolr implements NAV.INavigation {
             LOG.error(`NavigationSolr.executeSolrMetaQuery: ${error}`, LOG.LS.eNAV);
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
-        if (!queryResult.result || !queryResult.result.response || queryResult.result.response.numFound === undefined ||
-            (queryResult.result.response.numFound > 0 && !queryResult.result.response.docs)) {
+        if (!queryResult.result || queryResult.result.numFound === undefined ||
+            (queryResult.result.numFound > 0 && !queryResult.result.docs)) {
             error = `Solr Meta Query Response malformed: ${JSON.stringify(queryResult.result)}`;
             LOG.error(`NavigationSolr.executeSolrMetaQuery: ${error}`, LOG.LS.eNAV);
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
 
-        LOG.info(`NavigationSolr.executeSolrMetaQuery: { numFound: ${queryResult.result.response.numFound}, ` +
-            `start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length} }`, LOG.LS.eNAV);
+        LOG.info(`NavigationSolr.executeSolrMetaQuery: { numFound: ${queryResult.result.numFound}, ` +
+            `start: ${queryResult.result.start}, docsCount: ${queryResult.result.docs.length} }`, LOG.LS.eNAV);
         // let docNumber: number = 1;
-        for (const doc of queryResult.result.response.docs) {
+        for (const doc of queryResult.result.docs) {
             if (!doc.id || !doc.idSystemObjectParent) {
                 LOG.error(`NavigationSolr.executeSolrMetaQuery: malformed query response document ${JSON.stringify(doc)}`, LOG.LS.eNAV);
                 continue;
@@ -471,18 +471,14 @@ export class NavigationSolr implements NAV.INavigation {
     // #endregion
 
     // #region Execute Nav Helpers
-    private executeSolrQueryWorker(solrClient: SolrClient, SQ: solr.Query): Promise<SolrQueryResult> {
-        return new Promise<any>((resolve) => {
-            const request: ClientRequest = solrClient._client.search(SQ,
-                function (err, obj) {
-                    if (err) {
-                        LOG.error('NavigationSolr.executeSolrQueryWorker', LOG.LS.eNAV, err);
-                        resolve({ result: null, error: err });
-                    } else
-                        resolve({ result: obj });
-                });
-            request;
-        });
+    private async executeSolrQueryWorker(solrClient: SolrClient, SQ: solr.Query): Promise<SolrQueryResult> {
+        try {
+            const SR = await solrClient._client.search(SQ);
+            return { result: SR.response, error: null };
+        } catch (err) {
+            LOG.error('NavigationSolr.executeSolrQueryWorker', LOG.LS.eNAV, err);
+            return { result: null, error: (err instanceof Error) ? err.toString() : 'Unexpected error' };
+        }
     }
 
     private computeMetadataFromString(value: string | undefined): string {

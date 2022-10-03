@@ -7,7 +7,7 @@ import * as THREE from 'three';
 
 export type SvxNonModelAsset = {
     uri: string;
-    type: string;
+    type: 'Image' | 'Article';
     description?: string | undefined;
     size?: number | undefined;
     idAssetVersion?: number | undefined;

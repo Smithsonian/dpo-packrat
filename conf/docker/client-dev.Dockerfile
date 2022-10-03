@@ -1,4 +1,4 @@
-FROM node:14.17.1-alpine AS client
+FROM node:18.9.0-alpine AS client
 # Add a work directory, copy package.json for caching, copy app files
 WORKDIR /app
 ADD package*.json .

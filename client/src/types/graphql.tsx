@@ -773,6 +773,8 @@ export type GetSceneForAssetVersionResult = {
   __typename?: 'GetSceneForAssetVersionResult';
   idAssetVersion: Scalars['Int'];
   SceneConstellation?: Maybe<SceneConstellation>;
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
 };
 
 
@@ -1007,6 +1009,7 @@ export type IngestModelInput = {
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
   updateNotes?: Maybe<Scalars['String']>;
+  skipSceneGenerate?: Maybe<Scalars['Boolean']>;
 };
 
 export type IngestSceneInput = {
@@ -3532,7 +3535,7 @@ export type GetSceneForAssetVersionQuery = (
   { __typename?: 'Query' }
   & { getSceneForAssetVersion: (
     { __typename?: 'GetSceneForAssetVersionResult' }
-    & Pick<GetSceneForAssetVersionResult, 'idAssetVersion'>
+    & Pick<GetSceneForAssetVersionResult, 'idAssetVersion' | 'success' | 'message'>
     & { SceneConstellation?: Maybe<(
       { __typename?: 'SceneConstellation' }
       & { Scene?: Maybe<(
@@ -6116,6 +6119,8 @@ export const GetSceneForAssetVersionDocument = gql`
     query getSceneForAssetVersion($input: GetSceneForAssetVersionInput!) {
   getSceneForAssetVersion(input: $input) {
     idAssetVersion
+    success
+    message
     SceneConstellation {
       Scene {
         idScene

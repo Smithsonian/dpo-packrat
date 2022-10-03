@@ -54,7 +54,7 @@ export interface ICollection {
 
     /** Identifier services */
     /** Pass in a null shoulder to use the system shoulder */
-    generateArk(shoulder: string | null, prependNameAuthority: boolean): string;
+    generateArk(shoulder: string | null, prependNameAuthority: boolean, isMedia: boolean): string;
     extractArkFromUrl(url: string): string | null;
     transformArkIntoUrl(arkId: string): string
     getArkNameMappingAuthority(): string;

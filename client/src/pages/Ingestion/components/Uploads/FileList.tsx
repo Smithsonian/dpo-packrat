@@ -8,28 +8,42 @@ import React from 'react';
 import { FileId, FileUploadStatus, IngestionFile, useUploadStore, useVocabularyStore, VocabularyOption } from '../../../../store';
 import { eVocabularySetID } from '@dpo-packrat/common';
 import FileListItem from './FileListItem';
+import { UploadReferences } from '../../../../store/upload';
+import { eIngestionMode } from '../../../../constants';
 
 interface FileListProps {
     files: IngestionFile[];
     uploadPendingList?: boolean;
+    references?: UploadReferences;
+    uploadType?: eIngestionMode;
+    idSystemObject?: number;
 }
 
 function FileList(props: FileListProps): React.ReactElement {
     const { selectFile } = useUploadStore();
     const { getEntries } = useVocabularyStore();
-    const { files, uploadPendingList } = props;
-
-    const { startUpload, retryUpload, cancelUpload, removeUpload, changeAssetType } = useUploadStore();
-
+    const { files, uploadPendingList, references, idSystemObject } = props;
+    const { startUpload, retryUpload, retrySpecialUpload, cancelUpload, cancelSpecialUpload, removeUpload, removeSpecialPending, changeAssetType } = useUploadStore();
     const onChangeType = (id: FileId, assetType: number): void => changeAssetType(id, assetType);
 
-    const onUpload = (id: FileId): void => startUpload(id);
+    const onUpload = (id: FileId): void => {
+        if (references && idSystemObject)
+            startUpload(id, { idSystemObject, references });
+        else
+            startUpload(id);
+    };
 
     const onRetry = (id: FileId): void => retryUpload(id);
 
+    const onRetrySpecial = (uploadType: eIngestionMode, idSO: number) => retrySpecialUpload(uploadType, idSO);
+
     const onCancel = (id: FileId): void => cancelUpload(id);
 
+    const onCancelSpecial = (uploadType: eIngestionMode, idSO: number) => cancelSpecialUpload(uploadType, idSO);
+
     const onRemove = (id: FileId): void => removeUpload(id);
+
+    const onRemoveSpecial = (uploadType: eIngestionMode, idSO: number) => removeSpecialPending(uploadType, idSO);
 
     const onSelect = (id: FileId, selected: boolean): void => selectFile(id, selected);
 
@@ -60,12 +74,17 @@ function FileList(props: FileListProps): React.ReactElement {
                     onChangeType={onChangeType}
                     onSelect={onSelect}
                     onCancel={onCancel}
+                    onCancelSpecial={onCancelSpecial}
                     onUpload={onUpload}
                     onRetry={onRetry}
+                    onRetrySpecial={onRetrySpecial}
                     onRemove={onRemove}
+                    onRemoveSpecial={onRemoveSpecial}
                     idAsset={idAsset}
                     idSOAttachment={idSOAttachment}
+                    references={references}
                     uploadPendingList={uploadPendingList}
+                    idSystemObject={idSystemObject}
                 />
             </AnimatePresence>
         );

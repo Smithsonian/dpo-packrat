@@ -12,7 +12,7 @@ import KeepAlive from 'react-activation';
 import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
-import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute, eIngestionMode } from '../../../../constants';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { useMetadataStore, useUploadStore, useVocabularyStore } from '../../../../store';
 import { Colors } from '../../../../theme';
 import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
@@ -73,11 +73,9 @@ function Uploads(): React.ReactElement {
     const [updatedAssetVersionMetadata, setUpdatedAssetVersionMetadata] = useState();
 
     const [updateVocabularyEntries, getEntries] = useVocabularyStore(state => [state.updateVocabularyEntries, state.getEntries]);
-    const [completed, discardFiles, setUpdateMode, setUpdateWorkflowFileType, getSelectedFiles, selectFile] = useUploadStore(state => [
+    const [completed, discardFiles, getSelectedFiles, selectFile] = useUploadStore(state => [
         state.completed,
         state.discardFiles,
-        state.setUpdateMode,
-        state.setUpdateWorkflowFileType,
         state.getSelectedFiles,
         state.selectFile
     ]);
@@ -89,24 +87,7 @@ function Uploads(): React.ReactElement {
     ]);
     const { ingestionStart, ingestionComplete, ingestionReset } = useIngest();
     const assetTypes = getEntries(eVocabularySetID.eAssetAssetType);
-    let idVAssetType: number;
     const urlParams = new URLSearchParams(window.location.search);
-
-    // Responsible for setting UpdateMode state and file type so that it files to be updated will have the appropriate file type
-    useEffect(() => {
-        setUpdateMode(Number(urlParams.get('mode')) === eIngestionMode.eIngest);
-        const fileType = urlParams.get('fileType');
-        if (fileType && typeof fileType === 'string') {
-            for (let i = 0; i < assetTypes.length; i++) {
-                if (assetTypes[i].Term === fileType) {
-                    idVAssetType = assetTypes[i].idVocabulary;
-                    break;
-                }
-            }
-            // setting update workflow file type here allows the FileListItem to automatically select the correct asset type
-            setUpdateWorkflowFileType(idVAssetType);
-        }
-    }, [setUpdateMode, window.location.search]);
 
     // Responsible for checking if there's an uploaded model with the same name as the one intended to be ingested. If there is, automatically select it and start the ingestion workflow
     useEffect(() => {
@@ -152,7 +133,6 @@ function Uploads(): React.ReactElement {
                 if (success) {
                     toast.success('Ingestion complete');
                     ingestionComplete();
-                    setUpdateMode(false);
                 } else {
                     toast.error(`Ingestion failed, please try again later. Error: ${message}`);
                 }
@@ -296,6 +276,10 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
         UploadEvents.subscribe(UploadEventType.COMPLETE, onComplete);
 
         return () => {
+            UploadEvents.unsubscribe(UploadEventType.PROGRESS, onProgress);
+            UploadEvents.unsubscribe(UploadEventType.SET_CANCELLED, onSetCancelled);
+            UploadEvents.unsubscribe(UploadEventType.FAILED, onFailed);
+            UploadEvents.unsubscribe(UploadEventType.COMPLETE, onComplete);
             console.log('Thread closed');
         };
     }, []);

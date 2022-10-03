@@ -264,7 +264,10 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         storageHash = await H.Helpers.createRandomFile(WSR.writeStream, fileSize);
         expect(storageHash).toBeTruthy();
     } else {
-        expect(await H.Helpers.writeFileToStream(fileName, WSR.writeStream)).toBeTruthy();
+        const wsrRes: H.IOResults = await H.Helpers.writeFileToStream(fileName, WSR.writeStream);
+        WSR.writeStream.end();
+
+        expect(wsrRes.success).toBeTruthy();
         const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(fileName, 'sha512');
         expect(hashResults.success).toBeTruthy();
         storageHash = hashResults.hash;

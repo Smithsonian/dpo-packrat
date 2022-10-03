@@ -55,6 +55,10 @@ export class LocalStore {
     setWorkflowReportID(idWorkflowReport: number | undefined): void {
         this.idWorkflowReport = idWorkflowReport;
     }
+
+    incrementRequestID(): void {
+        this.idRequest = LocalStore.getIDRequestNext();
+    }
 }
 
 export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {

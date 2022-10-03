@@ -1,6 +1,6 @@
 {
   "name": "@dpo-packrat/e2e",
-  "version": "0.9.10",
+  "version": "0.9.12",
   "private": true,
   "license": "Apache-2.0",
   "description": "E2E tests for packrat",
@@ -35,7 +35,7 @@
     "ts-jest": "26.5.4"
   },
   "volta": {
-   "node": "14.17.1",
-   "yarn": "1.22.10"
+   "node": "18.9.0",
+   "yarn": "1.22.19"
   }
 }
