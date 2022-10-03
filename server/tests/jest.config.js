@@ -38,8 +38,8 @@ module.exports = {
         // '**/tests/storage/interface/AssetStorageAdapter.test.ts',
         // '**/tests/storage/impl/LocalStorage/OCFL.test.ts',
         // '**/tests/storage/impl/LocalStorage/LocalStorage.test.ts',
+        // '**/tests/utils/email.test.ts',
         // '**/tests/utils/helpers.test.ts',
-        // '**/tests/utils/migration/SceneMigration.test.ts',
         // '**/tests/utils/parser/bagitReader.test.ts',
         // '**/tests/utils/parser/bulkIngestReader.test.ts',
         // '**/tests/utils/parser/csvParser.test.ts',
@@ -48,5 +48,6 @@ module.exports = {
         // '**/tests/utils/zipStream.test.ts',
     ],
     testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/build/'],
-    setupFiles: ['<rootDir>/tests/setEnvVars.ts']
+    setupFiles: ['<rootDir>/tests/setEnvVars.ts'],
+    globalTeardown: '<rootDir>/tests/teardown.ts'
 };

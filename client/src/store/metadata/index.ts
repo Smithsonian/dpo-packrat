@@ -26,7 +26,7 @@ import { StateSubject, useSubjectStore } from '../subject';
 import { FileId, IngestionFile, useUploadStore } from '../upload';
 import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState, parseSubtitlesToState } from '../utils';
 import { useVocabularyStore } from '../vocabulary';
-import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema, defaultSceneAttachmentFields } from './metadata.defaults';
+import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema, defaultSceneAttachmentFields, subtitleFieldsSchema } from './metadata.defaults';
 import {
     FieldErrors,
     MetadataFieldValue,
@@ -42,6 +42,7 @@ import {
     StateIdentifier,
     StateMetadata,
     ValidateFields,
+    SubtitleFields
 } from './metadata.types';
 import { nullableSelectFields } from '../../utils/controls';
 
@@ -60,14 +61,16 @@ type MetadataStore = {
     updateCameraSettings: (metadatas: StateMetadata[]) => Promise<StateMetadata[]>;
     reset: () => void;
     getMetadatas: () => StateMetadata[];
+    getSubtitlesError: (subtitles: SubtitleFields) => boolean;
 };
 
 export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
     metadatas: [],
     getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => identifiers,
     getFieldErrors: (metadata: StateMetadata): FieldErrors => {
+        // Note: the field errors this function returns is how the UI renders error styling
         const { getAssetType } = useVocabularyStore.getState();
-        // UPDATE these error fields as we include more validation for ingestion
+        const { getSubtitlesError } = get();
         const errors: FieldErrors = {
             photogrammetry: {
                 dateCaptured: false,
@@ -80,7 +83,11 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 modality: false,
                 units: false,
                 purpose: false,
-                modelFileType: false
+                modelFileType: false,
+                subtitles: false,
+            },
+            scene: {
+                subtitles: false
             }
         };
 
@@ -102,6 +109,11 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             errors.model.units = lodash.isNull(metadata.model.units);
             errors.model.purpose = lodash.isNull(metadata.model.purpose);
             errors.model.modelFileType = lodash.isNull(metadata.model.modelFileType);
+            errors.model.subtitles = getSubtitlesError(metadata.model.subtitles);
+        }
+
+        if (assetType.scene) {
+            errors.scene.subtitles = getSubtitlesError(metadata.scene.subtitles);
         }
 
         return errors;
@@ -446,9 +458,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 toast.error('Failed to fetch titles for ingestion items');
                 return;
             }
-            // console.log('selectedItem', selectedItem);
-            // console.log('ingestTitleInput', { id: Number(selectedItem?.id) || -1, subtitle, name, entireSubject: selectedItem?.entireSubject });
-            // console.log('ingestTitle', ingestTitle);
             const metadatasCopy = lodash.cloneDeep(metadatas);
             const subtitleState = parseSubtitlesToState(ingestTitle);
 
@@ -513,6 +522,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
                 if (fileId === idAssetVersion) {
                     if (photogrammetry.folders.length) {
+                        photogrammetry.folders = photogrammetry.folders.map((folder, index) => ({
+                            ...folder,
+                            id: index
+                        }));
                         return metadata;
                     }
 
@@ -574,6 +587,22 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     getMetadatas: () => {
         const { metadatas } = get();
         return metadatas;
+    },
+    getSubtitlesError: (subtitles: SubtitleFields): boolean => {
+        let hasError: boolean = false;
+        const options: yup.ValidateOptions = {
+            abortEarly: false
+        };
+
+        toast.dismiss();
+
+        try {
+            subtitleFieldsSchema.validateSync(subtitles, options);
+        } catch (error) {
+            hasError = true;
+        }
+
+        return hasError;
     }
 }));
 

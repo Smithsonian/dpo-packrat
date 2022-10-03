@@ -19,6 +19,7 @@ export enum LS { // logger section
     eHTTP,  // http
     eJOB,   // job
     eMETA,  // metadata
+    eMIG,   // migration
     eNAV,   // navigation
     eRPT,   // report
     eSTR,   // storage
@@ -40,6 +41,10 @@ export function error(message: string | undefined, eLogSection: LS, obj: any | n
         logger.error(message ?? '', { eLS: eLogSection });
 }
 
+export function end(): void {
+    logger.end();
+}
+
 function loggerSectionName(eLogSection: LS | undefined): string {
     switch (eLogSection) {
         case LS.eAUDIT: return 'AUD';
@@ -53,6 +58,7 @@ function loggerSectionName(eLogSection: LS | undefined): string {
         case LS.eHTTP:  return 'HTP';
         case LS.eJOB:   return 'JOB';
         case LS.eMETA:  return 'MET';
+        case LS.eMIG:   return 'MIG';
         case LS.eNAV:   return 'NAV';
         case LS.eRPT:   return 'RPT';
         case LS.eSTR:   return 'STR';
@@ -99,12 +105,12 @@ function configureLogger(logPath: string | null): void {
         transports: [
             new winston.transports.File({
                 filename: path.join(logPath, 'PackratCombined.log'),
-                maxsize: 10485760 // 10MB
+                maxsize: 100 * 1024 * 1024 // 100 MB
             }),
             new winston.transports.File({
                 filename: path.join(logPath, 'PackratError.log'),
                 level: 'error',
-                maxsize: 10485760 // 10MB
+                maxsize: 100 * 1024 * 1024 // 100 MB
             }),
         ]
     });

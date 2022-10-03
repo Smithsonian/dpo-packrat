@@ -10,6 +10,7 @@ import { promises as fsp } from 'fs';
 import * as crypto from 'crypto';
 
 import * as LOG from './logger';
+import { Readable, Writable } from 'stream';
 
 export type IOResults = {
     success: boolean;
@@ -200,7 +201,7 @@ export class Helpers {
 
     static async removeDirectory(directory: string, recursive: boolean = false, logErrors: boolean = true): Promise<IOResults> {
         try {
-            await fsp.rmdir(directory, { recursive });
+            await fsp.rmdir(directory, { recursive }); // await fsp.rm(directory, { recursive });
         } catch (error) /* istanbul ignore next */ {
             if (logErrors)
                 LOG.error('Helpers.removeDirectory', LOG.LS.eSYS, error);
@@ -345,14 +346,17 @@ export class Helpers {
     }
 
     static async writeStreamToFile(readStream: NodeJS.ReadableStream, fileName: string): Promise<IOResults> {
+        let writeStream: NodeJS.WritableStream | null = null;
         try {
-            const writeStream: NodeJS.WritableStream = await fs.createWriteStream(fileName);
+            writeStream = await fs.createWriteStream(fileName);
             const retValue: IOResults = await Helpers.writeStreamToStream(readStream, writeStream);
-            writeStream.end();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.writeStreamToFile', LOG.LS.eSYS, error);
             return { success: false, error: `Helpers.writeStreamToFile: ${JSON.stringify(error)}` };
+        } finally {
+            if (writeStream)
+                writeStream.end();
         }
     }
 
@@ -382,6 +386,7 @@ export class Helpers {
                     writeStream.on('finish', () => { resolve({ success: true, size }); }); /* istanbul ignore next */
                     writeStream.on('end', () => { resolve({ success: true, size }); }); /* istanbul ignore next */
                 } else {
+                    readStream.on('end', () => { resolve({ success: true, size }); });
                     writeStream.on('end', () => { resolve({ success: true, size }); });
                 } /* istanbul ignore next */
                 readStream.on('error', () => { resolve({ success: false, error: 'Unknown readstream error', size }); });
@@ -393,6 +398,18 @@ export class Helpers {
             LOG.error('Helpers.writeStreamToStream', LOG.LS.eSYS, error);
             return { success: false, error: `Helpers.writeFileToStream: ${JSON.stringify(error)}`, size: 0 };
         }
+    }
+
+    static destroyReadStream(stream: NodeJS.ReadableStream): void {
+        const read: Readable = stream as Readable;
+        if (read)
+            read.destroy();
+    }
+
+    static destroyWriteStream(stream: NodeJS.WritableStream): void {
+        const write: Writable = stream as Writable;
+        if (write)
+            write.destroy();
     }
 
     static async writeJsonAndComputeHash(dest: string, obj: any, hashMethod: string, replacer: any | null = null): Promise<HashResults> {

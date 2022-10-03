@@ -5,7 +5,7 @@ import { IZip, zipFilterResults } from './IZip';
 
 /**
  * This ZIP implementation uses JSZip and reads everything into memory before unzipping.
- * Use zipStreamReader when you have a filename and you want fully streamed behavior -
+ * Use zipFile when you have a filename and you want fully streamed behavior -
  * the file won't be read into memory all at once.
  */
 export class ZipStream implements IZip {

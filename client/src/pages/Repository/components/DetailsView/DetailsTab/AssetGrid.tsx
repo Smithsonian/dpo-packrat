@@ -17,8 +17,6 @@ import { getObjectAssets } from '../../../hooks/useDetailsView';
 import { getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { sharedButtonProps, formatDate, formatDateAndTime } from '../../../../../utils/shared';
-import { updateSystemObjectUploadRedirect, attachSystemObjectUploadRedirect } from '../../../../../constants';
-import { useHistory } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import MUIDataTable from 'mui-datatables';
 import { CheckCircleOutline, GetApp } from '@material-ui/icons';
@@ -27,6 +25,8 @@ import clsx from 'clsx';
 import { DataTableOptions } from '../../../../../types/component';
 import API from '../../../../../api';
 import { truncateMiddleWithEllipses } from '../../../../../constants';
+import { eIngestionMode } from '../../../../../constants';
+import { UploadReferences } from '../../../../../store';
 
 export const useStyles = makeStyles(({ palette }) => ({
     btn: {
@@ -132,6 +132,7 @@ export const useStyles = makeStyles(({ palette }) => ({
 interface AssetGridProps {
     idSystemObject: number;
     systemObjectType?: eSystemObjectType;
+    onUploaderOpen: (objectType: eIngestionMode, references: UploadReferences) => void;
 }
 
 const getMuiTheme = () =>
@@ -196,9 +197,8 @@ const getMuiTheme = () =>
 
 function AssetGrid(props: AssetGridProps): React.ReactElement {
     const classes = useStyles();
-    const { idSystemObject, systemObjectType } = props;
+    const { idSystemObject, systemObjectType, onUploaderOpen } = props;
     const serverEndpoint = API.serverEndpoint();
-    const history = useHistory();
     const [assetColumns, setAssetColumns] = useState<any>([]);
     const [assetRows, setAssetRows] = useState<any[]>([]);
 
@@ -291,6 +291,15 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                 case eAssetGridColumnType.eHyperLink:
                     gridColumnObject.options = {
                         ...gridColumnObject.options,
+                        sortCompare: (order) => {
+                            return (obj1, obj2) => {
+                                const label1 = typeof obj1.data.label === 'string' ? obj1.data.label.toLowerCase() : obj1.data.path;
+                                const label2 = typeof obj2.data.label === 'string' ? obj2.data.label.toLowerCase() : obj2.data.path;
+                                let comparisonVal = 1;
+                                if (label1 < label2) comparisonVal = -1;
+                                return (order === 'asc') ? comparisonVal : -comparisonVal;
+                            };
+                        },
                         customBodyRender(value) {
                             if (value.label) {
                                 if (value.origin === eLinkOrigin.eClient) {
@@ -378,20 +387,14 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         }
     };
 
-    let redirect = () => {};
+    let onAddVersion;
     if (assetRows.length > 0 && assetRows[0]) {
-        const { idAsset, idAssetVersion, assetType } = assetRows[0];
-        redirect = () => {
-            const newEndpoint = updateSystemObjectUploadRedirect(idAsset, idAssetVersion, systemObjectType, assetType);
-            history.push(newEndpoint);
-        };
+        const { idAsset } = assetRows[0];
+        onAddVersion = () => onUploaderOpen(eIngestionMode.eUpdate, { idAsset });
     }
 
-    const addAttachment = () => {
-        const { assetType } = assetRows[0];
-        const newEndpoint = attachSystemObjectUploadRedirect(idSystemObject, assetType);
-        history.push(newEndpoint);
-    };
+
+    const onAddAttachment = () => onUploaderOpen(eIngestionMode.eAttach, { idSOAttachment: idSystemObject });
 
     const options: DataTableOptions = {
         filter: false,
@@ -432,12 +435,12 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                             Download All
                         </Button>
                     )}
-                    <Button className={classes.btn} disableElevation variant='contained' color='primary' style={{ marginLeft: '2px' }} onClick={redirect}>
+                    <Button className={classes.btn} disableElevation variant='contained' color='primary' style={{ marginLeft: '2px' }} onClick={onAddVersion}>
                         Add Version
                     </Button>
                 </Box>
                 <Box display='flex' flexDirection='row' alignItems='center' style={{ alignSelf: 'flex-end' }}>
-                    { systemObjectType === eSystemObjectType.eScene && (<Button className={classes.btn} disableElevation variant='contained' color='primary' onClick={addAttachment}>Add Attachment</Button>) }
+                    { systemObjectType === eSystemObjectType.eScene && (<Button className={classes.btn} disableElevation variant='contained' color='primary' onClick={onAddAttachment}>Add Attachment</Button>) }
                 </Box>
             </Box>
         </React.Fragment>

@@ -241,9 +241,24 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         if (!scenes)
             return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to fetch children scenes of model ${modelSource.idModel}`);
 
-        // If needed, create a new scene (if we have no scenes, or if we have multiple scenes, then create a new one)
-        const createScene: boolean = (scenes.length !== 1);
+        // If needed, create a new scene (if we have no scenes, or if we have multiple scenes, then create a new one);
+        // If we have just one scene, before reusing it, see if the model names all match up
+        let createScene: boolean = (scenes.length !== 1);
+        if (!createScene && scenes.length > 0 && svx.SvxExtraction.modelDetails) {
+            for (const MSX of svx.SvxExtraction.modelDetails) {
+                if (MSX.Name) {
+                    // look for existing models, children of our scene, that match this model's purpose
+                    const model: DBAPI.Model | null = await this.findMatchingModel(scenes[0], MSX.computeModelAutomationTag());
+                    if (!model || (model.Name !== MSX.Name)) {
+                        createScene = true;
+                        break;
+                    }
+                }
+            }
+        }
+
         const scene: DBAPI.Scene = createScene ? svx.SvxExtraction.extractScene() : scenes[0];
+
         let asset: DBAPI.Asset | null = null;
         if (createScene) {
             // compute ItemParent of ModelSource

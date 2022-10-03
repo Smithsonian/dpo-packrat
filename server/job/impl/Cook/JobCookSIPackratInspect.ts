@@ -12,11 +12,14 @@ import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { eEventKey } from '../../../event/interface/EventEnums';
+import { IZip } from '../../../utils/IZip';
 import { ZipStream } from '../../../utils/zipStream';
+import { ZipFile } from '../../../utils/zipFile';
 import { maybe, maybeString } from '../../../utils/types';
 
 import { isArray } from 'lodash';
 import * as path from 'path';
+import tmp from 'tmp-promise';
 
 export class JobCookSIPackratInspectParameters {
     /** Specify sourceMeshStream when we have the stream for sourceMeshFile in hand (e.g. during upload fo a scene zip that contains this model) */
@@ -125,7 +128,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     mappedId = assetMap.get(path.basename(fileName));
                 if (!mappedId) {
                     const error: string = `Missing ${fileName} and ${path.basename(fileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.saferStringify)}`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -217,7 +220,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedAssetId: number | undefined = assetIDMap.get(modelMaterialUVMap.idAsset);
                 if (!mappedAssetId) {
                     const error: string = `Missing ${modelMaterialUVMap.idAsset} from asset ID Map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -238,7 +241,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelMaterialChannel.idModelMaterial);
                 if (!mappedModelMaterialId) {
                     const error: string = `Missing ${modelMaterialChannel.idModelMaterial} from model material ID map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -248,7 +251,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     mappedModelMaterialUVMapId = modelMaterialUVMapIDMap.get(modelMaterialChannel.idModelMaterialUVMap);
                     if (!mappedModelMaterialUVMapId) {
                         const error: string = `Missing ${modelMaterialChannel.idModelMaterialUVMap} from model material UV ID map`;
-                        LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                        LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                         // return { success: false, error };
                         continue;
                     }
@@ -268,7 +271,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelObjectModelMaterialXref.idModelMaterial);
                 if (!mappedModelMaterialId) {
                     const error: string = `Missing ${modelObjectModelMaterialXref.idModelMaterial} from model material ID map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -276,7 +279,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelObjectId: number | undefined = modelObjectIDMap.get(modelObjectModelMaterialXref.idModelObject);
                 if (!mappedModelObjectId) {
                     const error: string = `Missing ${modelObjectModelMaterialXref.idModelObject} from model object ID map`;
-                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -535,7 +538,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         return JCOutput;
     }
 
-    static async extractFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<JobCookSIPackratInspectOutput | null> {
+    static async extractJobRunFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<DBAPI.JobRun | null> {
         // find JobCook results for this asset version
         const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         if (!idVJobType) {
@@ -548,6 +551,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             LOG.info(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}, sourceMeshFile ${sourceMeshFile}`, LOG.LS.eJOB);
             return null;
         }
+        return jobRuns[0];
+    }
+
+    static async extractFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<JobCookSIPackratInspectOutput | null> {
+        const jobRun: DBAPI.JobRun | null = await JobCookSIPackratInspectOutput.extractJobRunFromAssetVersion(idAssetVersion, sourceMeshFile);
+        if (!jobRun)
+            return null;
 
         // Determine filename, file type, and date created by computing asset version:
         let fileName: string | null = null;
@@ -561,14 +571,14 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
         let JCOutput: JobCookSIPackratInspectOutput | null = null;
         try {
-            JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRuns[0].Output || ''), fileName, dateCreated);
+            JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRun.Output || ''), fileName, dateCreated);
         } catch (error) {
             LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion${JCOutput ? ' ' + JCOutput.error : ''}`, LOG.LS.eJOB, error);
             return null;
         }
 
         if (!JCOutput.success) {
-            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed extracting job output [${JCOutput.error}]: ${jobRuns[0].Output}`, LOG.LS.eJOB);
+            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed extracting job output [${JCOutput.error}]: ${jobRun.Output}`, LOG.LS.eJOB);
             return null;
         }
 
@@ -726,19 +736,21 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
 
         // LOG.info(`JobCookSIPackratInspect.testForZipOrStream parameters ${H.Helpers.JSONStringify(this.parameters)}`, LOG.LS.eJOB);
-        if (path.extname(this.parameters.sourceMeshFile).toLowerCase() !== '.zip') {
-            // LOG.info('JobCookSIPackratInspect.testForZipOrStream processing non-zip file', LOG.LS.eJOB);
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(this._idAssetVersions[0]);
+        if (!assetVersion) {
+            LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to fetch asset version ${this._idAssetVersions[0]}`, LOG.LS.eJOB);
             return false;
         }
 
-        // LOG.info('JobCookSIPackratInspect.testForZipOrStream processing zip file', LOG.LS.eJOB);
-        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(this._idAssetVersions[0]);
-        if (!RSR.success || !RSR.readStream) {
-            LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to read asset version ${this._idAssetVersions[0]}: ${RSR.error}`, LOG.LS.eJOB);
+        if (!assetVersion.FileName || path.extname(assetVersion.FileName).toLowerCase() !== '.zip') {
+            // LOG.info(`JobCookSIPackratInspect.testForZipOrStream processing non-zip file ${RSR.fileName}`, LOG.LS.eJOB);
             return false;
         }
 
-        const ZS: ZipStream = new ZipStream(RSR.readStream);
+        const ZS: IZip | null = await this.fetchZip(assetVersion);
+        if (!ZS)
+            return false;
+
         const zipRes: H.IOResults = await ZS.load();
         if (!zipRes.success) {
             LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to read asset version ${this._idAssetVersions[0]}: ${zipRes.error}`, LOG.LS.eJOB);
@@ -751,7 +763,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         for (const file of files) {
             const eVocabID: COMMON.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
             const extension: string = path.extname(file).toLowerCase() || file.toLowerCase();
-            // LOG.info(`JobCookSIPackratInspect.testForZipOrStream consdiering zip file entry ${file}, extension ${extension}, VocabID ${eVocabID ? COMMON.eVocabularyID[eVocabID] : 'undefined'}`, LOG.LS.eJOB);
+            // LOG.info(`JobCookSIPackratInspect.testForZipOrStream considering zip file entry ${file}, extension ${extension}, VocabID ${eVocabID ? COMMON.eVocabularyID[eVocabID] : 'undefined'}`, LOG.LS.eJOB);
 
             // for the time being, only handle model geometry files, OBJ .mtl files, and GLTF .bin files
             if (eVocabID === undefined && extension !== '.mtl' && extension !== '.bin')
@@ -790,6 +802,36 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
 
         return false;
+    }
+
+    private async fetchZip(assetVersion: DBAPI.AssetVersion): Promise<IZip | null> {
+        // LOG.info(`JobCookSIPackratInspect.testForZipOrStream processing zip file ${RSR.fileName}`, LOG.LS.eJOB);
+        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(assetVersion.idAssetVersion);
+        if (!RSR.success || !RSR.readStream) {
+            LOG.error(`JobCookSIPackratInspect.fetchZip unable to read asset version ${assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eJOB);
+            return null;
+        }
+
+        if (assetVersion.StorageSize <= BigInt(500 * 1024 * 1024))
+            return new ZipStream(RSR.readStream);
+
+        // if our zipped asset is larger than 500MB, copy it locally so that we can avoid loading the full zip into memory
+        // This also avoids an issue we're experiencing (as of 8/1/2022) with JSZip not emitting "end" events
+        // when we've fully read a (very large) zip entry with its nodeStream method
+        const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: '.zip' });
+        try {
+            const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, tempFile.path);
+            if (!res.success) {
+                LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}: ${res.error}`, LOG.LS.eJOB);
+                return null;
+            }
+            return new ZipFile(tempFile.path, true);
+        } catch (err) {
+            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}`, LOG.LS.eJOB, err);
+            return null;
+        } finally {
+            await tempFile.cleanup();
+        }
     }
 }
 

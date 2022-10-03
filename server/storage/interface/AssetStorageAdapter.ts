@@ -20,7 +20,7 @@ import * as COMMON from '@dpo-packrat/common';
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import mime from 'mime';
+import * as mime from 'mime-types';
 
 export type AssetStorageResult = {
     asset: DBAPI.Asset | null;
@@ -756,8 +756,8 @@ export class AssetStorageAdapter {
                     if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
                         eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile;
                     else {
-                        const mimeType: string = mime.lookup(unzippedFileName);
-                        if (mimeType.startsWith('image/'))
+                        const mimeType: string | null = mime.lookup(unzippedFileName);
+                        if (mimeType && mimeType.startsWith('image/'))
                             eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile;
                         else
                             eAssetType = COMMON.eVocabularyID.eAssetAssetTypeOther;
@@ -953,9 +953,11 @@ export class AssetStorageAdapter {
         let res: H.IOResults = { success: true };
         const extractor: META.MetadataExtractor = new META.MetadataExtractor();
         const AFOSR: AssetFileOrStreamResult = await AssetStorageAdapter.assetFileOrStream(storage, asset, assetVersion);
-        if (AFOSR.success && (AFOSR.fileName || AFOSR.stream))
+        if (AFOSR.success && (AFOSR.fileName || AFOSR.stream)) {
             res = await extractor.extractMetadata(AFOSR.fileName ?? '', AFOSR.stream);
-        else
+            if (AFOSR.stream)
+                H.Helpers.destroyReadStream(AFOSR.stream);
+        } else
             LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to compute metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${AFOSR.error}`, LOG.LS.eSTR);
 
         // Persist extracted metadata
@@ -971,7 +973,7 @@ export class AssetStorageAdapter {
         } else
             LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to extract metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
 
-        return { asset, assetVersion, success: res.success };
+        return { asset, assetVersion, success: true }; // we always return true at this point; i.e. we do not treat metadata extraction failures as ingestion failure
     }
 
     static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestAssetResult> {
@@ -1005,11 +1007,15 @@ export class AssetStorageAdapter {
             ISI.readStream = fs.createReadStream(ISI.localFilePath);
         }
 
-        const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.readStream, wsRes.writeStream);
-        if (!wrRes.success) {
-            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to write to stream: ${wrRes.error}`;
-            LOG.error(error, LOG.LS.eSTR);
-            return { success: false, error };
+        try {
+            const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.readStream, wsRes.writeStream);
+            if (!wrRes.success) {
+                const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to write to stream: ${wrRes.error}`;
+                LOG.error(error, LOG.LS.eSTR);
+                return { success: false, error };
+            }
+        } finally {
+            wsRes.writeStream.end();
         }
 
         let comRes: STORE.AssetStorageResultCommit | null = null;

@@ -4,6 +4,8 @@ const getSceneForAssetVersion = gql`
     query getSceneForAssetVersion($input: GetSceneForAssetVersionInput!) {
         getSceneForAssetVersion(input: $input) {
             idAssetVersion
+            success
+            message
             SceneConstellation {
                 Scene {
                     idScene

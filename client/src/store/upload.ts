@@ -8,7 +8,7 @@ import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import path from 'path';
 import { toast } from 'react-toastify';
-import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '@dpo-packrat/common';
+import { eVocabularySetID, eVocabularyID } from '@dpo-packrat/common';
 import { generateFileId } from '../utils/upload';
 import { useVocabularyStore } from './vocabulary';
 import { apolloClient, apolloUploader } from '../graphql';
@@ -16,7 +16,7 @@ import { DiscardUploadedAssetVersionsDocument, DiscardUploadedAssetVersionsMutat
 import { FetchResult } from '@apollo/client';
 import { parseFileId } from './utils';
 import { UploadEvents, UploadEventType, UploadCompleteEvent, UploadProgressEvent, UploadSetCancelEvent, UploadFailedEvent } from '../utils/events';
-import { ROUTES } from '../constants';
+import { eIngestionMode, ROUTES } from '../constants';
 
 export type FileId = string;
 
@@ -28,6 +28,16 @@ export enum FileUploadStatus {
     CANCELLED = 'CANCELLED',
     FAILED = 'FAILED'
 }
+
+export type UploadReferences = {
+    idAsset?: number;
+    idSOAttachment?: number;
+};
+
+type UploadOptions = {
+    references: UploadReferences;
+    idSystemObject: number;
+};
 
 export type IngestionFile = {
     id: FileId;
@@ -47,39 +57,40 @@ export type IngestionFile = {
 type UploadStore = {
     completed: IngestionFile[];
     pending: IngestionFile[];
+    pendingUpdates: Map<number, IngestionFile>;
+    pendingAttachments: Map<number, IngestionFile>;
     loading: boolean;
-    updateMode: boolean;
-    updateWorkflowFileType: eSystemObjectType | null;
-    setUpdateMode: (update: boolean) => void;
-    setUpdateWorkflowFileType: (fileType: eSystemObjectType) => void;
     getSelectedFiles: (files: IngestionFile[], selected: boolean) => IngestionFile[];
     loadPending: (acceptedFiles: File[]) => void;
+    loadSpecialPending: (acceptedFiles: File[], references: UploadReferences, idSO: number) => void;
     loadCompleted: (completed: IngestionFile[], refetch) => void;
     selectFile: (id: FileId, selected: boolean) => void;
-    startUpload: (id: FileId) => void;
+    startUpload: (id: FileId, options?: UploadOptions) => void;
     cancelUpload: (id: FileId) => void;
+    cancelSpecialUpload: (uploadType: eIngestionMode, idSO: number) => void;
     retryUpload: (id: FileId) => void;
+    retrySpecialUpload: (uploadType: eIngestionMode, idSO: number) => void;
     removeUpload: (id: FileId) => void;
-    startUploadTransfer: (ingestionFile: IngestionFile) => void;
+    removeSpecialPending: (uploadType: eIngestionMode, idSO: number) => void;
+    startUploadTransfer: (ingestionFile: IngestionFile, references?: UploadReferences) => void;
     changeAssetType: (id: FileId, assetType: number) => void;
     discardFiles: () => Promise<void>;
     removeSelectedUploads: () => void;
-    onProgressEvent: (data: UploadProgressEvent) => void;
-    onSetCancelledEvent: (data: UploadSetCancelEvent) => void;
-    onFailedEvent: (data: UploadFailedEvent) => void;
-    onCompleteEvent: (data: UploadCompleteEvent) => void;
+    onProgressEvent: (data: UploadProgressEvent, options?: UploadOptions) => void;
+    onSetCancelledEvent: (data: UploadSetCancelEvent, options?: UploadOptions) => void;
+    onFailedEvent: (data: UploadFailedEvent, options?: UploadOptions) => void;
+    onCompleteEvent: (data: UploadCompleteEvent, options?: UploadOptions) => void;
     reset: () => void;
+    resetSpecialPending: (uploadType: eIngestionMode) => void;
     refetch?: (variables?) => Promise<any>;
 };
 
 export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, get: GetState<UploadStore>) => ({
     completed: [],
     pending: [],
+    pendingUpdates: new Map(),
+    pendingAttachments: new Map(),
     loading: true,
-    updateMode: false,
-    updateWorkflowFileType: null,
-    setUpdateMode: (update) => { set({ updateMode: update }); },
-    setUpdateWorkflowFileType: (fileType) => { set({ updateWorkflowFileType: fileType }); },
     getSelectedFiles: (files: IngestionFile[], selected: boolean): IngestionFile[] => lodash.filter(files, file => file.selected === selected),
     loadPending: (acceptedFiles: File[]) => {
         const { pending } = get();
@@ -124,6 +135,63 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             set({ pending: updatedPendingFiles });
         }
     },
+    loadSpecialPending: (acceptedFiles: File[], references: UploadReferences, idSO: number) => {
+        const { pendingUpdates, pendingAttachments } = get();
+        const isUpdate = references.idAsset;
+        const isAttachment = references.idSOAttachment;
+
+        if (acceptedFiles.length > 1 || acceptedFiles.length === 0) {
+            toast.warning(`${isUpdate ? 'Update' : 'Attachment'} upload only accepts 1 file.`);
+            return;
+        }
+
+        if (isUpdate && pendingUpdates.has(idSO)) {
+            toast.warning('A file has already been queued for upload. Please remove it first and try again.');
+            return;
+        }
+
+        if (isAttachment && pendingAttachments.has(idSO)) {
+            toast.warning('A file has already been queued for upload. Please remove it first and try again.');
+            return;
+        }
+
+        const file = acceptedFiles[0];
+
+        const id = generateFileId();
+
+        const { name, size } = file;
+        const extension: string = (name.toLowerCase().endsWith('.svx.json')) ? '.svx.json' : path.extname(name);
+        const { getAssetTypeForExtension, getInitialEntry } = useVocabularyStore.getState();
+        let type = getAssetTypeForExtension(extension);
+        if (!type)
+            type = getInitialEntry(eVocabularySetID.eAssetAssetType);
+        if (!type) {
+            toast.error(`Asset type for file ${name} not found`);
+            return;
+        }
+
+        const ingestionFile = {
+            id,
+            file,
+            name,
+            size,
+            status: FileUploadStatus.READY,
+            progress: 0,
+            type,
+            selected: false,
+            cancel: null
+        };
+
+        if (isUpdate) {
+            pendingUpdates.set(idSO, ingestionFile);
+            set({ pendingUpdates });
+        }
+
+        if (isAttachment) {
+            pendingAttachments.set(idSO, ingestionFile);
+            set({ pendingAttachments });
+        }
+    },
     loadCompleted: (completed: IngestionFile[], refetch): void => {
         set({ completed, loading: false, refetch });
     },
@@ -137,20 +205,38 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 
         set({ completed: updatedCompleted });
     },
-    startUpload: (id: FileId) => {
-        const { pending, startUploadTransfer } = get();
-        const file = getFile(id, pending);
+    startUpload: (id: FileId, options?: UploadOptions) => {
+        const { pending, startUploadTransfer, pendingAttachments, pendingUpdates } = get();
+        const isUpdate = options?.references.idAsset;
+        const isAttachment = options?.references.idSOAttachment;
+        const idSystemObject = options?.idSystemObject as number;
+        const updateFile = pendingUpdates.get(idSystemObject) as IngestionFile;
+        const attachmentFile = pendingAttachments.get(idSystemObject) as IngestionFile;
+        const file = isUpdate ? updateFile : isAttachment ? attachmentFile : getFile(id, pending);
 
         if (file) {
-            const updatedPending = lodash.forEach(pending, file => {
-                if (file.id === id) {
-                    lodash.set(file, 'progress', 0);
-                    lodash.set(file, 'status', FileUploadStatus.UPLOADING);
-                }
-            });
+            if (isUpdate) {
+                file.progress = 0;
+                file.status = FileUploadStatus.UPLOADING;
+                const updatedUpdates = new Map(pendingUpdates);
+                updatedUpdates.set(idSystemObject, file);
+            } else if (isAttachment) {
+                file.progress = 0;
+                file.status = FileUploadStatus.UPLOADING;
+                const updatedAttachments = new Map(pendingAttachments);
+                updatedAttachments.set(idSystemObject, file);
+            } else {
+                const updatedPending = lodash.forEach(pending, file => {
+                    if (file.id === id) {
+                        lodash.set(file, 'progress', 0);
+                        lodash.set(file, 'status', FileUploadStatus.UPLOADING);
+                    }
+                });
 
-            set({ pending: updatedPending });
-            startUploadTransfer(file);
+                set({ pending: updatedPending });
+            }
+
+            startUploadTransfer(file, options?.references);
         }
     },
     retryUpload: (id: FileId): void => {
@@ -166,6 +252,25 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             set({ pending: updatedPending });
             startUploadTransfer(file);
         }
+    },
+    retrySpecialUpload: (uploadType: eIngestionMode, idSO: number): void => {
+        const { pendingAttachments, pendingUpdates, startUploadTransfer } = get();
+
+        if (uploadType === eIngestionMode.eAttach) {
+            const updatedAttachments = new Map(pendingAttachments);
+            const file = updatedAttachments.get(idSO) as IngestionFile;
+            file.status = FileUploadStatus.UPLOADING;
+            set({ pendingAttachments: updatedAttachments });
+            startUploadTransfer(file, { idSOAttachment: file.idSOAttachment });
+        }
+        if (uploadType === eIngestionMode.eUpdate) {
+            const updatedUpdates = new Map(pendingUpdates);
+            const file = updatedUpdates.get(idSO) as IngestionFile;
+            file.status = FileUploadStatus.UPLOADING;
+            set({ pendingUpdates: updatedUpdates });
+            startUploadTransfer(file, { idAsset: file.idAsset });
+        }
+
     },
     cancelUpload: (id: FileId): void => {
         const { pending } = get();
@@ -187,16 +292,57 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             }
         }
     },
+    cancelSpecialUpload: (uploadType: eIngestionMode, idSO: number): void => {
+        const { pendingAttachments, pendingUpdates } = get();
+        const updatedAttachments = new Map(pendingAttachments);
+        const updatedUpdates = new Map(pendingUpdates);
+
+        if (uploadType === eIngestionMode.eAttach) {
+            const file = updatedAttachments.get(idSO) as IngestionFile;
+            if (file.status === FileUploadStatus.UPLOADING) {
+                const { cancel } = file;
+                if (cancel) {
+                    cancel();
+                    file.status = FileUploadStatus.CANCELLED;
+                    set({ pendingAttachments: updatedAttachments });
+                }
+            }
+        }
+
+        if (uploadType === eIngestionMode.eUpdate) {
+            const file = updatedUpdates.get(idSO) as IngestionFile;
+            if (file.status === FileUploadStatus.UPLOADING) {
+                const { cancel } = file;
+                if (cancel) {
+                    cancel();
+                    file.status = FileUploadStatus.CANCELLED;
+                    set({ pendingUpdates: updatedUpdates });
+                }
+            }
+        }
+    },
     removeUpload: (id: FileId): void => {
         const { pending } = get();
         const updatedPending = pending.filter(file => file.id !== id);
         set({ pending: updatedPending });
     },
-    startUploadTransfer: async (ingestionFile: IngestionFile) => {
+    removeSpecialPending: (uploadType: eIngestionMode, idSO: number): void => {
+        const { pendingAttachments, pendingUpdates } = get();
+        const updatedAttachments = new Map(pendingAttachments);
+        const updatedUpdates = new Map(pendingUpdates);
+
+        if (uploadType === eIngestionMode.eAttach) {
+            updatedAttachments.delete(idSO);
+            set({ pendingAttachments: updatedAttachments });
+        }
+        if (uploadType === eIngestionMode.eUpdate) {
+            updatedUpdates.delete(idSO);
+            set({ pendingUpdates: updatedUpdates });
+        }
+    },
+    startUploadTransfer: async (ingestionFile: IngestionFile, references?: UploadReferences) => {
         const { pending } = get();
         const { id, file, type } = ingestionFile;
-        const urlParams = new URLSearchParams(window.location.search);
-
         try {
             const onProgress = (event: ProgressEvent) => {
                 const { loaded, total } = event;
@@ -221,16 +367,15 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             };
 
             const uploadAssetInputs: UploadAssetInput = { file, type };
-            if (urlParams.has('idAsset'))
-                uploadAssetInputs.idAsset = Number(urlParams.get('idAsset'));
-            if (urlParams.has('idSOAttachment')) {
-                uploadAssetInputs.idSOAttachment = Number(urlParams.get('idSOAttachment'));
+            if (references && references.idAsset)
+                uploadAssetInputs.idAsset = references.idAsset;
+            if (references && references.idSOAttachment) {
+                uploadAssetInputs.idSOAttachment = references.idSOAttachment;
 
                 const { getVocabularyId } = useVocabularyStore.getState();
                 uploadAssetInputs.type = getVocabularyId(eVocabularyID.eAssetAssetTypeAttachment) ?? 0;
             }
 
-            // console.log('uploadassetinputs', uploadAssetInputs);
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
                 variables: uploadAssetInputs,
@@ -335,48 +480,131 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const updatedCompleted = completed.filter(({ selected }) => !selected);
         set({ completed: updatedCompleted });
     },
-    onProgressEvent: (eventData: UploadProgressEvent): void => {
-        const { pending } = get();
+    onProgressEvent: (eventData: UploadProgressEvent, options?: UploadOptions): void => {
+        const { pending, pendingAttachments, pendingUpdates } = get();
         const { id, progress } = eventData;
 
-        const updatedPendingProgress = lodash.forEach(pending, file => {
-            if (file.id === id) {
-                lodash.set(file, 'progress', progress);
+        // handles updates and attachments
+        if (options?.idSystemObject) {
+            const isAttachment = options.references.idSOAttachment;
+            const isUpdate = options.references.idAsset;
+
+            if (isAttachment) {
+                const file = pendingAttachments.get(options.idSystemObject) as IngestionFile;
+                file.progress = progress;
                 if (progress === 100)
-                    lodash.set(file, 'status', FileUploadStatus.PROCESSING);
+                    file.status = FileUploadStatus.PROCESSING;
+                const updatedAttachments = new Map(pendingAttachments);
+                updatedAttachments.set(options.idSystemObject, file);
+                set({ pendingAttachments: updatedAttachments });
             }
-        });
-        set({ pending: updatedPendingProgress });
+
+            if (isUpdate) {
+                const file = pendingUpdates.get(options.idSystemObject) as IngestionFile;
+                file.progress = progress;
+                if (progress === 100)
+                    file.status = FileUploadStatus.PROCESSING;
+                const updatedUpdate = new Map(pendingUpdates);
+                updatedUpdate.set(options.idSystemObject, file);
+                set({ pendingUpdates: updatedUpdate });
+            }
+        } else {
+            const updatedPendingProgress = lodash.forEach(pending, file => {
+                if (file.id === id) {
+                    lodash.set(file, 'progress', progress);
+                    if (progress === 100)
+                        lodash.set(file, 'status', FileUploadStatus.PROCESSING);
+                }
+            });
+            set({ pending: updatedPendingProgress });
+        }
     },
-    onSetCancelledEvent: (eventData: UploadSetCancelEvent): void => {
-        const { pending } = get();
+    onSetCancelledEvent: (eventData: UploadSetCancelEvent, options?: UploadOptions): void => {
+        const { pending, pendingAttachments, pendingUpdates } = get();
         const { id, cancel } = eventData;
 
-        const updateSetCancel = lodash.forEach(pending, file => {
-            if (file.id === id) {
-                lodash.set(file, 'cancel', cancel);
+        // handles updates and attachments
+        if (options?.idSystemObject) {
+            const isAttachment = options.references.idSOAttachment;
+            const isUpdate = options.references.idAsset;
+
+            if (isAttachment) {
+                const updatedAttachments = new Map(pendingAttachments);
+                const file = pendingAttachments.get(options.idSystemObject) as IngestionFile;
+                file.cancel = cancel;
+                set({ pendingAttachments: updatedAttachments });
             }
-        });
-        set({ pending: updateSetCancel });
+
+            if (isUpdate) {
+                const updatedUpdates = new Map(pendingUpdates);
+                const file = pendingUpdates.get(options.idSystemObject) as IngestionFile;
+                file.cancel = cancel;
+                set({ pendingUpdates: updatedUpdates });
+            }
+        } else {
+            const updateSetCancel = lodash.forEach(pending, file => {
+                if (file.id === id) {
+                    lodash.set(file, 'cancel', cancel);
+                }
+            });
+            set({ pending: updateSetCancel });
+        }
     },
-    onFailedEvent: (eventData: UploadFailedEvent): void => {
-        const { pending } = get();
+    onFailedEvent: (eventData: UploadFailedEvent, options?: UploadOptions): void => {
+        const { pending, pendingAttachments, pendingUpdates } = get();
         const { id } = eventData;
 
-        const updatedFailedPending = lodash.forEach(pending, file => {
-            if (file.id === id) {
-                lodash.set(file, 'status', FileUploadStatus.FAILED);
+        // handles updates and attachments
+        if (options?.idSystemObject) {
+            const isAttachment = options.references.idSOAttachment;
+            const isUpdate = options.references.idAsset;
+
+            if (isAttachment) {
+                const updatedAttachments = new Map(pendingAttachments);
+                const file = updatedAttachments.get(options.idSystemObject) as IngestionFile;
+                file.status = FileUploadStatus.FAILED;
+                set({ pendingAttachments: updatedAttachments });
             }
-        });
 
-        set({ pending: updatedFailedPending });
+            if (isUpdate) {
+                const updatedUpdates = new Map(pendingUpdates);
+                const file = updatedUpdates.get(options.idSystemObject) as IngestionFile;
+                file.status = FileUploadStatus.FAILED;
+                set({ pendingUpdates: updatedUpdates });
+            }
+        } else {
+            const updatedFailedPending = lodash.forEach(pending, file => {
+                if (file.id === id) {
+                    lodash.set(file, 'status', FileUploadStatus.FAILED);
+                }
+            });
+
+            set({ pending: updatedFailedPending });
+        }
     },
-    onCompleteEvent: (eventData: UploadCompleteEvent): void => {
-        const { pending } = get();
+    onCompleteEvent: (eventData: UploadCompleteEvent, options?: UploadOptions): void => {
+        const { pending, pendingAttachments, pendingUpdates } = get();
         const { id } = eventData;
-        const updatedComplete = pending.filter(file => file.id !== id);
 
-        set({ pending: updatedComplete });
+        // handles updates and attachments
+        if (options?.idSystemObject) {
+            const isAttachment = options.references.idSOAttachment;
+            const isUpdate = options.references.idAsset;
+            if (isAttachment) {
+                const updatedAttachments = new Map(pendingAttachments);
+                updatedAttachments.delete(options.idSystemObject);
+                set({ pendingAttachments: updatedAttachments });
+            }
+            if (isUpdate) {
+                const updatedUpdate = new Map(pendingUpdates);
+                updatedUpdate.delete(options.idSystemObject);
+                set({ pendingUpdates: updatedUpdate });
+            }
+        } else {
+            const updatedComplete = pending.filter(file => file.id !== id);
+
+            set({ pending: updatedComplete });
+        }
     },
     reset: (): void => {
         const { completed } = get();
@@ -387,6 +615,10 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 
         const updatedCompleted: IngestionFile[] = completed.map(unselectFiles);
         set({ completed: updatedCompleted, loading: false });
+    },
+    resetSpecialPending: (uploadType: eIngestionMode) => {
+        if (uploadType === eIngestionMode.eAttach) set({ pendingAttachments: new Map() });
+        if (uploadType === eIngestionMode.eUpdate) set({ pendingUpdates: new Map() });
     }
 }));
 

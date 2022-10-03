@@ -770,6 +770,8 @@ export type GetSceneForAssetVersionResult = {
   __typename?: 'GetSceneForAssetVersionResult';
   idAssetVersion: Scalars['Int'];
   SceneConstellation?: Maybe<SceneConstellation>;
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
 };
 
 
@@ -1004,6 +1006,7 @@ export type IngestModelInput = {
   sourceObjects: Array<RelatedObjectInput>;
   derivedObjects: Array<RelatedObjectInput>;
   updateNotes?: Maybe<Scalars['String']>;
+  skipSceneGenerate?: Maybe<Scalars['Boolean']>;
 };
 
 export type IngestSceneInput = {

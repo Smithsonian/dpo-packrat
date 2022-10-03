@@ -225,7 +225,8 @@ function LicenseView(): React.ReactElement {
                 input: {
                     search: newSearchText
                 }
-            }
+            },
+            fetchPolicy: 'no-cache'
         });
         setLicenseList(newFilterQuery?.data?.getLicenseList?.Licenses);
     };

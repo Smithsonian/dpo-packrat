@@ -58,18 +58,19 @@ export function getTermForSystemObjectType(objectType: eSystemObjectType): strin
     }
 }
 
-export function getRepositoryTreeNodeId(idSystemObject: number, objectType: eSystemObjectType, idObject: number, index: number): string {
-    return `${idSystemObject}-${eSystemObjectType[objectType]}-${idObject}-${index}`;
+export function getRepositoryTreeNodeId(idSystemObject: number, objectType: eSystemObjectType, idObject: number, hierarchy: string): string {
+    return `${idSystemObject}-${eSystemObjectType[objectType]}-${idObject}-${hierarchy}`;
 }
 
 type ParsedNodeId = {
     idSystemObject: number;
     idObject: number;
     objectType: eSystemObjectType;
+    hierarchy: string;
 };
 
 export function parseRepositoryTreeNodeId(nodeId: string): ParsedNodeId {
-    const [nodeSystemObjectId, nodeObjectType, nodeObjectId] = nodeId.split('-');
+    const [nodeSystemObjectId, nodeObjectType, nodeObjectId, hierarchy] = nodeId.split('-');
     const idSystemObject = Number.parseInt(nodeSystemObjectId, 10);
     const objectType = Number.parseInt(nodeObjectType, 10);
     const idObject = Number.parseInt(nodeObjectId, 10);
@@ -77,7 +78,8 @@ export function parseRepositoryTreeNodeId(nodeId: string): ParsedNodeId {
     return {
         idSystemObject,
         objectType,
-        idObject
+        idObject,
+        hierarchy
     };
 }
 
@@ -241,6 +243,8 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
         case eSystemObjectType.eActor:                  iconProps.overrideText = 'AC'; break;
         case eSystemObjectType.eStakeholder:            iconProps.overrideText = 'ST'; break;
         case eSystemObjectType.eItem:                   iconProps.overrideText = 'MG'; break;
+        case eSystemObjectType.eSubject:                iconProps.overrideText = 'SU'; break;
+        case eSystemObjectType.eCaptureData:            iconProps.overrideText = 'CD'; break;
         case eSystemObjectType.eAsset:
         case eSystemObjectType.eAssetVersion:
             return { icon: fileIcon, color };
