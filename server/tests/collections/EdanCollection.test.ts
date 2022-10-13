@@ -18,7 +18,7 @@ type EdanResult = {
     identifierPublic: string;
     identifierCollection: string;
     records: number;
-    IDMap: Map<string, string>;
+    IDMap?: Map<string, string> | undefined;
     raw?: any;
 };
 
@@ -594,7 +594,7 @@ export async function scrapeDPOIDs(ICol: COL.ICollection, fileName: string): Pro
     for (const record of records) {
         WS.write(`${record.id}\t${record.name}\t${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${record.records}`);
         for (const IDLabel of IDLabels)
-            WS.write(`\t${record.IDMap.get(IDLabel) ?? ''}`);
+            WS.write(`\t${record.IDMap?.get(IDLabel) ?? ''}`);
         WS.write('\n');
     }
 
@@ -2056,7 +2056,6 @@ async function scrapeIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, r
     await handleResultsWithIDs(ICol, 'https://collection.cooperhewitt.org/objects/18726645/', '10', IDLabelSet, records);
 }
 
-
 export async function scrapeDPOMigrationMDM(ICol: COL.ICollection, fileName: string): Promise<void> {
     jest.setTimeout(1000 * 60 * 60);  // 1 hour
 
@@ -2935,7 +2934,7 @@ async function handleResults(ICol: COL.ICollection, WS: NodeJS.WritableStream | 
 async function handleResultsWithIDs(ICol: COL.ICollection, query: string, id: string, IDLabelSet: Set<string>, records: EdanResult[]): Promise<boolean> {
 
     for (let retry: number = 1; retry <= 5; retry++) {
-        const results: COL.CollectionQueryResults | null = await ICol.queryCollection(query.trim(), 10, 0, { gatherRaw: true });
+        const results: COL.CollectionQueryResults | null = await ICol.queryCollection(query.trim(), 10, 0, { gatherIDMap: true });
         // LOG.info(`*** Edan Scrape: ${H.Helpers.JSONStringify(results)}`, LOG.LS.eTEST);
         if (results) {
             if (results.error)
@@ -2943,15 +2942,12 @@ async function handleResultsWithIDs(ICol: COL.ICollection, query: string, id: st
 
             for (const record of results.records) {
                 const IDMap: Map<string, string> = new Map<string, string>();
-                const IDs: [{ label?: string, content?: string }] | undefined = record?.raw?.content?.freetext?.identifier;
-                if (IDs) {
-                    for (const ID of IDs) {
-                        let label = ID?.label;
-                        const content = ID?.content;
+                if (record.identifierMap) {
+                    for (const [ label, content ] of record.identifierMap) {
                         if (label && content) {
-                            label = label.toLowerCase();
-                            IDMap.set(label, content);
-                            IDLabelSet.add(label);
+                            const labelNormalized = label.toLowerCase();
+                            IDMap.set(labelNormalized, content);
+                            IDLabelSet.add(labelNormalized);
                         }
                     }
                 }
