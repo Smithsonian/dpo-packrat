@@ -42,7 +42,8 @@ export class EdanCollection implements COL.ICollection {
             rowCount: 0,
         };
 
-        let gatherRaw: boolean | undefined = false;
+        let gatherRaw: boolean = false;
+        let gatherIDMap: boolean = false;
         let path: string = 'metadata/v2.0/collections/search.htm';
         let filter: string = '';
         const filters: string[] = [];
@@ -57,6 +58,7 @@ export class EdanCollection implements COL.ICollection {
                     filter = filter + (filterIndex == 0 ? '' : /* istanbul ignore next */ ',') + filters[filterIndex];
             }
             gatherRaw = options.gatherRaw ?? false;
+            gatherIDMap = options.gatherIDMap ?? false;
         }
 
         // in addition to URI encoding the query, also replace single quotes with %27
@@ -93,6 +95,7 @@ export class EdanCollection implements COL.ICollection {
                     let unit = row.unitCode ? row.unitCode : /* istanbul ignore next */ '';
                     let identifierPublic = row.id ? row.id : /* istanbul ignore next */ '';
                     let identifierCollection = row.id ? row.id : /* istanbul ignore next */ '';
+                    let identifierMap: Map<string, string> | undefined = undefined;
 
                     /* istanbul ignore else */
                     if (row.content && row.content.descriptiveNonRepeating) {
@@ -111,7 +114,21 @@ export class EdanCollection implements COL.ICollection {
                             identifierPublic = description.guid;
                     }
 
-                    records.push({ name, unit, identifierPublic, identifierCollection, raw: gatherRaw ? row : undefined });
+                    if (gatherIDMap) {
+                        identifierMap = new Map<string, string>();
+
+                        const IDs: [{ label?: string, content?: string }] | undefined = row.content?.freetext?.identifier;
+                        if (IDs) {
+                            for (const ID of IDs) {
+                                const label = ID?.label;
+                                const content = ID?.content;
+                                if (label && content)
+                                    identifierMap.set(label, content);
+                            }
+                        }
+                    }
+
+                    records.push({ name, unit, identifierPublic, identifierCollection, identifierMap, raw: gatherRaw ? row : undefined });
                 }
             }
         }
