@@ -452,14 +452,6 @@ class IngestDataWorker extends ResolverBase {
         return subjectDB;
     }
 
-    /*
-type IdentifierCollection = {
-    identifierArkId: DBAPI.Identifier | null;
-    identifierCollectionId: DBAPI.Identifier | null;
-    otherIdentifiers?: DBAPI.Identifier[] | undefined;
-};
-    */
-
     private async createSubjectIdentifiers(subject: IngestSubjectInput): Promise<IdentifierCollection | null> {
         let edanQuery: string | null = null;
         let identifierCollectionId: DBAPI.Identifier | null = null;
@@ -492,6 +484,7 @@ type IdentifierCollection = {
             const ICol: COL.ICollection = this.getICollection();
             for (let retry: number = 1; retry <= 5; retry++) {
                 const results: COL.CollectionQueryResults | null = await ICol.queryCollection(edanQuery, 10, 0, { gatherIDMap: true });
+                // LOG.info(`ingestData EDAN Query: ${H.Helpers.JSONStringify(results)}`, LOG.LS.eGQL);
                 if (!results)
                     continue;
                 if (results.error) {
@@ -503,22 +496,27 @@ type IdentifierCollection = {
                     break;
                 }
 
-                // TODO: detemine type of identifier, create identifier records here; add to otherIdentifiers:
+                // Detemine type of identifier, create identifier records here; add to otherIdentifiers:
                 otherIdentifiers = [];
-                /*
                 for (const record of results.records) {
-                    const IDMap: Map<string, string> = new Map<string, string>();
                     if (record.identifierMap) {
                         for (const [ label, content ] of record.identifierMap) {
-                            if (label && content) {
-                                IDMap.set(label, content);
+                            // lookup label to determine type of identifier
+                            const vIdentifierType: DBAPI.Vocabulary | undefined = await VocabularyCache.mapIdentifierType(label);
+                            if (!vIdentifierType) {
+                                LOG.error(`ingestData encountered unknown identifier type ${label} from '${edanQuery}'`, LOG.LS.eGQL);
+                                continue;
                             }
+
+                            const identifier: DBAPI.Identifier | null = await this.createIdentifier(content, null, vIdentifierType.idVocabulary, null);
+                            if (!identifier) {
+                                LOG.error(`ingestData unable to create ${H.Helpers.JSONStringify(identifier)}`, LOG.LS.eGQL);
+                                continue;
+                            }
+                            otherIdentifiers.push(identifier);
                         }
                     }
-
-                    // LOG.info(`EDAN Query(${query}): ${H.Helpers.JSONStringify(record)}`, LOG.LS.eTEST);
                 }
-                */
             }
         }
 
@@ -549,6 +547,11 @@ type IdentifierCollection = {
                 return null;
             if (idCollection.identifierCollectionId && !await this.updateSubjectIdentifier(idCollection.identifierCollectionId, SO))
                 return null;
+            if (idCollection.otherIdentifiers) {
+                for (const identifier of idCollection.otherIdentifiers)
+                    if (!await this.updateSubjectIdentifier(identifier, SO))
+                        return null;
+            }
         } else
             LOG.error(`ingestData unable to fetch system object for subject record ${JSON.stringify(subjectDB)}`, LOG.LS.eGQL);
 
