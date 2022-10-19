@@ -582,7 +582,7 @@ export async function scrapeDPOIDs(ICol: COL.ICollection, fileName: string): Pro
         return;
     }
 
-    await scrapeIDsWorker(ICol, IDLabelSet, records);
+    await scrapeDPOIDsWorker(ICol, IDLabelSet, records);
 
     const IDLabels: string[] = Array.from(IDLabelSet).sort((a, b) => a.localeCompare(b));
 
@@ -601,7 +601,7 @@ export async function scrapeDPOIDs(ICol: COL.ICollection, fileName: string): Pro
     WS.end();
 }
 
-async function scrapeIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, records: EdanResult[]): Promise<void> {
+async function scrapeDPOIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, records: EdanResult[]): Promise<void> {
     // vz_migration
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhvz_10049110', '12280', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhvz_10049111', '12490', IDLabelSet, records);
@@ -1423,7 +1423,7 @@ async function scrapeIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, r
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhvz_7592490', '10152', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhvz_7598211', '10889', IDLabelSet, records);
 
-    // master_list
+    // voyager-repo migration
     await handleResultsWithIDs(ICol, 'edanmdm:chndm_1907-1-40', '20', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:chndm_1910-12-1', '7', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:chndm_1910-41-1', '3', IDLabelSet, records);
@@ -1483,7 +1483,7 @@ async function scrapeIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, r
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200033', '396', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200034', '389', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200035', '400', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200036', '10013', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200036', '5013', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200038', '887', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200039', '550', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:fsg_F1908.236', '877', IDLabelSet, records);
@@ -1572,9 +1572,9 @@ async function scrapeIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, r
     await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19610048000', '202', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19700102000', '176', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040000', '180', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040001', '10001', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '10002', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040003', '10003', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040001', '5001', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '5002', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040003', '5003', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19791810000', '179', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19850354000', '200', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nasm_A20050459000', '183', IDLabelSet, records);
@@ -1628,7 +1628,7 @@ async function scrapeIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, r
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1251903', '335', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1272680', '315', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449492', '120', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449498', '10008', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449498', '5008', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1764061', '126', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1816008', '308', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1816562', '358', IDLabelSet, records);
@@ -1696,12 +1696,12 @@ async function scrapeIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, r
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1896978', '117', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1900832', '118', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904639', '121', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904641', '10009', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904656', '10010', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904641', '5009', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904656', '5010', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1927378', '115', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939648', '10005', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939650', '10006', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939654', '10007', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939648', '5005', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939650', '5006', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939654', '5007', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_214477', '283', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_361750', '123', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_362153', '119', IDLabelSet, records);
@@ -1788,7 +1788,7 @@ async function scrapeIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, r
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8440830', '430', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8471498', '439', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8477947', '388', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8478070', '10012', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8478070', '5012', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8480378', '440', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8480424', '429', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8552275', '568', IDLabelSet, records);
@@ -2002,7 +2002,7 @@ async function scrapeIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, r
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3457297', '827', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3457406', '829', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3457407', '832', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3572783', '10011', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3572783', '5011', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3573298', '159', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3577488', '162', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3580352', '157', IDLabelSet, records);
@@ -2054,6 +2054,193 @@ async function scrapeIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, r
     await handleResultsWithIDs(ICol, 'http://n2t.net/ark:/65665/3c32276ea-e29b-49b7-b699-2a57a621b6e6', '567', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'http://n2t.net/ark:/65665/3c34fa78d-02b8-4c1e-8a2a-2429ef6ab6a1', '689', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'https://collection.cooperhewitt.org/objects/18726645/', '10', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'BABOON', '630', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Crocodile', '631', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'HAWK2', '632', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, '1988_0062_0294', '317', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, '2007_0116_274', '320', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, '2017_01116_281', '329', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, '2017_0116', '330', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, '2018_0009_0002', '334', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, '76-15-2 Ivory Tusk', '237', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, '78-23-15 Ivory Tusk', '238', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, '79_002_421', '364', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, '79_112_cm1031', '370', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'a240189_64a Wooden Bowl', '403', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'A355722 Fire Board', '421', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Abydos Mummy 074586', '633', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Abydos Mummy 279283', '634', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Abydos Mummy 279286', '635', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Adult Mummy (Andrew)', '636', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'allosaurus articulated skeleton', '835', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Amati, Nicolo Vn 1654, \'Brookings\' LOC', '260', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Amati, Nicolo Vn 1675 SI', '261', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'ammonite', '828', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Argonauta Nodosa', '873', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Armstrong Space Suit Glove Savage Reproduction', '178', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Articulated Woolly Mammoth', '795', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Bombus Bee', '848', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'boot', '185', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'boots', '186', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Boy Mummy', '637', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Branta-sandvicensis C10', '587', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Branta-sandvicensis C3', '588', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Branta-sandvicensis Pelvis', '589', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'bust nam', '187', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Cab Calloway Case', '217', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'camera arriflex16srii', '188', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'camptosaurus articulated skeleton', '836', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Cast Iron Cauldron', '218', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Cat Mummy 2 381569', '638', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Cat Mummy 437431', '639', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'checkerboard skirt', '124', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'chionecetes opilio (crabs)', '508', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Clovis Drake1', '557', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Clovis Drake10', '558', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Clovis Drake11', '559', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Clovis Drake12', '560', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Clovis Drake2', '561', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Clovis Drake3', '562', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Clovis Drake4', '563', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Clovis Drake5', '564', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Clovis Drake6', '565', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Clovis Drake9', '566', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Coffee Grinder', '219', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Colonoware pot from Cooper River, Charleston County, SC', '843', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'coryanthes-dried', '849', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Crocodile Mummy', '640', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'diplodocus longus articulated skeleton', '837', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'dtid-1047', '677', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'dtid-270', '679', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'dtid-609', '680', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Eulaema Bee', '846', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'ExhibitID-917', '681', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'fedora lindbergh', '190', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Fossil Whale MPC 677', '881', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Fossil Whale MPC 684', '879', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'gongora', '850', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Grancino, Giovanni Vn SI', '266', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'green helmet', '192', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Guarneri del Gesu Vn \'Baron Vitta\' 1730 SIL LOC', '268', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Guarneri del Gesu Vn \'Kreisler\' 1732 LOC', '269', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Haw Mummy 454235', '641', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Hawkbill Turtle Taxidermy', '449', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'helmet a', '193', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'helmet type m1917', '194', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Honey Bee', '851', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Ibis Metal', '642', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Ibis Mummy', '643', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'impeller unknown', '196', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Ivory Tusk 2005-6-135', '239', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Ivory Tusk 72-33-14', '245', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Ivory Tusk 73-12-1', '246', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Jones Beaded Purse', '222', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'JuJu Drumsticks', '223', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Kuduo Vessel', '224', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Leather Shoes', '225', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Library of Congress Ornament', '863', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'lindbergh bank', '197', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'lycaste_aromatica', '852', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mesa Redonda', '397', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Microfossil 401478', '166', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Microfossil 402809', '170', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Monticello Model', '233', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mr Cox Mummy', '644', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mr Jones Mummy', '645', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Ms Anni Mummy', '646', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 126790', '647', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 1564', '648', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 1565', '649', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 1566', '650', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 278365', '651', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 279283', '652', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 279285', '653', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 279286', '654', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 279287', '655', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 316508', '656', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 381569', '657', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 381570', '658', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 381571', '659', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 381572', '660', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 435221', '661', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 437431', '662', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 454235', '663', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 508142', '664', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 528481-0', '665', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 74579', '666', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy A 74586', '667', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy AT 5604', '668', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy AT 5605', '669', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy P 381235', '670', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Mummy S 39475', '671', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'ndp-acrophoca', '682', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMAH 20 dollar coin', '382', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMAH bee pendant', '384', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMAH Cornerstone', '894', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMAH decadrachm', '385', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMAH euro', '386', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMAH tetradrachm', '387', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMAH Vannevar Kiplinger Statue', '895', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMNH Bonebed Analysis', '786', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMNH Camptosaurus', '787', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMNH Catfish', '788', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMNH Chiton', '789', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMNH Ichthyosaur', '441', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMNH Jorge Fossil', '791', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMNH Kennicott Bust', '628', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMNH Kennicott Skull', '629', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'NMNH OEC Tree (pella sp? tree)', '792', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'nmnh-USNM_PAL_00095661', '760', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'nmnh-USNM_S_0001170A', '775', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Ontocetus emmonsi (USNM PAL 329064)', '676', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'oxygen bottle', '198', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Peresson, Sergio Va 1986 SI', '275', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Presidents of Christmas Past and Present Ornament', '864', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Raqchi Qolcas', '392', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'rmh-1990_011', '684', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'rmh-2002_277', '685', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'rmh-2005_703', '686', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Sauropod Vertebra', '794', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Sculpin Hat - Repaired Model', '785', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'shell mermaids comb', '531', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Sleigh on the White House Ornament', '865', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'slipper_orchid', '853', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Slippers with flag', '845', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'sloth (upright) articulated skeleton', '838', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Snake Mummy', '672', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stainer, Jacob Va 1678 SIL', '278', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stainer, Jacob Vn 1645 SIL', '279', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stainer, Jacob Vn 1661 SIL', '280', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stainer, Jacob Vn c1650 SI', '281', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Star of Bliss Ornament', '866', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stegosaurus articulated skeleton', '839', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stoneware Jug', '229', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stoneware jug created by Thomas Commeraw', '842', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stradivari C \'Castelbarco\' 1697 LOC', '282', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stradivari Va \'Cassavetti\' 1727 LOC', '285', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stradivari Vn \'Betts\' 1704 LOC', '286', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stradivari Vn \'Castelbarco\' 1699 LOC', '287', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stradivari Vn \'Hellier\' 1679 SIL', '289', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stradivari Vn \'Sunrise\' 1677 SIL', '291', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Stradivari Vn \'Ward\' 1700 LOC', '292', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Talpanas 3Dpring Pelvis', '623', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Talpanas C10', '624', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Thomas Jefferson Statue', '234', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Tusk: 68-23-53', '235', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Tusk: 71-17-12', '236', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Tyrannosaurus rex (individual bones)', '205', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Unknown Bee 1', '854', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Unknown Bee 2', '855', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Unknown Bee 4', '856', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'usnm_pal_222302', '687', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'usnm-pal-27088', '697', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'usnm-s-1170a', '726', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'violoncello piccolo pegbox/head', '896', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Whale MPC 675', '880', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Winter Holiday Snowflake Ornament', '867', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Winter Wonderland of Innovation Ornament', '868', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Wooly shirt', '125', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'Wright Bicycle', '203', IDLabelSet, records);
 }
 
 export async function scrapeDPOMigrationMDM(ICol: COL.ICollection, fileName: string): Promise<void> {
@@ -2892,16 +3079,29 @@ export async function scrapeDPOEdanListsMigrationMDM(ICol: COL.ICollection, file
     const WS: NodeJS.WritableStream = await fs.createWriteStream(fileName, { 'flags': 'a' });
     if (!WS)
         LOG.info(`Unable to create writeStream for ${fileName}`, LOG.LS.eTEST);
+    WS.write('id\tname\tunit\tidentifierPublic\tidentifierCollection\trecords\n');
 
-    await handleResults(ICol, WS, 'edanlists:p2b-1601389276209-1602191757227-0', '115', { searchMetadata: true, gatherRaw: true });
-    await handleResults(ICol, WS, 'edanlists:p2b-1601388908954-1602191481746-0', '120', { searchMetadata: true, gatherRaw: true });
-    await handleResults(ICol, WS, 'edanlists:p2b-1601388908954-1602190270053-0', '121', { searchMetadata: true, gatherRaw: true });
-    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581618317463-0', '141', { searchMetadata: true, gatherRaw: true });
-    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581355895303-0', '173', { searchMetadata: true, gatherRaw: true });
-    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581618462852-0', '180', { searchMetadata: true, gatherRaw: true });
-    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581618944850-0', '204', { searchMetadata: true, gatherRaw: true });
-    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581628550322-0', '388', { searchMetadata: true, gatherRaw: true });
-    await handleResults(ICol, WS, 'edanlists:p2b-1580421846495-1581619988547-0', '399', { searchMetadata: true, gatherRaw: true });
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1601389276209-1602191757227-0', '115', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1601388908954-1602191481746-0', '120', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1601388908954-1602190270053-0', '121', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1580421846495-1581618317463-0', '141', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1580421846495-1581355895303-0', '173', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1580421846495-1581618462852-0', '180', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1580421846495-1581618944850-0', '204', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1580421846495-1581628550322-0', '388', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1580421846495-1581619988547-0', '399', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656500476665-1656703241436-0', '903', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656586819890-1656703282186-0', '907', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656586819890-1656703024090-0', '910', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656414186682-1656703065444-0', '914', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656414186682-1656703126116-0', '916', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656586819890-1656639283574-0', '920', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656414186682-1656639323814-0', '923', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656586819890-1656639364064-0', '930', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656586819890-1656639432917-0', '934', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656586819890-1656639541754-0', '935', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656414186682-1656702911409-0', '936', 'SI');
+    await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1656414186682-1656702965563-0', '937', 'SI');
 }
 // #endregion
 
@@ -2923,6 +3123,35 @@ async function handleResults(ICol: COL.ICollection, WS: NodeJS.WritableStream | 
                     // WS.write(`${id}\t${record.name.replace(/\r?\n|\r/g, ' ')}\t${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${H.Helpers.JSONStringify(record.raw)}\n`);
                 else
                     LOG.info(`EDAN Query(${query}): ${H.Helpers.JSONStringify(record)}`, LOG.LS.eTEST);
+            }
+            return true;
+        }
+    }
+    LOG.error(`*** Edan Scrape [${id}] failed for '${query}'`, LOG.LS.eTEST);
+    return false;
+}
+
+async function handleResultsEdanLists(ICol: COL.ICollection, WS: NodeJS.WritableStream | null, query: string, id: string, unitFilter?: string | undefined): Promise<boolean> {
+    const options: COL.CollectionQueryOptions = { searchMetadata: true, gatherRaw: true };
+
+    for (let retry: number = 1; retry <= 5; retry++) {
+        const results: COL.CollectionQueryResults | null = await ICol.queryCollection(query.trim(), 10, 0, options);
+        // LOG.info(`*** Edan Scrape: ${H.Helpers.JSONStringify(results)}`, LOG.LS.eTEST);
+        if (results) {
+            if (results.error)
+                LOG.info(`*** Edan Scrape [${id}] ERROR for '${query}': ${results.error}`, LOG.LS.eTEST);
+
+            for (const record of results.records) {
+                const items = record?.raw?.content?.items;
+                if (!WS)
+                    LOG.info(`EDAN Query(${query}): ${H.Helpers.JSONStringify(record)}`, LOG.LS.eTEST);
+                else if (items) {
+                    for (const item of items) {
+                        if (!unitFilter || record.unit == unitFilter)
+                            WS.write(`${id}\t${record.name.replace(/\r?\n|\r/g, ' ')}\t${record.unit}\t${record.identifierPublic}\t${item}\t${results.records.length}\n`);
+                    }
+                } else if (!unitFilter || record.unit == unitFilter)
+                    WS.write(`${id}\t${record.name.replace(/\r?\n|\r/g, ' ')}\t${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${results.records.length}\n`);
             }
             return true;
         }
