@@ -112,7 +112,7 @@ export class SceneMigration {
             EdanUUID: this.scenePackage.EdanUUID,
             PosedAndQCd: this.scenePackage.PosedAndQCd ?? false,
             ApprovedForPublication: this.scenePackage.ApprovedForPublication ?? false,
-            Title: null,
+            Title: this.scenePackage.SceneTitle ? this.scenePackage.SceneTitle : null,
             idScene: 0
         });
 
@@ -438,6 +438,13 @@ export class SceneMigration {
                 this.scene.CountTour    = svx.SvxExtraction.tourCount;
                 if (!await this.scene.update())
                     return this.recordError('extractSceneDetails', `unable to update scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
+
+                // compare this.scenePackage.SceneName with scene name in package
+                const sceneExtract: DBAPI.Scene = svx.SvxExtraction.extractScene();
+                if ((this.scene.Name ?? '') !== (sceneExtract.Name ?? ''))
+                    this.logError('extractSceneDetails', `Migration input scene name ${this.scene.Name} does not match svx.json name ${sceneExtract.Name}`);
+                if ((this.scene.Title ?? '') !== (sceneExtract.Title ?? ''))
+                    this.logError('extractSceneDetails', `Migration input scene title ${this.scene.Title} does not match svx.json title ${sceneExtract.Title}`);
 
                 this.log('extractSceneDetails', `updated scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
             }
