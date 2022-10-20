@@ -100,7 +100,7 @@ export class ModelTestSetup {
         }
 
         const migrationFilesMap: Map<string, MIG.ModelMigrationFile[]> = new Map<string, MIG.ModelMigrationFile[]>(); // map of ModelMigrationFile.uniqueID -> ModelMigrationFile[]
-        for (const MMF of MIG.ModelMigrationFiles) {
+        for (const MMF of MIG.ModelMigrationTestFiles) {
             if (testCaseSet && !testCaseSet.has(MMF.uniqueID))  // trim ModelMigrationFiles to only those of interest
                 continue;
 
