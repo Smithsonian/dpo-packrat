@@ -103,7 +103,7 @@ function DetailsView(): React.ReactElement {
     const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const [loadingIdentifiers, setLoadingIdentifiers] = useState(true);
-    const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
+    const idSystemObject: number = Number.parseInt(params.idSystemObject as string, 10);
     const { data, loading } = useObjectDetails(idSystemObject);
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
