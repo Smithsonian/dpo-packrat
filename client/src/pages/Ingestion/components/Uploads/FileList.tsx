@@ -19,15 +19,16 @@ interface FileListProps {
     idSystemObject?: number;
 }
 
-interface NewAnimatePresenceProps extends Omit<AnimatePresenceProps, "children"> {
+interface NewAnimatePresenceProps extends Omit<AnimatePresenceProps, 'children'> {
     children: React.ReactNode;
- }
+}
 
- export function AnimatedComponent({ children }: { children: React.ReactNode }) {  
+export function AnimatedComponent({ children }: { children: React.ReactNode }): React.ReactElement {
     const NewAnimatePresence: React.FC<NewAnimatePresenceProps> = AnimatePresence;
-  
-    return <NewAnimatePresence>{children}</NewAnimatePresence>
-  }
+
+    return <NewAnimatePresence>{children}</NewAnimatePresence>;
+}
+
 function FileList(props: FileListProps): React.ReactElement {
     const { selectFile } = useUploadStore();
     const { getEntries } = useVocabularyStore();

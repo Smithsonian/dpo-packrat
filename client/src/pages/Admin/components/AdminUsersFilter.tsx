@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState } from 'react';
 import { Box, TextField, Button, Select, MenuItem, InputLabel, FormControl, IconButton } from '@material-ui/core';
