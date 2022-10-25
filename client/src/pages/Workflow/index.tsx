@@ -27,7 +27,7 @@ function Workflow(): React.ReactElement {
             </Helmet>
             <Box className={classes.container}>
                 <PrivateRoute path={resolveRoute(HOME_ROUTES.WORKFLOW)}>
-                    <PrivateRoute exact path={resolveRoute(HOME_ROUTES.WORKFLOW)} component={WorkflowView} />
+                    <PrivateRoute path={resolveRoute(HOME_ROUTES.WORKFLOW)} component={WorkflowView} />
                 </PrivateRoute>
             </Box>
         </React.Fragment>

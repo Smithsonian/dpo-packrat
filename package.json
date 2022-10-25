@@ -87,7 +87,7 @@
   },
   "workspaces": {
     "nohoist": [
-      "@dpo-packrat/client/*"
+      "@dpo-packrat/client/**"
     ],
     "packages": [
       "client",

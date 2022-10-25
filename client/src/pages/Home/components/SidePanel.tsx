@@ -64,19 +64,15 @@ interface SidePanelProps {
     onToggle: () => void;
 }
 
-type SidePanelParams = {
-    type: string;
-};
-
 function SidePanel(props: SidePanelProps): React.ReactElement {
     const { isExpanded, onToggle } = props;
-    const { type }: SidePanelParams = useParams();
+    const { type } = useParams();
     const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
 
     const [selectedOption, setSelectedOption] = useState(type || HOME_ROUTES.INGESTION);
 
     useEffect(() => {
-        setSelectedOption(type);
+        setSelectedOption(type as string);
     }, [type]);
 
     const classes = useStyles(isExpanded);

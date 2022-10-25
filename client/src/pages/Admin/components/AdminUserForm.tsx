@@ -13,10 +13,10 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button, Select, MenuItem, InputLabel, FormControl } from '@material-ui/core';
 import { extractISOMonthDateYear, formatISOToHoursMinutes } from '../../../constants/index';
-import { useParams, useLocation, useHistory } from 'react-router';
+import { useParams, useLocation, useNavigate } from 'react-router';
 import { useGetUserQuery, CreateUserDocument, UpdateUserDocument, GetAllUsersDocument, User_Status } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
@@ -24,7 +24,7 @@ import { useUsersStore } from '../../../store';
 import { Helmet } from 'react-helmet';
 import { DebounceInput } from 'react-debounce-input';
 
-const useStyles = makeStyles(({ typography }) => ({
+const useStyles = makeStyles(({ typography }) => createStyles({
     container: {
         display: 'flex',
         flex: 1,
@@ -76,7 +76,7 @@ const useStyles = makeStyles(({ typography }) => ({
         borderRadius: '5px',
         border: '1px solid rgb(118,118,118)',
         width: '95%',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8rem',
         height: '20px'
@@ -106,7 +106,7 @@ const useStyles = makeStyles(({ typography }) => ({
         minWidth: 'fit-content',
         height: '24px',
         padding: '0px 5px',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8rem',
         color: 'black',
@@ -118,8 +118,8 @@ const useStyles = makeStyles(({ typography }) => ({
 
 function AdminUserForm(): React.ReactElement {
     const classes = useStyles();
-    const history = useHistory();
-    const parameters: { idUser: string } = useParams();
+    const navigate = useNavigate();
+    const parameters = useParams();
     const { idUser } = parameters;
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -208,7 +208,7 @@ function AdminUserForm(): React.ReactElement {
             await updateUsersEntries();
             if (data?.updateUser) {
                 toast.success('User updated successfully');
-                history.push('/admin/users');
+                navigate('/admin/users');
             } else {
                 throw new Error('Update request returned success: false');
             }
@@ -241,7 +241,7 @@ function AdminUserForm(): React.ReactElement {
             updateUsersEntries();
             if (data?.createUser) {
                 toast.success('User created successfully');
-                history.push('/admin/users');
+                navigate('/admin/users');
             } else {
                 throw new Error('Create request returned success: false');
             }
@@ -391,7 +391,7 @@ function AdminUserForm(): React.ReactElement {
                         Update
                     </Button>
                 )}
-                <Button variant='contained' className={classes.styledBtn} onClick={() => history.push('/admin/users')} disableElevation>
+                <Button variant='contained' className={classes.styledBtn} onClick={() => navigate('/admin/users')} disableElevation>
                     Cancel
                 </Button>
             </Box>

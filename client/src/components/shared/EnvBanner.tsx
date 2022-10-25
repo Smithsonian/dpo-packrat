@@ -4,10 +4,10 @@
  * This component renders banner for the environment the app is running.
  */
 import { Box, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React from 'react';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette /*, typography*/ }) => createStyles({
     container: {
         display: 'flex',
         position: 'fixed',
@@ -20,7 +20,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         color: palette.background.paper
     },
     content: {
-        fontWeight: typography.fontWeightMedium
+        fontWeight: 500
     }
 }));
 

@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import { Box, TextField, Button, Select, MenuItem, InputLabel, FormControl, IconButton } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { User_Status } from '../../../types/graphql';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Clear from '@material-ui/icons/Clear';
 
-const useStyles = makeStyles(({ typography, palette }) => ({
+const useStyles = makeStyles(({ typography, palette }) => createStyles({
     searchUsersFilterButton: {
         backgroundColor: '#3854d0',
         color: 'white',
@@ -52,7 +52,7 @@ const useStyles = makeStyles(({ typography, palette }) => ({
         width: '250px'
     },
     filterLabel: {
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: 'inherit',
         color: 'black'
@@ -74,10 +74,10 @@ const useStyles = makeStyles(({ typography, palette }) => ({
     }
 }));
 
-function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActive: User_Status, newSearchText: string) => Promise<void> }): React.ReactElement {
+function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: any }): React.ReactElement {
     const [searchFilter, setSearchFilter] = useState('');
     const [activeStatusFilter, setActiveStatusFilter] = useState(User_Status.EAll);
-    const history = useHistory();
+    const navigate = useNavigate();
     const classes = useStyles();
 
     const handleActiveStatusFilterChange = e => {
@@ -143,7 +143,7 @@ function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActi
                 </Button>
             </Box>
             <Box className={classes.searchFilterContainerRight}>
-                <Button className={classes.searchUsersFilterButton} onClick={() => history.push('/admin/users/create')} variant='contained' disableElevation>Create</Button>
+                <Button className={classes.searchUsersFilterButton} onClick={() => navigate('/admin/users/create')} variant='contained' disableElevation>Create</Button>
             </Box>
         </Box>
     );

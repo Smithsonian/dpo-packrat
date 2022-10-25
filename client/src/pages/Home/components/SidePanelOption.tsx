@@ -4,7 +4,7 @@
  * This component renders options for collapsable SidePanel in then homepage UI.
  */
 import { Box, Typography } from '@material-ui/core';
-import { makeStyles, fade } from '@material-ui/core/styles';
+import { makeStyles, fade, createStyles } from '@material-ui/core/styles';
 import React, { memo } from 'react';
 import { FaChartLine, FaClipboardCheck, FaClipboardList, FaCog, FaFileUpload } from 'react-icons/fa';
 import { MdInsertChart } from 'react-icons/md';
@@ -12,7 +12,7 @@ import { HOME_ROUTES, resolveRoute } from '../../../constants';
 import { Colors } from '../../../theme';
 import { Link } from 'react-router-dom';
 
-const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, spacing, breakpoints }) => createStyles({
     container: {
         display: 'flex',
         alignItems: 'center',
@@ -60,7 +60,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
     subtitle: {
         whiteSpace: 'nowrap',
         color: palette.primary.contrastText,
-        fontWeight: typography.fontWeightLight
+        fontWeight: 300
     },
 }));
 

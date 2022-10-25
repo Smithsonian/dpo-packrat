@@ -3,7 +3,7 @@
  *
  * This component renders file list used in UploadList and UploadCompleteList components.
  */
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, AnimatePresenceProps } from 'framer-motion/dist/framer-motion';
 import React from 'react';
 import { FileId, FileUploadStatus, IngestionFile, useUploadStore, useVocabularyStore, VocabularyOption } from '../../../../store';
 import { eVocabularySetID } from '@dpo-packrat/common';
@@ -19,6 +19,15 @@ interface FileListProps {
     idSystemObject?: number;
 }
 
+interface NewAnimatePresenceProps extends Omit<AnimatePresenceProps, "children"> {
+    children: React.ReactNode;
+ }
+
+ export function AnimatedComponent({ children }: { children: React.ReactNode }) {  
+    const NewAnimatePresence: React.FC<NewAnimatePresenceProps> = AnimatePresence;
+  
+    return <NewAnimatePresence>{children}</NewAnimatePresence>
+  }
 function FileList(props: FileListProps): React.ReactElement {
     const { selectFile } = useUploadStore();
     const { getEntries } = useVocabularyStore();
@@ -56,7 +65,7 @@ function FileList(props: FileListProps): React.ReactElement {
         const typeOptions: VocabularyOption[] = getEntries(eVocabularySetID.eAssetAssetType);
 
         return (
-            <AnimatePresence key={index}>
+            <AnimatedComponent key={index}>
                 <FileListItem
                     id={id}
                     name={name}
@@ -86,7 +95,7 @@ function FileList(props: FileListProps): React.ReactElement {
                     uploadPendingList={uploadPendingList}
                     idSystemObject={idSystemObject}
                 />
-            </AnimatePresence>
+            </AnimatedComponent>
         );
     };
 
