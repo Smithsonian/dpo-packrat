@@ -1,5 +1,7 @@
 import * as LOG from './logger';
-import  * as os from 'os';
+import * as os from 'os';
+import * as process from 'process';
+// import * as heapdump from 'heapdump';
 
 /** Upon construction, computes the total MS and % CPU utilization, either compared with the pass in osStats object, or since the last reboot (if null) */
 export class osStats {
@@ -74,30 +76,49 @@ export class osStats {
     }
 }
 
-export class CPUMonitor {
+export class UsageMonitor {
     private monitorTimeout: number;
-    private alertThreshold: number;
-    private alertAlarm: number;
+    private cpuAlertThreshold: number;
+    private cpuAlertAlarm: number;
+
+    private monitorMem: boolean;
+    private memAlertThreshold: number;
+    private memAlertAlarm: number;
+
     private verbose: boolean;
 
-    private alertCount: number = 0;
+    private cpuAlertCount: number = 0;
+    private memAlertCount: number = 0;
     private verboseCount: number = 0;
     private timer: NodeJS.Timeout | null = null;
     private OS: osStats = new osStats();
 
+    private totalMem: number = 0;
+    private rssMem: number = 0;
+
     /**
      * @monitorTimeout in milleseconds -- how often we sample CPU utilization
-     * @alertThreshold busy percentage above which we'll be alerted; 100 is the maximum
-     * @alertAlarm count of consequetive samples above alertThreshold that indicate an alarm status
+     * @cpuAlertThreshold CPU busy percentage above which we'll be alerted; 100 is the maximum
+     * @cpuAlertAlarm count of consequetive CPU samples above cpuAlertThreshold that indicate an alarm status
+     * @monitorMem true indicates monitoring of memory usage, too
+     * @memAlertThreshold mem uasge percentage above which we'll be alerted; 100 is the maximum
+     * @memAlertAlarm count of consequetive MEM samples above memAlertThreshold that indicate an alarm status
      * @verbose true results in logging of cpu utlitization every alertAlarm samples */
-    constructor(monitorTimeout: number, alertThreshold: number, alertAlarm: number, verbose?: boolean | undefined) {
+    constructor(monitorTimeout: number, cpuAlertThreshold: number, cpuAlertAlarm: number,
+        monitorMem: boolean, memAlertThreshold: number, memAlertAlarm: number, verbose?: boolean | undefined) {
         this.monitorTimeout = monitorTimeout;
-        this.alertThreshold = alertThreshold;
-        this.alertAlarm = alertAlarm;
+        this.cpuAlertThreshold = cpuAlertThreshold;
+        this.cpuAlertAlarm = cpuAlertAlarm;
+
+        this.monitorMem = monitorMem;
+        this.memAlertThreshold = memAlertThreshold;
+        this.memAlertAlarm = memAlertAlarm;
+
         this.verbose = verbose ?? false;
     }
 
     start(): void {
+        this.totalMem = os.totalmem();
         this.timer = setInterval(() => this.sample(), this.monitorTimeout);
     }
 
@@ -107,23 +128,62 @@ export class CPUMonitor {
     }
 
     sample(): void {
+        let emitCPUAlert: boolean = false;
+        let emitMemAlert: boolean = false;
+
+        // CPU Monitor
         this.OS = new osStats(this.OS);
-        if ((this.OS.busyPerc * 100) >= this.alertThreshold) {
-            if (++this.alertCount >= this.alertAlarm)
-                this.alert();
+        if ((this.OS.busyPerc * 100) >= this.cpuAlertThreshold) {
+            if (++this.cpuAlertCount >= this.cpuAlertAlarm)
+                emitCPUAlert = true;
         } else
-            this.alertCount = 0;
+            this.cpuAlertCount = 0;
+
+        // Mem Monitor
+        if (this.monitorMem) {
+            this.rssMem = process.memoryUsage.rss();
+            if ((this.rssMem * 100 / this.totalMem) >= this.memAlertThreshold) {
+                if (++this.memAlertCount === this.memAlertAlarm) {
+                    /*
+                    const snapShotName: string = `./var/${Date.now()}.heapsnapshot`;
+                    LOG.info(`UsageMonitor.sample emitting heap snapshot to ${snapShotName}`, LOG.LS.eSYS);
+                    heapdump.writeSnapshot(snapShotName);
+                    */
+                    emitMemAlert = true;
+                }
+            } else
+                this.memAlertCount = 0;
+        }
+
+        if (emitCPUAlert || emitMemAlert)
+            this.alert(emitCPUAlert, emitMemAlert);
 
         if (this.verbose) {
-            if (++this.verboseCount >= this.alertAlarm) {
+            if (++this.verboseCount >= this.cpuAlertAlarm) {
                 this.verboseCount = 0;
-                LOG.info(`CPUMonitor.sample ${this.OS.emitInfo()}`, LOG.LS.eSYS);
+                LOG.info(`UsageMonitor.sample ${this.emitInfo()}`, LOG.LS.eSYS);
             }
         }
     }
 
-    alert(): void {
-        this.alertCount = 0;
-        LOG.error(`CPUMonitor exceeded ${this.alertThreshold}% CPU utilization for ${this.alertAlarm} consecutive samples: ${this.OS.emitInfo()}`, LOG.LS.eSYS);
+    emitInfo(): string {
+        let mem: string = '';
+        if (this.monitorMem) {
+            const memPerc: string = (this.rssMem * 100 / this.totalMem).toFixed(2) + '%';
+            const memRssMB: string = (this.rssMem / 1024 / 1024).toFixed(0);
+            const memTotMB: string = (this.totalMem / 1024 / 1024).toFixed(0);
+            mem = `; Mem ${memPerc}: ${memRssMB}/${memTotMB} MB`;
+        }
+        return `${this.OS.emitInfo()}${mem}`;
+    }
+
+    alert(emitCPUAlert: boolean, emitMemAlert: boolean): void {
+        this.cpuAlertCount = 0;
+        this.memAlertCount = 0;
+        if (emitCPUAlert)
+            LOG.error(`UsageMonitor exceeded ${this.cpuAlertThreshold}% CPU utilization for ${this.cpuAlertAlarm} consecutive samples: ${this.emitInfo()}`, LOG.LS.eSYS);
+        if (emitMemAlert)
+            LOG.error(`UsageMonitor exceeded ${this.memAlertThreshold}% Mem utilization for ${this.memAlertAlarm} consecutive samples: ${this.emitInfo()}`, LOG.LS.eSYS);
     }
 }
+
