@@ -29,7 +29,7 @@
   "main": "build/index.js",
   "typings": "build/index.d.ts",
   "scripts": {
-    "start": "nodemon --watch . --watch ../common --ignore var/ --ignore build/ --ignore coverage/ --ignore node_modules/ --ignore tests/ --exec yarn ts-node index.ts -e ts,js,json,graphql",
+    "start": "nodemon --watch . --watch ../common --ignore var/ --ignore build/ --ignore coverage/ --ignore node_modules/ --ignore tests/ --exec yarn node -r ts-node/register --max-old-space-size=14336 index.ts -e ts,js,json,graphql",
     "start:inspect": "nodemon --watch . --watch ../common --ignore var/ --ignore build/ --ignore coverage/ --ignore node_modules/ --ignore tests/ --exec yarn node -r ts-node/register --inspect=0.0.0.0:9230 index.ts -e ts,js,json,graphql",
     "start:trace": "nodemon --watch . --watch ../common --ignore var/ --ignore build/ --ignore coverage/ --ignore node_modules/ --ignore tests/ --exec yarn node -r ts-node/register --trace-deprecation index.ts -e ts,js,json,graphql",
     "start:prod": "node build/index.js",

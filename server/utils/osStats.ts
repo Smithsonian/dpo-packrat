@@ -1,7 +1,9 @@
 import * as LOG from './logger';
 import * as os from 'os';
 import * as process from 'process';
+// import * as H from './helpers';
 // import * as heapdump from 'heapdump';
+// const memwatch = require('@airbnb/node-memwatch');
 
 /** Upon construction, computes the total MS and % CPU utilization, either compared with the pass in osStats object, or since the last reboot (if null) */
 export class osStats {
@@ -65,9 +67,10 @@ export class osStats {
     }
 
     emitInfo(): string {
-        const totalTime: number = this.userTotal + this.niceTotal + this.sysTotal + this.idleTotal + this.irqTotal;
-        const deltaTime: number = this.userDelta + this.niceDelta + this.sysDelta + this.idleDelta + this.irqDelta;
-        return `CPU Count ${this.CPUs.length}; busy ${this.emitBusyPerc()}; delta time ${deltaTime}; total time ${totalTime}`;
+        // const totalTime: number = this.userTotal + this.niceTotal + this.sysTotal + this.idleTotal + this.irqTotal;
+        // const deltaTime: number = this.userDelta + this.niceDelta + this.sysDelta + this.idleDelta + this.irqDelta;
+        // return `CPU Count ${this.CPUs.length}; busy ${this.emitBusyPerc()}; delta time ${deltaTime}; total time ${totalTime}`;
+        return `CPU Count ${this.CPUs.length}; busy ${this.emitBusyPerc()}`;
     }
 
     emitBusyPerc(): string {
@@ -92,6 +95,8 @@ export class UsageMonitor {
     private verboseCount: number = 0;
     private timer: NodeJS.Timeout | null = null;
     private OS: osStats = new osStats();
+
+    // private heapdiff: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     private totalMem: number = 0;
     private rssMem: number = 0;
@@ -120,6 +125,22 @@ export class UsageMonitor {
     start(): void {
         this.totalMem = os.totalmem();
         this.timer = setInterval(() => this.sample(), this.monitorTimeout);
+        if (this.monitorMem) {
+            // if (!this.heapdiff)
+            //     this.heapdiff = new memwatch.HeapDiff();
+
+            /*
+            memwatch.on('stats', stats => {
+                LOG.info(`UsageMonitor.memwatch.stats ${H.Helpers.JSONStringify(stats)}`, LOG.LS.eSYS);
+
+                // if (this.heapdiff) {
+                //     const diff = this.heapdiff.end();
+                //     LOG.info(`UsageMonitor memory GC, ${H.Helpers.JSONStringify(diff)}`, LOG.LS.eSYS);
+                // }
+                // this.heapdiff = new memwatch.HeapDiff();
+            });
+            */
+        }
     }
 
     stop(): void {
@@ -144,12 +165,20 @@ export class UsageMonitor {
             this.rssMem = process.memoryUsage.rss();
             if ((this.rssMem * 100 / this.totalMem) >= this.memAlertThreshold) {
                 if (++this.memAlertCount === this.memAlertAlarm) {
+                    emitMemAlert = true;
                     /*
                     const snapShotName: string = `./var/${Date.now()}.heapsnapshot`;
                     LOG.info(`UsageMonitor.sample emitting heap snapshot to ${snapShotName}`, LOG.LS.eSYS);
                     heapdump.writeSnapshot(snapShotName);
                     */
-                    emitMemAlert = true;
+
+                    /*
+                    if (this.heapdiff) {
+                        const diff = this.heapdiff.end();
+                        LOG.info(`UsageMonitor memory alert, ${H.Helpers.JSONStringify(diff)}`, LOG.LS.eSYS);
+                        this.heapdiff = new memwatch.HeapDiff();
+                    }
+                    */
                 }
             } else
                 this.memAlertCount = 0;
@@ -172,7 +201,8 @@ export class UsageMonitor {
             const memPerc: string = (this.rssMem * 100 / this.totalMem).toFixed(2) + '%';
             const memRssMB: string = (this.rssMem / 1024 / 1024).toFixed(0);
             const memTotMB: string = (this.totalMem / 1024 / 1024).toFixed(0);
-            mem = `; Mem ${memPerc}: ${memRssMB}/${memTotMB} MB`;
+
+            mem = `; Mem ${('       ' + memPerc).substring(memPerc.length)} ${memRssMB}/${memTotMB} MB`;
         }
         return `${this.OS.emitInfo()}${mem}`;
     }
