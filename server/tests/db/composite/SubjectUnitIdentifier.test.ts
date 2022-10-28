@@ -35,12 +35,12 @@ describe('DB Composite SubjectUnitIdentifier Test', () => {
     executeSearch('Armstrong', false, false, 1);
     executeSearch('65665', false, true);
     executeSearch('65665', false, false, -1);
-    executeSearch('65665', false, true, 17, 1, 100);
-    executeSearch('65665', false, true, 17, 2, 10);
-    executeSearch('65665', false, true, 17, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eDefault, true);
-    executeSearch('65665', false, true, 17, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eIdentifierValue, false);
-    executeSearch('65665', false, true, 17, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eSubjectName, true);
-    executeSearch('65665', false, true, 17, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation, false);
+    executeSearch('65665', false, true, 18, 1, 100);
+    executeSearch('65665', false, true, 18, 2, 10);
+    executeSearch('65665', false, true, 18, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eDefault, true);
+    executeSearch('65665', false, true, 18, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eIdentifierValue, false);
+    executeSearch('65665', false, true, 18, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eSubjectName, true);
+    executeSearch('65665', false, true, 18, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation, false);
 });
 
 function executeQuery(query: string, expectNull: boolean, expectResults: boolean): void {
