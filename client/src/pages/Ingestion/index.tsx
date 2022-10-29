@@ -9,10 +9,8 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
-import { Navigate, useMatch } from 'react-router';
-// import { Prompt } from 'react-router-dom';
-import { PrivateRoute } from '../../components';
-import { HOME_ROUTES, INGESTION_PARAMS_TYPE, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
+import { Route, Routes, Navigate } from 'react-router';
+import { INGESTION_PARAMS_TYPE, INGESTION_ROUTE,resolveRoute, INGESTION_ROUTES_TYPE, resolveSubRoute, HOME_ROUTES } from '../../constants';
 import { useMetadataStore } from '../../store';
 import { IngestionSidebarMenu, IngestionSidebarOption } from './components/IngestionSidebar';
 import Metadata from './components/Metadata';
@@ -31,7 +29,7 @@ const useStyles = makeStyles(() => ({
 function Ingestion(): React.ReactElement {
     const classes = useStyles();
     // TODO may need to revisit
-    const match = useMatch('/');
+    // const match = useMatch('/');
     const { metadatas } = useMetadataStore();
     const { ingestionReset } = useIngest();
 
@@ -102,21 +100,17 @@ function Ingestion(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            {/* <Prompt message={routeChangeCheck} /> */}
-            <PrivateRoute path={match?.pathname}>
-                <Navigate to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)} />
-            </PrivateRoute>
-
-            <PrivateRoute path={resolveRoute(INGESTION_ROUTE.TYPE)}>
-                <IngestionSidebarMenu title='INGESTION' paramIdentifier={INGESTION_PARAMS_TYPE.STEP} options={options} />
-
-                <PrivateRoute path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)} component={Uploads} />
-
-                <PrivateRoute path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP)} component={SubjectItem} />
-
-                <PrivateRoute path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)} component={Metadata} />
-            </PrivateRoute>
+            <IngestionSidebarMenu title='INGESTION' paramIdentifier={INGESTION_PARAMS_TYPE.STEP} options={options} />
+            <Routes>
+                <Route path={resolveRoute(INGESTION_ROUTES_TYPE.UPLOADS)} element={<Uploads />} />
+                <Route path={resolveRoute(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP)} element={<SubjectItem />} />
+                <Route path={resolveRoute(INGESTION_ROUTES_TYPE.METADATA)} element={<Metadata />} />
+                <Route path='/' element={<Navigate to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)} />} />
+            </Routes>
         </Box>
+
+            // {/* <Prompt message={routeChangeCheck} /> */}
+            // {/* <PrivateRoute path={match?.pathname}> */}
     );
 }
 
