@@ -90,9 +90,10 @@ export class SystemObjectCache {
                 this.systemIDToObjectMap.set(SO.idSystemObject, oIDCleansed);
             } else if (!isASystemObject) {
                 if (idObject) {
-                    // LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal storing idSystemObject 0 for ${JSON.stringify(oIDCleansed)}`, LOG.LS.eCACHE);
                     sID = { idSystemObject: 0, Retired: false };
-                    this.objectIDToSystemMap.set(oIDCleansed, sID);
+                    // Avoid adding non-system objects to objectIDToSystemMap ... we end up with more than 2^24 entries in this map, which is the V8 limit for JS Maps
+                    // LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal stored idSystemObject 0 for ${JSON.stringify(oIDCleansed)}`, LOG.LS.eCACHE);
+                    // this.objectIDToSystemMap.set(oIDCleansed, sID);
                 }
             } else
                 LOG.error(`SystemObjectCache.getSystemFromObjectIDInternal unable to lookup ${COMMON.eSystemObjectType[eObjectType]}, id ${idObject}`, LOG.LS.eCACHE );
