@@ -4,7 +4,7 @@ import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Config } from '../config';
 import * as LOG from '../utils/logger';
-import { CPUMonitor } from '../utils/osStats';
+import { UsageMonitor } from '../utils/osStats';
 
 import { logtest } from './routes/logtest';
 import { heartbeat } from './routes/heartbeat';
@@ -22,7 +22,8 @@ import { v2 as webdav } from 'webdav-server';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
 
 const monitorCPU: boolean = true;
-const monitorVerbose: boolean = false;
+const monitorMem: boolean = true;
+const monitorVerboseSamples: number = 60;
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
@@ -48,7 +49,7 @@ export class HttpServer {
         // call to initalize the EventFactory, which in turn will initialize the AuditEventGenerator, supplying the IEventEngine
         EventFactory.getInstance();
         if (monitorCPU) {
-            const monitor: CPUMonitor = new CPUMonitor(1000, 90, 10, monitorVerbose); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerbose -> verbose logging
+            const monitor: UsageMonitor = new UsageMonitor(1000, 90, 10, monitorMem, 90, 10, monitorVerboseSamples); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerboseSamples -> verbose logging, when != 0, every monitorVerboseSamples samples
             monitor.start();
         }
         return res;

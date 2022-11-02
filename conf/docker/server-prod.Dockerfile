@@ -30,4 +30,4 @@ RUN mkdir -p /app/node_modules/@dpo-packrat/ && rm /app/node_modules/@dpo-packra
 
 # Expose port, and provide start command on execution
 EXPOSE 4000
-CMD [ "node", "server/build/index.js" ]
+CMD [ "node", "--max-old-space-size=14336", "server/build/index.js" ]

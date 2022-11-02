@@ -34,7 +34,7 @@ export class IndexSolr implements NAV.IIndexer {
 
     constructor() {
         if (IndexSolr.reindexJob === null) {
-            IndexSolr.reindexJob = NS.scheduleJob('Packrat Solr Full Reindex', '*/30 * * * *', IndexSolr.fullIndexScheduled);
+            IndexSolr.reindexJob = NS.scheduleJob('Packrat Solr Full Reindex', '0 */4 * * *', IndexSolr.fullIndexScheduled);
             LOG.info('IndexSolr reindex job scheduled', LOG.LS.eNAV);
         }
     }
@@ -259,7 +259,7 @@ export class IndexSolr implements NAV.IIndexer {
         const createdSystemObjectSet: Set<number> = new Set<number>(); // system object IDs that have been "created"
 
         while (true) { // eslint-disable-line no-constant-condition
-            const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchAllByPage(idMetadataLast, 1000);
+            const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchAllByPage(idMetadataLast, 25000);
             if (!metadataList) {
                 LOG.error('IndexSolr.fullIndexWorkerMeta could not fetch metadata', LOG.LS.eNAV);
                 return false;
