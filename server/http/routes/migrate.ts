@@ -1,8 +1,10 @@
 import * as DBAPI from '../../db';
+import * as CACHE from '../../cache';
 import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
 import { SceneMigration, SceneMigrationResults } from '../../utils/migration/SceneMigration';
-import { SceneMigrationPackages } from '../../utils/migration/MigrationData';
+import { ModelMigration, ModelMigrationResults } from '../../utils/migration/ModelMigration';
+import { SceneMigrationPackages, ModelMigrationFiles } from '../../utils/migration/MigrationData';
 import { MigrationUtils } from '../../utils/migration/MigrationUtils';
 import { ASL, LocalStore } from '../../utils/localStore';
 
@@ -10,6 +12,9 @@ import { Request, Response } from 'express';
 import * as NS from 'node-schedule';
 import { Semaphore } from 'async-mutex';
 import { SceneMigrationPackage } from '../../utils/migration/SceneMigrationPackage';
+
+import * as COMMON from '@dpo-packrat/common';
+import { ModelMigrationFile } from '../../utils/migration';
 
 const SimultaneousMigrations: number = 10;
 
@@ -114,8 +119,29 @@ class Migrator {
             }
         }
 
-        if (this.modelIDSet !== undefined)
-            this.results += 'Migrating Models Not Yet Implemented<br/>\n';
+        if (this.modelIDSet !== undefined) {
+            this.results += 'Migrating Models<br/>\n';
+
+            const vAssetTypeModel: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
+            const vAssetTypeModelGeometryFile: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+            if (!vAssetTypeModel || !vAssetTypeModelGeometryFile) {
+                this.recordMigrationResult(false, 'ModelMigration unable to fetch asset type vocabulary');
+                return false;
+            }
+
+            // TODO: Pre-process ModelMigrationFiles, collecting them into arrays, one per .uniqueID; pass this array below in this.migrateModel
+            for (const modelFile of ModelMigrationFiles) {
+                if (this.modelIDSet && !this.modelIDSet.has(modelFile.uniqueID))
+                    continue;
+                const models: DBAPI.Model[] | null = await DBAPI.Model.fetchByFileNameAndAssetType(modelFile.fileName, [vAssetTypeModel.idVocabulary, vAssetTypeModelGeometryFile.idVocabulary]);
+                if (models && models.length > 0) {
+                    this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) skipped: already migrated`);
+                    continue;
+                }
+
+                await this.migrateModel([modelFile], user);
+            }
+        }
 
         return true;
     }
@@ -134,6 +160,29 @@ class Migrator {
                 this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) succeeded: ${H.Helpers.JSONStringify(SMR)}`);
 
             return SMR;
+        });
+        return res;
+    }
+
+    private async migrateModel(modelFileSet: ModelMigrationFile[], user: DBAPI.User): Promise<ModelMigrationResults> {
+        if (modelFileSet.length <= 0)
+            return { success: false, error: 'migrateModel called with no files' };
+
+        const res: ModelMigrationResults = await Migrator.semaphoreMigrations.runExclusive(async (value) => {
+            const LS: LocalStore = await ASL.getOrCreateStore();
+            LS.incrementRequestID();
+
+            const modelFile: ModelMigrationFile = modelFileSet[0];
+
+            this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) Starting; semaphore count ${value}`);
+            const MM: ModelMigration = new ModelMigration();
+            const MMR: ModelMigrationResults = await MM.migrateModel(user.idUser, modelFileSet, true);
+            if (!MMR.success)
+                this.recordMigrationResult(false, `ModelMigration (${modelFile.uniqueID}) failed for ${H.Helpers.JSONStringify(modelFile)}: ${MMR.error}`);
+            else
+                this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) succeeded: ${H.Helpers.JSONStringify(MMR)}`);
+
+            return MMR;
         });
         return res;
     }
