@@ -17,7 +17,6 @@ import Metadata from './components/Metadata';
 import SubjectItem from './components/SubjectItem';
 import Uploads from './components/Uploads';
 import useIngest from './hooks/useIngest';
-// import { usePrompt, useBlocker } from './hooks/usePromp';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -28,8 +27,6 @@ const useStyles = makeStyles(() => ({
 
 function Ingestion(): React.ReactElement {
     const classes = useStyles();
-    // TODO may need to revisit
-    // const match = useMatch('/');
     const { metadatas } = useMetadataStore();
     const { ingestionReset } = useIngest();
 
@@ -108,9 +105,6 @@ function Ingestion(): React.ReactElement {
                 <Route path='/' element={<Navigate to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)} />} />
             </Routes>
         </Box>
-
-            // {/* <Prompt message={routeChangeCheck} /> */}
-            // {/* <PrivateRoute path={match?.pathname}> */}
     );
 }
 

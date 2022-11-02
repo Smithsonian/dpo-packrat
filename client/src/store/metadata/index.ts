@@ -120,7 +120,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     },
     validateFields: (fields: ValidateFields, schema: ValidateFieldsSchema): boolean => {
         let hasError: boolean = false;
-        const options: yup.ValidateOptions = {
+        const options = {
             abortEarly: false
         };
 
@@ -590,7 +590,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     },
     getSubtitlesError: (subtitles: SubtitleFields): boolean => {
         let hasError: boolean = false;
-        const options: yup.ValidateOptions = {
+        const options = {
             abortEarly: false
         };
 

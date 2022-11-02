@@ -134,7 +134,6 @@ function AdminUserForm(): React.ReactElement {
 
     const location = useLocation();
     const create: boolean = idUser === 'create';
-    console.log('location', location, 'parameters', parameters)
     const schema = yup.object().shape({
         fullName: yup.string().min(1),
         email: yup.string().email().min(1)
@@ -153,7 +152,6 @@ function AdminUserForm(): React.ReactElement {
 
     useEffect(() => {
         if (fetchedUser) {
-            console.log('fetchedUser', fetchedUser);
             setName(fetchedUser?.Name);
             setEmail(fetchedUser?.EmailAddress);
             setActive(fetchedUser?.Active);
