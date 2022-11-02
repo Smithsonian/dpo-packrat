@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 /**
  * Packrat Client
  *
@@ -8,10 +11,10 @@ import { ApolloProvider } from '@apollo/client';
 import { ThemeProvider, Box } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { BrowserRouter as Router, Routes, Route, Navigate /*, Outlet, */ } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Slide, toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { EnvBanner, ErrorBoundary, Loader, /*PrivateRoute*/ } from './components';
+import { EnvBanner, ErrorBoundary, Loader } from './components';
 import { ROUTES } from './constants';
 import './global/root.css';
 import { apolloClient } from './graphql';
@@ -20,7 +23,7 @@ import * as serviceWorker from './serviceWorker';
 import { useUserStore, useVocabularyStore, useLicenseStore, useUsersStore, useObjectMetadataStore, useControlStore } from './store';
 import theme from './theme';
 import { eVocabularySetID } from '@dpo-packrat/common';
-import { createRoot } from 'react-dom/client'
+import { createRoot } from 'react-dom/client';
 import { AliveScope } from 'react-activation';
 import Header from './components/shared/Header';
 import SidePanel from './pages/Home/components/SidePanel';
@@ -73,7 +76,7 @@ function AppRouter(): React.ReactElement {
 
     let content: React.ReactNode = <Loader size={40} />;
 
-    let homeLayout = (
+    const homeLayout = (
         <RequireAuth redirectTo={ROUTES.LOGIN}>
             <AliveScope>
                 <Box className={classes.container}>
@@ -125,12 +128,17 @@ function App(): React.ReactElement {
     );
 }
 
-function RequireAuth({ children, redirectTo }) {
+interface ReRouteProps {
+    children: any;
+    redirectTo: string;
+}
+
+function RequireAuth({ children, redirectTo }: ReRouteProps) {
     const [user] = useUserStore(state => [state.user]);
     return user ? children : <Navigate to={redirectTo} />;
 }
 
-function RedirectAuth({ children, redirectTo }) {
+function RedirectAuth({ children, redirectTo }: ReRouteProps) {
     const [user] = useUserStore(state => [state.user]);
     return user ? <Navigate to={redirectTo} /> : children;
 }

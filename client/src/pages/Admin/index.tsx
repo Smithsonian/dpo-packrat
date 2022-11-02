@@ -49,7 +49,7 @@ function Admin(): React.ReactElement {
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.CREATESUBJECT)} element={<SubjectForm />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.SUBJECTS)} element={<SubjectView />} />
             <Route path='/' element={<Navigate to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.LICENSES)} />} />
-    </Routes>
+        </Routes>
     );
 }
 

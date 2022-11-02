@@ -10,16 +10,14 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
-import { /*Navigate,*/ useLocation, Route, Routes } from 'react-router';
-// import { PrivateRoute } from '../../components';
-import { /*HOME_ROUTES,*/ REPOSITORY_ROUTE, resolveRoute } from '../../constants';
+import { useLocation, Route, Routes } from 'react-router';
+import { REPOSITORY_ROUTE, resolveRoute } from '../../constants';
 import { useControlStore, useRepositoryStore } from '../../store';
 import { eMetadata, eSystemObjectType } from '@dpo-packrat/common';
 import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repository';
 import DetailsView from './components/DetailsView';
 import RepositoryFilterView from './components/RepositoryFilterView';
 import RepositoryTreeView from './components/RepositoryTreeView';
-// import VoyagerStoryView from './components/DetailsView/VoyagerStoryView';
 import { Helmet } from 'react-helmet';
 import VoyagerStoryView from './components/DetailsView/VoyagerStoryView';
 
@@ -65,24 +63,10 @@ function Repository(): React.ReactElement {
 
     return (
         <Routes>
-            <Route path='details/:idSystemObject' element={
-                <DetailsView />
-            } />
-            <Route path={resolveRoute(REPOSITORY_ROUTE.ROUTES.VOYAGER)} element={
-                <VoyagerStoryView />
-            } />
-            <Route path={resolveRoute(REPOSITORY_ROUTE.ROUTES.VIEW)} element={
-                <TreeViewPage />
-            } />
+            <Route path='details/:idSystemObject' element={<DetailsView />} />
+            <Route path={resolveRoute(REPOSITORY_ROUTE.ROUTES.VOYAGER)} element={<VoyagerStoryView />} />
+            <Route path={resolveRoute(REPOSITORY_ROUTE.ROUTES.VIEW)} element={<TreeViewPage />} />
         </Routes>
-        // <PrivateRoute path={resolveRoute(HOME_ROUTES.REPOSITORY)}>
-        //     <PrivateRoute path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} component={TreeViewPage} />
-        //     <PrivateRoute path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.DETAILS)} component={DetailsView} />
-        //     <PrivateRoute path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VOYAGER)} component={VoyagerStoryView} />
-        //     <PrivateRoute path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, 'details')}>
-        //         <Navigate to={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} />
-        //     </PrivateRoute>
-        // </PrivateRoute>
     );
 }
 

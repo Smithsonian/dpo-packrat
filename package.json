@@ -65,6 +65,9 @@
     "install:husky": "husky install",
     "upgradelatest": "lerna exec -- yarn upgrade --latest"
   },
+  "resolutions": {
+    "react-error-overlay": "6.0.9"
+  },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "4.10.0",
     "@typescript-eslint/parser": "4.10.0",

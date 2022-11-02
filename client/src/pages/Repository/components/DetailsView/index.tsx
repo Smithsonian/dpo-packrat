@@ -150,7 +150,6 @@ function DetailsView(): React.ReactElement {
             setLoadingIdentifiers(false);
         }
     };
-    console.log('details view mounted!');
     const onUploaderReset = () => {
         resetSpecialPending(eIngestionMode.eAttach);
         resetSpecialPending(eIngestionMode.eUpdate);
