@@ -661,7 +661,7 @@ export class VocabularyCache {
         return await VocabularyCache.vocabularyByEnum(eVocabID);
     }
 
-    static mapIdentifierTypeID(identifierType: string): COMMON.eVocabularyID | undefined  {
+    static mapIdentifierTypeID(identifierType: string): COMMON.eVocabularyID | undefined {
         switch (identifierType.toLowerCase()) {
             case 'ark':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeARK;
             case 'doi':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeDOI;

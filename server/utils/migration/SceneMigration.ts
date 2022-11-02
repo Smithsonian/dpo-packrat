@@ -112,7 +112,7 @@ export class SceneMigration {
             EdanUUID: this.scenePackage.EdanUUID,
             PosedAndQCd: this.scenePackage.PosedAndQCd ?? false,
             ApprovedForPublication: this.scenePackage.ApprovedForPublication ?? false,
-            Title: null,
+            Title: this.scenePackage.SceneTitle ? this.scenePackage.SceneTitle : null,
             idScene: 0
         });
 
@@ -151,20 +151,57 @@ export class SceneMigration {
             return resourceRes;
 
         let sceneSO: DBAPI.SystemObject | null = null;
-        // set license
+        // set license -- on subject!
         if (this.scenePackage.License) {
-            if (!sceneSO)
-                sceneSO = await this.scene.fetchSystemObject();
-            if (!sceneSO)
-                return this.recordError('migrateScene', `failed to fetch scene system object for ${H.Helpers.JSONStringify(this.scene)}`);
+            let idSystemObjects: number[] | null = null;
+            if (this.scenePackage.idSystemObjectItem) {
+                const itemSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(this.scenePackage.idSystemObjectItem);
+                if (!itemSO || !itemSO.idItem)
+                    return this.recordError('migrateScene', `failed to fetch item system object for id ${this.scenePackage.idSystemObjectItem}`);
+
+                const subjects: DBAPI.Subject[] | null = await DBAPI.Subject.fetchMasterFromItems([itemSO.idItem]);
+                if (!subjects || subjects.length === 0)
+                    return this.recordError('migrateScene', `failed to fetch subjects associated with item id ${itemSO.idItem}`);
+
+                for (const subject of subjects) {
+                    const subjectSO: DBAPI.SystemObject | null = await subject.fetchSystemObject();
+                    if (!subjectSO)
+                        return this.recordError('migrateScene', `failed to fetch subject system object for ${H.Helpers.JSONStringify(subject)}`);
+                    if (!idSystemObjects)
+                        idSystemObjects = [];
+                    idSystemObjects.push(subjectSO.idSystemObject);
+                }
+            }
+
+            // if we have no subjects, or if we have multiple subjects, assign the license to the scene
+            if (!idSystemObjects || idSystemObjects.length > 1) {
+                if (!sceneSO)
+                    sceneSO = await this.scene.fetchSystemObject();
+                if (!sceneSO)
+                    return this.recordError('migrateScene', `failed to fetch scene system object for ${H.Helpers.JSONStringify(this.scene)}`);
+                idSystemObjects = [sceneSO.idSystemObject];
+            }
 
             const License: DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByEnum(this.scenePackage.License);
             if (!License)
                 return this.recordError('migrateScene', `failed to fetch scene license from enum ${this.scenePackage.License} for ${H.Helpers.JSONStringify(this.scene)}`);
 
-            const assignmentSuccess: boolean = await DBAPI.LicenseManager.setAssignment(sceneSO.idSystemObject, License);
-            if (!assignmentSuccess)
-                return this.recordError('migrateScene', `failed to assign license ${this.scenePackage.License} for ${H.Helpers.JSONStringify(this.scene)}`);
+            // detect if any license has already been assigned, and if it differs, complain
+            for (const idSystemObject of idSystemObjects) {
+                const licenseAssignments: DBAPI.LicenseAssignment[] | null = await DBAPI.LicenseAssignment.fetchFromSystemObject(idSystemObject);
+                if (!licenseAssignments)
+                    return this.recordError('migrateScene', `failed to fetch assigned licenses for idSystemObject ${idSystemObject}`);
+                if (licenseAssignments.length > 0) {
+                    for (const licenseAssignment of licenseAssignments) {
+                        if (licenseAssignment.assignmentActive() && licenseAssignment.idLicense !== License.idLicense)
+                            return this.recordError('migrateScene', `license ${H.Helpers.JSONStringify(licenseAssignment)} already assigned to ${idSystemObject} does not match to-be-assigned license of ${H.Helpers.JSONStringify(License)}`);
+                    }
+                }
+
+                const assignmentSuccess: boolean = await DBAPI.LicenseManager.setAssignment(idSystemObject, License);
+                if (!assignmentSuccess)
+                    return this.recordError('migrateScene', `failed to assign license ${this.scenePackage.License} to idSystemObject ${idSystemObject}`);
+            }
         }
 
         // set publication status
@@ -438,6 +475,13 @@ export class SceneMigration {
                 this.scene.CountTour    = svx.SvxExtraction.tourCount;
                 if (!await this.scene.update())
                     return this.recordError('extractSceneDetails', `unable to update scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
+
+                // compare this.scenePackage.SceneName with scene name in package
+                const sceneExtract: DBAPI.Scene = svx.SvxExtraction.extractScene();
+                if ((this.scene.Name ?? '') !== (sceneExtract.Name ?? ''))
+                    this.logError('extractSceneDetails', `Migration input scene name ${this.scene.Name} does not match svx.json name ${sceneExtract.Name}`);
+                if ((this.scene.Title ?? '') !== (sceneExtract.Title ?? ''))
+                    this.logError('extractSceneDetails', `Migration input scene title ${this.scene.Title} does not match svx.json title ${sceneExtract.Title}`);
 
                 this.log('extractSceneDetails', `updated scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
             }

@@ -5,6 +5,7 @@ import * as CACHE from '../../cache';
 import * as H from '../helpers';
 import * as LOG from '../logger';
 import * as path from 'path';
+import { LineStream } from '../lineStream';
 import { MigrationUtils } from './MigrationUtils';
 import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
 import { JobCookSIPackratInspectOutput } from '../../job/impl/Cook';
@@ -203,13 +204,26 @@ export class ModelDataExtraction {
 
         // Crack .obj to look for "mtllib" keywords (there may be multiple)
         // https://en.wikipedia.org/wiki/Wavefront_.obj_file#Material_template_library
-        STORE.AssetStorageAdapter.readAssetVersion(this.AssetVersionModel);
+        const res: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(this.AssetVersionModel);
+        if (!res.success || !res.readStream)
+            return this.returnStatus('crackOBJ', false, `Unable to readAssetVersion ${H.Helpers.JSONStringify(this.AssetVersionModel)}`);
+
+        const LS: LineStream = new LineStream(res.readStream);
+        const mtlLines: string[] | null = await LS.readLines('mtllib', true);
+        if (!mtlLines)
+            return this.returnStatus('crackOBJ', false, `Unable to extract mtllib lines from AssetVersion ${H.Helpers.JSONStringify(this.AssetVersionModel)}`);
+
+        // e.g. mtllib eremotherium_laurillardi-150k-4096.mtl
+        for (const mtlLine of mtlLines) {
+            if (mtlLine.toLowerCase().startsWith('mtllib '))
+                this.supportFiles.push(mtlLine.substring(7)); // strip off leading 'mtllib '
+        }
         return { success: true };
     }
 
     private async crackGLTF(): Promise<H.IOResults> {
         if (!this.AssetVersionModel)
-            return this.returnStatus('crackOBJ', false, 'Missing Model Asset Version');
+            return this.returnStatus('crackGLTF', false, 'Missing Model Asset Version');
 
         // Crack .gltf, .glb to identify .bin -> buffers[].uri; images[].uri
         //      this.json.buffers[]; this.json.images
