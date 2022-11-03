@@ -88,7 +88,7 @@ export class UsageMonitor {
     private memAlertThreshold: number;
     private memAlertAlarm: number;
 
-    private verbose: boolean;
+    private verboseSamples: number = 0;
 
     private cpuAlertCount: number = 0;
     private memAlertCount: number = 0;
@@ -108,9 +108,9 @@ export class UsageMonitor {
      * @monitorMem true indicates monitoring of memory usage, too
      * @memAlertThreshold mem uasge percentage above which we'll be alerted; 100 is the maximum
      * @memAlertAlarm count of consequetive MEM samples above memAlertThreshold that indicate an alarm status
-     * @verbose true results in logging of cpu utlitization every alertAlarm samples */
+     * @verboseSamples when > 0, results in logging of cpu utlitization every verboseSamples samples */
     constructor(monitorTimeout: number, cpuAlertThreshold: number, cpuAlertAlarm: number,
-        monitorMem: boolean, memAlertThreshold: number, memAlertAlarm: number, verbose?: boolean | undefined) {
+        monitorMem: boolean, memAlertThreshold: number, memAlertAlarm: number, verboseSamples?: number | undefined) {
         this.monitorTimeout = monitorTimeout;
         this.cpuAlertThreshold = cpuAlertThreshold;
         this.cpuAlertAlarm = cpuAlertAlarm;
@@ -119,7 +119,7 @@ export class UsageMonitor {
         this.memAlertThreshold = memAlertThreshold;
         this.memAlertAlarm = memAlertAlarm;
 
-        this.verbose = verbose ?? false;
+        this.verboseSamples = verboseSamples ?? 0;
     }
 
     start(): void {
@@ -187,8 +187,8 @@ export class UsageMonitor {
         if (emitCPUAlert || emitMemAlert)
             this.alert(emitCPUAlert, emitMemAlert);
 
-        if (this.verbose) {
-            if (++this.verboseCount >= this.cpuAlertAlarm) {
+        if (this.verboseSamples) {
+            if (++this.verboseCount >= this.verboseSamples) {
                 this.verboseCount = 0;
                 LOG.info(`UsageMonitor.sample ${this.emitInfo()}`, LOG.LS.eSYS);
             }

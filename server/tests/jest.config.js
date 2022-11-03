@@ -49,5 +49,6 @@ module.exports = {
     ],
     testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/build/'],
     setupFiles: ['<rootDir>/tests/setEnvVars.ts'],
+    moduleNameMapper: { '^axios$': require.resolve('axios'), },
     globalTeardown: '<rootDir>/tests/teardown.ts'
 };
