@@ -169,7 +169,7 @@ export class Helpers {
 
                 stream.end();
                 stream.on('finish', () => { resolve(hash.digest('hex')); });
-                stream.on('error', reject);
+                stream.on('error', (err) => { LOG.error(`Helpers.createRandomFile error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); reject(); });
             } catch (error) /* istanbul ignore next */ {
                 LOG.error('Helpers.createRandomFile() error', LOG.LS.eSYS, error);
                 reject(error);
@@ -289,7 +289,7 @@ export class Helpers {
 
                 stream.on('data', (chunk: Buffer) => { dataLength += chunk.length; });
                 stream.on('end', () => { resolve({ hash: hash.digest('hex'), dataLength, success: true }); });
-                stream.on('error', () => { resolve({ hash: '', dataLength: 0, success: false, error: 'Helpers.computeHashFromFile() Stream Error' }); });
+                stream.on('error', (err) => { resolve({ hash: '', dataLength: 0, success: false, error: `Helpers.computeHashFromFile() Stream Error ${Helpers.JSONStringify(err)}` }); });
                 stream.pipe(hash);
             });
         } catch (error) /* istanbul ignore next */ {
@@ -309,7 +309,7 @@ export class Helpers {
             return new Promise<Buffer | null>((resolve) => {
                 stream.on('data', (chunk: Buffer) => { bufArray.push(chunk); });
                 stream.on('end', () => { resolve(Buffer.concat(bufArray)); }); /* istanbul ignore next */
-                stream.on('error', () => { resolve(null); });
+                stream.on('error', (err) => { LOG.error(`Helpers.readFileFromStream error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); resolve(null); });
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.readFileFromStream', LOG.LS.eSYS, error);
@@ -323,7 +323,7 @@ export class Helpers {
             return new Promise<Buffer>((resolve, reject) => {
                 stream.on('data', (chunk: Buffer) => { bufArray.push(chunk); });
                 stream.on('end', () => { resolve(Buffer.concat(bufArray)); }); /* istanbul ignore next */
-                stream.on('error', () => { reject(); });
+                stream.on('error', (err) => { LOG.error(`Helpers.readFileFromStreamThrowErrors error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); reject(); });
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.readFileFromStreamThrowErrors', LOG.LS.eSYS, error);
@@ -337,7 +337,7 @@ export class Helpers {
             return new Promise<number | null>((resolve) => {
                 stream.on('data', (chunk: Buffer) => { size += chunk.length; });
                 stream.on('end', () => { resolve(size); }); /* istanbul ignore next */
-                stream.on('error', () => { resolve(null); });
+                stream.on('error', (err) => { LOG.error(`Helpers.computeSizeOfStream error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); resolve(null); });
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.computeSizeOfStream', LOG.LS.eSYS, error);
@@ -389,8 +389,8 @@ export class Helpers {
                     readStream.on('end', () => { resolve({ success: true, size }); });
                     writeStream.on('end', () => { resolve({ success: true, size }); });
                 } /* istanbul ignore next */
-                readStream.on('error', () => { resolve({ success: false, error: 'Unknown readstream error', size }); });
-                writeStream.on('error', () => { resolve({ success: false, error: 'Unknown writestream error', size }); });
+                readStream.on('error', (err) => { resolve({ success: false, error: `readstream error: ${Helpers.JSONStringify(err)}`, size }); });
+                writeStream.on('error', (err) => { resolve({ success: false, error: `writestream error: ${Helpers.JSONStringify(err)}`, size }); });
 
                 readStream.pipe(writeStream);
             });
