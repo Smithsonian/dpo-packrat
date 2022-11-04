@@ -1,8 +1,7 @@
 import * as LOG from './logger';
 import * as fs from 'fs';
-import { Readable } from 'node:stream';
-import * as readline from 'node:readline';
-// import * as readline from 'node:readline/promises';
+import { Readable } from 'stream';
+import * as readline from 'readline';
 
 export class LineStream {
     private inputName: string | undefined = undefined;
