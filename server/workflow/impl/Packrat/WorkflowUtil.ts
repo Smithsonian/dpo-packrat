@@ -46,6 +46,7 @@ export class WorkflowUtil {
         idModel: number | undefined,
         idSystemObjectModel: number | undefined,
         idSystemObjectAssetVersion: number | undefined,
+        idSystemObjectSupportFileAssetVersion: number | undefined,
         readStream: NodeJS.ReadableStream | undefined, idProject: number | undefined, idUserInitiator: number | undefined): Promise<H.IOResults> {
         LOG.info(`WorkflowUtil.computeModelMetrics (${fileName}, idModel ${idModel}, idSystemObjectModel ${idSystemObjectModel}, idSystemObjectAssetVersion ${idSystemObjectAssetVersion})`, LOG.LS.eWF);
 
@@ -67,9 +68,11 @@ export class WorkflowUtil {
         // compute array of idSystemObjects for the asset versions of the specified model/system object of a model/system object of an asset version
         const idSystemObject: number[] = [];
         const idAssetVersions: number[] = [];
-        if (idSystemObjectAssetVersion)
+        if (idSystemObjectAssetVersion) {
             idSystemObject.push(idSystemObjectAssetVersion);
-        else {
+            if (idSystemObjectSupportFileAssetVersion)
+                idSystemObject.push(idSystemObjectSupportFileAssetVersion);
+        } else {
             if (!idSystemObjectModel) {
                 const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel ?? 0);
                 if (!model)

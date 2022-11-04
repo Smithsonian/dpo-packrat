@@ -4,18 +4,21 @@ import * as STORE from '../../storage/interface';
 import * as CACHE from '../../cache';
 import * as H from '../helpers';
 import * as LOG from '../logger';
-import * as path from 'path';
 import { LineStream } from '../lineStream';
+import { ModelMigrationResults } from './ModelMigration';
 import { MigrationUtils } from './MigrationUtils';
 import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
 import { JobCookSIPackratInspectOutput } from '../../job/impl/Cook';
 import * as COMMON from '@dpo-packrat/common';
 
 import { isArray } from 'lodash';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+// import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
+// import { DRACOLoader } from 'three/examples/js/libs/draco';
+// import tmp from 'tmp-promise';
+import * as path from 'path';
 
 export class ModelDataExtraction {
-    sequence: number;
+    uniqueID: string;
     masterModelGeometryFile: string;
     edanRecordID?: string;
     masterModelLocation?: string;
@@ -27,26 +30,29 @@ export class ModelDataExtraction {
     supportFiles: string[] = [];
 
     private userOwner: DBAPI.User | undefined = undefined;
-    private AssetVersionModel: DBAPI.AssetVersion | undefined = undefined;
+    private AssetModel: DBAPI.Asset[] | undefined = undefined;
+    private AssetVersionModel: DBAPI.AssetVersion[] | undefined = undefined;
+    private AssetVersionSupportFile: DBAPI.AssetVersion[] | undefined = undefined;
     private model: DBAPI.Model | undefined = undefined;
 
     private static vocabDownload: DBAPI.Vocabulary | undefined = undefined;
     private static vocabModelGeometryFile: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabOtherFile: DBAPI.Vocabulary | undefined = undefined;
 
-    constructor(sequence: number,
+    constructor(uniqueID: string,
         masterModelGeometryFile: string,
         edanRecordID?: string,
         masterModelLocation?: string,
         masterModelTextureFile?: string) {
-        this.sequence = sequence;
+        this.uniqueID = uniqueID;
         this.masterModelGeometryFile = masterModelGeometryFile;
         this.edanRecordID = edanRecordID;
         this.masterModelLocation = masterModelLocation;
         this.masterModelTextureFile = masterModelTextureFile;
     }
 
-    async fetchAndExtractInfo(): Promise<H.IOResults> {
-        let res: H.IOResults;
+    async fetchAndExtractInfo(): Promise<ModelMigrationResults> {
+        let res: ModelMigrationResults;
         if (!this.userOwner)
             this.userOwner = await MigrationUtils.fetchMigrationUser();
 
@@ -63,12 +69,33 @@ export class ModelDataExtraction {
         if (!res.success)
             return res;
 
-        if (!this.AssetVersionModel)
+        if (!this.AssetVersionModel || this.AssetVersionModel.length === 0)
             return this.returnStatus('fetchAndExtractInfo', false, 'Model Asset not ingested');
+        const AssetVersionModel: DBAPI.AssetVersion = this.AssetVersionModel[0];
+        const AssetVersionModelSO: DBAPI.SystemObject | null = await AssetVersionModel.fetchSystemObject();
+        if (!AssetVersionModelSO)
+            return this.returnStatus('fetchAndExtractInfo', false, 'Model Asset System Object not found');
+
+        // If file is .obj or .gltf, download model to crack open to detect .bin / .mtl files
+        const extension: string = path.extname(this.masterModelGeometryFile).toLowerCase();
+        switch (extension) {
+            case '.obj':    res = await this.crackOBJ(AssetVersionModel); break;
+            // case '.gltf':   res = await this.crackGLTF(AssetVersionModel); break;
+            // case '.glb':    res = await this.crackGLTF(AssetVersionModel); break;
+        }
+
+        let AssetVersionSupportFileSO: DBAPI.SystemObject | null = null;
+        const AssetVersionSupportFile: DBAPI.AssetVersion | null = (this.AssetVersionSupportFile) ? this.AssetVersionSupportFile[0] : null;
+        if (AssetVersionSupportFile) {
+            AssetVersionSupportFileSO = await AssetVersionSupportFile.fetchSystemObject();
+            if (!AssetVersionSupportFileSO)
+                return this.returnStatus('fetchAndExtractInfo', false, 'Support File Asset System Object not found');
+        }
 
         // Run Cook's si-packrat-inspect and parse Cook output to obtain list of texture maps
         res = await WorkflowUtil.computeModelMetrics(this.masterModelGeometryFile, this.model.idModel, undefined,
-            this.AssetVersionModel.idAssetVersion, undefined, undefined, this.userOwner.idUser);
+            AssetVersionModelSO.idSystemObject, AssetVersionSupportFileSO?.idSystemObject,
+            undefined, undefined, this.userOwner.idUser);
         if (!res.success)
             return res;
 
@@ -76,18 +103,12 @@ export class ModelDataExtraction {
         if (!res.success)
             return res;
 
-        // If file is .obj or .gltf, download model to crack open to detect .bin / .mtl files
-        const extension: string = path.extname(this.masterModelGeometryFile).toLowerCase();
-        switch (extension) {
-            case '.obj':    res = await this.crackOBJ(); break;
-            case '.gltf':   res = await this.crackGLTF(); break;
-            case '.glb':    res = await this.crackGLTF(); break;
-        }
-
         if (!res.success)
             return res;
 
-        return { success: true };
+        const modelFilePath: string | undefined = this.masterModelLocation ? path.dirname(this.masterModelLocation) : undefined;
+        return { success: true, modelFileName: this.masterModelGeometryFile, modelFilePath, model: this.model,
+            asset: this.AssetModel, assetVersion: this.AssetVersionModel, supportFiles: this.supportFiles };
     }
 
     private async ingestModel(SOBased: DBAPI.SystemObjectBased): Promise<H.IOResults> {
@@ -95,12 +116,11 @@ export class ModelDataExtraction {
         const idVAssetType: number | undefined = vAssetType?.idVocabulary;
         if (!idVAssetType)
             return this.returnStatus('ingestModel', false, 'Unable to compute idVAssetType for model geometry file');
-        const FileName: string = path.basename(this.masterModelGeometryFile);
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream: null,
-            localFilePath: this.masterModelGeometryFile,
+            localFilePath: this.masterModelLocation ?? this.masterModelGeometryFile,
             asset: null,
-            FileName,
+            FileName: this.masterModelGeometryFile,
             FilePath: '',
             idAssetGroup: 0,
             idVAssetType,
@@ -112,10 +132,44 @@ export class ModelDataExtraction {
             doNotUpdateParentVersion: false
         };
 
+        // LOG.info(`ingestStreamOrFile ${H.Helpers.JSONStringify(ISI)}`, LOG.LS.eSYS);
+
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
             return this.returnStatus('ingestModel', false, `IngestAssetResult failed: ${IAR.error}`);
-        this.AssetVersionModel = IAR.assetVersions[0];
+        this.AssetModel = IAR.assets ?? undefined;
+        this.AssetVersionModel = IAR.assetVersions;
+
+        return { success: true };
+    }
+
+    private async ingestSupportFile(SOBased: DBAPI.SystemObjectBased, supportFilePath: string): Promise<H.IOResults> {
+        const vAssetType: DBAPI.Vocabulary | undefined = await this.computeVocabOtherFile();
+        const idVAssetType: number | undefined = vAssetType?.idVocabulary;
+        if (!idVAssetType)
+            return this.returnStatus('ingestSupportFile', false, 'Unable to compute idVAssetType for other file');
+        const ISI: STORE.IngestStreamOrFileInput = {
+            readStream: null,
+            localFilePath: supportFilePath,
+            asset: null,
+            FileName: path.basename(supportFilePath),
+            FilePath: '',
+            idAssetGroup: 0,
+            idVAssetType,
+            allowZipCracking: true,
+            idUserCreator: this.userOwner?.idUser ?? 0,
+            SOBased,
+            Comment: 'Support File Ingested by ModelDataExtraction',
+            doNotSendIngestionEvent: true,
+            doNotUpdateParentVersion: false
+        };
+
+        LOG.info(`ingestStreamOrFile ${H.Helpers.JSONStringify(ISI)}`, LOG.LS.eSYS);
+
+        const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
+        if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
+            return this.returnStatus('ingestSupportFile', false, `IngestAssetResult failed: ${IAR.error}`);
+        this.AssetVersionSupportFile = IAR.assetVersions;
 
         return { success: true };
     }
@@ -166,25 +220,44 @@ export class ModelDataExtraction {
         return ModelDataExtraction.vocabModelGeometryFile;
     }
 
+    private async computeVocabOtherFile(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!ModelDataExtraction.vocabOtherFile) {
+            ModelDataExtraction.vocabOtherFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
+            if (!ModelDataExtraction.vocabOtherFile)
+                LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Other File', LOG.LS.eGQL);
+        }
+        return ModelDataExtraction.vocabOtherFile;
+    }
+
     private async extractTextureMaps(): Promise<H.IOResults> {
-        if (!this.AssetVersionModel)
+        if (!this.AssetVersionModel || this.AssetVersionModel.length === 0)
             return this.returnStatus('extractTextureMaps', false, 'AssetVersionModel is null');
 
-        const jobRun: DBAPI.JobRun | null = await JobCookSIPackratInspectOutput.extractJobRunFromAssetVersion(this.AssetVersionModel.idAssetVersion, this.masterModelGeometryFile);
+        const AssetVersionModel: DBAPI.AssetVersion = this.AssetVersionModel[0];
+        const jobRun: DBAPI.JobRun | null = await JobCookSIPackratInspectOutput.extractJobRunFromAssetVersion(AssetVersionModel.idAssetVersion, this.masterModelGeometryFile);
+        // LOG.info(`extractTextureMaps ${H.Helpers.JSONStringify(jobRun)}`, LOG.LS.eSYS);
         if (!jobRun || !jobRun.Output)
-            return this.returnStatus('extractTextureMaps', false, `failed to extract si-packrate-inspect JobRun from idAssetVersion ${this.AssetVersionModel.idAssetVersion}, model ${this.masterModelGeometryFile}`);
+            return this.returnStatus('extractTextureMaps', false, `failed to extract si-packrate-inspect JobRun from idAssetVersion ${AssetVersionModel.idAssetVersion}, model ${this.masterModelGeometryFile}`);
 
         const output: any = JSON.parse(jobRun.Output);
 
         // Extract support files from steps -> merge-reports -> result -> inspection -> scene -> materials[] -> channels[] -> uri
         const steps: any = output?.steps;
         const mergeReports: any = steps ? steps['merge-reports'] : undefined;
-        const results: any = mergeReports ? mergeReports['results'] : undefined;
-        const inspection: any = results ? results['inspection'] : undefined;
+        const result: any = mergeReports ? mergeReports['result'] : undefined;
+        const inspection: any = result ? result['inspection'] : undefined;
         const scene: any = inspection ? inspection['scene'] : undefined;
         const materials: any = scene ? scene['materials'] : undefined;
+
+        // LOG.info(`steps = ${H.Helpers.JSONStringify(steps)}`, LOG.LS.eMIG);
+        // LOG.info(`mergeReports = ${H.Helpers.JSONStringify(mergeReports)}`, LOG.LS.eMIG);
+        // LOG.info(`result = ${H.Helpers.JSONStringify(result)}`, LOG.LS.eMIG);
+        // LOG.info(`inspection = ${H.Helpers.JSONStringify(inspection)}`, LOG.LS.eMIG);
+        // LOG.info(`scene = ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eMIG);
+        // LOG.info(`materials = ${H.Helpers.JSONStringify(materials)}`, LOG.LS.eMIG);
+
         if (!materials || !isArray(materials))
-            return this.returnStatus('extractTextureMaps', false, `failed to extract si-packrate-inspect JobRun from idAssetVersion ${this.AssetVersionModel.idAssetVersion}, model ${this.masterModelGeometryFile}`);
+            return this.returnStatus('extractTextureMaps', false, `failed to extract materials from si-packrat-inspect output from idAssetVersion ${AssetVersionModel.idAssetVersion}, model ${this.masterModelGeometryFile}`);
 
         for (const material of materials) {
             const channels: any = material['channels'];
@@ -198,15 +271,12 @@ export class ModelDataExtraction {
         return { success: true };
     }
 
-    private async crackOBJ(): Promise<H.IOResults> {
-        if (!this.AssetVersionModel)
-            return this.returnStatus('crackOBJ', false, 'Missing Model Asset Version');
-
+    private async crackOBJ(AssetVersionModel: DBAPI.AssetVersion): Promise<H.IOResults> {
         // Crack .obj to look for "mtllib" keywords (there may be multiple)
         // https://en.wikipedia.org/wiki/Wavefront_.obj_file#Material_template_library
-        const res: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(this.AssetVersionModel);
+        const res: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(AssetVersionModel);
         if (!res.success || !res.readStream)
-            return this.returnStatus('crackOBJ', false, `Unable to readAssetVersion ${H.Helpers.JSONStringify(this.AssetVersionModel)}`);
+            return this.returnStatus('crackOBJ', false, `Unable to readAssetVersion ${H.Helpers.JSONStringify(AssetVersionModel)}`);
 
         const LS: LineStream = new LineStream(res.readStream);
         const mtlLines: string[] | null = await LS.readLines('mtllib', true);
@@ -215,27 +285,73 @@ export class ModelDataExtraction {
 
         // e.g. mtllib eremotherium_laurillardi-150k-4096.mtl
         for (const mtlLine of mtlLines) {
-            if (mtlLine.toLowerCase().startsWith('mtllib '))
-                this.supportFiles.push(mtlLine.substring(7)); // strip off leading 'mtllib '
+            if (mtlLine.toLowerCase().startsWith('mtllib ')) {
+                this.mtlFile = mtlLine.substring(7); // strip off leading 'mtllib '
+                this.supportFiles.push(this.mtlFile);
+            }
+        }
+
+        if (this.mtlFile && this.model) {
+            // Ingest support file
+            const supportFilePath: string = path.join(path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile), this.mtlFile);
+            const ingestRes: H.IOResults = await this.ingestSupportFile(this.model, supportFilePath);
+            if (!ingestRes.success)
+                return this.returnStatus('crackOBJ', false, `Unable to ingest mtllib ${supportFilePath}`);
         }
         return { success: true };
     }
 
-    private async crackGLTF(): Promise<H.IOResults> {
-        if (!this.AssetVersionModel)
-            return this.returnStatus('crackGLTF', false, 'Missing Model Asset Version');
+    /*
+    private async crackGLTF(AssetVersionModel: DBAPI.AssetVersion): Promise<H.IOResults> {
+        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(AssetVersionModel);
+        if (!RSR.success || !RSR.readStream)
+            return this.returnStatus('crackGLTF', false, `Unable to readAssetVersion ${H.Helpers.JSONStringify(AssetVersionModel)}`);
 
         // Crack .gltf, .glb to identify .bin -> buffers[].uri; images[].uri
         //      this.json.buffers[]; this.json.images
         // https://threejs.org/docs/#examples/en/loaders/GLTFLoader
-        const loader = new GLTFLoader();
-        await loader.loadAsync('url');
+        const modelExtension: string = path.extname(AssetVersionModel.FileName);
+        const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: modelExtension });
+        try {
+            const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, tempFile.path);
+            if (!res.success)
+                return this.returnStatus('crackGLTF', false, `unable to copy asset version ${H.Helpers.JSONStringify(AssetVersionModel)}to ${tempFile.path}: ${res.error}`);
+
+            const loader = new GLTFLoader();
+
+            // const dracoLoader = new DRACOLoader();
+            // dracoLoader.setDecoderPath('/examples/js/libs/draco/');
+            // loader.setDRACOLoader(dracoLoader);
+
+            const GLTF: GLTF = await loader.loadAsync(tempFile.path);
+            const GLTFObj: any = JSON.parse(GLTF.parser.json);
+            if (GLTFObj.buffers && isArray(GLTFObj.buffers)) {
+                for (const buffer of GLTFObj.buffers) {
+                    const uri = buffer['uri'];
+                    if (uri)
+                        this.supportFiles.push(uri);
+                }
+            }
+            if (GLTFObj.images && isArray(GLTFObj.images)) {
+                for (const image of GLTFObj.images) {
+                    const uri =image['uri'];
+                    if (uri)
+                        this.supportFiles.push(uri);
+                }
+            }
+        } catch (err) {
+            return this.returnStatus('crackGLTF', false, `Caught exception attempting to copy asset version ${H.Helpers.JSONStringify(AssetVersionModel)}to ${tempFile.path}: ${err}`);
+        } finally {
+            await tempFile.cleanup();
+        }
+
         return { success: true };
     }
+    */
 
     private returnStatus(context: string, success: boolean, error: string | undefined): H.IOResults {
         if (!success)
-            LOG.error(`ModelDataExtraction.${context}: ${error}`, LOG.LS.eMIG);
+            LOG.error(`ModelDataExtraction (${this.uniqueID}) ${context}: ${error}`, LOG.LS.eMIG);
         return { success, error };
     }
 }

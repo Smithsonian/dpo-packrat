@@ -627,7 +627,7 @@ export class SceneMigration {
                     const SOModel: DBAPI.SystemObject | null = await model.fetchSystemObject();
                     if (SOModel)
                         // launch si-packrat-inspect on this model -- do not await results
-                        WorkflowUtil.computeModelMetrics(model.Name, model.idModel, SOModel.idSystemObject, undefined, undefined, undefined /* FIXME */, this.userOwner?.idUser);
+                        WorkflowUtil.computeModelMetrics(model.Name, model.idModel, SOModel.idSystemObject, undefined, undefined, undefined, undefined /* FIXME */, this.userOwner?.idUser);
                     else
                         this.recordError('fetchAndIngestResources', `failed to fetch system object for model ${H.Helpers.JSONStringify(model)}`);
                 }

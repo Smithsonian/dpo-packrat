@@ -1,4 +1,5 @@
 import * as COMMON from '@dpo-packrat/common';
+import * as path from 'path';
 
 export class ModelMigrationFile {
     uniqueID: string;                           // unique identifier used to group all files of a model together
@@ -34,9 +35,15 @@ export class ModelMigrationFile {
         this.eVCreationMethod   = eVCreationMethod;
         this.eVModality         = eVModality;
         this.eVUnits            = eVUnits;
-        this.License                = License;
-        this.PublishedState         = PublishedState;
+        this.License            = License;
+        this.PublishedState     = PublishedState;
         this.idSystemObjectItem = idSystemObjectItem;
         this.testData           = testData;
+    }
+
+    static computeFilePath(modelFile: ModelMigrationFile): string {
+        // if no path is provided, assume this is regression testing, and look in the appropriate path for our mock models
+        const basePath: string = modelFile.path ? modelFile.path : path.join(__dirname, '../../tests/mock/models', modelFile.filePath);
+        return path.join(basePath, modelFile.fileName);
     }
 }

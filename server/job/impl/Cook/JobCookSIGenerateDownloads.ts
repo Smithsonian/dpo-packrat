@@ -274,7 +274,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
             // run si-packrat-inspect on this model
             if (idSystemObjectModel) {
-                const results: H.IOResults = await WorkflowUtil.computeModelMetrics(model.Name, model.idModel, idSystemObjectModel, undefined,
+                const results: H.IOResults = await WorkflowUtil.computeModelMetrics(model.Name, model.idModel, idSystemObjectModel, undefined, undefined,
                     undefined, undefined /* FIXME */, idUserCreator);
                 if (results.success)
                     this.appendToReportAndLog(`JobCookSIGenerateDownloads extracted model metrics for ${model.Name}`);
