@@ -7,16 +7,16 @@ import * as H from '../helpers';
 import * as LOG from '../logger';
 import { ModelMigrationFile } from './ModelMigrationFile';
 
-import * as path from 'path';
-
 export type ModelMigrationResults = {
     success: boolean;
     error?: string | undefined;
     modelFileName?: string | undefined;
+    modelFilePath?: string | undefined;
     model?: DBAPI.Model | null | undefined;
     asset?: DBAPI.Asset[] | null | undefined;
     assetVersion?: DBAPI.AssetVersion[] | null | undefined;
     filesMissing?: boolean | undefined;
+    supportFiles?: string[];
 };
 
 export class ModelMigration {
@@ -25,16 +25,19 @@ export class ModelMigration {
     private static vocabModelUVMapFile: DBAPI.Vocabulary | undefined    = undefined;
     private static idSystemObjectTest:  number | undefined              = undefined;
 
+    private uniqueID:                   string                          = '';
     private userOwner:                  DBAPI.User | undefined          = undefined;
     private model:                      DBAPI.Model | null | undefined  = undefined;
 
-    async migrateModel(idUser: number, modelFileSet: ModelMigrationFile[], doNotSendIngestionEvent?: boolean): Promise<ModelMigrationResults> {
+    async migrateModel(uniqueID: string, idUser: number, modelFileSet: ModelMigrationFile[], doNotSendIngestionEvent?: boolean): Promise<ModelMigrationResults> {
         let idSystemObject: number | undefined = undefined;
         let testData: boolean | undefined = undefined;
 
         let modelFileName: string | undefined = undefined;
         let asset: DBAPI.Asset[] | null | undefined = undefined;
         let assetVersion: DBAPI.AssetVersion[] | null | undefined = undefined;
+
+        this.uniqueID = uniqueID;
 
         const initRes: H.IOResults = await this.initialize();
         if (!initRes.success)
@@ -46,9 +49,8 @@ export class ModelMigration {
 
         for (const modelFile of modelFileSet) {
             const fileExists: boolean = await this.testFileExistence(modelFile);
-            if (!fileExists) {
+            if (!fileExists)
                 return this.recordError(`migrateModel unable to locate file for ${H.Helpers.JSONStringify(modelFile)}`, { filesMissing: true });
-            }
 
             // capture idSystemObject for item, if any, and ensure consistency
             if (modelFile.idSystemObjectItem !== idSystemObject) {
@@ -155,8 +157,8 @@ export class ModelMigration {
         if (!this.model || !this.userOwner || !ModelMigration.vocabModel || !ModelMigration.vocabModelUVMapFile)
             return { success: false };
 
-        const LocalFilePath: string = this.computeFilePath(modelFile);
-        LOG.info(`ModelMigration.ingestFile ${LocalFilePath} for model ${this.model}`, LOG.LS.eMIG);
+        const LocalFilePath: string = ModelMigrationFile.computeFilePath(modelFile);
+        this.recordMessage(`ingestFile ${LocalFilePath} for model ${this.model}`);
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream: null,
             localFilePath: LocalFilePath,
@@ -193,12 +195,12 @@ export class ModelMigration {
         if (!xref)
             return this.recordError(`wireItemToModel unable to wire item ${JSON.stringify(itemDB)} to model ${this.model}`);
 
-        LOG.info(`ModelMigration.wireItemToModel ${JSON.stringify(itemDB)} to model ${this.model}`, LOG.LS.eMIG);
+        this.recordMessage(`wireItemToModel ${JSON.stringify(itemDB)} to model ${this.model}`);
         return { success: true };
     }
 
     private async postItemWiring(): Promise<H.IOResults> {
-        LOG.info('ModelMigration.postItemWiring', LOG.LS.eMIG);
+        this.recordMessage('postItemWiring');
         if (!this.model)
             return this.recordError('postItemWiring called without model defined');
 
@@ -225,7 +227,7 @@ export class ModelMigration {
         if (ModelMigration.idSystemObjectTest)
             return { success: true };
 
-        LOG.info('ModelMigration.createTestObjects', LOG.LS.eMIG);
+        this.recordMessage('createTestObjects');
         const unitDB: DBAPI.Unit | null = await DBAPI.Unit.fetch(1); // Unknown Unit
         if (!unitDB)
             return this.recordError('createTestObjects unable to fetch unit with ID=1 for test data');
@@ -265,34 +267,35 @@ export class ModelMigration {
         return { success: true };
     }
 
-    private computeFilePath(modelFile: ModelMigrationFile): string {
-        // if no path is provided, assume this is regression testing, and look in the appropriate path for our mock models
-        const basePath: string = modelFile.path ? modelFile.path : path.join(__dirname, '../../tests/mock/models', modelFile.filePath);
-        return path.join(basePath, modelFile.fileName);
-    }
-
     private async testFileExistence(modelFile: ModelMigrationFile): Promise<boolean> {
-        const filePath: string = this.computeFilePath(modelFile);
+        const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
         const res: H.StatResults = await H.Helpers.stat(filePath);
         let success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
 
         if (modelFile.hash) {
             const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
             if (!hashRes.success) {
-                LOG.error(`ModelMigration.testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`, LOG.LS.eMIG);
+                this.recordError(`testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`);
                 success = false;
             } else if (hashRes.hash != modelFile.hash) {
-                LOG.error(`ModelMigration.testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${modelFile.hash}`, LOG.LS.eMIG);
+                this.recordError(`testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
                 success = false;
             }
         }
 
-        LOG.info(`ModelMigration.testFileExistience('${filePath}') = ${success}`, LOG.LS.eMIG);
+        this.recordMessage(`testFileExistience('${filePath}') = ${success}`);
         return success;
     }
 
+    private recordMessage(message: string, isError: boolean = false, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (isError)
+            LOG.error(`ModelMigration (${this.uniqueID}) ${message}`, LOG.LS.eMIG);
+        else
+            LOG.info(`ModelMigration (${this.uniqueID}) ${message}`, LOG.LS.eMIG);
+        return { success: false, error: message, ...props };
+    }
+
     private recordError(error: string, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
-        LOG.error(`ModelMigration.${error}`, LOG.LS.eMIG);
-        return { success: false, error, ...props };
+        return this.recordMessage(error, true, props);
     }
 }
