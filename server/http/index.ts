@@ -23,7 +23,7 @@ import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
 
 const monitorCPU: boolean = true;
 const monitorMem: boolean = true;
-const monitorVerboseSamples: number = 60;
+const monitorVerboseSamples: number = 300;
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
