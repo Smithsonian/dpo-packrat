@@ -85,7 +85,8 @@ class Migrator {
         const requestPath: string = this.request.path;
         let handled: boolean = true;
         switch (requestPath) {
-            case '/migrate':        this.sceneIDSet = null; this.modelIDSet = null; break;
+            case '/migrate':
+            case '/migrate/':       this.sceneIDSet = null; this.modelIDSet = null; break;
             case '/migrate/scenes': this.sceneIDSet = null; break;
             case '/migrate/models': this.modelIDSet = null; break;
             default:                handled = false; break;

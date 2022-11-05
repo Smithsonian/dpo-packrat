@@ -159,11 +159,11 @@ export class ModelDataExtraction {
             doNotUpdateParentVersion: false
         };
 
-        LOG.info(`ingestStreamOrFile ${H.Helpers.JSONStringify(ISI)}`, LOG.LS.eSYS);
+        LOG.info(`ingestStreamOrFile ${ISI.localFilePath}`, LOG.LS.eSYS);
 
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
-            return this.returnStatus('ingestSupportFile', false, `IngestAssetResult failed: ${IAR.error}`);
+            return this.returnStatus('ingestSupportFile', false, `ingestStreamOrFile ${ISI.localFilePath} failed: ${IAR.error}`);
         this.AssetVersionSupportFile = IAR.assetVersions;
 
         return { success: true };

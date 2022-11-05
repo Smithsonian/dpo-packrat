@@ -80,6 +80,7 @@ export class HttpServer {
         this.app.get('/heartbeat', heartbeat);
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
+        this.app.get('/migrate', migrate);
         this.app.get('/migrate/*', migrate);
         this.app.get(`${Downloader.httpRoute}*`, HttpServer.idRequestMiddleware2);
         this.app.get(`${Downloader.httpRoute}*`, download);
