@@ -748,10 +748,10 @@ export class SceneMigration {
     }
 
     private log(scope: string, message: string): void { // eslint-disable-line @typescript-eslint/no-explicit-any
-        LOG.info(`SceneMigration.${scope} (${this.scenePackage?.EdanUUID}): ${message}`, LOG.LS.eMIG);
+        LOG.info(`SceneMigration (${this.scenePackage?.EdanUUID}) ${scope}: ${message}`, LOG.LS.eMIG);
     }
 
     private logError(scope: string, message: string, error?: any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
-        LOG.error(`SceneMigration.${scope} (${this.scenePackage?.EdanUUID}): ${message}`, LOG.LS.eMIG, error);
+        LOG.error(`SceneMigration (${this.scenePackage?.EdanUUID}) ${scope}: ${message}`, LOG.LS.eMIG, error);
     }
 }
