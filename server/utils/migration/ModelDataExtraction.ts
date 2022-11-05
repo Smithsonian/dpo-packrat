@@ -8,26 +8,24 @@ import { LineStream } from '../lineStream';
 import { ModelMigrationResults } from './ModelMigration';
 import { MigrationUtils } from './MigrationUtils';
 import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
-import { JobCookSIPackratInspectOutput } from '../../job/impl/Cook';
+import { JobCookSIPackratInspectOutput, isEmbeddedTexture } from '../../job/impl/Cook';
 import * as COMMON from '@dpo-packrat/common';
 
 import { isArray } from 'lodash';
-// import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
-// import { DRACOLoader } from 'three/examples/js/libs/draco';
-// import tmp from 'tmp-promise';
+import { NodeIO, Document, Root, Buffer, Texture } from '@gltf-transform/core';
+import { KHRONOS_EXTENSIONS } from '@gltf-transform/extensions';
+import draco3d from 'draco3dgltf';
+import tmp from 'tmp-promise';
 import * as path from 'path';
 
 export class ModelDataExtraction {
-    uniqueID: string;
-    masterModelGeometryFile: string;
-    edanRecordID?: string;
-    masterModelLocation?: string;
-    masterModelTextureFile?: string;
+    private uniqueID: string;
+    private masterModelGeometryFile: string;
+    private masterModelLocation?: string;
 
     // Computed
-    mtlFile?: string;
-    diffuseMapFile?: string;
-    supportFiles: string[] = [];
+    private mtlFile?: string;
+    private supportFiles: Set<string> = new Set<string>();
 
     private userOwner: DBAPI.User | undefined = undefined;
     private AssetModel: DBAPI.Asset[] | undefined = undefined;
@@ -41,14 +39,10 @@ export class ModelDataExtraction {
 
     constructor(uniqueID: string,
         masterModelGeometryFile: string,
-        edanRecordID?: string,
-        masterModelLocation?: string,
-        masterModelTextureFile?: string) {
+        masterModelLocation?: string) {
         this.uniqueID = uniqueID;
         this.masterModelGeometryFile = masterModelGeometryFile;
-        this.edanRecordID = edanRecordID;
         this.masterModelLocation = masterModelLocation;
-        this.masterModelTextureFile = masterModelTextureFile;
     }
 
     async fetchAndExtractInfo(): Promise<ModelMigrationResults> {
@@ -80,9 +74,10 @@ export class ModelDataExtraction {
         const extension: string = path.extname(this.masterModelGeometryFile).toLowerCase();
         switch (extension) {
             case '.obj':    res = await this.crackOBJ(AssetVersionModel); break;
-            // case '.gltf':   res = await this.crackGLTF(AssetVersionModel); break;
-            // case '.glb':    res = await this.crackGLTF(AssetVersionModel); break;
+            case '.gltf':   res = await this.crackGLTF(AssetVersionModel, false); break;
+            case '.glb':    res = await this.crackGLTF(AssetVersionModel, true); break;
         }
+        // Allow failures here, as some GLTFs are not being read properly by our 3rd party library
 
         let AssetVersionSupportFileSO: DBAPI.SystemObject | null = null;
         const AssetVersionSupportFile: DBAPI.AssetVersion | null = (this.AssetVersionSupportFile) ? this.AssetVersionSupportFile[0] : null;
@@ -108,7 +103,7 @@ export class ModelDataExtraction {
 
         const modelFilePath: string | undefined = this.masterModelLocation ? path.dirname(this.masterModelLocation) : undefined;
         return { success: true, modelFileName: this.masterModelGeometryFile, modelFilePath, model: this.model,
-            asset: this.AssetModel, assetVersion: this.AssetVersionModel, supportFiles: this.supportFiles };
+            asset: this.AssetModel, assetVersion: this.AssetVersionModel, supportFiles: Array.from(this.supportFiles.keys()) };
     }
 
     private async ingestModel(SOBased: DBAPI.SystemObjectBased): Promise<H.IOResults> {
@@ -263,8 +258,8 @@ export class ModelDataExtraction {
             const channels: any = material['channels'];
             if (channels && isArray(channels)) {
                 for (const channel of channels) {
-                    if (channel.uri)
-                        this.supportFiles.push(channel.uri);
+                    if (channel.uri && !isEmbeddedTexture(channel.uri))
+                        this.supportFiles.add(channel.uri);
                 }
             }
         }
@@ -287,7 +282,7 @@ export class ModelDataExtraction {
         for (const mtlLine of mtlLines) {
             if (mtlLine.toLowerCase().startsWith('mtllib ')) {
                 this.mtlFile = mtlLine.substring(7); // strip off leading 'mtllib '
-                this.supportFiles.push(this.mtlFile);
+                this.supportFiles.add(this.mtlFile);
             }
         }
 
@@ -301,53 +296,58 @@ export class ModelDataExtraction {
         return { success: true };
     }
 
-    /*
-    private async crackGLTF(AssetVersionModel: DBAPI.AssetVersion): Promise<H.IOResults> {
+    private async crackGLTF(AssetVersionModel: DBAPI.AssetVersion, _glbCompressed: boolean): Promise<H.IOResults> {
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(AssetVersionModel);
         if (!RSR.success || !RSR.readStream)
             return this.returnStatus('crackGLTF', false, `Unable to readAssetVersion ${H.Helpers.JSONStringify(AssetVersionModel)}`);
 
         // Crack .gltf, .glb to identify .bin -> buffers[].uri; images[].uri
-        //      this.json.buffers[]; this.json.images
-        // https://threejs.org/docs/#examples/en/loaders/GLTFLoader
         const modelExtension: string = path.extname(AssetVersionModel.FileName);
         const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: modelExtension });
+        let writeError: boolean = false;
         try {
             const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, tempFile.path);
             if (!res.success)
                 return this.returnStatus('crackGLTF', false, `unable to copy asset version ${H.Helpers.JSONStringify(AssetVersionModel)}to ${tempFile.path}: ${res.error}`);
+        } catch (err) {
+            writeError = true;
+            return this.returnStatus('crackGLTF', false, `Caught exception attempting to copy asset version ${H.Helpers.JSONStringify(AssetVersionModel)} to ${tempFile.path}: ${err}`);
+        } finally {
+            if (writeError)
+                await tempFile.cleanup();
+        }
 
-            const loader = new GLTFLoader();
+        try {
+            const io: NodeIO = new NodeIO();
+            io.registerExtensions(KHRONOS_EXTENSIONS);
+            io.registerDependencies({
+                'draco3d.decoder': await draco3d.createDecoderModule(),
+                // 'draco3d.encoder': await draco3d.createEncoderModule(),
+            });
+            const document: Document = await io.read(tempFile.path);
+            const root: Root = document.getRoot();
+            const buffers: Buffer[] = root.listBuffers();
+            const textures: Texture[] = root.listTextures();
 
-            // const dracoLoader = new DRACOLoader();
-            // dracoLoader.setDecoderPath('/examples/js/libs/draco/');
-            // loader.setDRACOLoader(dracoLoader);
-
-            const GLTF: GLTF = await loader.loadAsync(tempFile.path);
-            const GLTFObj: any = JSON.parse(GLTF.parser.json);
-            if (GLTFObj.buffers && isArray(GLTFObj.buffers)) {
-                for (const buffer of GLTFObj.buffers) {
-                    const uri = buffer['uri'];
-                    if (uri)
-                        this.supportFiles.push(uri);
-                }
+            for (const buffer of buffers) {
+                const uri: string = buffer.getURI();
+                if (!isEmbeddedTexture(uri))
+                    this.supportFiles.add(uri);
             }
-            if (GLTFObj.images && isArray(GLTFObj.images)) {
-                for (const image of GLTFObj.images) {
-                    const uri =image['uri'];
-                    if (uri)
-                        this.supportFiles.push(uri);
-                }
+
+            for (const texture of textures) {
+                const uri: string = texture.getURI();
+                if (!isEmbeddedTexture(uri))
+                    this.supportFiles.add(uri);
             }
         } catch (err) {
-            return this.returnStatus('crackGLTF', false, `Caught exception attempting to copy asset version ${H.Helpers.JSONStringify(AssetVersionModel)}to ${tempFile.path}: ${err}`);
+            return this.returnStatus('crackGLTF', false, `Caught exception attempting to extract GLTF info from ${tempFile.path}: ${err}`);
         } finally {
             await tempFile.cleanup();
         }
 
         return { success: true };
     }
-    */
 
     private returnStatus(context: string, success: boolean, error: string | undefined): H.IOResults {
         if (!success)
