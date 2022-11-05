@@ -45,19 +45,19 @@ export class ModelMigration {
 
         this.userOwner = await CACHE.UserCache.getUser(idUser);
         if (!this.userOwner)
-            return this.recordError(`migrateModel unable to load user with idUser of ${idUser}`);
+            return this.logError('migrateModel', `unable to load user with idUser of ${idUser}`);
 
         for (const modelFile of modelFileSet) {
             const fileExists: boolean = await this.testFileExistence(modelFile);
             if (!fileExists)
-                return this.recordError(`migrateModel unable to locate file for ${H.Helpers.JSONStringify(modelFile)}`, { filesMissing: true });
+                return this.logError('migrateModel', `unable to locate file for ${H.Helpers.JSONStringify(modelFile)}`, { filesMissing: true });
 
             // capture idSystemObject for item, if any, and ensure consistency
             if (modelFile.idSystemObjectItem !== idSystemObject) {
                 if (idSystemObject === undefined)
                     idSystemObject = modelFile.idSystemObjectItem;
                 else if (idSystemObject !== ModelMigration.idSystemObjectTest)
-                    return this.recordError(`migrateModel called with inconsistent value for idSystemObjectItem (${modelFile.idSystemObjectItem}); expected ${idSystemObject}`);
+                    return this.logError('migrateModel', `called with inconsistent value for idSystemObjectItem (${modelFile.idSystemObjectItem}); expected ${idSystemObject}`);
             }
 
             // capture testData flag, if set, and ensure consistency
@@ -65,7 +65,7 @@ export class ModelMigration {
                 if (testData === undefined)
                     testData = modelFile.testData;
                 else
-                    return this.recordError(`migrateModel called with inconsistent value for testData (${modelFile.testData}); expected ${testData}`);
+                    return this.logError('migrateModel', `called with inconsistent value for testData (${modelFile.testData}); expected ${testData}`);
             }
 
             if (!idSystemObject && testData) {
@@ -76,7 +76,7 @@ export class ModelMigration {
             if (modelFile.geometry) {
                 const vocabMFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(modelFile.fileName);
                 if (!vocabMFileType)
-                    return this.recordError(`migrateModel failed to fetch Model file type Vocabulary for ${H.Helpers.JSONStringify(modelFile)}`);
+                    return this.logError('migrateModel', `failed to fetch Model file type Vocabulary for ${H.Helpers.JSONStringify(modelFile)}`);
 
                 const vCreationMethod: DBAPI.Vocabulary | undefined = modelFile.eVCreationMethod    ? await CACHE.VocabularyCache.vocabularyByEnum(modelFile.eVCreationMethod)  : undefined;
                 const vModality: DBAPI.Vocabulary | undefined       = modelFile.eVModality          ? await CACHE.VocabularyCache.vocabularyByEnum(modelFile.eVModality)        : undefined;
@@ -84,13 +84,13 @@ export class ModelMigration {
                 const vUnits: DBAPI.Vocabulary | undefined          = modelFile.eVUnits             ? await CACHE.VocabularyCache.vocabularyByEnum(modelFile.eVUnits)           : undefined;
 
                 if (!vCreationMethod)
-                    return this.recordError(`migrateModel model missing creation method ${H.Helpers.JSONStringify(modelFile)}`);
+                    return this.logError('migrateModel', `model missing creation method ${H.Helpers.JSONStringify(modelFile)}`);
                 if (!vModality)
-                    return this.recordError(`migrateModel model missing modality ${H.Helpers.JSONStringify(modelFile)}`);
+                    return this.logError('migrateModel', `model missing modality ${H.Helpers.JSONStringify(modelFile)}`);
                 if (!vPurpose)
-                    return this.recordError(`migrateModel model missing purpose ${H.Helpers.JSONStringify(modelFile)}`);
+                    return this.logError('migrateModel', `model missing purpose ${H.Helpers.JSONStringify(modelFile)}`);
                 if (!vUnits)
-                    return this.recordError(`migrateModel model missing units ${H.Helpers.JSONStringify(modelFile)}`);
+                    return this.logError('migrateModel', `model missing units ${H.Helpers.JSONStringify(modelFile)}`);
 
                 modelFileName = modelFile.fileName;
                 this.model = new DBAPI.Model({
@@ -109,14 +109,14 @@ export class ModelMigration {
                     idModel: 0
                 });
                 if (!await this.model.create())
-                    return this.recordError(`migrateModel failed to create model DB record ${H.Helpers.JSONStringify(this.model)}`);
+                    return this.logError('migrateModel', `failed to create model DB record ${H.Helpers.JSONStringify(this.model)}`);
                 // wire item to model
                 if (idSystemObject) {
                     if (!await this.wireItemToModel(idSystemObject))
-                        return this.recordError(`migrateModel failed to wire media group to model for ${H.Helpers.JSONStringify(modelFileSet)}`);
+                        return this.logError('migrateModel', `failed to wire media group to model for ${H.Helpers.JSONStringify(modelFileSet)}`);
                 }
             } else if (!this.model)
-                return this.recordError(`migrateModel attempting to ingest non-model ${H.Helpers.JSONStringify(modelFile)} without model already created`);
+                return this.logError('migrateModel', `attempting to ingest non-model ${H.Helpers.JSONStringify(modelFile)} without model already created`);
 
             const IAR: STORE.IngestAssetResult = await this.ingestFile(modelFile, doNotSendIngestionEvent);
             if (IAR.assets) {
@@ -132,7 +132,7 @@ export class ModelMigration {
             }
 
             if (!IAR.success)
-                return this.recordError(`migrateModel failed to ingest ${H.Helpers.JSONStringify(modelFile)}: ${IAR.error}`);
+                return this.logError('migrateModel', `failed to ingest ${H.Helpers.JSONStringify(modelFile)}: ${IAR.error}`);
         }
 
         if (idSystemObject)
@@ -147,9 +147,9 @@ export class ModelMigration {
         if (!ModelMigration.vocabModelUVMapFile)
             ModelMigration.vocabModelUVMapFile    = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile);
         if (!ModelMigration.vocabModel)
-            return this.recordError('initialize unable to load vocabulary for model file asset type');
+            return this.logError('initialize', 'unable to load vocabulary for model file asset type');
         if (!ModelMigration.vocabModelUVMapFile)
-            return this.recordError('initialize unable to load vocabulary for model uv map file asset type');
+            return this.logError('initialize', 'unable to load vocabulary for model uv map file asset type');
         return { success: true };
     }
 
@@ -158,7 +158,7 @@ export class ModelMigration {
             return { success: false };
 
         const LocalFilePath: string = ModelMigrationFile.computeFilePath(modelFile);
-        this.recordMessage(`ingestFile ${LocalFilePath} for model ${this.model}`);
+        this.log('ingestFile', `${LocalFilePath} for model ${this.model}`);
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream: null,
             localFilePath: LocalFilePath,
@@ -179,45 +179,45 @@ export class ModelMigration {
 
     private async wireItemToModel(idSystemObject: number): Promise<H.IOResults> {
         if (!this.model)
-            return this.recordError('wireItemToModel called with null model');
+            return this.logError('wireItemToModel', 'called with null model');
 
         const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
         if (!oID)
-            return this.recordError(`wireItemToModel unable to compute object info for ${idSystemObject}`);
+            return this.logError('wireItemToModel', `unable to compute object info for ${idSystemObject}`);
         if (oID.eObjectType !== COMMON.eSystemObjectType.eItem)
-            return this.recordError(`wireItemToModel called with non-item idSystemObject ID (${idSystemObject}):  ${H.Helpers.JSONStringify(oID)}`);
+            return this.logError('wireItemToModel', `called with non-item idSystemObject ID (${idSystemObject}):  ${H.Helpers.JSONStringify(oID)}`);
 
         const itemDB: DBAPI.Item | null = await DBAPI.Item.fetch(oID.idObject);
         if (!itemDB)
-            return this.recordError(`wireItemToModel failed to fetch item ${oID.idObject}`);
+            return this.logError('wireItemToModel', `failed to fetch item ${oID.idObject}`);
 
         const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, this.model);
         if (!xref)
-            return this.recordError(`wireItemToModel unable to wire item ${JSON.stringify(itemDB)} to model ${this.model}`);
+            return this.logError('wireItemToModel', `unable to wire item ${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`);
 
-        this.recordMessage(`wireItemToModel ${JSON.stringify(itemDB)} to model ${this.model}`);
+        this.log('wireItemToModel', `${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`);
         return { success: true };
     }
 
     private async postItemWiring(): Promise<H.IOResults> {
-        this.recordMessage('postItemWiring');
+        this.log('postItemWiring', 'starting');
         if (!this.model)
-            return this.recordError('postItemWiring called without model defined');
+            return this.logError('postItemWiring', 'called without model defined');
 
         // explicitly reindex model
         const nav: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
         if (!nav)
-            return this.recordError('postItemWiring unable to fetch navigation interface');
+            return this.logError('postItemWiring', 'unable to fetch navigation interface');
 
         const SO: DBAPI.SystemObject | null = await this.model.fetchSystemObject();
         if (!SO)
-            return this.recordError(`postItemWiring unable to fetch system object for ${H.Helpers.JSONStringify(this.model)}`);
+            return this.logError('postItemWiring', `unable to fetch system object for ${H.Helpers.JSONStringify(this.model)}`);
 
         // index directly instead of scheduling indexing, so that we get an initial SOLR entry right away
         // NAV.NavigationFactory.scheduleObjectIndexing(SO.idSystemObject);
         const indexer: NAV.IIndexer | null = await nav.getIndexer();
         if (!indexer)
-            return this.recordError(`postItemWiring unable to fetch navigation indexer for ${H.Helpers.JSONStringify(this.model)}`);
+            return this.logError('postItemWiring', `unable to fetch navigation indexer for ${H.Helpers.JSONStringify(this.model)}`);
 
         indexer.indexObject(SO.idSystemObject);
         return { success: true };
@@ -227,10 +227,10 @@ export class ModelMigration {
         if (ModelMigration.idSystemObjectTest)
             return { success: true };
 
-        this.recordMessage('createTestObjects');
+        this.log('createTestObjects', 'starting');
         const unitDB: DBAPI.Unit | null = await DBAPI.Unit.fetch(1); // Unknown Unit
         if (!unitDB)
-            return this.recordError('createTestObjects unable to fetch unit with ID=1 for test data');
+            return this.logError('createTestObjects', 'unable to fetch unit with ID=1 for test data');
 
         const Name: string = `ModelMigrationTest-${new Date().toISOString()}`;
         const subjectDB: DBAPI.Subject = new DBAPI.Subject({
@@ -242,7 +242,7 @@ export class ModelMigration {
             idSubject: 0,
         });
         if (!await subjectDB.create())
-            return this.recordError(`createTestObjects unable to create subject ${H.Helpers.JSONStringify(subjectDB)}`);
+            return this.logError('createTestObjects', `unable to create subject ${H.Helpers.JSONStringify(subjectDB)}`);
 
         const itemDB: DBAPI.Item = new DBAPI.Item({
             idAssetThumbnail: null,
@@ -253,15 +253,15 @@ export class ModelMigration {
             idItem: 0,
         });
         if (!await itemDB.create())
-            return this.recordError(`createTestObjects unable to create item ${H.Helpers.JSONStringify(itemDB)}`);
+            return this.logError('createTestObjects', `unable to create item ${H.Helpers.JSONStringify(itemDB)}`);
 
         const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(subjectDB, itemDB);
         if (!xref)
-            return this.recordError(`createTestObjects unable to wire subject ${H.Helpers.JSONStringify(subjectDB)} to item ${H.Helpers.JSONStringify(itemDB)}`);
+            return this.logError('createTestObjects', `unable to wire subject ${H.Helpers.JSONStringify(subjectDB)} to item ${H.Helpers.JSONStringify(itemDB)}`);
 
         const SO: DBAPI.SystemObject | null = await itemDB.fetchSystemObject();
         if (!SO)
-            return this.recordError(`createTestObjects unable to fetch system object from item ${H.Helpers.JSONStringify(itemDB)}`);
+            return this.logError('createTestObjects', `unable to fetch system object from item ${H.Helpers.JSONStringify(itemDB)}`);
         ModelMigration.idSystemObjectTest = SO.idSystemObject;
 
         return { success: true };
@@ -275,27 +275,27 @@ export class ModelMigration {
         if (modelFile.hash) {
             const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
             if (!hashRes.success) {
-                this.recordError(`testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`);
+                this.logError(`testFileExistience('${filePath}')`, `unable to compute hash ${hashRes.error}`);
                 success = false;
             } else if (hashRes.hash != modelFile.hash) {
-                this.recordError(`testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
+                this.logError(`testFileExistience('${filePath}')`, `computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
                 success = false;
             }
         }
 
-        this.recordMessage(`testFileExistience('${filePath}') = ${success}`);
+        this.log(`testFileExistience('${filePath}')`, `${success}`);
         return success;
     }
 
-    private recordMessage(message: string, isError: boolean = false, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
+    private log(scope: string, message: string, isError: boolean = false, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (isError)
-            LOG.error(`ModelMigration (${this.uniqueID}) ${message}`, LOG.LS.eMIG);
+            LOG.error(`ModelMigration (${this.uniqueID}) ${scope}: ${message}`, LOG.LS.eMIG);
         else
-            LOG.info(`ModelMigration (${this.uniqueID}) ${message}`, LOG.LS.eMIG);
+            LOG.info(`ModelMigration (${this.uniqueID}) ${scope}: ${message}`, LOG.LS.eMIG);
         return { success: false, error: message, ...props };
     }
 
-    private recordError(error: string, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
-        return this.recordMessage(error, true, props);
+    private logError(scope: string, message: string, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
+        return this.log(scope, message, true, props);
     }
 }
