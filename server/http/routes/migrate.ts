@@ -231,7 +231,7 @@ class Migrator {
                 MMR = await MM.migrateModel(modelFile.uniqueID, user.idUser, modelFileSet, true);
             } else {
                 const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
-                const MDE: ModelDataExtraction = new ModelDataExtraction(modelFile.uniqueID, path.basename(filePath), undefined, filePath);
+                const MDE: ModelDataExtraction = new ModelDataExtraction(modelFile.uniqueID, path.basename(filePath), filePath);
                 MMR = await MDE.fetchAndExtractInfo();
             }
             if (!MMR.success)
