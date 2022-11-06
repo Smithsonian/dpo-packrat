@@ -15,6 +15,7 @@ export class IndexSolr implements NAV.IIndexer {
     private hierarchyNameMap: Map<number, string> = new Map<number, string>(); // map of idSystemObject -> object name
     private static fullIndexUnderway: boolean = false;
     private static reindexJob: NS.Job | null = null;
+    private static regexARK: RegExp = new RegExp('ark:/(.*)/(.*)');
 
     private countUnit:                  number = 0;
     private countProject:               number = 0;
@@ -951,8 +952,24 @@ export class IndexSolr implements NAV.IIndexer {
         const identifiersRet: string[] = [];
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(idSystemObject);
         if (identifiers) {
-            for (const identifier of identifiers)
-                identifiersRet.push(identifier.IdentifierValue);
+            for (const identifier of identifiers) {
+                const idValue: string = identifier.IdentifierValue;
+                identifiersRet.push(idValue);
+
+                // find first :
+                const firstColonIndex: number = idValue.indexOf(':');
+
+                // if this is an ARK ID, extract the guid ... e.g. http://n2t.net/ark:/65665/ye3b2567e1b-5e76-4379-bf60-8dbb0fd8a2d1 -> ye3b2567e1b-5e76-4379-bf60-8dbb0fd8a2d1
+                const ARKMatch: RegExpMatchArray | null = idValue.match(IndexSolr.regexARK);
+                if (ARKMatch && ARKMatch.length >= 3)
+                    identifiersRet.push(ARKMatch[2]);
+                // else if we have a colon after the first character, extract trimmed text to the right of the colon ... e.g. edanmdm:dpo_3d_200032 -> dpo_3d_200032
+                else if (firstColonIndex > 0) {
+                    const trimmedID: string = idValue.substring(firstColonIndex + 1).trim();
+                    if (trimmedID)
+                        identifiersRet.push(trimmedID);
+                }
+            }
         }
         return identifiersRet;
     }
