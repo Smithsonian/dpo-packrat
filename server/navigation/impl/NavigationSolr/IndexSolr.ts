@@ -980,3 +980,4 @@ export class IndexSolr implements NAV.IIndexer {
         return vocabulary ? vocabulary.Term : '';
     }
 }
+// Check me in
