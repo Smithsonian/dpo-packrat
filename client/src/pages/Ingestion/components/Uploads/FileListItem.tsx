@@ -54,7 +54,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         }
     },
     name: {
-        // fontWeight: 500,
+        fontWeight: 500,
         color: 'black',
         zIndex: 'inherit',
         wordBreak: 'break-all',

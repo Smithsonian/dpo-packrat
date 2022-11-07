@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 /**
  * Packrat Client
@@ -11,7 +12,7 @@ import { ApolloProvider } from '@apollo/client';
 import { ThemeProvider, Box } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Slide, toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { EnvBanner, ErrorBoundary, Loader } from './components';
@@ -135,6 +136,13 @@ interface ReRouteProps {
 
 function RequireAuth({ children, redirectTo }: ReRouteProps) {
     const [user] = useUserStore(state => [state.user]);
+    const { setRedirectPath } = useUserStore();
+    const location = useLocation();
+
+    useEffect(() => {
+        setRedirectPath(location.pathname);
+    }, [user, setRedirectPath]);
+
     return user ? children : <Navigate to={redirectTo} />;
 }
 

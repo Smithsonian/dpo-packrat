@@ -11,6 +11,7 @@ import { MdInsertChart } from 'react-icons/md';
 import { HOME_ROUTES, resolveRoute } from '../../../constants';
 import { Colors } from '../../../theme';
 import { Link } from 'react-router-dom';
+import { confirmLeaveIngestion } from '../../Ingestion';
 
 const useStyles = makeStyles(({ palette, spacing, breakpoints }) => createStyles({
     container: {
@@ -77,9 +78,13 @@ function SidePanelOption(props: SidePanelOptionProps): React.ReactElement {
     const { title, subtitle, color, type, isExpanded } = props;
 
     const classes = useStyles(props);
+    const onClick = (e) => {
+        const leaveIngestion = confirmLeaveIngestion();
+        if (!leaveIngestion) e.preventDefault();
+    };
 
     return (
-        <Link className={classes.container} to={resolveRoute(type)}>
+        <Link className={classes.container} to={resolveRoute(type)} onClick={onClick}>
             <Box className={classes.iconContainer}>
                 <MenuOptionIcon type={type} color={color} />
             </Box>

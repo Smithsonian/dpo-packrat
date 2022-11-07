@@ -7,7 +7,7 @@ import { Box, Typography, Button } from '@material-ui/core';
 import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
 import { DebounceInput } from 'react-debounce-input';
-import { IoIosLogOut, IoIosHelp, /* IoIosNotifications, */ IoIosSearch } from 'react-icons/io';
+import { IoIosLogOut, IoIosHelp, IoIosSearch } from 'react-icons/io';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Logo from '../../assets/images/logo-packrat.square.png';
@@ -16,6 +16,7 @@ import { Selectors } from '../../config';
 import { HOME_ROUTES, resolveRoute, ROUTES } from '../../constants';
 import { useRepositoryStore, useUserStore } from '../../store';
 import { Colors } from '../../theme';
+import { confirmLeaveIngestion } from '../../pages/Ingestion';
 
 const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => createStyles({
     container: {
@@ -133,6 +134,11 @@ function Header(): React.ReactElement {
         window.open('https://smithsonian.github.io/dpo-packrat/');
     };
 
+    const onClick = (e) => {
+        const leaveIngestion = confirmLeaveIngestion();
+        if (!leaveIngestion) e.preventDefault();
+    };
+
     const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
 
     // Specific to search while in repository view
@@ -148,6 +154,9 @@ function Header(): React.ReactElement {
 
     // General search function when in different views
     const onSearch = (): void => {
+        const leaveIngestion = confirmLeaveIngestion();
+        if (!leaveIngestion) return;
+
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
         resetRepositoryFilter();
         const filterState = getFilterState();
@@ -166,7 +175,7 @@ function Header(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box display='flex' alignItems='center'>
-                <Link className={classes.logo} to={resolveRoute(HOME_ROUTES.REPOSITORY)}>
+                <Link className={classes.logo} to={resolveRoute(HOME_ROUTES.REPOSITORY)} onClick={onClick}>
                     <img style={{ height: 30, width: 30 }} src={Logo} alt='packrat' />
                 </Link>
                 <Typography color='inherit' variant='body2'>

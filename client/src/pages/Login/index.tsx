@@ -99,7 +99,7 @@ const useStyles = makeStyles(({ palette, spacing, breakpoints }) => createStyles
 function Login(): React.ReactElement {
     const classes = useStyles();
     const navigate = useNavigate();
-    const { login } = useUserStore();
+    const { login, redirectPath } = useUserStore();
 
     const { initialValues, loginValidationSchema } = useLoginForm();
 
@@ -113,11 +113,11 @@ function Login(): React.ReactElement {
         const { email, password } = values;
 
         try {
-            const { success, message, originalUrl } = await login(email, password);
+            const { success, message } = await login(email, password);
 
             if (success) {
                 toast.success('Welcome to Packrat');
-                navigate(originalUrl ?? ROUTES.HOME);
+                navigate(redirectPath ?? ROUTES.HOME);
             } else {
                 toast.error(message);
             }
