@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-
+// React Router v6 removed withRouter but offers the wrapper code. See https://reactrouter.com/en/v6.3.0/faq
 import React from 'react';
 import {
     useLocation,

@@ -7,7 +7,7 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React from 'react';
 
-const useStyles = makeStyles(({ palette /*, typography*/ }) => createStyles({
+const useStyles = makeStyles(({ palette }) => createStyles({
     container: {
         display: 'flex',
         position: 'fixed',

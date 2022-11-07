@@ -31,7 +31,6 @@ function Ingestion(): React.ReactElement {
     const { ingestionReset } = useIngest();
 
     const [options, setOptions] = useState<IngestionSidebarOption[]>([]);
-
     // check metadata. if every entry is update (idAsset) or attachment (idSOAttachment) then we want to skip the subject/item step
     const includeSubjectItem = !metadatas.every((metadata) => metadata.file.idAsset || metadata.file.idSOAttachment);
     useEffect(() => {
@@ -65,36 +64,6 @@ function Ingestion(): React.ReactElement {
         ingestionReset(true);
     }, []);
 
-    // const routeChangeCheck = ({ pathname }): boolean | string => {
-    //     let allowChange: boolean = true;
-    //     const { href: url } = window.location;
-
-    //     // reset when we navigate to any other part of the app from subject/item or metadata
-    //     if (!pathname.includes(HOME_ROUTES.INGESTION)) {
-    //         allowChange = !(url.includes(INGESTION_ROUTES_TYPE.METADATA) || url.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP));
-    //     }
-
-    //     if (url.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP)) {
-    //         allowChange = pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
-    //     }
-
-    //     // handle case of use clicking on side panel options while in ingestion
-    //     // without this block, router will redirect to uploads without confirming a reset
-    //     if (pathname === '/ingestion' && (url.includes(INGESTION_ROUTES_TYPE.METADATA) || url.includes(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP) || url.includes(INGESTION_ROUTES_TYPE.UPLOADS))) {
-    //         allowChange = false;
-    //     }
-
-    //     if (allowChange) return true;
-
-    //     const isConfirmed = global.confirm('Are you sure you want to go to navigate away? Changes might be lost');
-
-    //     if (isConfirmed) {
-    //         ingestionReset(false);
-    //     }
-
-    //     return isConfirmed;
-    // };
-
     return (
         <Box className={classes.container}>
             <IngestionSidebarMenu title='INGESTION' paramIdentifier={INGESTION_PARAMS_TYPE.STEP} options={options} />
@@ -109,3 +78,12 @@ function Ingestion(): React.ReactElement {
 }
 
 export default Ingestion;
+
+export function confirmLeaveIngestion(): boolean {
+    const { href: url } = window.location;
+    if (url.includes(resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)) || url.includes(resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP))) {
+        const confirm = window.confirm('Are you sure you want to go to navigate away? Changes might be lost');
+        return confirm;
+    } else
+        return true;
+}

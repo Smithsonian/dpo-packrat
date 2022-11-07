@@ -37,7 +37,7 @@ const useStyles = makeStyles(({ palette, typography }) => createStyles({
         width: '100%'
     },
     text: {
-        // fontWeight: 400,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '1em'
     }

@@ -16,6 +16,7 @@ import SearchList from './SearchList';
 import SubjectList from './SubjectList';
 import { Helmet } from 'react-helmet';
 import useIngest from '../../hooks/useIngest';
+import { confirmLeaveIngestion } from '../..';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -171,9 +172,16 @@ function SubjectItem(): React.ReactElement {
                 rightLoading={metadataStepLoading}
                 leftLabel='Previous'
                 rightLabel='Next'
-                leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)}
                 onClickRight={onNext}
-                onClickLeft={() => ingestionReset()}
+                onClickLeft={(e) => {
+                    const leaveIngestion = confirmLeaveIngestion();
+                    if (!leaveIngestion) {
+                        e.preventDefault();
+                        return;
+                    } else {
+                        ingestionReset();
+                    }
+                }}
             />
         </Box>
     );
