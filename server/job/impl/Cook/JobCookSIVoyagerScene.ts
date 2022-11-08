@@ -437,7 +437,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                     }
 
                     // run si-packrat-inspect on this model
-                    const results: H.IOResults = await WorkflowUtil.computeModelMetrics(FileName, model.idModel, undefined, undefined,
+                    const results: H.IOResults = await WorkflowUtil.computeModelMetrics(FileName, model.idModel, undefined, undefined, undefined,
                         undefined, undefined /* FIXME */, idUserCreator);
                     if (results.success)
                         this.appendToReportAndLog(`JobCookSIVoyagerScene extracted model metrics for ${FileName}`);

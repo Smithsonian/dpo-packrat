@@ -197,7 +197,7 @@ export class WorkflowUpload implements WF.IWorkflow {
     }
 
     private async validateFileModel(fileName: string, readStream: NodeJS.ReadableStream, fromZip: boolean, idSystemObject: number): Promise<H.IOResults> {
-        const results: H.IOResults = await WorkflowUtil.computeModelMetrics(fileName, undefined, undefined, idSystemObject,
+        const results: H.IOResults = await WorkflowUtil.computeModelMetrics(fileName, undefined, undefined, idSystemObject, undefined,
             !fromZip ? undefined : readStream, this.workflowParams.idProject, this.workflowParams.idUserInitiator);
         if (!results.success)
             return this.handleError(results.error ?? '');

@@ -20,7 +20,7 @@ export default async function getIngestionItems(_: Parent, args: QueryGetIngesti
 
     const ItemAndProjects: DBAPI.ItemAndProject[] | null = await DBAPI.Item.fetchRelatedItemsAndProjects(idItems);
     if (!ItemAndProjects) {
-        LOG.error(`getIngestionItems unable to fetch projects related to items ${H.Helpers.JSONStringify(idItems)}`, LOG.LS.eGQL);
+        LOG.info(`getIngestionItems unable to fetch projects related to items ${H.Helpers.JSONStringify(idItems)}`, LOG.LS.eGQL);
         return { };
     }
 

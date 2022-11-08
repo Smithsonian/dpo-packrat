@@ -1,7 +1,7 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Typography, Select, MenuItem, InputLabel } from '@material-ui/core';
-import { useWorkflowStore, useVocabularyStore, useUsersStore } from '../../../../store';
+import { useWorkflowStore, useVocabularyStore, useUsersStore, ePaginationChange } from '../../../../store';
 import { getWorkflowFilterOptions } from '../WorkflowFilterOptions';
 import { LoadingButton } from '../../../../components';
 import { Colors } from '../../../../theme';
@@ -96,8 +96,12 @@ function WorkflowFilter(): React.ReactElement {
     const classes = useStyles(false);
     const getEntries = useVocabularyStore(state => state.getEntries);
     const getUsersFilterOptions = useUsersStore(state => state.getUsersFilterOptions);
-    const [resetWorkflowFilters, fetchWorkflowList] = useWorkflowStore(state => [state.resetWorkflowFilters, state.fetchWorkflowList]);
+    const [resetWorkflowFilters, paginationUpdateAndRefetchList] = useWorkflowStore(state => [state.resetWorkflowFilters, state.paginationUpdateAndRefetchList]);
     const { workflowTypeOptions, jobTypeOptions, stateOptions, initiatorOptions, ownerOptions } = getWorkflowFilterOptions(getUsersFilterOptions(), getEntries);
+
+    const fetch = () => {
+        paginationUpdateAndRefetchList(ePaginationChange.ePage, 0);
+    };
 
     return (
         <Box className={classes.container} mt={2}>
@@ -129,7 +133,7 @@ function WorkflowFilter(): React.ReactElement {
                     disableElevation
                     loaderSize={15}
                     loading={false}
-                    onClick={() => fetchWorkflowList()}
+                    onClick={fetch}
                 >
                     Search
                 </LoadingButton>
