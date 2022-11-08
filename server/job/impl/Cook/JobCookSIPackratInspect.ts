@@ -433,7 +433,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                                     if (materialUri) {
                                         materialUri = materialUri.trim();
                                         // detect and handle UV Maps embedded in the geometry file:
-                                        if (materialUri.toLowerCase().startsWith('embedded*')) {
+                                        if (isEmbeddedTexture(materialUri)) {
                                             materialUri = null;
                                             UVMapEmbedded = true;
                                         }
@@ -835,3 +835,9 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     }
 }
 
+const EMBEDDED_TEXTURE_PREFIX: string = 'embedded*';
+export function isEmbeddedTexture(uri: string): boolean {
+    const uriNorm: string = uri.toLowerCase();
+    const fileName: string = path.basename(uriNorm);
+    return uriNorm.startsWith(EMBEDDED_TEXTURE_PREFIX) || fileName.startsWith(EMBEDDED_TEXTURE_PREFIX);
+}

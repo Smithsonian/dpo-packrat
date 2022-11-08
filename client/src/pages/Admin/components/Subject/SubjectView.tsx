@@ -6,9 +6,8 @@ import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { useLocation } from 'react-router';
 import { Link, useNavigate } from 'react-router-dom';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
-import { getUnitsList, getSubjectList } from '../../hooks/useAdminView';
+import { getUnitsList } from '../../hooks/useAdminView';
 import { SubjectUnitIdentifier } from '../../../../types/graphql';
-import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet';
 import { eSubjectUnitIdentifierSortColumns } from '@dpo-packrat/common';
 import DataTable from '../shared/DataTable';
@@ -17,6 +16,7 @@ import clsx from 'clsx';
 import Clear from '@material-ui/icons/Clear';
 import { ePaginationChange } from '../../../../store';
 import { EmptyTable } from '../../../../components';
+import { useAdminSubjectStore } from '../../store/adminSubject';
 
 const useStyles = makeStyles(({ typography, palette }) => createStyles({
     centeredTableHead: {
@@ -145,7 +145,7 @@ interface selectOption {
 
 interface SearchFilterProps {
     units: selectOption[],
-    queryByFilter: (reset?: boolean) => Promise<void>,
+    queryByFilter: (reset?: boolean) => void,
     onSelect: (value: number) => void,
     onKeywordChange: (value: string) => void,
     selectedUnit: number,
@@ -362,16 +362,8 @@ function SearchFilter(props: SearchFilterProps): React.ReactElement {
 function SubjectView(): React.ReactElement {
     const classes = useStyles();
     const location = useLocation();
-    const [pageNumber, setPageNumber] = useState(0);
-    const [rowCount, setRowCount] = useState(50);
-    const [sortOrder, setSortOrder] = useState(true);
-    const [sortBy, setSortBy] = useState<eSubjectUnitIdentifierSortColumns>(eSubjectUnitIdentifierSortColumns.eDefault);
-    const [keyword, setKeyword] = useState<string>('');
-    const [loading, setLoading] = useState(false);
-    const [subjectList, setSubjectList] = useState<SubjectUnitIdentifier[]>([]);
+    const [updateFilterValue, fetchSubjectList, paginationUpdateAndRefetchList, keyword, selectedUnit, pageNumber, rowCount, sortOrder, sortBy, loading, subjects] = useAdminSubjectStore(state => [state.updateFilterValue, state.fetchSubjectList, state.paginationUpdateAndRefetchList, state.keyword, state.selectedUnit, state.pageNumber, state.rowCount, state.sortOrder, state.sortBy, state.loading, state.subjects]);
     const [units, setUnits] = useState<selectOption[]>([{ value: 0, label: 'All' }]);
-    const [selectedUnit, setSelectedUnit] = useState<number>(0);
-
     useEffect(() => {
         const fetchUnitList = async () => {
             const { data } = await getUnitsList();
@@ -390,76 +382,19 @@ function SubjectView(): React.ReactElement {
 
     useEffect(() => {
         fetchSubjectList();
-    }, [pageNumber, rowCount, sortOrder, sortBy]);
+    }, []);
 
-    const fetchSubjectList = async () => {
-        setLoading(true);
-        try {
-            const getSubjectListInput = {
-                search: keyword,
-                idUnit: selectedUnit,
-                // pageNumber + 1 because Material UI requires starting page === 0
-                pageNumber: pageNumber + 1,
-                rowCount,
-                sortBy,
-                sortOrder
-            };
-            const { data } = await getSubjectList(getSubjectListInput);
-            if (data?.getSubjectList.subjects && data?.getSubjectList.subjects.length) {
-                setSubjectList(data?.getSubjectList.subjects);
-            } else {
-                setSubjectList([]);
-            }
-        } catch (error) {
-            toast.error(`Error in fetching subjects. Message: ${error}`);
-        }
-        setLoading(false);
-    };
-
-    const onSearch = async (reset: boolean = false) => {
+    const onSearch = (reset: boolean = false) => {
         if (reset) {
-            await setKeyword('');
-            await setSelectedUnit(0);
-            await setPageNumber(0);
+            updateFilterValue('keyword', '');
+            updateFilterValue('selectedUnit', 0);
         }
-        await setLoading(true);
-        try {
-            const getSubjectListInput = {
-                search: reset ? '' : keyword,
-                idUnit: reset ? 0 : selectedUnit,
-                pageNumber,
-                rowCount,
-                sortBy,
-                sortOrder
-            };
-            const { data } = await getSubjectList(getSubjectListInput);
-            if (data?.getSubjectList.subjects && data?.getSubjectList.subjects.length) {
-                setSubjectList(data.getSubjectList.subjects);
-            } else {
-                setSubjectList([]);
-            }
-        } catch (error) {
-            toast.error(`Error in fetching subjects. Message: ${error}`);
-        }
-        setLoading(false);
+
+        paginationUpdateAndRefetchList(ePaginationChange.ePage, 0);
     };
 
-    const paginationUpdateAndRefetchList = (changeType: ePaginationChange, value?: number | null, column?: string | null, direction?: string | null): void => {
-        if (changeType === ePaginationChange.ePage && value !== null) setPageNumber(value as number);
-
-        if (changeType === ePaginationChange.eRowCount && value !== null) {
-            setRowCount(value as number);
-            setPageNumber(0);
-        }
-
-        if (changeType === ePaginationChange.eSort && column) {
-            setPageNumber(0);
-            setSortOrder(direction === 'asc' ? true : false);
-            setSortBy(subjectUnitIdentifierStringToEnum(column));
-        }
-    };
-    const handleDropDownChange = value => setSelectedUnit(value);
-    const handleSearchKeywordChange = value => setKeyword(value);
+    const handleDropDownChange = value => updateFilterValue('selectedUnit', value);
+    const handleSearchKeywordChange = value => updateFilterValue('keyword', value);
 
     return (
         <Box className={classes.AdminViewContainer}>
@@ -478,7 +413,7 @@ function SubjectView(): React.ReactElement {
                 selectedUnit={selectedUnit}
             />
             <SubjectList
-                subjects={subjectList}
+                subjects={subjects}
                 onPaginationChange={paginationUpdateAndRefetchList}
                 pageNumber={pageNumber}
                 rowsPerPage={rowCount}
@@ -489,15 +424,6 @@ function SubjectView(): React.ReactElement {
         </Box>
     );
 }
-
-const subjectUnitIdentifierStringToEnum = (col: string): eSubjectUnitIdentifierSortColumns => {
-    switch (col) {
-        case 'UnitAbbreviation': return eSubjectUnitIdentifierSortColumns.eUnitAbbreviation;
-        case 'SubjectName': return eSubjectUnitIdentifierSortColumns.eSubjectName;
-        case 'IdentifierPublic': return eSubjectUnitIdentifierSortColumns.eIdentifierValue;
-        default: return eSubjectUnitIdentifierSortColumns.eDefault;
-    }
-};
 
 const subjectUnitIdentifierEnumToString = (col: eSubjectUnitIdentifierSortColumns): string => {
     switch (col) {

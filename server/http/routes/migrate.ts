@@ -1,22 +1,25 @@
 import * as DBAPI from '../../db';
+import * as CACHE from '../../cache';
 import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
-import { SceneMigration, SceneMigrationResults } from '../../utils/migration/SceneMigration';
-import { SceneMigrationPackages } from '../../utils/migration/MigrationData';
-import { MigrationUtils } from '../../utils/migration/MigrationUtils';
 import { ASL, LocalStore } from '../../utils/localStore';
 
+import { SceneMigrationPackages, ModelMigrationFiles } from '../../utils/migration/MigrationData';
+import { MigrationUtils, ModelDataExtraction, ModelMigration, ModelMigrationResults, ModelMigrationFile, SceneMigration, SceneMigrationResults, SceneMigrationPackage } from '../../utils/migration';
+
+import * as COMMON from '@dpo-packrat/common';
+
 import { Request, Response } from 'express';
-import * as NS from 'node-schedule';
 import { Semaphore } from 'async-mutex';
-import { SceneMigrationPackage } from '../../utils/migration/SceneMigrationPackage';
+import * as NS from 'node-schedule';
+import * as path from 'path';
 
 const SimultaneousMigrations: number = 10;
 
 export async function migrate(request: Request, response: Response): Promise<void> {
     try {
         const migrator: Migrator = new Migrator(request, response);
-        if (!await migrator.parseArguments())
+        if (!await migrator.parseArguments(false))
             return;
 
         const soon: Date = new Date(new Date().getTime() + 1000); // start 1 second from now
@@ -35,6 +38,7 @@ class Migrator {
     private response: Response;
     private sceneIDSet: Set<string> | undefined | null = undefined; // undefined means do not migrate; null means migrate all; non-null means migrate only matches
     private modelIDSet: Set<string> | undefined | null = undefined; // undefined means do not migrate; null means migrate all; non-null means migrate only matches
+    private extractMode: boolean = false;   // true -> extract model information for selected models
 
     private static semaphoreMigrations: Semaphore = new Semaphore(SimultaneousMigrations);
 
@@ -44,28 +48,53 @@ class Migrator {
     }
 
     static async launcher(migrator: Migrator): Promise<boolean> {
-        if (!await migrator.parseArguments())
+        if (!await migrator.parseArguments(true))
             return false;
         return await migrator.migrate();
     }
 
     /** Returns false if arguments are invalid */
-    async parseArguments(): Promise<boolean> {
+    async parseArguments(log: boolean): Promise<boolean> {
+        const ret: boolean = await this.parseArgumentsWorker();
+
+        if (log) {
+            if (this.sceneIDSet === null)
+                LOG.info('SceneMigration migrating all scenes', LOG.LS.eMIG);
+            else if (this.sceneIDSet !== undefined)
+                LOG.info(`SceneMigration migrating ${H.Helpers.JSONStringify(this.sceneIDSet)}`, LOG.LS.eMIG);
+
+            if (this.modelIDSet === null)
+                LOG.info(`ModelMigration ${this.extractMode ? 'extracting data for' : 'migrating' } all models`, LOG.LS.eMIG);
+            else if (this.modelIDSet !== undefined)
+                LOG.info(`ModelMigration ${this.extractMode ? 'extracting data for' : 'migrating' } ${H.Helpers.JSONStringify(this.modelIDSet)}`, LOG.LS.eMIG);
+        }
+        return ret;
+    }
+
+    private async parseArgumentsWorker(): Promise<boolean> {
         // All entry points below perform migration for objects not yet migrated
-        // /migrate                     Performs full migration
-        // /migrate/scenes              Performs full scene migration
-        // /migrate/models              Performs full model migration
-        // /migrate/scene/ID            Performs scene migration for scene with EdanUUID of ID (comma-separated list)
-        // /migrate/model/ID            Performs model migration for model with Unique ID of ID (comma-separated list)
+        // /migrate             Performs full migration
+        // /migrate/scenes      Performs full scene migration
+        // /migrate/models      Performs full model migration
+        // /migrate/scene/ID    Performs scene migration for scene with EdanUUID of ID (comma-separated list)
+        // /migrate/model/ID    Performs model migration for model with Unique ID of ID (comma-separated list)
+        //     ?extract=true    Performs model migration extraction for specified models, by ingesting each model, and then using Cook to determine
+        //                      which support files are in use by the model. This leaves Packrat in a "corrupted" state,
+        //                      to be reinitialized with migrated content without ?extract=true
 
         const requestPath: string = this.request.path;
         let handled: boolean = true;
         switch (requestPath) {
-            case '/migrate':        this.sceneIDSet = null; this.modelIDSet = null; break;
+            case '/migrate':
+            case '/migrate/':       this.sceneIDSet = null; this.modelIDSet = null; break;
             case '/migrate/scenes': this.sceneIDSet = null; break;
             case '/migrate/models': this.modelIDSet = null; break;
             default:                handled = false; break;
         }
+
+        const extract: string | null = H.Helpers.safeString(this.request.query.extract);
+        this.extractMode = (extract === 'true');
+
         if (handled)
             return true;
 
@@ -91,7 +120,7 @@ class Migrator {
             for (const id of idList.split(','))
                 idSet.add(id);
         }
-        // LOG.info(`SceneMigration handling ${idList} with idSet ${H.Helpers.JSONStringify(idSet)})`, LOG.LS.eMIG);
+
         return true;
     }
 
@@ -114,8 +143,55 @@ class Migrator {
             }
         }
 
-        if (this.modelIDSet !== undefined)
-            this.results += 'Migrating Models Not Yet Implemented<br/>\n';
+        if (this.modelIDSet !== undefined) {
+            this.results += 'Migrating Models<br/>\n';
+
+            const vAssetTypeModel: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
+            const vAssetTypeModelGeometryFile: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+            if (!vAssetTypeModel || !vAssetTypeModelGeometryFile) {
+                this.recordMigrationResult(false, 'ModelMigration unable to fetch asset type vocabulary');
+                return false;
+            }
+
+            // Pre-process ModelMigrationFiles, collecting them into arrays, one per .uniqueID; pass this array below in this.migrateModel
+            const modelMigrationMap: Map<string, ModelMigrationFile[]> = new Map<string, ModelMigrationFile[]>();
+            for (const modelFile of ModelMigrationFiles) {
+                if (this.modelIDSet && !this.modelIDSet.has(modelFile.uniqueID))
+                    continue;
+                let modelFiles: ModelMigrationFile[] | undefined = modelMigrationMap.get(modelFile.uniqueID);
+                if (!modelFiles) {
+                    modelFiles = [];
+                    modelMigrationMap.set(modelFile.uniqueID, modelFiles);
+                }
+                modelFiles.push(modelFile);
+            }
+
+            for (const [uniqueID, modelFiles] of modelMigrationMap) {
+                let uniqueIDAlreadyMigrated: string | null = null;
+                for (const modelFile of modelFiles) {
+                    const models: DBAPI.Model[] | null = await DBAPI.Model.fetchByFileNameAndAssetType(modelFile.fileName, [vAssetTypeModel.idVocabulary, vAssetTypeModelGeometryFile.idVocabulary]);
+                    if (models && models.length > 0) {
+                        uniqueIDAlreadyMigrated = modelFile.uniqueID;
+                        break;
+                    }
+                }
+
+                if (uniqueIDAlreadyMigrated) {
+                    this.recordMigrationResult(true, `ModelMigration (${uniqueIDAlreadyMigrated}) skipped: already migrated`);
+                    continue;
+                }
+
+                const MMR: ModelMigrationResults = await this.migrateModel(modelFiles, user);
+                if (this.extractMode && MMR.success && MMR.supportFiles) {
+                    for (const supportFile of MMR.supportFiles) {
+                        const supportPath: string = path.join(MMR.modelFilePath ?? '', supportFile);
+                        const fileName: string = path.basename(supportFile);
+                        const scriptLine: string = `SCRIPT { uniqueID: '${uniqueID}', path: '${supportPath}', fileName: '${fileName}', name: '${fileName}', title: '', filePath: '', hash: undefined, geometry: false, idSystemObjectItem: undefined, testData: false, License: undefined, PublishedState: undefined },`;
+                        this.recordMigrationResult(true, scriptLine);
+                    }
+                }
+            }
+        }
 
         return true;
     }
@@ -134,6 +210,37 @@ class Migrator {
                 this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) succeeded: ${H.Helpers.JSONStringify(SMR)}`);
 
             return SMR;
+        });
+        return res;
+    }
+
+    private async migrateModel(modelFileSet: ModelMigrationFile[], user: DBAPI.User): Promise<ModelMigrationResults> {
+        if (modelFileSet.length <= 0)
+            return { success: false, error: 'migrateModel called with no files' };
+
+        const res: ModelMigrationResults = await Migrator.semaphoreMigrations.runExclusive(async (value) => {
+            const LS: LocalStore = await ASL.getOrCreateStore();
+            LS.incrementRequestID();
+
+            const modelFile: ModelMigrationFile = modelFileSet[0];
+            let MMR: ModelMigrationResults;
+
+            const operation: string = this.extractMode ? 'extraction' : 'migration';
+            this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) Starting ${operation}; semaphore count ${value}`);
+            if (!this.extractMode) {
+                const MM: ModelMigration = new ModelMigration();
+                MMR = await MM.migrateModel(modelFile.uniqueID, user.idUser, modelFileSet, true);
+            } else {
+                const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
+                const MDE: ModelDataExtraction = new ModelDataExtraction(modelFile.uniqueID, path.basename(filePath), filePath);
+                MMR = await MDE.fetchAndExtractInfo();
+            }
+            if (!MMR.success)
+                this.recordMigrationResult(false, `ModelMigration (${modelFile.uniqueID}) ${operation} failed for ${H.Helpers.JSONStringify(modelFile)}: ${MMR.error}`);
+            else
+                this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) ${operation} succeeded: ${H.Helpers.JSONStringify(MMR)}`);
+
+            return MMR;
         });
         return res;
     }

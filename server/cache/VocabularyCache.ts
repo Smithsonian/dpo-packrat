@@ -112,9 +112,49 @@ export class VocabularyCache {
             switch (eVocabSetEnum) {
                 case COMMON.eVocabularySetID.eIdentifierIdentifierType: {
                     switch (vocabulary.Term) {
-                        case 'ARK':             eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeARK; break;
-                        case 'DOI':             eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeDOI; break;
-                        case 'Edan Record ID':  eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID; break;
+                        case 'ARK':                         eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeARK; break;
+                        case 'DOI':                         eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeDOI; break;
+                        case 'Edan Record ID':              eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID; break;
+                        case 'Accession #':                 eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeAccession; break;
+                        case 'Accession Number':            eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeAccessionNumber; break;
+                        case 'Archives Collection Number':  eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeArchivesCollectionNumber; break;
+                        case 'Bank Charter Number':         eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeBankCharterNumber; break;
+                        case 'Barcode':                     eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeBarcode; break;
+                        case 'Call Number':                 eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeCallNumber; break;
+                        case 'Catalog ID':                  eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeCatalogID; break;
+                        case 'Catalog Number':              eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeCatalogNumber; break;
+                        case 'Collector/Donor Number':      eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeCollectorDonorNumber; break;
+                        case 'Control Number':              eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeControlNumber; break;
+                        case 'Design Patent Number':        eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeDesignPatentNumber; break;
+                        case 'Designer Number':             eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeDesignerNumber; break;
+                        case 'Field Identifier':            eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeFieldIdentifier; break;
+                        case 'GUID':                        eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeGUID; break;
+                        case 'ID Number':                   eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeIDNumber; break;
+                        case 'Identifier':                  eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeIdentifier; break;
+                        case 'Image ID':                    eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeImageID; break;
+                        case 'Image Number':                eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeImageNumber; break;
+                        case 'Inventory Number':            eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeInventoryNumber; break;
+                        case 'ISBN':                        eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeISBN; break;
+                        case 'ISSN':                        eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeISSN; break;
+                        case 'Label Number':                eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeLabelNumber; break;
+                        case 'License Number':              eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeLicenseNumber; break;
+                        case 'Local Number':                eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeLocalNumber; break;
+                        case 'Maker Number':                eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeMakerNumber; break;
+                        case 'Model Number':                eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeModelNumber; break;
+                        case 'Nonaccession Number':         eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeNonaccessionNumber; break;
+                        case 'Object Number':               eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeObjectNumber; break;
+                        case 'Original Object Identifier':  eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeOriginalObjectIdentifier; break;
+                        case 'Other Numbers':               eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeOtherNumbers; break;
+                        case 'Patent Number':               eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypePatentNumber; break;
+                        case 'Plate Letters':               eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypePlateLetters; break;
+                        case 'Plate Number':                eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypePlateNumber; break;
+                        case 'Publisher Number':            eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypePublisherNumber; break;
+                        case 'Record ID':                   eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeRecordID; break;
+                        case 'Record Number':               eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeRecordNumber; break;
+                        case 'Serial Number':               eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeSerialNumber; break;
+                        case 'Series Standard Number':      eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeSeriesStandardNumber; break;
+                        case 'Standard Number':             eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeStandardNumber; break;
+                        case 'USNM Number':                 eVocabEnum = COMMON.eVocabularyID.eIdentifierIdentifierTypeUSNMNumber; break;
                     }
                 } break;
 
@@ -619,6 +659,62 @@ export class VocabularyCache {
             default: eVocabID = COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeUnknown; break;
         }
         return await VocabularyCache.vocabularyByEnum(eVocabID);
+    }
+
+    static mapIdentifierTypeID(identifierType: string): COMMON.eVocabularyID | undefined {
+        switch (identifierType.toLowerCase()) {
+            case 'ark':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeARK;
+            case 'doi':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeDOI;
+            case 'edanmdm':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID;
+            case 'edan record id':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID;
+            case 'accession #':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeAccession;
+            case 'accession number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeAccessionNumber;
+            case 'archives collection number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeArchivesCollectionNumber;
+            case 'bank charter number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeBankCharterNumber;
+            case 'barcode':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeBarcode;
+            case 'call number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeCallNumber;
+            case 'catalog id':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeCatalogID;
+            case 'catalog number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeCatalogNumber;
+            case 'collector/donor number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeCollectorDonorNumber;
+            case 'control number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeControlNumber;
+            case 'design patent number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeDesignPatentNumber;
+            case 'designer number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeDesignerNumber;
+            case 'field identifier':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeFieldIdentifier;
+            case 'guid':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeGUID;
+            case 'id number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeIDNumber;
+            case 'identifier':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeIdentifier;
+            case 'image id':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeImageID;
+            case 'image number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeImageNumber;
+            case 'inventory number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeInventoryNumber;
+            case 'isbn':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeISBN;
+            case 'issn':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeISSN;
+            case 'label number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeLabelNumber;
+            case 'license number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeLicenseNumber;
+            case 'local number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeLocalNumber;
+            case 'maker number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeMakerNumber;
+            case 'model number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeModelNumber;
+            case 'nonaccession number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeNonaccessionNumber;
+            case 'object number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeObjectNumber;
+            case 'original object identifier':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeOriginalObjectIdentifier;
+            case 'other numbers':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeOtherNumbers;
+            case 'patent number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypePatentNumber;
+            case 'plate letters':  return COMMON.eVocabularyID.eIdentifierIdentifierTypePlateLetters;
+            case 'plate number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypePlateNumber;
+            case 'publisher number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypePublisherNumber;
+            case 'record id':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeRecordID;
+            case 'record number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeRecordNumber;
+            case 'serial number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeSerialNumber;
+            case 'series standard number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeSeriesStandardNumber;
+            case 'standard number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeStandardNumber;
+            case 'usnm number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeUSNMNumber;
+            default: return undefined;
+        }
+    }
+
+    static async mapIdentifierType(identifierType: string): Promise<Vocabulary | undefined>  {
+        const eVocabID: COMMON.eVocabularyID | undefined = VocabularyCache.mapIdentifierTypeID(identifierType);
+        // LOG.info(`VocabularyCache.mapIdentifierType(${identifierType}) = ${COMMON.eVocabularyID[eVocabID]}, { eLS: LOG.eLS.eCACHE });
+        return eVocabID ?  await VocabularyCache.vocabularyByEnum(eVocabID) : undefined;
     }
 
     static async isPreferredAsset(idVAssetType: number, SO: SystemObject): Promise<boolean> {

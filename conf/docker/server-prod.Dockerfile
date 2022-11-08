@@ -26,8 +26,8 @@ RUN apk add perl
 COPY --from=base /app/server ./server
 COPY --from=base /app/common ./common
 COPY --from=base /app/node_modules ./node_modules
-RUN mkdir -p /app/node_modules/@dpo-packrat/ && ln -s /app/common /app/node_modules/@dpo-packrat/common
+RUN mkdir -p /app/node_modules/@dpo-packrat/ && rm /app/node_modules/@dpo-packrat/common && ln -s /app/common/build /app/node_modules/@dpo-packrat/common
 
 # Expose port, and provide start command on execution
 EXPOSE 4000
-CMD [ "node", "server/build/index.js" ]
+CMD [ "node", "--max-old-space-size=14336", "server/build/index.js" ]
