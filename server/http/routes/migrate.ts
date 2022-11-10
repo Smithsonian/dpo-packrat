@@ -169,7 +169,10 @@ class Migrator {
             for (const [uniqueID, modelFiles] of modelMigrationMap) {
                 let uniqueIDAlreadyMigrated: string | null = null;
                 for (const modelFile of modelFiles) {
-                    const models: DBAPI.Model[] | null = await DBAPI.Model.fetchByFileNameAndAssetType(modelFile.fileName, [vAssetTypeModel.idVocabulary, vAssetTypeModelGeometryFile.idVocabulary]);
+                    const models: DBAPI.Model[] | null = modelFile.idSystemObjectItem
+                        ? await DBAPI.Model.fetchItemChildrenModels(modelFile.idSystemObjectItem,
+                            modelFile.fileName, [vAssetTypeModel.idVocabulary, vAssetTypeModelGeometryFile.idVocabulary])
+                        : null;
                     if (models && models.length > 0) {
                         uniqueIDAlreadyMigrated = modelFile.uniqueID;
                         break;
