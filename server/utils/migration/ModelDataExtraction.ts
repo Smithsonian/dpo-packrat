@@ -202,13 +202,14 @@ export class ModelDataExtraction {
 
         if (!await model.create())
             return this.returnStatus('createModel', false, 'Unable to create model DB Object');
+        this.model = model;
+
         // wire item to model
         if (this.idSystemObjectItem) {
             if (!await this.wireItemToModel(this.idSystemObjectItem))
                 return this.returnStatus('createModel', false, `Failed to wire media group ${this.idSystemObjectItem} to model`);
         }
 
-        this.model = model;
         return { success: true };
     }
 
