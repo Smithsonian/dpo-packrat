@@ -20,6 +20,7 @@ import * as path from 'path';
 
 export class ModelDataExtraction {
     private uniqueID: string;
+    private idSystemObjectItem: number | undefined;
     private masterModelGeometryFile: string;
     private masterModelLocation?: string;
 
@@ -38,10 +39,11 @@ export class ModelDataExtraction {
     private static vocabOtherFile: DBAPI.Vocabulary | undefined = undefined;
     private static regexMTLParser: RegExp = new RegExp('(map_.*?|norm|disp|decal|bump|refl)( .*?)? ([^ ]*)$', 'i'); // [1] map type, [2] map params, [3] map name
 
-    constructor(uniqueID: string,
+    constructor(uniqueID: string, idSystemObjectItem: number | undefined,
         masterModelGeometryFile: string,
         masterModelLocation?: string) {
         this.uniqueID = uniqueID;
+        this.idSystemObjectItem = idSystemObjectItem;
         this.masterModelGeometryFile = masterModelGeometryFile;
         this.masterModelLocation = masterModelLocation;
     }
@@ -200,7 +202,35 @@ export class ModelDataExtraction {
 
         if (!await model.create())
             return this.returnStatus('createModel', false, 'Unable to create model DB Object');
+        // wire item to model
+        if (this.idSystemObjectItem) {
+            if (!await this.wireItemToModel(this.idSystemObjectItem))
+                return this.returnStatus('createModel', false, `Failed to wire media group ${this.idSystemObjectItem} to model`);
+        }
+
         this.model = model;
+        return { success: true };
+    }
+
+    private async wireItemToModel(idSystemObject: number): Promise<H.IOResults> {
+        if (!this.model)
+            return this.returnStatus('wireItemToModel', false, 'Called with null model');
+
+        const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+        if (!oID)
+            return this.returnStatus('wireItemToModel', false, `Unable to compute object info for ${idSystemObject}`);
+        if (oID.eObjectType !== COMMON.eSystemObjectType.eItem)
+            return this.returnStatus('wireItemToModel', false, `Called with non-item idSystemObject ID (${idSystemObject}):  ${H.Helpers.JSONStringify(oID)}`);
+
+        const itemDB: DBAPI.Item | null = await DBAPI.Item.fetch(oID.idObject);
+        if (!itemDB)
+            return this.returnStatus('wireItemToModel', false, `Failed to fetch item ${oID.idObject}`);
+
+        const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, this.model);
+        if (!xref)
+            return this.returnStatus('wireItemToModel', false, `Unable to wire item ${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`);
+
+        LOG.info(`wireItemToModel ${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`, LOG.LS.eMIG);
         return { success: true };
     }
 
