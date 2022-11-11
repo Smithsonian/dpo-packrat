@@ -75,7 +75,7 @@ export class ModelDataExtraction {
 
         // If file is .obj or .gltf, download model to crack open to detect .bin / .mtl files
         // Avoid using Cook for .obj (we'll crack it and its .mtl's manually to find textures)
-        //    and for .ply (none of our master models in this format have textures)
+        //    and for .ply, .stl (none of our master models in this format have textures)
         let useCook: boolean = true;
         const extension: string = path.extname(this.masterModelGeometryFile).toLowerCase();
         switch (extension) {
@@ -83,6 +83,7 @@ export class ModelDataExtraction {
             case '.gltf':   res = await this.crackGLTF(AssetVersionModel, false); break;
             case '.glb':    res = await this.crackGLTF(AssetVersionModel, true); break;
             case '.ply':    useCook = false; break;
+            case '.stl':    useCook = false; break;
         }
         // Allow failures here, as some GLTFs are not being read properly by our 3rd party library
 
