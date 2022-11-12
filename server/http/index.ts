@@ -21,6 +21,8 @@ import cookieParser from 'cookie-parser';
 import { v2 as webdav } from 'webdav-server';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
 
+require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
+
 const monitorCPU: boolean = true;
 const monitorMem: boolean = true;
 const monitorVerboseSamples: number = 300;
