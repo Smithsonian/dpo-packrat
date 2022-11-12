@@ -236,9 +236,10 @@ export class SceneMigration {
     }
 
     private async fetchRemoteStream(url: string): Promise<NodeJS.ReadableStream | null> {
-        this.log('fetchRemoteStream', `Fetching ${url}`);
+        const encodedURL: string = encodeURI(url);
+        this.log('fetchRemoteStream', `Fetching ${encodedURL}`);
         try {
-            const res = await fetch(url);
+            const res = await fetch(encodedURL);
             this.log('fetchRemoteStream', 'Completed');
             return res.body;
         } catch (error) /* istanbul ignore next */ {
