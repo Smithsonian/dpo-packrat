@@ -393,7 +393,7 @@ CREATE TABLE IF NOT EXISTS `ModelSceneXref` (
   `idModelSceneXref` int(11) NOT NULL AUTO_INCREMENT,
   `idModel` int(11) NOT NULL,
   `idScene` int(11) NOT NULL,
-  `Name` varchar(100) DEFAULT NULL,
+  `Name` varchar(512) DEFAULT NULL,
   `Usage` varchar(100) DEFAULT NULL,
   `Quality` varchar(100) DEFAULT NULL,
   `FileSize` bigint(20) DEFAULT NULL,

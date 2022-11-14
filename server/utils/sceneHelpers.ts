@@ -271,6 +271,8 @@ export class SceneHelpers {
                     if (!MSX.idModelSceneXref) { // should always be true
                         MSX.idModel = model.idModel;
                         MSX.idScene = scene.idScene;
+                        if (MSX.Name.length > DBAPI.ModelSceneXref.NameMaxLen)
+                            MSX.Name = MSX.Name.substring(0, DBAPI.ModelSceneXref.NameMaxLen - 1);
                         if (!await MSX.create()) {
                             LOG.error(`sceneHelper handleComplexIngestionScene unable to create ModelSceneXref for model xref ${H.Helpers.JSONStringify(MSX)}`, LOG.LS.eSYS);
                             success = false;
