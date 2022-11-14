@@ -12,6 +12,8 @@ import * as crypto from 'crypto';
 import * as LOG from './logger';
 import { Readable, Writable } from 'stream';
 
+require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
+
 export type IOResults = {
     success: boolean;
     error?: string;
