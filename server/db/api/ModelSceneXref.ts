@@ -30,6 +30,8 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
     S1!: number | null;
     S2!: number | null;
 
+    static NameMaxLen: number = 512;
+
     constructor(input: ModelSceneXrefBase) {
         super(input);
     }

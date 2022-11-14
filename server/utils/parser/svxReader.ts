@@ -38,8 +38,25 @@ export class SvxExtraction {
         if (this.document.metas !== undefined) {
             for (const meta of this.document.metas) {
                 if (meta.collection) {
-                    if (title === '' && meta.collection['title'])
-                        title = meta.collection['title'];
+                    if (title === '') {
+                        const collectionTitle = meta.collection['title'];
+                        if (collectionTitle) {
+                            if (typeof collectionTitle === 'string')
+                                title = collectionTitle;
+                            else if (typeof collectionTitle === 'object') {
+                                if (collectionTitle['EN'] && typeof collectionTitle['EN'] === 'string')
+                                    title = collectionTitle['EN'];
+                                else {
+                                    for (const language in collectionTitle) {
+                                        if (typeof collectionTitle[language]  === 'string') {
+                                            title = collectionTitle[language];
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     if (sceneTitle === '' && meta.collection['sceneTitle'])
                         sceneTitle = meta.collection['sceneTitle'];
                     if (title && sceneTitle)
@@ -57,7 +74,7 @@ export class SvxExtraction {
         }
 
         return new DBAPI.Scene({
-            Name: title + (sceneTitle ? `: ${sceneTitle}` : ''),
+            Name: title + ((sceneTitle && !title.includes(sceneTitle)) ? `: ${sceneTitle}` : ''),
             Title: sceneTitle,
             idAssetThumbnail: null,
             CountScene: this.sceneCount,
