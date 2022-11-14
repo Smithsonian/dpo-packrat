@@ -121,9 +121,9 @@ function MetadataDisplayTable(): React.ReactElement {
             columns={columnHeader}
             rowHeight={40}
             scrollbarSize={5}
+            rowsPerPageOptions={[100]}
             density='compact'
             disableSelectionOnClick
-            hideFooter
             className={classes.container}
             autoHeight
         />
