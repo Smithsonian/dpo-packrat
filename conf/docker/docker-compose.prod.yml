@@ -94,7 +94,6 @@ services:
             - $PACKRAT_SOLR_PORT:8983
         volumes:
             - ../../server/config/solr/data/:/var/solr/data/
-            - ../../server/config/solr/etc/default/solr.in.sh:/etc/default/solr.in.sh
 
 networks:
     default:
