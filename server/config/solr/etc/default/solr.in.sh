@@ -1,0 +1,1 @@
+SOLR_JAVA_MEM="-XX:MaxDirectMemorySize=512m"
