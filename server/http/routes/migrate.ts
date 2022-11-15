@@ -192,7 +192,7 @@ class Migrator {
                     for (const supportFile of MMR.supportFiles) {
                         const supportPath: string = path.dirname(path.join(MMR.modelFilePath ?? '', supportFile));
                         const fileName: string = path.basename(supportFile);
-                        const scriptLine: string = `SCRIPT { uniqueID: '${uniqueID}', path: '${supportPath}', fileName: '${fileName}', name: '${fileName}', title: '', filePath: '', hash: '', geometry: false, idSystemObjectItem: ${idSystemObjectItem}, testData: false, License: undefined, PublishedState: undefined },`;
+                        const scriptLine: string = `SCRIPT { uniqueID: '${uniqueID}', idSystemObjectItem: ${idSystemObjectItem}, path: '${supportPath}', fileName: '${fileName}', name: '${fileName}', title: '', filePath: '', hash: '', geometry: false, testData: false, License: undefined, PublishedState: undefined },`;
                         this.recordMigrationResult(true, scriptLine);
                     }
                 }
