@@ -174,7 +174,9 @@ export class ModelDataExtraction {
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
             return this.returnStatus('ingestSupportFile', false, `ingestStreamOrFile ${ISI.localFilePath} failed: ${IAR.error}`);
-        this.AssetVersionSupportFile = IAR.assetVersions;
+        if (!this.AssetVersionSupportFile)
+            this.AssetVersionSupportFile = [];
+        this.AssetVersionSupportFile.push(...IAR.assetVersions);
 
         return IAR;
     }
@@ -324,21 +326,28 @@ export class ModelDataExtraction {
 
         // Ingest mtllib support files
         let success: boolean = true;
+        let error: string | undefined = undefined;
         if (this.mtlFiles && this.mtlFiles.length > 0 && this.model) {
             for (const mtlFile of this.mtlFiles) {
                 const res: H.IOResults = await this.crackMTL(mtlFile);
-                if (!res.success)
+                if (!res.success) {
                     success = false;
+                    if (!error)
+                        error = res.error;
+                    else
+                        error = error + '; ' + res.error;
+                }
             }
         }
-        return { success, error: success ? undefined : 'Unable to crack (all) mtllib' };
+        return { success, error };
     }
 
     private async crackMTL(mtlFile: string): Promise<H.IOResults> {
         if (!this.model)
             return { success: false, error: 'Missing model' };
 
-        const supportFilePath: string = path.join(path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile), mtlFile);
+        const supportDir: string = path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile);
+        const supportFilePath: string = path.join(supportDir, mtlFile);
         const ingestRes: STORE.IngestAssetResult = await this.ingestSupportFile(this.model, supportFilePath);
         if (!ingestRes.success || !ingestRes.assetVersions || ingestRes.assetVersions.length === 0)
             return this.returnStatus('crackMTL', false, `Unable to ingest mtllib ${supportFilePath}: ${ingestRes.error}`);
@@ -346,12 +355,12 @@ export class ModelDataExtraction {
         const AssetVersionMTL: DBAPI.AssetVersion = ingestRes.assetVersions[0];
         const res: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(AssetVersionMTL);
         if (!res.success || !res.readStream)
-            return this.returnStatus('crackMTL', false, `Unable to readAssetVersion ${H.Helpers.JSONStringify(AssetVersionMTL)}`);
+            return this.returnStatus('crackMTL', false, `Unable to readAssetVersion for mtllib ${supportFilePath} from AssetVersion ${H.Helpers.JSONStringify(AssetVersionMTL)}`);
 
         const LS: LineStream = new LineStream(res.readStream);
         const mtlLines: string[] | null = await LS.readLines();
         if (!mtlLines)
-            return this.returnStatus('crackMTL', false, `Unable to extract lines from AssetVersion ${H.Helpers.JSONStringify(AssetVersionMTL)}`);
+            return this.returnStatus('crackMTL', false, `Unable to extract lines for mtllib ${supportFilePath} from AssetVersion ${H.Helpers.JSONStringify(AssetVersionMTL)}`);
 
         // parse MTL file, per http://paulbourke.net/dataformats/mtl/
         // and https://github.com/assimp/assimp/blob/master/code/AssetLib/Obj/ObjFileMtlImporter.cpp
@@ -371,10 +380,17 @@ export class ModelDataExtraction {
             // LOG.info(`crackMTL processing ${mtlLine}`, LOG.LS.eMIG);
             const textureMatch: RegExpMatchArray | null = mtlLine.match(ModelDataExtraction.regexMTLParser);
             if (textureMatch && textureMatch.length >= 4) {
-                // const mapType: string = textureMatch[1]?.trim();
+                const mapType: string = textureMatch[1]?.trim();
                 // const mapParams: string = textureMatch[2]?.trim();
                 const mapName: string = textureMatch[3]?.trim();
                 // LOG.info(`crackMTL found ${mapName}, map type ${mapType}, params ${mapParams} in ${mtlLine}`, LOG.LS.eMIG);
+
+                // Attempt to ingest texture
+                const texturePath: string = path.join(supportDir, mapName);
+                const ingestTextureRes: STORE.IngestAssetResult = await this.ingestSupportFile(this.model, texturePath);
+                if (!ingestTextureRes.success || !ingestTextureRes.assetVersions || ingestTextureRes.assetVersions.length === 0)
+                    return this.returnStatus('crackMTL', false, `Unable to ingest texture ${mapName} of type ${mapType} from ${texturePath} referenced in mtllib ${supportFilePath}: ${ingestTextureRes.error}`);
+
                 this.supportFiles.add(mapName);
             }
         }
