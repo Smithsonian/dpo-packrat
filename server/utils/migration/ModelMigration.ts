@@ -29,7 +29,10 @@ export class ModelMigration {
     private userOwner:                  DBAPI.User | undefined          = undefined;
     private model:                      DBAPI.Model | null | undefined  = undefined;
 
-    async migrateModel(uniqueID: string, idUser: number, modelFileSet: ModelMigrationFile[], doNotSendIngestionEvent?: boolean): Promise<ModelMigrationResults> {
+    async migrateModel(modelFileSet: ModelMigrationFile[], idUser: number, doNotSendIngestionEvent?: boolean): Promise<ModelMigrationResults> {
+        if (modelFileSet.length === 0)
+            return this.logError('migrateModel', 'called with empty file set');
+
         let idSystemObject: number | undefined = undefined;
         let testData: boolean | undefined = undefined;
 
@@ -37,7 +40,7 @@ export class ModelMigration {
         let asset: DBAPI.Asset[] | null | undefined = undefined;
         let assetVersion: DBAPI.AssetVersion[] | null | undefined = undefined;
 
-        this.uniqueID = uniqueID;
+        this.uniqueID = modelFileSet[0].uniqueID;
 
         const initRes: H.IOResults = await this.initialize();
         if (!initRes.success)

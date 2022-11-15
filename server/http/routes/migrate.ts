@@ -221,24 +221,26 @@ class Migrator {
     }
 
     private async migrateModel(modelFileSet: ModelMigrationFile[], user: DBAPI.User): Promise<ModelMigrationResults> {
-        if (modelFileSet.length <= 0)
-            return { success: false, error: 'migrateModel called with no files' };
+        if (modelFileSet.length <= 0) {
+            const error: string = 'migrateModel called with no files';
+            this.recordMigrationResult(false, error);
+            return { success: false, error };
+        }
 
         const res: ModelMigrationResults = await Migrator.semaphoreMigrations.runExclusive(async (value) => {
             const LS: LocalStore = await ASL.getOrCreateStore();
             LS.incrementRequestID();
 
-            const modelFile: ModelMigrationFile = modelFileSet[0];
             let MMR: ModelMigrationResults;
-
             const operation: string = this.extractMode ? 'extraction' : 'migration';
+            const modelFile: ModelMigrationFile = modelFileSet[0];
             this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) Starting ${operation}; semaphore count ${value}`);
+
             if (!this.extractMode) {
                 const MM: ModelMigration = new ModelMigration();
-                MMR = await MM.migrateModel(modelFile.uniqueID, user.idUser, modelFileSet, true);
+                MMR = await MM.migrateModel(modelFileSet, user.idUser, true);
             } else {
-                const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
-                const MDE: ModelDataExtraction = new ModelDataExtraction(modelFile.uniqueID, modelFile.idSystemObjectItem, path.basename(filePath), filePath);
+                const MDE: ModelDataExtraction = new ModelDataExtraction(modelFileSet);
                 MMR = await MDE.fetchAndExtractInfo();
             }
             if (!MMR.success)
