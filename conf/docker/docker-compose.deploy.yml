@@ -223,6 +223,8 @@ services:
             - $PACKRAT_SOLR_PORT:8983
         environment:
             - PACKRAT_SOLR_HOST=packrat-solr-dev
+        volumes:
+            - ../../server/config/solr/etc/default:/etc/default/
             
     packrat-solr-prod:
         container_name: packrat-solr-prod
@@ -236,6 +238,8 @@ services:
             - $PACKRAT_SOLR_PORT:8983
         environment:
             - PACKRAT_SOLR_HOST=packrat-solr-prod
+        volumes:
+            - ../../server/config/solr/etc/default:/etc/default/
 
     packrat-solr-inspect:
         container_name: packrat-solr-inspect
