@@ -6,6 +6,7 @@ import * as H from '../helpers';
 import * as LOG from '../logger';
 import { LineStream } from '../lineStream';
 import { ModelMigrationResults } from './ModelMigration';
+import { ModelMigrationFile } from './ModelMigrationFile';
 import { MigrationUtils } from './MigrationUtils';
 import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
 import { JobCookSIPackratInspectOutput, isEmbeddedTexture } from '../../job/impl/Cook';
@@ -19,12 +20,14 @@ import tmp from 'tmp-promise';
 import * as path from 'path';
 
 export class ModelDataExtraction {
-    private uniqueID: string;
-    private masterModelGeometryFile: string;
+    private uniqueID: string | undefined = undefined;
+    private idSystemObjectItem: number | undefined;
+    private masterModelGeometryFile: string | undefined = undefined;
     private masterModelLocation?: string;
+    private modelFileSet: ModelMigrationFile[];
 
     // Computed
-    private mtlFile?: string;
+    private mtlFiles?: string[];
     private supportFiles: Set<string> = new Set<string>();
 
     private userOwner: DBAPI.User | undefined = undefined;
@@ -36,16 +39,34 @@ export class ModelDataExtraction {
     private static vocabDownload: DBAPI.Vocabulary | undefined = undefined;
     private static vocabModelGeometryFile: DBAPI.Vocabulary | undefined = undefined;
     private static vocabOtherFile: DBAPI.Vocabulary | undefined = undefined;
+    private static regexMTLParser: RegExp = new RegExp('(map_.*?|norm|disp|decal|bump|refl)( .*?)? ([^ ]+)\\s*$', 'i'); // [1] map type, [2] map params, [3] map name
 
-    constructor(uniqueID: string,
-        masterModelGeometryFile: string,
-        masterModelLocation?: string) {
-        this.uniqueID = uniqueID;
-        this.masterModelGeometryFile = masterModelGeometryFile;
-        this.masterModelLocation = masterModelLocation;
+    constructor(modelFileSet: ModelMigrationFile[]) {
+        this.modelFileSet = modelFileSet;
+        this.extractGeometryInfo();
+    }
+
+    private extractGeometryInfo(): boolean {
+        for (const modelFile of this.modelFileSet) {
+            if (modelFile.geometry) {
+                this.uniqueID                   = modelFile.uniqueID;
+                this.idSystemObjectItem         = modelFile.idSystemObjectItem;
+
+                const filePath: string          = ModelMigrationFile.computeFilePath(modelFile);
+                this.masterModelGeometryFile    = path.basename(filePath);
+                this.masterModelLocation        = filePath;
+                return true;
+            }
+        }
+        this.uniqueID = undefined;
+        this.masterModelGeometryFile = undefined;
+        return false;
     }
 
     async fetchAndExtractInfo(): Promise<ModelMigrationResults> {
+        if (!this.uniqueID || !this.masterModelGeometryFile)
+            return { success: false, error: 'No geometry present in model definition' };
+
         let res: ModelMigrationResults;
         if (!this.userOwner)
             this.userOwner = await MigrationUtils.fetchMigrationUser();
@@ -71,13 +92,20 @@ export class ModelDataExtraction {
             return this.returnStatus('fetchAndExtractInfo', false, 'Model Asset System Object not found');
 
         // If file is .obj or .gltf, download model to crack open to detect .bin / .mtl files
+        // Avoid using Cook for .obj (we'll crack it and its .mtl's manually to find textures)
+        //    and for .ply, .stl (none of our master models in this format have textures)
+        let useCook: boolean = true;
         const extension: string = path.extname(this.masterModelGeometryFile).toLowerCase();
         switch (extension) {
-            case '.obj':    res = await this.crackOBJ(AssetVersionModel); break;
+            case '.obj':    res = await this.crackOBJ(AssetVersionModel); useCook = false; break;
             case '.gltf':   res = await this.crackGLTF(AssetVersionModel, false); break;
             case '.glb':    res = await this.crackGLTF(AssetVersionModel, true); break;
-        }
-        // Allow failures here, as some GLTFs are not being read properly by our 3rd party library
+            case '.ply':    useCook = false; break;
+            case '.stl':    useCook = false; break;
+        }   // Allow failures here, as some GLTFs are not being read properly by our 3rd party library
+
+        // Ingest Explicit Support Files
+        this.ingestExplicitSupportFiles(); // Allow failures here, to get as many error messages as possible
 
         let AssetVersionSupportFileSO: DBAPI.SystemObject | null = null;
         const AssetVersionSupportFile: DBAPI.AssetVersion | null = (this.AssetVersionSupportFile) ? this.AssetVersionSupportFile[0] : null;
@@ -87,16 +115,14 @@ export class ModelDataExtraction {
                 return this.returnStatus('fetchAndExtractInfo', false, 'Support File Asset System Object not found');
         }
 
-        // Run Cook's si-packrat-inspect and parse Cook output to obtain list of texture maps
-        res = await WorkflowUtil.computeModelMetrics(this.masterModelGeometryFile, this.model.idModel, undefined,
-            AssetVersionModelSO.idSystemObject, AssetVersionSupportFileSO?.idSystemObject,
-            undefined, undefined, this.userOwner.idUser);
-        if (!res.success)
-            return res;
-
-        res = await this.extractTextureMaps();
-        if (!res.success)
-            return res;
+        if (useCook) {
+            // Run Cook's si-packrat-inspect and parse Cook output to obtain list of texture maps
+            res = await WorkflowUtil.computeModelMetrics(this.masterModelGeometryFile, this.model.idModel, undefined,
+                AssetVersionModelSO.idSystemObject, AssetVersionSupportFileSO?.idSystemObject,
+                undefined, undefined, this.userOwner.idUser);
+            if (res.success)
+                res = await this.extractTextureMaps();
+        }
 
         if (!res.success)
             return res;
@@ -113,9 +139,9 @@ export class ModelDataExtraction {
             return this.returnStatus('ingestModel', false, 'Unable to compute idVAssetType for model geometry file');
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream: null,
-            localFilePath: this.masterModelLocation ?? this.masterModelGeometryFile,
+            localFilePath: this.masterModelLocation ?? this.masterModelGeometryFile ?? '',
             asset: null,
-            FileName: this.masterModelGeometryFile,
+            FileName: this.masterModelGeometryFile ?? '',
             FilePath: '',
             idAssetGroup: 0,
             idVAssetType,
@@ -138,7 +164,7 @@ export class ModelDataExtraction {
         return { success: true };
     }
 
-    private async ingestSupportFile(SOBased: DBAPI.SystemObjectBased, supportFilePath: string): Promise<H.IOResults> {
+    private async ingestSupportFile(SOBased: DBAPI.SystemObjectBased, supportFilePath: string): Promise<STORE.IngestAssetResult> {
         const vAssetType: DBAPI.Vocabulary | undefined = await this.computeVocabOtherFile();
         const idVAssetType: number | undefined = vAssetType?.idVocabulary;
         if (!idVAssetType)
@@ -164,9 +190,11 @@ export class ModelDataExtraction {
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
             return this.returnStatus('ingestSupportFile', false, `ingestStreamOrFile ${ISI.localFilePath} failed: ${IAR.error}`);
-        this.AssetVersionSupportFile = IAR.assetVersions;
+        if (!this.AssetVersionSupportFile)
+            this.AssetVersionSupportFile = [];
+        this.AssetVersionSupportFile.push(...IAR.assetVersions);
 
-        return { success: true };
+        return IAR;
     }
 
     private async createModel(Name: string, eVCreationMethod?: COMMON.eVocabularyID,
@@ -194,6 +222,35 @@ export class ModelDataExtraction {
         if (!await model.create())
             return this.returnStatus('createModel', false, 'Unable to create model DB Object');
         this.model = model;
+
+        // wire item to model
+        if (this.idSystemObjectItem) {
+            if (!await this.wireItemToModel(this.idSystemObjectItem))
+                return this.returnStatus('createModel', false, `Failed to wire media group ${this.idSystemObjectItem} to model`);
+        }
+
+        return { success: true };
+    }
+
+    private async wireItemToModel(idSystemObject: number): Promise<H.IOResults> {
+        if (!this.model)
+            return this.returnStatus('wireItemToModel', false, 'Called with null model');
+
+        const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+        if (!oID)
+            return this.returnStatus('wireItemToModel', false, `Unable to compute object info for ${idSystemObject}`);
+        if (oID.eObjectType !== COMMON.eSystemObjectType.eItem)
+            return this.returnStatus('wireItemToModel', false, `Called with non-item idSystemObject ID (${idSystemObject}):  ${H.Helpers.JSONStringify(oID)}`);
+
+        const itemDB: DBAPI.Item | null = await DBAPI.Item.fetch(oID.idObject);
+        if (!itemDB)
+            return this.returnStatus('wireItemToModel', false, `Failed to fetch item ${oID.idObject}`);
+
+        const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, this.model);
+        if (!xref)
+            return this.returnStatus('wireItemToModel', false, `Unable to wire item ${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`);
+
+        LOG.info(`wireItemToModel ${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`, LOG.LS.eMIG);
         return { success: true };
     }
 
@@ -224,6 +281,38 @@ export class ModelDataExtraction {
         return ModelDataExtraction.vocabOtherFile;
     }
 
+    private async ingestExplicitSupportFiles(): Promise<H.IOResults> {
+        if (!this.model)
+            return { success: false, error: 'model not defined' };
+
+        let success: boolean = true;
+        let error: string | undefined = undefined;
+        const supportDir: string = path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile ?? '');
+        for (const modelFile of this.modelFileSet) {
+            // Skip already-ingested geometry:
+            if (modelFile.geometry)
+                continue;
+
+            if (this.supportFiles.has(modelFile.fileName)) {
+                this.logStatus('ingestExplicitSupportFiles', false, `Skipping explicit support file ${modelFile.fileName} as it was already discovered and ingested`);
+                continue;
+            }
+
+            const texturePath: string = path.join(supportDir, modelFile.fileName);
+            const ingestTextureRes: STORE.IngestAssetResult = await this.ingestSupportFile(this.model, texturePath);
+            if (!ingestTextureRes.success || !ingestTextureRes.assetVersions || ingestTextureRes.assetVersions.length === 0) {
+                const errorLocal: string = `Unable to ingest explit support file ${modelFile.fileName} from ${texturePath}: ${ingestTextureRes.error}`;
+                this.logStatus('ingestExplicitSupportFiles', false, errorLocal);
+
+                success = false;
+                error = (error ? error + '; ' : '') + errorLocal;
+            }
+
+            this.supportFiles.add(modelFile.fileName);
+        }
+        return { success, error };
+    }
+
     private async extractTextureMaps(): Promise<H.IOResults> {
         if (!this.AssetVersionModel || this.AssetVersionModel.length === 0)
             return this.returnStatus('extractTextureMaps', false, 'AssetVersionModel is null');
@@ -243,13 +332,6 @@ export class ModelDataExtraction {
         const inspection: any = result ? result['inspection'] : undefined;
         const scene: any = inspection ? inspection['scene'] : undefined;
         const materials: any = scene ? scene['materials'] : undefined;
-
-        // LOG.info(`steps = ${H.Helpers.JSONStringify(steps)}`, LOG.LS.eMIG);
-        // LOG.info(`mergeReports = ${H.Helpers.JSONStringify(mergeReports)}`, LOG.LS.eMIG);
-        // LOG.info(`result = ${H.Helpers.JSONStringify(result)}`, LOG.LS.eMIG);
-        // LOG.info(`inspection = ${H.Helpers.JSONStringify(inspection)}`, LOG.LS.eMIG);
-        // LOG.info(`scene = ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eMIG);
-        // LOG.info(`materials = ${H.Helpers.JSONStringify(materials)}`, LOG.LS.eMIG);
 
         if (!materials || !isArray(materials))
             return this.returnStatus('extractTextureMaps', false, `failed to extract materials from si-packrat-inspect output from idAssetVersion ${AssetVersionModel.idAssetVersion}, model ${this.masterModelGeometryFile}`);
@@ -281,19 +363,92 @@ export class ModelDataExtraction {
         // e.g. mtllib eremotherium_laurillardi-150k-4096.mtl
         for (const mtlLine of mtlLines) {
             if (mtlLine.toLowerCase().startsWith('mtllib ')) {
-                this.mtlFile = mtlLine.substring(7); // strip off leading 'mtllib '
-                this.supportFiles.add(this.mtlFile);
+                const mtlFile: string = mtlLine.substring(7); // strip off leading 'mtllib '
+                if (!this.mtlFiles)
+                    this.mtlFiles = [];
+                // LOG.info(`crackOBJ found MTL ${mtlFile}`, LOG.LS.eMIG);
+                this.mtlFiles.push(mtlFile);
+                this.supportFiles.add(mtlFile);
             }
         }
 
-        if (this.mtlFile && this.model) {
-            // Ingest support file
-            const supportFilePath: string = path.join(path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile), this.mtlFile);
-            const ingestRes: H.IOResults = await this.ingestSupportFile(this.model, supportFilePath);
-            if (!ingestRes.success)
-                return this.returnStatus('crackOBJ', false, `Unable to ingest mtllib ${supportFilePath}`);
+        // Ingest mtllib support files
+        let success: boolean = true;
+        let error: string | undefined = undefined;
+        if (this.mtlFiles && this.mtlFiles.length > 0 && this.model) {
+            for (const mtlFile of this.mtlFiles) {
+                const res: H.IOResults = await this.crackMTL(mtlFile);
+                if (!res.success) {
+                    success = false;
+                    if (!error)
+                        error = res.error;
+                    else
+                        error = error + '; ' + res.error;
+                }
+            }
         }
-        return { success: true };
+        return { success, error };
+    }
+
+    private async crackMTL(mtlFile: string): Promise<H.IOResults> {
+        if (!this.model || (!this.masterModelLocation && !this.masterModelGeometryFile))
+            return { success: false, error: 'Missing model' };
+
+        const supportDir: string = path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile ?? '');
+        const supportFilePath: string = path.join(supportDir, mtlFile);
+        const ingestRes: STORE.IngestAssetResult = await this.ingestSupportFile(this.model, supportFilePath);
+        if (!ingestRes.success || !ingestRes.assetVersions || ingestRes.assetVersions.length === 0)
+            return this.returnStatus('crackMTL', false, `Unable to ingest mtllib ${supportFilePath}: ${ingestRes.error}`);
+
+        const AssetVersionMTL: DBAPI.AssetVersion = ingestRes.assetVersions[0];
+        const res: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(AssetVersionMTL);
+        if (!res.success || !res.readStream)
+            return this.returnStatus('crackMTL', false, `Unable to readAssetVersion for mtllib ${supportFilePath} from AssetVersion ${H.Helpers.JSONStringify(AssetVersionMTL)}`);
+
+        const LS: LineStream = new LineStream(res.readStream);
+        const mtlLines: string[] | null = await LS.readLines();
+        if (!mtlLines)
+            return this.returnStatus('crackMTL', false, `Unable to extract lines for mtllib ${supportFilePath} from AssetVersion ${H.Helpers.JSONStringify(AssetVersionMTL)}`);
+
+        // parse MTL file, per http://paulbourke.net/dataformats/mtl/
+        // and https://github.com/assimp/assimp/blob/master/code/AssetLib/Obj/ObjFileMtlImporter.cpp
+        /*
+            map_Ka -s 1 1 1 -o 0 0 0 -mm 0 1 chrome.mpc
+            map_Kd -s 1 1 1 -o 0 0 0 -mm 0 1 chrome.mpc
+            map_Ks -s 1 1 1 -o 0 0 0 -mm 0 1 chrome.mpc
+            map_Ns -s 1 1 1 -o 0 0 0 -mm 0 1 wisp.mps
+            map_d -s 1 1 1 -o 0 0 0 -mm 0 1 wisp.mps
+            disp -s 1 1 .5 wisp.mps
+            decal -s 1 1 1 -o 0 0 0 -mm 0 1 sand.mps
+            bump -s 1 1 1 -o 0 0 0 -bm 1 sand.mpb
+            refl -type sphere -mm 0 1 clouds.mpc
+            map_Kd eremotherium_laurillardi-150k-4096-diffuse.jpg
+        */
+        let success: boolean = true;
+        let error: string | undefined = undefined;
+        for (const mtlLine of mtlLines) {
+            // LOG.info(`crackMTL processing ${mtlLine}`, LOG.LS.eMIG);
+            const textureMatch: RegExpMatchArray | null = mtlLine.match(ModelDataExtraction.regexMTLParser);
+            if (textureMatch && textureMatch.length >= 4) {
+                const mapType: string = textureMatch[1]?.trim();
+                // const mapParams: string = textureMatch[2]?.trim();
+                const mapName: string = textureMatch[3]?.trim();
+                // LOG.info(`crackMTL found ${mapName}, map type ${mapType}, params ${mapParams} in ${mtlLine}`, LOG.LS.eMIG);
+
+                // Attempt to ingest texture
+                const texturePath: string = path.join(supportDir, mapName);
+                const ingestTextureRes: STORE.IngestAssetResult = await this.ingestSupportFile(this.model, texturePath);
+                if (!ingestTextureRes.success || !ingestTextureRes.assetVersions || ingestTextureRes.assetVersions.length === 0) {
+                    const errorLocal: string = `Unable to ingest texture ${mapName} of type ${mapType} from ${texturePath} referenced in mtllib ${supportFilePath}: ${ingestTextureRes.error}`;
+                    this.logStatus('crackMTL', false, errorLocal);
+                    success = false;
+                    error = (error ? error + ': ' : '') + errorLocal;
+                }
+
+                this.supportFiles.add(mapName);
+            }
+        }
+        return { success, error };
     }
 
     private async crackGLTF(AssetVersionModel: DBAPI.AssetVersion, _glbCompressed: boolean): Promise<H.IOResults> {
@@ -349,9 +504,16 @@ export class ModelDataExtraction {
         return { success: true };
     }
 
-    private returnStatus(context: string, success: boolean, error: string | undefined): H.IOResults {
+    private logStatus(context: string, success: boolean, error: string | undefined): void {
         if (!success)
             LOG.error(`ModelDataExtraction (${this.uniqueID}) ${context}: ${error}`, LOG.LS.eMIG);
+        else
+            LOG.info(`ModelDataExtraction (${this.uniqueID}) ${context}`, LOG.LS.eMIG);
+    }
+
+    private returnStatus(context: string, success: boolean, error: string | undefined): H.IOResults {
+        if (!success)
+            this.logStatus(context, success, error);
         return { success, error };
     }
 }

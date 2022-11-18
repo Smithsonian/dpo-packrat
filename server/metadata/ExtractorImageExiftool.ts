@@ -86,6 +86,8 @@ export class ExtractorImageExiftool implements IExtractor  {
 
                 return { success: true, metadata };
             } catch (err) /* istanbul ignore next */ {
+                if (this.testErrorForUnsupportedFileType(tempFile?.path, err))
+                    return { success: false, error: `Exiftool is unable to extract metadata from file ${tempFile?.path}` };
                 const res: H.IOResults = (err instanceof Error) ? await this.handleExiftoolException(err) : { success: false, error: 'Unknown error' };
                 if (!res.success)
                     return res;
@@ -96,6 +98,14 @@ export class ExtractorImageExiftool implements IExtractor  {
 
         }
         return { success: false, error: 'ExtractorImageExiftool.extractMetadata failed' };
+    }
+
+    private testErrorForUnsupportedFileType(tempFilePath: string | undefined, err: any): boolean { // eslint-disable-line @typescript-eslint/no-explicit-any
+        const errObj: Error | null = err instanceof Error ? err : null;
+        if (!errObj)
+            return false;
+
+        return tempFilePath !== undefined && path.extname(tempFilePath) === '.m4a' && errObj && errObj.message.includes('unsupported file type');
     }
 
     eMetadataSource(): COMMON.eVocabularyID | null {
