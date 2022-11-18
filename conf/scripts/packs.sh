@@ -24,4 +24,4 @@ fi
 
 CONTAINER=packrat-$1-$ENV
 
-docker exec -it $CONTAINER /bin/sh
+docker exec -u 0 -it $CONTAINER /bin/bash

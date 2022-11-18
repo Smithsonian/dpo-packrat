@@ -12,6 +12,8 @@ import * as crypto from 'crypto';
 import * as LOG from './logger';
 import { Readable, Writable } from 'stream';
 
+require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
+
 export type IOResults = {
     success: boolean;
     error?: string;
@@ -483,13 +485,13 @@ export class Helpers {
         return JSON.stringify(obj, Helpers.saferStringify);
     }
 
-    /** Stringifies Maps and BigInts */
+    /** Stringifies Maps, Sets, streams (sort of); BigInts are handled by json-bigint-patch */
     static saferStringify(key: any, value: any): any {
         key;
         if (value == null)
             return value;
-        if (typeof value === 'bigint')
-            return value.toString();
+        // if (typeof value === 'bigint')
+        //     return value.toString();
         if (value instanceof Map)
             return [...value];
         if (value instanceof Set)

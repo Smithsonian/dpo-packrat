@@ -501,15 +501,15 @@ describe('Utils: Helpers', () => {
 
         const output1: string = JSON.stringify(testData, H.Helpers.saferStringify);
         // LOG.info(`output: ${output1}`, LOG.LS.eTEST);
-        expect(output1).toEqual('{"map":[],"set":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"null":null,"valueOrig":39}');
+        expect(output1).toEqual('{"map":[],"set":[],"bigint":999999999999999,"string":"string","number":50,"boolean":false,"null":null,"valueOrig":39}');
 
         const output2: string = JSON.stringify(testData, H.Helpers.stringifyDatabaseRow);
         // LOG.info(`output: ${output2}`, LOG.LS.eTEST);
-        expect(output2).toEqual('{"map":[],"set":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"null":null}');
+        expect(output2).toEqual('{"map":[],"set":[],"bigint":999999999999999,"string":"string","number":50,"boolean":false,"null":null}');
 
         const output3: string = H.Helpers.JSONStringify(testData);
         // LOG.info(`output: ${output3}`, LOG.LS.eTEST);
-        expect(output3).toEqual('{"map":[],"set":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"null":null,"valueOrig":39}');
+        expect(output3).toEqual('{"map":[],"set":[],"bigint":999999999999999,"string":"string","number":50,"boolean":false,"null":null,"valueOrig":39}');
     });
 
     test('Utils: escapeHTMLEntity', async () => {

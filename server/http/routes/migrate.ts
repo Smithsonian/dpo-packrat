@@ -166,14 +166,20 @@ class Migrator {
                 modelFiles.push(modelFile);
             }
 
+            let idSystemObjectItem: number | undefined = undefined;
             for (const [uniqueID, modelFiles] of modelMigrationMap) {
                 let uniqueIDAlreadyMigrated: string | null = null;
                 for (const modelFile of modelFiles) {
-                    const models: DBAPI.Model[] | null = await DBAPI.Model.fetchByFileNameAndAssetType(modelFile.fileName, [vAssetTypeModel.idVocabulary, vAssetTypeModelGeometryFile.idVocabulary]);
+                    const models: DBAPI.Model[] | null = modelFile.idSystemObjectItem
+                        ? await DBAPI.Model.fetchItemChildrenModels(modelFile.idSystemObjectItem,
+                            modelFile.fileName, [vAssetTypeModel.idVocabulary, vAssetTypeModelGeometryFile.idVocabulary])
+                        : null;
                     if (models && models.length > 0) {
                         uniqueIDAlreadyMigrated = modelFile.uniqueID;
                         break;
                     }
+                    if (!idSystemObjectItem)
+                        idSystemObjectItem = modelFile.idSystemObjectItem;
                 }
 
                 if (uniqueIDAlreadyMigrated) {
@@ -184,9 +190,9 @@ class Migrator {
                 const MMR: ModelMigrationResults = await this.migrateModel(modelFiles, user);
                 if (this.extractMode && MMR.success && MMR.supportFiles) {
                     for (const supportFile of MMR.supportFiles) {
-                        const supportPath: string = path.join(MMR.modelFilePath ?? '', supportFile);
+                        const supportPath: string = path.dirname(path.join(MMR.modelFilePath ?? '', supportFile));
                         const fileName: string = path.basename(supportFile);
-                        const scriptLine: string = `SCRIPT { uniqueID: '${uniqueID}', path: '${supportPath}', fileName: '${fileName}', name: '${fileName}', title: '', filePath: '', hash: undefined, geometry: false, idSystemObjectItem: undefined, testData: false, License: undefined, PublishedState: undefined },`;
+                        const scriptLine: string = `SCRIPT { uniqueID: '${uniqueID}', idSystemObjectItem: ${idSystemObjectItem}, path: '${supportPath}', fileName: '${fileName}', name: '${fileName}', title: '', filePath: '', hash: '', geometry: false, testData: false, License: undefined, PublishedState: undefined },`;
                         this.recordMigrationResult(true, scriptLine);
                     }
                 }
@@ -215,24 +221,26 @@ class Migrator {
     }
 
     private async migrateModel(modelFileSet: ModelMigrationFile[], user: DBAPI.User): Promise<ModelMigrationResults> {
-        if (modelFileSet.length <= 0)
-            return { success: false, error: 'migrateModel called with no files' };
+        if (modelFileSet.length <= 0) {
+            const error: string = 'migrateModel called with no files';
+            this.recordMigrationResult(false, error);
+            return { success: false, error };
+        }
 
         const res: ModelMigrationResults = await Migrator.semaphoreMigrations.runExclusive(async (value) => {
             const LS: LocalStore = await ASL.getOrCreateStore();
             LS.incrementRequestID();
 
-            const modelFile: ModelMigrationFile = modelFileSet[0];
             let MMR: ModelMigrationResults;
-
             const operation: string = this.extractMode ? 'extraction' : 'migration';
+            const modelFile: ModelMigrationFile = modelFileSet[0];
             this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) Starting ${operation}; semaphore count ${value}`);
+
             if (!this.extractMode) {
                 const MM: ModelMigration = new ModelMigration();
-                MMR = await MM.migrateModel(modelFile.uniqueID, user.idUser, modelFileSet, true);
+                MMR = await MM.migrateModel(modelFileSet, user.idUser, true);
             } else {
-                const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
-                const MDE: ModelDataExtraction = new ModelDataExtraction(modelFile.uniqueID, path.basename(filePath), filePath);
+                const MDE: ModelDataExtraction = new ModelDataExtraction(modelFileSet);
                 MMR = await MDE.fetchAndExtractInfo();
             }
             if (!MMR.success)

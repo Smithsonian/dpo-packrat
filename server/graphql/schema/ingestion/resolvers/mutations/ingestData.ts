@@ -110,7 +110,7 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async ingestWorker(): Promise<IngestDataResult> {
-        LOG.info(`ingestData: input=${JSON.stringify(this.input, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+        LOG.info(`ingestData: input=${H.Helpers.JSONStringify(this.input)}`, LOG.LS.eGQL);
 
         const results: H.IOResults = await this.validateInput();
         if (!results.success)
@@ -279,7 +279,7 @@ class IngestDataWorker extends ResolverBase {
             for (const identifier of identifiers) {
                 const results: IdentifierResults = await this.validateIdentifier(identifier);
                 if (!results.success) {
-                    LOG.error(`ingestData failed to validate identifier ${JSON.stringify(identifier)}: ${results.error}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData failed to validate identifier ${H.Helpers.JSONStringify(identifier)}: ${results.error}`, LOG.LS.eGQL);
                     return { success: false, error: results.error ?? '' };
                 }
             }
@@ -308,7 +308,7 @@ class IngestDataWorker extends ResolverBase {
         identifiers: IngestIdentifierInput[] | undefined): Promise<boolean> {
         if (systemCreated) {
             if (!await this.createIdentifierForObject(null, SOBased)) {
-                LOG.error(`ingestData unable to create system identifier for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData unable to create system identifier for ${H.Helpers.JSONStringify(SOBased)}`, LOG.LS.eGQL);
                 return false;
             }
         }
@@ -316,7 +316,7 @@ class IngestDataWorker extends ResolverBase {
         if (identifiers && identifiers.length > 0) {
             for (const identifier of identifiers) {
                 if (!await this.createIdentifierForObject(identifier, SOBased)) {
-                    LOG.error(`ingestData unable to create identifier ${JSON.stringify(identifier)} for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData unable to create identifier ${H.Helpers.JSONStringify(identifier)} for ${H.Helpers.JSONStringify(SOBased)}`, LOG.LS.eGQL);
                     return false;
                 }
             }
@@ -328,7 +328,7 @@ class IngestDataWorker extends ResolverBase {
     private async createIdentifierForObject(identifier: IngestIdentifierInput | null, SOBased: DBAPI.SystemObjectBased): Promise<boolean> {
         const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
         if (!SO) {
-            LOG.error(`ingestData unable to fetch system object from ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+            LOG.error(`ingestData unable to fetch system object from ${H.Helpers.JSONStringify(SOBased)}`, LOG.LS.eGQL);
             return false;
         }
 
@@ -342,7 +342,7 @@ class IngestDataWorker extends ResolverBase {
             const arkId: string = this.getICollection().generateArk(ARKShoulder, false, true); /* true -> is media, as opposed to being a collection item */
             const identifierSystemDB: DBAPI.Identifier | null = await this.createIdentifier(arkId, SO, null, true);
             if (!identifierSystemDB) {
-                LOG.error(`ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData unable to create identifier record for object ${H.Helpers.JSONStringify(SOBased)}`, LOG.LS.eGQL);
                 return false;
             } else
                 return true;
@@ -350,7 +350,7 @@ class IngestDataWorker extends ResolverBase {
             // compute identifier; for ARKs, extract the ID from a URL that may be housing the ARK ID
             const identiferResults: IdentifierResults = await this.validateIdentifier(identifier);
             if (!identiferResults.success || !identiferResults.identifierValue) {
-                LOG.error(`ingestData failed to create an indentifier ${JSON.stringify(identifier)} for ${JSON.stringify(SOBased)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData failed to create an indentifier ${H.Helpers.JSONStringify(identifier)} for ${H.Helpers.JSONStringify(SOBased)}`, LOG.LS.eGQL);
                 return false;
             }
 
@@ -428,7 +428,7 @@ class IngestDataWorker extends ResolverBase {
     private async updateSubjectIdentifier(identifier: DBAPI.Identifier, SO: DBAPI.SystemObject): Promise<boolean> {
         identifier.idSystemObject = SO.idSystemObject;
         if (!await identifier.update()) {
-            LOG.error(`ingestData unable to update identifier's idSystemObject ${JSON.stringify(identifier)}`, LOG.LS.eGQL);
+            LOG.error(`ingestData unable to update identifier's idSystemObject ${H.Helpers.JSONStringify(identifier)}`, LOG.LS.eGQL);
             return false;
         }
 
@@ -553,7 +553,7 @@ class IngestDataWorker extends ResolverBase {
                         return null;
             }
         } else
-            LOG.error(`ingestData unable to fetch system object for subject record ${JSON.stringify(subjectDB)}`, LOG.LS.eGQL);
+            LOG.error(`ingestData unable to fetch system object for subject record ${H.Helpers.JSONStringify(subjectDB)}`, LOG.LS.eGQL);
 
         return subjectDB;
     }
@@ -567,7 +567,7 @@ class IngestDataWorker extends ResolverBase {
 
         const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(projectDB, itemDB);
         if (!xref) {
-            LOG.error(`ingestData unable to wire project ${JSON.stringify(projectDB)} to item ${JSON.stringify(itemDB)}`, LOG.LS.eGQL);
+            LOG.error(`ingestData unable to wire project ${H.Helpers.JSONStringify(projectDB)} to item ${H.Helpers.JSONStringify(itemDB)}`, LOG.LS.eGQL);
             return null;
         }
         return projectDB;
@@ -590,7 +590,7 @@ class IngestDataWorker extends ResolverBase {
             });
 
             if (!await itemDB.create()) {
-                LOG.error(`ingestData unable to create item from ${JSON.stringify(item)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData unable to create item from ${H.Helpers.JSONStringify(item)}`, LOG.LS.eGQL);
                 return null;
             }
         }
@@ -602,7 +602,7 @@ class IngestDataWorker extends ResolverBase {
         for (const subjectDB of subjectsDB) {
             const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(subjectDB, itemDB);
             if (!xref) {
-                LOG.error(`ingestData unable to wire subject ${JSON.stringify(subjectDB)} to item ${JSON.stringify(itemDB)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData unable to wire subject ${H.Helpers.JSONStringify(subjectDB)} to item ${H.Helpers.JSONStringify(itemDB)}`, LOG.LS.eGQL);
                 return false;
             }
         }
@@ -620,7 +620,7 @@ class IngestDataWorker extends ResolverBase {
         if (photogrammetry.idAsset) {
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(photogrammetry.idAsset);
             if (!asset) {
-                LOG.error(`ingestData createPhotogrammetryObjects unable to fetch asset from ${JSON.stringify(photogrammetry, H.Helpers.saferStringify)}, idAsset ${photogrammetry.idAsset}`, LOG.LS.eGQL);
+                LOG.error(`ingestData createPhotogrammetryObjects unable to fetch asset from ${H.Helpers.JSONStringify(photogrammetry)}, idAsset ${photogrammetry.idAsset}`, LOG.LS.eGQL);
                 return false;
             }
 
@@ -701,7 +701,7 @@ class IngestDataWorker extends ResolverBase {
         }
         const CDPhotoRes = idCaptureData ? photoDB.update() : photoDB.create();
         if (!CDPhotoRes) {
-            LOG.error(`ingestData unable to ${idCaptureData ? 'update' : 'create'} CaptureDataPhoto for photogrammetry data ${JSON.stringify(photogrammetry)}`, LOG.LS.eGQL);
+            LOG.error(`ingestData unable to ${idCaptureData ? 'update' : 'create'} CaptureDataPhoto for photogrammetry data ${H.Helpers.JSONStringify(photogrammetry)}`, LOG.LS.eGQL);
             return false;
         }
 
@@ -825,7 +825,7 @@ class IngestDataWorker extends ResolverBase {
                     idCaptureDataFile: 0
                 });
                 if (!await CDF.create()) {
-                    LOG.error(`ingestData unable to create CaptureDataFile for idAssetVersion ${idAssetVersion}, asset ${JSON.stringify(asset)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData unable to create CaptureDataFile for idAssetVersion ${idAssetVersion}, asset ${H.Helpers.JSONStringify(asset)}`, LOG.LS.eGQL);
                     res = false;
                     continue;
                 }
@@ -867,12 +867,12 @@ class IngestDataWorker extends ResolverBase {
         if (model.idAsset) {
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(model.idAssetVersion);
             if (!assetVersion) {
-                LOG.error(`ingestData createModelObjects unable to fetch asset version from ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData createModelObjects unable to fetch asset version from ${H.Helpers.JSONStringify(model)}`, LOG.LS.eGQL);
                 return false;
             }
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
             if (!asset) {
-                LOG.error(`ingestData createModelObjects unable to fetch asset from ${JSON.stringify(model, H.Helpers.saferStringify)}, idAsset ${assetVersion.idAsset}`, LOG.LS.eGQL);
+                LOG.error(`ingestData createModelObjects unable to fetch asset from ${H.Helpers.JSONStringify(model)}, idAsset ${assetVersion.idAsset}`, LOG.LS.eGQL);
                 return false;
             }
 
@@ -881,7 +881,7 @@ class IngestDataWorker extends ResolverBase {
                 assetType === COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile) {
                 const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
                 if (!SO) {
-                    LOG.error(`ingestData createModelObjects unable to fetch model's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData createModelObjects unable to fetch model's asset's system object ${H.Helpers.JSONStringify(asset)}`, LOG.LS.eGQL);
                     return false;
                 }
 
@@ -919,16 +919,16 @@ class IngestDataWorker extends ResolverBase {
 
         const updateRes: boolean = idModel ? await modelDB.update() : await modelDB.create();
         if (!updateRes) {
-            LOG.error(`ingestData createModelObjects unable to ${idModel ? 'update' : 'create'} model ${JSON.stringify(modelDB, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            LOG.error(`ingestData createModelObjects unable to ${idModel ? 'update' : 'create'} model ${H.Helpers.JSONStringify(modelDB)}`, LOG.LS.eGQL);
             return false;
         }
 
-        // LOG.info(`ingestData createModelObjects model=${JSON.stringify(model, H.Helpers.saferStringify)} vs asset=${JSON.stringify(asset, H.Helpers.saferStringify)}vs assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+        // LOG.info(`ingestData createModelObjects model=${H.Helpers.JSONStringify(model)} vs asset=${H.Helpers.JSONStringify(asset)} vs assetVersion=${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eGQL);
         if (model.idAssetVersion) {
             this.assetVersionMap.set(model.idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: model.updateNotes ?? null, skipSceneGenerate: model.skipSceneGenerate });
             const MI: ModelInfo = { model, idModel: modelDB.idModel, JCOutput };
             this.ingestModelMap.set(model.idAssetVersion, MI);
-            LOG.info(`ingestData createModelObjects computed ${JSON.stringify(MI, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            LOG.info(`ingestData createModelObjects computed ${H.Helpers.JSONStringify(MI)}`, LOG.LS.eGQL);
         }
 
         return true;
@@ -942,7 +942,7 @@ class IngestDataWorker extends ResolverBase {
 
         for (const [idAssetVersion, AVInfo] of this.assetVersionMap) {
             const SOOwner: DBAPI.SystemObjectBased = AVInfo.SOOwner;
-            LOG.info(`ingestData createModelDerivedObjects considering idAssetVersion ${idAssetVersion}: ${JSON.stringify(SOOwner, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            LOG.info(`ingestData createModelDerivedObjects considering idAssetVersion ${idAssetVersion}: ${H.Helpers.JSONStringify(SOOwner)}`, LOG.LS.eGQL);
             if (!(SOOwner instanceof DBAPI.Model))
                 continue;
             const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
@@ -972,14 +972,14 @@ class IngestDataWorker extends ResolverBase {
             const idModel: number = modelInfo.idModel;
 
             if (!JCOutput.success || !JCOutput.modelConstellation || !JCOutput.modelConstellation.Model) {
-                LOG.error(`ingestData createModelDerivedObjects unable to find valid model object results for idAssetVersion ${idAssetVersion}: ${JSON.stringify(JCOutput, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData createModelDerivedObjects unable to find valid model object results for idAssetVersion ${idAssetVersion}: ${H.Helpers.JSONStringify(JCOutput)}`, LOG.LS.eGQL);
                 ret = false;
                 continue;
             }
 
             const res: H.IOResults = await JCOutput.persist(idModel, assetMap);
             if (!res.success) {
-                LOG.error(`ingestData unable to create model constellation ${JSON.stringify(model)}: ${res.success}`, LOG.LS.eGQL);
+                LOG.error(`ingestData unable to create model constellation ${H.Helpers.JSONStringify(model)}: ${res.success}`, LOG.LS.eGQL);
                 ret = false;
                 continue;
             }
@@ -1025,21 +1025,21 @@ class IngestDataWorker extends ResolverBase {
         if (updateMode) {
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(scene.idAsset!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!asset) {
-                LOG.error(`ingestData createSceneObjects unable to fetch scene's asset for ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData createSceneObjects unable to fetch scene's asset for ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eGQL);
                 return { success: false };
             }
             const assetType: COMMON.eVocabularyID | undefined = await asset.assetType();
             if (assetType === COMMON.eVocabularyID.eAssetAssetTypeScene) {
                 const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
                 if (!SO) {
-                    LOG.error(`ingestData createSceneObjects unable to fetch scene's asset's system object ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData createSceneObjects unable to fetch scene's asset's system object ${H.Helpers.JSONStringify(asset)}`, LOG.LS.eGQL);
                     return { success: false };
                 }
 
                 if (SO.idScene) {               // Is this a scene?  If so, use it!
                     sceneDB = await DBAPI.Scene.fetch(SO.idScene);
                     if (!sceneDB) {
-                        LOG.error(`ingestData createSceneObjects unable to fetch scene with ID ${SO.idScene} from ${JSON.stringify(SO, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                        LOG.error(`ingestData createSceneObjects unable to fetch scene with ID ${SO.idScene} from ${H.Helpers.JSONStringify(SO)}`, LOG.LS.eGQL);
                         return { success: false };
                     }
                 }
@@ -1058,7 +1058,7 @@ class IngestDataWorker extends ResolverBase {
         if (!updateMode) sceneDB.Title = scene.subtitle;
         sceneDB.ApprovedForPublication = scene.approvedForPublication;
         sceneDB.PosedAndQCd = scene.posedAndQCd;
-        LOG.info(`ingestData createSceneObjects, updateMode=${updateMode}, sceneDB=${JSON.stringify(sceneDB, H.Helpers.saferStringify)}, sceneConstellation=${JSON.stringify(sceneConstellation, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+        LOG.info(`ingestData createSceneObjects, updateMode=${updateMode}, sceneDB=${H.Helpers.JSONStringify(sceneDB)}, sceneConstellation=${H.Helpers.JSONStringify(sceneConstellation)}`, LOG.LS.eGQL);
         let success: boolean = sceneDB.idScene ? await sceneDB.update() : await sceneDB.create();
 
         this.sceneSOI = await CACHE.SystemObjectCache.getSystemFromScene(sceneDB);
@@ -1077,11 +1077,11 @@ class IngestDataWorker extends ResolverBase {
 
             for (const MSX of sceneConstellation.ModelSceneXref) {
                 if (MSX.idModelSceneXref || MSX.idScene) {
-                    LOG.error(`ingestData could not create ModelSceneXref for scene ${sceneDB.idScene}, as record already was populated: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData could not create ModelSceneXref for scene ${sceneDB.idScene}, as record already was populated: ${H.Helpers.JSONStringify(MSX)}`, LOG.LS.eGQL);
                     continue;
                 }
                 if (MSX.idModel <= 0) {
-                    LOG.info(`ingestData could not create ModelSceneXref for scene ${sceneDB.idScene}, as model has not yet been ingested: ${JSON.stringify(MSX)}`, LOG.LS.eGQL);
+                    LOG.info(`ingestData could not create ModelSceneXref for scene ${sceneDB.idScene}, as model has not yet been ingested: ${H.Helpers.JSONStringify(MSX)}`, LOG.LS.eGQL);
                     continue;
                 }
 
@@ -1102,7 +1102,7 @@ class IngestDataWorker extends ResolverBase {
 
                 const modelDB: DBAPI.Model | null = await DBAPI.Model.fetch(MSXUpdate.idModel);
                 if (!modelDB || !await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneDB, modelDB)) {
-                    LOG.error(`ingestData could not create SystemObjectXref for scene ${sceneDB.idScene} using: ${JSON.stringify(MSXUpdate)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData could not create SystemObjectXref for scene ${sceneDB.idScene} using: ${H.Helpers.JSONStringify(MSXUpdate)}`, LOG.LS.eGQL);
                     success = false;
                     continue;
                 }
@@ -1160,7 +1160,7 @@ class IngestDataWorker extends ResolverBase {
             if (asset.idSystemObject) {
                 const SOP: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(asset.idSystemObject);
                 if (!SOP) {
-                    LOG.error(`ingestData could not fetch system object paids from ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData could not fetch system object paids from ${H.Helpers.JSONStringify(asset)}`, LOG.LS.eGQL);
                     return false;
                 }
                 SOOwner = SOP.SystemObjectBased;
@@ -1228,7 +1228,7 @@ class IngestDataWorker extends ResolverBase {
         for (const AVInfo of this.assetVersionMap.values()) {
             const SO: DBAPI.SystemObject | null = await AVInfo.SOOwner.fetchSystemObject();
             if (!SO) {
-                LOG.error(`ingestData unable to fetch system object for ${JSON.stringify(AVInfo.SOOwner, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData unable to fetch system object for ${H.Helpers.JSONStringify(AVInfo.SOOwner)}`, LOG.LS.eGQL);
                 continue;
             }
 
@@ -1236,7 +1236,7 @@ class IngestDataWorker extends ResolverBase {
             // NAV.NavigationFactory.scheduleObjectIndexing(SO.idSystemObject);
             const indexer: NAV.IIndexer | null = await nav.getIndexer();
             if (!indexer) {
-                LOG.error(`ingestData unable to fetch navigation indexer for ${JSON.stringify(AVInfo.SOOwner, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData unable to fetch navigation indexer for ${H.Helpers.JSONStringify(AVInfo.SOOwner)}`, LOG.LS.eGQL);
                 continue;
             }
             indexer.indexObject(SO.idSystemObject);
@@ -1245,7 +1245,7 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async extractAndReuseMetadata(idAsset: number | null | undefined, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<boolean> {
-        // LOG.info(`ingestData.extractAndReuseMetadata idAsset=${idAsset}, asset=${JSON.stringify(asset, H.Helpers.saferStringify)}, assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+        // LOG.info(`ingestData.extractAndReuseMetadata idAsset=${idAsset}, asset=${H.Helpers.JSONStringify(asset)}, assetVersion=${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eGQL);
         if (!idAsset)
             return true; // nothing to do
 
@@ -1268,7 +1268,7 @@ class IngestDataWorker extends ResolverBase {
 
         const SOAssetVersionCurrent: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
         if (!SOAssetVersionCurrent) {
-            LOG.error(`ingestData extractAndReuseMetadata could not fetch system object from ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            LOG.error(`ingestData extractAndReuseMetadata could not fetch system object from ${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eGQL);
             return false;
         }
 
@@ -1298,7 +1298,7 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async createSceneAttachment(sceneAttachment: IngestSceneAttachmentInput): Promise<boolean> {
-        LOG.info(`ingestData.createSceneAttachment(${JSON.stringify(sceneAttachment)})`, LOG.LS.eGQL);
+        LOG.info(`ingestData.createSceneAttachment(${H.Helpers.JSONStringify(sceneAttachment)})`, LOG.LS.eGQL);
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(sceneAttachment.idAssetVersion);
         if (!assetVersion) {
             LOG.error(`ingestData could not fetch asset version for ${sceneAttachment.idAssetVersion}`, LOG.LS.eGQL);
@@ -1320,7 +1320,7 @@ class IngestDataWorker extends ResolverBase {
         if (assetVersion.idSOAttachment) {
             const SOP: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(assetVersion.idSOAttachment);
             if (!SOP) {
-                LOG.error(`ingestData could not fetch system object pairs from ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData could not fetch system object pairs from ${H.Helpers.JSONStringify(asset)}`, LOG.LS.eGQL);
                 return false;
             }
             SOOwner = SOP.SystemObjectBased;
@@ -1330,7 +1330,7 @@ class IngestDataWorker extends ResolverBase {
 
         const SOAssetVersion: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
         if (!SOAssetVersion) {
-            LOG.error(`ingestData could not fetch system object from ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            LOG.error(`ingestData could not fetch system object from ${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eGQL);
             return false;
         }
 
@@ -1349,7 +1349,7 @@ class IngestDataWorker extends ResolverBase {
             const SOOwner: DBAPI.SystemObjectBased = AVInfo.SOOwner;
             const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, SOOwner);
             if (!xref) {
-                LOG.error(`ingestData unable to wire item ${JSON.stringify(itemDB)} to asset owner ${JSON.stringify(SOOwner)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData unable to wire item ${H.Helpers.JSONStringify(itemDB)} to asset owner ${H.Helpers.JSONStringify(SOOwner)}`, LOG.LS.eGQL);
                 return false;
             }
         }
@@ -1365,7 +1365,7 @@ class IngestDataWorker extends ResolverBase {
         for (const [idAssetVersion, AVInfo] of this.assetVersionMap) {
             const SOBased: DBAPI.SystemObjectBased = AVInfo.SOOwner;
 
-            // LOG.info(`ingestData.promoteAssetsIntoRepository ${idAssetVersion} -> ${JSON.stringify(SOOwner)}`, LOG.LS.eGQL);
+            // LOG.info(`ingestData.promoteAssetsIntoRepository ${idAssetVersion} -> ${H.Helpers.JSONStringify(SOOwner)}`, LOG.LS.eGQL);
             const assetVersionDB: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
             if (!assetVersionDB) {
                 LOG.error(`ingestData unable to load assetVersion for ${idAssetVersion}`, LOG.LS.eGQL);
@@ -1382,7 +1382,7 @@ class IngestDataWorker extends ResolverBase {
 
             await this.appendToWFReport(`Ingesting ${assetVersionDB.FileName}, size ${assetVersionDB.StorageSize}, hash ${assetVersionDB.StorageHash}`);
 
-            // LOG.info(`ingestData.promoteAssetsIntoRepository AssetVersion=${JSON.stringify(assetVersionDB, H.Helpers.saferStringify)}; Asset=${JSON.stringify(assetDB, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            // LOG.info(`ingestData.promoteAssetsIntoRepository AssetVersion=${H.Helpers.JSONStringify(assetVersionDB)}; Asset=${H.Helpers.JSONStringify(assetDB)}`, LOG.LS.eGQL);
             const opInfo: OperationInfo = {
                 message: AVInfo.Comment ? AVInfo.Comment : 'Ingesting asset',
                 idUser: user.idUser,
@@ -1423,7 +1423,7 @@ class IngestDataWorker extends ResolverBase {
                         const { success, transformUpdated: modelTransformUpdated } = await SceneHelpers.handleComplexIngestionScene(SOBased, IAR, user.idUser, idAssetVersion);
                         if (success && modelTransformUpdated) {
                             transformUpdated = true;
-                            LOG.info(`ingestData set transformUpdated to true from idAssetVersion ${idAssetVersion} for ${JSON.stringify(SOBased, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                            LOG.info(`ingestData set transformUpdated to true from idAssetVersion ${idAssetVersion} for ${H.Helpers.JSONStringify(SOBased)}`, LOG.LS.eGQL);
                         }
                     }
                 }
@@ -1462,7 +1462,7 @@ class IngestDataWorker extends ResolverBase {
                 const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion };
                 const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
                 if (!sysInfo) {
-                    LOG.error(`ingestData sendWorkflowIngestionEvent could not find system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData sendWorkflowIngestionEvent could not find system object for ${H.Helpers.JSONStringify(oID)}`, LOG.LS.eGQL);
                     ret = false;
                     continue;
                 }
@@ -1480,7 +1480,7 @@ class IngestDataWorker extends ResolverBase {
                         idWorkflowStepSystemObjectXref: 0
                     });
                     if (!await WSSOX.create())
-                        LOG.error(`ingestData sendWorkflowIngestionEvent failed to create WorkflowStepSystemObjectXref ${JSON.stringify(WSSOX, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+                        LOG.error(`ingestData sendWorkflowIngestionEvent failed to create WorkflowStepSystemObjectXref ${H.Helpers.JSONStringify(WSSOX)}`, LOG.LS.eGQL);
                 }
             }
 
@@ -1721,7 +1721,7 @@ class IngestDataWorker extends ResolverBase {
             if (SOI)
                 idSystemObject.push(SOI.idSystemObject);
             else
-                LOG.error(`ingestData createWorkflow unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData createWorkflow unable to locate system object for ${H.Helpers.JSONStringify(oID)}`, LOG.LS.eGQL);
         }
 
         const wfParams: WF.WorkflowParameters = {
@@ -1733,7 +1733,7 @@ class IngestDataWorker extends ResolverBase {
 
         const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
         if (!workflow) {
-            const error: string = `ingestData createWorkflow unable to create Ingestion workflow: ${JSON.stringify(wfParams)}`;
+            const error: string = `ingestData createWorkflow unable to create Ingestion workflow: ${H.Helpers.JSONStringify(wfParams)}`;
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
@@ -1759,11 +1759,11 @@ class IngestDataWorker extends ResolverBase {
                         this.unitsDB = this.unitsDB.concat(OG.unit);
                     // LOG.info(`ingestData computeUpdateSubjects computed ${H.Helpers.JSONStringify(this.unitsDB)}`, LOG.LS.eGQL);
                 } else {
-                    LOG.error(`ingestData computeUpdateSubjects unable to compute object graph for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                    LOG.error(`ingestData computeUpdateSubjects unable to compute object graph for ${H.Helpers.JSONStringify(oID)}`, LOG.LS.eGQL);
                     retValue = false;
                 }
             } else {
-                LOG.error(`ingestData computeUpdateSubjects unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                LOG.error(`ingestData computeUpdateSubjects unable to locate system object for ${H.Helpers.JSONStringify(oID)}`, LOG.LS.eGQL);
                 retValue = false;
             }
         }
