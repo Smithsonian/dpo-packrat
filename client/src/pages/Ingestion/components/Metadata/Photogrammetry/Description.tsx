@@ -5,13 +5,13 @@
  *
  * This component renders description field used in photogrammetry metadata component.
  */
-import { fade, makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { FieldType } from '../../../../../components';
 import { ViewableProps } from '../../../../../types/repository';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette, typography }) => createStyles({
     description: {
         height: '10vh',
         width: '80%',
@@ -20,7 +20,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
         backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         borderRadius: 5,
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily
     }
 }));

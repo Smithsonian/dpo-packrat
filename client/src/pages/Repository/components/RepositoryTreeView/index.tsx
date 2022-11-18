@@ -7,7 +7,7 @@
  * This component renders repository tree view along with metadata view
  * for the Repository UI.
  */
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
@@ -30,7 +30,7 @@ import { repositoryRowCount } from '@dpo-packrat/common';
 
 const repositoryRowPrefetchThreshold = 75;
 
-const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
+const useStyles = makeStyles(({ breakpoints, palette }) => createStyles({
     container: {
         display: 'flex',
         flex: 5,
@@ -79,7 +79,7 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
     },
     iconInitial: {
         fontSize: 10,
-        fontWeight: typography.fontWeightMedium,
+        fontWeight: 500,
         alignSelf: 'center',
         justifySelf: 'center'
     },
@@ -114,7 +114,7 @@ const useStyles = makeStyles(({ breakpoints, typography, palette }) => ({
         padding: '0px 10px',
         fontSize: undefined,
         color: palette.grey[900],
-        fontWeight: typography.fontWeightLight,
+        fontWeight: 300,
         overflow: 'hidden',
         textOverflow: 'ellipsis'
     },

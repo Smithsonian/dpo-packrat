@@ -2,9 +2,9 @@
 /* eslint-disable react/jsx-boolean-value */
 
 import { Box, FormControl, FormHelperText, Button, InputLabel } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useParams, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { DebounceInput } from 'react-debounce-input';
@@ -19,7 +19,7 @@ import clsx from 'clsx';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 
 
-const useStyles = makeStyles(({ typography }) => ({
+const useStyles = makeStyles(({ typography }) => createStyles({
     container: {
         display: 'flex',
         flex: 1,
@@ -60,7 +60,7 @@ const useStyles = makeStyles(({ typography }) => ({
         borderRadius: '5px',
         border: '1px solid rgb(118,118,118)',
         width: '95%',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8rem',
         height: '20px'
@@ -102,8 +102,8 @@ const useStyles = makeStyles(({ typography }) => ({
 
 function LicenseForm(): React.ReactElement {
     const classes = useStyles();
-    const history = useHistory();
-    const parameters: { idLicense: string } = useParams();
+    const navigate = useNavigate();
+    const parameters = useParams();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [restrictLevel, setRestrictLevel] = useState('');
@@ -191,7 +191,7 @@ function LicenseForm(): React.ReactElement {
 
             if (data) {
                 toast.success('License updated successfully');
-                history.push('/admin/licenses');
+                navigate('/admin/licenses');
             } else {
                 throw new Error('Update request returned success: false');
             }
@@ -213,7 +213,7 @@ function LicenseForm(): React.ReactElement {
 
             if (data?.createLicense) {
                 toast.success('License created successfully');
-                history.push('/admin/licenses');
+                navigate('/admin/licenses');
             } else {
                 throw new Error('Create request returned success: false');
             }
@@ -278,7 +278,7 @@ function LicenseForm(): React.ReactElement {
                         Update
                     </Button>
                 )}
-                <Button variant='contained' disableElevation className={classes.btn} onClick={() => history.push('/admin/licenses')}>
+                <Button variant='contained' disableElevation className={classes.btn} onClick={() => navigate('/admin/licenses')}>
                     Cancel
                 </Button>
             </Box>

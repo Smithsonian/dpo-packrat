@@ -7,7 +7,7 @@
  * This component renders header for RepositoryTreeView.
  */
 import { Box } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
 import { eMetadata } from '@dpo-packrat/common';
 import { getTreeViewColumns } from '../../../../utils/repository';
@@ -18,7 +18,7 @@ import clsx from 'clsx';
 
 const SO_NAME_COLUMN_HEADER = 'object-name';
 
-const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, typography, breakpoints }) => createStyles({
     container: {
         display: 'flex',
         alignItems: 'center',
@@ -41,7 +41,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         alignItems: 'center',
         color: palette.primary.dark,
         fontSize: typography.pxToRem(15),
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         flex: 1,
     },
     treeViewText: {
@@ -66,7 +66,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         padding: '0px 10px',
         fontSize: typography.pxToRem(14),
         color: palette.primary.dark,
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         overflow: 'hidden',
         resize: 'horizontal',
         minWidth: 50

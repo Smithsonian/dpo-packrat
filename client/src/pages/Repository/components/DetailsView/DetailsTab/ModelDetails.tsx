@@ -6,7 +6,7 @@
  *
  * This component renders details tab for Model specific details used in DetailsTab component.
  */
-import { Typography, Box, makeStyles, Select, MenuItem, fade } from '@material-ui/core';
+import { Typography, Box, makeStyles, Select, MenuItem, fade, createStyles } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { DateInputField, Loader, ReadOnlyRow, } from '../../../../../components';
 import { useVocabularyStore, useDetailTabStore } from '../../../../../store';
@@ -19,7 +19,7 @@ import ObjectMeshTable from '../../../../Ingestion/components/Metadata/Model/Obj
 import { updatedFieldStyling } from './CaptureDataDetails';
 import { isFieldUpdated } from '../../../../../utils/repository';
 
-export const useStyles = makeStyles(({ palette, typography }) => ({
+export const useStyles = makeStyles(({ palette, typography }) => createStyles({
     notRequiredFields: {
         display: 'flex',
         flexDirection: 'column',
@@ -72,7 +72,7 @@ export const useStyles = makeStyles(({ palette, typography }) => ({
         backgroundColor: palette.background.paper,
         padding: 9,
         borderRadius: 5,
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8em',
         height: 3

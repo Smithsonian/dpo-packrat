@@ -6,10 +6,10 @@
  * This component renders the upload specific components for Ingestion UI.
  */
 import { Box } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import KeepAlive from 'react-activation';
-import { useHistory } from 'react-router';
+import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
@@ -22,7 +22,7 @@ import useIngest from '../../hooks/useIngest';
 import { eVocabularySetID } from '@dpo-packrat/common';
 import { Helmet } from 'react-helmet';
 
-const useStyles = makeStyles(({ palette, typography, spacing }) => ({
+const useStyles = makeStyles(({ palette, typography, spacing }) => createStyles({
     container: {
         display: 'flex',
         flex: 1,
@@ -54,7 +54,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     uploadTitle: {
         margin: '2% 0px',
         fontSize: '1.2em',
-        fontWeight: typography.fontWeightMedium
+        fontWeight: 500
     },
     uploadButton: {
         width: 120,
@@ -66,7 +66,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 
 function Uploads(): React.ReactElement {
     const classes = useStyles();
-    const history = useHistory();
+    const navigate = useNavigate();
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
     // this state will be responsible for feeding metadata the info it needs for update
@@ -147,7 +147,7 @@ function Uploads(): React.ReactElement {
                 const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
                 // console.log(`Uploads onNext() nextRoute=${nextRoute}, metadatas=${JSON.stringify(metadatas)}`);
                 toast.dismiss();
-                await history.push(nextRoute);
+                await navigate(nextRoute);
             }
         } catch (error) {
             const message: string = (error instanceof Error) ? `: ${error.message}` : '';
@@ -187,8 +187,8 @@ function Uploads(): React.ReactElement {
                 // console.log('Uploads.onIngest onNext');
                 onNext();
             } else {
-                // console.log(`Uploads.onIngest history.push(${nextStep})`);
-                await history.push(nextStep);
+                // console.log(`Uploads.onIngest navigate.push(${nextStep})`);
+                await navigate(nextStep);
             }
         } catch (error) {
             // console.log(`Uploads.onIngest Exception: ${JSON.stringify(error)}`);

@@ -4,20 +4,20 @@
  *
  * This component renders id input fields used in metadata components.
  */
-import { fade, makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { ViewableProps } from '../../types/repository';
 import FieldType from '../shared/FieldType';
 
-const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, typography, breakpoints }) => createStyles({
     input: {
         width: '50%',
         border: ({ updated }: InputFieldProps) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
         backgroundColor: ({ updated, error }: InputFieldProps) => error ? fade(palette.error.light, 0.3) : updated ? palette.secondary.light : palette.background.paper,
         padding: 8,
         borderRadius: 5,
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8em',
         [breakpoints.down('lg')]: {

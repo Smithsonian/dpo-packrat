@@ -13,7 +13,7 @@ import { GetUnitsFromNameSearchDocument, GetUnitsFromNameSearchResult } from '..
 import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Clear from '@material-ui/icons/Clear';
 import DataTable from './shared/DataTable';
 import { DataTableOptions } from '../../../types/component';
@@ -172,7 +172,7 @@ function AdminUnitsList({ units }): React.ReactElement {
 
 function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSearchText: string) => Promise<void> }): React.ReactElement {
     const [searchFilter, setSearchFilter] = useState('');
-    const history = useHistory();
+    const navigate = useNavigate();
     const classes = useStyles();
 
     const handleSearchFilterChange = e => {
@@ -210,7 +210,7 @@ function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSear
                 </Button>
             </Box>
             <Box className={classes.searchContainerRight}>
-                <Button className={classes.styledButton} onClick={() => history.push('/admin/units/create')} variant='contained' disableElevation>Create</Button>
+                <Button className={classes.styledButton} onClick={() => navigate('/admin/units/create')} variant='contained' disableElevation>Create</Button>
             </Box>
         </Box>
     );
@@ -219,7 +219,7 @@ function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSear
 function AdminUnitsView(): React.ReactElement {
     const classes = useStyles();
     const location = useLocation();
-    const [unitList, setUnitList] = useState<GetUnitsFromNameSearchResult['Units'] | []>([]);
+    const [unitList, setUnitList] = useState<GetUnitsFromNameSearchResult['Units']>([]);
 
     useEffect(() => {
         async function fetchInitialUnitList() {
