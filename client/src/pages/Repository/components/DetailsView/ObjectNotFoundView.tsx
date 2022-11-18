@@ -7,7 +7,7 @@ import { Box, Button, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { IoIosInformationCircleOutline, IoMdArrowBack } from 'react-icons/io';
-import { useHistory } from 'react-router';
+import { useNavigate } from 'react-router';
 import { Progress } from '../../../../components';
 import { palette } from '../../../../theme';
 
@@ -43,12 +43,12 @@ interface ObjectNotFoundViewProps {
 function ObjectNotFoundView(props: ObjectNotFoundViewProps): React.ReactElement {
     const { loading } = props;
     const classes = useStyles();
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const startIcon: React.ReactNode = <IoMdArrowBack />;
 
     const onGoBack = (): void => {
-        history.goBack();
+        navigate(-1);
     };
 
     let content: React.ReactNode = <Progress />;

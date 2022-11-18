@@ -7,11 +7,11 @@
  * This component renders the metadata specific components for Ingestion UI.
  */
 import { Box, Breadcrumbs, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import * as qs from 'query-string';
 import React, { useState, useEffect } from 'react';
 import { MdNavigateNext } from 'react-icons/md';
-import { Redirect, useHistory, useLocation } from 'react-router';
+import { Navigate, useNavigate, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
@@ -46,7 +46,7 @@ import { GetSystemObjectDetailsDocument } from '../../../../types/graphql';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { Loader } from '../../../../components';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette }) => createStyles({
     container: {
         display: 'flex',
         flex: 1,
@@ -73,7 +73,7 @@ type QueryParams = {
 function Metadata(): React.ReactElement {
     const classes = useStyles();
     const location = useLocation();
-    const history = useHistory();
+    const navigate = useNavigate();
     const [ingestionLoading, setIngestionLoading] = useState(false);
     const [disableNavigation, setDisableNavigation] = useState(false);
     const [invalidMetadataStep, setInvalidMetadataStep] = useState<boolean>(false);
@@ -147,7 +147,7 @@ function Metadata(): React.ReactElement {
     }, [metadatas, metadataIndex]);
 
     if (!metadataLength || !fileId) {
-        return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
+        return <Navigate to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
     }
 
     if (loadingAssetType)
@@ -158,7 +158,7 @@ function Metadata(): React.ReactElement {
 
     const onPrevious = async () => {
         toast.dismiss();
-        await history.goBack();
+        await navigate(-1);
     };
 
     const onNext = async (): Promise<void> => {
@@ -213,7 +213,7 @@ function Metadata(): React.ReactElement {
             } = nextMetadata;
             const { isLast } = getMetadataInfo(id);
             const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
-            history.push(nextRoute);
+            navigate(nextRoute);
         }
     };
 

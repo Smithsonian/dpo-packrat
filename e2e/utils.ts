@@ -1,3 +1,5 @@
+/* eslint-disable import/default */
+
 import playwright, { ChromiumBrowser, ChromiumBrowserContext, LaunchOptions, Page } from 'playwright';
 import { Selectors } from '../client/src/config';
 

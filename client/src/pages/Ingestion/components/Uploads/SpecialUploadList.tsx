@@ -19,7 +19,7 @@ import { UploadReferences, IngestionFile, useUploadStore } from '../../../../sto
 import CloseIcon from '@material-ui/icons/Close';
 import KeepAlive from 'react-activation';
 import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
-import { useHistory } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useUploadListStyles } from './UploadList';
 
 type UploadListProps = {
@@ -82,7 +82,7 @@ function SpecialUploadList(props: SpecialUploadListProps): React.ReactElement {
         state.onCompleteEvent,
         state.loadSpecialPending
     ]);
-    const history = useHistory();
+    const navigate = useNavigate();
     const uploadReferences = { idAsset, idSOAttachment };
     const options = { idSystemObject: idSO, references: uploadReferences };
 
@@ -112,7 +112,7 @@ function SpecialUploadList(props: SpecialUploadListProps): React.ReactElement {
             const eventData: UploadCompleteEvent = data.detail;
             onCompleteEvent(eventData, options);
             // when an upload finishes, we want to redirect user to uploads
-            history.push(resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS));
+            navigate(resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS));
         };
 
         UploadEvents.subscribe(UploadEventType.COMPLETE, onComplete);

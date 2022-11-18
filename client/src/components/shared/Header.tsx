@@ -4,11 +4,11 @@
  * This component renders the header consistent across the app.
  */
 import { Box, Typography, Button } from '@material-ui/core';
-import { fade, makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
 import { DebounceInput } from 'react-debounce-input';
-import { IoIosLogOut, IoIosHelp, /* IoIosNotifications, */ IoIosSearch } from 'react-icons/io';
-import { Link, useHistory, useLocation } from 'react-router-dom';
+import { IoIosLogOut, IoIosHelp, IoIosSearch } from 'react-icons/io';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Logo from '../../assets/images/logo-packrat.square.png';
 import { generateRepositoryUrl } from '../../utils/repository';
@@ -16,8 +16,9 @@ import { Selectors } from '../../config';
 import { HOME_ROUTES, resolveRoute, ROUTES } from '../../constants';
 import { useRepositoryStore, useUserStore } from '../../store';
 import { Colors } from '../../theme';
+import { confirmLeaveIngestion } from '../../pages/Ingestion';
 
-const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => createStyles({
     container: {
         display: 'flex',
         height: 60,
@@ -50,7 +51,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         marginLeft: 5,
         color: fade(Colors.defaults.white, 0.65),
         background: 'transparent',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
             height: 20,
@@ -97,7 +98,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
 
 function Header(): React.ReactElement {
     const classes = useStyles();
-    const history = useHistory();
+    const navigate = useNavigate();
     const { pathname } = useLocation();
     const { user, logout } = useUserStore();
     const [search, keyword, updateSearch, getFilterState, resetRepositoryFilter, updateRepositoryFilter, resetKeywordSearch] = useRepositoryStore(state => [
@@ -122,7 +123,7 @@ function Header(): React.ReactElement {
             const { success } = await logout();
 
             if (success) {
-                history.push(ROUTES.LOGIN);
+                navigate(ROUTES.LOGIN);
             }
         } catch {
             toast.error('Failed to logout');
@@ -131,6 +132,11 @@ function Header(): React.ReactElement {
 
     const onHelp = async (): Promise<void> => {
         window.open('https://smithsonian.github.io/dpo-packrat/');
+    };
+
+    const onClick = (e) => {
+        const leaveIngestion = confirmLeaveIngestion();
+        if (!leaveIngestion) e.preventDefault();
     };
 
     const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
@@ -143,17 +149,20 @@ function Header(): React.ReactElement {
         updateRepositoryFilter(filterState, false);
         const repositoryURL = generateRepositoryUrl(filterState);
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
-        history.push(route + repositoryURL);
+        navigate(route + repositoryURL);
     };
 
     // General search function when in different views
     const onSearch = (): void => {
+        const leaveIngestion = confirmLeaveIngestion();
+        if (!leaveIngestion) return;
+
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
         resetRepositoryFilter();
         const filterState = getFilterState();
         filterState.search = filterState.keyword;
         updateRepositoryFilter(filterState, false);
-        history.push(route);
+        navigate(route);
     };
 
     // Filter and keyword clear when in Repository
@@ -166,7 +175,7 @@ function Header(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box display='flex' alignItems='center'>
-                <Link className={classes.logo} to={resolveRoute(HOME_ROUTES.REPOSITORY)}>
+                <Link className={classes.logo} to={resolveRoute(HOME_ROUTES.REPOSITORY)} onClick={onClick}>
                     <img style={{ height: 30, width: 30 }} src={Logo} alt='packrat' />
                 </Link>
                 <Typography color='inherit' variant='body2'>
@@ -177,7 +186,7 @@ function Header(): React.ReactElement {
                 <IoIosSearch size={20} color={fade(Colors.defaults.white, 0.65)} />
                 {/* Note:
                 The way the search in repository view is slightly different from other views. In other views, search simply
-                pushes history to the repository view and lets react hooks handle the search with the filters held in state. While
+                pushes navigate to the repository view and lets react hooks handle the search with the filters held in state. While
                 in repository view, the search needs to reconstruct the URL based on the state of the search and then re-initialize the tree */}
                 <DebounceInput
                     title='Search Repository'
