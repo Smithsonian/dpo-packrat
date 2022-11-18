@@ -61,7 +61,7 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
     title: {
         margin: '1% 0px',
         fontSize: '1em',
-        fontWeight: typography.fontWeightMedium
+        fontWeight: 500
     }
 }));
 

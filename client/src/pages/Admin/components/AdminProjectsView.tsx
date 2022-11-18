@@ -13,11 +13,12 @@ import { GetProjectListDocument, GetProjectListResult } from '../../../types/gra
 import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Clear from '@material-ui/icons/Clear';
 import DataTable from './shared/DataTable';
 import { DataTableOptions } from '../../../types/component';
 import clsx from 'clsx';
+import { resolveSubRoute, ADMIN_ROUTE } from '../../../constants';
 
 const useStyles = makeStyles({
     centeredTableHead: {
@@ -165,7 +166,7 @@ function AdminProjectsList({ projects }): React.ReactElement {
 
 function AdminProjectsFilter({ queryProjectsByFilter }: { queryProjectsByFilter: (newSearchText: string) => Promise<void> }): React.ReactElement {
     const [searchFilter, setSearchFilter] = useState('');
-    const history = useHistory();
+    const navigate = useNavigate();
     const classes = useStyles();
 
     const handleSearchFilterChange = e => {
@@ -203,7 +204,7 @@ function AdminProjectsFilter({ queryProjectsByFilter }: { queryProjectsByFilter:
                 </Button>
             </Box>
             <Box className={classes.searchContainerRight}>
-                <Button className={classes.styledButton} onClick={() => history.push('/admin/projects/create')} variant='contained' disableElevation>Create</Button>
+                <Button className={classes.styledButton} onClick={() => navigate(resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.CREATEPROJECT))} variant='contained' disableElevation>Create</Button>
             </Box>
         </Box>
     );
@@ -212,7 +213,7 @@ function AdminProjectsFilter({ queryProjectsByFilter }: { queryProjectsByFilter:
 function AdminProjectsView(): React.ReactElement {
     const classes = useStyles();
     const location = useLocation();
-    const [projectList, setProjectList] = useState<GetProjectListResult['projects'] | []>([]);
+    const [projectList, setProjectList] = useState<GetProjectListResult['projects']>([]);
 
     useEffect(() => {
         async function fetchInitialProjectList() {
@@ -238,8 +239,7 @@ function AdminProjectsView(): React.ReactElement {
                 input: {
                     search: newSearchText
                 }
-            },
-            fetchPolicy: 'no-cache'
+            }
         });
 
         const {

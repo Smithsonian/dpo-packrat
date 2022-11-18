@@ -4,13 +4,13 @@
  *
  * This component renders a textarea form control component.
  */
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { ViewableProps } from '../../types/repository';
 import FieldType from '../shared/FieldType';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette, typography }) => createStyles({
     description: {
         height: ({ height, rows }: TextAreaProps) => rows ? 'undefined' : height,
         width: '80%',
@@ -19,7 +19,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         border: `${palette.primary.contrastText}, 0.4`,
         backgroundColor: palette.background.paper,
         borderRadius: 5,
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8em'
     }

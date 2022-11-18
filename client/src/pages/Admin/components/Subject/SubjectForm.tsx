@@ -11,7 +11,7 @@ import * as yup from 'yup';
 import { toast } from 'react-toastify';
 import { eVocabularySetID } from '@dpo-packrat/common';
 import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router';
 import { CreateSubjectWithIdentifiersInput } from '../../../../types/graphql';
 import { Helmet } from 'react-helmet';
@@ -90,7 +90,7 @@ export type CoordinateValues = {
 function SubjectForm(): React.ReactElement {
     const classes = useStyles();
     const tableClasses = useTableStyles();
-    const history = useHistory();
+    const navigate = useNavigate();
     const location = useLocation();
     const [subjectName, setSubjectName] = useState('');
     const [subjectUnit, setSubjectUnit] = useState(0);
@@ -297,7 +297,7 @@ function SubjectForm(): React.ReactElement {
                 toast.success('Subject Successfully Created!');
                 reset();
                 resetMetadata();
-                history.push('/admin/subjects');
+                navigate('/admin/subjects');
             } else {
                 toast.error(`Failed To Create Subject: ${message}`);
             }

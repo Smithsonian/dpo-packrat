@@ -5,7 +5,7 @@
  */
 import { FetchResult } from '@apollo/client';
 import lodash from 'lodash';
-import { useHistory } from 'react-router';
+import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { HOME_ROUTES, INGESTION_ROUTES_TYPE, resolveSubRoute } from '../../../constants/routes';
 import { apolloClient } from '../../../graphql';
@@ -57,7 +57,7 @@ function useIngest(): UseIngest {
     const [metadatas, getSelectedIdentifiers, resetMetadatas, getMetadatas] = useMetadataStore(state => [state.metadatas, state.getSelectedIdentifiers, state.reset, state.getMetadatas]);
     const getAssetType = useVocabularyStore(state => state.getAssetType);
 
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const ingestionStart = async (): Promise<IngestionStartResult> => {
         try {
@@ -186,8 +186,7 @@ function useIngest(): UseIngest {
                         sourceObjects,
                         derivedObjects,
                         updateNotes,
-                        subtitles,
-                        skipSceneGenerate
+                        subtitles
                     } = model;
 
                     let {
@@ -215,8 +214,7 @@ function useIngest(): UseIngest {
                         directory,
                         systemCreated,
                         sourceObjects,
-                        derivedObjects,
-                        skipSceneGenerate
+                        derivedObjects
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);
@@ -342,7 +340,7 @@ function useIngest(): UseIngest {
         removeSelectedUploads();
         resetIngestionState();
         const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS);
-        history.push(nextRoute);
+        navigate(nextRoute);
     };
 
     const ingestionReset = (isFullReset?: boolean): void => {

@@ -62,7 +62,7 @@ function VoyagerStoryView(): React.ReactElement {
     const params = useParams<DetailsParams>(); // NOTE: params gives you access to the idSystemObject as defined in the route
     const location = useLocation();
     const { document, root, mode } = qs.parse(location.search) as QueryParams; // NOTE: qs.parse gives you the object of query strings you use, such as document and root
-    const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
+    const idSystemObject: number = Number.parseInt(params.idSystemObject as string, 10);
     const { data, loading } = useObjectDetails(idSystemObject);
     const [objectName, setObjectName] = useState('');
     const eMode = getVoyagerModeFromParam(mode);

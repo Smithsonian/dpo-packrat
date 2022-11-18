@@ -7,7 +7,7 @@
  */
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Select, MenuItem, Typography } from '@material-ui/core';
 import { grey } from '@material-ui/core/colors';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { RiCheckboxBlankCircleLine, RiRecordCircleFill } from 'react-icons/ri';
@@ -16,7 +16,7 @@ import { StateItem, useItemStore, useSubjectStore } from '../../../../store';
 import { palette } from '../../../../theme';
 import lodash from 'lodash';
 
-const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => createStyles({
     container: {
         maxHeight: '18vh',
         backgroundColor: palette.background.paper
@@ -51,7 +51,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         outline: 'none',
         padding: '0px 2px',
         fontSize: '0.75rem',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         '&:focus': {
             outline: 'none',
@@ -71,7 +71,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
     },
     text: {
         fontSize: '0.75rem',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily
     }
 }));

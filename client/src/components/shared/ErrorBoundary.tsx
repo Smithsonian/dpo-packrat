@@ -10,7 +10,7 @@ import { Theme, withStyles } from '@material-ui/core/styles';
 import React, { Component } from 'react';
 import { BiMessageRoundedError } from 'react-icons/bi';
 import { IoMdArrowBack } from 'react-icons/io';
-import { withRouter } from 'react-router';
+import withRouter from './withRouter';
 import { ROUTES } from '../../constants';
 import { palette } from '../../theme';
 

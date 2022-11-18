@@ -15,13 +15,13 @@ import { DataGrid, GridColumns } from '@material-ui/data-grid';
 import { useObjectMetadataStore, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID } from '@dpo-packrat/common';
 import { MdRemoveCircleOutline } from 'react-icons/md';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { truncateWithEllipses } from '../../../../../constants';
 import { ToolTip } from '../../../../../components';
 import { getDownloadValueForMetadata, getDownloadAssetVersionUrlForObject } from '../../../../../utils/repository';
 import API from '../../../../../api';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette, typography }) => createStyles({
     btn: {
         width: 'fit-content'
     },
@@ -37,7 +37,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         width: '100%'
     },
     text: {
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '1em'
     }
@@ -121,9 +121,9 @@ function MetadataDisplayTable(): React.ReactElement {
             columns={columnHeader}
             rowHeight={40}
             scrollbarSize={5}
+            rowsPerPageOptions={[100]}
             density='compact'
             disableSelectionOnClick
-            hideFooter
             className={classes.container}
             autoHeight
         />

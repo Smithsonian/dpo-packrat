@@ -4,7 +4,7 @@
  *
  * This file configures and exports apollo client and apollo uploader client.
  */
-import { ApolloClient, InMemoryCache, NormalizedCacheObject, OperationVariables, MutationOptions, FetchResult, QueryOptions, ApolloQueryResult, ApolloClientOptions, from } from '@apollo/client';
+import { ApolloClient, InMemoryCache, NormalizedCacheObject, OperationVariables, MutationOptions, FetchResult, QueryOptions, ApolloQueryResult, ApolloClientOptions, from, DefaultContext } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
 import { createUploadLink } from 'apollo-upload-client';
 import { apolloFetch, uploadFailureMessage } from './utils';
@@ -28,7 +28,7 @@ class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
         return retValue;
     }
 
-    async mutate<T = any, TVariables = OperationVariables>(options: MutationOptions<T, TVariables>): Promise<FetchResult<T>> {
+    async mutate<T = any, TVariables = OperationVariables, TContext = DefaultContext>(options: MutationOptions<T, TVariables, TContext>): Promise<FetchResult<T>> {
         // console.log('PRApolloClient.mutate');
         let retValue: any;
         try {
