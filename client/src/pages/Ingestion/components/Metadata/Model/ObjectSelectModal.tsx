@@ -8,7 +8,7 @@
 import { GetSystemObjectDetailsDocument, ExistingRelationship, RelatedObjectType } from '../../../../../types/graphql';
 import { apolloClient } from '../../../../../graphql';
 import { AppBar, Box, Button, Dialog, Toolbar, Typography, IconButton } from '@material-ui/core';
-import { makeStyles, fade } from '@material-ui/core/styles';
+import { makeStyles, fade, createStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { StateRelatedObject } from '../../../../../store';
@@ -23,7 +23,7 @@ import { IoIosSearch } from 'react-icons/io';
 import { Colors } from '../../../../../theme';
 
 
-const useStyles = makeStyles(({ palette, spacing, typography }) => ({
+const useStyles = makeStyles(({ palette, spacing, typography }) => createStyles({
     title: {
         marginLeft: spacing(2),
         textAlign: 'center',
@@ -79,7 +79,7 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
         marginLeft: 5,
         color: fade(Colors.defaults.white, 0.65),
         background: 'transparent',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         '&::placeholder': {
             color: fade(Colors.defaults.white, 0.65),

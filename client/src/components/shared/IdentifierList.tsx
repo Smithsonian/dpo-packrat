@@ -6,7 +6,7 @@
  * This component renders identifier list used in photogrammetry metadata component.
  */
 import { Box, Button, MenuItem, Select, Typography, Radio } from '@material-ui/core';
-import { fade, makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { MdRemoveCircleOutline } from 'react-icons/md';
@@ -17,14 +17,14 @@ import FieldType from './FieldType';
 import { Progress } from '..';
 import { Colors } from '../../theme';
 
-const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, typography, breakpoints }) => createStyles({
     identifierInput: {
         width: '75%',
         border: 'none',
         padding: '5px 2px 5px 2px',
         backgroundColor: 'transparent',
         fontSize: '0.8em',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         borderBottom: `1px solid ${palette.grey[300]}`,
         '&::placeholder': {

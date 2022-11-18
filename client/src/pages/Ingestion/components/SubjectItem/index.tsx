@@ -6,7 +6,7 @@
 import { Box, Chip, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
-import { Redirect, useHistory } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
@@ -16,6 +16,7 @@ import SearchList from './SearchList';
 import SubjectList from './SubjectList';
 import { Helmet } from 'react-helmet';
 import useIngest from '../../hooks/useIngest';
+import { confirmLeaveIngestion } from '../..';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -44,7 +45,7 @@ const useStyles = makeStyles(({ palette }) => ({
 
 function SubjectItem(): React.ReactElement {
     const classes = useStyles();
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const [subjectError, setSubjectError] = useState(false);
     const [itemError, setItemError] = useState(false);
@@ -126,13 +127,13 @@ function SubjectItem(): React.ReactElement {
         const { isLast } = getMetadataInfo(id);
         const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
         toast.dismiss();
-        history.push(nextRoute);
+        navigate(nextRoute);
     };
 
     const metadataLength = metadatas.length;
 
     if (!metadataLength) {
-        return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
+        return <Navigate to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
     }
 
     return (
@@ -171,9 +172,16 @@ function SubjectItem(): React.ReactElement {
                 rightLoading={metadataStepLoading}
                 leftLabel='Previous'
                 rightLabel='Next'
-                leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)}
                 onClickRight={onNext}
-                onClickLeft={() => ingestionReset()}
+                onClickLeft={(e) => {
+                    const leaveIngestion = confirmLeaveIngestion();
+                    if (!leaveIngestion) {
+                        e.preventDefault();
+                        return;
+                    } else {
+                        ingestionReset();
+                    }
+                }}
             />
         </Box>
     );

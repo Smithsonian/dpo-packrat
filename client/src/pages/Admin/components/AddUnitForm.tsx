@@ -2,9 +2,9 @@
 /* eslint-disable react/jsx-boolean-value */
 
 import { Box, FormControl, FormHelperText, InputLabel, Button } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { CreateUnitDocument } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
@@ -15,7 +15,7 @@ import { DebounceInput } from 'react-debounce-input';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { useLocation } from 'react-router';
 
-const useStyles = makeStyles(({ typography }) => ({
+const useStyles = makeStyles(({ typography }) => createStyles({
     container: {
         display: 'flex',
         flex: 1,
@@ -31,7 +31,7 @@ const useStyles = makeStyles(({ typography }) => ({
         '& :focus': {
             outline: '2px solid #8DABC4',
         },
-        // fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily
     },
     formContainer: {
@@ -67,7 +67,7 @@ const useStyles = makeStyles(({ typography }) => ({
         borderRadius: '5px',
         border: '1px solid rgb(118,118,118)',
         width: '95%',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8rem',
         height: '20px'
@@ -91,7 +91,7 @@ const useStyles = makeStyles(({ typography }) => ({
 
 function AddUnitForm(): React.ReactElement {
     const classes = useStyles();
-    const history = useHistory();
+    const navigate = useNavigate();
     const location = useLocation();
     const [name, setName] = useState('');
     const [abbreviation, setAbbreviation] = useState('');
@@ -167,7 +167,7 @@ function AddUnitForm(): React.ReactElement {
             toast.error(`Failed to create object${message}`);
         } finally {
             if (newUnitSystemObjectId) {
-                history.push(`/repository/details/${newUnitSystemObjectId}`);
+                navigate(`/repository/details/${newUnitSystemObjectId}`);
             } else {
                 toast.error('Unable to retrieve new System Object Id');
             }
@@ -223,7 +223,7 @@ function AddUnitForm(): React.ReactElement {
                 <Button className={classes.btn} onClick={createUnit} disableElevation>
                     Create
                 </Button>
-                <Button variant='contained' className={classes.btn} onClick={() => history.push('/admin/units')} disableElevation>
+                <Button variant='contained' className={classes.btn} onClick={() => navigate('/admin/units')} disableElevation>
                     Cancel
                 </Button>
             </Box>

@@ -2,9 +2,9 @@
 /* eslint-disable react/display-name */
 import React, { useState, useEffect } from 'react';
 import { Box, InputLabel, FormControl, IconButton, TextField, Button, Select, MenuItem, TablePagination } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { useLocation } from 'react-router';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { getUnitsList } from '../../hooks/useAdminView';
 import { SubjectUnitIdentifier } from '../../../../types/graphql';
@@ -18,7 +18,7 @@ import { ePaginationChange } from '../../../../store';
 import { EmptyTable } from '../../../../components';
 import { useAdminSubjectStore } from '../../store/adminSubject';
 
-const useStyles = makeStyles(({ typography, palette }) => ({
+const useStyles = makeStyles(({ typography, palette }) => createStyles({
     centeredTableHead: {
         '& > span': {
             '& > button': {
@@ -93,7 +93,7 @@ const useStyles = makeStyles(({ typography, palette }) => ({
         width: 'fit-content'
     },
     filterLabel: {
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: 'inherit',
         color: 'black'
@@ -282,7 +282,7 @@ function SubjectList(props: ListProps): React.ReactElement {
 
 function SearchFilter(props: SearchFilterProps): React.ReactElement {
     const { units, queryByFilter, onSelect, onKeywordChange, selectedUnit, keyword } = props;
-    const history = useHistory();
+    const navigate = useNavigate();
     const classes = useStyles();
 
     const handleSelectChange = e => {
@@ -348,7 +348,7 @@ function SearchFilter(props: SearchFilterProps): React.ReactElement {
             <Box className={classes.searchFilterContainerRight}>
                 <Button
                     className={classes.styledButton}
-                    onClick={() => history.push('/admin/subjects/create')}
+                    onClick={() => navigate('/admin/subjects/create')}
                     variant='contained'
                     disableElevation
                 >

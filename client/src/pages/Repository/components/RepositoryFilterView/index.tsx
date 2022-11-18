@@ -7,7 +7,7 @@
  * This component renders repository filter view for the Repository UI.
  */
 import { Box, Chip, Typography } from '@material-ui/core';
-import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
+import { fade, makeStyles, withStyles, createStyles } from '@material-ui/core/styles';
 import React, { memo, useEffect } from 'react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { FiLink2 } from 'react-icons/fi';
@@ -25,7 +25,7 @@ import { ChipOption, getRepositoryFilterOptions, eRepositoryChipFilterType, getT
 import { extractISOMonthDateYear } from '../../../../constants';
 import { HOME_ROUTES } from '../../../../constants';
 
-const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
     container: {
         display: 'flex',
         background: palette.primary.light,
@@ -44,7 +44,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     defaultFilter: {
         color: palette.primary.dark,
-        fontWeight: typography.fontWeightRegular
+        fontWeight: 400
     },
     anchor: {
         display: 'flex',
@@ -70,7 +70,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontSize: '0.75em',
         color: palette.primary.dark,
         fontStyle: 'italic',
-        fontWeight: typography.fontWeightLight
+        fontWeight: 300
     },
     textArea: {
         width: 280,

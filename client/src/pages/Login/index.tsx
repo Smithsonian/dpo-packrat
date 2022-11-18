@@ -4,11 +4,11 @@
  * This component renders Login page UI.
  */
 import { Box, Container, Typography } from '@material-ui/core';
-import { fade, makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import { Field, Formik } from 'formik';
 import { TextField } from 'formik-material-ui';
 import React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 import LoginBackground from '../../assets/images/login-background.png';
@@ -19,7 +19,7 @@ import { useUserStore } from '../../store';
 import { actionOnKeyPress } from '../../utils/shared';
 import useLoginForm, { ILoginForm } from './hooks/useLoginForm';
 
-const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, spacing, breakpoints }) => createStyles({
     container: {
         display: 'flex',
         flex: 1,
@@ -51,14 +51,14 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
         }
     },
     title: {
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         color: 'black',
         textAlign: 'center',
         marginBottom: 5
     },
     subtitle: {
         color: palette.primary.dark,
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         textAlign: 'center'
     },
     loginForm: {
@@ -98,8 +98,8 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
 
 function Login(): React.ReactElement {
     const classes = useStyles();
-    const history = useHistory();
-    const { login } = useUserStore();
+    const navigate = useNavigate();
+    const { login, redirectPath } = useUserStore();
 
     const { initialValues, loginValidationSchema } = useLoginForm();
 
@@ -113,11 +113,11 @@ function Login(): React.ReactElement {
         const { email, password } = values;
 
         try {
-            const { success, message, originalUrl } = await login(email, password);
+            const { success, message } = await login(email, password);
 
             if (success) {
                 toast.success('Welcome to Packrat');
-                history.push(originalUrl ?? ROUTES.HOME);
+                navigate(redirectPath ?? ROUTES.HOME);
             } else {
                 toast.error(message);
             }
