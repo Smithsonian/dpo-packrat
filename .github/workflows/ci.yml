@@ -20,10 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup node version
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 18.9.0
 
@@ -50,7 +50,7 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=10s --health-retries=10
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup test DB
         run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test -e 'CREATE DATABASE IF NOT EXISTS Packrat'
@@ -65,7 +65,7 @@ jobs:
         run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test --database=Packrat < server/db/sql/scripts/Packrat.DATA.sql
 
       - name: Setup node version
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 18.9.0
 
@@ -104,7 +104,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Get current package version
         id: packrat-version
