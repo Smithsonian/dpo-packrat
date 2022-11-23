@@ -1499,15 +1499,7 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.3.tgz#555193ab2e3bb3b6adc3d551c9c030d9e860daf6"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
-"@gltf-transform/core@2.4.5":
-  version "2.4.5"
-  resolved "https://registry.yarnpkg.com/@gltf-transform/core/-/core-2.4.5.tgz#6b7d16cf2d92d452d087fa23e0ba4e857150b7b7"
-  integrity sha512-cQY2iv3sQOjiUq5eO8moIkb8M7I4eD46KlR4y/+LSz3lrUulx3M6h8kd9exLcwoiJnhFiTG4R6FBSjtCVwCIdg==
-  dependencies:
-    gl-matrix "~3.4.3"
-    property-graph "^0.2.6"
-
-"@gltf-transform/core@^2.4.5":
+"@gltf-transform/core@2.4.6", "@gltf-transform/core@^2.4.6":
   version "2.4.6"
   resolved "https://registry.yarnpkg.com/@gltf-transform/core/-/core-2.4.6.tgz#90c2a3fb0825ea1a0e12154ed8ef7fba185608b3"
   integrity sha512-oyAeLNMs3zxEStfZdriZiDr7fm1poqR8pjvYXsCDPoRpTKnO+KYvuFMMYJFeGhpPm/Z1Ur/SdlfTkfVLpqjXYA==
@@ -1515,12 +1507,12 @@
     gl-matrix "~3.4.3"
     property-graph "^0.2.6"
 
-"@gltf-transform/extensions@2.4.5":
-  version "2.4.5"
-  resolved "https://registry.yarnpkg.com/@gltf-transform/extensions/-/extensions-2.4.5.tgz#3356747d6661a45e874253f5b6482360e5a39a37"
-  integrity sha512-vSdwVL+IgQnZzw1QETKrDHsTmifVtwi1Q2AilcpN4H3spox/rkPlHRw3EOr5Bg6V358N2C0Tqj9mro8N21YyGA==
+"@gltf-transform/extensions@2.4.6":
+  version "2.4.6"
+  resolved "https://registry.yarnpkg.com/@gltf-transform/extensions/-/extensions-2.4.6.tgz#c108095bbe20331a136fdda41ed84d02599e1680"
+  integrity sha512-SYYHbRIFK5PilnjtpbFsbbGpiN+fQ0cwJqJHcq1AD+2uGdx8mnmhhoXjdOmKPIwNrD6ULaVh3EiHDq1yMuPX2Q==
   dependencies:
-    "@gltf-transform/core" "^2.4.5"
+    "@gltf-transform/core" "^2.4.6"
     ktx-parse "^0.4.5"
 
 "@graphql-codegen/cli@2.12.1":
