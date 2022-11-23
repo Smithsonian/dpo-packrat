@@ -105,7 +105,7 @@ export class ExtractorImageExiftool implements IExtractor  {
         if (!errObj)
             return false;
 
-        return tempFilePath !== undefined && path.extname(tempFilePath) === '.m4a' && errObj && errObj.message.includes('unsupported file type');
+        return tempFilePath !== undefined && path.extname(tempFilePath) === '.m4a' && errObj.message.includes('unsupported file type');
     }
 
     eMetadataSource(): COMMON.eVocabularyID | null {
