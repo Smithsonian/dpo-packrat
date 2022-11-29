@@ -435,6 +435,11 @@ export class ModelDataExtraction {
                 const mapName: string = textureMatch[3]?.trim();
                 // LOG.info(`crackMTL found ${mapName}, map type ${mapType}, params ${mapParams} in ${mtlLine}`, LOG.LS.eMIG);
 
+                // skip 'Linear' and 'Repeat', which sometimes show up incorrectly as map names
+                const mapNameNorm: string = mapName.toLowerCase();
+                if (mapNameNorm === 'repeat' || mapNameNorm === 'linear')
+                    continue;
+
                 // Attempt to ingest texture
                 const texturePath: string = path.join(supportDir, mapName);
                 const ingestTextureRes: STORE.IngestAssetResult = await this.ingestSupportFile(this.model, texturePath);

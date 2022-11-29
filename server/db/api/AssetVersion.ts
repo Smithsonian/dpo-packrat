@@ -82,7 +82,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                         SystemObject_AssetVersion_idSOAttachmentToSystemObject: idSOAttachment ? { connect: { idSystemObject: idSOAttachment }, } : undefined,
                         FilePath,
                         Comment,
-                        SystemObject:       { create: { Retired: false }, },
+                        SystemObject_AssetVersionToSystemObject_idAssetVersion: { create: { Retired: false }, },
                     },
                 }));
             return true;
