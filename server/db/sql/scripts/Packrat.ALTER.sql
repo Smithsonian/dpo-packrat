@@ -482,3 +482,5 @@ UPDATE Unit SET ARKPrefix = 'uj5' WHERE Abbreviation = 'OCIO';
 
 -- 2022-11-11 Jon
 ALTER TABLE ModelSceneXref MODIFY COLUMN `NAME` varchar(512) DEFAULT NULL;
+
+-- 2022-11-11 Deployed to Staging and Production

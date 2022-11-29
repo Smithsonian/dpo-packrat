@@ -35,7 +35,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                         AssetVersion:   idAssetVersionValue ? { connect: { idAssetVersion: idAssetVersionValue }, } : undefined,
                         User:           idUser              ? { connect: { idUser }, } : undefined,
                         Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : undefined,
-                        SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : undefined,
+                        SystemObject_Metadata_idSystemObjectToSystemObject:       idSystemObject          ? { connect: { idSystemObject }, } : undefined,
                         SystemObject_Metadata_idSystemObjectParentToSystemObject: idSystemObjectParent    ? { connect: { idSystemObject: idSystemObjectParent }, } : undefined,
                     },
                 }));
@@ -58,8 +58,8 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                     AssetVersion:   idAssetVersionValue ? { connect: { idAssetVersion: idAssetVersionValue }, } : { disconnect: true, },
                     User:           idUser              ? { connect: { idUser }, } : { disconnect: true, },
                     Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : { disconnect: true, },
-                    SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : { disconnect: true, },
-                    SystemObject_Metadata_idSystemObjectParentToSystemObject: idSystemObjectParent    ? { connect: { idSystemObject: idSystemObjectParent }, } : { disconnect: true, },
+                    SystemObject_Metadata_idSystemObjectToSystemObject:         idSystemObject          ? { connect: { idSystemObject }, } : { disconnect: true, },
+                    SystemObject_Metadata_idSystemObjectParentToSystemObject:   idSystemObjectParent    ? { connect: { idSystemObject: idSystemObjectParent }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

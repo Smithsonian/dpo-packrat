@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `Ingested` boolean DEFAULT NULL,
   `BulkIngest` boolean NOT NULL,
   `idSOAttachment` int(11) NULL,
-  `FilePath` varchar(512) NULL,
+  `FilePath` varchar(512) NOT NULL,
   `Comment` text NULL,
   PRIMARY KEY (`idAssetVersion`),
   KEY `AssetVersion_idAsset_Version` (`idAsset`,`Version`),
