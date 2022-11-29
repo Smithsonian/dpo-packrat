@@ -3681,10 +3681,10 @@ describe('DB Fetch SystemObject*.fetch Test Suite', () => {
             SO = await DBAPI.SystemObjectAssetVersion.fetch(assetVersion.idAssetVersion);
             if (SO) {
                 expect(SO.idAssetVersion).toEqual(assetVersion.idAssetVersion);
-                expect(SO.AssetVersion).toBeTruthy();
-                if (SO.AssetVersion) {
-                    expect(SO.AssetVersion).toMatchObject(assetVersion);
-                    expect(assetVersion).toMatchObject(SO.AssetVersion);
+                expect(SO.AssetVersion_AssetVersionToSystemObject_idAssetVersion).toBeTruthy();
+                if (SO.AssetVersion_AssetVersionToSystemObject_idAssetVersion) {
+                    expect(SO.AssetVersion_AssetVersionToSystemObject_idAssetVersion).toMatchObject(assetVersion);
+                    expect(assetVersion).toMatchObject(SO.AssetVersion_AssetVersionToSystemObject_idAssetVersion);
                 }
             }
         }
@@ -4055,7 +4055,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
             idSystemObject: 0, idUnit: null, idProject: null, idSubject: null, idItem: null, idCaptureData: null,
             idModel: null, idScene: null, idIntermediaryFile: null, idAsset: null, idAssetVersion: null,
             idProjectDocumentation: null, idActor: null, idStakeholder: null, Retired: false,
-            Actor: null, Asset_AssetToSystemObject_idAsset: null, AssetVersion: null, CaptureData: null, // eslint-disable-line camelcase
+            Actor: null, Asset_AssetToSystemObject_idAsset: null, AssetVersion_AssetVersionToSystemObject_idAssetVersion: null, CaptureData: null, // eslint-disable-line camelcase
             IntermediaryFile: null, Item: null, Model: null, Project: null, ProjectDocumentation: null,
             Scene: null, Stakeholder: null, Subject: null, Unit: null
         });
@@ -4103,10 +4103,10 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         if (SOAssetVersion && assetVersion) {
             SYOP = await DBAPI.SystemObjectPairs.fetch(SOAssetVersion.idSystemObject);
             if (SYOP) {
-                expect(SYOP.AssetVersion).toBeTruthy();
-                expect(SYOP.AssetVersion).toMatchObject(assetVersion);
-                if (SYOP.AssetVersion)
-                    expect(assetVersion).toMatchObject(SYOP.AssetVersion);
+                expect(SYOP.AssetVersion_AssetVersionToSystemObject_idAssetVersion).toBeTruthy();
+                expect(SYOP.AssetVersion_AssetVersionToSystemObject_idAssetVersion).toMatchObject(assetVersion);
+                if (SYOP.AssetVersion_AssetVersionToSystemObject_idAssetVersion)
+                    expect(assetVersion).toMatchObject(SYOP.AssetVersion_AssetVersionToSystemObject_idAssetVersion);
                 expect(SYOP.SystemObjectBased).toMatchObject(assetVersion);
             }
         }
