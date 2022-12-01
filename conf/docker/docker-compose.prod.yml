@@ -70,8 +70,6 @@ services:
             - SHARP_IGNORE_GLOBAL_LIBVIPS=1
             - npm_config_arch=x64
             - npm_config_platform=linux
-        depends_on:
-            - db
 
     db:
         container_name: packrat-db

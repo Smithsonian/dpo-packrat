@@ -409,9 +409,8 @@ INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES 
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jon Blundell', 'blundellj@si.edu', '', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Vince Rossi', 'rossiv@si.edu', '', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jamie Cope', 'copeg@si.edu', '', 1, NOW());
-INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Hsin Tung', 'tungh@si.edu', '', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Eric Maslowski', 'emaslowski@quotient-inc.com', '', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Megan Dattoria', 'dattoriam@si.edu', '', 1, NOW());
-INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Anais Perez', 'pereza3@si.edu', '', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('James Boyle', 'boylej@si.edu', '', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jonathan Bylsma', 'bylsmaj@si.edu', '', 1, NOW());
 
