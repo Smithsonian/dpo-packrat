@@ -29,6 +29,7 @@ export class ModelDataExtraction {
     // Computed
     private mtlFiles?: string[];
     private supportFiles: Set<string> = new Set<string>();
+    private expectedSupportFiles: Set<string> = new Set<string>();
 
     private userOwner: DBAPI.User | undefined = undefined;
     private AssetModel: DBAPI.Asset[] | undefined = undefined;
@@ -43,21 +44,34 @@ export class ModelDataExtraction {
 
     constructor(modelFileSet: ModelMigrationFile[]) {
         this.modelFileSet = modelFileSet;
-        this.extractGeometryInfo();
+        this.extractMigrationInfo();
     }
 
-    private extractGeometryInfo(): boolean {
+    private extractMigrationInfo(): boolean {
+        let retValue: boolean = true;
+        let foundGeometry: boolean = false;
         for (const modelFile of this.modelFileSet) {
             if (modelFile.geometry) {
+                const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
+                if (foundGeometry) {
+                    this.logStatus('extractGeometryInfo', false, `Skipping Secondary Geometry File ${filePath} vs already encountered ${this.masterModelLocation}`);
+                    retValue = false;
+                    continue;
+                }
+
                 this.uniqueID                   = modelFile.uniqueID;
                 this.idSystemObjectItem         = modelFile.idSystemObjectItem;
 
-                const filePath: string          = ModelMigrationFile.computeFilePath(modelFile);
                 this.masterModelGeometryFile    = path.basename(filePath);
                 this.masterModelLocation        = filePath;
-                return true;
-            }
+                foundGeometry = true;
+            } else
+                this.expectedSupportFiles.add(modelFile.fileName);
         }
+
+        if (foundGeometry)
+            return retValue;
+
         this.uniqueID = undefined;
         this.masterModelGeometryFile = undefined;
         return false;
@@ -106,6 +120,8 @@ export class ModelDataExtraction {
 
         // Ingest Explicit Support Files
         this.ingestExplicitSupportFiles(); // Allow failures here, to get as many error messages as possible
+
+        res = this.testSupportFiles();
 
         let AssetVersionSupportFileSO: DBAPI.SystemObject | null = null;
         const AssetVersionSupportFile: DBAPI.AssetVersion | null = (this.AssetVersionSupportFile) ? this.AssetVersionSupportFile[0] : null;
@@ -306,11 +322,26 @@ export class ModelDataExtraction {
 
                 success = false;
                 error = (error ? error + '; ' : '') + errorLocal;
-            }
-
-            this.supportFiles.add(modelFile.fileName);
+            } else
+                this.supportFiles.add(modelFile.fileName);
         }
         return { success, error };
+    }
+
+    // if there are entries in expectedSupportFiles which were not discovered, those are errors
+    // if there are entries in supportFiles which were not in expectedSupportFiles, those are errors
+    private testSupportFiles(): H.IOResults {
+        let results: H.IOResults = { success: true };
+        for (const supportFile in this.supportFiles.values()) {
+            if (!this.expectedSupportFiles.has(supportFile))
+                results = this.returnStatus('testSupportFiles', false, `Discovered support file ${supportFile} was not expected`);
+        }
+
+        for (const expectedSupportFile in this.expectedSupportFiles.values()) {
+            if (!this.supportFiles.has(expectedSupportFile))
+                results = this.returnStatus('testSupportFiles', false, `Expected support file ${expectedSupportFile} was not discovered`);
+        }
+        return results;
     }
 
     private async extractTextureMaps(): Promise<H.IOResults> {
