@@ -27,6 +27,7 @@
     }
   ],
   "scripts": {
+    "init": "lerna bootstrap",
     "start:client": "yarn workspace @dpo-packrat/client start",
     "start:server": "yarn workspace @dpo-packrat/server start",
     "start:server:inspect": "yarn workspace @dpo-packrat/server start:inspect",

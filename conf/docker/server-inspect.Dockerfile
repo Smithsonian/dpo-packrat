@@ -16,7 +16,7 @@ RUN apk add net-tools
 
 # Install dependencies and build development
 RUN mkdir -p /app/node_modules/@dpo-packrat/ && ln -s /app/common /app/node_modules/@dpo-packrat/common
-RUN yarn
+RUN yarn --frozen-lockfile
 RUN yarn build:dev
 
 # Expose port, and provide start command on execution
