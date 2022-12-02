@@ -78,8 +78,6 @@ services:
         volumes:
             - ../../package.json:/app/package.json
             - ../../server:/app/server
-        depends_on:
-            - db
 
     db:
         container_name: packrat-db
