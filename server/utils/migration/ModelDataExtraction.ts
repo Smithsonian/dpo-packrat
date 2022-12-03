@@ -310,7 +310,7 @@ export class ModelDataExtraction {
                 continue;
 
             if (this.supportFiles.has(modelFile.fileName)) {
-                this.logStatus('ingestExplicitSupportFiles', false, `Skipping explicit support file ${modelFile.fileName} as it was already discovered and ingested`);
+                this.logStatus('ingestExplicitSupportFiles', true, `Skipping explicit support file ${modelFile.fileName} as it was already discovered and ingested`);
                 continue;
             }
 
