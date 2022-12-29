@@ -42,7 +42,7 @@ function executeProductionMigration(): void {
                 user = await fetchOrCreateTestUser();
 
             const SM: SceneMigration = new SceneMigration();
-            const SMR: SceneMigrationResults = await SM.migrateScene(user.idUser, scenePackage, true);
+            const SMR: SceneMigrationResults = await SM.migrateScene(user.idUser, scenePackage, undefined, true);
             if (!SMR.success)
                 LOG.error(`SceneMigration of ${H.Helpers.JSONStringify(scenePackage)} failed: ${SMR.error}`, LOG.LS.eTEST);
             else

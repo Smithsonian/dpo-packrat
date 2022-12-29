@@ -17,12 +17,14 @@ export class ModelMigrationFile {
     License?: COMMON.eLicense;
     PublishedState?: COMMON.ePublishedState;
     idSystemObjectItem?: number;                // idSystemObject of item that owns this model.
+    edanUUID?: string | undefined;              // EDAN 3d_package UUID ... used to connect master models to scenes, if any
     testData?: boolean;                         // Set to true for test data; will create subject and item if idSystemObject is undefined
 
     constructor(uniqueID: string, path: string, fileName: string, filePath: string, title: string, name: string,
         geometry: boolean, hash?: string, eVPurpose?: COMMON.eVocabularyID, eVCreationMethod?: COMMON.eVocabularyID,
         eVModality?: COMMON.eVocabularyID, eVUnits?: COMMON.eVocabularyID,
-        License?: COMMON.eLicense, PublishedState?: COMMON.ePublishedState, idSystemObjectItem?: number, testData?: boolean) {
+        License?: COMMON.eLicense, PublishedState?: COMMON.ePublishedState, idSystemObjectItem?: number,
+        edanUUID?: string, testData?: boolean) {
         this.uniqueID           = uniqueID;
         this.path               = path;
         this.fileName           = fileName;
@@ -38,6 +40,7 @@ export class ModelMigrationFile {
         this.License            = License;
         this.PublishedState     = PublishedState;
         this.idSystemObjectItem = idSystemObjectItem;
+        this.edanUUID           = edanUUID;
         this.testData           = testData;
     }
 
