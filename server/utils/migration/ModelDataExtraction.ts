@@ -31,7 +31,6 @@ export class ModelDataExtraction {
     private modelFileSet: ModelMigrationFile[];
 
     // Computed
-    private mtlFiles?: string[];
     private supportFiles: Set<string> = new Set<string>();
     private expectedSupportFiles: Set<string> = new Set<string>();
 
@@ -173,7 +172,7 @@ export class ModelDataExtraction {
             doNotUpdateParentVersion: false
         };
 
-        // LOG.info(`ingestStreamOrFile ${H.Helpers.JSONStringify(ISI)}`, LOG.LS.eSYS);
+        // LOG.info(`ingestStreamOrFile ${H.Helpers.JSONStringify(ISI)}`, LOG.LS.eMIG);
 
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
@@ -184,10 +183,10 @@ export class ModelDataExtraction {
         return { success: true };
     }
 
-    private async ingestSupportFile(baseName: string, allowSkip?: boolean): Promise<IngestAssetResultSkippable> {
+    private async ingestSupportFile(baseName: string): Promise<IngestAssetResultSkippable> {
         if (!this.model || (!this.masterModelLocation && !this.masterModelGeometryFile))
             return this.returnStatus('ingestSupportFile', false, 'model not defined');
-        if (allowSkip && this.supportFiles.has(baseName)) {
+        if (this.supportFiles.has(baseName)) {
             this.logStatus('ingestSupportFile', true, `Skipping support file ${baseName} as it was already discovered and ingested`);
             return { success: true, skipped: true };
         }
@@ -225,7 +224,7 @@ export class ModelDataExtraction {
             doNotUpdateParentVersion: false
         };
 
-        LOG.info(`ingestSupportFileWorker ${ISI.localFilePath}`, LOG.LS.eSYS);
+        LOG.info(`ingestSupportFileWorker ${ISI.localFilePath}`, LOG.LS.eMIG);
 
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
@@ -298,7 +297,7 @@ export class ModelDataExtraction {
         if (!ModelDataExtraction.vocabDownload) {
             ModelDataExtraction.vocabDownload = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
             if (!ModelDataExtraction.vocabDownload)
-                LOG.error('ModelDataExtraction unable to fetch vocabulary for Download Model Purpose', LOG.LS.eGQL);
+                LOG.error('ModelDataExtraction unable to fetch vocabulary for Download Model Purpose', LOG.LS.eMIG);
         }
         return ModelDataExtraction.vocabDownload;
     }
@@ -307,7 +306,7 @@ export class ModelDataExtraction {
         if (!ModelDataExtraction.vocabModelGeometryFile) {
             ModelDataExtraction.vocabModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
             if (!ModelDataExtraction.vocabModelGeometryFile)
-                LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eGQL);
+                LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eMIG);
         }
         return ModelDataExtraction.vocabModelGeometryFile;
     }
@@ -316,7 +315,7 @@ export class ModelDataExtraction {
         if (!ModelDataExtraction.vocabOtherFile) {
             ModelDataExtraction.vocabOtherFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
             if (!ModelDataExtraction.vocabOtherFile)
-                LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Other File', LOG.LS.eGQL);
+                LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Other File', LOG.LS.eMIG);
         }
         return ModelDataExtraction.vocabOtherFile;
     }
@@ -329,7 +328,7 @@ export class ModelDataExtraction {
             if (modelFile.geometry)
                 continue;
 
-            const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(modelFile.fileName, true);
+            const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(modelFile.fileName);
             if (ingestTextureRes.skipped)
                 continue;
             if (!ingestTextureRes.success) {
@@ -362,7 +361,7 @@ export class ModelDataExtraction {
 
         const AssetVersionModel: DBAPI.AssetVersion = this.AssetVersionModel[0];
         const jobRun: DBAPI.JobRun | null = await JobCookSIPackratInspectOutput.extractJobRunFromAssetVersion(AssetVersionModel.idAssetVersion, this.masterModelGeometryFile);
-        // LOG.info(`extractTextureMaps ${H.Helpers.JSONStringify(jobRun)}`, LOG.LS.eSYS);
+        // LOG.info(`extractTextureMaps ${H.Helpers.JSONStringify(jobRun)}`, LOG.LS.eMIG);
         if (!jobRun || !jobRun.Output)
             return this.returnStatus('extractTextureMaps', false, `failed to extract si-packrate-inspect JobRun from idAssetVersion ${AssetVersionModel.idAssetVersion}, model ${this.masterModelGeometryFile}`);
 
@@ -387,7 +386,7 @@ export class ModelDataExtraction {
             if (channels && isArray(channels)) {
                 for (const channel of channels) {
                     if (channel.uri && !isEmbeddedTexture(channel.uri)) {
-                        const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(channel.uri, true);
+                        const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(channel.uri);
                         if (ingestTextureRes.skipped)
                             continue;
                         if (!ingestTextureRes.success) {
@@ -414,36 +413,33 @@ export class ModelDataExtraction {
             return this.returnStatus('crackOBJ', false, `Unable to extract mtllib lines from AssetVersion ${H.Helpers.JSONStringify(this.AssetVersionModel)}`);
 
         // e.g. mtllib eremotherium_laurillardi-150k-4096.mtl
+        const mtlFiles: Set<string> = new Set<string>();
         for (const mtlLine of mtlLines) {
             if (mtlLine.toLowerCase().startsWith('mtllib ')) {
                 const mtlFile: string = mtlLine.substring(7); // strip off leading 'mtllib '
-                if (!this.mtlFiles)
-                    this.mtlFiles = [];
                 // LOG.info(`crackOBJ found MTL ${mtlFile}`, LOG.LS.eMIG);
-                this.mtlFiles.push(mtlFile);
+                mtlFiles.add(mtlFile);
             }
         }
 
         // Ingest mtllib support files
         let success: boolean = true;
         let error: string | undefined = undefined;
-        if (this.mtlFiles && this.mtlFiles.length > 0 && this.model) {
-            for (const mtlFile of this.mtlFiles) {
-                const res: H.IOResults = await this.crackMTL(mtlFile);
-                if (!res.success) {
-                    success = false;
-                    if (!error)
-                        error = res.error;
-                    else
-                        error = error + '; ' + res.error;
-                }
+        for (const mtlFile of mtlFiles.keys()) {
+            const res: H.IOResults = await this.crackMTL(mtlFile);
+            if (!res.success) {
+                success = false;
+                if (!error)
+                    error = res.error;
+                else
+                    error = error + '; ' + res.error;
             }
         }
         return { success, error };
     }
 
     private async crackMTL(mtlFile: string): Promise<H.IOResults> {
-        const ingestRes: IngestAssetResultSkippable = await this.ingestSupportFile(mtlFile, false);
+        const ingestRes: IngestAssetResultSkippable = await this.ingestSupportFile(mtlFile);
         if (ingestRes.skipped)
             return { success: false, error: 'Support File Already Handled' };
         if (!ingestRes.success || !ingestRes.assetVersions || ingestRes.assetVersions.length === 0)
@@ -490,7 +486,7 @@ export class ModelDataExtraction {
                     continue;
 
                 // Attempt to ingest texture
-                const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(mapName, false);
+                const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(mapName);
                 if (!ingestTextureRes.skipped)
                     continue;
                 if (!ingestTextureRes.success) {
@@ -541,7 +537,7 @@ export class ModelDataExtraction {
                 const uri: string = buffer.getURI();
                 if (!isEmbeddedTexture(uri)) {
                     // Attempt to ingest buffer
-                    const ingestBufferRes: IngestAssetResultSkippable = await this.ingestSupportFile(uri, false);
+                    const ingestBufferRes: IngestAssetResultSkippable = await this.ingestSupportFile(uri);
                     if (!ingestBufferRes.skipped)
                         continue;
                     if (!ingestBufferRes.success) {
@@ -555,7 +551,7 @@ export class ModelDataExtraction {
                 const uri: string = texture.getURI();
                 if (!isEmbeddedTexture(uri)) {
                     // Attempt to ingest texture
-                    const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(uri, false);
+                    const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(uri);
                     if (!ingestTextureRes.skipped)
                         continue;
                     if (!ingestTextureRes.success) {
