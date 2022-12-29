@@ -39,6 +39,7 @@ class Migrator {
     private sceneIDSet: Set<string> | undefined | null = undefined; // undefined means do not migrate; null means migrate all; non-null means migrate only matches
     private modelIDSet: Set<string> | undefined | null = undefined; // undefined means do not migrate; null means migrate all; non-null means migrate only matches
     private extractMode: boolean = false;   // true -> extract model information for selected models
+    private sceneUUIDToModelMap: Map<string, DBAPI.Model> = new Map<string, DBAPI.Model>(); // mapping of scene edan UUID to model object; used by scene migration to wire scene to master model
 
     private static semaphoreMigrations: Semaphore = new Semaphore(SimultaneousMigrations);
 
@@ -128,21 +129,6 @@ class Migrator {
         const user: DBAPI.User = await MigrationUtils.fetchMigrationUser();
 
         this.results += 'Migration Started<br/>\n';
-        if (this.sceneIDSet !== undefined) {
-            this.results += 'Migrating Scenes<br/>\n';
-            for (const scenePackage of SceneMigrationPackages) {
-                if (this.sceneIDSet && !this.sceneIDSet.has(scenePackage.EdanUUID))
-                    continue;
-                const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchByUUID(scenePackage.EdanUUID);
-                if (scenes && scenes.length > 0) {
-                    this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) skipped: already migrated`);
-                    continue;
-                }
-
-                await this.migrateScene(scenePackage, user);
-            }
-        }
-
         if (this.modelIDSet !== undefined) {
             this.results += 'Migrating Models<br/>\n';
 
@@ -169,7 +155,11 @@ class Migrator {
             let idSystemObjectItem: number | undefined = undefined;
             for (const [uniqueID, modelFiles] of modelMigrationMap) {
                 let uniqueIDAlreadyMigrated: string | null = null;
+                let sceneUUID: string = '';
                 for (const modelFile of modelFiles) {
+                    if (!sceneUUID && modelFile.edanUUID)
+                        sceneUUID = modelFile.edanUUID;
+
                     const models: DBAPI.Model[] | null = modelFile.idSystemObjectItem
                         ? await DBAPI.Model.fetchItemChildrenModels(modelFile.idSystemObjectItem,
                             modelFile.fileName, [vAssetTypeModel.idVocabulary, vAssetTypeModelGeometryFile.idVocabulary])
@@ -188,6 +178,9 @@ class Migrator {
                 }
 
                 const MMR: ModelMigrationResults = await this.migrateModel(modelFiles, user);
+                if (MMR.success && MMR.model && sceneUUID)
+                    this.sceneUUIDToModelMap.set(sceneUUID, MMR.model);
+
                 if (this.extractMode && MMR.success && MMR.supportFiles) {
                     for (const supportFile of MMR.supportFiles) {
                         const supportPath: string = path.dirname(path.join(MMR.modelFilePath ?? '', supportFile));
@@ -199,25 +192,23 @@ class Migrator {
             }
         }
 
+        if (this.sceneIDSet !== undefined) {
+            this.results += 'Migrating Scenes<br/>\n';
+            for (const scenePackage of SceneMigrationPackages) {
+                if (this.sceneIDSet && !this.sceneIDSet.has(scenePackage.EdanUUID))
+                    continue;
+
+                const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchByUUID(scenePackage.EdanUUID);
+                if (scenes && scenes.length > 0) {
+                    this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) skipped: already migrated`);
+                    continue;
+                }
+
+                await this.migrateScene(scenePackage, user);
+            }
+        }
+
         return true;
-    }
-
-    private async migrateScene(scenePackage: SceneMigrationPackage, user: DBAPI.User): Promise<SceneMigrationResults> {
-        const res: SceneMigrationResults = await Migrator.semaphoreMigrations.runExclusive(async (value) => {
-            const LS: LocalStore = await ASL.getOrCreateStore();
-            LS.incrementRequestID();
-
-            this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) Starting; semaphore count ${value}`);
-            const SM: SceneMigration = new SceneMigration();
-            const SMR: SceneMigrationResults = await SM.migrateScene(user.idUser, scenePackage, true);
-            if (!SMR.success)
-                this.recordMigrationResult(false, `SceneMigration (${scenePackage.EdanUUID}) failed for ${H.Helpers.JSONStringify(scenePackage)}: ${SMR.error}`);
-            else
-                this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) succeeded: ${H.Helpers.JSONStringify(SMR)}`);
-
-            return SMR;
-        });
-        return res;
     }
 
     private async migrateModel(modelFileSet: ModelMigrationFile[], user: DBAPI.User): Promise<ModelMigrationResults> {
@@ -249,6 +240,26 @@ class Migrator {
                 this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) ${operation} succeeded: ${H.Helpers.JSONStringify(MMR)}`);
 
             return MMR;
+        });
+        return res;
+    }
+
+    private async migrateScene(scenePackage: SceneMigrationPackage, user: DBAPI.User): Promise<SceneMigrationResults> {
+        const res: SceneMigrationResults = await Migrator.semaphoreMigrations.runExclusive(async (value) => {
+            const LS: LocalStore = await ASL.getOrCreateStore();
+            LS.incrementRequestID();
+
+            const model: DBAPI.Model | undefined = this.sceneUUIDToModelMap.get(scenePackage.EdanUUID);
+
+            this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) Starting; semaphore count ${value}`);
+            const SM: SceneMigration = new SceneMigration();
+            const SMR: SceneMigrationResults = await SM.migrateScene(user.idUser, scenePackage, model, true);
+            if (!SMR.success)
+                this.recordMigrationResult(false, `SceneMigration (${scenePackage.EdanUUID}) failed for ${H.Helpers.JSONStringify(scenePackage)}: ${SMR.error}`);
+            else
+                this.recordMigrationResult(true, `SceneMigration (${scenePackage.EdanUUID}) succeeded: ${H.Helpers.JSONStringify(SMR)}`);
+
+            return SMR;
         });
         return res;
     }
