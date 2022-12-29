@@ -119,7 +119,7 @@ export class ModelDataExtraction {
         }   // Allow failures here, as some GLTFs are not being read properly by our 3rd party library
 
         // Ingest Explicit Support Files
-        this.ingestExplicitSupportFiles(); // Allow failures here, to get as many error messages as possible
+        await this.ingestExplicitSupportFiles(); // Allow failures here, to get as many error messages as possible
 
         res = this.testSupportFiles();
 
@@ -317,7 +317,7 @@ export class ModelDataExtraction {
             const texturePath: string = path.join(supportDir, modelFile.fileName);
             const ingestTextureRes: STORE.IngestAssetResult = await this.ingestSupportFile(this.model, texturePath);
             if (!ingestTextureRes.success || !ingestTextureRes.assetVersions || ingestTextureRes.assetVersions.length === 0) {
-                const errorLocal: string = `Unable to ingest explit support file ${modelFile.fileName} from ${texturePath}: ${ingestTextureRes.error}`;
+                const errorLocal: string = `Unable to ingest explicit support file ${modelFile.fileName} from ${texturePath}: ${ingestTextureRes.error}`;
                 this.logStatus('ingestExplicitSupportFiles', false, errorLocal);
 
                 success = false;
