@@ -19,6 +19,10 @@ import draco3d from 'draco3dgltf';
 import tmp from 'tmp-promise';
 import * as path from 'path';
 
+interface IngestAssetResultSkippable extends STORE.IngestAssetResult {
+    skipped?: boolean;
+}
+
 export class ModelDataExtraction {
     private uniqueID: string | undefined = undefined;
     private idSystemObjectItem: number | undefined;
@@ -180,11 +184,31 @@ export class ModelDataExtraction {
         return { success: true };
     }
 
-    private async ingestSupportFile(SOBased: DBAPI.SystemObjectBased, supportFilePath: string): Promise<STORE.IngestAssetResult> {
+    private async ingestSupportFile(baseName: string, allowSkip?: boolean): Promise<IngestAssetResultSkippable> {
+        if (!this.model || (!this.masterModelLocation && !this.masterModelGeometryFile))
+            return this.returnStatus('ingestSupportFile', false, 'model not defined');
+        if (allowSkip && this.supportFiles.has(baseName)) {
+            this.logStatus('ingestSupportFile', true, `Skipping support file ${baseName} as it was already discovered and ingested`);
+            return { success: true, skipped: true };
+        }
+        this.supportFiles.add(baseName);
+
+        const supportDir: string = path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile ?? '');
+        const supportFilePath: string = path.join(supportDir, baseName);
+        const ingestTextureRes: STORE.IngestAssetResult = await this.ingestSupportFileWorker(this.model, supportFilePath);
+        if (!ingestTextureRes.success || !ingestTextureRes.assetVersions || ingestTextureRes.assetVersions.length === 0) {
+            const error: string = `Unable to ingest support file ${baseName} from ${supportFilePath}: ${ingestTextureRes.error}`;
+            this.logStatus('ingestSupportFile', false, error);
+            return { success: false, error };
+        }
+        return ingestTextureRes;
+    }
+
+    private async ingestSupportFileWorker(SOBased: DBAPI.SystemObjectBased, supportFilePath: string): Promise<STORE.IngestAssetResult> {
         const vAssetType: DBAPI.Vocabulary | undefined = await this.computeVocabOtherFile();
         const idVAssetType: number | undefined = vAssetType?.idVocabulary;
         if (!idVAssetType)
-            return this.returnStatus('ingestSupportFile', false, 'Unable to compute idVAssetType for other file');
+            return this.returnStatus('ingestSupportFileWorker', false, 'Unable to compute idVAssetType for other file');
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream: null,
             localFilePath: supportFilePath,
@@ -201,11 +225,11 @@ export class ModelDataExtraction {
             doNotUpdateParentVersion: false
         };
 
-        LOG.info(`ingestStreamOrFile ${ISI.localFilePath}`, LOG.LS.eSYS);
+        LOG.info(`ingestSupportFileWorker ${ISI.localFilePath}`, LOG.LS.eSYS);
 
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
-            return this.returnStatus('ingestSupportFile', false, `ingestStreamOrFile ${ISI.localFilePath} failed: ${IAR.error}`);
+            return this.returnStatus('ingestSupportFileWorker', false, `ingestStreamOrFile ${ISI.localFilePath} failed: ${IAR.error}`);
         if (!this.AssetVersionSupportFile)
             this.AssetVersionSupportFile = [];
         this.AssetVersionSupportFile.push(...IAR.assetVersions);
@@ -298,32 +322,20 @@ export class ModelDataExtraction {
     }
 
     private async ingestExplicitSupportFiles(): Promise<H.IOResults> {
-        if (!this.model)
-            return { success: false, error: 'model not defined' };
-
         let success: boolean = true;
         let error: string | undefined = undefined;
-        const supportDir: string = path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile ?? '');
         for (const modelFile of this.modelFileSet) {
             // Skip already-ingested geometry:
             if (modelFile.geometry)
                 continue;
 
-            if (this.supportFiles.has(modelFile.fileName)) {
-                this.logStatus('ingestExplicitSupportFiles', true, `Skipping explicit support file ${modelFile.fileName} as it was already discovered and ingested`);
+            const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(modelFile.fileName, true);
+            if (ingestTextureRes.skipped)
                 continue;
-            }
-
-            const texturePath: string = path.join(supportDir, modelFile.fileName);
-            const ingestTextureRes: STORE.IngestAssetResult = await this.ingestSupportFile(this.model, texturePath);
-            if (!ingestTextureRes.success || !ingestTextureRes.assetVersions || ingestTextureRes.assetVersions.length === 0) {
-                const errorLocal: string = `Unable to ingest explicit support file ${modelFile.fileName} from ${texturePath}: ${ingestTextureRes.error}`;
-                this.logStatus('ingestExplicitSupportFiles', false, errorLocal);
-
+            if (!ingestTextureRes.success) {
                 success = false;
-                error = (error ? error + '; ' : '') + errorLocal;
-            } else
-                this.supportFiles.add(modelFile.fileName);
+                error = (error ? error + '; ' : '') + ingestTextureRes.error;
+            }
         }
         return { success, error };
     }
@@ -367,16 +379,26 @@ export class ModelDataExtraction {
         if (!materials || !isArray(materials))
             return this.returnStatus('extractTextureMaps', false, `failed to extract materials from si-packrat-inspect output from idAssetVersion ${AssetVersionModel.idAssetVersion}, model ${this.masterModelGeometryFile}`);
 
+        let success: boolean = true;
+        let error: string | undefined = undefined;
+
         for (const material of materials) {
             const channels: any = material['channels'];
             if (channels && isArray(channels)) {
                 for (const channel of channels) {
-                    if (channel.uri && !isEmbeddedTexture(channel.uri))
-                        this.supportFiles.add(channel.uri);
+                    if (channel.uri && !isEmbeddedTexture(channel.uri)) {
+                        const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(channel.uri, true);
+                        if (ingestTextureRes.skipped)
+                            continue;
+                        if (!ingestTextureRes.success) {
+                            success = false;
+                            error = (error ? error + '; ' : '') + ingestTextureRes.error;
+                        }
+                    }
                 }
             }
         }
-        return { success: true };
+        return { success, error };
     }
 
     private async crackOBJ(AssetVersionModel: DBAPI.AssetVersion): Promise<H.IOResults> {
@@ -399,7 +421,6 @@ export class ModelDataExtraction {
                     this.mtlFiles = [];
                 // LOG.info(`crackOBJ found MTL ${mtlFile}`, LOG.LS.eMIG);
                 this.mtlFiles.push(mtlFile);
-                this.supportFiles.add(mtlFile);
             }
         }
 
@@ -422,24 +443,21 @@ export class ModelDataExtraction {
     }
 
     private async crackMTL(mtlFile: string): Promise<H.IOResults> {
-        if (!this.model || (!this.masterModelLocation && !this.masterModelGeometryFile))
-            return { success: false, error: 'Missing model' };
-
-        const supportDir: string = path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile ?? '');
-        const supportFilePath: string = path.join(supportDir, mtlFile);
-        const ingestRes: STORE.IngestAssetResult = await this.ingestSupportFile(this.model, supportFilePath);
+        const ingestRes: IngestAssetResultSkippable = await this.ingestSupportFile(mtlFile, false);
+        if (ingestRes.skipped)
+            return { success: false, error: 'Support File Already Handled' };
         if (!ingestRes.success || !ingestRes.assetVersions || ingestRes.assetVersions.length === 0)
-            return this.returnStatus('crackMTL', false, `Unable to ingest mtllib ${supportFilePath}: ${ingestRes.error}`);
+            return this.returnStatus('crackMTL', false, `Unable to ingest mtllib ${mtlFile}: ${ingestRes.error}`);
 
         const AssetVersionMTL: DBAPI.AssetVersion = ingestRes.assetVersions[0];
         const res: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(AssetVersionMTL);
         if (!res.success || !res.readStream)
-            return this.returnStatus('crackMTL', false, `Unable to readAssetVersion for mtllib ${supportFilePath} from AssetVersion ${H.Helpers.JSONStringify(AssetVersionMTL)}`);
+            return this.returnStatus('crackMTL', false, `Unable to readAssetVersion for mtllib ${mtlFile} from AssetVersion ${H.Helpers.JSONStringify(AssetVersionMTL)}`);
 
         const LS: LineStream = new LineStream(res.readStream);
         const mtlLines: string[] | null = await LS.readLines();
         if (!mtlLines)
-            return this.returnStatus('crackMTL', false, `Unable to extract lines for mtllib ${supportFilePath} from AssetVersion ${H.Helpers.JSONStringify(AssetVersionMTL)}`);
+            return this.returnStatus('crackMTL', false, `Unable to extract lines for mtllib ${mtlFile} from AssetVersion ${H.Helpers.JSONStringify(AssetVersionMTL)}`);
 
         // parse MTL file, per http://paulbourke.net/dataformats/mtl/
         // and https://github.com/assimp/assimp/blob/master/code/AssetLib/Obj/ObjFileMtlImporter.cpp
@@ -461,7 +479,7 @@ export class ModelDataExtraction {
             // LOG.info(`crackMTL processing ${mtlLine}`, LOG.LS.eMIG);
             const textureMatch: RegExpMatchArray | null = mtlLine.match(ModelDataExtraction.regexMTLParser);
             if (textureMatch && textureMatch.length >= 4) {
-                const mapType: string = textureMatch[1]?.trim();
+                // const mapType: string = textureMatch[1]?.trim();
                 // const mapParams: string = textureMatch[2]?.trim();
                 const mapName: string = textureMatch[3]?.trim();
                 // LOG.info(`crackMTL found ${mapName}, map type ${mapType}, params ${mapParams} in ${mtlLine}`, LOG.LS.eMIG);
@@ -472,16 +490,13 @@ export class ModelDataExtraction {
                     continue;
 
                 // Attempt to ingest texture
-                const texturePath: string = path.join(supportDir, mapName);
-                const ingestTextureRes: STORE.IngestAssetResult = await this.ingestSupportFile(this.model, texturePath);
-                if (!ingestTextureRes.success || !ingestTextureRes.assetVersions || ingestTextureRes.assetVersions.length === 0) {
-                    const errorLocal: string = `Unable to ingest texture ${mapName} of type ${mapType} from ${texturePath} referenced in mtllib ${supportFilePath}: ${ingestTextureRes.error}`;
-                    this.logStatus('crackMTL', false, errorLocal);
+                const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(mapName, false);
+                if (!ingestTextureRes.skipped)
+                    continue;
+                if (!ingestTextureRes.success) {
                     success = false;
-                    error = (error ? error + ': ' : '') + errorLocal;
+                    error = (error ? error + ': ' : '') + ingestTextureRes.error;
                 }
-
-                this.supportFiles.add(mapName);
             }
         }
         return { success, error };
@@ -508,6 +523,8 @@ export class ModelDataExtraction {
                 await tempFile.cleanup();
         }
 
+        let success: boolean = true;
+        let error: string | undefined = undefined;
         try {
             const io: NodeIO = new NodeIO();
             io.registerExtensions(KHRONOS_EXTENSIONS);
@@ -522,14 +539,30 @@ export class ModelDataExtraction {
 
             for (const buffer of buffers) {
                 const uri: string = buffer.getURI();
-                if (!isEmbeddedTexture(uri))
-                    this.supportFiles.add(uri);
+                if (!isEmbeddedTexture(uri)) {
+                    // Attempt to ingest buffer
+                    const ingestBufferRes: IngestAssetResultSkippable = await this.ingestSupportFile(uri, false);
+                    if (!ingestBufferRes.skipped)
+                        continue;
+                    if (!ingestBufferRes.success) {
+                        success = false;
+                        error = (error ? error + ': ' : '') + ingestBufferRes.error;
+                    }
+                }
             }
 
             for (const texture of textures) {
                 const uri: string = texture.getURI();
-                if (!isEmbeddedTexture(uri))
-                    this.supportFiles.add(uri);
+                if (!isEmbeddedTexture(uri)) {
+                    // Attempt to ingest texture
+                    const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(uri, false);
+                    if (!ingestTextureRes.skipped)
+                        continue;
+                    if (!ingestTextureRes.success) {
+                        success = false;
+                        error = (error ? error + ': ' : '') + ingestTextureRes.error;
+                    }
+                }
             }
         } catch (err) {
             return this.returnStatus('crackGLTF', false, `Caught exception attempting to extract GLTF info from ${tempFile.path}: ${err}`);
@@ -537,14 +570,14 @@ export class ModelDataExtraction {
             await tempFile.cleanup();
         }
 
-        return { success: true };
+        return { success, error };
     }
 
     private logStatus(context: string, success: boolean, error: string | undefined): void {
         if (!success)
             LOG.error(`ModelDataExtraction (${this.uniqueID}) ${context}: ${error}`, LOG.LS.eMIG);
         else
-            LOG.info(`ModelDataExtraction (${this.uniqueID}) ${context}`, LOG.LS.eMIG);
+            LOG.info(`ModelDataExtraction (${this.uniqueID}) ${context}${error ? (': ' + error) : ''}`, LOG.LS.eMIG);
     }
 
     private returnStatus(context: string, success: boolean, error: string | undefined): H.IOResults {
