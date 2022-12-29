@@ -3,6 +3,7 @@ import AuthRouter from './AuthRouter';
 import session from 'express-session';
 import MemoryStore from 'memorystore';
 import { Config } from '../config';
+import { httpAuthRequired } from '../http/auth';
 
 const { PACKRAT_CLIENT_ENDPOINT, PACKRAT_SESSION_SECRET } = process.env;
 
@@ -10,8 +11,9 @@ if (!PACKRAT_CLIENT_ENDPOINT) {
     throw new Error('PACKRAT_CLIENT_ENDPOINT was not provided to cors config');
 }
 
+// for non-production deployments (where httpAuthRequired is false), allow requests from the Apollo GraphQL Studio:
 const authCorsConfig = {
-    origin: PACKRAT_CLIENT_ENDPOINT,
+    origin: httpAuthRequired ? PACKRAT_CLIENT_ENDPOINT : [ PACKRAT_CLIENT_ENDPOINT, 'https://studio.apollographql.com' ],
     credentials: true
 };
 
