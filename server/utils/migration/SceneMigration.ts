@@ -60,7 +60,8 @@ export class SceneMigration {
         return { success: true };
     }
 
-    async migrateScene(idUser: number, scenePackage: SceneMigrationPackage, doNotSendIngestionEvent?: boolean): Promise<SceneMigrationResults> {
+    async migrateScene(idUser: number, scenePackage: SceneMigrationPackage,
+        model?: DBAPI.Model, doNotSendIngestionEvent?: boolean): Promise<SceneMigrationResults> {
         let testData: boolean | undefined = undefined;
 
         let asset: DBAPI.Asset[] | null | undefined = undefined;
@@ -125,6 +126,14 @@ export class SceneMigration {
             if (!await this.wireItemToScene(this.scenePackage.idSystemObjectItem))
                 return this.recordError('migrateScene', `failed to wire media group to scene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
             this.log('migrateScene', `wired scene to idSystemObject ${this.scenePackage.idSystemObjectItem}`);
+        }
+
+        // wire master model to scene, if supplied
+        if (model) {
+            const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(model, this.scene);
+            if (!xref)
+                return this.recordError('migrateScene', `unable to wire master model ${H.Helpers.JSONStringify(model)} to scene ${H.Helpers.JSONStringify(this.scene)}`);
+            this.log('migrateScene', `wired master model with idModel ${model.idModel} to scene`);
         }
 
         const sceneFileName: string = this.scenePackage.PackageName ? this.scenePackage.PackageName : `${this.scenePackage.EdanUUID}.zip`;
