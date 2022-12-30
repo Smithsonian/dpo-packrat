@@ -42,6 +42,7 @@ class Migrator {
     private sceneUUIDToModelMap: Map<string, DBAPI.Model> = new Map<string, DBAPI.Model>(); // mapping of scene edan UUID to model object; used by scene migration to wire scene to master model
 
     private static semaphoreMigrations: Semaphore = new Semaphore(SimultaneousMigrations);
+    private static vocabModelPurposeMaster: DBAPI.Vocabulary | undefined = undefined;
 
     constructor(request: Request, response: Response) {
         this.request = request;
@@ -51,6 +52,11 @@ class Migrator {
     static async launcher(migrator: Migrator): Promise<boolean> {
         if (!await migrator.parseArguments(true))
             return false;
+        if (!Migrator.vocabModelPurposeMaster)
+            Migrator.vocabModelPurposeMaster = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
+        if (!Migrator.vocabModelPurposeMaster)
+            return false;
+
         return await migrator.migrate();
     }
 
@@ -155,6 +161,7 @@ class Migrator {
             let idSystemObjectItem: number | undefined = undefined;
             for (const [uniqueID, modelFiles] of modelMigrationMap) {
                 let uniqueIDAlreadyMigrated: string | null = null;
+                let modelSource: DBAPI.Model | null = null;
                 let sceneUUID: string = '';
                 for (const modelFile of modelFiles) {
                     if (!sceneUUID && modelFile.edanUUID)
@@ -166,6 +173,12 @@ class Migrator {
                         : null;
                     if (models && models.length > 0) {
                         uniqueIDAlreadyMigrated = modelFile.uniqueID;
+                        for (const model of models) {
+                            if (Migrator.vocabModelPurposeMaster && model.idVPurpose === Migrator.vocabModelPurposeMaster.idVocabulary) {
+                                modelSource = model;
+                                break;
+                            }
+                        }
                         break;
                     }
                     if (!idSystemObjectItem)
@@ -174,6 +187,8 @@ class Migrator {
 
                 if (uniqueIDAlreadyMigrated) {
                     this.recordMigrationResult(true, `ModelMigration (${uniqueIDAlreadyMigrated}) skipped: already migrated`);
+                    if (sceneUUID && modelSource)
+                        this.sceneUUIDToModelMap.set(sceneUUID, modelSource);
                     continue;
                 }
 
