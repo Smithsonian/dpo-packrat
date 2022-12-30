@@ -37,6 +37,7 @@ export class SceneMigration {
     private scenePackage:               SceneMigrationPackage | undefined   = undefined;
     private userOwner:                  DBAPI.User | undefined              = undefined;
     private scene:                      DBAPI.Scene | null | undefined      = undefined;
+    private modelSource:                DBAPI.Model | undefined             = undefined;
     private sceneSystemObjectID:        number | undefined                  = undefined;
 
     private async initialize(): Promise<H.IOResults> {
@@ -61,7 +62,7 @@ export class SceneMigration {
     }
 
     async migrateScene(idUser: number, scenePackage: SceneMigrationPackage,
-        model?: DBAPI.Model, doNotSendIngestionEvent?: boolean): Promise<SceneMigrationResults> {
+        modelSource?: DBAPI.Model, doNotSendIngestionEvent?: boolean): Promise<SceneMigrationResults> {
         let testData: boolean | undefined = undefined;
 
         let asset: DBAPI.Asset[] | null | undefined = undefined;
@@ -73,6 +74,7 @@ export class SceneMigration {
 
         this.ICol = COL.CollectionFactory.getInstance();
         this.scenePackage = scenePackage;
+        this.modelSource = modelSource;
         this.log('migrateScene', 'Starting');
 
         this.userOwner = await CACHE.UserCache.getUser(idUser);
@@ -129,11 +131,11 @@ export class SceneMigration {
         }
 
         // wire master model to scene, if supplied
-        if (model) {
-            const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(model, this.scene);
+        if (this.modelSource) {
+            const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.modelSource, this.scene);
             if (!xref)
-                return this.recordError('migrateScene', `unable to wire master model ${H.Helpers.JSONStringify(model)} to scene ${H.Helpers.JSONStringify(this.scene)}`);
-            this.log('migrateScene', `wired master model with idModel ${model.idModel} to scene`);
+                return this.recordError('migrateScene', `unable to wire master model ${H.Helpers.JSONStringify(this.modelSource)} to scene ${H.Helpers.JSONStringify(this.scene)}`);
+            this.log('migrateScene', `wired master model with idModel ${this.modelSource.idModel} to scene`);
         }
 
         const sceneFileName: string = this.scenePackage.PackageName ? this.scenePackage.PackageName : `${this.scenePackage.EdanUUID}.zip`;
@@ -145,7 +147,7 @@ export class SceneMigration {
         if (IAR.assetVersions)
             assetVersion = IAR.assetVersions;
 
-        const { success } = await SceneHelpers.handleComplexIngestionScene(this.scene, IAR, this.userOwner.idUser, undefined);
+        const { success } = await SceneHelpers.handleComplexIngestionScene(this.scene, IAR, this.userOwner.idUser, undefined, this.modelSource);
         if (!success)
             return this.recordError('migrateScene', `failed in handleComplexIngestionScene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
 
@@ -712,18 +714,19 @@ export class SceneMigration {
             return null;
         }
 
-        // link each model as derived from both the scene and the master model
-        if (this.scene) {
-            const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.scene, model);
+        // wire master model to derived model
+        if (this.modelSource) {
+            const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.modelSource, model);
             if (!SOX1)
-                this.recordError('createModel', `unable to wire Scene ${H.Helpers.JSONStringify(this.scene)} and Model ${H.Helpers.JSONStringify(model)} together`);
+                this.recordError('createModel', `unable to wire master model ${H.Helpers.JSONStringify(this.modelSource)} and Model ${H.Helpers.JSONStringify(model)} together`);
         }
 
-        /*
-        const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.modelSource, model);
-        if (!SOX2)
-            return this.logError(`createSystemObjects unable to wire Model Source ${H.Helpers.JSONStringify(this.modelSource)} and Model ${H.Helpers.JSONStringify(model)} together`);
-        */
+        // wire scene to model
+        if (this.scene) {
+            const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.scene, model);
+            if (!SOX2)
+                this.recordError('createModel', `unable to wire Scene ${H.Helpers.JSONStringify(this.scene)} and Model ${H.Helpers.JSONStringify(model)} together`);
+        }
 
         this.log('createModel', 'Completed');
         return model;
