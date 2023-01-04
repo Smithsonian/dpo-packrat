@@ -26,6 +26,7 @@ interface IngestAssetResultSkippable extends STORE.IngestAssetResult {
 export class ModelDataExtraction {
     private uniqueID: string | undefined = undefined;
     private idSystemObjectItem: number | undefined;
+    private masterModelFile: ModelMigrationFile | undefined = undefined;
     private masterModelGeometryFile: string | undefined = undefined;
     private masterModelLocation?: string;
     private modelFileSet: ModelMigrationFile[];
@@ -40,7 +41,7 @@ export class ModelDataExtraction {
     private AssetVersionSupportFile: DBAPI.AssetVersion[] | undefined = undefined;
     private model: DBAPI.Model | undefined = undefined;
 
-    private static vocabDownload: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabMaster: DBAPI.Vocabulary | undefined = undefined;
     private static vocabModelGeometryFile: DBAPI.Vocabulary | undefined = undefined;
     private static vocabOtherFile: DBAPI.Vocabulary | undefined = undefined;
     private static regexMTLParser: RegExp = new RegExp('(map_.*?|norm|disp|decal|bump|refl)( .*?)? ([^ ]+)\\s*$', 'i'); // [1] map type, [2] map params, [3] map name
@@ -65,6 +66,7 @@ export class ModelDataExtraction {
                 this.uniqueID                   = modelFile.uniqueID;
                 this.idSystemObjectItem         = modelFile.idSystemObjectItem;
 
+                this.masterModelFile            = modelFile;
                 this.masterModelGeometryFile    = path.basename(filePath);
                 this.masterModelLocation        = filePath;
                 foundGeometry = true;
@@ -81,7 +83,7 @@ export class ModelDataExtraction {
     }
 
     async fetchAndExtractInfo(): Promise<ModelMigrationResults> {
-        if (!this.uniqueID || !this.masterModelGeometryFile)
+        if (!this.uniqueID || !this.masterModelGeometryFile || !this.masterModelFile)
             return { success: false, error: 'No geometry present in model definition' };
 
         let res: ModelMigrationResults;
@@ -89,7 +91,8 @@ export class ModelDataExtraction {
             this.userOwner = await MigrationUtils.fetchMigrationUser();
 
         // Create DBAPI.Model
-        res = await this.createModel(this.masterModelGeometryFile);
+        res = await this.createModel(this.masterModelGeometryFile, this.masterModelFile.eVCreationMethod,
+            this.masterModelFile.eVModality, this.masterModelFile.eVPurpose, this.masterModelFile.eVUnits);
         if (!res.success)
             return res;
 
@@ -236,13 +239,13 @@ export class ModelDataExtraction {
         return IAR;
     }
 
-    private async createModel(Name: string, eVCreationMethod?: COMMON.eVocabularyID,
-        eVModality?: COMMON.eVocabularyID, eVUnits?: COMMON.eVocabularyID): Promise<H.IOResults> {
+    private async createModel(Name: string, eVCreationMethod?: COMMON.eVocabularyID, eVModality?: COMMON.eVocabularyID,
+        eVPurpose?: COMMON.eVocabularyID, eVUnits?: COMMON.eVocabularyID): Promise<H.IOResults> {
         const vCreationMethod: DBAPI.Vocabulary | undefined = eVCreationMethod ? await CACHE.VocabularyCache.vocabularyByEnum(eVCreationMethod) : undefined;
-        const vModality: DBAPI.Vocabulary | undefined = eVModality? await CACHE.VocabularyCache.vocabularyByEnum(eVModality) : undefined;
+        const vModality: DBAPI.Vocabulary | undefined = eVModality ? await CACHE.VocabularyCache.vocabularyByEnum(eVModality) : undefined;
+        const vPurpose: DBAPI.Vocabulary | undefined = eVPurpose ? await CACHE.VocabularyCache.vocabularyByEnum(eVPurpose) : await this.computeVocabMaster();
         const vUnits: DBAPI.Vocabulary | undefined = eVUnits ? await CACHE.VocabularyCache.vocabularyByEnum(eVUnits) : undefined;
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
-        const vPurpose: DBAPI.Vocabulary | undefined = await this.computeVocabDownload();
         const model: DBAPI.Model = new DBAPI.Model({
             idModel: 0,
             Name,
@@ -293,13 +296,13 @@ export class ModelDataExtraction {
         return { success: true };
     }
 
-    private async computeVocabDownload(): Promise<DBAPI.Vocabulary | undefined> {
-        if (!ModelDataExtraction.vocabDownload) {
-            ModelDataExtraction.vocabDownload = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
-            if (!ModelDataExtraction.vocabDownload)
-                LOG.error('ModelDataExtraction unable to fetch vocabulary for Download Model Purpose', LOG.LS.eMIG);
+    private async computeVocabMaster(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!ModelDataExtraction.vocabMaster) {
+            ModelDataExtraction.vocabMaster = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
+            if (!ModelDataExtraction.vocabMaster)
+                LOG.error('ModelDataExtraction unable to fetch vocabulary for Master Model Purpose', LOG.LS.eMIG);
         }
-        return ModelDataExtraction.vocabDownload;
+        return ModelDataExtraction.vocabMaster;
     }
 
     private async computeVocabModelGeometryFile(): Promise<DBAPI.Vocabulary | undefined> {
