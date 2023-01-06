@@ -581,6 +581,24 @@ export class VocabularyCache {
         return (await this.getInstance()).isVocabularyInSetInternal(eVocabEnum, eVocabSetEnum);
     }
 
+    static mapModelAssetType(fileName: string): COMMON.eVocabularyID | undefined {
+        // does this file have an extension recognizable as geometry?
+        const eModelType: COMMON.eVocabularyID | undefined = VocabularyCache.mapModelFileByExtensionID(fileName);
+        if (eModelType)
+            return COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile;
+
+        // if not, is it one of our recognized model support file extensions?
+        const extension: string = path.extname(fileName).toLowerCase() || fileName.toLowerCase();
+        switch (extension) {
+            case '.mtl':    // for OBJ
+            case '.bin':    // for GLTF
+                return COMMON.eVocabularyID.eAssetAssetTypeOther;
+        }
+
+        // Otherwise, assume this is a UV Map
+        return COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile;
+    }
+
     static async mapPhotogrammetryVariantType(variantType: string): Promise<Vocabulary | undefined> {
         let eVocabID: COMMON.eVocabularyID;
         switch (variantType.toLowerCase().replace(/_/g, '')) {
