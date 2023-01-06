@@ -114,7 +114,7 @@ export class ModelTestSetup {
 
         for (const [ uniqueID, MMFList ] of migrationFilesMap) {
             LOG.info(`ModelTestSetup handling ${uniqueID} with ${MMFList.length} files`, LOG.LS.eTEST);
-            const MM: MIG.ModelDataExtraction = new MIG.ModelDataExtraction();
+            const MM: MIG.ModelMigration = new MIG.ModelMigration();
             const resMigration: MIG.ModelMigrationResults = await MM.migrateModel(MMFList, this.userOwner.idUser, true, false);
             if (!resMigration.success || !resMigration.model || !resMigration.modelFileName) {
                 if (resMigration.filesMissing)    // handle special case where files are not present
