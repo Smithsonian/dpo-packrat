@@ -26,7 +26,7 @@ describe('DB Composite SubjectUnitIdentifier Test', () => {
     executeQueryCollection(ICollection, 'DPO', false, true);
     executeQueryCollection(ICollection, 'Armstrong', false, true);
     executeQueryCollection(ICollection, '', false, true);
-    executeQueryCollection(ICollection, '1 = 1; DROP Database Packrat', false, false);
+    executeQueryCollection(ICollection, '1 = 1; DROP Database Packrat', false, true);
 
     executeSearch('', false, true);
     executeSearch('Mount', false, true);
