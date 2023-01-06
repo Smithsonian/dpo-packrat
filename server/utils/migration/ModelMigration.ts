@@ -6,7 +6,6 @@ import * as NAV from '../../navigation/interface';
 import * as H from '../helpers';
 import * as LOG from '../logger';
 import { LineStream } from '../lineStream';
-import { ModelMigrationResults } from './ModelMigration';
 import { ModelMigrationFile } from './ModelMigrationFile';
 import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
 import { JobCookSIPackratInspectOutput, isEmbeddedTexture } from '../../job/impl/Cook';
@@ -23,7 +22,19 @@ interface IngestAssetResultSkippable extends STORE.IngestAssetResult {
     skipped?: boolean;
 }
 
-export class ModelDataExtraction {
+export type ModelMigrationResults = {
+    success: boolean;
+    error?: string | undefined;
+    modelFileName?: string | undefined;
+    modelFilePath?: string | undefined;
+    model?: DBAPI.Model | null | undefined;
+    asset?: DBAPI.Asset[] | null | undefined;
+    assetVersion?: DBAPI.AssetVersion[] | null | undefined;
+    filesMissing?: boolean | undefined;
+    supportFiles?: string[];
+};
+
+export class ModelMigration {
     private uniqueID: string | undefined = undefined;
     private idSystemObjectItem: number | undefined;
     private masterModelFile: ModelMigrationFile | undefined = undefined;
@@ -175,7 +186,7 @@ export class ModelDataExtraction {
 
         if (!this.idSystemObjectItem && testData) {
             await this.createTestObjects();
-            this.idSystemObjectItem  = ModelDataExtraction.idSystemObjectTest;
+            this.idSystemObjectItem  = ModelMigration.idSystemObjectTest;
         }
 
         if (foundGeometry)
@@ -345,39 +356,39 @@ export class ModelDataExtraction {
     }
 
     private async computeVocabMaster(): Promise<DBAPI.Vocabulary | undefined> {
-        if (!ModelDataExtraction.vocabMaster) {
-            ModelDataExtraction.vocabMaster = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
-            if (!ModelDataExtraction.vocabMaster)
+        if (!ModelMigration.vocabMaster) {
+            ModelMigration.vocabMaster = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
+            if (!ModelMigration.vocabMaster)
                 LOG.error('ModelDataExtraction unable to fetch vocabulary for Master Model Purpose', LOG.LS.eMIG);
         }
-        return ModelDataExtraction.vocabMaster;
+        return ModelMigration.vocabMaster;
     }
 
     private async computeVocabModelGeometryFile(): Promise<DBAPI.Vocabulary | undefined> {
-        if (!ModelDataExtraction.vocabModelGeometryFile) {
-            ModelDataExtraction.vocabModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
-            if (!ModelDataExtraction.vocabModelGeometryFile)
+        if (!ModelMigration.vocabModelGeometryFile) {
+            ModelMigration.vocabModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
+            if (!ModelMigration.vocabModelGeometryFile)
                 LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eMIG);
         }
-        return ModelDataExtraction.vocabModelGeometryFile;
+        return ModelMigration.vocabModelGeometryFile;
     }
 
     private async computeVocabUVMapFile(): Promise<DBAPI.Vocabulary | undefined> {
-        if (!ModelDataExtraction.vocabModelUVMapFile) {
-            ModelDataExtraction.vocabModelUVMapFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile);
-            if (!ModelDataExtraction.vocabModelUVMapFile)
+        if (!ModelMigration.vocabModelUVMapFile) {
+            ModelMigration.vocabModelUVMapFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile);
+            if (!ModelMigration.vocabModelUVMapFile)
                 LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Model UV Map File', LOG.LS.eMIG);
         }
-        return ModelDataExtraction.vocabModelUVMapFile;
+        return ModelMigration.vocabModelUVMapFile;
     }
 
     private async computeVocabOtherFile(): Promise<DBAPI.Vocabulary | undefined> {
-        if (!ModelDataExtraction.vocabOtherFile) {
-            ModelDataExtraction.vocabOtherFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
-            if (!ModelDataExtraction.vocabOtherFile)
+        if (!ModelMigration.vocabOtherFile) {
+            ModelMigration.vocabOtherFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
+            if (!ModelMigration.vocabOtherFile)
                 LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Other File', LOG.LS.eMIG);
         }
-        return ModelDataExtraction.vocabOtherFile;
+        return ModelMigration.vocabOtherFile;
     }
 
     private async ingestExplicitSupportFiles(): Promise<H.IOResults> {
@@ -533,7 +544,7 @@ export class ModelDataExtraction {
         let error: string | undefined = undefined;
         for (const mtlLine of mtlLines) {
             // LOG.info(`crackMTL processing ${mtlLine}`, LOG.LS.eMIG);
-            const textureMatch: RegExpMatchArray | null = mtlLine.match(ModelDataExtraction.regexMTLParser);
+            const textureMatch: RegExpMatchArray | null = mtlLine.match(ModelMigration.regexMTLParser);
             if (textureMatch && textureMatch.length >= 4) {
                 // const mapType: string = textureMatch[1]?.trim();
                 // const mapParams: string = textureMatch[2]?.trim();
@@ -655,7 +666,7 @@ export class ModelDataExtraction {
     }
 
     private async createTestObjects(): Promise<H.IOResults> {
-        if (ModelDataExtraction.idSystemObjectTest)
+        if (ModelMigration.idSystemObjectTest)
             return { success: true };
 
         this.logStatus('createTestObjects', true, 'starting');
@@ -694,7 +705,7 @@ export class ModelDataExtraction {
         if (!SO)
             return this.returnStatus('createTestObjects', false, `unable to fetch system object from item ${H.Helpers.JSONStringify(itemDB)}`);
 
-        ModelDataExtraction.idSystemObjectTest = SO.idSystemObject;
+        ModelMigration.idSystemObjectTest = SO.idSystemObject;
         return { success: true };
     }
 

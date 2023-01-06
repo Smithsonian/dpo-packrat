@@ -5,7 +5,7 @@ import * as LOG from '../../utils/logger';
 import { ASL, LocalStore } from '../../utils/localStore';
 
 import { SceneMigrationPackages, ModelMigrationFiles } from '../../utils/migration/MigrationData';
-import { MigrationUtils, ModelDataExtraction, ModelMigrationResults, ModelMigrationFile, SceneMigration, SceneMigrationResults, SceneMigrationPackage } from '../../utils/migration';
+import { MigrationUtils, ModelMigration, ModelMigrationResults, ModelMigrationFile, SceneMigration, SceneMigrationResults, SceneMigrationPackage } from '../../utils/migration';
 
 import * as COMMON from '@dpo-packrat/common';
 
@@ -241,7 +241,7 @@ class Migrator {
             const modelFile: ModelMigrationFile = modelFileSet[0];
             this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) Starting ${operation}; semaphore count ${value}`);
 
-            const MDE: ModelDataExtraction = new ModelDataExtraction();
+            const MDE: ModelMigration = new ModelMigration();
             const MMR: ModelMigrationResults = await MDE.migrateModel(modelFileSet, user.idUser, true, this.extractMode);
 
             if (!MMR.success)
