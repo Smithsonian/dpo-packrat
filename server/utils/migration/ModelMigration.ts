@@ -68,7 +68,7 @@ export class ModelMigration {
         this.extractMode = extractMode;
         let res: ModelMigrationResults = await this.extractMigrationInfo();
         if (!res.success)
-            return this.returnStatus('migrateModel', false, res.error);
+            return res;
 
         if (!this.uniqueID || !this.masterModelGeometryFile || !this.masterModelFile)
             return { success: false, error: 'No geometry present in model definition' };
@@ -151,10 +151,14 @@ export class ModelMigration {
         let idSystemObjectItem: number | undefined = undefined;
         let testData: boolean | undefined = undefined;
         for (const modelFile of this.modelFileSet) {
+            const fileExists: boolean = await this.testFileExistence(modelFile);
+            if (!fileExists)
+                return this.returnStatus('extractMigrationInfo', false, `unable to locate file for ${H.Helpers.JSONStringify(modelFile)}`, { filesMissing: true });
+
             if (modelFile.geometry) {
                 const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
                 if (foundGeometry) {
-                    this.logStatus('extractGeometryInfo', false, `Skipping Secondary Geometry File ${filePath} vs already encountered ${this.masterModelLocation}`);
+                    this.logStatus('extractMigrationInfo', false, `Skipping Secondary Geometry File ${filePath} vs already encountered ${this.masterModelLocation}`);
                     retValue = false;
                     continue;
                 }
@@ -709,6 +713,26 @@ export class ModelMigration {
         return { success: true };
     }
 
+    private async testFileExistence(modelFile: ModelMigrationFile): Promise<boolean> {
+        const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
+        const res: H.StatResults = await H.Helpers.stat(filePath);
+        let success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
+
+        if (modelFile.hash) {
+            const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
+            if (!hashRes.success) {
+                this.logStatus(`testFileExistience('${filePath}')`, false, `unable to compute hash ${hashRes.error}`);
+                success = false;
+            } else if (hashRes.hash != modelFile.hash) {
+                this.logStatus(`testFileExistience('${filePath}')`, false, `computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
+                success = false;
+            }
+        }
+
+        this.logStatus(`testFileExistience('${filePath}')`, success, `${success ? 'Exists' : 'Missing'}`);
+        return success;
+    }
+
     private logStatus(context: string, success: boolean, message: string | undefined): void {
         if (!success)
             LOG.error(`ModelMigration (${this.uniqueID}) ${context}: ${message}`, LOG.LS.eMIG);
@@ -716,9 +740,9 @@ export class ModelMigration {
             LOG.info(`ModelMigration (${this.uniqueID}) ${context}${message ? (': ' + message) : ''}`, LOG.LS.eMIG);
     }
 
-    private returnStatus(context: string, success: boolean, message: string | undefined): H.IOResults {
+    private returnStatus(context: string, success: boolean, message: string | undefined, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (!success)
             this.logStatus(context, success, message);
-        return { success, error: message };
+        return { success, error: message, ...props };
     }
 }
