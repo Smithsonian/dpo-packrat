@@ -42,23 +42,30 @@ export class EdanCollection implements COL.ICollection {
             rowCount: 0,
         };
 
+        const path: string = 'metadata/v2.0/metadata/search.htm';
+        const filters: string[] = [];
         let gatherRaw: boolean = false;
         let gatherIDMap: boolean = false;
-        let path: string = 'metadata/v2.0/collections/search.htm';
-        let filter: string = '';
-        const filters: string[] = [];
+
+        if (!options)
+            filters.push('"type:edanmdm"');
+
         if (options) {
-            if (options.searchMetadata)
-                path = 'metadata/v2.0/metadata/search.htm';
             if (options.recordType)
-                filters.push(`type:${options.recordType}`);
-            if (filters.length > 0) {
-                filter = '&fq[]=';
-                for (let filterIndex = 0; filterIndex < filters.length; filterIndex++)
-                    filter = filter + (filterIndex == 0 ? '' : /* istanbul ignore next */ ',') + filters[filterIndex];
-            }
+                filters.push(`"type:${options.recordType}"`);
+            else if (!options.searchMetadata)
+                filters.push('"type:edanmdm"');
+
             gatherRaw = options.gatherRaw ?? false;
             gatherIDMap = options.gatherIDMap ?? false;
+        }
+
+        let filter: string = '';
+        if (filters.length > 0) {
+            filter = '&fqs=[';
+            for (let filterIndex = 0; filterIndex < filters.length; filterIndex++)
+                filter = filter + (filterIndex == 0 ? '' : /* istanbul ignore next */ ',') + encodeURIComponent(filters[filterIndex]);
+            filter += ']';
         }
 
         // in addition to URI encoding the query, also replace single quotes with %27
@@ -133,8 +140,8 @@ export class EdanCollection implements COL.ICollection {
             }
         }
 
-        // LOG.info(JSON.stringify(result) + '\n\n', LOG.LS.eCOLL);
-        // LOG.info(reqResult.output + '\n\n', LOG.LS.eCOLL);
+        // LOG.info(`Collections Processed Results = ${JSON.stringify(result)}'\n\n'`, LOG.LS.eCOLL);
+        // LOG.info(`EDAN Raw Results = ${reqResult.output}\n\n`, LOG.LS.eCOLL);
         return result;
     }
 
