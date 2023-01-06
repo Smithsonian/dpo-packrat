@@ -213,7 +213,7 @@ export class ModelMigration {
             allowZipCracking: true,
             idUserCreator: this.userOwner?.idUser ?? 0,
             SOBased,
-            Comment: 'Model Ingested by ModelDataExtraction',
+            Comment: 'Model Ingested by ModelMigration',
             doNotSendIngestionEvent,
             doNotUpdateParentVersion: false
         };
@@ -281,7 +281,7 @@ export class ModelMigration {
             allowZipCracking: true,
             idUserCreator: this.userOwner?.idUser ?? 0,
             SOBased,
-            Comment: 'Support File Ingested by ModelDataExtraction',
+            Comment: 'Support File Ingested by ModelMigration',
             doNotSendIngestionEvent: true,
             doNotUpdateParentVersion: false
         };
@@ -359,7 +359,7 @@ export class ModelMigration {
         if (!ModelMigration.vocabMaster) {
             ModelMigration.vocabMaster = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
             if (!ModelMigration.vocabMaster)
-                LOG.error('ModelDataExtraction unable to fetch vocabulary for Master Model Purpose', LOG.LS.eMIG);
+                LOG.error('ModelMigration unable to fetch vocabulary for Master Model Purpose', LOG.LS.eMIG);
         }
         return ModelMigration.vocabMaster;
     }
@@ -368,7 +368,7 @@ export class ModelMigration {
         if (!ModelMigration.vocabModelGeometryFile) {
             ModelMigration.vocabModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
             if (!ModelMigration.vocabModelGeometryFile)
-                LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eMIG);
+                LOG.error('ModelMigration unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eMIG);
         }
         return ModelMigration.vocabModelGeometryFile;
     }
@@ -377,7 +377,7 @@ export class ModelMigration {
         if (!ModelMigration.vocabModelUVMapFile) {
             ModelMigration.vocabModelUVMapFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile);
             if (!ModelMigration.vocabModelUVMapFile)
-                LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Model UV Map File', LOG.LS.eMIG);
+                LOG.error('ModelMigration unable to fetch vocabulary for Asset Type Model UV Map File', LOG.LS.eMIG);
         }
         return ModelMigration.vocabModelUVMapFile;
     }
@@ -386,7 +386,7 @@ export class ModelMigration {
         if (!ModelMigration.vocabOtherFile) {
             ModelMigration.vocabOtherFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
             if (!ModelMigration.vocabOtherFile)
-                LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Other File', LOG.LS.eMIG);
+                LOG.error('ModelMigration unable to fetch vocabulary for Asset Type Other File', LOG.LS.eMIG);
         }
         return ModelMigration.vocabOtherFile;
     }
@@ -711,9 +711,9 @@ export class ModelMigration {
 
     private logStatus(context: string, success: boolean, message: string | undefined): void {
         if (!success)
-            LOG.error(`ModelDataExtraction (${this.uniqueID}) ${context}: ${message}`, LOG.LS.eMIG);
+            LOG.error(`ModelMigration (${this.uniqueID}) ${context}: ${message}`, LOG.LS.eMIG);
         else
-            LOG.info(`ModelDataExtraction (${this.uniqueID}) ${context}${message ? (': ' + message) : ''}`, LOG.LS.eMIG);
+            LOG.info(`ModelMigration (${this.uniqueID}) ${context}${message ? (': ' + message) : ''}`, LOG.LS.eMIG);
     }
 
     private returnStatus(context: string, success: boolean, message: string | undefined): H.IOResults {
