@@ -5,7 +5,7 @@ import * as LOG from '../../utils/logger';
 import { ASL, LocalStore } from '../../utils/localStore';
 
 import { SceneMigrationPackages, ModelMigrationFiles } from '../../utils/migration/MigrationData';
-import { MigrationUtils, ModelDataExtraction, ModelMigration, ModelMigrationResults, ModelMigrationFile, SceneMigration, SceneMigrationResults, SceneMigrationPackage } from '../../utils/migration';
+import { MigrationUtils, ModelDataExtraction, ModelMigrationResults, ModelMigrationFile, SceneMigration, SceneMigrationResults, SceneMigrationPackage } from '../../utils/migration';
 
 import * as COMMON from '@dpo-packrat/common';
 
@@ -237,18 +237,13 @@ class Migrator {
             const LS: LocalStore = await ASL.getOrCreateStore();
             LS.incrementRequestID();
 
-            let MMR: ModelMigrationResults;
             const operation: string = this.extractMode ? 'extraction' : 'migration';
             const modelFile: ModelMigrationFile = modelFileSet[0];
             this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) Starting ${operation}; semaphore count ${value}`);
 
-            if (!this.extractMode) {
-                const MM: ModelMigration = new ModelMigration();
-                MMR = await MM.migrateModel(modelFileSet, user.idUser, true);
-            } else {
-                const MDE: ModelDataExtraction = new ModelDataExtraction(modelFileSet);
-                MMR = await MDE.fetchAndExtractInfo();
-            }
+            const MDE: ModelDataExtraction = new ModelDataExtraction();
+            const MMR: ModelMigrationResults = await MDE.migrateModel(modelFileSet, user.idUser, true, this.extractMode);
+
             if (!MMR.success)
                 this.recordMigrationResult(false, `ModelMigration (${modelFile.uniqueID}) ${operation} failed for ${H.Helpers.JSONStringify(modelFile)}: ${MMR.error}`);
             else
