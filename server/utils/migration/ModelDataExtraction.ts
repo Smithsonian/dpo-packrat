@@ -2,12 +2,12 @@
 import * as DBAPI from '../../db';
 import * as STORE from '../../storage/interface';
 import * as CACHE from '../../cache';
+import * as NAV from '../../navigation/interface';
 import * as H from '../helpers';
 import * as LOG from '../logger';
 import { LineStream } from '../lineStream';
 import { ModelMigrationResults } from './ModelMigration';
 import { ModelMigrationFile } from './ModelMigrationFile';
-import { MigrationUtils } from './MigrationUtils';
 import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
 import { JobCookSIPackratInspectOutput, isEmbeddedTexture } from '../../job/impl/Cook';
 import * as COMMON from '@dpo-packrat/common';
@@ -29,7 +29,8 @@ export class ModelDataExtraction {
     private masterModelFile: ModelMigrationFile | undefined = undefined;
     private masterModelGeometryFile: string | undefined = undefined;
     private masterModelLocation?: string;
-    private modelFileSet: ModelMigrationFile[];
+    private modelFileSet: ModelMigrationFile[] = [];
+    private extractMode?: boolean;
 
     // Computed
     private supportFiles: Set<string> = new Set<string>();
@@ -43,52 +44,27 @@ export class ModelDataExtraction {
 
     private static vocabMaster: DBAPI.Vocabulary | undefined = undefined;
     private static vocabModelGeometryFile: DBAPI.Vocabulary | undefined = undefined;
+    private static vocabModelUVMapFile: DBAPI.Vocabulary | undefined = undefined;
     private static vocabOtherFile: DBAPI.Vocabulary | undefined = undefined;
     private static regexMTLParser: RegExp = new RegExp('(map_.*?|norm|disp|decal|bump|refl)( .*?)? ([^ ]+)\\s*$', 'i'); // [1] map type, [2] map params, [3] map name
+    private static idSystemObjectTest:  number | undefined = undefined;
 
-    constructor(modelFileSet: ModelMigrationFile[]) {
+    async migrateModel(modelFileSet: ModelMigrationFile[], idUser: number, doNotSendIngestionEvent?: boolean, extractMode?: boolean): Promise<ModelMigrationResults> {
+        if (modelFileSet.length === 0)
+            return this.returnStatus('migrateModel', false, 'called with empty file set');
+
         this.modelFileSet = modelFileSet;
-        this.extractMigrationInfo();
-    }
+        this.extractMode = extractMode;
+        let res: ModelMigrationResults = await this.extractMigrationInfo();
+        if (!res.success)
+            return this.returnStatus('migrateModel', false, res.error);
 
-    private extractMigrationInfo(): boolean {
-        let retValue: boolean = true;
-        let foundGeometry: boolean = false;
-        for (const modelFile of this.modelFileSet) {
-            if (modelFile.geometry) {
-                const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
-                if (foundGeometry) {
-                    this.logStatus('extractGeometryInfo', false, `Skipping Secondary Geometry File ${filePath} vs already encountered ${this.masterModelLocation}`);
-                    retValue = false;
-                    continue;
-                }
-
-                this.uniqueID                   = modelFile.uniqueID;
-                this.idSystemObjectItem         = modelFile.idSystemObjectItem;
-
-                this.masterModelFile            = modelFile;
-                this.masterModelGeometryFile    = path.basename(filePath);
-                this.masterModelLocation        = filePath;
-                foundGeometry = true;
-            } else
-                this.expectedSupportFiles.add(modelFile.fileName);
-        }
-
-        if (foundGeometry)
-            return retValue;
-
-        this.uniqueID = undefined;
-        this.masterModelGeometryFile = undefined;
-        return false;
-    }
-
-    async fetchAndExtractInfo(): Promise<ModelMigrationResults> {
         if (!this.uniqueID || !this.masterModelGeometryFile || !this.masterModelFile)
             return { success: false, error: 'No geometry present in model definition' };
 
-        let res: ModelMigrationResults;
+        this.userOwner = await CACHE.UserCache.getUser(idUser);
         if (!this.userOwner)
-            this.userOwner = await MigrationUtils.fetchMigrationUser();
+            return this.returnStatus('migrateModel', false, `unable to load user with idUser of ${idUser}`);
 
         // Create DBAPI.Model
         res = await this.createModel(this.masterModelGeometryFile, this.masterModelFile.eVCreationMethod,
@@ -100,7 +76,7 @@ export class ModelDataExtraction {
             return this.returnStatus('fetchAndExtractInfo', false, 'DB Model not created');
 
         // Ingest model geometry asset as a model
-        res = await this.ingestModel(this.model);
+        res = await this.ingestModel(this.model, doNotSendIngestionEvent);
         if (!res.success)
             return res;
 
@@ -137,7 +113,7 @@ export class ModelDataExtraction {
                 return this.returnStatus('fetchAndExtractInfo', false, 'Support File Asset System Object not found');
         }
 
-        if (useCook) {
+        if (useCook || !this.extractMode) { // if we're not in "extract mode", always use cook to gather model metrics
             // Run Cook's si-packrat-inspect and parse Cook output to obtain list of texture maps
             res = await WorkflowUtil.computeModelMetrics(this.masterModelGeometryFile, this.model.idModel, undefined,
                 AssetVersionModelSO.idSystemObject, AssetVersionSupportFileSO?.idSystemObject,
@@ -149,12 +125,68 @@ export class ModelDataExtraction {
         if (!res.success)
             return res;
 
+        if (this.idSystemObjectItem)
+            await this.postItemWiring();
+
         const modelFilePath: string | undefined = this.masterModelLocation ? path.dirname(this.masterModelLocation) : undefined;
         return { success: true, modelFileName: this.masterModelGeometryFile, modelFilePath, model: this.model,
             asset: this.AssetModel, assetVersion: this.AssetVersionModel, supportFiles: Array.from(this.supportFiles.keys()) };
     }
 
-    private async ingestModel(SOBased: DBAPI.SystemObjectBased): Promise<H.IOResults> {
+    private async extractMigrationInfo(): Promise<H.IOResults> {
+        let retValue: boolean = true;
+        let foundGeometry: boolean = false;
+
+        let idSystemObjectItem: number | undefined = undefined;
+        let testData: boolean | undefined = undefined;
+        for (const modelFile of this.modelFileSet) {
+            if (modelFile.geometry) {
+                const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
+                if (foundGeometry) {
+                    this.logStatus('extractGeometryInfo', false, `Skipping Secondary Geometry File ${filePath} vs already encountered ${this.masterModelLocation}`);
+                    retValue = false;
+                    continue;
+                }
+
+                this.uniqueID                   = modelFile.uniqueID;
+                this.idSystemObjectItem         = modelFile.idSystemObjectItem;
+
+                this.masterModelFile            = modelFile;
+                this.masterModelGeometryFile    = path.basename(filePath);
+                this.masterModelLocation        = filePath;
+                foundGeometry = true;
+            } else
+                this.expectedSupportFiles.add(modelFile.fileName);
+
+            // capture idSystemObject for item, if any, and ensure consistency
+            if (idSystemObjectItem === undefined)
+                idSystemObjectItem = modelFile.idSystemObjectItem;
+            else if (idSystemObjectItem !== modelFile.idSystemObjectItem && modelFile.idSystemObjectItem)
+                return this.returnStatus('extractMigrationInfo', false, `called with inconsistent value for idSystemObjectItem (${modelFile.idSystemObjectItem}); expected ${idSystemObjectItem}`);
+
+            // capture testData flag, if set, and ensure consistency
+            if (modelFile.testData !== testData) {
+                if (testData === undefined)
+                    testData = modelFile.testData;
+                else
+                    return this.returnStatus('extractMigrationInfo', false, `called with inconsistent value for testData (${modelFile.testData}); expected ${testData}`);
+            }
+        }
+
+        if (!this.idSystemObjectItem && testData) {
+            await this.createTestObjects();
+            this.idSystemObjectItem  = ModelDataExtraction.idSystemObjectTest;
+        }
+
+        if (foundGeometry)
+            return { success: retValue, error: retValue ? undefined : 'Multiple Geometry Found' };
+
+        this.uniqueID = undefined;
+        this.masterModelGeometryFile = undefined;
+        return { success: true, error: 'No Geometry Found' };
+    }
+
+    private async ingestModel(SOBased: DBAPI.SystemObjectBased, doNotSendIngestionEvent?: boolean): Promise<H.IOResults> {
         const vAssetType: DBAPI.Vocabulary | undefined = await this.computeVocabModelGeometryFile();
         const idVAssetType: number | undefined = vAssetType?.idVocabulary;
         if (!idVAssetType)
@@ -171,7 +203,7 @@ export class ModelDataExtraction {
             idUserCreator: this.userOwner?.idUser ?? 0,
             SOBased,
             Comment: 'Model Ingested by ModelDataExtraction',
-            doNotSendIngestionEvent: true,
+            doNotSendIngestionEvent,
             doNotUpdateParentVersion: false
         };
 
@@ -207,10 +239,26 @@ export class ModelDataExtraction {
     }
 
     private async ingestSupportFileWorker(SOBased: DBAPI.SystemObjectBased, supportFilePath: string): Promise<STORE.IngestAssetResult> {
-        const vAssetType: DBAPI.Vocabulary | undefined = await this.computeVocabOtherFile();
+        let vAssetType: DBAPI.Vocabulary | undefined = undefined;
+        switch (CACHE.VocabularyCache.mapModelAssetType(supportFilePath)) {
+            case COMMON.eVocabularyID.eAssetAssetTypeModel:
+            case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile:
+                vAssetType = await this.computeVocabModelGeometryFile();
+                break;
+
+            case COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile:
+                vAssetType = await this.computeVocabUVMapFile();
+                break;
+
+            case COMMON.eVocabularyID.eAssetAssetTypeOther:
+            default:
+                vAssetType = await this.computeVocabOtherFile();
+                break;
+        }
+
         const idVAssetType: number | undefined = vAssetType?.idVocabulary;
         if (!idVAssetType)
-            return this.returnStatus('ingestSupportFileWorker', false, 'Unable to compute idVAssetType for other file');
+            return this.returnStatus('ingestSupportFileWorker', false, `Unable to compute idVAssetType for file ${supportFilePath}`);
         const ISI: STORE.IngestStreamOrFileInput = {
             readStream: null,
             localFilePath: supportFilePath,
@@ -312,6 +360,15 @@ export class ModelDataExtraction {
                 LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eMIG);
         }
         return ModelDataExtraction.vocabModelGeometryFile;
+    }
+
+    private async computeVocabUVMapFile(): Promise<DBAPI.Vocabulary | undefined> {
+        if (!ModelDataExtraction.vocabModelUVMapFile) {
+            ModelDataExtraction.vocabModelUVMapFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile);
+            if (!ModelDataExtraction.vocabModelUVMapFile)
+                LOG.error('ModelDataExtraction unable to fetch vocabulary for Asset Type Model UV Map File', LOG.LS.eMIG);
+        }
+        return ModelDataExtraction.vocabModelUVMapFile;
     }
 
     private async computeVocabOtherFile(): Promise<DBAPI.Vocabulary | undefined> {
@@ -572,16 +629,85 @@ export class ModelDataExtraction {
         return { success, error };
     }
 
-    private logStatus(context: string, success: boolean, error: string | undefined): void {
-        if (!success)
-            LOG.error(`ModelDataExtraction (${this.uniqueID}) ${context}: ${error}`, LOG.LS.eMIG);
-        else
-            LOG.info(`ModelDataExtraction (${this.uniqueID}) ${context}${error ? (': ' + error) : ''}`, LOG.LS.eMIG);
+    private async postItemWiring(): Promise<H.IOResults> {
+        this.logStatus('postItemWiring', true, 'starting');
+
+        if (!this.model)
+            return this.returnStatus('postItemWiring', false, 'called without model defined');
+
+        // explicitly reindex model
+        const nav: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
+        if (!nav)
+            return this.returnStatus('postItemWiring', false, 'unable to fetch navigation interface');
+
+        const SO: DBAPI.SystemObject | null = await this.model.fetchSystemObject();
+        if (!SO)
+            return this.returnStatus('postItemWiring', false, `unable to fetch system object for ${H.Helpers.JSONStringify(this.model)}`);
+
+        // index directly instead of scheduling indexing, so that we get an initial SOLR entry right away
+        // NAV.NavigationFactory.scheduleObjectIndexing(SO.idSystemObject);
+        const indexer: NAV.IIndexer | null = await nav.getIndexer();
+        if (!indexer)
+            return this.returnStatus('postItemWiring', false,  `unable to fetch navigation indexer for ${H.Helpers.JSONStringify(this.model)}`);
+
+        indexer.indexObject(SO.idSystemObject);
+        return { success: true };
     }
 
-    private returnStatus(context: string, success: boolean, error: string | undefined): H.IOResults {
+    private async createTestObjects(): Promise<H.IOResults> {
+        if (ModelDataExtraction.idSystemObjectTest)
+            return { success: true };
+
+        this.logStatus('createTestObjects', true, 'starting');
+        const unitDB: DBAPI.Unit | null = await DBAPI.Unit.fetch(1); // Unknown Unit
+        if (!unitDB)
+            return this.returnStatus('createTestObjects', false, 'unable to fetch unit with ID=1 for test data');
+
+        const Name: string = `ModelMigrationTest-${new Date().toISOString()}`;
+        const subjectDB: DBAPI.Subject = new DBAPI.Subject({
+            idUnit: unitDB.idUnit,
+            idAssetThumbnail: null,
+            idGeoLocation: null,
+            Name,
+            idIdentifierPreferred: null,
+            idSubject: 0,
+        });
+        if (!await subjectDB.create())
+            return this.returnStatus('createTestObjects', false, `unable to create subject ${H.Helpers.JSONStringify(subjectDB)}`);
+
+        const itemDB: DBAPI.Item = new DBAPI.Item({
+            idAssetThumbnail: null,
+            idGeoLocation: null,
+            Name,
+            EntireSubject: true,
+            Title: null,
+            idItem: 0,
+        });
+        if (!await itemDB.create())
+            return this.returnStatus('createTestObjects', false, `unable to create item ${H.Helpers.JSONStringify(itemDB)}`);
+
+        const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(subjectDB, itemDB);
+        if (!xref)
+            return this.returnStatus('createTestObjects', false, `unable to wire subject ${H.Helpers.JSONStringify(subjectDB)} to item ${H.Helpers.JSONStringify(itemDB)}`);
+
+        const SO: DBAPI.SystemObject | null = await itemDB.fetchSystemObject();
+        if (!SO)
+            return this.returnStatus('createTestObjects', false, `unable to fetch system object from item ${H.Helpers.JSONStringify(itemDB)}`);
+
+        ModelDataExtraction.idSystemObjectTest = SO.idSystemObject;
+        return { success: true };
+    }
+
+    private logStatus(context: string, success: boolean, message: string | undefined): void {
         if (!success)
-            this.logStatus(context, success, error);
-        return { success, error };
+            LOG.error(`ModelDataExtraction (${this.uniqueID}) ${context}: ${message}`, LOG.LS.eMIG);
+        else
+            LOG.info(`ModelDataExtraction (${this.uniqueID}) ${context}${message ? (': ' + message) : ''}`, LOG.LS.eMIG);
+    }
+
+    private returnStatus(context: string, success: boolean, message: string | undefined): H.IOResults {
+        if (!success)
+            this.logStatus(context, success, message);
+        return { success, error: message };
     }
 }
