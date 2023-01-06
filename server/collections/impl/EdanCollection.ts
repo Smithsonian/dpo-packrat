@@ -49,8 +49,7 @@ export class EdanCollection implements COL.ICollection {
 
         if (!options)
             filters.push('"type:edanmdm"');
-
-        if (options) {
+        else {
             if (options.recordType)
                 filters.push(`"type:${options.recordType}"`);
             else if (!options.searchMetadata)
