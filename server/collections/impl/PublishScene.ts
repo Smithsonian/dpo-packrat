@@ -120,6 +120,9 @@ export class PublishScene {
             || (!lodash.isEqual(media_usage, edanRecord.content['media_usage']));   // license has changed
 
         // update EDAN 3D Package if we have downloads and/or if our published state has changed
+        // Per Andrew Gunther on 1/10/2023, 'media_usage' is the correct property for us to set for our calls
+        // to the EDAN 3D API upsertContent, when we want to specify licensing information for the scene (not its metadata)
+        // Confusingly, this data is presented as 'usage' when querying EDAN using its metadata search
         if (this.svxDocument && updatePackage) {
             const E3DPackage: COL.Edan3DPackageContent = { ...edanRecord.content };
             E3DPackage.document = this.svxDocument;
