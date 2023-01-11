@@ -72,6 +72,14 @@ export class WorkflowUtil {
             idSystemObject.push(idSystemObjectAssetVersion);
             if (idSystemObjectSupportFileAssetVersion)
                 idSystemObject.push(idSystemObjectSupportFileAssetVersion);
+
+            const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObjectAssetVersion);
+            if (!SO)
+                return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} unable to fetch system object from id ${idSystemObjectAssetVersion}` };
+            if (SO.idAssetVersion)
+                idAssetVersions.push(SO.idAssetVersion);
+            else
+                LOG.error(`WorkflowUtil.computeModelMetrics ${fileName} handling system object ${idSystemObjectAssetVersion} which is not an asset version`, LOG.LS.eWF);
         } else {
             if (!idSystemObjectModel) {
                 const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel ?? 0);

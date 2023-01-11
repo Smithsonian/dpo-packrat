@@ -236,7 +236,7 @@ export class EdanCollection implements COL.ICollection {
         // LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         LOG.info('EdanCollection.upsertContent', LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertContent', '', JSON.stringify(body), 'application/json');
-        // LOG.info(`EdanCollection.upsertContent:\n${JSON.stringify(body)}\n${reqResult.output}`, LOG.LS.eCOLL);
+        LOG.info(`EdanCollection.upsertContent:\n${JSON.stringify(body)}\n${reqResult.output}`, LOG.LS.eCOLL);
         if (!reqResult.success) {
             LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
             return null;
