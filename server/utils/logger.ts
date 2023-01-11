@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as winston from 'winston';
+import 'winston-daily-rotate-file';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Config } from '../config';
@@ -103,9 +104,11 @@ function configureLogger(logPath: string | null): void {
             })
         ),
         transports: [
-            new winston.transports.File({
-                filename: path.join(logPath, 'PackratCombined.log'),
-                maxsize: 100 * 1024 * 1024 // 100 MB
+            new winston.transports.DailyRotateFile({
+                filename: 'PackratCombined.%DATE%.log',
+                dirname: logPath,
+                datePattern: 'YYYY-MM-DD',
+                maxSize: 100 * 1024 * 1024 // 100 MB
             }),
             new winston.transports.File({
                 filename: path.join(logPath, 'PackratError.log'),
