@@ -82,11 +82,14 @@ export class Helpers {
         return { success: true };
     }
 
-    static async moveFile(nameSource: string, nameDestination: string): Promise<IOResults> {
+    static async moveFile(nameSource: string, nameDestination: string, allowedToFail?: boolean): Promise<IOResults> {
         try {
             await fsp.rename(nameSource, nameDestination);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.moveFile', LOG.LS.eSYS, error);
+            if (allowedToFail)
+                LOG.info(`Helpers.moveFile: ${Helpers.JSONStringify(error)}`, LOG.LS.eSYS);
+            else
+                LOG.error('Helpers.moveFile', LOG.LS.eSYS, error);
             return { success: false, error: `Unable to move ${nameSource} to ${nameDestination}: ${error}` };
         }
         return { success: true };
