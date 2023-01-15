@@ -13,6 +13,7 @@ export enum LS { // logger section
     eAUTH,  // authentication
     eCACHE, // cache
     eCOLL,  // collections
+    eCON,   // console-redirected messages
     eCONF,  // config
     eDB,    // database
     eEVENT, // event
@@ -52,6 +53,7 @@ function loggerSectionName(eLogSection: LS | undefined): string {
         case LS.eAUTH:  return 'ATH';
         case LS.eCACHE: return 'CCH';
         case LS.eCOLL:  return 'COL';
+        case LS.eCON:   return 'CON';
         case LS.eCONF:  return 'CNF';
         case LS.eDB:    return 'DB ';
         case LS.eEVENT: return 'EVE';
@@ -131,6 +133,38 @@ function configureLogger(logPath: string | null): void {
     } catch (error) /* istanbul ignore next */ {
         logger.error(error);
     }
+
+    // Replace console debug/info/log/warn/error with our own versions:
+    const _debug = console.debug;
+    const _info = console.info;
+    const _log = console.log;
+    const _warn = console.warn;
+    const _error = console.error;
+
+    console.debug = function(...args) {
+        info(`console.debug: ${JSON.stringify(args)}`, LS.eCON);
+        return _debug.apply(console, args);
+    };
+
+    console.info = function(...args) {
+        info(`console.info: ${JSON.stringify(args)}`, LS.eCON);
+        return _info.apply(console, args);
+    };
+
+    console.log = function(...args) {
+        info(`console.log: ${JSON.stringify(args)}`, LS.eCON);
+        return _log.apply(console, args);
+    };
+
+    console.warn = function(...args) {
+        info(`console.warn: ${JSON.stringify(args)}`, LS.eCON);
+        return _warn.apply(console, args);
+    };
+
+    console.error = function(...args) {
+        error(`console.error: ${JSON.stringify(args)}`, LS.eCON);
+        return _error.apply(console, args);
+    };
 
     info('**************************', LS.eSYS);
     info(`Writing logs to ${path.resolve(logPath)}`, LS.eSYS);
