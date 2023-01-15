@@ -22,6 +22,7 @@ WORKDIR /app
 # Install perl, needed by exiftool
 RUN apk update
 RUN apk add perl
+RUN apk add bash
 
 COPY --from=base /app/server ./server
 COPY --from=base /app/common ./common
