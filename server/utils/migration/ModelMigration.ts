@@ -112,18 +112,11 @@ export class ModelMigration {
             case '.stl':    useCook = false; break;
         }   // Allow failures here, as some GLTFs are not being read properly by our 3rd party library
 
-        // Ingest Explicit Support Files
         await this.ingestExplicitSupportFiles(); // Allow failures here, to get as many error messages as possible
 
         res = this.testSupportFiles();
 
-        let AssetVersionSupportFileSO: DBAPI.SystemObject | null = null;
-        const AssetVersionSupportFile: DBAPI.AssetVersion | null = (this.AssetVersionSupportFile) ? this.AssetVersionSupportFile[0] : null;
-        if (AssetVersionSupportFile) {
-            AssetVersionSupportFileSO = await AssetVersionSupportFile.fetchSystemObject();
-            if (!AssetVersionSupportFileSO)
-                return this.returnStatus('fetchAndExtractInfo', false, 'Support File Asset System Object not found');
-        }
+        const AssetVersionSupportFileSO: DBAPI.SystemObject | null = await this.identifySpecialSupportFileSO();
 
         if (useCook || !this.extractMode) { // if we're not in "extract mode", use cook to gather model metrics
             // Only use Cook on models smaller than 4GB
@@ -134,6 +127,10 @@ export class ModelMigration {
                     undefined, undefined, this.userOwner.idUser);
                 if (res.success)
                     res = await this.extractTextureMaps();
+                else if (!this.testData) // if we failed and this is not test data, worry about Cook failures at this point
+                    return res;          // Test case setup wants to continue past here without errors
+                else
+                    res = { success: true, error: 'Skipping Cook failure' }; // test data will ignore cook failures at this point (allowing the test case construction to be completed)
             } else
                 this.logStatus('fetchAndExtractInfo', true, `Skipping Cook si-packrat-inspect run on ${AssetVersionModel.FileName} due to its large size of ${AssetVersionModel.StorageSize}`);
         }
@@ -422,6 +419,7 @@ export class ModelMigration {
             if (modelFile.geometry)
                 continue;
 
+            this.logStatus('ingestExplicitSupportFiles', true, `${modelFile.fileName}`);
             const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(modelFile.fileName);
             if (ingestTextureRes.skipped)
                 continue;
@@ -431,6 +429,33 @@ export class ModelMigration {
             }
         }
         return { success, error };
+    }
+
+    private async identifySpecialSupportFileSO(): Promise<DBAPI.SystemObject | null> {
+        let AssetVersionSupportFileSO: DBAPI.SystemObject | null = null;
+        let AssetVersionSupportFile: DBAPI.AssetVersion | null = null;
+
+        if (this.AssetVersionSupportFile) {
+            for (const AssetVersionSFTester of this.AssetVersionSupportFile) {
+                switch (CACHE.VocabularyCache.mapModelAssetType(AssetVersionSFTester.FileName)) {
+                    case COMMON.eVocabularyID.eAssetAssetTypeOther:
+                        AssetVersionSupportFile = AssetVersionSFTester;
+                        break;
+                }
+                if (!AssetVersionSupportFile)
+                    AssetVersionSupportFile = AssetVersionSFTester;
+            }
+        }
+
+        if (AssetVersionSupportFile) {
+            AssetVersionSupportFileSO = await AssetVersionSupportFile.fetchSystemObject();
+            if (!AssetVersionSupportFileSO) {
+                this.logStatus('identifySpecialSupportFileSO', false, 'Support File Asset System Object not found');
+                return null;
+            }
+            this.logStatus('identifySpecialSupportFileSO', true, `Selected ${AssetVersionSupportFile.FileName} as model support file`);
+        }
+        return AssetVersionSupportFileSO;
     }
 
     // if there are entries in expectedSupportFiles which were not discovered, those are errors
@@ -602,6 +627,7 @@ export class ModelMigration {
         const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: modelExtension });
         let writeError: boolean = false;
         try {
+            this.logStatus('crackGLTF', true, `Creating copy via temp file ${tempFile.path}`);
             const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, tempFile.path);
             if (!res.success)
                 return this.returnStatus('crackGLTF', false, `unable to copy asset version ${H.Helpers.JSONStringify(AssetVersionModel)}to ${tempFile.path}: ${res.error}`);
@@ -631,6 +657,7 @@ export class ModelMigration {
                 const uri: string = buffer.getURI();
                 if (!isEmbeddedTexture(uri)) {
                     // Attempt to ingest buffer
+                    this.logStatus('crackGLTF', true, `Ingest buffer from ${uri}`);
                     const ingestBufferRes: IngestAssetResultSkippable = await this.ingestSupportFile(uri);
                     if (!ingestBufferRes.skipped)
                         continue;
@@ -645,6 +672,7 @@ export class ModelMigration {
                 const uri: string = texture.getURI();
                 if (!isEmbeddedTexture(uri)) {
                     // Attempt to ingest texture
+                    this.logStatus('crackGLTF', true, `Ingest texture from ${uri}`);
                     const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(uri);
                     if (!ingestTextureRes.skipped)
                         continue;
@@ -752,16 +780,16 @@ export class ModelMigration {
         return success;
     }
 
-    private logStatus(context: string, success: boolean, message: string | undefined): void {
+    private logStatus(context: string, success: boolean, message: string | undefined, err?: any): void {
         if (!success)
-            LOG.error(`ModelMigration (${this.uniqueID}) ${context}: ${message}`, LOG.LS.eMIG);
+            LOG.error(`ModelMigration (${this.uniqueID}) ${context}: ${message}`, LOG.LS.eMIG, err);
         else
             LOG.info(`ModelMigration (${this.uniqueID}) ${context}${message ? (': ' + message) : ''}`, LOG.LS.eMIG);
     }
 
-    private returnStatus(context: string, success: boolean, message: string | undefined, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
+    private returnStatus(context: string, success: boolean, message: string | undefined, props?: any, err?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (!success)
-            this.logStatus(context, success, message);
+            this.logStatus(context, success, message, err);
         return { success, error: message, ...props };
     }
 }
