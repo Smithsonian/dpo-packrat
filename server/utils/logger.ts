@@ -120,11 +120,10 @@ function configureLogger(logPath: string | null): void {
         ]
     });
 
-    // For the time being, let's emit logs to the Console in production, for use in debugging
-    // /* istanbul ignore else */
-    // if (process.env.NODE_ENV !== 'production') {
-    logger.add(new winston.transports.Console());
-    // }
+    // Log to console only in non-production builds
+    /* istanbul ignore else */
+    if (process.env.NODE_ENV !== 'production')
+        logger.add(new winston.transports.Console());
 
     try {
         /* istanbul ignore if */
@@ -165,6 +164,11 @@ function configureLogger(logPath: string | null): void {
         error(`console.error: ${JSON.stringify(args)}`, LS.eCON);
         return _error.apply(console, args);
     };
+
+    // The following approach does not work. More thought and investigation is needed here
+    // Observe writes to stdout and stderr; forward to our log
+    // process.stdout.on('data', data => { info(`stdout: ${JSON.stringify(data)}`, LS.eCON); });
+    // process.stderr.on('data', data => { error(`stderr: ${JSON.stringify(data)}`, LS.eCON); });
 
     info('**************************', LS.eSYS);
     info(`Writing logs to ${path.resolve(logPath)}`, LS.eSYS);
