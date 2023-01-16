@@ -36,7 +36,8 @@ export type ModelMigrationResults = {
 
 export class ModelMigration {
     private uniqueID: string | undefined = undefined;
-    private idSystemObjectItem: number | undefined;
+    private idSystemObjectItem: number | undefined = undefined;
+    private testData: boolean | undefined = undefined;
     private masterModelFile: ModelMigrationFile | undefined = undefined;
     private masterModelGeometryFile: string | undefined = undefined;
     private masterModelLocation?: string;
@@ -124,13 +125,17 @@ export class ModelMigration {
                 return this.returnStatus('fetchAndExtractInfo', false, 'Support File Asset System Object not found');
         }
 
-        if (useCook || !this.extractMode) { // if we're not in "extract mode", always use cook to gather model metrics
-            // Run Cook's si-packrat-inspect and parse Cook output to obtain list of texture maps
-            res = await WorkflowUtil.computeModelMetrics(this.masterModelGeometryFile, this.model.idModel, undefined,
-                AssetVersionModelSO.idSystemObject, AssetVersionSupportFileSO?.idSystemObject,
-                undefined, undefined, this.userOwner.idUser);
-            if (res.success)
-                res = await this.extractTextureMaps();
+        if (useCook || !this.extractMode) { // if we're not in "extract mode", use cook to gather model metrics
+            // Only use Cook on models smaller than 4GB
+            if (AssetVersionModel.StorageSize < 4 * 1024 * 1024 * 1024) {
+                // Run Cook's si-packrat-inspect and parse Cook output to obtain list of texture maps
+                res = await WorkflowUtil.computeModelMetrics(this.masterModelGeometryFile, this.model.idModel, undefined,
+                    AssetVersionModelSO.idSystemObject, AssetVersionSupportFileSO?.idSystemObject,
+                    undefined, undefined, this.userOwner.idUser);
+                if (res.success)
+                    res = await this.extractTextureMaps();
+            } else
+                this.logStatus('fetchAndExtractInfo', true, `Skipping Cook si-packrat-inspect run on ${AssetVersionModel.FileName} due to its large size of ${AssetVersionModel.StorageSize}`);
         }
 
         if (!res.success)
@@ -151,6 +156,9 @@ export class ModelMigration {
         let idSystemObjectItem: number | undefined = undefined;
         let testData: boolean | undefined = undefined;
         for (const modelFile of this.modelFileSet) {
+            if (!this.uniqueID)
+                this.uniqueID = modelFile.uniqueID;
+
             const fileExists: boolean = await this.testFileExistence(modelFile);
             if (!fileExists)
                 return this.returnStatus('extractMigrationInfo', false, `unable to locate file for ${H.Helpers.JSONStringify(modelFile)}`, { filesMissing: true });
@@ -163,8 +171,8 @@ export class ModelMigration {
                     continue;
                 }
 
-                this.uniqueID                   = modelFile.uniqueID;
                 this.idSystemObjectItem         = modelFile.idSystemObjectItem;
+                this.testData                   = modelFile.testData;
 
                 this.masterModelFile            = modelFile;
                 this.masterModelGeometryFile    = path.basename(filePath);
@@ -180,15 +188,13 @@ export class ModelMigration {
                 return this.returnStatus('extractMigrationInfo', false, `called with inconsistent value for idSystemObjectItem (${modelFile.idSystemObjectItem}); expected ${idSystemObjectItem}`);
 
             // capture testData flag, if set, and ensure consistency
-            if (modelFile.testData !== testData) {
-                if (testData === undefined)
-                    testData = modelFile.testData;
-                else
-                    return this.returnStatus('extractMigrationInfo', false, `called with inconsistent value for testData (${modelFile.testData}); expected ${testData}`);
-            }
+            if (testData === undefined)
+                testData = modelFile.testData;
+            else if (testData !== modelFile.testData && modelFile.testData)
+                return this.returnStatus('extractMigrationInfo', false, `called with inconsistent value for testData (${modelFile.testData}); expected ${testData}`);
         }
 
-        if (!this.idSystemObjectItem && testData) {
+        if (!this.idSystemObjectItem && this.testData) {
             await this.createTestObjects();
             this.idSystemObjectItem  = ModelMigration.idSystemObjectTest;
         }
@@ -236,19 +242,32 @@ export class ModelMigration {
     private async ingestSupportFile(baseName: string): Promise<IngestAssetResultSkippable> {
         if (!this.model || (!this.masterModelLocation && !this.masterModelGeometryFile))
             return this.returnStatus('ingestSupportFile', false, 'model not defined');
-        if (this.supportFiles.has(baseName)) {
-            this.logStatus('ingestSupportFile', true, `Skipping support file ${baseName} as it was already discovered and ingested`);
-            return { success: true, skipped: true };
-        }
+        if (this.supportFiles.has(baseName))
+            return this.returnStatus('ingestSupportFile', true, `Skipping support file ${baseName} as it was already discovered and ingested`, { skipped: true });
         this.supportFiles.add(baseName);
 
         const supportDir: string = path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile ?? '');
-        const supportFilePath: string = path.join(supportDir, baseName);
-        const ingestTextureRes: STORE.IngestAssetResult = await this.ingestSupportFileWorker(this.model, supportFilePath);
-        if (!ingestTextureRes.success || !ingestTextureRes.assetVersions || ingestTextureRes.assetVersions.length === 0) {
+        const fileName: string = path.basename(baseName);
+        const maxAttempts: number = (!this.testData) ? 1 : (fileName === baseName ? 1 : 2); // not test mode -- only first attempt; test mode -- try with just the filename, if necessary
+        let ingestTextureRes: STORE.IngestAssetResult = { success: false, error: 'Uninitialized' };
+
+        for (let attempt: number = 1; attempt <= maxAttempts; attempt++) {
+            let supportFilePath: string = '';
+
+            switch (attempt) {
+                case 1: supportFilePath = path.join(supportDir, baseName); break;
+                case 2: supportFilePath = path.join(supportDir, fileName); break; // in test mode, try again, throwing away the file path
+            }
+
+            ingestTextureRes = await this.ingestSupportFileWorker(this.model, supportFilePath);
+            if (ingestTextureRes.success && ingestTextureRes.assetVersions && ingestTextureRes.assetVersions.length > 0)
+                return ingestTextureRes;
+
             const error: string = `Unable to ingest support file ${baseName} from ${supportFilePath}: ${ingestTextureRes.error}`;
-            this.logStatus('ingestSupportFile', false, error);
-            return { success: false, error };
+            if (attempt < maxAttempts)
+                this.logStatus('ingestSupportFile', false, error);
+            else
+                return this.returnStatus('ingestSupportFile', false, error);
         }
         return ingestTextureRes;
     }
@@ -721,15 +740,15 @@ export class ModelMigration {
         if (modelFile.hash) {
             const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
             if (!hashRes.success) {
-                this.logStatus(`testFileExistience('${filePath}')`, false, `unable to compute hash ${hashRes.error}`);
+                this.logStatus(`testFileExistence('${filePath}')`, false, `unable to compute hash ${hashRes.error}`);
                 success = false;
             } else if (hashRes.hash != modelFile.hash) {
-                this.logStatus(`testFileExistience('${filePath}')`, false, `computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
+                this.logStatus(`testFileExistence('${filePath}')`, false, `computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
                 success = false;
             }
         }
 
-        this.logStatus(`testFileExistience('${filePath}')`, success, `${success ? 'Exists' : 'Missing'}`);
+        this.logStatus(`testFileExistence('${filePath}')`, success, `${success ? 'Exists' : 'Missing'}`);
         return success;
     }
 

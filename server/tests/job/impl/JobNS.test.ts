@@ -323,7 +323,7 @@ function computeJobParameters(testCase: string, eJobType: COMMON.eVocabularyID):
 }
 
 async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null): Promise<boolean> {
-    LOG.info(`JonNS Test validateJobOutput(${testcase}): idJobRun ${dbJobRun?.idJobRun}`, LOG.LS.eTEST);
+    LOG.info(`JobNS Test validateJobOutput(${testcase}): idJobRun ${dbJobRun?.idJobRun}`, LOG.LS.eTEST);
     expect(dbJobRun).toBeTruthy();
     if (!dbJobRun)
         return false;
@@ -331,7 +331,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
         expect(dbJobRun.Result).toBeTruthy();
     else {
         if (!dbJobRun.Result) {
-            LOG.error(`JonNS Test validateJobOutput(${testcase}) failed: idJobRun ${dbJobRun.idJobRun}`, LOG.LS.eTEST);
+            LOG.error(`JobNS Test validateJobOutput(${testcase}) failed: idJobRun ${dbJobRun.idJobRun}`, LOG.LS.eTEST);
             return true;
         }
     }
@@ -350,7 +350,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
             try {
                 JCOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''), null, null);
             } catch (error) {
-                LOG.error(`JonNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output}`, LOG.LS.eTEST, error);
+                LOG.error(`JobNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output}`, LOG.LS.eTEST, error);
                 expect(true).toBeFalsy();
             }
             expect(JCOutput).toBeTruthy();
@@ -360,7 +360,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
                 expect(JCOutput.success).toBeTruthy();
             else {
                 if (!JCOutput.success)
-                    LOG.error(`JonNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output} FAILED`, LOG.LS.eTEST);
+                    LOG.error(`JobNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output} FAILED`, LOG.LS.eTEST);
             }
 
             normalizeOutput(JCOutput);
@@ -391,7 +391,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
                 expect(JCOutput.modelConstellation).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model?.idModel).toBeTruthy();
-                LOG.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+                LOG.info(`JobNS Persisting ${MTC.testCase} SUCCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
             }
             return (!IGNORE_FAILURES) ? (JCOutputStr === inspectJSON) : true;
         }
