@@ -2,6 +2,7 @@ import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
+import * as WFP from '../../workflow/impl/Packrat';
 import { ASL, LocalStore } from '../../utils/localStore';
 
 import { SceneMigrationPackages, ModelMigrationFiles } from '../../utils/migration/MigrationData';
@@ -236,13 +237,14 @@ class Migrator {
         const res: ModelMigrationResults = await Migrator.semaphoreMigrations.runExclusive(async (value) => {
             const LS: LocalStore = await ASL.getOrCreateStore();
             LS.incrementRequestID();
+            await WFP.WorkflowEngine.nextWorkflowSet(LS); // bump workflow set number
 
             const operation: string = this.extractMode ? 'extraction' : 'migration';
             const modelFile: ModelMigrationFile = modelFileSet[0];
             this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) Starting ${operation}; semaphore count ${value}`);
 
-            const MDE: ModelMigration = new ModelMigration();
-            const MMR: ModelMigrationResults = await MDE.migrateModel(modelFileSet, user.idUser, true, this.extractMode);
+            const MM: ModelMigration = new ModelMigration();
+            const MMR: ModelMigrationResults = await MM.migrateModel(modelFileSet, user.idUser, true, this.extractMode);
 
             if (!MMR.success)
                 this.recordMigrationResult(false, `ModelMigration (${modelFile.uniqueID}) ${operation} failed for ${H.Helpers.JSONStringify(modelFile)}: ${MMR.error}`);
@@ -258,6 +260,7 @@ class Migrator {
         const res: SceneMigrationResults = await Migrator.semaphoreMigrations.runExclusive(async (value) => {
             const LS: LocalStore = await ASL.getOrCreateStore();
             LS.incrementRequestID();
+            await WFP.WorkflowEngine.nextWorkflowSet(LS); // bump workflow set number
 
             const model: DBAPI.Model | undefined = this.sceneUUIDToModelMap.get(scenePackage.EdanUUID);
 
