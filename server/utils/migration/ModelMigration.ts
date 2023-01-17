@@ -20,6 +20,7 @@ import * as path from 'path';
 
 interface IngestAssetResultSkippable extends STORE.IngestAssetResult {
     skipped?: boolean;
+    filesMissing?: boolean;
 }
 
 export type ModelMigrationResults = {
@@ -30,6 +31,7 @@ export type ModelMigrationResults = {
     model?: DBAPI.Model | null | undefined;
     asset?: DBAPI.Asset[] | null | undefined;
     assetVersion?: DBAPI.AssetVersion[] | null | undefined;
+    assetVersionSupport?: DBAPI.AssetVersion[] | null | undefined;
     filesMissing?: boolean | undefined;
     supportFiles?: string[];
 };
@@ -143,7 +145,8 @@ export class ModelMigration {
 
         const modelFilePath: string | undefined = this.masterModelLocation ? path.dirname(this.masterModelLocation) : undefined;
         return { success: true, modelFileName: this.masterModelGeometryFile, modelFilePath, model: this.model,
-            asset: this.AssetModel, assetVersion: this.AssetVersionModel, supportFiles: Array.from(this.supportFiles.keys()) };
+            asset: this.AssetModel, assetVersion: this.AssetVersionModel, assetVersionSupport: this.AssetVersionSupportFile,
+            supportFiles: Array.from(this.supportFiles.keys()) };
     }
 
     private async extractMigrationInfo(): Promise<H.IOResults> {
@@ -229,7 +232,7 @@ export class ModelMigration {
 
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
-            return this.returnStatus('ingestModel', false, `IngestAssetResult failed: ${IAR.error}`);
+            return this.returnStatus('ingestModel', false, `IngestAssetResult failed: ${IAR.error}`, { filesMissing: true });
         this.AssetModel = IAR.assets ?? undefined;
         this.AssetVersionModel = IAR.assetVersions;
 
@@ -264,7 +267,7 @@ export class ModelMigration {
             if (attempt < maxAttempts)
                 this.logStatus('ingestSupportFile', false, error);
             else
-                return this.returnStatus('ingestSupportFile', false, error);
+                return this.returnStatus('ingestSupportFile', false, error, { filesMissing: true });
         }
         return ingestTextureRes;
     }
@@ -411,9 +414,10 @@ export class ModelMigration {
         return ModelMigration.vocabOtherFile;
     }
 
-    private async ingestExplicitSupportFiles(): Promise<H.IOResults> {
+    private async ingestExplicitSupportFiles(): Promise<IngestAssetResultSkippable> {
         let success: boolean = true;
         let error: string | undefined = undefined;
+        let filesMissing: boolean | undefined = undefined;
         for (const modelFile of this.modelFileSet) {
             // Skip already-ingested geometry:
             if (modelFile.geometry)
@@ -426,9 +430,11 @@ export class ModelMigration {
             if (!ingestTextureRes.success) {
                 success = false;
                 error = (error ? error + '; ' : '') + ingestTextureRes.error;
+                if (ingestTextureRes.filesMissing)
+                    filesMissing = true;
             }
         }
-        return { success, error };
+        return { success, error, filesMissing };
     }
 
     private async identifySpecialSupportFileSO(): Promise<DBAPI.SystemObject | null> {
@@ -469,12 +475,12 @@ export class ModelMigration {
 
         for (const expectedSupportFile in this.expectedSupportFiles.values()) {
             if (!this.supportFiles.has(expectedSupportFile))
-                results = this.returnStatus('testSupportFiles', false, `Expected support file ${expectedSupportFile} was not discovered`);
+                results = this.returnStatus('testSupportFiles', false, `Expected support file ${expectedSupportFile} was not discovered`, { filesMissing: true });
         }
         return results;
     }
 
-    private async extractTextureMaps(): Promise<H.IOResults> {
+    private async extractTextureMaps(): Promise<IngestAssetResultSkippable> {
         if (!this.AssetVersionModel || this.AssetVersionModel.length === 0)
             return this.returnStatus('extractTextureMaps', false, 'AssetVersionModel is null');
 
@@ -499,6 +505,7 @@ export class ModelMigration {
 
         let success: boolean = true;
         let error: string | undefined = undefined;
+        let filesMissing: boolean | undefined = undefined;
 
         for (const material of materials) {
             const channels: any = material['channels'];
@@ -512,14 +519,16 @@ export class ModelMigration {
                             success = false;
                             error = (error ? error + '; ' : '') + ingestTextureRes.error;
                         }
+                        if (ingestTextureRes.filesMissing)
+                            filesMissing = true;
                     }
                 }
             }
         }
-        return { success, error };
+        return { success, error, filesMissing };
     }
 
-    private async crackOBJ(AssetVersionModel: DBAPI.AssetVersion): Promise<H.IOResults> {
+    private async crackOBJ(AssetVersionModel: DBAPI.AssetVersion): Promise<IngestAssetResultSkippable> {
         // Crack .obj to look for "mtllib" keywords (there may be multiple)
         // https://en.wikipedia.org/wiki/Wavefront_.obj_file#Material_template_library
         const res: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(AssetVersionModel);
@@ -557,7 +566,7 @@ export class ModelMigration {
         return { success, error };
     }
 
-    private async crackMTL(mtlFile: string): Promise<H.IOResults> {
+    private async crackMTL(mtlFile: string): Promise<IngestAssetResultSkippable> {
         const ingestRes: IngestAssetResultSkippable = await this.ingestSupportFile(mtlFile);
         if (ingestRes.skipped)
             return { success: false, error: 'Support File Already Handled' };
@@ -590,6 +599,7 @@ export class ModelMigration {
         */
         let success: boolean = true;
         let error: string | undefined = undefined;
+        let filesMissing: boolean | undefined = ingestRes.filesMissing;
         for (const mtlLine of mtlLines) {
             // LOG.info(`crackMTL processing ${mtlLine}`, LOG.LS.eMIG);
             const textureMatch: RegExpMatchArray | null = mtlLine.match(ModelMigration.regexMTLParser);
@@ -612,12 +622,14 @@ export class ModelMigration {
                     success = false;
                     error = (error ? error + ': ' : '') + ingestTextureRes.error;
                 }
+                if (ingestTextureRes.filesMissing)
+                    filesMissing = true;
             }
         }
-        return { success, error };
+        return { success, error, filesMissing };
     }
 
-    private async crackGLTF(AssetVersionModel: DBAPI.AssetVersion, _glbCompressed: boolean): Promise<H.IOResults> {
+    private async crackGLTF(AssetVersionModel: DBAPI.AssetVersion, _glbCompressed: boolean): Promise<IngestAssetResultSkippable> {
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(AssetVersionModel);
         if (!RSR.success || !RSR.readStream)
             return this.returnStatus('crackGLTF', false, `Unable to readAssetVersion ${H.Helpers.JSONStringify(AssetVersionModel)}`);
@@ -641,6 +653,7 @@ export class ModelMigration {
 
         let success: boolean = true;
         let error: string | undefined = undefined;
+        let filesMissing: boolean | undefined = undefined;
         try {
             const io: NodeIO = new NodeIO();
             io.registerExtensions(KHRONOS_EXTENSIONS);
@@ -665,6 +678,8 @@ export class ModelMigration {
                         success = false;
                         error = (error ? error + ': ' : '') + ingestBufferRes.error;
                     }
+                    if (ingestBufferRes.filesMissing)
+                        filesMissing = true;
                 }
             }
 
@@ -680,6 +695,8 @@ export class ModelMigration {
                         success = false;
                         error = (error ? error + ': ' : '') + ingestTextureRes.error;
                     }
+                    if (ingestTextureRes.filesMissing)
+                        filesMissing = true;
                 }
             }
         } catch (err) {
@@ -688,7 +705,7 @@ export class ModelMigration {
             await tempFile.cleanup();
         }
 
-        return { success, error };
+        return { success, error, filesMissing };
     }
 
     private async postItemWiring(): Promise<H.IOResults> {
