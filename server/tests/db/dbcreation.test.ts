@@ -7752,7 +7752,7 @@ describe('DB Delete Test', () => {
             if (!res.success)
                 LOG.error(`DB Delete failed: ${res.error}`, LOG.LS.eTEST);
             else
-                LOG.info(`DB Delete suceeded: ${JSON.stringify(systemObjectXrefSubItem4)}`, LOG.LS.eTEST);
+                LOG.info(`DB Delete succeeded: ${JSON.stringify(systemObjectXrefSubItem4)}`, LOG.LS.eTEST);
             expect(res.success).toBeTruthy();
 
             // try to fetch; should not be found
@@ -7764,7 +7764,7 @@ describe('DB Delete Test', () => {
             if (!res.success)
                 LOG.info(`DB Delete failed, as expected: ${res.error}`, LOG.LS.eTEST);
             else
-                LOG.error(`DB Delete suceeded unexpectedly: ${JSON.stringify(systemObjectXrefSubItem2)}`, LOG.LS.eTEST);
+                LOG.error(`DB Delete succeeded unexpectedly: ${JSON.stringify(systemObjectXrefSubItem2)}`, LOG.LS.eTEST);
             expect(res.success).toBeFalsy();
 
             // try to fetch; should be found
@@ -7778,7 +7778,7 @@ describe('DB Delete Test', () => {
             if (!res.success)
                 LOG.error(`DB Delete failed: ${res.error}`, LOG.LS.eTEST);
             else
-                LOG.info(`DB Delete suceeded: ${JSON.stringify(systemObjectXrefSubItem4)}`, LOG.LS.eTEST);
+                LOG.info(`DB Delete succeeded: ${JSON.stringify(systemObjectXrefSubItem4)}`, LOG.LS.eTEST);
             expect(res.success).toBeTruthy();
 
             // try to fetch; should not be found

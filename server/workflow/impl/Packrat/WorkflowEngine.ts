@@ -488,7 +488,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return null;
         const dtNow: Date = new Date();
 
-        WFC.workflowSet = await this.getActiveWorkflowSet();
+        WFC.workflowSet = await WorkflowEngine.getActiveWorkflowSet();
 
         WFC.workflow = new DBAPI.Workflow({
             idVWorkflowType,
@@ -763,19 +763,25 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         LS.setWorkflowStepID(undefined);
     }
 
-    private async getActiveWorkflowSet(): Promise<DBAPI.WorkflowSet | null> {
+    static async getActiveWorkflowSet(): Promise<DBAPI.WorkflowSet | null> {
         const LS: LocalStore = await ASL.getOrCreateStore();
-        let workflowSet: DBAPI.WorkflowSet | null = null;
         if (LS.idWorkflowSet) {
-            workflowSet = await DBAPI.WorkflowSet.fetch(LS.idWorkflowSet);
+            const workflowSet: DBAPI.WorkflowSet | null = await DBAPI.WorkflowSet.fetch(LS.idWorkflowSet);
             if (!workflowSet)
-                LOG.error(`WorkflowEngine.getActiveWorkflowSet unable to fetch new WorkflowSet ${LS.idWorkflowSet}`, LOG.LS.eWF);
+                LOG.error(`WorkflowEngine.getActiveWorkflowSet unable to fetch active WorkflowSet ${LS.idWorkflowSet}`, LOG.LS.eWF);
             return workflowSet;
         }
 
-        workflowSet = new DBAPI.WorkflowSet({ idWorkflowSet: 0 });
+        return await WorkflowEngine.nextWorkflowSet(LS);
+    }
+
+    static async nextWorkflowSet(LS: LocalStore | null): Promise<DBAPI.WorkflowSet | null> {
+        if (!LS)
+            LS = await ASL.getOrCreateStore();
+
+        const workflowSet: DBAPI.WorkflowSet | null = new DBAPI.WorkflowSet({ idWorkflowSet: 0 });
         if (!await workflowSet.create()) {
-            LOG.error('WorkflowEngine.getActiveWorkflowSet unable to create new WorkflowSet', LOG.LS.eWF);
+            LOG.error('WorkflowEngine.nextWorkflowSet unable to create new WorkflowSet', LOG.LS.eWF);
             return null;
         }
 

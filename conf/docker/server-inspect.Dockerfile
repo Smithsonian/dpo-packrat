@@ -13,6 +13,7 @@ RUN apk add perl
 RUN apk add git
 RUN apk add strace
 RUN apk add net-tools
+RUN apk add bash
 
 # Install dependencies and build development
 RUN mkdir -p /app/node_modules/@dpo-packrat/ && ln -s /app/common /app/node_modules/@dpo-packrat/common
