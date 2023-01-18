@@ -8,6 +8,7 @@ import { Config } from '../config';
 import { ASL, LocalStore } from './localStore';
 
 let logger: winston.Logger;
+let ending: boolean = false;
 export enum LS { // logger section
     eAUDIT, // audit
     eAUTH,  // authentication
@@ -44,6 +45,7 @@ export function error(message: string | undefined, eLogSection: LS, obj: any | n
 }
 
 export function end(): void {
+    ending = true;
     logger.end();
 }
 
@@ -141,27 +143,32 @@ function configureLogger(logPath: string | null): void {
     const _error = console.error;
 
     console.debug = function(...args) {
-        info(`console.debug: ${JSON.stringify(args)}`, LS.eCON);
+        if (!ending)
+            info(`console.debug: ${JSON.stringify(args)}`, LS.eCON);
         return _debug.apply(console, args);
     };
 
     console.info = function(...args) {
-        info(`console.info: ${JSON.stringify(args)}`, LS.eCON);
+        if (!ending)
+            info(`console.info: ${JSON.stringify(args)}`, LS.eCON);
         return _info.apply(console, args);
     };
 
     console.log = function(...args) {
-        info(`console.log: ${JSON.stringify(args)}`, LS.eCON);
+        if (!ending)
+            info(`console.log: ${JSON.stringify(args)}`, LS.eCON);
         return _log.apply(console, args);
     };
 
     console.warn = function(...args) {
-        info(`console.warn: ${JSON.stringify(args)}`, LS.eCON);
+        if (!ending)
+            info(`console.warn: ${JSON.stringify(args)}`, LS.eCON);
         return _warn.apply(console, args);
     };
 
     console.error = function(...args) {
-        error(`console.error: ${JSON.stringify(args)}`, LS.eCON);
+        if (!ending)
+            error(`console.error: ${JSON.stringify(args)}`, LS.eCON);
         return _error.apply(console, args);
     };
 
