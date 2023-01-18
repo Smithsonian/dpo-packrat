@@ -33,8 +33,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.GeoLocation.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -46,8 +45,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
                 data: { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.GeoLocation.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

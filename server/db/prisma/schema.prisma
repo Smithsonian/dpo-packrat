@@ -1,8 +1,7 @@
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../../../node_modules/.prisma/client"
-  previewFeatures = ["interactiveTransactions"]
-  binaryTargets   = ["native", "linux-musl"]
+  provider      = "prisma-client-js"
+  output        = "../../../node_modules/.prisma/client"
+  binaryTargets = ["native", "linux-musl"]
 }
 
 datasource mariasql {
@@ -458,9 +457,9 @@ model ModelMaterialUVMap {
   idModel              Int
   idAsset              Int
   UVMapEdgeLength      Int
+  ModelMaterialChannel ModelMaterialChannel[]
   Asset                Asset                  @relation(fields: [idAsset], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_modelmaterialuvmap_asset1")
   Model                Model                  @relation(fields: [idModel], references: [idModel], onDelete: NoAction, onUpdate: NoAction, map: "fk_modelmaterialuvmap_model1")
-  ModelMaterialChannel ModelMaterialChannel[]
 
   @@index([idAsset], map: "ModelUVMapFile_idAsset")
   @@index([idModel], map: "ModelUVMapFile_idModel")
@@ -602,8 +601,8 @@ model Scene {
   PosedAndQCd            Boolean
   ApprovedForPublication Boolean
   Title                  String?          @mariasql.VarChar(255)
-  Asset                  Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_scene_asset1")
   ModelSceneXref         ModelSceneXref[]
+  Asset                  Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_scene_asset1")
   SystemObject           SystemObject?
 
   @@index([idAssetThumbnail], map: "fk_scene_asset1")
@@ -666,6 +665,14 @@ model SystemObject {
   idActor                                                               Int?                              @unique(map: "idActor")
   idStakeholder                                                         Int?                              @unique(map: "idStakeholder")
   Retired                                                               Boolean
+  AccessContextObject                                                   AccessContextObject[]
+  Asset_Asset_idSystemObjectToSystemObject                              Asset[]                           @relation("Asset_idSystemObjectToSystemObject")
+  AssetVersion_AssetVersion_idSOAttachmentToSystemObject                AssetVersion[]                    @relation("AssetVersion_idSOAttachmentToSystemObject")
+  Audit                                                                 Audit[]
+  Identifier                                                            Identifier[]
+  LicenseAssignment                                                     LicenseAssignment[]
+  Metadata_Metadata_idSystemObjectToSystemObject                        Metadata[]                        @relation("Metadata_idSystemObjectToSystemObject")
+  Metadata_Metadata_idSystemObjectParentToSystemObject                  Metadata[]                        @relation("Metadata_idSystemObjectParentToSystemObject")
   Actor                                                                 Actor?                            @relation(fields: [idActor], references: [idActor], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_actor1")
   Asset_AssetToSystemObject_idAsset                                     Asset?                            @relation("AssetToSystemObject_idAsset", fields: [idAsset], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_asset1")
   AssetVersion_AssetVersionToSystemObject_idAssetVersion                AssetVersion?                     @relation("AssetVersionToSystemObject_idAssetVersion", fields: [idAssetVersion], references: [idAssetVersion], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_assetversion1")
@@ -679,14 +686,6 @@ model SystemObject {
   Stakeholder                                                           Stakeholder?                      @relation(fields: [idStakeholder], references: [idStakeholder], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_stakeholder1")
   Subject                                                               Subject?                          @relation(fields: [idSubject], references: [idSubject], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_subject1")
   Unit                                                                  Unit?                             @relation(fields: [idUnit], references: [idUnit], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_unit1")
-  AccessContextObject                                                   AccessContextObject[]
-  Asset_Asset_idSystemObjectToSystemObject                              Asset[]                           @relation("Asset_idSystemObjectToSystemObject")
-  AssetVersion_AssetVersion_idSOAttachmentToSystemObject                AssetVersion[]                    @relation("AssetVersion_idSOAttachmentToSystemObject")
-  Audit                                                                 Audit[]
-  Identifier                                                            Identifier[]
-  LicenseAssignment                                                     LicenseAssignment[]
-  Metadata_Metadata_idSystemObjectToSystemObject                        Metadata[]                        @relation("Metadata_idSystemObjectToSystemObject")
-  Metadata_Metadata_idSystemObjectParentToSystemObject                  Metadata[]                        @relation("Metadata_idSystemObjectParentToSystemObject")
   SystemObjectVersion                                                   SystemObjectVersion[]
   SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster  SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectMaster")
   SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived")
@@ -816,7 +815,6 @@ model Vocabulary {
   idVocabularySet                                                          Int
   SortOrder                                                                Int
   Term                                                                     String                      @mariasql.VarChar(255)
-  VocabularySet                                                            VocabularySet               @relation(fields: [idVocabularySet], references: [idVocabularySet], onDelete: NoAction, onUpdate: NoAction, map: "fk_vocabulary_vocabularyset1")
   Asset                                                                    Asset[]
   CaptureData                                                              CaptureData[]
   CaptureDataFile                                                          CaptureDataFile[]
@@ -836,6 +834,7 @@ model Vocabulary {
   Model_Model_idVFileTypeToVocabulary                                      Model[]                     @relation("Model_idVFileTypeToVocabulary")
   ModelMaterialChannel                                                     ModelMaterialChannel[]
   ModelProcessingActionStep                                                ModelProcessingActionStep[]
+  VocabularySet                                                            VocabularySet               @relation(fields: [idVocabularySet], references: [idVocabularySet], onDelete: NoAction, onUpdate: NoAction, map: "fk_vocabulary_vocabularyset1")
   Workflow                                                                 Workflow[]
   WorkflowStep                                                             WorkflowStep[]
 

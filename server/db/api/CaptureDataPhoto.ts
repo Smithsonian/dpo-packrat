@@ -54,8 +54,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureDataPhoto.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -83,8 +82,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureDataPhoto.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

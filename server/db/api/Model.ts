@@ -91,8 +91,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -119,8 +118,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

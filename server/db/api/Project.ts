@@ -29,8 +29,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Project.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -42,8 +41,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 data: { Name, Description, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Project.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

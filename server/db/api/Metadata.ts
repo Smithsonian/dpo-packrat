@@ -41,8 +41,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Metadata.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -64,8 +63,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Metadata.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */

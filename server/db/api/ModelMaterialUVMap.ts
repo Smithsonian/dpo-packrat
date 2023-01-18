@@ -30,8 +30,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialUVMap.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -48,8 +47,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialUVMap.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */

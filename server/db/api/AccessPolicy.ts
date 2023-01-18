@@ -30,8 +30,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessPolicy.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -47,8 +46,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessPolicy.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

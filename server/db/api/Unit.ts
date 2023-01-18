@@ -31,8 +31,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -48,8 +47,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 
