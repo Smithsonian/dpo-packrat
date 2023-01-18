@@ -2,6 +2,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { ASL, LocalStore } from '../../utils/localStore';
+import * as LOG from '../../utils/logger';
 
 export type PrismaClientTrans = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>;
 
@@ -20,8 +21,23 @@ export class DBConnection {
     }
 
     private get prisma(): PrismaClient | PrismaClientTrans {
-        if (!this._prisma)
-            this._prisma = new PrismaClient();
+        if (!this._prisma) {
+            // configure logging of errors // warnings, queries, info
+            const prisma = new PrismaClient({
+                log: [
+                    { level: 'error',  emit: 'event' },
+                    // { level: 'warn',   emit: 'event' },
+                    // { level: 'query',  emit: 'event' },
+                    // { level: 'info',   emit: 'event' },
+                ],
+            });
+
+            prisma.$on('error', (e) => { LOG.error(`PrismaClient error ${e.message} target ${e.target}`, LOG.LS.eDB); });
+            // prisma.$on('query', (e) => { LOG.info(e.query, LOG.LS.eDB); });
+
+            this._prisma = prisma;
+        }
+
         if (this._prismaTransMap.size > 0) {
             const LS: LocalStore | undefined = ASL.getStore();
             if (LS && LS.transactionNumber) {
