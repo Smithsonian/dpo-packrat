@@ -49,8 +49,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Job.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -67,8 +66,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Job.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

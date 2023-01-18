@@ -31,8 +31,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Actor.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -49,8 +48,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Actor.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

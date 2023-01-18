@@ -29,8 +29,7 @@ export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Sentinel.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -46,8 +45,7 @@ export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Sentinel.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

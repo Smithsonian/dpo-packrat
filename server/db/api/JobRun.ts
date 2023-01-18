@@ -63,7 +63,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.JobRun.create', LOG.LS.eDB, error);
+            this.logError('create', error);
             return false;
         }
     }
@@ -86,7 +86,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.JobRun.update', LOG.LS.eDB, error);
+            this.logError('update', error);
             return false;
         }
     }
@@ -98,7 +98,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
             return DBC.CopyObject<JobRunBase, JobRun>(
                 await DBC.DBConnection.prisma.jobRun.findUnique({ where: { idJobRun, }, }), JobRun);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.JobRun.fetch', LOG.LS.eDB, error);
+            LOG.error(`DBAPI.JobRun.fetch(${idJobRun})`, LOG.LS.eDB, error);
             return null;
         }
     }

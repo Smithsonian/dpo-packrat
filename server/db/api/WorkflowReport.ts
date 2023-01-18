@@ -30,8 +30,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.WorkflowReport.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -47,8 +46,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.WorkflowReport.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

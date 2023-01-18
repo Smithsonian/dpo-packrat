@@ -27,8 +27,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.VocabularySet.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -43,8 +42,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.VocabularySet.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

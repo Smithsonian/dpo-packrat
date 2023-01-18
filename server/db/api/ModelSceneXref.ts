@@ -112,8 +112,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelSceneXref.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -133,8 +132,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelSceneXref.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */

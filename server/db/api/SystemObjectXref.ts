@@ -30,8 +30,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObjectXref.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -46,8 +45,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObjectXref.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
