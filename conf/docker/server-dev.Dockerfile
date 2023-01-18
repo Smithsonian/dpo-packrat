@@ -11,6 +11,7 @@ RUN rm -rf client
 RUN apk update
 RUN apk add perl
 RUN apk add git
+RUN apk add bash
 
 # Install dependencies and build development
 RUN mkdir -p /app/node_modules/@dpo-packrat/ && ln -s /app/common /app/node_modules/@dpo-packrat/common

@@ -20,6 +20,7 @@ import * as path from 'path';
 
 interface IngestAssetResultSkippable extends STORE.IngestAssetResult {
     skipped?: boolean;
+    filesMissing?: boolean;
 }
 
 export type ModelMigrationResults = {
@@ -30,13 +31,15 @@ export type ModelMigrationResults = {
     model?: DBAPI.Model | null | undefined;
     asset?: DBAPI.Asset[] | null | undefined;
     assetVersion?: DBAPI.AssetVersion[] | null | undefined;
+    assetVersionSupport?: DBAPI.AssetVersion[] | null | undefined;
     filesMissing?: boolean | undefined;
     supportFiles?: string[];
 };
 
 export class ModelMigration {
     private uniqueID: string | undefined = undefined;
-    private idSystemObjectItem: number | undefined;
+    private idSystemObjectItem: number | undefined = undefined;
+    private testData: boolean | undefined = undefined;
     private masterModelFile: ModelMigrationFile | undefined = undefined;
     private masterModelGeometryFile: string | undefined = undefined;
     private masterModelLocation?: string;
@@ -111,26 +114,27 @@ export class ModelMigration {
             case '.stl':    useCook = false; break;
         }   // Allow failures here, as some GLTFs are not being read properly by our 3rd party library
 
-        // Ingest Explicit Support Files
         await this.ingestExplicitSupportFiles(); // Allow failures here, to get as many error messages as possible
 
         res = this.testSupportFiles();
 
-        let AssetVersionSupportFileSO: DBAPI.SystemObject | null = null;
-        const AssetVersionSupportFile: DBAPI.AssetVersion | null = (this.AssetVersionSupportFile) ? this.AssetVersionSupportFile[0] : null;
-        if (AssetVersionSupportFile) {
-            AssetVersionSupportFileSO = await AssetVersionSupportFile.fetchSystemObject();
-            if (!AssetVersionSupportFileSO)
-                return this.returnStatus('fetchAndExtractInfo', false, 'Support File Asset System Object not found');
-        }
+        const AssetVersionSupportFileSO: DBAPI.SystemObject | null = await this.identifySpecialSupportFileSO();
 
-        if (useCook || !this.extractMode) { // if we're not in "extract mode", always use cook to gather model metrics
-            // Run Cook's si-packrat-inspect and parse Cook output to obtain list of texture maps
-            res = await WorkflowUtil.computeModelMetrics(this.masterModelGeometryFile, this.model.idModel, undefined,
-                AssetVersionModelSO.idSystemObject, AssetVersionSupportFileSO?.idSystemObject,
-                undefined, undefined, this.userOwner.idUser);
-            if (res.success)
-                res = await this.extractTextureMaps();
+        if (useCook || !this.extractMode) { // if we're not in "extract mode", use cook to gather model metrics
+            // Only use Cook on models smaller than 4GB
+            if (AssetVersionModel.StorageSize < 4 * 1024 * 1024 * 1024) {
+                // Run Cook's si-packrat-inspect and parse Cook output to obtain list of texture maps
+                res = await WorkflowUtil.computeModelMetrics(this.masterModelGeometryFile, this.model.idModel, undefined,
+                    AssetVersionModelSO.idSystemObject, AssetVersionSupportFileSO?.idSystemObject,
+                    undefined, undefined, this.userOwner.idUser);
+                if (res.success)
+                    res = await this.extractTextureMaps();
+                else if (!this.testData) // if we failed and this is not test data, worry about Cook failures at this point
+                    return res;          // Test case setup wants to continue past here without errors
+                else
+                    res = { success: true, error: 'Skipping Cook failure' }; // test data will ignore cook failures at this point (allowing the test case construction to be completed)
+            } else
+                this.logStatus('fetchAndExtractInfo', true, `Skipping Cook si-packrat-inspect run on ${AssetVersionModel.FileName} due to its large size of ${AssetVersionModel.StorageSize}`);
         }
 
         if (!res.success)
@@ -141,7 +145,8 @@ export class ModelMigration {
 
         const modelFilePath: string | undefined = this.masterModelLocation ? path.dirname(this.masterModelLocation) : undefined;
         return { success: true, modelFileName: this.masterModelGeometryFile, modelFilePath, model: this.model,
-            asset: this.AssetModel, assetVersion: this.AssetVersionModel, supportFiles: Array.from(this.supportFiles.keys()) };
+            asset: this.AssetModel, assetVersion: this.AssetVersionModel, assetVersionSupport: this.AssetVersionSupportFile,
+            supportFiles: Array.from(this.supportFiles.keys()) };
     }
 
     private async extractMigrationInfo(): Promise<H.IOResults> {
@@ -151,6 +156,9 @@ export class ModelMigration {
         let idSystemObjectItem: number | undefined = undefined;
         let testData: boolean | undefined = undefined;
         for (const modelFile of this.modelFileSet) {
+            if (!this.uniqueID)
+                this.uniqueID = modelFile.uniqueID;
+
             const fileExists: boolean = await this.testFileExistence(modelFile);
             if (!fileExists)
                 return this.returnStatus('extractMigrationInfo', false, `unable to locate file for ${H.Helpers.JSONStringify(modelFile)}`, { filesMissing: true });
@@ -163,8 +171,8 @@ export class ModelMigration {
                     continue;
                 }
 
-                this.uniqueID                   = modelFile.uniqueID;
                 this.idSystemObjectItem         = modelFile.idSystemObjectItem;
+                this.testData                   = modelFile.testData;
 
                 this.masterModelFile            = modelFile;
                 this.masterModelGeometryFile    = path.basename(filePath);
@@ -180,15 +188,13 @@ export class ModelMigration {
                 return this.returnStatus('extractMigrationInfo', false, `called with inconsistent value for idSystemObjectItem (${modelFile.idSystemObjectItem}); expected ${idSystemObjectItem}`);
 
             // capture testData flag, if set, and ensure consistency
-            if (modelFile.testData !== testData) {
-                if (testData === undefined)
-                    testData = modelFile.testData;
-                else
-                    return this.returnStatus('extractMigrationInfo', false, `called with inconsistent value for testData (${modelFile.testData}); expected ${testData}`);
-            }
+            if (testData === undefined)
+                testData = modelFile.testData;
+            else if (testData !== modelFile.testData && modelFile.testData)
+                return this.returnStatus('extractMigrationInfo', false, `called with inconsistent value for testData (${modelFile.testData}); expected ${testData}`);
         }
 
-        if (!this.idSystemObjectItem && testData) {
+        if (!this.idSystemObjectItem && this.testData) {
             await this.createTestObjects();
             this.idSystemObjectItem  = ModelMigration.idSystemObjectTest;
         }
@@ -226,7 +232,7 @@ export class ModelMigration {
 
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
-            return this.returnStatus('ingestModel', false, `IngestAssetResult failed: ${IAR.error}`);
+            return this.returnStatus('ingestModel', false, `IngestAssetResult failed: ${IAR.error}`, { filesMissing: true });
         this.AssetModel = IAR.assets ?? undefined;
         this.AssetVersionModel = IAR.assetVersions;
 
@@ -236,19 +242,32 @@ export class ModelMigration {
     private async ingestSupportFile(baseName: string): Promise<IngestAssetResultSkippable> {
         if (!this.model || (!this.masterModelLocation && !this.masterModelGeometryFile))
             return this.returnStatus('ingestSupportFile', false, 'model not defined');
-        if (this.supportFiles.has(baseName)) {
-            this.logStatus('ingestSupportFile', true, `Skipping support file ${baseName} as it was already discovered and ingested`);
-            return { success: true, skipped: true };
-        }
+        if (this.supportFiles.has(baseName))
+            return this.returnStatus('ingestSupportFile', true, `Skipping support file ${baseName} as it was already discovered and ingested`, { skipped: true });
         this.supportFiles.add(baseName);
 
         const supportDir: string = path.dirname(this.masterModelLocation ?? this.masterModelGeometryFile ?? '');
-        const supportFilePath: string = path.join(supportDir, baseName);
-        const ingestTextureRes: STORE.IngestAssetResult = await this.ingestSupportFileWorker(this.model, supportFilePath);
-        if (!ingestTextureRes.success || !ingestTextureRes.assetVersions || ingestTextureRes.assetVersions.length === 0) {
+        const fileName: string = path.basename(baseName);
+        const maxAttempts: number = (!this.testData) ? 1 : (fileName === baseName ? 1 : 2); // not test mode -- only first attempt; test mode -- try with just the filename, if necessary
+        let ingestTextureRes: STORE.IngestAssetResult = { success: false, error: 'Uninitialized' };
+
+        for (let attempt: number = 1; attempt <= maxAttempts; attempt++) {
+            let supportFilePath: string = '';
+
+            switch (attempt) {
+                case 1: supportFilePath = path.join(supportDir, baseName); break;
+                case 2: supportFilePath = path.join(supportDir, fileName); break; // in test mode, try again, throwing away the file path
+            }
+
+            ingestTextureRes = await this.ingestSupportFileWorker(this.model, supportFilePath);
+            if (ingestTextureRes.success && ingestTextureRes.assetVersions && ingestTextureRes.assetVersions.length > 0)
+                return ingestTextureRes;
+
             const error: string = `Unable to ingest support file ${baseName} from ${supportFilePath}: ${ingestTextureRes.error}`;
-            this.logStatus('ingestSupportFile', false, error);
-            return { success: false, error };
+            if (attempt < maxAttempts)
+                this.logStatus('ingestSupportFile', false, error);
+            else
+                return this.returnStatus('ingestSupportFile', false, error, { filesMissing: true });
         }
         return ingestTextureRes;
     }
@@ -395,23 +414,54 @@ export class ModelMigration {
         return ModelMigration.vocabOtherFile;
     }
 
-    private async ingestExplicitSupportFiles(): Promise<H.IOResults> {
+    private async ingestExplicitSupportFiles(): Promise<IngestAssetResultSkippable> {
         let success: boolean = true;
         let error: string | undefined = undefined;
+        let filesMissing: boolean | undefined = undefined;
         for (const modelFile of this.modelFileSet) {
             // Skip already-ingested geometry:
             if (modelFile.geometry)
                 continue;
 
+            this.logStatus('ingestExplicitSupportFiles', true, `${modelFile.fileName}`);
             const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(modelFile.fileName);
             if (ingestTextureRes.skipped)
                 continue;
             if (!ingestTextureRes.success) {
                 success = false;
                 error = (error ? error + '; ' : '') + ingestTextureRes.error;
+                if (ingestTextureRes.filesMissing)
+                    filesMissing = true;
             }
         }
-        return { success, error };
+        return { success, error, filesMissing };
+    }
+
+    private async identifySpecialSupportFileSO(): Promise<DBAPI.SystemObject | null> {
+        let AssetVersionSupportFileSO: DBAPI.SystemObject | null = null;
+        let AssetVersionSupportFile: DBAPI.AssetVersion | null = null;
+
+        if (this.AssetVersionSupportFile) {
+            for (const AssetVersionSFTester of this.AssetVersionSupportFile) {
+                switch (CACHE.VocabularyCache.mapModelAssetType(AssetVersionSFTester.FileName)) {
+                    case COMMON.eVocabularyID.eAssetAssetTypeOther:
+                        AssetVersionSupportFile = AssetVersionSFTester;
+                        break;
+                }
+                if (!AssetVersionSupportFile)
+                    AssetVersionSupportFile = AssetVersionSFTester;
+            }
+        }
+
+        if (AssetVersionSupportFile) {
+            AssetVersionSupportFileSO = await AssetVersionSupportFile.fetchSystemObject();
+            if (!AssetVersionSupportFileSO) {
+                this.logStatus('identifySpecialSupportFileSO', false, 'Support File Asset System Object not found');
+                return null;
+            }
+            this.logStatus('identifySpecialSupportFileSO', true, `Selected ${AssetVersionSupportFile.FileName} as model support file`);
+        }
+        return AssetVersionSupportFileSO;
     }
 
     // if there are entries in expectedSupportFiles which were not discovered, those are errors
@@ -425,12 +475,12 @@ export class ModelMigration {
 
         for (const expectedSupportFile in this.expectedSupportFiles.values()) {
             if (!this.supportFiles.has(expectedSupportFile))
-                results = this.returnStatus('testSupportFiles', false, `Expected support file ${expectedSupportFile} was not discovered`);
+                results = this.returnStatus('testSupportFiles', false, `Expected support file ${expectedSupportFile} was not discovered`, { filesMissing: true });
         }
         return results;
     }
 
-    private async extractTextureMaps(): Promise<H.IOResults> {
+    private async extractTextureMaps(): Promise<IngestAssetResultSkippable> {
         if (!this.AssetVersionModel || this.AssetVersionModel.length === 0)
             return this.returnStatus('extractTextureMaps', false, 'AssetVersionModel is null');
 
@@ -455,6 +505,7 @@ export class ModelMigration {
 
         let success: boolean = true;
         let error: string | undefined = undefined;
+        let filesMissing: boolean | undefined = undefined;
 
         for (const material of materials) {
             const channels: any = material['channels'];
@@ -468,14 +519,16 @@ export class ModelMigration {
                             success = false;
                             error = (error ? error + '; ' : '') + ingestTextureRes.error;
                         }
+                        if (ingestTextureRes.filesMissing)
+                            filesMissing = true;
                     }
                 }
             }
         }
-        return { success, error };
+        return { success, error, filesMissing };
     }
 
-    private async crackOBJ(AssetVersionModel: DBAPI.AssetVersion): Promise<H.IOResults> {
+    private async crackOBJ(AssetVersionModel: DBAPI.AssetVersion): Promise<IngestAssetResultSkippable> {
         // Crack .obj to look for "mtllib" keywords (there may be multiple)
         // https://en.wikipedia.org/wiki/Wavefront_.obj_file#Material_template_library
         const res: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(AssetVersionModel);
@@ -513,7 +566,7 @@ export class ModelMigration {
         return { success, error };
     }
 
-    private async crackMTL(mtlFile: string): Promise<H.IOResults> {
+    private async crackMTL(mtlFile: string): Promise<IngestAssetResultSkippable> {
         const ingestRes: IngestAssetResultSkippable = await this.ingestSupportFile(mtlFile);
         if (ingestRes.skipped)
             return { success: false, error: 'Support File Already Handled' };
@@ -546,6 +599,7 @@ export class ModelMigration {
         */
         let success: boolean = true;
         let error: string | undefined = undefined;
+        let filesMissing: boolean | undefined = ingestRes.filesMissing;
         for (const mtlLine of mtlLines) {
             // LOG.info(`crackMTL processing ${mtlLine}`, LOG.LS.eMIG);
             const textureMatch: RegExpMatchArray | null = mtlLine.match(ModelMigration.regexMTLParser);
@@ -568,12 +622,14 @@ export class ModelMigration {
                     success = false;
                     error = (error ? error + ': ' : '') + ingestTextureRes.error;
                 }
+                if (ingestTextureRes.filesMissing)
+                    filesMissing = true;
             }
         }
-        return { success, error };
+        return { success, error, filesMissing };
     }
 
-    private async crackGLTF(AssetVersionModel: DBAPI.AssetVersion, _glbCompressed: boolean): Promise<H.IOResults> {
+    private async crackGLTF(AssetVersionModel: DBAPI.AssetVersion, _glbCompressed: boolean): Promise<IngestAssetResultSkippable> {
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(AssetVersionModel);
         if (!RSR.success || !RSR.readStream)
             return this.returnStatus('crackGLTF', false, `Unable to readAssetVersion ${H.Helpers.JSONStringify(AssetVersionModel)}`);
@@ -583,6 +639,7 @@ export class ModelMigration {
         const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: modelExtension });
         let writeError: boolean = false;
         try {
+            this.logStatus('crackGLTF', true, `Creating copy via temp file ${tempFile.path}`);
             const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, tempFile.path);
             if (!res.success)
                 return this.returnStatus('crackGLTF', false, `unable to copy asset version ${H.Helpers.JSONStringify(AssetVersionModel)}to ${tempFile.path}: ${res.error}`);
@@ -596,6 +653,7 @@ export class ModelMigration {
 
         let success: boolean = true;
         let error: string | undefined = undefined;
+        let filesMissing: boolean | undefined = undefined;
         try {
             const io: NodeIO = new NodeIO();
             io.registerExtensions(KHRONOS_EXTENSIONS);
@@ -612,6 +670,7 @@ export class ModelMigration {
                 const uri: string = buffer.getURI();
                 if (!isEmbeddedTexture(uri)) {
                     // Attempt to ingest buffer
+                    this.logStatus('crackGLTF', true, `Ingest buffer from ${uri}`);
                     const ingestBufferRes: IngestAssetResultSkippable = await this.ingestSupportFile(uri);
                     if (!ingestBufferRes.skipped)
                         continue;
@@ -619,6 +678,8 @@ export class ModelMigration {
                         success = false;
                         error = (error ? error + ': ' : '') + ingestBufferRes.error;
                     }
+                    if (ingestBufferRes.filesMissing)
+                        filesMissing = true;
                 }
             }
 
@@ -626,6 +687,7 @@ export class ModelMigration {
                 const uri: string = texture.getURI();
                 if (!isEmbeddedTexture(uri)) {
                     // Attempt to ingest texture
+                    this.logStatus('crackGLTF', true, `Ingest texture from ${uri}`);
                     const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(uri);
                     if (!ingestTextureRes.skipped)
                         continue;
@@ -633,6 +695,8 @@ export class ModelMigration {
                         success = false;
                         error = (error ? error + ': ' : '') + ingestTextureRes.error;
                     }
+                    if (ingestTextureRes.filesMissing)
+                        filesMissing = true;
                 }
             }
         } catch (err) {
@@ -641,7 +705,7 @@ export class ModelMigration {
             await tempFile.cleanup();
         }
 
-        return { success, error };
+        return { success, error, filesMissing };
     }
 
     private async postItemWiring(): Promise<H.IOResults> {
@@ -721,28 +785,28 @@ export class ModelMigration {
         if (modelFile.hash) {
             const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
             if (!hashRes.success) {
-                this.logStatus(`testFileExistience('${filePath}')`, false, `unable to compute hash ${hashRes.error}`);
+                this.logStatus(`testFileExistence('${filePath}')`, false, `unable to compute hash ${hashRes.error}`);
                 success = false;
             } else if (hashRes.hash != modelFile.hash) {
-                this.logStatus(`testFileExistience('${filePath}')`, false, `computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
+                this.logStatus(`testFileExistence('${filePath}')`, false, `computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
                 success = false;
             }
         }
 
-        this.logStatus(`testFileExistience('${filePath}')`, success, `${success ? 'Exists' : 'Missing'}`);
+        this.logStatus(`testFileExistence('${filePath}')`, success, `${success ? 'Exists' : 'Missing'}`);
         return success;
     }
 
-    private logStatus(context: string, success: boolean, message: string | undefined): void {
+    private logStatus(context: string, success: boolean, message: string | undefined, err?: any): void {
         if (!success)
-            LOG.error(`ModelMigration (${this.uniqueID}) ${context}: ${message}`, LOG.LS.eMIG);
+            LOG.error(`ModelMigration (${this.uniqueID}) ${context}: ${message}`, LOG.LS.eMIG, err);
         else
             LOG.info(`ModelMigration (${this.uniqueID}) ${context}${message ? (': ' + message) : ''}`, LOG.LS.eMIG);
     }
 
-    private returnStatus(context: string, success: boolean, message: string | undefined, props?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
+    private returnStatus(context: string, success: boolean, message: string | undefined, props?: any, err?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (!success)
-            this.logStatus(context, success, message);
+            this.logStatus(context, success, message, err);
         return { success, error: message, ...props };
     }
 }
