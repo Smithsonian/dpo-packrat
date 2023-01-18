@@ -30,9 +30,10 @@ enum eTestType {
     eScrapeEDANListsMigration,
     eScrapeEDAN,
     eOneOff,
+    eEDANVerifier,
 }
 
-const eTYPE: eTestType = +eTestType.eRegressionSuite; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eRegressionSuite!
+const eTYPE: eTestType = +eTestType.eEDANVerifier; //+eTestType.eRegressionSuite; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eRegressionSuite!
 
 const now: Date = new Date();
 const yyyymmdd: string = now.toISOString().split('T')[0];
@@ -104,6 +105,10 @@ describe('Collections: EdanCollection', () => {
             test('Collections: EdanCollection.scrape EDAN', async () => {
                 await scrapeEdan(ICol, 'd:\\Work\\SI\\EdanScrape.EDAN.txt', 0);
             });
+            break;
+
+        case eTestType.eEDANVerifier:
+            executeEdanVerifier(ICol);
             break;
     }
 });
@@ -616,7 +621,6 @@ async function scrapeDPOEdanMDMWorker(ICol: COL.ICollection, IDLabelSet: Set<str
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200149', 'dpo_3d_200149', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200150', 'dpo_3d_200150', IDLabelSet, records);
 }
-// #endregion
 
 async function scrapeDPOIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, records: EdanResult[]): Promise<void> {
     // #region vz_migration
@@ -2129,6 +2133,7 @@ async function scrapeDPOIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>
     await handleResultsWithIDs(ICol, 'https://collection.cooperhewitt.org/objects/18726645/', '10', IDLabelSet, records);
     // #endregion
 }
+// #endregion
 
 // #region Handle Results
 async function handleResultsEdanLists(ICol: COL.ICollection, WS: NodeJS.WritableStream | null, query: string, id: string, unitFilter?: string | undefined): Promise<boolean> {
@@ -2234,5 +2239,341 @@ async function handle3DContentQuery(ICol: COL.ICollection, _WS: NodeJS.WritableS
     }
     LOG.error(`Content Query ${id ? id : ''}${url ? url : ''} [${queryID}] failed`, LOG.LS.eTEST);
     return false;
+}
+// #endregion
+
+
+// #region EDAN Verifier
+// specific EDAN verifier
+import * as DBAPI from '../../db';
+import * as CACHE from '../../cache';
+import * as COMMON from '@dpo-packrat/common'; // shared by client & server
+
+// external: Subject.fetchAll() to get list of all subjects
+//async function executeVerifySubjects(_ICol: COL.ICollection): Promise<boolean> {
+function executeEdanVerifier(ICol: COL.ICollection) {
+
+    // bad: don't keep
+    test.only('Collections: EdanCollection.fieldCompare', async () => {
+        const result = await executeVerifySubjectGuts(ICol);
+        expect(result).toBeTruthy();
+    });
+
+    //return true;
+}
+async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean> {
+    const errorFn: string = 'EDAN Verifier'; //'EdanCollection.test.executeVerifySubjects';
+    const debugLogs: boolean = true;
+    const debugSubjectLimit = 1; // # of subjects to investigate for testing
+    jest.setTimeout(3000000); // temp: avoid timeout errors when doing a full run
+
+    // tracking stats for each subject
+    type subjectStat = {
+        name: string,
+        isValid?: boolean,
+        actions?: string[], // what needs fixing/attention
+        hasMatchingUnit?: boolean,
+        packratUnit?: DBAPI.Unit,
+        edanUnits?: DBAPI.Unit[],
+    };
+    const subjectStats: subjectStat[] = [];
+
+    // fetch all subjects from Packrat DB
+    const subjects: DBAPI.Subject[] | null = await DBAPI.Subject.fetchAll(); /* istanbul ignore if */
+    if (!subjects) {
+        LOG.error(`${errorFn} could not get subjects from DB`, LOG.LS.eTEST);
+        return false;
+    }
+    if(subjects.length<=0) {
+        LOG.error(`${errorFn} no subjects found in DB`, LOG.LS.eTEST);
+        return false;
+    }
+    // if(debugLogs)
+    console.log(`Subjects: ${subjects.length}`);
+
+    // loop through subjects, extract name, query from EDAN
+    for(let i=0; i<subjects.length; i++) {
+
+        // adjust our counter for # of subjects and bail when done
+        if(i>=debugSubjectLimit) break;
+
+        // create our stats object and helper variable
+        const subject = subjects[i];
+        subjectStats.push({ name: subject.Name, isValid: true, hasMatchingUnit: true, actions: [] });
+
+        LOG.info(`${errorFn} processing subject: ${subject.Name}`, LOG.LS.eTEST);
+        if(debugLogs) console.log('Subject:\t'+JSON.stringify(subject,null,0)); // temp
+
+        // get our subject's unit from Packrat DB
+        const packratUnit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subject.idUnit);
+        if(!packratUnit) {
+            LOG.error(`${errorFn} Packrat DB did not return a unit for (subject: ${subject.Name} )`, LOG.LS.eTEST);
+            subjectStats[i].isValid = false;
+            subjectStats[i].actions?.push(`no DB unit found for id (${ subject.idUnit })`);
+            continue;
+        } else { subjectStats[i].packratUnit = packratUnit; }
+        if(debugLogs) console.log('Unit: '+JSON.stringify(packratUnit,null,0));
+
+        // grab preferred identifier
+        let preferredIdentifier: DBAPI.Identifier | null = null;
+        if(subject.idIdentifierPreferred){
+            preferredIdentifier = await DBAPI.Identifier.fetch(subject.idIdentifierPreferred);
+            if(!preferredIdentifier){
+                LOG.error(`${errorFn} subject's preferredId not found in the DB (subject: ${subject.Name} )`, LOG.LS.eTEST);
+                subjectStats[i].isValid = false;
+                continue;
+            }
+            if(debugLogs) console.log('Preferred:\t'+JSON.stringify(preferredIdentifier,null,0)); // temp
+        }
+
+        // grab all of our identifiers by getting the SystemObject for our subject and using that
+        // id to get all identifiers via the Identifier interface.
+        const systemObject: DBAPI.SystemObject | null = await subject.fetchSystemObject();
+        if(!systemObject){
+            LOG.error(`${errorFn} could not get SystemObject from subject: ${subject.Name}. skipping...`, LOG.LS.eTEST);
+            subjectStats[i].isValid = false;
+            continue;
+        }
+        const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(systemObject.idSystemObject);
+        if(!identifiers){
+            LOG.error(`${errorFn} could not get identifiers from subject: ${subject.Name}. skipping...`, LOG.LS.eTEST);
+            subjectStats[i].isValid = false;
+            continue;
+        }
+        if(identifiers.length<=0){
+            LOG.info(`${errorFn} (WARNING) no identifiers assigned to subject (${subject.Name}). skipping...`, LOG.LS.eTEST);
+            subjectStats[i].isValid = false;
+            subjectStats[i].actions?.push('no identifiers assigned');
+            continue;
+        }
+
+        // expanded info for Packrat identifiers to be used later when comparing against EDAN's response
+        const packratIdentifiers: any = [];
+
+        // cycle through identifiers looking for an EDAN ID or ARK ID to use in querying EDAN
+        let idEDAN: DBAPI.Identifier | null = null;
+        let idARK: DBAPI.Identifier | null = null;
+        for(const identifier of identifiers){
+
+            // grab the identifier type object from the Packrat DB
+            const identifierType: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(identifier.idVIdentifierType);
+            if(!identifierType){
+                LOG.error(`${errorFn} could not find identifier type in DB (identifier: ${identifier.idVIdentifierType} )`, LOG.LS.eTEST);
+                continue;
+            }
+            if(debugLogs) console.log('Type:\t'+JSON.stringify(identifierType)); //temp
+
+            // pull from enumeration from the CACHE (vocabulary id -> enum)
+            const identifierTypeEnum: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(identifier.idVIdentifierType);
+            if(identifierTypeEnum===undefined){
+                LOG.error(`${errorFn} could not find enumerator for identifier type (${identifier.idVIdentifierType}) in Cache`, LOG.LS.eTEST);
+                continue;
+            }
+            if(debugLogs) console.log('Enum:\t'+JSON.stringify(identifierTypeEnum,null,0));
+
+            // check the enumeration type to see if it's an edan or ark type
+            switch(identifierTypeEnum){
+                case COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID: {
+                    // if we already have one throw a warning
+                    if(idEDAN) {
+                        LOG.info(`${errorFn} (WARNING) multiple EDAN identifiers found for subject (${subject.Name})`, LOG.LS.eTEST);
+                        subjectStats[i].isValid = true;
+                        subjectStats[i].actions?.push('multiple EDAN identifiers');
+                    } else {
+                        idEDAN = identifier;
+                    }
+                } break;
+
+                case COMMON.eVocabularyID.eIdentifierIdentifierTypeARK: {
+
+                    if(idEDAN) {
+                        LOG.info(`${errorFn} (WARNING) multiple ARK identifiers found for subject (${subject.Name})`, LOG.LS.eTEST);
+                        subjectStats[i].isValid = true;
+                        subjectStats[i].actions?.push('multiple ARK identifiers');
+                    } else {
+                        idARK = identifier;
+
+                        // do small check to make sure the preferred id matches to honor suggested behavior
+                        if(preferredIdentifier && identifier.idIdentifier!=preferredIdentifier.idIdentifier){
+                            LOG.info(`${errorFn} (WARNING) preferred id (${preferredIdentifier.IdentifierValue}) for subject (${subject.Name}) is not of type ARK. (type:${identifierType.Term} | enum:${identifierTypeEnum})`, LOG.LS.eTEST);
+                            subjectStats[i].isValid = true;
+                            subjectStats[i].actions?.push('preferred id is not ARK');
+                        }
+                    }
+
+                } break;
+            }
+
+            // push into any array for later comparison against EDAN
+            packratIdentifiers.push({
+                identifier,
+                identifierType,
+                identifierTypeEnum,
+            });
+        }
+
+        // if we have an EDAN id we use it
+        let query: string = '';
+        if(idEDAN)
+            query = idEDAN.IdentifierValue;
+        else if(idARK)
+            query = idARK.IdentifierValue;
+        else if(preferredIdentifier)
+            query = preferredIdentifier.IdentifierValue;
+
+        // query EDAN with our new information
+        const options: COL.CollectionQueryOptions | null = {
+            recordType: 'edanmdm',
+            // gatherRaw: true,
+            gatherIDMap: true,
+        };
+        const results: COL.CollectionQueryResults | null = await ICol.queryCollection(query, 10, 0, options);
+        if(!results || results.records.length<=0) {
+            LOG.error(`${errorFn} did not receive records for subject (${subject.Name}) and id (${query}). skipping...`, LOG.LS.eTEST);
+            continue;
+        }
+        if(debugLogs) console.log(`Results (${subject.Name}): `+JSON.stringify(results,null,0));
+
+        // if we received multiple records, throw warning as it's unexpected
+        if(results?.records.length>1){
+            LOG.info(`${errorFn} (WARNING) received multiple EDAN records for subject (${subject.Name}) and id (${query}). skipping...`, LOG.LS.eTEST);
+            subjectStats[i].isValid = true;
+            subjectStats[i].actions?.push('multiple EDAN records');
+        }
+        if(debugLogs) console.log('EDAN Records: '+JSON.stringify(results.records));
+
+        // structure to hold results and fill with packrat identifiers first
+        const identifierMatches: any = [];
+        for(const packratId of packratIdentifiers){
+
+            // TEST: skip EDAN records since they only exist in Packrat?
+            if(packratId.identifierTypeEnum === COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID) continue;
+
+            // create our array object
+            identifierMatches.push({
+                type: packratId.identifierType,
+                value: packratId.identifier.IdentifierValue,
+                existsPackrat: true,
+                existsEDAN: false,
+                typeValueMismatch: false,
+            });
+        }
+
+        // cycle through the records returned by EDAN and add find matches
+        for(const record of results.records){
+
+            // see if we have the correct Unit assignment by translating EDAN units into what we know
+            const edanUnits: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(record.unit);
+            if(!edanUnits){
+                LOG.info(`${errorFn} (WARNING) did not find Packrat known units for subject (${subject.Name}) and EDAN unit (${record.unit}). skipping...`, LOG.LS.eTEST);
+                subjectStats[i].isValid = false;
+                subjectStats[i].hasMatchingUnit = false;
+                subjectStats[i].actions?.push(`EDAN unit not found in DB (${record.unit})`);
+                subjectStats[i].edanUnits = [];
+            } else {
+
+                // copy our array for later reporting
+                subjectStats[i].edanUnits = [...edanUnits];
+
+                // cycle through found units and see if it matches
+                for(const unit of edanUnits) {
+                    if(unit.idUnit === packratUnit.idUnit) {
+                        subjectStats[i].hasMatchingUnit = true;
+                        break;
+                    }
+                }
+                if(!subjectStats[i].hasMatchingUnit) {
+                    subjectStats[i].isValid = false;
+                    subjectStats[i].actions?.push('Packrat and EDAN units do not match');
+                    LOG.error(`${errorFn} Packrat unit (${packratUnit.idUnit}) and EDAN units (${edanUnits.map(x=>{ return x.idUnit; }).join(',')}) do not match for subject (${subject.Name}).`, LOG.LS.eTEST);
+                }
+            }
+
+            // handle identifiers by checking if any returned by EDAN
+            if (record.identifierMap) {
+
+                // console.log('EDAN: '+H.Helpers.JSONStringify(record.identifierMap));
+                for (const [ label, content ] of record.identifierMap) {
+
+                    // get our type for this identifier
+                    const vIdentifierType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapIdentifierType(label);
+                    if (!vIdentifierType) {
+                        LOG.error(`${errorFn} encountered unknown identifier type ${label} from '${query}'`, LOG.LS.eGQL);
+                        continue;
+                    }
+
+                    // see if we can find the type in our current results (i.e. Packrat)
+                    const foundResult = identifierMatches.find(result => {
+                        if(result.type.idVocabulary===vIdentifierType.idVocabulary &&
+                            result.type.idVocabularySet===vIdentifierType.idVocabularySet){
+                            // mark that we exist and check if values match
+                            result.existsEDAN = true;
+                            if(result.value!==content){
+                                result.typeValueMismatch = true;
+                            }
+                            return true;
+                        }
+                        return false;
+                    });
+
+                    // if not found we add it to our results and will throw warnings when done
+                    if(!foundResult){
+                        identifierMatches.push({
+                            type: label,
+                            value: content,
+                            existsPackrat: false,
+                            existsEDAN: true,
+                            typeValueMismatch: false,
+                        });
+                        // console.error('not found in packrat. adding...');
+                    }
+                    // console.log('EDAN: '+label+'|'+content+'|'+JSON.stringify(vIdentifierType));
+                }
+            }
+        }
+
+        // cycle through all matches and build up workflow report
+        for(const match of identifierMatches){
+            if(match.existsPackrat && !match.existsEDAN ) {
+                LOG.info(`${errorFn} (WARNING) could not find Packrat identifier type (${match.type.Term}) in EDAN's list of identifiers for subject. (subject: ${subject.Name})`, LOG.LS.eGQL);
+                subjectStats[i].isValid = false;
+                subjectStats[i].actions?.push(`cannot find Packrat identifier (${match.type.Term}) in EDAN`);
+            } else if(!match.existsPackrat && match.existsEDAN) {
+                LOG.info(`${errorFn} (WARNING) could not find EDAN identifier type (${match.type.Term}) in Packrat's list of identifiers for subject. (subject: ${subject.Name})`, LOG.LS.eGQL);
+                subjectStats[i].isValid = false;
+                subjectStats[i].actions?.push(`cannot find EDAN identifier (${match.type.Term}) in Packrat`);
+            } else if(match.typeValueMismatch) {
+                LOG.info(`${errorFn} (WARNING) Packrat and EDAN have same identifier (${match.type.Term}) just different values. (subject: ${subject.Name})`, LOG.LS.eGQL);
+                subjectStats[i].isValid = false;
+                subjectStats[i].actions?.push(`have same Packrat identifier (${match.type.Term}) in EDAN, but different values`);
+            }
+        }
+
+        // if(hasIssue) { subjectStats[i].isValid = false; }
+    }
+
+    // get our counts
+    const statCounts = { passed: 0, };
+    for(const stat of subjectStats) {
+        if(stat.isValid===true) { statCounts.passed++; }
+    }
+
+    // build our string and output for action items and summary
+    let output = 'name,valid,actions,matching units,packrat units,EDAN units\n';
+    for(const stat of subjectStats) {
+        output += '"'+stat.name+'"' +',';
+        output += stat.isValid + ',';
+        output += '"' + stat.actions?.join('\n') + '",'; //((action)=>{ return action + '\n'; }) + '",';
+        output += stat.hasMatchingUnit + ',';
+        output += '"'+stat.packratUnit?.Abbreviation + ' - ' + stat.packratUnit?.Name +'",';
+        output += '"'+stat.edanUnits?.map((unit) => { return (unit.Abbreviation + ' - ' + unit.Name); }).join('\n')+'",';
+        output += '\n';
+    }
+    console.log(`subject pool (passed: ${statCounts.passed} | issues: ${subjectStats.length - statCounts.passed})`); // items:\n`+output);
+
+    // HACK: dumping to local file until moved into Workflow reports.
+    require('fs').writeFile('../../EDAN-Verifier_Output.csv',output, err=>{ if(err) { console.error(err); }});
+
+    return true;
 }
 // #endregion
