@@ -32,8 +32,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ProjectDocumentation.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -49,8 +48,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ProjectDocumentation.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

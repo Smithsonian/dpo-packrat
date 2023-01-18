@@ -39,8 +39,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Stakeholder.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -59,8 +58,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Stakeholder.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

@@ -18,8 +18,7 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
             ({ idWorkflowSet: this.idWorkflowSet } = await DBC.DBConnection.prisma.workflowSet.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.WorkflowSet.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -31,8 +30,7 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.WorkflowSet.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 
