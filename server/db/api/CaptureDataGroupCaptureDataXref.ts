@@ -28,8 +28,7 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureDataGroupCaptureDataXref.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -44,8 +43,7 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureDataGroupCaptureDataXref.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

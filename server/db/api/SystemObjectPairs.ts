@@ -415,7 +415,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                 });
             return (SOAPB ? new SystemObjectPairs(SOAPB) : null);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObjectAndPairs.fetch', LOG.LS.eDB, error);
+            LOG.error(`DBAPI.SystemObjectAndPairs.fetch(${idSystemObject})`, LOG.LS.eDB, error);
             return null;
         }
     }

@@ -106,7 +106,7 @@
     "@graphql-codegen/typescript": "2.7.3",
     "@graphql-codegen/typescript-operations": "2.5.3",
     "@graphql-codegen/typescript-react-apollo": "3.3.3",
-    "@prisma/client": "4.6.1",
+    "@prisma/client": "4.9.0",
     "@types/express": "4.17.14",
     "@types/express-serve-static-core": "4.17.18",
     "@types/fs-extra": "9.0.13",
@@ -125,7 +125,7 @@
     "@types/three": "0.144.0",
     "cross-env": "7.0.3",
     "jest": "26.6.3",
-    "prisma": "4.6.1",
+    "prisma": "4.9.0",
     "ts-jest": "26.5.4"
   },
   "optionalDependencies": {

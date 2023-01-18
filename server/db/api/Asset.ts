@@ -49,8 +49,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -69,8 +68,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

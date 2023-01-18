@@ -1,6 +1,8 @@
 import { eDBObjectType, eNonSystemObjectType, ObjectIDAndType, DBObjectNameToType } from '../api/ObjectType';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
+import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 
 export abstract class DBObject<T> {
     public abstract fetchTableName(): string;
@@ -60,6 +62,11 @@ export abstract class DBObject<T> {
                 dataItem.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
         }
         return retVal;
+    }
+
+    protected logError(method: string, error?: any): boolean { // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+        LOG.error(`DBAPI.${this.fetchTableName()}.${method} ${H.Helpers.JSONStringify(this)}`, LOG.LS.eDB, error);
+        return false;
     }
 }
 

@@ -27,8 +27,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessAction.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -40,8 +39,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                 data: { Name, SortOrder, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessAction.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

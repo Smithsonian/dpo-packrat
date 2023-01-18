@@ -29,8 +29,7 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.IntermediaryFile.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -45,8 +44,7 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.IntermediaryFile.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

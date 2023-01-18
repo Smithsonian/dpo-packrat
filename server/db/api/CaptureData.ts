@@ -36,8 +36,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureData.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -56,8 +55,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureData.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 
