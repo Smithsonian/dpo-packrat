@@ -135,9 +135,11 @@ class Migrator {
     async migrate(): Promise<boolean> {
         const user: DBAPI.User = await MigrationUtils.fetchMigrationUser();
 
-        this.results += 'Migration Started<br/>\n';
+        this.recordMigrationResult(true, 'Migration Started');
+        const modelMigrationPromiseList: Promise<ModelMigrationResults>[] = [];
+
         if (this.modelIDSet !== undefined) {
-            this.results += 'Migrating Models<br/>\n';
+            this.recordMigrationResult(true, 'Migrating Models');
 
             const vAssetTypeModel: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
             const vAssetTypeModelGeometryFile: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
@@ -160,7 +162,7 @@ class Migrator {
             }
 
             let idSystemObjectItem: number | undefined = undefined;
-            for (const [uniqueID, modelFiles] of modelMigrationMap) {
+            for (const modelFiles of modelMigrationMap.values()) {
                 let uniqueIDAlreadyMigrated: string | null = null;
                 let modelSource: DBAPI.Model | null = null;
                 let sceneUUID: string = '';
@@ -193,23 +195,20 @@ class Migrator {
                     continue;
                 }
 
-                const MMR: ModelMigrationResults = await this.migrateModel(modelFiles, user);
-                if (MMR.success && MMR.model && sceneUUID)
-                    this.sceneUUIDToModelMap.set(sceneUUID, MMR.model);
-
-                if (this.extractMode && MMR.success && MMR.supportFiles) {
-                    for (const supportFile of MMR.supportFiles) {
-                        const supportPath: string = path.dirname(path.join(MMR.modelFilePath ?? '', supportFile));
-                        const fileName: string = path.basename(supportFile);
-                        const scriptLine: string = `SCRIPT { uniqueID: '${uniqueID}', idSystemObjectItem: ${idSystemObjectItem}, path: '${supportPath}', fileName: '${fileName}', name: '${fileName}', title: '', filePath: '', hash: '', geometry: false, testData: false, License: undefined, PublishedState: undefined },`;
-                        this.recordMigrationResult(true, scriptLine);
-                    }
-                }
+                modelMigrationPromiseList.push(this.migrateModel(modelFiles, sceneUUID, idSystemObjectItem, user));
             }
         }
 
+        // Wait for model migration to complete before continuing
+        // Scene migration needs parent models to exist before we start
+        await Promise.all(modelMigrationPromiseList).then(_resultArray => {
+            this.recordMigrationResult(true, 'Migrating Models Complete');
+        }).catch((error) => {
+            this.recordMigrationResult(false, 'Migrating Models Failed', error);
+        });
+
         if (this.sceneIDSet !== undefined) {
-            this.results += 'Migrating Scenes<br/>\n';
+            this.recordMigrationResult(true, 'Migrating Scenes');
             for (const scenePackage of SceneMigrationPackages) {
                 if (this.sceneIDSet && !this.sceneIDSet.has(scenePackage.EdanUUID))
                     continue;
@@ -227,7 +226,8 @@ class Migrator {
         return true;
     }
 
-    private async migrateModel(modelFileSet: ModelMigrationFile[], user: DBAPI.User): Promise<ModelMigrationResults> {
+    private async migrateModel(modelFileSet: ModelMigrationFile[], sceneUUID: string, idSystemObjectItem: number | undefined,
+        user: DBAPI.User): Promise<ModelMigrationResults> {
         if (modelFileSet.length <= 0) {
             const error: string = 'migrateModel called with no files';
             this.recordMigrationResult(false, error);
@@ -241,15 +241,28 @@ class Migrator {
 
             const operation: string = this.extractMode ? 'extraction' : 'migration';
             const modelFile: ModelMigrationFile = modelFileSet[0];
-            this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) Starting ${operation}; semaphore count ${value}`);
+            const uniqueID: string = modelFile.uniqueID;
+            this.recordMigrationResult(true, `ModelMigration (${uniqueID}) Starting ${operation}; semaphore count ${value}`);
 
             const MM: ModelMigration = new ModelMigration();
             const MMR: ModelMigrationResults = await MM.migrateModel(modelFileSet, user.idUser, true, this.extractMode);
 
             if (!MMR.success)
-                this.recordMigrationResult(false, `ModelMigration (${modelFile.uniqueID}) ${operation} failed for ${H.Helpers.JSONStringify(modelFile)}: ${MMR.error}`);
+                this.recordMigrationResult(false, `ModelMigration (${uniqueID}) ${operation} failed for ${H.Helpers.JSONStringify(modelFile)}: ${MMR.error}`);
             else
-                this.recordMigrationResult(true, `ModelMigration (${modelFile.uniqueID}) ${operation} succeeded: ${H.Helpers.JSONStringify(MMR)}`);
+                this.recordMigrationResult(true, `ModelMigration (${uniqueID}) ${operation} succeeded: ${H.Helpers.JSONStringify(MMR)}`);
+
+            if (MMR.success && MMR.model && sceneUUID)
+                this.sceneUUIDToModelMap.set(sceneUUID, MMR.model);
+
+            if (this.extractMode && MMR.success && MMR.supportFiles) {
+                for (const supportFile of MMR.supportFiles) {
+                    const supportPath: string = path.dirname(path.join(MMR.modelFilePath ?? '', supportFile));
+                    const fileName: string = path.basename(supportFile);
+                    const scriptLine: string = `SCRIPT { uniqueID: '${uniqueID}', idSystemObjectItem: ${idSystemObjectItem}, path: '${supportPath}', fileName: '${fileName}', name: '${fileName}', title: '', filePath: '', hash: '', geometry: false, testData: false, License: undefined, PublishedState: undefined },`;
+                    this.recordMigrationResult(true, scriptLine);
+                }
+            }
 
             return MMR;
         });
@@ -277,12 +290,12 @@ class Migrator {
         return res;
     }
 
-    private recordMigrationResult(success: boolean, message: string): void {
+    private recordMigrationResult(success: boolean, message: string, error?: any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (success)
             LOG.info(message, LOG.LS.eMIG);
         else {
             this.success = false;
-            LOG.error(message, LOG.LS.eMIG);
+            LOG.error(message, LOG.LS.eMIG, error);
         }
 
         this.results += `${message}<br/>\n`;
