@@ -47,7 +47,10 @@ export class WorkflowUtil {
         idSystemObjectModel: number | undefined,
         idSystemObjectAssetVersion: number | undefined,
         idSystemObjectSupportFileAssetVersion: number | undefined,
-        readStream: NodeJS.ReadableStream | undefined, idProject: number | undefined, idUserInitiator: number | undefined): Promise<H.IOResults> {
+        readStream: NodeJS.ReadableStream | undefined,
+        idProject: number | undefined,
+        idUserInitiator: number | undefined,
+        assetMap?: Map<string, number> | undefined): Promise<H.IOResults> { // map of asset filename -> idAsset, needed by WorkflowUtil.computeModelMetrics to persist ModelMaterialUVMap and ModelMaterialChannel
         LOG.info(`WorkflowUtil.computeModelMetrics (${fileName}, idModel ${idModel}, idSystemObjectModel ${idSystemObjectModel}, idSystemObjectAssetVersion ${idSystemObjectAssetVersion})`, LOG.LS.eWF);
 
         switch (path.extname(fileName).toLowerCase()) {
@@ -129,7 +132,7 @@ export class WorkflowUtil {
                 const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion);
                 if (JCOutput) {
                     LOG.info(`WorkflowUtil.computeModelMetrics ${fileName} persisting metrics for model ${idModel}`, LOG.LS.eWF);
-                    const results: H.IOResults = await JCOutput.persist(idModel);
+                    const results: H.IOResults = await JCOutput.persist(idModel, assetMap);
                     if (!results.success)
                         return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} post-upload workflow error: ${results.error}` };
                 }
