@@ -2266,7 +2266,9 @@ function executeEdanVerifier(ICol: COL.ICollection) {
 async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean> {
     const errorFn: string = 'EDAN Verifier'; //'EdanCollection.test.executeVerifySubjects';
     const debugLogs: boolean = false;
-    const debugSubjectLimit = 300; // # of subjects to investigate for testing
+    const doFixErrors: boolean = false;
+    const debugSubjectLimit = 10000; // # of subjects to investigate for testing
+    const debugSubjectOffset = 0;
     jest.setTimeout(3000000); // temp: avoid timeout errors when doing a full run
 
     // our structure and header for saved output to CSV
@@ -2286,10 +2288,10 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
     if(debugLogs) console.log(`Subjects: ${subjects.length}`);
 
     // loop through subjects, extract name, query from EDAN
-    for(let i=0; i<subjects.length; i++) {
+    for(let i=debugSubjectOffset; i<subjects.length; i++) {
 
         // adjust our counter for # of subjects and bail when done
-        if(i>=debugSubjectLimit) break;
+        if(i>=debugSubjectLimit+debugSubjectOffset) break;
 
         // create our stats object and helper variable
         const subject = subjects[i];
@@ -2301,9 +2303,6 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             continue;
         }
         if(debugLogs) console.log('SystemObject: '+JSON.stringify(systemObject));
-
-        // TODO: are we a DPO created subject?
-        const isDPOSubject: boolean = false;
 
         LOG.info(`${errorFn} processing subject: ${subject.Name}`, LOG.LS.eTEST);
         if(debugLogs) console.log('Subject:\t'+JSON.stringify(subject,null,0)); // temp
@@ -2323,6 +2322,18 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             continue;
         }
         if(debugLogs) console.log('Packrat Identifiers: '+JSON.stringify(packratIdentifiers,null,0));
+
+        // if we have an EDAN (should 100% be true) then determine if from DPO or not
+        // defaults to all subjects coming from EDAN
+        let isDPOSubject: boolean = false;
+        if(packratIdentifiers.edan && packratIdentifiers.edan.identifier) {
+            isDPOSubject = isIdentifierFromDPO(packratIdentifiers.edan.identifier);
+        } else {
+            LOG.error(`${errorFn} could not get EDAN ID for subject. source of subject is ambiguous. (id: ${systemObject.idSystemObject} | subject: ${subject.Name})`, LOG.LS.eTEST);
+        }
+
+        // get our packrat name
+        const packratName: string = subject.Name;
 
         // if we have an EDAN id we use it
         let query: string | undefined = '';
@@ -2351,40 +2362,70 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
         }
         if(debugLogs) console.log('EDAN Results: '+JSON.stringify(results,null,0));
 
-        // cycle through the records getting our EDAN units and identifiers
-        const edanUnits: DBAPI.Unit[] | null = [];
-        const edanIdentifiers: IdentifierList[] | null = [];
-        for(const record of results.records) {
+        // structure to hold our units/identifiers
+        let edanUnit: DBAPI.Unit | null = null;
+        let edanIdentifiers: IdentifierList | null = null;
+        let edanName: string = '';
+
+        // if we received multipled records from EDAN, complain but keep going (compares will place subject in output)
+        if(results.records.length==1) {
+            const record = results.records[0];
 
             // get our EDAN units from this record
-            const units: DBAPI.Unit[] | null = await getEdanRecordUnits(record);
-            if(!units)
+            const unit: DBAPI.Unit | null = await getEdanRecordUnit(record,packratUnit);
+            if(!unit)
                 LOG.error(`${errorFn} no known units found for subject (id: ${systemObject.idSystemObject} | subject: ${subject.Name}) and EDAN record name (${record.name})`, LOG.LS.eGQL);
             else
-                edanUnits.push(...units);
-            if(debugLogs) console.log('EDAN Units: '+JSON.stringify(units,null,0));
+                edanUnit = unit;
+            if(debugLogs) console.log('EDAN Units: '+JSON.stringify(unit,null,0));
 
             // get our EDAN identifiers from this record
             const identifiers: IdentifierList | null = await getEdanRecordIdentifiers(record);
             if(!identifiers)
                 LOG.error(`${errorFn} no EDAN identifiers found for subject (id: ${systemObject.idSystemObject} | subject: ${subject.Name}) and EDAN record name (${record.name})`, LOG.LS.eGQL);
             else
-                edanIdentifiers.push(identifiers);
+                edanIdentifiers = identifiers;
             if(debugLogs) console.log('EDAN Ids: '+JSON.stringify(identifiers,null,0));
+
+            // get our name
+            edanName = record.name;
+
+        } else {
+            LOG.error(`${errorFn} received multiple records from EDAN when expecting 1. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name} | query: ${query})`, LOG.LS.eTEST);
         }
 
         // a structure to hold our output
         const outputPrefix = `${systemObject.idSystemObject},${getSystemObjectDetailsURL(systemObject)},${JSON.stringify(subject.Name)},`;
 
+        // Compare: Name
+        if(packratName!=edanName) {
+            LOG.error(`${errorFn} Subject name in Packrat and EDAN are not the same (id:${systemObject.idSystemObject} | Packrat:${packratName} | EDAN:${edanName})`, LOG.LS.eTEST);
+            let str = outputPrefix;
+            str += 'error,';
+            str += 'name,';
+            str += 'Subject name not the same,';
+            str += '"' + packratName + '",';
+            str += '"' + edanName + '",';
+            str += ((isDPOSubject)?'DPO created subject. needs manual fix':'EDAN subject. needs manual fix.')+',';
+            output.push(str);
+        } else {
+            LOG.info(`${errorFn} name compare succeeded!`, LOG.LS.eTEST);
+            let str = outputPrefix;
+            str += 'success,';
+            str += 'name,';
+            str += ',';
+            str += '"' + packratName + '",';
+            str += '"' + edanName + '",';
+            str += ',';
+            output.push(str);
+        }
+
         // Compare: Units
-        if(packratUnit && edanUnits) {
+        if(packratUnit && edanUnit) {
             // if both present then we check the value match
             let foundUnit: boolean = false;
-            for(const unit of edanUnits) {
-                if(unit.idUnit===packratUnit.idUnit) {
-                    foundUnit = true;
-                    break;
-                }
+            if(edanUnit.idUnit===packratUnit.idUnit) {
+                foundUnit = true;
             }
 
             // if we couldn't find the unit, add error otherwise success
@@ -2395,14 +2436,28 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
                 str += 'units,';
                 str += 'Packrat unit does not match EDAN units,';
                 str += '"' + packratUnit.Abbreviation + ' - ' + packratUnit.Name + '",';
-                str += '"' + edanUnits.map( unit => { return unit.Abbreviation + ' - ' + unit.Name; }).join('\n') +'",';
-                str += ((isDPOSubject)?'DPO created subject. needs manual fix to update EDAN with unit':'EDAN subject. replacing unit in packrat (todo)')+',';
+                str += '"' + edanUnit.Abbreviation + ' - ' + edanUnit.Name +'",';
+
+                // apply edan unit packrat subject
+                if(isDPOSubject) {
+                    str += 'DPO subject. needs manual fix to update EDAN unit info';
+                } else {
+                    if(doFixErrors) {
+                        const replaceUnitResult: boolean = await replacePackratUnit(packratUnit,edanUnit);
+                        if(!replaceUnitResult) {
+                            LOG.error(`${errorFn} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                            str += 'EDAN subject. failed to automatic update. check logs or do manually';
+                        } else {
+                            LOG.info(`${errorFn} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                            str += 'EDAN subject. updated Packrat unit to match EDAN';
+                        }
+                    } else {
+                        str += 'EDAN subject. automatic updating disabled. rerun or manual fix required';
+                    }
+                }
+
+                // store for output
                 output.push(str);
-
-                // TODO: apply edan unit packrat subject
-                const replaceUnitResult: boolean = await replacePackratUnit(systemObject,edanUnits);
-                if(!replaceUnitResult) console.error('failed');
-
             } else {
                 LOG.info(`${errorFn} Unit compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
                 let str = outputPrefix;
@@ -2410,11 +2465,11 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
                 str += 'units,';
                 str += ',';
                 str += '"' + packratUnit.Abbreviation + ' - ' + packratUnit.Name + '",';
-                str += '"' + edanUnits.map( unit => { return unit.Abbreviation + ' - ' + unit.Name; }).join('\n') +'",'; // inner " not needed because whole cell is wrapped
+                str += '"' + edanUnit.Abbreviation + ' - ' + edanUnit.Name + '",';
                 output.push(str);
             }
-        } else if(packratUnit && !edanUnits) {
-            LOG.error(`${errorFn} Packrat unit not found in EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name} | packrat:${JSON.stringify(packratUnit)})`, LOG.LS.eGQL);
+        } else if(packratUnit && !edanUnit) {
+            LOG.error(`${errorFn} Packrat unit not found in EDAN record (id:${systemObject.idSystemObject} | subject:${subject.Name} | packrat:${JSON.stringify(packratUnit)})`, LOG.LS.eGQL);
             let str = outputPrefix;
             str += 'error,';
             str += 'units,';
@@ -2423,20 +2478,35 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             str += 'null,';
             str += ((isDPOSubject)?'DPO created subject. needs manual fix to apply to EDAN.':'EDAN subject. needs manual fix because EDAN should have unit assigned. (todo)')+',';
             output.push(str);
-        } else if(!packratUnit && edanUnits) {
-            LOG.error(`${errorFn} EDAN unit not found in Packrat (id:${systemObject.idSystemObject} | subject:${subject.Name} | EDAN:${edanUnits.map(x=>{ return x.Name; }).join(',')})`, LOG.LS.eGQL);
+        } else if(!packratUnit && edanUnit) {
+            LOG.error(`${errorFn} EDAN unit not found in Packrat (id:${systemObject.idSystemObject} | subject:${subject.Name} | EDAN:${edanUnit.Name})`, LOG.LS.eTEST);
             let str = outputPrefix;
             str += 'error,';
             str += 'units,';
             str += 'EDAN unit not found in Packrat,';
             str += 'null,';
-            str += '"' + edanUnits.map( unit => { return unit.Abbreviation + ' - ' + unit.Name; }).join('\n') +'",';
-            str += ((isDPOSubject)?'DPO created subject. needs manual fix as unit should be assigned':'EDAN subject. replacing unit in packrat (todo)')+',';
-            output.push(str);
+            str += '"' + edanUnit.Abbreviation + ' - ' + edanUnit.Name +'",';
 
-            // TODO: apply edan unit packrat subject
-            const replaceUnitResult: boolean = await replacePackratUnit(systemObject,edanUnits);
-            if(!replaceUnitResult) console.error('failed');
+            // apply edan unit to packrat unit (creating new unit in process)
+            if(isDPOSubject) {
+                str += 'DPO subject. needs manual fix as Packrat should have unit';
+            } else {
+                if(doFixErrors) {
+                    const replaceUnitResult: boolean = await replacePackratUnit(packratUnit,edanUnit);
+                    if(!replaceUnitResult) {
+                        LOG.error(`${errorFn} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                        str += 'EDAN subject. failed to automatic update. check logs or do manually';
+                    } else {
+                        LOG.info(`${errorFn} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                        str += 'EDAN subject. updated Packrat unit to match EDAN';
+                    }
+                } else {
+                    str += 'EDAN subject. automatic updating disabled. rerun or manual fix required';
+                }
+            }
+
+            // store for output
+            output.push(str);
 
         } else {
             LOG.error(`${errorFn} Packrat & EDAN units not found (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
@@ -2455,16 +2525,14 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             let idMismatch: boolean = false;
 
             // figure out how many identifiers edan has
-            let edanIdCount = 0;
-            for(const id of edanIdentifiers) { edanIdCount += (id.details)?id.details?.length:0; }
+            const edanIdCount = edanIdentifiers.details.length;
 
             // build our list of identifiers
             // TODO: clean strings for CSV output
             const strPackratIds: string[] = (packratIdentifiers.details)?(packratIdentifiers.details?.map(id=>{ return id.identifier?.IdentifierValue+' ('+id.identifierType?.Term+')'; })):([]);
             const strEdanIds: string[] = [];
-            for(const idSet of edanIdentifiers) {
-                for(const id of idSet.details)
-                    strEdanIds.push(id.identifier?.IdentifierValue+' ('+id.identifierType?.Term+')');
+            for(const id of edanIdentifiers.details) {
+                strEdanIds.push(id.identifier?.IdentifierValue+' ('+id.identifierType?.Term+')');
             }
 
             // see if we have the same count for a quick catch of difference, otherwise do deeper compare
@@ -2473,14 +2541,12 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             } else {
                 // cycle through all edan identifiers and look for match in packrat
                 let didFindId = false;
-                for(const idSet of edanIdentifiers) {
-                    for(const edanId of idSet.details) {
-                        for(const packratId of packratIdentifiers.details) {
-                            if(packratId.identifierTypeEnum===edanId.identifierTypeEnum &&
-                               packratId.identifier?.IdentifierValue===edanId.identifier?.IdentifierValue) {
-                                didFindId = true;
-                                break;
-                            }
+                for(const id of edanIdentifiers.details) {
+                    for(const packratId of packratIdentifiers.details) {
+                        if(packratId.identifierTypeEnum===id.identifierTypeEnum &&
+                            packratId.identifier?.IdentifierValue===id.identifier?.IdentifierValue) {
+                            didFindId = true;
+                            break;
                         }
                     }
                 }
@@ -2490,15 +2556,14 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             // if we have a mismatch then output
             if(idMismatch) {
                 // log error and details
-                LOG.error(`${errorFn} Packrat has different units than EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                LOG.error(`${errorFn} Packrat has different identifiers than EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
                 LOG.error(`${errorFn} \tPackrat: `+strPackratIds.sort().join(','), LOG.LS.eGQL);
                 LOG.error(`${errorFn} \t   EDAN: `+strEdanIds, LOG.LS.eGQL);
 
                 // if we're an EDAN subject then we need to fix the situation
                 if(!isDPOSubject) {
                     // TODO: wipe out Packrat identifiers and replace with EDAN modifiers
-                    // TEST: should edan identifiers be consolidated into a single list or maintain separate records?
-                    const replaceIdsResult: boolean = await replacePackratIdentifiers(systemObject,edanIdentifiers);
+                    const replaceIdsResult: boolean = await replacePackratIdentifiers(packratIdentifiers,edanIdentifiers,systemObject);
                     if(!replaceIdsResult) console.error('failed');
                 }
 
@@ -2509,8 +2574,28 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
                 str += 'Packrat identifiers do not match EDAN,';
                 str += '"'+strPackratIds.sort().join('\n')+'",';
                 str += '"'+strEdanIds.sort().join('\n')+'",';
-                str += ((isDPOSubject)?'DPO created subject. needs manual fix.':'EDAN subject. overwriting Packrat identifiers (todo)')+',';
+
+                // apply edan unit to packrat unit (creating new unit in process)
+                if(isDPOSubject) {
+                    str += 'DPO subject. needs manual fix';
+                } else {
+                    if(doFixErrors) {
+                        const replaceUnitResult: boolean = await replacePackratIdentifiers(packratIdentifiers,edanIdentifiers,systemObject);
+                        if(!replaceUnitResult) {
+                            LOG.error(`${errorFn} failed to update Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                            str += 'EDAN subject. failed to automatic update. check logs or do manually';
+                        } else {
+                            LOG.info(`${errorFn} successfully updated Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                            str += 'EDAN subject. updated Packrat identifiers to match EDAN';
+                        }
+                    } else {
+                        str += 'EDAN subject. automatic updating disabled. rerun or manual fix required';
+                    }
+                }
+
+                // store for output
                 output.push(str);
+
             } else {
                 LOG.info(`${errorFn} Identifier compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
                 let str = outputPrefix;
@@ -2587,6 +2672,17 @@ async function getSubjectIdentifiers(subject: DBAPI.Subject, systemObject: DBAPI
                 result.preferred = preferredIdentifierDetails;
                 result.details?.push(preferredIdentifierDetails);
             }
+
+            // check for edan/ark and store as appropriate because the preferred id may be ARK too
+            switch(preferredIdentifierDetails?.identifierTypeEnum){
+                case COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID: {
+                    if(!result.edan) result.edan = preferredIdentifierDetails;
+                } break;
+
+                case COMMON.eVocabularyID.eIdentifierIdentifierTypeARK: {
+                    if(!result.ark) result.ark = preferredIdentifierDetails;
+                } break;
+            }
         }
     }
 
@@ -2652,17 +2748,41 @@ async function getSubjectUnit(subject: DBAPI.Subject): Promise<DBAPI.Unit | null
     return packratUnit;
 }
 
-async function getEdanRecordUnits(record: COL.CollectionQueryResultRecord): Promise<DBAPI.Unit[] | null> {
+async function getEdanRecordUnit(record: COL.CollectionQueryResultRecord, packratUnit: DBAPI.Unit): Promise<DBAPI.Unit | null> {
 
-    const edanUnits: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(record.unit);
-    if(!edanUnits){
-        LOG.info(`(WARNING) did not find known unit for EDAN unit. (${record.unit})`, LOG.LS.eTEST);
+    // TODO: additional verification or handling? (e.g. create new Unit for unknown types?)
+    // TODO: relocate logic to central/shared location to benefit ingestion
+
+    // see if UnittEdan has a direct match for this unit, if not do a deeper (less precise approach)
+    const edanUnits: DBAPI.UnitEdan[] | null = await DBAPI.UnitEdan.fetchFromName(record.unit);
+    if(edanUnits && edanUnits.length==1 && edanUnits[0].idUnit) {
+        const result = DBAPI.Unit.fetch(edanUnits[0].idUnit);
+        if(result) return result;
+    }
+
+    LOG.info(`(WARNING) did not find EDAN unit in the UnitEdan DB. Doing less precise check... (${record.unit}) `, LOG.LS.eTEST);
+
+    // if not found then do a deeper named search on Packrat units
+    const packratUnits: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(record.unit);
+    if(!packratUnits){
+        LOG.info(`(WARNING) did not find known Packrat unit for EDAN unit. (${record.unit})`, LOG.LS.eTEST);
         return null;
     }
 
-    // todo: additional verification or handling? (e.g. create new Unit for unknown types)
+    // make sure we didn't get multiples
+    if(packratUnits.length!=1) {
+        LOG.error(`received multiple units from EDAN. Should only be 1 for subjects. Checking if packrat unit is in list. (${record.unit}:${packratUnits.map(x=>{ return x.Abbreviation; }).join('|')})`, LOG.LS.eTEST);
 
-    return edanUnits;
+        // now we check if our unit from packrat is in the returned results
+        // TEST: if so, we return that instead...?
+        for(const unit of packratUnits)
+            if(unit.idUnit===packratUnit.idUnit) return unit;
+
+        return null;
+    }
+
+    // if wqe got multiples, then we need to throw error. It should only be one.
+    return packratUnits[0];
 }
 
 async function getEdanRecordIdentifiers(record: COL.CollectionQueryResultRecord): Promise<IdentifierList | null> {
@@ -2775,26 +2895,70 @@ async function getEdanRecordIdentifiers(record: COL.CollectionQueryResultRecord)
     return result;
 }
 
-async function replacePackratUnit(_systemObject: DBAPI.SystemObject, _edanUnits: DBAPI.Unit[]): Promise<boolean> {
+async function replacePackratUnit(packratUnit: DBAPI.Unit | null, edanUnit: DBAPI.Unit): Promise<boolean> {
 
-    // find the unit(s) attached to this system object
+    // if packrat unit is null, we need to create one and push to the system
+    if(!packratUnit) { return false; }
+    //     console.warn(edanUnit);
 
-    // cycle through edan units and create the same in Packrat, or choose best one?
+    //     const unitArgs = {
+    //         idUnit: 0, // use Edan's?
+    //         Name: edanUnit.Name,
+    //         Abbreviation: edanUnit.Abbreviation,
+    //         ARKPrefix: edanUnit.ARKPrefix
+    //     };
+    //     packratUnit = new DBAPI.Unit(unitArgs);
+    //     const wasCreated: boolean = await packratUnit.create();
+    //     if(!wasCreated) {
+    //         LOG.error(`failed to create new unit in Packrat (unit: ${edanUnit.Name})`, LOG.LS.eTEST);
+    //         return false;
+    //     }
 
+    //     LOG.info(`Created new unit in Packrat (id: ${packratUnit.idUnit}} | unit: ${packratUnit.Name})`, LOG.LS.eTEST);
+    //     return true;
+    // }
+
+    // copy properties over. skip the id or things will break
+    packratUnit.Name = edanUnit.Name;
+    packratUnit.Abbreviation = edanUnit.Abbreviation;
+    packratUnit.ARKPrefix = edanUnit.ARKPrefix;
+
+    const result: boolean =  await packratUnit.update();
+    if(!result) {
+        LOG.error(`could not update Packrat unit (id: ${packratUnit.idUnit}} | unit: ${packratUnit.Name})`, LOG.LS.eTEST);
+        return false;
+    }
     return true;
 }
-async function replacePackratIdentifiers(_systemObject: DBAPI.SystemObject, _edanIdentifiers: IdentifierList[]): Promise<boolean> {
-    // find all identifiers attached to system object and remove them
+
+async function replacePackratIdentifiers(_packratIdentifiers: IdentifierList, _edanIdentifiers: IdentifierList, _systemObject: DBAPI.SystemObject): Promise<boolean> {
+
+    // [?] do we remove previous identifiers?
+    // [?] do we repurpose them by reassign new values keeping ids (still need to add/remove if count mismatch)?
+
+    // get subject system object for identifiers
+
+    // wipe all identifiers from subject
+    // for(const id of packratIdentifiers.details) {
+    //     await id.identifier?.delete();
+    // }
 
     // cycle through edan identifiers creating new entries in the DB for each attached to the same SystemObject
 
     return true;
 }
 
+function isIdentifierFromDPO(identifier: DBAPI.Identifier): boolean {
+    // simply check if the EDAN id starts with the DPO prefix.
+    // TODO: make more robust with additional checks(?)
+    return (identifier.IdentifierValue.startsWith('dpo_3d') || identifier.IdentifierValue.startsWith('edanmdm:dpo_3d'));
+}
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 function getSystemObjectDetailsURL(systemObject: DBAPI.SystemObject) {
     return '=HYPERLINK("https://packrat-test.si.edu:8443/repository/details/'+systemObject.idSystemObject+'")';
 }
+
 // function getSubjectDetailsURL(subject: DBAPI.Subject) {
 //     return 'https://packrat-test.si.edu:8443/repository/details/'+subject.idSubject;
 // }
