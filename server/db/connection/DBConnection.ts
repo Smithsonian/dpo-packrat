@@ -32,7 +32,7 @@ export class DBConnection {
                 ],
             });
 
-            prisma.$on('error', (e) => { LOG.error(`PrismaClient error ${e.message} target ${e.target}`, LOG.LS.eDB); });
+            prisma.$on('error', (e) => { LOG.error(`PrismaClient error ${e.target}`, LOG.LS.eDB); });
             // prisma.$on('query', (e) => { LOG.info(e.query, LOG.LS.eDB); });
 
             this._prisma = prisma;
