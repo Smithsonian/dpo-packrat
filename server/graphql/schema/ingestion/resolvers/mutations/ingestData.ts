@@ -517,6 +517,7 @@ class IngestDataWorker extends ResolverBase {
                         }
                     }
                 }
+                break; // exit retry loop
             }
         }
 

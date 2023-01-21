@@ -65,7 +65,8 @@ export abstract class DBObject<T> {
     }
 
     protected logError(method: string, error?: any): boolean { // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-        LOG.error(`DBAPI.${this.fetchTableName()}.${method} ${H.Helpers.JSONStringify(this)}`, LOG.LS.eDB, error);
+        const errorMessage: string = (H.Helpers.safeString(error?.message) ?? '').replace(/(\n|\r)/g, ' ');
+        LOG.error(`DBAPI.${this.fetchTableName()}.${method} ${H.Helpers.JSONStringify(this)}: ${errorMessage}`, LOG.LS.eDB);
         return false;
     }
 }
