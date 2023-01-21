@@ -123,10 +123,16 @@ export class ModelMigration {
         if (useCook || !this.extractMode) { // if we're not in "extract mode", use cook to gather model metrics
             // Only use Cook on models smaller than 4GB
             if (AssetVersionModel.StorageSize < 4 * 1024 * 1024 * 1024) {
+                const assetMap: Map<string, number> = new Map<string, number>(); // map of asset filename -> idAsset, needed by WorkflowUtil.computeModelMetrics to persist ModelMaterialUVMap and ModelMaterialChannel
+                for (const assetVersion of this.AssetVersionModel)
+                    assetMap.set(assetVersion.FileName, assetVersion.idAsset);
+                for (const assetVersion of this.AssetVersionSupportFile ?? [])
+                    assetMap.set(assetVersion.FileName, assetVersion.idAsset);
+
                 // Run Cook's si-packrat-inspect and parse Cook output to obtain list of texture maps
                 res = await WorkflowUtil.computeModelMetrics(this.masterModelGeometryFile, this.model.idModel, undefined,
                     AssetVersionModelSO.idSystemObject, AssetVersionSupportFileSO?.idSystemObject,
-                    undefined, undefined, this.userOwner.idUser);
+                    undefined, undefined, this.userOwner.idUser, assetMap);
                 if (res.success)
                     res = await this.extractTextureMaps();
                 else if (!this.testData) // if we failed and this is not test data, worry about Cook failures at this point
@@ -331,7 +337,7 @@ export class ModelMigration {
         const model: DBAPI.Model = new DBAPI.Model({
             idModel: 0,
             Name,
-            Title: Name,
+            Title: null,
             DateCreated: new Date(),
             idVCreationMethod: vCreationMethod ? vCreationMethod.idVocabulary : null,
             idVModality: vModality ? vModality.idVocabulary : null,
