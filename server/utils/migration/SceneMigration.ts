@@ -31,6 +31,7 @@ export class SceneMigration {
     private static vocabModel:          DBAPI.Vocabulary | undefined        = undefined;
     private static vocabOther:          DBAPI.Vocabulary | undefined        = undefined;
     private static vocabDownload:       DBAPI.Vocabulary | undefined        = undefined;
+    private static vocabMasterModel:    DBAPI.Vocabulary | undefined        = undefined;
     private static idSystemObjectTest:  number | undefined                  = undefined;
 
     private ICol:                       COL.ICollection | undefined         = undefined;
@@ -49,15 +50,20 @@ export class SceneMigration {
             SceneMigration.vocabOther   = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
         if (!SceneMigration.vocabDownload)
             SceneMigration.vocabDownload = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+        if (!SceneMigration.vocabMasterModel)
+            SceneMigration.vocabMasterModel = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
 
         if (!SceneMigration.vocabScene)
             return this.recordError('initialize', 'unable to load vocabulary for scene asset type');
         if (!SceneMigration.vocabModel)
-            return this.recordError('initialize', ' unable to load vocabulary for model asset type');
+            return this.recordError('initialize', 'unable to load vocabulary for model asset type');
         if (!SceneMigration.vocabOther)
-            return this.recordError('initialize', ' unable to load vocabulary for other asset type');
+            return this.recordError('initialize', 'unable to load vocabulary for other asset type');
         if (!SceneMigration.vocabDownload)
-            return this.recordError('initialize', ' unable to load vocabulary for download model purpose');
+            return this.recordError('initialize', 'unable to load vocabulary for download model purpose');
+        if (!SceneMigration.vocabMasterModel)
+            return this.recordError('initialize', 'unable to load vocabulary for master model purpose');
+
         return { success: true };
     }
 
@@ -130,7 +136,7 @@ export class SceneMigration {
             this.log('migrateScene', `wired scene to idSystemObject ${this.scenePackage.idSystemObjectItem}`);
         }
 
-        // wire master model to scene, if supplied
+        // wire master model to scene, if supplied or computed
         if (this.modelSource) {
             const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.modelSource, this.scene);
             if (!xref)
@@ -308,6 +314,30 @@ export class SceneMigration {
             return this.recordError('wireItemToScene', `unable to wire item ${JSON.stringify(itemDB)} to scene ${H.Helpers.JSONStringify(this.scene)}`);
 
         this.log('wireItemToScene', `Completed wiring ${JSON.stringify(itemDB)} to scene ${H.Helpers.JSONStringify(this.scene)}`);
+
+        // if we don't have an explicit model source, search for a master model that is the child of our item
+        if (!this.modelSource) {
+            const models: DBAPI.Model[] | null = await DBAPI.Model.fetchDerivedFromItems([itemDB.idItem]);
+            if (!models)
+                return this.recordError('wireItemToScene', `unable to compute models derived from item ${JSON.stringify(itemDB)}`);
+
+            let master: DBAPI.Model | undefined = undefined;
+            let masterCount: number = 0;
+            const idVPurposeMaster: number = SceneMigration.vocabMasterModel?.idVocabulary ?? -1;
+            for (const model of models) {
+                if (model.idVPurpose === idVPurposeMaster) {
+                    if (masterCount++ === 0)
+                        master = model;
+                }
+            }
+
+            if (masterCount === 1) {
+                this.modelSource = master;
+                this.log('wireItemToScene', `Found master model ${H.Helpers.JSONStringify(this.modelSource)} from item ${JSON.stringify(itemDB)}`);
+            } else
+                this.log('wireItemToScene', `Found ${masterCount} master models derived from item ${JSON.stringify(itemDB)}; unable to compute scene's master`);
+        }
+
         return { success: true };
     }
 
