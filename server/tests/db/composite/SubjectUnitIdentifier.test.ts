@@ -5,7 +5,7 @@ import * as COMMON from '@dpo-packrat/common';
 // import * as H from '../../../utils/helpers';
 
 afterAll(async done => {
-    // awaitH.Helpers.sleep(4000);
+    // await H.Helpers.sleep(4000);
     done();
 });
 
@@ -26,7 +26,7 @@ describe('DB Composite SubjectUnitIdentifier Test', () => {
     executeQueryCollection(ICollection, 'DPO', false, true);
     executeQueryCollection(ICollection, 'Armstrong', false, true);
     executeQueryCollection(ICollection, '', false, true);
-    executeQueryCollection(ICollection, '1 = 1; DROP Database Packrat', false, false);
+    executeQueryCollection(ICollection, '1 = 1; DROP Database Packrat', false, true);
 
     executeSearch('', false, true);
     executeSearch('Mount', false, true);
@@ -35,12 +35,12 @@ describe('DB Composite SubjectUnitIdentifier Test', () => {
     executeSearch('Armstrong', false, false, 1);
     executeSearch('65665', false, true);
     executeSearch('65665', false, false, -1);
-    executeSearch('65665', false, true, 12, 1, 100);
-    executeSearch('65665', false, true, 12, 2, 10);
-    executeSearch('65665', false, true, 12, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eDefault, true);
-    executeSearch('65665', false, true, 12, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eIdentifierValue, false);
-    executeSearch('65665', false, true, 12, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eSubjectName, true);
-    executeSearch('65665', false, true, 12, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation, false);
+    executeSearch('65665', false, true, 18, 1, 100);
+    executeSearch('65665', false, true, 18, 2, 10);
+    executeSearch('65665', false, true, 18, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eDefault, true);
+    executeSearch('65665', false, true, 18, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eIdentifierValue, false);
+    executeSearch('65665', false, true, 18, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eSubjectName, true);
+    executeSearch('65665', false, true, 18, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation, false);
 });
 
 function executeQuery(query: string, expectNull: boolean, expectResults: boolean): void {

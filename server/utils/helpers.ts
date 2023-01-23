@@ -12,6 +12,8 @@ import * as crypto from 'crypto';
 import * as LOG from './logger';
 import { Readable, Writable } from 'stream';
 
+require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
+
 export type IOResults = {
     success: boolean;
     error?: string;
@@ -80,11 +82,14 @@ export class Helpers {
         return { success: true };
     }
 
-    static async moveFile(nameSource: string, nameDestination: string): Promise<IOResults> {
+    static async moveFile(nameSource: string, nameDestination: string, allowedToFail?: boolean): Promise<IOResults> {
         try {
             await fsp.rename(nameSource, nameDestination);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.moveFile', LOG.LS.eSYS, error);
+            if (allowedToFail)
+                LOG.info(`Helpers.moveFile: ${Helpers.JSONStringify(error)}`, LOG.LS.eSYS);
+            else
+                LOG.error('Helpers.moveFile', LOG.LS.eSYS, error);
             return { success: false, error: `Unable to move ${nameSource} to ${nameDestination}: ${error}` };
         }
         return { success: true };
@@ -169,7 +174,7 @@ export class Helpers {
 
                 stream.end();
                 stream.on('finish', () => { resolve(hash.digest('hex')); });
-                stream.on('error', reject);
+                stream.on('error', (err) => { LOG.error(`Helpers.createRandomFile error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); reject(); });
             } catch (error) /* istanbul ignore next */ {
                 LOG.error('Helpers.createRandomFile() error', LOG.LS.eSYS, error);
                 reject(error);
@@ -289,7 +294,7 @@ export class Helpers {
 
                 stream.on('data', (chunk: Buffer) => { dataLength += chunk.length; });
                 stream.on('end', () => { resolve({ hash: hash.digest('hex'), dataLength, success: true }); });
-                stream.on('error', () => { resolve({ hash: '', dataLength: 0, success: false, error: 'Helpers.computeHashFromFile() Stream Error' }); });
+                stream.on('error', (err) => { resolve({ hash: '', dataLength: 0, success: false, error: `Helpers.computeHashFromFile() Stream Error ${Helpers.JSONStringify(err)}` }); });
                 stream.pipe(hash);
             });
         } catch (error) /* istanbul ignore next */ {
@@ -309,7 +314,7 @@ export class Helpers {
             return new Promise<Buffer | null>((resolve) => {
                 stream.on('data', (chunk: Buffer) => { bufArray.push(chunk); });
                 stream.on('end', () => { resolve(Buffer.concat(bufArray)); }); /* istanbul ignore next */
-                stream.on('error', () => { resolve(null); });
+                stream.on('error', (err) => { LOG.error(`Helpers.readFileFromStream error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); resolve(null); });
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.readFileFromStream', LOG.LS.eSYS, error);
@@ -323,7 +328,7 @@ export class Helpers {
             return new Promise<Buffer>((resolve, reject) => {
                 stream.on('data', (chunk: Buffer) => { bufArray.push(chunk); });
                 stream.on('end', () => { resolve(Buffer.concat(bufArray)); }); /* istanbul ignore next */
-                stream.on('error', () => { reject(); });
+                stream.on('error', (err) => { LOG.error(`Helpers.readFileFromStreamThrowErrors error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); reject(); });
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.readFileFromStreamThrowErrors', LOG.LS.eSYS, error);
@@ -337,7 +342,7 @@ export class Helpers {
             return new Promise<number | null>((resolve) => {
                 stream.on('data', (chunk: Buffer) => { size += chunk.length; });
                 stream.on('end', () => { resolve(size); }); /* istanbul ignore next */
-                stream.on('error', () => { resolve(null); });
+                stream.on('error', (err) => { LOG.error(`Helpers.computeSizeOfStream error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); resolve(null); });
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.error('Helpers.computeSizeOfStream', LOG.LS.eSYS, error);
@@ -389,8 +394,8 @@ export class Helpers {
                     readStream.on('end', () => { resolve({ success: true, size }); });
                     writeStream.on('end', () => { resolve({ success: true, size }); });
                 } /* istanbul ignore next */
-                readStream.on('error', () => { resolve({ success: false, error: 'Unknown readstream error', size }); });
-                writeStream.on('error', () => { resolve({ success: false, error: 'Unknown writestream error', size }); });
+                readStream.on('error', (err) => { resolve({ success: false, error: `readstream error: ${Helpers.JSONStringify(err)}`, size }); });
+                writeStream.on('error', (err) => { resolve({ success: false, error: `writestream error: ${Helpers.JSONStringify(err)}`, size }); });
 
                 readStream.pipe(writeStream);
             });
@@ -483,13 +488,13 @@ export class Helpers {
         return JSON.stringify(obj, Helpers.saferStringify);
     }
 
-    /** Stringifies Maps and BigInts */
+    /** Stringifies Maps, Sets, streams (sort of); BigInts are handled by json-bigint-patch */
     static saferStringify(key: any, value: any): any {
         key;
         if (value == null)
             return value;
-        if (typeof value === 'bigint')
-            return value.toString();
+        // if (typeof value === 'bigint')
+        //     return value.toString();
         if (value instanceof Map)
             return [...value];
         if (value instanceof Set)

@@ -11,6 +11,8 @@ import API, { AuthResponseType } from '../api';
 
 type UserStore = {
     user: User | null;
+    redirectPath: string;
+    setRedirectPath: (path: string) => void;
     initialize: () => Promise<void>;
     login: (email: string, password: string) => Promise<AuthResponseType>;
     logout: () => Promise<AuthResponseType>;
@@ -18,6 +20,10 @@ type UserStore = {
 
 export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: GetState<UserStore>) => ({
     user: null,
+    redirectPath: '',
+    setRedirectPath: (path: string) => {
+        set({ redirectPath: path });
+    },
     initialize: async () => {
         const { user } = get();
         if (!user) {

@@ -8,7 +8,7 @@ import * as LOG from '../../utils/logger';
 type SystemObjectPairsBase = P.SystemObject
 & { Actor: P.Actor | null}
 & { Asset_AssetToSystemObject_idAsset: P.Asset | null}
-& { AssetVersion: P.AssetVersion | null}
+& { AssetVersion_AssetVersionToSystemObject_idAssetVersion: P.AssetVersion | null}
 & { CaptureData: P.CaptureData | null}
 & { IntermediaryFile: P.IntermediaryFile | null}
 & { Item: P.Item | null}
@@ -22,7 +22,7 @@ type SystemObjectPairsBase = P.SystemObject
 
 type SystemObjectActorBase = P.SystemObject & { Actor: P.Actor | null};
 type SystemObjectAssetBase = P.SystemObject & { Asset_AssetToSystemObject_idAsset: P.Asset | null};
-type SystemObjectAssetVersionBase = P.SystemObject & { AssetVersion: P.AssetVersion | null};
+type SystemObjectAssetVersionBase = P.SystemObject & { AssetVersion_AssetVersionToSystemObject_idAssetVersion: P.AssetVersion | null};
 type SystemObjectCaptureDataBase = P.SystemObject & { CaptureData: P.CaptureData | null};
 type SystemObjectIntermediaryFileBase = P.SystemObject & { IntermediaryFile: P.IntermediaryFile | null};
 type SystemObjectItemBase = P.SystemObject & { Item: P.Item | null};
@@ -86,11 +86,11 @@ export class SystemObjectAsset extends SystemObject implements SystemObjectAsset
 }
 
 export class SystemObjectAssetVersion extends SystemObject implements SystemObjectAssetVersionBase {
-    AssetVersion: AssetVersion | null;
+    AssetVersion_AssetVersionToSystemObject_idAssetVersion: AssetVersion | null;
 
     constructor(input: SystemObjectAssetVersionBase) {
         super(input);
-        this.AssetVersion = (input.AssetVersion) ? new AssetVersion(input.AssetVersion) : /* istanbul ignore next */ null;
+        this.AssetVersion_AssetVersionToSystemObject_idAssetVersion = (input.AssetVersion_AssetVersionToSystemObject_idAssetVersion) ? new AssetVersion(input.AssetVersion_AssetVersionToSystemObject_idAssetVersion) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idAssetVersion: number): Promise<SystemObjectAssetVersion | null> {
@@ -98,7 +98,7 @@ export class SystemObjectAssetVersion extends SystemObject implements SystemObje
             return null;
         try {
             const SOPair: SystemObjectAssetVersionBase | null =
-                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAssetVersion, }, include: { AssetVersion: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAssetVersion, }, include: { AssetVersion_AssetVersionToSystemObject_idAssetVersion: true, }, });
             return SOPair ? new SystemObjectAssetVersion(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SystemObjectAssetVersion.fetch', LOG.LS.eDB, error);
@@ -330,7 +330,7 @@ export class SystemObjectUnit extends SystemObject implements SystemObjectUnitBa
 export class SystemObjectPairs extends SystemObject implements SystemObjectPairsBase {
     Actor: Actor | null = null;
     Asset_AssetToSystemObject_idAsset: Asset | null = null;
-    AssetVersion: AssetVersion | null = null;
+    AssetVersion_AssetVersionToSystemObject_idAssetVersion: AssetVersion | null = null;
     CaptureData: CaptureData | null = null;
     IntermediaryFile: IntermediaryFile | null = null;
     Item: Item | null = null;
@@ -349,9 +349,16 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
         this.Asset_AssetToSystemObject_idAsset = value;
     }
 
+    get AssetVersion(): AssetVersion | null {
+        return this.AssetVersion_AssetVersionToSystemObject_idAssetVersion;
+    }
+    set AssetVersion(value: AssetVersion | null) {
+        this.AssetVersion_AssetVersionToSystemObject_idAssetVersion = value;
+    }
+
     get SystemObjectBased(): SystemObjectBased | null {
         if (this.Actor) return this.Actor;
-        if (this.Asset_AssetToSystemObject_idAsset) return this.Asset_AssetToSystemObject_idAsset;
+        if (this.Asset) return this.Asset;
         if (this.AssetVersion) return this.AssetVersion;
         if (this.CaptureData) return this.CaptureData;
         if (this.IntermediaryFile) return this.IntermediaryFile;
@@ -370,7 +377,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
         super(input);
         if (input.Actor) this.Actor = new Actor(input.Actor);
         if (input.Asset_AssetToSystemObject_idAsset) this.Asset_AssetToSystemObject_idAsset = new Asset(input.Asset_AssetToSystemObject_idAsset);
-        if (input.AssetVersion) this.AssetVersion = new AssetVersion(input.AssetVersion);
+        if (input.AssetVersion_AssetVersionToSystemObject_idAssetVersion) this.AssetVersion_AssetVersionToSystemObject_idAssetVersion = new AssetVersion(input.AssetVersion_AssetVersionToSystemObject_idAssetVersion);
         if (input.CaptureData) this.CaptureData = new CaptureData(input.CaptureData);
         if (input.IntermediaryFile) this.IntermediaryFile = new IntermediaryFile(input.IntermediaryFile);
         if (input.Item) this.Item = new Item(input.Item);
@@ -393,7 +400,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     include: {
                         Actor: true,
                         Asset_AssetToSystemObject_idAsset: true,
-                        AssetVersion: true,
+                        AssetVersion_AssetVersionToSystemObject_idAssetVersion: true,
                         CaptureData: true,
                         IntermediaryFile: true,
                         Item: true,
@@ -408,7 +415,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                 });
             return (SOAPB ? new SystemObjectPairs(SOAPB) : null);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObjectAndPairs.fetch', LOG.LS.eDB, error);
+            LOG.error(`DBAPI.SystemObjectAndPairs.fetch(${idSystemObject})`, LOG.LS.eDB, error);
             return null;
         }
     }
@@ -427,7 +434,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     include: {
                         Actor: true,
                         Asset_AssetToSystemObject_idAsset: true,
-                        AssetVersion: true,
+                        AssetVersion_AssetVersionToSystemObject_idAssetVersion: true,
                         CaptureData: true,
                         IntermediaryFile: true,
                         Item: true,
@@ -460,7 +467,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     include: {
                         Actor: true,
                         Asset_AssetToSystemObject_idAsset: true,
-                        AssetVersion: true,
+                        AssetVersion_AssetVersionToSystemObject_idAssetVersion: true,
                         CaptureData: true,
                         IntermediaryFile: true,
                         Item: true,

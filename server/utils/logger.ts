@@ -1,17 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as winston from 'winston';
+import 'winston-daily-rotate-file';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Config } from '../config';
 import { ASL, LocalStore } from './localStore';
 
 let logger: winston.Logger;
+let ending: boolean = false;
 export enum LS { // logger section
     eAUDIT, // audit
     eAUTH,  // authentication
     eCACHE, // cache
     eCOLL,  // collections
+    eCON,   // console-redirected messages
     eCONF,  // config
     eDB,    // database
     eEVENT, // event
@@ -42,6 +45,7 @@ export function error(message: string | undefined, eLogSection: LS, obj: any | n
 }
 
 export function end(): void {
+    ending = true;
     logger.end();
 }
 
@@ -51,6 +55,7 @@ function loggerSectionName(eLogSection: LS | undefined): string {
         case LS.eAUTH:  return 'ATH';
         case LS.eCACHE: return 'CCH';
         case LS.eCOLL:  return 'COL';
+        case LS.eCON:   return 'CON';
         case LS.eCONF:  return 'CNF';
         case LS.eDB:    return 'DB ';
         case LS.eEVENT: return 'EVE';
@@ -103,9 +108,11 @@ function configureLogger(logPath: string | null): void {
             })
         ),
         transports: [
-            new winston.transports.File({
-                filename: path.join(logPath, 'PackratCombined.log'),
-                maxsize: 100 * 1024 * 1024 // 100 MB
+            new winston.transports.DailyRotateFile({
+                filename: 'PackratCombined.%DATE%.log',
+                dirname: logPath,
+                datePattern: 'YYYY-MM-DD',
+                maxSize: 100 * 1024 * 1024 // 100 MB
             }),
             new winston.transports.File({
                 filename: path.join(logPath, 'PackratError.log'),
@@ -115,11 +122,10 @@ function configureLogger(logPath: string | null): void {
         ]
     });
 
-    // For the time being, let's emit logs to the Console in production, for use in debugging
-    // /* istanbul ignore else */
-    // if (process.env.NODE_ENV !== 'production') {
-    logger.add(new winston.transports.Console());
-    // }
+    // Log to console only in non-production builds
+    /* istanbul ignore else */
+    if (process.env.NODE_ENV !== 'production')
+        logger.add(new winston.transports.Console());
 
     try {
         /* istanbul ignore if */
@@ -128,6 +134,48 @@ function configureLogger(logPath: string | null): void {
     } catch (error) /* istanbul ignore next */ {
         logger.error(error);
     }
+
+    // Replace console debug/info/log/warn/error with our own versions:
+    const _debug = console.debug;
+    const _info = console.info;
+    const _log = console.log;
+    const _warn = console.warn;
+    const _error = console.error;
+
+    console.debug = function(...args) {
+        if (!ending)
+            info(`console.debug: ${JSON.stringify(args)}`, LS.eCON);
+        return _debug.apply(console, args);
+    };
+
+    console.info = function(...args) {
+        if (!ending)
+            info(`console.info: ${JSON.stringify(args)}`, LS.eCON);
+        return _info.apply(console, args);
+    };
+
+    console.log = function(...args) {
+        if (!ending)
+            info(`console.log: ${JSON.stringify(args)}`, LS.eCON);
+        return _log.apply(console, args);
+    };
+
+    console.warn = function(...args) {
+        if (!ending)
+            info(`console.warn: ${JSON.stringify(args)}`, LS.eCON);
+        return _warn.apply(console, args);
+    };
+
+    console.error = function(...args) {
+        if (!ending)
+            error(`console.error: ${JSON.stringify(args)}`, LS.eCON);
+        return _error.apply(console, args);
+    };
+
+    // The following approach does not work. More thought and investigation is needed here
+    // Observe writes to stdout and stderr; forward to our log
+    // process.stdout.on('data', data => { info(`stdout: ${JSON.stringify(data)}`, LS.eCON); });
+    // process.stderr.on('data', data => { error(`stderr: ${JSON.stringify(data)}`, LS.eCON); });
 
     info('**************************', LS.eSYS);
     info(`Writing logs to ${path.resolve(logPath)}`, LS.eSYS);

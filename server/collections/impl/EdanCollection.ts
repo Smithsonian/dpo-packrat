@@ -42,21 +42,29 @@ export class EdanCollection implements COL.ICollection {
             rowCount: 0,
         };
 
-        let gatherRaw: boolean | undefined = false;
-        let path: string = 'metadata/v2.0/collections/search.htm';
-        let filter: string = '';
+        const path: string = 'metadata/v2.0/metadata/search.htm';
         const filters: string[] = [];
-        if (options) {
-            if (options.searchMetadata)
-                path = 'metadata/v2.0/metadata/search.htm';
+        let gatherRaw: boolean = false;
+        let gatherIDMap: boolean = false;
+
+        if (!options)
+            filters.push('"type:edanmdm"');
+        else {
             if (options.recordType)
-                filters.push(`type:${options.recordType}`);
-            if (filters.length > 0) {
-                filter = '&fq[]=';
-                for (let filterIndex = 0; filterIndex < filters.length; filterIndex++)
-                    filter = filter + (filterIndex == 0 ? '' : /* istanbul ignore next */ ',') + filters[filterIndex];
-            }
+                filters.push(`"type:${options.recordType}"`);
+            else if (!options.searchMetadata)
+                filters.push('"type:edanmdm"');
+
             gatherRaw = options.gatherRaw ?? false;
+            gatherIDMap = options.gatherIDMap ?? false;
+        }
+
+        let filter: string = '';
+        if (filters.length > 0) {
+            filter = '&fqs=[';
+            for (let filterIndex = 0; filterIndex < filters.length; filterIndex++)
+                filter = filter + (filterIndex == 0 ? '' : /* istanbul ignore next */ ',') + encodeURIComponent(filters[filterIndex]);
+            filter += ']';
         }
 
         // in addition to URI encoding the query, also replace single quotes with %27
@@ -93,6 +101,7 @@ export class EdanCollection implements COL.ICollection {
                     let unit = row.unitCode ? row.unitCode : /* istanbul ignore next */ '';
                     let identifierPublic = row.id ? row.id : /* istanbul ignore next */ '';
                     let identifierCollection = row.id ? row.id : /* istanbul ignore next */ '';
+                    let identifierMap: Map<string, string> | undefined = undefined;
 
                     /* istanbul ignore else */
                     if (row.content && row.content.descriptiveNonRepeating) {
@@ -111,13 +120,27 @@ export class EdanCollection implements COL.ICollection {
                             identifierPublic = description.guid;
                     }
 
-                    records.push({ name, unit, identifierPublic, identifierCollection, raw: gatherRaw ? row : undefined });
+                    if (gatherIDMap) {
+                        identifierMap = new Map<string, string>();
+
+                        const IDs: [{ label?: string, content?: string }] | undefined = row.content?.freetext?.identifier;
+                        if (IDs) {
+                            for (const ID of IDs) {
+                                const label = ID?.label;
+                                const content = ID?.content;
+                                if (label && content)
+                                    identifierMap.set(label, content);
+                            }
+                        }
+                    }
+
+                    records.push({ name, unit, identifierPublic, identifierCollection, identifierMap, raw: gatherRaw ? row : undefined });
                 }
             }
         }
 
-        // LOG.info(JSON.stringify(result) + '\n\n', LOG.LS.eCOLL);
-        // LOG.info(reqResult.output + '\n\n', LOG.LS.eCOLL);
+        // LOG.info(`Collections Processed Results = ${JSON.stringify(result)}'\n\n'`, LOG.LS.eCOLL);
+        // LOG.info(`EDAN Raw Results = ${reqResult.output}\n\n`, LOG.LS.eCOLL);
         return result;
     }
 
@@ -213,7 +236,7 @@ export class EdanCollection implements COL.ICollection {
         // LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         LOG.info('EdanCollection.upsertContent', LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertContent', '', JSON.stringify(body), 'application/json');
-        // LOG.info(`EdanCollection.upsertContent:\n${JSON.stringify(body)}\n${reqResult.output}`, LOG.LS.eCOLL);
+        LOG.info(`EdanCollection.upsertContent:\n${JSON.stringify(body)}\n${reqResult.output}`, LOG.LS.eCOLL);
         if (!reqResult.success) {
             LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
             return null;

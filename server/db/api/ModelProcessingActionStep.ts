@@ -30,8 +30,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelProcessingActionStep.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -47,8 +46,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelProcessingActionStep.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

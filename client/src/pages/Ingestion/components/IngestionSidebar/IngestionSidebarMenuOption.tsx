@@ -9,6 +9,7 @@ import React, { memo } from 'react';
 import { INGESTION_ROUTES_TYPE } from '../../../../constants';
 import { Colors } from '../../../../theme';
 import { Link } from 'react-router-dom';
+import { confirmLeaveIngestion } from '../..';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -60,9 +61,14 @@ function IngestionSidebarMenuOption(props: IngestionSidebarMenuOptionProps): Rea
 
     let content = <Box className={classes.container}>{subContent}</Box>;
 
+    const onClick = (e) => {
+        const change = confirmLeaveIngestion();
+        if (!change) e.preventDefault();
+    };
+
     if (enabled) {
         content = (
-            <Link className={classes.container} to={route}>
+            <Link className={classes.container} to={route} onClick={onClick}>
                 {subContent}
             </Link>
         );

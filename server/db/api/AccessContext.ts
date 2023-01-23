@@ -29,8 +29,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessContext.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -42,8 +41,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
                 data: { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessContext.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

@@ -34,8 +34,7 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.LicenseAssignment.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -54,8 +53,7 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.LicenseAssignment.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

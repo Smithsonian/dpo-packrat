@@ -60,8 +60,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Scene.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -86,8 +85,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Scene.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

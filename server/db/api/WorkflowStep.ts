@@ -41,8 +41,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.WorkflowStep.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -63,8 +62,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.WorkflowStep.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

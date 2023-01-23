@@ -46,7 +46,11 @@ export class WorkflowUtil {
         idModel: number | undefined,
         idSystemObjectModel: number | undefined,
         idSystemObjectAssetVersion: number | undefined,
-        readStream: NodeJS.ReadableStream | undefined, idProject: number | undefined, idUserInitiator: number | undefined): Promise<H.IOResults> {
+        idSystemObjectSupportFileAssetVersion: number | undefined,
+        readStream: NodeJS.ReadableStream | undefined,
+        idProject: number | undefined,
+        idUserInitiator: number | undefined,
+        assetMap?: Map<string, number> | undefined): Promise<H.IOResults> { // map of asset filename -> idAsset, needed by WorkflowUtil.computeModelMetrics to persist ModelMaterialUVMap and ModelMaterialChannel
         LOG.info(`WorkflowUtil.computeModelMetrics (${fileName}, idModel ${idModel}, idSystemObjectModel ${idSystemObjectModel}, idSystemObjectAssetVersion ${idSystemObjectAssetVersion})`, LOG.LS.eWF);
 
         switch (path.extname(fileName).toLowerCase()) {
@@ -67,9 +71,19 @@ export class WorkflowUtil {
         // compute array of idSystemObjects for the asset versions of the specified model/system object of a model/system object of an asset version
         const idSystemObject: number[] = [];
         const idAssetVersions: number[] = [];
-        if (idSystemObjectAssetVersion)
+        if (idSystemObjectAssetVersion) {
             idSystemObject.push(idSystemObjectAssetVersion);
-        else {
+            if (idSystemObjectSupportFileAssetVersion)
+                idSystemObject.push(idSystemObjectSupportFileAssetVersion);
+
+            const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObjectAssetVersion);
+            if (!SO)
+                return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} unable to fetch system object from id ${idSystemObjectAssetVersion}` };
+            if (SO.idAssetVersion)
+                idAssetVersions.push(SO.idAssetVersion);
+            else
+                LOG.error(`WorkflowUtil.computeModelMetrics ${fileName} handling system object ${idSystemObjectAssetVersion} which is not an asset version`, LOG.LS.eWF);
+        } else {
             if (!idSystemObjectModel) {
                 const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel ?? 0);
                 if (!model)
@@ -118,7 +132,7 @@ export class WorkflowUtil {
                 const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion);
                 if (JCOutput) {
                     LOG.info(`WorkflowUtil.computeModelMetrics ${fileName} persisting metrics for model ${idModel}`, LOG.LS.eWF);
-                    const results: H.IOResults = await JCOutput.persist(idModel);
+                    const results: H.IOResults = await JCOutput.persist(idModel, assetMap);
                     if (!results.success)
                         return { success: false, error: `WorkflowUtil.computeModelMetrics ${fileName} post-upload workflow error: ${results.error}` };
                 }

@@ -134,8 +134,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                     set({ cursors: newCursors });
                 }
 
-                const entry: [string, NavigationResultEntryState[]] = [treeRootKey, entries];
-                const updatedTree = new Map([entry]);
+                const updatedTree: Map<string, NavigationResultEntryState[]> = new Map();
+                updatedTree.set(treeRootKey, entries);
                 set({ tree: updatedTree, loading: false, expandedCount: 0 });
             }
         }
@@ -520,8 +520,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;
-            const entry: [string, NavigationResultEntry[]] = [treeRootKey, entries];
-            const updatedTree = new Map([entry]);
+
+            const updatedTree = new Map();
+            updatedTree.set(treeRootKey, entries);
             set({ tree: updatedTree, loading: false });
         }
     },

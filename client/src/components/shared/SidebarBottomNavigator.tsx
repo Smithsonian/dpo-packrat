@@ -53,11 +53,11 @@ interface SidebarBottomNavigatorProps {
     leftLoading?: boolean;
     leftRoute?: string;
     uploadVersion?: boolean;
-    onClickLeft?: () => void;
+    onClickLeft?: (e: React.MouseEvent<HTMLElement>) => void;
     rightLabel: string;
     rightLoading?: boolean;
     rightRoute?: string;
-    onClickRight?: () => void;
+    onClickRight?: (e: React.MouseEvent<HTMLElement>) => void;
     invalidMetadataStep?: boolean;
     disableNavigation?: boolean;
 }
@@ -81,7 +81,7 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
 
     if (leftRoute) {
         leftButton = (
-            <Link className={classes.link} to={leftRoute}>
+            <Link className={classes.link} to={leftRoute} onClick={onClickLeft}>
                 {leftButton}
             </Link>
         );
@@ -89,7 +89,7 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
 
     if (rightRoute) {
         rightButton = (
-            <Link className={classes.link} to={rightRoute}>
+            <Link className={classes.link} to={rightRoute} onClick={onClickRight}>
                 {rightButton}
             </Link>
         );

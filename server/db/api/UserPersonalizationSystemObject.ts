@@ -30,8 +30,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UserPersonalizationSystemObject.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -47,8 +46,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UserPersonalizationSystemObject.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

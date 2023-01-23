@@ -79,7 +79,6 @@ describe('JobNS Cook Test Setup', () => {
         testCookExplicit('dae', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
 
         // Persistence incomplete (with errors logged) as of 2022-04-28 due to test model having references to missing assets:
-        testCookImplicit('fbx-stand-alone', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testCookExplicit('ply', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
 
         if (IGNORE_FAILURES) {
@@ -90,6 +89,9 @@ describe('JobNS Cook Test Setup', () => {
             testCookImplicit('usd', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
             testCookExplicit('usdz', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
             testCookImplicit('wrl', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+
+            // Failing as of 2023-01-16 due to referencing a texture, despite the FBX supposedly being standalone
+            testCookImplicit('fbx-stand-alone', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         }
     }
     // TODO: test job cancellation
@@ -112,7 +114,6 @@ describe('JobNS IWorkflow Test Setup', () => {
         testWorkflow('dae', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
 
         // Persistence incomplete (with errors logged) as of 2022-04-28 due to test model having references to missing assets:
-        testWorkflow('fbx-stand-alone', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         testWorkflow('ply', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
 
         if (IGNORE_FAILURES) {
@@ -123,6 +124,9 @@ describe('JobNS IWorkflow Test Setup', () => {
             testWorkflow('usd', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
             testWorkflow('usdz', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
             testWorkflow('wrl', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+
+            // Failing as of 2023-01-16 due to referencing a texture, despite the FBX supposedly being standalone
+            testWorkflow('fbx-stand-alone', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         }
     }
 });
@@ -323,7 +327,7 @@ function computeJobParameters(testCase: string, eJobType: COMMON.eVocabularyID):
 }
 
 async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null): Promise<boolean> {
-    LOG.info(`JonNS Test validateJobOutput(${testcase}): idJobRun ${dbJobRun?.idJobRun}`, LOG.LS.eTEST);
+    LOG.info(`JobNS Test validateJobOutput(${testcase}): idJobRun ${dbJobRun?.idJobRun}`, LOG.LS.eTEST);
     expect(dbJobRun).toBeTruthy();
     if (!dbJobRun)
         return false;
@@ -331,7 +335,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
         expect(dbJobRun.Result).toBeTruthy();
     else {
         if (!dbJobRun.Result) {
-            LOG.error(`JonNS Test validateJobOutput(${testcase}) failed: idJobRun ${dbJobRun.idJobRun}`, LOG.LS.eTEST);
+            LOG.error(`JobNS Test validateJobOutput(${testcase}) failed: idJobRun ${dbJobRun.idJobRun}`, LOG.LS.eTEST);
             return true;
         }
     }
@@ -350,7 +354,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
             try {
                 JCOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''), null, null);
             } catch (error) {
-                LOG.error(`JonNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output}`, LOG.LS.eTEST, error);
+                LOG.error(`JobNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output}`, LOG.LS.eTEST, error);
                 expect(true).toBeFalsy();
             }
             expect(JCOutput).toBeTruthy();
@@ -360,7 +364,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
                 expect(JCOutput.success).toBeTruthy();
             else {
                 if (!JCOutput.success)
-                    LOG.error(`JonNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output} FAILED`, LOG.LS.eTEST);
+                    LOG.error(`JobNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output} FAILED`, LOG.LS.eTEST);
             }
 
             normalizeOutput(JCOutput);
@@ -391,7 +395,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
                 expect(JCOutput.modelConstellation).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model?.idModel).toBeTruthy();
-                LOG.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+                LOG.info(`JobNS Persisting ${MTC.testCase} SUCCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
             }
             return (!IGNORE_FAILURES) ? (JCOutputStr === inspectJSON) : true;
         }

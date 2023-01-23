@@ -15,7 +15,7 @@ import { apolloClient } from '../../../../graphql/index';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { useLicenseStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Clear from '@material-ui/icons/Clear';
 import DataTable from '../shared/DataTable';
 import { DataTableOptions } from '../../../../types/component';
@@ -167,7 +167,7 @@ function LicenseList({ licenses }): React.ReactElement {
 
 function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string) => Promise<void> }): React.ReactElement {
     const [searchFilter, setSearchFilter] = useState('');
-    const history = useHistory();
+    const navigate = useNavigate();
     const classes = useStyles();
 
     const handleSearchFilterChange = e => {
@@ -201,7 +201,7 @@ function SearchFilter({ queryByFilter }: { queryByFilter: (newSearchText: string
                 <Button className={classes.styledButton} onClick={search} variant='contained' disableElevation>Search</Button>
             </Box>
             <Box className={classes.searchFilterContainerRight}>
-                <Button className={classes.styledButton} onClick={() => history.push('/admin/licenses/create')} variant='contained' disableElevation>Create</Button>
+                <Button className={classes.styledButton} onClick={() => navigate('/admin/licenses/create')} variant='contained' disableElevation>Create</Button>
             </Box>
         </Box>
     );

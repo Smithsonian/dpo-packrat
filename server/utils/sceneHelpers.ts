@@ -152,7 +152,7 @@ export class SceneHelpers {
 
     /** idAssetVersion is the assetversion ID of the ingested object */
     static async handleComplexIngestionScene(scene: DBAPI.Scene, IAR: STORE.IngestAssetResult,
-        idUser?: number | undefined, idAssetVersion?: number | undefined): Promise<{ success: boolean, transformUpdated: boolean }> {
+        idUser?: number | undefined, idAssetVersion?: number | undefined, modelSource?: DBAPI.Model | undefined): Promise<{ success: boolean, transformUpdated: boolean }> {
         if (!IAR.assets || !IAR.assetVersions)
             return { success: false, transformUpdated: false };
 
@@ -271,19 +271,27 @@ export class SceneHelpers {
                     if (!MSX.idModelSceneXref) { // should always be true
                         MSX.idModel = model.idModel;
                         MSX.idScene = scene.idScene;
+                        if (MSX.Name.length > DBAPI.ModelSceneXref.NameMaxLen)
+                            MSX.Name = MSX.Name.substring(0, DBAPI.ModelSceneXref.NameMaxLen - 1);
                         if (!await MSX.create()) {
                             LOG.error(`sceneHelper handleComplexIngestionScene unable to create ModelSceneXref for model xref ${H.Helpers.JSONStringify(MSX)}`, LOG.LS.eSYS);
                             success = false;
-                            continue;
                         }
                     } else
                         LOG.error(`sceneHelper handleComplexIngestionScene unexpected non-null ModelSceneXref for model xref ${H.Helpers.JSONStringify(MSX)}`, LOG.LS.eSYS);
 
-                    const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
-                    if (!SOX) {
+                    if (modelSource) {
+                        const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, model);
+                        if (!SOX1) {
+                            LOG.error(`sceneHelper handleComplexIngestionScene unable to wire master model ${H.Helpers.JSONStringify(modelSource)} and model ${H.Helpers.JSONStringify(model)} together`, LOG.LS.eSYS);
+                            success = false;
+                        }
+                    }
+
+                    const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
+                    if (!SOX2) {
                         LOG.error(`sceneHelper handleComplexIngestionScene unable to wire scene ${H.Helpers.JSONStringify(scene)} and model ${H.Helpers.JSONStringify(model)} together`, LOG.LS.eSYS);
                         success = false;
-                        continue;
                     }
                 }
 
@@ -356,7 +364,7 @@ export class SceneHelpers {
             return false;
         }
 
-        const results: H.IOResults = await WorkflowUtil.computeModelMetrics(MSX.Name, undefined, undefined, SOModelAssetVersion.idSystemObject, undefined, undefined /* idProject */, idUser);
+        const results: H.IOResults = await WorkflowUtil.computeModelMetrics(MSX.Name, undefined, undefined, SOModelAssetVersion.idSystemObject, undefined, undefined, undefined /* idProject */, idUser);
         if (!results.success)
             LOG.error(`sceneHelper populateModelMetrics failed to compute JobCookSIPackratInspectOutput from idAssetVersion ${assetPair.assetVersion.idAssetVersion}, model ${MSX.Name}: ${results.error}`, LOG.LS.eSYS);
 

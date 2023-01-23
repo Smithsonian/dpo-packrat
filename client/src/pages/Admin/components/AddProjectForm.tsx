@@ -1,9 +1,9 @@
 /* eslint-disable react/jsx-max-props-per-line, react/jsx-boolean-value, @typescript-eslint/no-explicit-any */
 
 import { Box, InputLabel, FormControl, FormHelperText, Select, MenuItem, Button } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { DebounceInput } from 'react-debounce-input';
@@ -16,7 +16,7 @@ import { getUnitsList } from '../hooks/useAdminView';
 import { toTitleCase } from '../../../constants/helperfunctions';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 
-const useStyles = makeStyles(({ typography }) => ({
+const useStyles = makeStyles(({ typography }) => createStyles({
     container: {
         display: 'flex',
         flex: 1,
@@ -66,7 +66,7 @@ const useStyles = makeStyles(({ typography }) => ({
         borderRadius: '5px',
         border: '1px solid rgb(118,118,118)',
         width: '95%',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8rem',
         height: '20px'
@@ -85,7 +85,7 @@ const useStyles = makeStyles(({ typography }) => ({
         minWidth: 'fit-content',
         height: '24px',
         padding: '0px 5px',
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8rem',
         color: 'black',
@@ -112,7 +112,7 @@ const useStyles = makeStyles(({ typography }) => ({
 
 function AddProjectForm(): React.ReactElement {
     const classes = useStyles();
-    const history = useHistory();
+    const navigate = useNavigate();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [unit, setUnit] = useState(0);
@@ -200,7 +200,7 @@ function AddProjectForm(): React.ReactElement {
             toast.error(`Failed to create project${message}`);
         } finally {
             if (newProjectSystemObjectId) {
-                history.push(`/repository/details/${newProjectSystemObjectId}`);
+                navigate(`/repository/details/${newProjectSystemObjectId}`);
             } else {
                 toast.error('Unable to retrieve new System Object Id');
             }
@@ -264,7 +264,7 @@ function AddProjectForm(): React.ReactElement {
                 <Button className={classes.btn} onClick={createProject} disableElevation>
                     Create
                 </Button>
-                <Button variant='contained' className={classes.btn} onClick={() => history.push('/admin/projects')} disableElevation>
+                <Button variant='contained' className={classes.btn} onClick={() => navigate('/admin/projects')} disableElevation>
                     Cancel
                 </Button>
             </Box>

@@ -18,8 +18,7 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
             ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBC.DBConnection.prisma.captureDataGroup.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureDataGroup.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -31,8 +30,7 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureDataGroup.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

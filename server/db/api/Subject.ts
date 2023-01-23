@@ -36,8 +36,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Subject.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -56,8 +55,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Subject.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

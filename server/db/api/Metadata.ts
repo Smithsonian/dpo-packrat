@@ -35,14 +35,13 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                         AssetVersion:   idAssetVersionValue ? { connect: { idAssetVersion: idAssetVersionValue }, } : undefined,
                         User:           idUser              ? { connect: { idUser }, } : undefined,
                         Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : undefined,
-                        SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : undefined,
+                        SystemObject_Metadata_idSystemObjectToSystemObject:       idSystemObject          ? { connect: { idSystemObject }, } : undefined,
                         SystemObject_Metadata_idSystemObjectParentToSystemObject: idSystemObjectParent    ? { connect: { idSystemObject: idSystemObjectParent }, } : undefined,
                     },
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Metadata.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -58,14 +57,13 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                     AssetVersion:   idAssetVersionValue ? { connect: { idAssetVersion: idAssetVersionValue }, } : { disconnect: true, },
                     User:           idUser              ? { connect: { idUser }, } : { disconnect: true, },
                     Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : { disconnect: true, },
-                    SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : { disconnect: true, },
-                    SystemObject_Metadata_idSystemObjectParentToSystemObject: idSystemObjectParent    ? { connect: { idSystemObject: idSystemObjectParent }, } : { disconnect: true, },
+                    SystemObject_Metadata_idSystemObjectToSystemObject:         idSystemObject          ? { connect: { idSystemObject }, } : { disconnect: true, },
+                    SystemObject_Metadata_idSystemObjectParentToSystemObject:   idSystemObjectParent    ? { connect: { idSystemObject: idSystemObjectParent }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Metadata.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */

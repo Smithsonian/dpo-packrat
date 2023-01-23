@@ -184,9 +184,9 @@ export class OCFLObject {
 
     private async safeMoveFile(pathOnDisk: string, destName: string): Promise<H.IOResults> {
         let results: H.IOResults;
-        if (OCFLObject._eMoveFileType == eMoveFileType.eUnknown ||
-            OCFLObject._eMoveFileType == eMoveFileType.eMove) {
-            results = await H.Helpers.moveFile(pathOnDisk, destName);
+        if (OCFLObject._eMoveFileType === eMoveFileType.eUnknown ||
+            OCFLObject._eMoveFileType === eMoveFileType.eMove) {
+            results = await H.Helpers.moveFile(pathOnDisk, destName, (OCFLObject._eMoveFileType === eMoveFileType.eUnknown));
             if (results.success) {
                 OCFLObject._eMoveFileType = eMoveFileType.eMove;
                 return results;

@@ -7,7 +7,7 @@ import * as COMMON from '@dpo-packrat/common';
 export class SystemObjectCache {
     private static singleton: SystemObjectCache | null = null;
 
-    private objectIDToSystemMap: Map<DBAPI.ObjectIDAndType, DBAPI.SystemObjectInfo> = new Map<DBAPI.ObjectIDAndType, DBAPI.SystemObjectInfo>(); // map of { idObject, eDBObjectType } -> { idSystemObject, Retired }
+    private objectIDToSystemMap: Map<string, DBAPI.SystemObjectInfo> = new Map<string, DBAPI.SystemObjectInfo>(); // map of `${idObject}|${eDBObjectType}` -> { idSystemObject, Retired }
     private systemIDToObjectMap: Map<number, DBAPI.ObjectIDAndType> = new Map<number, DBAPI.ObjectIDAndType>(); // map of idSystemObject -> { idObject, eDBObjectType }
     private systemIDToNameMap: Map<number, string> = new Map<number, string>(); // map of idSystemObject -> name
 
@@ -35,6 +35,10 @@ export class SystemObjectCache {
     // **************************
     // Cache Construction
     // **************************
+    private static computeOIDKey(oID: DBAPI.ObjectIDAndType): string {
+        return `${oID.idObject}|${oID.eObjectType}`;
+    }
+
     private async flushInternalWorker(): Promise<boolean> {
         LOG.info('CACHE SystemObjectCache.flushInternalWorker() start', LOG.LS.eCACHE );
         // TODO: replace with paged output
@@ -47,7 +51,7 @@ export class SystemObjectCache {
         for (const SO of SOFetch) {
             const oID: DBAPI.ObjectIDAndType | undefined = SystemObjectCache.convertSystemObjectToObjectID(SO); /* istanbul ignore else */
             if (oID) {
-                this.objectIDToSystemMap.set(oID, { idSystemObject: SO.idSystemObject, Retired: SO.Retired });
+                this.objectIDToSystemMap.set(SystemObjectCache.computeOIDKey(oID), { idSystemObject: SO.idSystemObject, Retired: SO.Retired });
                 this.systemIDToObjectMap.set(SO.idSystemObject, oID);
             }
         }
@@ -61,7 +65,8 @@ export class SystemObjectCache {
     private async getSystemFromObjectIDInternal(oID: DBAPI.ObjectIDAndType): Promise<DBAPI.SystemObjectInfo | undefined> {
         // Ensure that SystemObjectCache lookups by ObjectIDAndType use a cleaned object in case the caller has stuffed additional information in the object
         const oIDCleansed: DBAPI.ObjectIDAndType = { idObject: oID.idObject, eObjectType: oID.eObjectType };
-        let sID: DBAPI.SystemObjectInfo | undefined = this.objectIDToSystemMap.get(oIDCleansed); /* istanbul ignore else */
+        const oIDKey: string = SystemObjectCache.computeOIDKey(oIDCleansed);
+        let sID: DBAPI.SystemObjectInfo | undefined = this.objectIDToSystemMap.get(oIDKey); /* istanbul ignore else */
         if (!sID) {  // if we have a cache miss, look it up
             let SO: SystemObject | null = null;
             let isASystemObject: boolean = true;
@@ -86,13 +91,14 @@ export class SystemObjectCache {
             /* istanbul ignore else */
             if (SO) {
                 sID = { idSystemObject: SO.idSystemObject, Retired: SO.Retired };
-                this.objectIDToSystemMap.set(oIDCleansed, sID);
+                this.objectIDToSystemMap.set(oIDKey, sID);
                 this.systemIDToObjectMap.set(SO.idSystemObject, oIDCleansed);
             } else if (!isASystemObject) {
                 if (idObject) {
-                    // LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal storing idSystemObject 0 for ${JSON.stringify(oIDCleansed)}`, LOG.LS.eCACHE);
                     sID = { idSystemObject: 0, Retired: false };
-                    this.objectIDToSystemMap.set(oIDCleansed, sID);
+                    // Avoid adding non-system objects to objectIDToSystemMap ... we end up with more than 2^24 entries in this map, which is the V8 limit for JS Maps
+                    // LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal stored idSystemObject 0 for ${JSON.stringify(oIDCleansed)}`, LOG.LS.eCACHE);
+                    // this.objectIDToSystemMap.set(oIDKey, sID);
                 }
             } else
                 LOG.error(`SystemObjectCache.getSystemFromObjectIDInternal unable to lookup ${COMMON.eSystemObjectType[eObjectType]}, id ${idObject}`, LOG.LS.eCACHE );
@@ -209,7 +215,7 @@ export class SystemObjectCache {
 
         const oID: DBAPI.ObjectIDAndType | undefined = SystemObjectCache.convertSystemObjectToObjectID(SO); /* istanbul ignore else */
         if (oID) {
-            this.objectIDToSystemMap.set(oID, { idSystemObject, Retired: SO.Retired });
+            this.objectIDToSystemMap.set(SystemObjectCache.computeOIDKey(oID), { idSystemObject, Retired: SO.Retired });
             this.systemIDToObjectMap.set(idSystemObject, oID);
         }
 
