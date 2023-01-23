@@ -11,7 +11,7 @@ import { SceneHelpers } from '../../utils';
 import { SvxReader } from '../parser';
 import { JobCookSIGenerateDownloads } from '../../job/impl/Cook';
 import { PublishScene } from '../../collections/impl/PublishScene';
-import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
+// import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
 
 import * as path from 'path';
 import fetch from 'node-fetch';
@@ -667,10 +667,12 @@ export class SceneMigration {
                 if (model) {
                     await this.createModelSceneXref(model, downloadType, FileSize);
                     const SOModel: DBAPI.SystemObject | null = await model.fetchSystemObject();
-                    if (SOModel)
-                        // launch si-packrat-inspect on this model -- do not await results
-                        WorkflowUtil.computeModelMetrics(model.Name, model.idModel, SOModel.idSystemObject, undefined, undefined, undefined, undefined /* FIXME */, this.userOwner?.idUser);
-                    else
+                    if (SOModel) {
+                        // Based on team's migration feedback from 1/23/2023, we skip running si-packrat-inspect on all scene resources
+                        this.log('fetchAndIngestResources', `skipping si-packrat-inspect on scene resource ${resource.filename}`);
+                        // // launch si-packrat-inspect on this model -- do not await results
+                        // WorkflowUtil.computeModelMetrics(model.Name, model.idModel, SOModel.idSystemObject, undefined, undefined, undefined, undefined /* FIXME */, this.userOwner?.idUser);
+                    } else
                         this.recordError('fetchAndIngestResources', `failed to fetch system object for model ${H.Helpers.JSONStringify(model)}`);
                 }
             }
