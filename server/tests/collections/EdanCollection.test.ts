@@ -2242,7 +2242,7 @@ async function handle3DContentQuery(ICol: COL.ICollection, _WS: NodeJS.WritableS
 }
 // #endregion
 
-
+//----------------------------------------------------------------
 // #region EDAN Verifier
 // specific EDAN verifier
 import * as DBAPI from '../../db';
@@ -2260,20 +2260,23 @@ function executeEdanVerifier(ICol: COL.ICollection) {
     //return true;
 }
 
-// TODO: change log 'type' to more appropriate value(s)
+// [DPO3DPKRT-698]
 // TODO: ocassional failed fetch requests (ECONNRESET). make more robust
-// TODO: detect whether subject comes from DPO or EDAN
+// TODO: verify EDAN scene UUID are correct
+// TODO: verify EDAN 3d_package match the most recent published version
+// TODO: migrate into module to be called elsewhere
+// TODO: hook to endpoint and support running on a schedule via node_scheduler
 async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean> {
     const errorFn: string = 'EDAN Verifier'; //'EdanCollection.test.executeVerifySubjects';
     const debugLogs: boolean = false;
     const doFixErrors: boolean = false;
     const debugSubjectLimit = 10000; // # of subjects to investigate for testing
-    const debugSubjectOffset = 0;
+    const debugSysObjectID = -1;
     jest.setTimeout(3000000); // temp: avoid timeout errors when doing a full run
 
     // our structure and header for saved output to CSV
     const output: string[] = [];
-    output.push('ID,URL,SUBJECT,STATUS,TEST,DESCRIPTION,PACKRAT,EDAN,NOTES');
+    output.push('ID,MDM,URL,SUBJECT,STATUS,TEST,DESCRIPTION,PACKRAT,EDAN,NOTES');
 
     // fetch all subjects from Packrat DB
     const subjects: DBAPI.Subject[] | null = await DBAPI.Subject.fetchAll(); /* istanbul ignore if */
@@ -2288,10 +2291,10 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
     if(debugLogs) console.log(`Subjects: ${subjects.length}`);
 
     // loop through subjects, extract name, query from EDAN
-    for(let i=debugSubjectOffset; i<subjects.length; i++) {
+    for(let i=0; i<subjects.length; i++) {
 
         // adjust our counter for # of subjects and bail when done
-        if(i>=debugSubjectLimit+debugSubjectOffset) break;
+        if(i>=debugSubjectLimit) break;
 
         // create our stats object and helper variable
         const subject = subjects[i];
@@ -2303,6 +2306,14 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             continue;
         }
         if(debugLogs) console.log('SystemObject: '+JSON.stringify(systemObject));
+
+        // (debug) if not the desired subject id skip
+        if(debugSysObjectID>0){
+            if(systemObject.idSystemObject!==debugSysObjectID) {
+                if(debugLogs) console.log('Subject skipping. IDs don not match.');
+                continue;
+            }
+        }
 
         LOG.info(`${errorFn} processing subject: ${subject.Name}`, LOG.LS.eTEST);
         if(debugLogs) console.log('Subject:\t'+JSON.stringify(subject,null,0)); // temp
@@ -2374,7 +2385,7 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             // get our EDAN units from this record
             const unit: DBAPI.Unit | null = await getEdanRecordUnit(record,packratUnit);
             if(!unit)
-                LOG.error(`${errorFn} no known units found for subject (id: ${systemObject.idSystemObject} | subject: ${subject.Name}) and EDAN record name (${record.name})`, LOG.LS.eGQL);
+                LOG.error(`${errorFn} no known units found for subject (id: ${systemObject.idSystemObject} | subject: ${subject.Name}) and EDAN record name (${record.name})`, LOG.LS.eTEST);
             else
                 edanUnit = unit;
             if(debugLogs) console.log('EDAN Units: '+JSON.stringify(unit,null,0));
@@ -2382,7 +2393,7 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             // get our EDAN identifiers from this record
             const identifiers: IdentifierList | null = await getEdanRecordIdentifiers(record);
             if(!identifiers)
-                LOG.error(`${errorFn} no EDAN identifiers found for subject (id: ${systemObject.idSystemObject} | subject: ${subject.Name}) and EDAN record name (${record.name})`, LOG.LS.eGQL);
+                LOG.error(`${errorFn} no EDAN identifiers found for subject (id: ${systemObject.idSystemObject} | subject: ${subject.Name}) and EDAN record name (${record.name})`, LOG.LS.eTEST);
             else
                 edanIdentifiers = identifiers;
             if(debugLogs) console.log('EDAN Ids: '+JSON.stringify(identifiers,null,0));
@@ -2395,7 +2406,7 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
         }
 
         // a structure to hold our output
-        const outputPrefix = `${systemObject.idSystemObject},${getSystemObjectDetailsURL(systemObject)},${JSON.stringify(subject.Name)},`;
+        const outputPrefix = `${systemObject.idSystemObject},${packratIdentifiers.edan?.identifier?.IdentifierValue},${getSystemObjectDetailsURL(systemObject)},${JSON.stringify(subject.Name)},`;
 
         // Compare: Name
         if(packratName!=edanName) {
@@ -2430,7 +2441,7 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
 
             // if we couldn't find the unit, add error otherwise success
             if(!foundUnit) {
-                LOG.error(`${errorFn} Packrat unit does not match EDAN units (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                LOG.error(`${errorFn} Packrat unit does not match EDAN units (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
                 let str = outputPrefix;
                 str += 'error,';
                 str += 'units,';
@@ -2445,10 +2456,10 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
                     if(doFixErrors) {
                         const replaceUnitResult: boolean = await replacePackratUnit(packratUnit,edanUnit);
                         if(!replaceUnitResult) {
-                            LOG.error(`${errorFn} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                            LOG.error(`${errorFn} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
                             str += 'EDAN subject. failed to automatic update. check logs or do manually';
                         } else {
-                            LOG.info(`${errorFn} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                            LOG.info(`${errorFn} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
                             str += 'EDAN subject. updated Packrat unit to match EDAN';
                         }
                     } else {
@@ -2459,7 +2470,7 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
                 // store for output
                 output.push(str);
             } else {
-                LOG.info(`${errorFn} Unit compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                LOG.info(`${errorFn} Unit compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
                 let str = outputPrefix;
                 str += 'success,';
                 str += 'units,';
@@ -2469,7 +2480,7 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
                 output.push(str);
             }
         } else if(packratUnit && !edanUnit) {
-            LOG.error(`${errorFn} Packrat unit not found in EDAN record (id:${systemObject.idSystemObject} | subject:${subject.Name} | packrat:${JSON.stringify(packratUnit)})`, LOG.LS.eGQL);
+            LOG.error(`${errorFn} Packrat unit not found in EDAN record (id:${systemObject.idSystemObject} | subject:${subject.Name} | packrat:${JSON.stringify(packratUnit)})`, LOG.LS.eTEST);
             let str = outputPrefix;
             str += 'error,';
             str += 'units,';
@@ -2494,10 +2505,10 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
                 if(doFixErrors) {
                     const replaceUnitResult: boolean = await replacePackratUnit(packratUnit,edanUnit);
                     if(!replaceUnitResult) {
-                        LOG.error(`${errorFn} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                        LOG.error(`${errorFn} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
                         str += 'EDAN subject. failed to automatic update. check logs or do manually';
                     } else {
-                        LOG.info(`${errorFn} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                        LOG.info(`${errorFn} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
                         str += 'EDAN subject. updated Packrat unit to match EDAN';
                     }
                 } else {
@@ -2509,7 +2520,7 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             output.push(str);
 
         } else {
-            LOG.error(`${errorFn} Packrat & EDAN units not found (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+            LOG.error(`${errorFn} Packrat & EDAN units not found (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
             let str = outputPrefix;
             str += 'error,';
             str += 'units,';
@@ -2556,9 +2567,9 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
             // if we have a mismatch then output
             if(idMismatch) {
                 // log error and details
-                LOG.error(`${errorFn} Packrat has different identifiers than EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
-                LOG.error(`${errorFn} \tPackrat: `+strPackratIds.sort().join(','), LOG.LS.eGQL);
-                LOG.error(`${errorFn} \t   EDAN: `+strEdanIds, LOG.LS.eGQL);
+                LOG.error(`${errorFn} Packrat has different identifiers than EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
+                LOG.error(`${errorFn} \tPackrat: `+strPackratIds.sort().join(','), LOG.LS.eTEST);
+                LOG.error(`${errorFn} \t   EDAN: `+strEdanIds, LOG.LS.eTEST);
 
                 // if we're an EDAN subject then we need to fix the situation
                 if(!isDPOSubject) {
@@ -2582,10 +2593,10 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
                     if(doFixErrors) {
                         const replaceUnitResult: boolean = await replacePackratIdentifiers(packratIdentifiers,edanIdentifiers,systemObject);
                         if(!replaceUnitResult) {
-                            LOG.error(`${errorFn} failed to update Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                            LOG.error(`${errorFn} failed to update Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
                             str += 'EDAN subject. failed to automatic update. check logs or do manually';
                         } else {
-                            LOG.info(`${errorFn} successfully updated Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                            LOG.info(`${errorFn} successfully updated Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
                             str += 'EDAN subject. updated Packrat identifiers to match EDAN';
                         }
                     } else {
@@ -2597,7 +2608,7 @@ async function executeVerifySubjectGuts(ICol: COL.ICollection): Promise<boolean>
                 output.push(str);
 
             } else {
-                LOG.info(`${errorFn} Identifier compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eGQL);
+                LOG.info(`${errorFn} Identifier compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eTEST);
                 let str = outputPrefix;
                 str += 'success,';
                 str += 'identifiers,';
@@ -2813,7 +2824,7 @@ async function getEdanRecordIdentifiers(record: COL.CollectionQueryResultRecord)
                 }
             }
         } else {
-            // todo: create new identifier, type, and of EDAN Record ID type
+            // TODO: create new identifier, type, and of EDAN Record ID type
         }
     }
 
@@ -2852,7 +2863,7 @@ async function getEdanRecordIdentifiers(record: COL.CollectionQueryResultRecord)
             // get our type for this identifier
             const identifierType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapIdentifierType(label);
             if (!identifierType) {
-                LOG.error(`\tencountered unknown identifier type ${label} for EDAN record ${record.name}`, LOG.LS.eGQL);
+                LOG.error(`\tencountered unknown identifier type ${label} for EDAN record ${record.name}`, LOG.LS.eTEST);
                 continue;
             }
 
@@ -2964,5 +2975,11 @@ function getSystemObjectDetailsURL(systemObject: DBAPI.SystemObject) {
 // }
 
 /* eslint-enable @typescript-eslint/no-unused-vars */
+
+// #endregion
+
+//----------------------------------------------------------------
+// #region DB verifier
+
 
 // #endregion
