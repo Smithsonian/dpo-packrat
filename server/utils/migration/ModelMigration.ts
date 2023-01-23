@@ -591,6 +591,7 @@ export class ModelMigration {
 
         // parse MTL file, per http://paulbourke.net/dataformats/mtl/
         // and https://github.com/assimp/assimp/blob/master/code/AssetLib/Obj/ObjFileMtlImporter.cpp
+        // Ignore commented lines!
         /*
             map_Ka -s 1 1 1 -o 0 0 0 -mm 0 1 chrome.mpc
             map_Kd -s 1 1 1 -o 0 0 0 -mm 0 1 chrome.mpc
@@ -606,8 +607,14 @@ export class ModelMigration {
         let success: boolean = true;
         let error: string | undefined = undefined;
         let filesMissing: boolean | undefined = ingestRes.filesMissing;
-        for (const mtlLine of mtlLines) {
+        for (let mtlLine of mtlLines) {
+            const commentStart: number = mtlLine.indexOf('#');  // find comment start, if any
+            if (commentStart > -1)                              // if we have a comment,
+                mtlLine = mtlLine.substring(0, commentStart);   // trim anything from the comment, onwards
+
             // LOG.info(`crackMTL processing ${mtlLine}`, LOG.LS.eMIG);
+            if (mtlLine.trimStart().startsWith('#')) // ignore commented-out mtl lines, which start with a "#"
+                continue;
             const textureMatch: RegExpMatchArray | null = mtlLine.match(ModelMigration.regexMTLParser);
             if (textureMatch && textureMatch.length >= 4) {
                 // const mapType: string = textureMatch[1]?.trim();
