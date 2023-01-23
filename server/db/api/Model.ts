@@ -91,8 +91,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -119,8 +118,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 
@@ -210,7 +208,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         }
     }
 
-    /** fetches models which are chilren of either the specified idModelParent or idSceneParent, and have matching AutomationTag values */
+    /** fetches models which are children of either the specified idModelParent or idSceneParent, and have matching AutomationTag values */
     static async fetchChildrenModels(idModelParent: number | null, idSceneParent: number | null, AutomationTag: string): Promise<Model[] | null> {
         try {
             return DBC.CopyArray<ModelBase, Model>(
@@ -224,6 +222,27 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                   AND M.AutomationTag = ${AutomationTag}`, Model);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Model.fetchChildrenModels', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** fetches models which are children of the specified idSystemObjectIemParent
+     * and have the specified asset version filename and is one of the specified idVAssetTypes Asset.idVAssetType */
+    static async fetchItemChildrenModels(idSystemObjectItemParent: number, FileName: string, idVAssetTypes: number[]): Promise<Model[] | null> {
+        try {
+            return DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.$queryRaw<Model[]>`
+                SELECT DISTINCT M.*
+                FROM Model AS M
+                JOIN SystemObject AS SOM ON (M.idModel = SOM.idModel)
+                JOIN Asset AS ASS ON (SOM.idSystemObject = ASS.idSystemObject)
+                JOIN AssetVersion AS ASV ON (ASS.idAsset = ASV.idAsset)
+                JOIN SystemObjectXref AS SOX ON (SOM.idSystemObject = SOX.idSystemObjectDerived)
+                WHERE SOX.idSystemObjectMaster = ${idSystemObjectItemParent}
+                  AND ASV.FileName = ${FileName}
+                  AND ASS.idVAssetType IN (${Prisma.join(idVAssetTypes)})`, Model);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchItemChildrenModels', LOG.LS.eDB, error);
             return null;
         }
     }

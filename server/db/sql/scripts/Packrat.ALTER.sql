@@ -479,3 +479,8 @@ INSERT INTO Project (idProject, Name) VALUES (105, 'Nps-Devils Tower'); INSERT I
 INSERT INTO Project (idProject, Name) VALUES (106, 'Pullman Car'); INSERT INTO SystemObject (idProject, Retired) VALUES (106, 0);
 UPDATE Unit SET ARKPrefix = 'ch5' WHERE Abbreviation = 'CFCH';
 UPDATE Unit SET ARKPrefix = 'uj5' WHERE Abbreviation = 'OCIO';
+
+-- 2022-11-11 Jon
+ALTER TABLE ModelSceneXref MODIFY COLUMN `NAME` varchar(512) DEFAULT NULL;
+
+-- 2022-11-11 Deployed to Staging and Production

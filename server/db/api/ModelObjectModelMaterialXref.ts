@@ -28,8 +28,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelObjectModelMaterialXref.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -45,8 +44,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelObjectModelMaterialXref.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */

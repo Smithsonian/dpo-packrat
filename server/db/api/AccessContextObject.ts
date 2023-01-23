@@ -28,8 +28,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessContextObject.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -44,8 +43,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessContextObject.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

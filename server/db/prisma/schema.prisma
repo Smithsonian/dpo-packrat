@@ -1,8 +1,7 @@
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../../../node_modules/.prisma/client"
-  previewFeatures = ["interactiveTransactions"]
-  binaryTargets   = ["native", "linux-musl"]
+  provider      = "prisma-client-js"
+  output        = "../../../node_modules/.prisma/client"
+  binaryTargets = ["native", "linux-musl"]
 }
 
 datasource mariasql {
@@ -136,7 +135,7 @@ model AssetVersion {
   SystemObject_AssetVersion_idSOAttachmentToSystemObject SystemObject?                         @relation("AssetVersion_idSOAttachmentToSystemObject", fields: [idSOAttachment], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_assetversion_systemobject1")
   User                                                   User                                  @relation(fields: [idUserCreator], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_assetversion_user1")
   Metadata                                               Metadata[]
-  SystemObject                                           SystemObject?
+  SystemObject_AssetVersionToSystemObject_idAssetVersion SystemObject?                         @relation("AssetVersionToSystemObject_idAssetVersion")
   SystemObjectVersionAssetVersionXref                    SystemObjectVersionAssetVersionXref[]
 
   @@index([Ingested, idUserCreator], map: "AssetVersion_Ingested_idUserCreator")
@@ -145,6 +144,23 @@ model AssetVersion {
   @@index([idAsset, Version], map: "AssetVersion_idAsset_Version")
   @@index([idUserCreator, Ingested], map: "AssetVersion_idUserCreator_Ingested")
   @@index([idSOAttachment], map: "fk_assetversion_systemobject1")
+}
+
+model Audit {
+  idAudit        Int           @id @default(autoincrement())
+  idUser         Int?
+  AuditDate      DateTime      @mariasql.DateTime(0)
+  AuditType      Int
+  DBObjectType   Int?
+  idDBObject     Int?
+  idSystemObject Int?
+  Data           String?       @mariasql.LongText
+  SystemObject   SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_audit_systemobject1")
+  User           User?         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_audit_user1")
+
+  @@index([DBObjectType, idDBObject, AuditDate], map: "Audit_idAsset_DBObjectType_idDBObject_AuditDate")
+  @@index([idSystemObject, AuditDate], map: "Audit_idAsset_idSystemObject_AuditDate")
+  @@index([idUser, AuditDate], map: "Audit_idAsset_idUser_AuditDate")
 }
 
 model CaptureData {
@@ -211,12 +227,12 @@ model CaptureDataPhoto {
   ClusterGeometryFieldID                                             Int?
   CameraSettingsUniform                                              Boolean?
   CaptureData                                                        CaptureData @relation(fields: [idCaptureData], references: [idCaptureData], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_capturedata1")
-  Vocabulary_CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary Vocabulary? @relation("CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary", fields: [idVBackgroundRemovalMethod], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary5")
   Vocabulary_CaptureDataPhoto_idVCaptureDatasetTypeToVocabulary      Vocabulary  @relation("CaptureDataPhoto_idVCaptureDatasetTypeToVocabulary", fields: [idVCaptureDatasetType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary1")
-  Vocabulary_CaptureDataPhoto_idVClusterTypeToVocabulary             Vocabulary? @relation("CaptureDataPhoto_idVClusterTypeToVocabulary", fields: [idVClusterType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary6")
-  Vocabulary_CaptureDataPhoto_idVFocusTypeToVocabulary               Vocabulary? @relation("CaptureDataPhoto_idVFocusTypeToVocabulary", fields: [idVFocusType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary3")
   Vocabulary_CaptureDataPhoto_idVItemPositionTypeToVocabulary        Vocabulary? @relation("CaptureDataPhoto_idVItemPositionTypeToVocabulary", fields: [idVItemPositionType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary2")
+  Vocabulary_CaptureDataPhoto_idVFocusTypeToVocabulary               Vocabulary? @relation("CaptureDataPhoto_idVFocusTypeToVocabulary", fields: [idVFocusType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary3")
   Vocabulary_CaptureDataPhoto_idVLightSourceTypeToVocabulary         Vocabulary? @relation("CaptureDataPhoto_idVLightSourceTypeToVocabulary", fields: [idVLightSourceType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary4")
+  Vocabulary_CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary Vocabulary? @relation("CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary", fields: [idVBackgroundRemovalMethod], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary5")
+  Vocabulary_CaptureDataPhoto_idVClusterTypeToVocabulary             Vocabulary? @relation("CaptureDataPhoto_idVClusterTypeToVocabulary", fields: [idVClusterType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary6")
 
   @@index([idCaptureData], map: "fk_capturedataphoto_capturedata1")
   @@index([idVCaptureDatasetType], map: "fk_capturedataphoto_vocabulary1")
@@ -349,7 +365,7 @@ model Metadata {
   idSystemObject                                           Int?
   idSystemObjectParent                                     Int?
   AssetVersion                                             AssetVersion? @relation(fields: [idAssetVersionValue], references: [idAssetVersion], onDelete: NoAction, onUpdate: NoAction, map: "fk_metadata_assetversion1")
-  SystemObject                                             SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_metadata_systemobject1")
+  SystemObject_Metadata_idSystemObjectToSystemObject       SystemObject? @relation("Metadata_idSystemObjectToSystemObject", fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_metadata_systemobject1")
   SystemObject_Metadata_idSystemObjectParentToSystemObject SystemObject? @relation("Metadata_idSystemObjectParentToSystemObject", fields: [idSystemObjectParent], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_metadata_systemobject2")
   User                                                     User?         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_metadata_user1")
   Vocabulary                                               Vocabulary?   @relation(fields: [idVMetadataSource], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_metadata_vocabulary1")
@@ -388,10 +404,10 @@ model Model {
   Title                                          String?                 @mariasql.VarChar(255)
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_asset1")
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary?             @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary1")
-  Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary?             @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary5")
   Vocabulary_Model_idVModalityToVocabulary       Vocabulary?             @relation("Model_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary2")
-  Vocabulary_Model_idVPurposeToVocabulary        Vocabulary?             @relation("Model_idVPurposeToVocabulary", fields: [idVPurpose], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary4")
   Vocabulary_Model_idVUnitsToVocabulary          Vocabulary?             @relation("Model_idVUnitsToVocabulary", fields: [idVUnits], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary3")
+  Vocabulary_Model_idVPurposeToVocabulary        Vocabulary?             @relation("Model_idVPurposeToVocabulary", fields: [idVPurpose], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary4")
+  Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary?             @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary5")
   ModelMaterialUVMap                             ModelMaterialUVMap[]
   ModelObject                                    ModelObject[]
   ModelProcessingAction                          ModelProcessingAction[]
@@ -441,9 +457,9 @@ model ModelMaterialUVMap {
   idModel              Int
   idAsset              Int
   UVMapEdgeLength      Int
+  ModelMaterialChannel ModelMaterialChannel[]
   Asset                Asset                  @relation(fields: [idAsset], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_modelmaterialuvmap_asset1")
   Model                Model                  @relation(fields: [idModel], references: [idModel], onDelete: NoAction, onUpdate: NoAction, map: "fk_modelmaterialuvmap_model1")
-  ModelMaterialChannel ModelMaterialChannel[]
 
   @@index([idAsset], map: "ModelUVMapFile_idAsset")
   @@index([idModel], map: "ModelUVMapFile_idModel")
@@ -521,7 +537,7 @@ model ModelSceneXref {
   idModelSceneXref Int     @id @default(autoincrement())
   idModel          Int
   idScene          Int
-  Name             String? @mariasql.VarChar(100)
+  Name             String? @mariasql.VarChar(512)
   Usage            String? @mariasql.VarChar(100)
   Quality          String? @mariasql.VarChar(100)
   FileSize         BigInt?
@@ -585,11 +601,22 @@ model Scene {
   PosedAndQCd            Boolean
   ApprovedForPublication Boolean
   Title                  String?          @mariasql.VarChar(255)
-  Asset                  Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_scene_asset1")
   ModelSceneXref         ModelSceneXref[]
+  Asset                  Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_scene_asset1")
   SystemObject           SystemObject?
 
   @@index([idAssetThumbnail], map: "fk_scene_asset1")
+}
+
+model Sentinel {
+  idSentinel     Int      @id @default(autoincrement())
+  URLBase        String   @mariasql.VarChar(512)
+  ExpirationDate DateTime @mariasql.DateTime(0)
+  idUser         Int
+  User           User     @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_sentinel_user1")
+
+  @@index([URLBase], map: "Sentinel_URLBase")
+  @@index([idUser], map: "fk_sentinel_user1")
 }
 
 model Stakeholder {
@@ -638,9 +665,17 @@ model SystemObject {
   idActor                                                               Int?                              @unique(map: "idActor")
   idStakeholder                                                         Int?                              @unique(map: "idStakeholder")
   Retired                                                               Boolean
+  AccessContextObject                                                   AccessContextObject[]
+  Asset_Asset_idSystemObjectToSystemObject                              Asset[]                           @relation("Asset_idSystemObjectToSystemObject")
+  AssetVersion_AssetVersion_idSOAttachmentToSystemObject                AssetVersion[]                    @relation("AssetVersion_idSOAttachmentToSystemObject")
+  Audit                                                                 Audit[]
+  Identifier                                                            Identifier[]
+  LicenseAssignment                                                     LicenseAssignment[]
+  Metadata_Metadata_idSystemObjectToSystemObject                        Metadata[]                        @relation("Metadata_idSystemObjectToSystemObject")
+  Metadata_Metadata_idSystemObjectParentToSystemObject                  Metadata[]                        @relation("Metadata_idSystemObjectParentToSystemObject")
   Actor                                                                 Actor?                            @relation(fields: [idActor], references: [idActor], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_actor1")
   Asset_AssetToSystemObject_idAsset                                     Asset?                            @relation("AssetToSystemObject_idAsset", fields: [idAsset], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_asset1")
-  AssetVersion                                                          AssetVersion?                     @relation(fields: [idAssetVersion], references: [idAssetVersion], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_assetversion1")
+  AssetVersion_AssetVersionToSystemObject_idAssetVersion                AssetVersion?                     @relation("AssetVersionToSystemObject_idAssetVersion", fields: [idAssetVersion], references: [idAssetVersion], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_assetversion1")
   CaptureData                                                           CaptureData?                      @relation(fields: [idCaptureData], references: [idCaptureData], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_capturedata1")
   IntermediaryFile                                                      IntermediaryFile?                 @relation(fields: [idIntermediaryFile], references: [idIntermediaryFile], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_intermediaryfile1")
   Item                                                                  Item?                             @relation(fields: [idItem], references: [idItem], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_item1")
@@ -651,17 +686,9 @@ model SystemObject {
   Stakeholder                                                           Stakeholder?                      @relation(fields: [idStakeholder], references: [idStakeholder], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_stakeholder1")
   Subject                                                               Subject?                          @relation(fields: [idSubject], references: [idSubject], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_subject1")
   Unit                                                                  Unit?                             @relation(fields: [idUnit], references: [idUnit], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_unit1")
-  AccessContextObject                                                   AccessContextObject[]
-  Asset_Asset_idSystemObjectToSystemObject                              Asset[]                           @relation("Asset_idSystemObjectToSystemObject")
-  AssetVersion_AssetVersion_idSOAttachmentToSystemObject                AssetVersion[]                    @relation("AssetVersion_idSOAttachmentToSystemObject")
-  Audit                                                                 Audit[]
-  Identifier                                                            Identifier[]
-  LicenseAssignment                                                     LicenseAssignment[]
-  Metadata                                                              Metadata[]
-  Metadata_Metadata_idSystemObjectParentToSystemObject                  Metadata[]                        @relation("Metadata_idSystemObjectParentToSystemObject")
   SystemObjectVersion                                                   SystemObjectVersion[]
-  SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived")
   SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster  SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectMaster")
+  SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived")
   UserPersonalizationSystemObject                                       UserPersonalizationSystemObject[]
   WorkflowStepSystemObjectXref                                          WorkflowStepSystemObjectXref[]
 
@@ -692,12 +719,23 @@ model SystemObjectVersion {
   @@index([idSystemObject, idSystemObjectVersion], map: "ObjectVersion_idSystemObject_idObjectVersion")
 }
 
+model SystemObjectVersionAssetVersionXref {
+  idSystemObjectVersionAssetVersionXref Int                 @id @default(autoincrement())
+  idSystemObjectVersion                 Int
+  idAssetVersion                        Int
+  AssetVersion                          AssetVersion        @relation(fields: [idAssetVersion], references: [idAssetVersion], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobjectversionassetversionxref_assetversion")
+  SystemObjectVersion                   SystemObjectVersion @relation(fields: [idSystemObjectVersion], references: [idSystemObjectVersion], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobjectversionassetversionxref_systemobjectversion")
+
+  @@index([idAssetVersion], map: "fk_systemobjectversionassetversionxref_assetversion")
+  @@index([idSystemObjectVersion], map: "fk_systemobjectversionassetversionxref_systemobjectversion")
+}
+
 model SystemObjectXref {
   idSystemObjectXref                                                Int          @id @default(autoincrement())
   idSystemObjectMaster                                              Int
   idSystemObjectDerived                                             Int
-  SystemObject_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObject @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived", fields: [idSystemObjectDerived], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobjectxref_systemobject2")
   SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster  SystemObject @relation("SystemObjectToSystemObjectXref_idSystemObjectMaster", fields: [idSystemObjectMaster], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobjectxref_systemobject1")
+  SystemObject_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObject @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived", fields: [idSystemObjectDerived], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobjectxref_systemobject2")
 
   @@index([idSystemObjectDerived], map: "SystemObjectXref_idSystemObjectDerived")
   @@index([idSystemObjectMaster], map: "SystemObjectXref_idSystemObjectMaster")
@@ -777,26 +815,26 @@ model Vocabulary {
   idVocabularySet                                                          Int
   SortOrder                                                                Int
   Term                                                                     String                      @mariasql.VarChar(255)
-  VocabularySet                                                            VocabularySet               @relation(fields: [idVocabularySet], references: [idVocabularySet], onDelete: NoAction, onUpdate: NoAction, map: "fk_vocabulary_vocabularyset1")
   Asset                                                                    Asset[]
   CaptureData                                                              CaptureData[]
   CaptureDataFile                                                          CaptureDataFile[]
-  CaptureDataPhoto_CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary")
   CaptureDataPhoto_CaptureDataPhoto_idVCaptureDatasetTypeToVocabulary      CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVCaptureDatasetTypeToVocabulary")
-  CaptureDataPhoto_CaptureDataPhoto_idVClusterTypeToVocabulary             CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVClusterTypeToVocabulary")
-  CaptureDataPhoto_CaptureDataPhoto_idVFocusTypeToVocabulary               CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVFocusTypeToVocabulary")
   CaptureDataPhoto_CaptureDataPhoto_idVItemPositionTypeToVocabulary        CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVItemPositionTypeToVocabulary")
+  CaptureDataPhoto_CaptureDataPhoto_idVFocusTypeToVocabulary               CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVFocusTypeToVocabulary")
   CaptureDataPhoto_CaptureDataPhoto_idVLightSourceTypeToVocabulary         CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVLightSourceTypeToVocabulary")
+  CaptureDataPhoto_CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary")
+  CaptureDataPhoto_CaptureDataPhoto_idVClusterTypeToVocabulary             CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVClusterTypeToVocabulary")
   Identifier                                                               Identifier[]
   Job                                                                      Job[]
   Metadata                                                                 Metadata[]
   Model_Model_idVCreationMethodToVocabulary                                Model[]                     @relation("Model_idVCreationMethodToVocabulary")
-  Model_Model_idVFileTypeToVocabulary                                      Model[]                     @relation("Model_idVFileTypeToVocabulary")
   Model_Model_idVModalityToVocabulary                                      Model[]                     @relation("Model_idVModalityToVocabulary")
-  Model_Model_idVPurposeToVocabulary                                       Model[]                     @relation("Model_idVPurposeToVocabulary")
   Model_Model_idVUnitsToVocabulary                                         Model[]                     @relation("Model_idVUnitsToVocabulary")
+  Model_Model_idVPurposeToVocabulary                                       Model[]                     @relation("Model_idVPurposeToVocabulary")
+  Model_Model_idVFileTypeToVocabulary                                      Model[]                     @relation("Model_idVFileTypeToVocabulary")
   ModelMaterialChannel                                                     ModelMaterialChannel[]
   ModelProcessingActionStep                                                ModelProcessingActionStep[]
+  VocabularySet                                                            VocabularySet               @relation(fields: [idVocabularySet], references: [idVocabularySet], onDelete: NoAction, onUpdate: NoAction, map: "fk_vocabulary_vocabularyset1")
   Workflow                                                                 Workflow[]
   WorkflowStep                                                             WorkflowStep[]
 
@@ -832,6 +870,21 @@ model Workflow {
   @@index([idWorkflowSet], map: "fk_workflow_workflowset1")
 }
 
+model WorkflowReport {
+  idWorkflowReport Int      @id @default(autoincrement())
+  idWorkflow       Int
+  MimeType         String   @mariasql.VarChar(256)
+  Data             String   @mariasql.LongText
+  Workflow         Workflow @relation(fields: [idWorkflow], references: [idWorkflow], onDelete: NoAction, onUpdate: NoAction, map: "fk_workflowreport_workflow1")
+
+  @@index([idWorkflow], map: "fk_workflowreport_workflow1")
+}
+
+model WorkflowSet {
+  idWorkflowSet Int        @id @default(autoincrement())
+  Workflow      Workflow[]
+}
+
 model WorkflowStep {
   idWorkflowStep               Int                            @id @default(autoincrement())
   idWorkflow                   Int
@@ -865,58 +918,4 @@ model WorkflowStepSystemObjectXref {
 
   @@index([idSystemObject, Input], map: "WorkflowStepSystemObjectXref_idSystemObject_Input")
   @@index([idWorkflowStep, Input], map: "WorkflowStepSystemObjectXref_idWorkflowStep_Input")
-}
-
-model Audit {
-  idAudit        Int           @id @default(autoincrement())
-  idUser         Int?
-  AuditDate      DateTime      @mariasql.DateTime(0)
-  AuditType      Int
-  DBObjectType   Int?
-  idDBObject     Int?
-  idSystemObject Int?
-  Data           String?       @mariasql.LongText
-  SystemObject   SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_audit_systemobject1")
-  User           User?         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_audit_user1")
-
-  @@index([DBObjectType, idDBObject, AuditDate], map: "Audit_idAsset_DBObjectType_idDBObject_AuditDate")
-  @@index([idSystemObject, AuditDate], map: "Audit_idAsset_idSystemObject_AuditDate")
-  @@index([idUser, AuditDate], map: "Audit_idAsset_idUser_AuditDate")
-}
-
-model SystemObjectVersionAssetVersionXref {
-  idSystemObjectVersionAssetVersionXref Int                 @id @default(autoincrement())
-  idSystemObjectVersion                 Int
-  idAssetVersion                        Int
-  AssetVersion                          AssetVersion        @relation(fields: [idAssetVersion], references: [idAssetVersion], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobjectversionassetversionxref_assetversion")
-  SystemObjectVersion                   SystemObjectVersion @relation(fields: [idSystemObjectVersion], references: [idSystemObjectVersion], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobjectversionassetversionxref_systemobjectversion")
-
-  @@index([idAssetVersion], map: "fk_systemobjectversionassetversionxref_assetversion")
-  @@index([idSystemObjectVersion], map: "fk_systemobjectversionassetversionxref_systemobjectversion")
-}
-
-model WorkflowReport {
-  idWorkflowReport Int      @id @default(autoincrement())
-  idWorkflow       Int
-  MimeType         String   @mariasql.VarChar(256)
-  Data             String   @mariasql.LongText
-  Workflow         Workflow @relation(fields: [idWorkflow], references: [idWorkflow], onDelete: NoAction, onUpdate: NoAction, map: "fk_workflowreport_workflow1")
-
-  @@index([idWorkflow], map: "fk_workflowreport_workflow1")
-}
-
-model WorkflowSet {
-  idWorkflowSet Int        @id @default(autoincrement())
-  Workflow      Workflow[]
-}
-
-model Sentinel {
-  idSentinel     Int      @id @default(autoincrement())
-  URLBase        String   @mariasql.VarChar(512)
-  ExpirationDate DateTime @mariasql.DateTime(0)
-  idUser         Int
-  User           User     @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_sentinel_user1")
-
-  @@index([URLBase], map: "Sentinel_URLBase")
-  @@index([idUser], map: "fk_sentinel_user1")
 }

@@ -23,8 +23,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
                 await DBC.DBConnection.prisma.license.create({ data: { Name, Description, RestrictLevel }, }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.License.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -36,8 +35,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
                 data: { Name, Description, RestrictLevel, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.License.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

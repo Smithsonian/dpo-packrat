@@ -5,7 +5,7 @@
  * This component renders object details for the Repository Details UI.
  */
 import { Box, Checkbox, Typography, Select, MenuItem, Tooltip } from '@material-ui/core';
-import { withStyles, makeStyles } from '@material-ui/core/styles';
+import { withStyles, makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../components';
 import { GetSystemObjectDetailsResult, RepositoryPath, License } from '../../../../types/graphql';
@@ -20,7 +20,7 @@ import { eSystemObjectType, ePublishedState } from '@dpo-packrat/common';
 import { ToolTip } from '../../../../components';
 import { HelpOutline } from '@material-ui/icons';
 
-const useStyles = makeStyles(({ typography, palette }) => ({
+const useStyles = makeStyles(({ palette }) => createStyles({
     detail: {
         display: 'flex',
         alignItems: 'center',
@@ -29,7 +29,7 @@ const useStyles = makeStyles(({ typography, palette }) => ({
         marginBottom: 8
     },
     label: {
-        fontWeight: typography.fontWeightMedium,
+        fontWeight: 500,
         alignSelf: 'center',
         color: palette.primary.dark
     },

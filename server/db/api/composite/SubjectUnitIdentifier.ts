@@ -25,8 +25,8 @@ export class SubjectUnitIdentifier {
             if (!SubjectUnitIdentifier.initialized) {
                 const vocabARK:             Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
                 const vocabEdanRecordID:    Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
-                SubjectUnitIdentifier.idVocabARK = vocabARK ? vocabARK.idVocabulary : /* istanbul ignore next */ 76;
-                SubjectUnitIdentifier.idVocabEdanRecordID = vocabEdanRecordID ? vocabEdanRecordID.idVocabulary : /* istanbul ignore next */ 77;
+                SubjectUnitIdentifier.idVocabARK = vocabARK ? vocabARK.idVocabulary : /* istanbul ignore next */ 79;                            // SELECT idVocabulary FROM Vocabulary WHERE Term = 'ARK';
+                SubjectUnitIdentifier.idVocabEdanRecordID = vocabEdanRecordID ? vocabEdanRecordID.idVocabulary : /* istanbul ignore next */ 81; // SELECT idVocabulary FROM Vocabulary WHERE Term = 'Edan Record ID';
                 SubjectUnitIdentifier.initialized = true;
             }
 

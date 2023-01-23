@@ -6,7 +6,8 @@ export type CollectionQueryResultRecord = {
     unit: string;
     identifierPublic: string;
     identifierCollection: string;
-    raw?: any | undefined;
+    identifierMap?: Map<string, string> | undefined;    // set if options.gatherIDMap is true
+    raw?: any | undefined;                              // set if options.gatherRaw is true
 };
 
 export type CollectionQueryResults = {
@@ -16,9 +17,10 @@ export type CollectionQueryResults = {
 };
 
 export type CollectionQueryOptions = {
-    searchMetadata?: boolean | undefined;    // false is the default, which means we only search edanMDM records; true means we search edanMDM as well as other types of data
-    recordType?: string | undefined;         // the EDAN record type (e.g. 'edanmdm', '3d_package'); transformed into query parameter fq[]=type${recordType}
-    gatherRaw?: boolean | undefined;         // false is the default, which means we do not gather raw output and place it in the results; true is the reverse
+    searchMetadata?: boolean | undefined;   // false is the default, which means we only search edanMDM records; true means we search edanMDM as well as other types of data
+    recordType?: string | undefined;        // the EDAN record type (e.g. 'edanmdm', '3d_package'); transformed into query parameter fq[]=type${recordType}
+    gatherRaw?: boolean | undefined;        // false is the default, which means we do not gather raw output and place it in the results; true is the reverse
+    gatherIDMap?: boolean | undefined;      // false is the default, which means we do not gather identifiers and place them in identifierMap; true is the reverse
 };
 
 /**

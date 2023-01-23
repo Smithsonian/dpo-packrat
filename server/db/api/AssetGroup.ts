@@ -18,8 +18,7 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
             ({ idAssetGroup: this.idAssetGroup } = await DBC.DBConnection.prisma.assetGroup.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetGroup.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -31,8 +30,7 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetGroup.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

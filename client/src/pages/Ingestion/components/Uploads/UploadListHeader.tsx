@@ -4,10 +4,10 @@
  * This component renders upload list header for FileList component.
  */
 import { Box, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React from 'react';
 
-const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
     header: {
         display: 'flex',
         alignItems: 'center',
@@ -40,11 +40,11 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         marginTop: 5,
         marginBottom: 10,
         color: palette.primary.dark,
-        fontWeight: typography.fontWeightRegular
+        fontWeight: 400
     },
     label: {
         color: palette.primary.dark,
-        fontWeight: typography.fontWeightRegular
+        fontWeight: 400
     }
 }));
 

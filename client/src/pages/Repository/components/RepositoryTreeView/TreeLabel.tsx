@@ -6,7 +6,7 @@
  */
 import { Box, Tooltip } from '@material-ui/core';
 import { grey } from '@material-ui/core/colors';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import lodash from 'lodash';
 import React, { useMemo, useState, useEffect } from 'react';
@@ -80,7 +80,7 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
     );
 }
 
-const useLabelStyle = makeStyles(({ breakpoints, palette, typography }) => ({
+const useLabelStyle = makeStyles(({ breakpoints, palette }) => createStyles({
     container: {
         display: 'flex',
         alignItems: 'center',
@@ -91,7 +91,7 @@ const useLabelStyle = makeStyles(({ breakpoints, palette, typography }) => ({
     },
     emptyText: {
         fontSize: '0.7em',
-        fontWeight: typography.fontWeightLight,
+        fontWeight: 300,
         color: palette.grey[500]
     },
     stickyItem: {

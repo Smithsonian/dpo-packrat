@@ -8,7 +8,7 @@
  */
 import { Box, MenuItem, Select, Typography } from '@material-ui/core';
 import { green, grey, red, yellow } from '@material-ui/core/colors';
-import { fade, makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import { motion } from 'framer-motion';
 import React from 'react';
 import { FaCheckCircle, FaRedo, FaRegCircle } from 'react-icons/fa';
@@ -22,7 +22,7 @@ import { formatBytes } from '../../../../utils/upload';
 import { eIngestionMode } from '../../../../constants';
 import { UploadReferences } from '../../../../store';
 
-const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
     container: {
         position: 'relative',
         display: 'flex',
@@ -54,13 +54,13 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         }
     },
     name: {
-        fontWeight: typography.fontWeightMedium,
+        fontWeight: 500,
         color: 'black',
         zIndex: 'inherit',
         wordBreak: 'break-all',
     },
     updateContext: {
-        fontWeight: typography.fontWeightLight,
+        fontWeight: 300,
         fontStyle: 'italic',
         color: 'black',
         zIndex: 'inherit',
@@ -72,7 +72,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         width: 80
     },
     caption: {
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         color: palette.primary.main,
         zIndex: 'inherit'
     },
@@ -84,7 +84,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         padding: '0px 10px'
     },
     sizeText: {
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         color: palette.primary.main,
         zIndex: 'inherit'
     },

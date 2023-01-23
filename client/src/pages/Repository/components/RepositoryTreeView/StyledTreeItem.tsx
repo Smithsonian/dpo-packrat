@@ -3,7 +3,7 @@
  *
  * This component renders a custom tree item for RepositoryTreeView.
  */
-import { fade, Theme, withStyles } from '@material-ui/core/styles';
+import { fade, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import { TreeItem, TreeItemProps } from '@material-ui/lab';
 import React from 'react';
 
@@ -11,7 +11,7 @@ interface StyledTreeItemProps {
     color: string;
 }
 
-const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) => ({
+const StyledTreeItem = withStyles(({ palette, breakpoints }: Theme) => createStyles({
     iconContainer: {
         width: 25,
         left: 2.5,
@@ -47,7 +47,7 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
     },
     label: {
         fontSize: '0.7em',
-        fontWeight: typography.fontWeightLight,
+        fontWeight: 300,
         borderRadius: 5,
         padding: '2.5px 5px',
         [breakpoints.down('lg')]: {

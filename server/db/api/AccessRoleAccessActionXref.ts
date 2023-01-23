@@ -28,8 +28,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessRoleAccessActionXref.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -44,8 +43,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessRoleAccessActionXref.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

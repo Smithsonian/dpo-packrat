@@ -30,8 +30,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UserPersonalizationUrl.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -47,8 +46,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UserPersonalizationUrl.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

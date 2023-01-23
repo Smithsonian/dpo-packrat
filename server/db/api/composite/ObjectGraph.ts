@@ -67,7 +67,7 @@ export class ObjectGraph {
     noCycles: boolean = true;
 
     pushCount: number = 0;
-    maxPushCount: number = 50000;
+    maxPushCount: number = 250000;
     depth: number = 32;
 
     systemObjectList: number[] = []; // array of idSystemObjects to be processed

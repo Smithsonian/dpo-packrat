@@ -64,19 +64,16 @@ interface SidePanelProps {
     onToggle: () => void;
 }
 
-type SidePanelParams = {
-    type: string;
-};
-
 function SidePanel(props: SidePanelProps): React.ReactElement {
     const { isExpanded, onToggle } = props;
-    const { type }: SidePanelParams = useParams();
+    const params = useParams();
+    const type = params['*'] as string;
     const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
 
     const [selectedOption, setSelectedOption] = useState(type || HOME_ROUTES.INGESTION);
 
     useEffect(() => {
-        setSelectedOption(type);
+        setSelectedOption(type as string);
     }, [type]);
 
     const classes = useStyles(isExpanded);
@@ -94,21 +91,21 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
             type: HOME_ROUTES.REPOSITORY,
             color: Colors.sidebarOptions.repository,
             isExpanded,
-            isSelected: selectedOption === HOME_ROUTES.REPOSITORY
+            isSelected: selectedOption.includes(HOME_ROUTES.REPOSITORY)
         },
         {
             title: 'Ingestion',
             type: HOME_ROUTES.INGESTION,
             color: Colors.sidebarOptions.ingestion,
             isExpanded,
-            isSelected: selectedOption === HOME_ROUTES.INGESTION
+            isSelected: selectedOption.includes(HOME_ROUTES.INGESTION)
         },
         {
             title: 'Workflow',
             type: HOME_ROUTES.WORKFLOW,
             color: Colors.sidebarOptions.workflow,
             isExpanded,
-            isSelected: selectedOption === HOME_ROUTES.WORKFLOW
+            isSelected: selectedOption.includes(HOME_ROUTES.WORKFLOW)
         },
         // {
         //     title: 'Reporting',
@@ -123,7 +120,7 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
             type: HOME_ROUTES.ADMIN,
             color: Colors.sidebarOptions.admin,
             isExpanded,
-            isSelected: selectedOption === HOME_ROUTES.ADMIN
+            isSelected: selectedOption.includes(HOME_ROUTES.ADMIN)
         }
     ];
 

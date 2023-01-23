@@ -4,12 +4,12 @@
  * This component renders sidebar menu for Ingestion flow.
  */
 import { Box, Grid, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
 import IngestionSidebarMenuOption, { SidebarRouteTypes } from './IngestionSidebarMenuOption';
 import { INGESTION_ROUTE } from '../../../../constants';
 
-const useStyles = makeStyles(({ palette, typography, spacing }) => ({
+const useStyles = makeStyles(({ palette, spacing }) => createStyles({
     container: {
         display: 'flex',
         flexDirection: 'column',
@@ -19,7 +19,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     },
     menuLabel: {
         color: palette.primary.dark,
-        fontWeight: typography.fontWeightMedium,
+        fontWeight: 500,
         marginLeft: spacing(2),
         marginBottom: spacing(2)
     },

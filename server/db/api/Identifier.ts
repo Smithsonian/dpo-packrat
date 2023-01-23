@@ -31,8 +31,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Identifier.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -49,8 +48,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Identifier.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

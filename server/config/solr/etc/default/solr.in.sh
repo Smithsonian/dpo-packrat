@@ -1,0 +1,1 @@
+SOLR_JAVA_MEM="-Xms4096m -Xmx4096m"

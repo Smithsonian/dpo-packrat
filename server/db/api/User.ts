@@ -74,8 +74,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.User.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -108,8 +107,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.User.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

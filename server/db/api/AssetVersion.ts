@@ -82,13 +82,12 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                         SystemObject_AssetVersion_idSOAttachmentToSystemObject: idSOAttachment ? { connect: { idSystemObject: idSOAttachment }, } : undefined,
                         FilePath,
                         Comment,
-                        SystemObject:       { create: { Retired: false }, },
+                        SystemObject_AssetVersionToSystemObject_idAssetVersion: { create: { Retired: false }, },
                     },
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
 
         /*
@@ -162,8 +161,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 
@@ -185,7 +183,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyObject<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findUnique({ where: { idAssetVersion, }, }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetch', LOG.LS.eDB, error);
+            LOG.error(`DBAPI.AssetVersion.fetch(${idAssetVersion})`, LOG.LS.eDB, error);
             return null;
         }
     }

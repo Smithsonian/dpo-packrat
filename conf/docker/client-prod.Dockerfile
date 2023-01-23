@@ -7,6 +7,10 @@ COPY . .
 # Remove server from client build
 RUN rm -rf server
 
+# Install bash
+RUN apk update
+RUN apk add bash
+
 # Install dependencies (production mode) and build
 RUN mkdir -p /app/node_modules/@dpo-packrat/ && ln -s /app/common /app/node_modules/@dpo-packrat/common
 RUN yarn install --frozen-lockfile

@@ -36,8 +36,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
                 } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Audit.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -54,8 +53,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Audit.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

@@ -37,7 +37,7 @@ const useStyles = makeStyles({
 
 function AdminUsersView(): React.ReactElement {
     const classes = useStyles();
-    const [usersList, setUsersList] = useState<GetAllUsersResult['User'] | []>([]);
+    const [usersList, setUsersList] = useState<GetAllUsersResult['User']>([]);
     const location = useLocation();
 
     useEffect(() => {

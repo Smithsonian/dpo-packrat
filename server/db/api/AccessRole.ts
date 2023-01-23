@@ -22,8 +22,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
             }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessRole.create', LOG.LS.eDB, error);
-            return false;
+            return this.logError('create', error);
         }
     }
 
@@ -35,8 +34,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
                 data: { Name, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessRole.update', LOG.LS.eDB, error);
-            return false;
+            return this.logError('update', error);
         }
     }
 

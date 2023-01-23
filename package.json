@@ -27,6 +27,7 @@
     }
   ],
   "scripts": {
+    "init": "lerna bootstrap",
     "start:client": "yarn workspace @dpo-packrat/client start",
     "start:server": "yarn workspace @dpo-packrat/server start",
     "start:server:inspect": "yarn workspace @dpo-packrat/server start:inspect",
@@ -65,6 +66,9 @@
     "install:husky": "husky install",
     "upgradelatest": "lerna exec -- yarn upgrade --latest"
   },
+  "resolutions": {
+    "react-error-overlay": "6.0.9"
+  },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "4.10.0",
     "@typescript-eslint/parser": "4.10.0",
@@ -87,7 +91,7 @@
   },
   "workspaces": {
     "nohoist": [
-      "@dpo-packrat/client/*"
+      "@dpo-packrat/client/**"
     ],
     "packages": [
       "client",

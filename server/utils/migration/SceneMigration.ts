@@ -11,7 +11,7 @@ import { SceneHelpers } from '../../utils';
 import { SvxReader } from '../parser';
 import { JobCookSIGenerateDownloads } from '../../job/impl/Cook';
 import { PublishScene } from '../../collections/impl/PublishScene';
-import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
+// import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
 
 import * as path from 'path';
 import fetch from 'node-fetch';
@@ -31,12 +31,14 @@ export class SceneMigration {
     private static vocabModel:          DBAPI.Vocabulary | undefined        = undefined;
     private static vocabOther:          DBAPI.Vocabulary | undefined        = undefined;
     private static vocabDownload:       DBAPI.Vocabulary | undefined        = undefined;
+    private static vocabMasterModel:    DBAPI.Vocabulary | undefined        = undefined;
     private static idSystemObjectTest:  number | undefined                  = undefined;
 
     private ICol:                       COL.ICollection | undefined         = undefined;
     private scenePackage:               SceneMigrationPackage | undefined   = undefined;
     private userOwner:                  DBAPI.User | undefined              = undefined;
     private scene:                      DBAPI.Scene | null | undefined      = undefined;
+    private modelSource:                DBAPI.Model | undefined             = undefined;
     private sceneSystemObjectID:        number | undefined                  = undefined;
 
     private async initialize(): Promise<H.IOResults> {
@@ -48,19 +50,25 @@ export class SceneMigration {
             SceneMigration.vocabOther   = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
         if (!SceneMigration.vocabDownload)
             SceneMigration.vocabDownload = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+        if (!SceneMigration.vocabMasterModel)
+            SceneMigration.vocabMasterModel = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
 
         if (!SceneMigration.vocabScene)
             return this.recordError('initialize', 'unable to load vocabulary for scene asset type');
         if (!SceneMigration.vocabModel)
-            return this.recordError('initialize', ' unable to load vocabulary for model asset type');
+            return this.recordError('initialize', 'unable to load vocabulary for model asset type');
         if (!SceneMigration.vocabOther)
-            return this.recordError('initialize', ' unable to load vocabulary for other asset type');
+            return this.recordError('initialize', 'unable to load vocabulary for other asset type');
         if (!SceneMigration.vocabDownload)
-            return this.recordError('initialize', ' unable to load vocabulary for download model purpose');
+            return this.recordError('initialize', 'unable to load vocabulary for download model purpose');
+        if (!SceneMigration.vocabMasterModel)
+            return this.recordError('initialize', 'unable to load vocabulary for master model purpose');
+
         return { success: true };
     }
 
-    async migrateScene(idUser: number, scenePackage: SceneMigrationPackage, doNotSendIngestionEvent?: boolean): Promise<SceneMigrationResults> {
+    async migrateScene(idUser: number, scenePackage: SceneMigrationPackage,
+        modelSource?: DBAPI.Model, doNotSendIngestionEvent?: boolean): Promise<SceneMigrationResults> {
         let testData: boolean | undefined = undefined;
 
         let asset: DBAPI.Asset[] | null | undefined = undefined;
@@ -72,6 +80,7 @@ export class SceneMigration {
 
         this.ICol = COL.CollectionFactory.getInstance();
         this.scenePackage = scenePackage;
+        this.modelSource = modelSource;
         this.log('migrateScene', 'Starting');
 
         this.userOwner = await CACHE.UserCache.getUser(idUser);
@@ -112,7 +121,7 @@ export class SceneMigration {
             EdanUUID: this.scenePackage.EdanUUID,
             PosedAndQCd: this.scenePackage.PosedAndQCd ?? false,
             ApprovedForPublication: this.scenePackage.ApprovedForPublication ?? false,
-            Title: null,
+            Title: this.scenePackage.SceneTitle ? this.scenePackage.SceneTitle : null,
             idScene: 0
         });
 
@@ -127,6 +136,14 @@ export class SceneMigration {
             this.log('migrateScene', `wired scene to idSystemObject ${this.scenePackage.idSystemObjectItem}`);
         }
 
+        // wire master model to scene, if supplied or computed
+        if (this.modelSource) {
+            const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.modelSource, this.scene);
+            if (!xref)
+                return this.recordError('migrateScene', `unable to wire master model ${H.Helpers.JSONStringify(this.modelSource)} to scene ${H.Helpers.JSONStringify(this.scene)}`);
+            this.log('migrateScene', `wired master model with idModel ${this.modelSource.idModel} to scene`);
+        }
+
         const sceneFileName: string = this.scenePackage.PackageName ? this.scenePackage.PackageName : `${this.scenePackage.EdanUUID}.zip`;
         const IAR: STORE.IngestAssetResult = await this.ingestStream(readStream, sceneFileName, true, this.scene, SceneMigration.vocabScene?.idVocabulary, doNotSendIngestionEvent); /* true -> allow zip containing scene package to be cracked open */
         if (!IAR.success)
@@ -136,7 +153,7 @@ export class SceneMigration {
         if (IAR.assetVersions)
             assetVersion = IAR.assetVersions;
 
-        const { success } = await SceneHelpers.handleComplexIngestionScene(this.scene, IAR, this.userOwner.idUser, undefined);
+        const { success } = await SceneHelpers.handleComplexIngestionScene(this.scene, IAR, this.userOwner.idUser, undefined, this.modelSource);
         if (!success)
             return this.recordError('migrateScene', `failed in handleComplexIngestionScene for ${H.Helpers.JSONStringify(this.scenePackage)}`);
 
@@ -151,20 +168,57 @@ export class SceneMigration {
             return resourceRes;
 
         let sceneSO: DBAPI.SystemObject | null = null;
-        // set license
+        // set license -- on subject!
         if (this.scenePackage.License) {
-            if (!sceneSO)
-                sceneSO = await this.scene.fetchSystemObject();
-            if (!sceneSO)
-                return this.recordError('migrateScene', `failed to fetch scene system object for ${H.Helpers.JSONStringify(this.scene)}`);
+            let idSystemObjects: number[] | null = null;
+            if (this.scenePackage.idSystemObjectItem) {
+                const itemSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(this.scenePackage.idSystemObjectItem);
+                if (!itemSO || !itemSO.idItem)
+                    return this.recordError('migrateScene', `failed to fetch item system object for id ${this.scenePackage.idSystemObjectItem}`);
+
+                const subjects: DBAPI.Subject[] | null = await DBAPI.Subject.fetchMasterFromItems([itemSO.idItem]);
+                if (!subjects || subjects.length === 0)
+                    return this.recordError('migrateScene', `failed to fetch subjects associated with item id ${itemSO.idItem}`);
+
+                for (const subject of subjects) {
+                    const subjectSO: DBAPI.SystemObject | null = await subject.fetchSystemObject();
+                    if (!subjectSO)
+                        return this.recordError('migrateScene', `failed to fetch subject system object for ${H.Helpers.JSONStringify(subject)}`);
+                    if (!idSystemObjects)
+                        idSystemObjects = [];
+                    idSystemObjects.push(subjectSO.idSystemObject);
+                }
+            }
+
+            // if we have no subjects, or if we have multiple subjects, assign the license to the scene
+            if (!idSystemObjects || idSystemObjects.length > 1) {
+                if (!sceneSO)
+                    sceneSO = await this.scene.fetchSystemObject();
+                if (!sceneSO)
+                    return this.recordError('migrateScene', `failed to fetch scene system object for ${H.Helpers.JSONStringify(this.scene)}`);
+                idSystemObjects = [sceneSO.idSystemObject];
+            }
 
             const License: DBAPI.License | undefined = await CACHE.LicenseCache.getLicenseByEnum(this.scenePackage.License);
             if (!License)
                 return this.recordError('migrateScene', `failed to fetch scene license from enum ${this.scenePackage.License} for ${H.Helpers.JSONStringify(this.scene)}`);
 
-            const assignmentSuccess: boolean = await DBAPI.LicenseManager.setAssignment(sceneSO.idSystemObject, License);
-            if (!assignmentSuccess)
-                return this.recordError('migrateScene', `failed to assign license ${this.scenePackage.License} for ${H.Helpers.JSONStringify(this.scene)}`);
+            // detect if any license has already been assigned, and if it differs, complain
+            for (const idSystemObject of idSystemObjects) {
+                const licenseAssignments: DBAPI.LicenseAssignment[] | null = await DBAPI.LicenseAssignment.fetchFromSystemObject(idSystemObject);
+                if (!licenseAssignments)
+                    return this.recordError('migrateScene', `failed to fetch assigned licenses for idSystemObject ${idSystemObject}`);
+                if (licenseAssignments.length > 0) {
+                    for (const licenseAssignment of licenseAssignments) {
+                        if (licenseAssignment.assignmentActive() && licenseAssignment.idLicense !== License.idLicense)
+                            return this.recordError('migrateScene', `license ${H.Helpers.JSONStringify(licenseAssignment)} already assigned to ${idSystemObject} does not match to-be-assigned license of ${H.Helpers.JSONStringify(License)}`);
+                    }
+                }
+
+                const assignmentSuccess: boolean = await DBAPI.LicenseManager.setAssignment(idSystemObject, License);
+                if (!assignmentSuccess)
+                    return this.recordError('migrateScene', `failed to assign license ${this.scenePackage.License} to idSystemObject ${idSystemObject}`);
+            }
         }
 
         // set publication status
@@ -199,9 +253,10 @@ export class SceneMigration {
     }
 
     private async fetchRemoteStream(url: string): Promise<NodeJS.ReadableStream | null> {
-        this.log('fetchRemoteStream', `Fetching ${url}`);
+        const encodedURL: string = encodeURI(url);
+        this.log('fetchRemoteStream', `Fetching ${encodedURL}`);
         try {
-            const res = await fetch(url);
+            const res = await fetch(encodedURL);
             this.log('fetchRemoteStream', 'Completed');
             return res.body;
         } catch (error) /* istanbul ignore next */ {
@@ -259,6 +314,30 @@ export class SceneMigration {
             return this.recordError('wireItemToScene', `unable to wire item ${JSON.stringify(itemDB)} to scene ${H.Helpers.JSONStringify(this.scene)}`);
 
         this.log('wireItemToScene', `Completed wiring ${JSON.stringify(itemDB)} to scene ${H.Helpers.JSONStringify(this.scene)}`);
+
+        // if we don't have an explicit model source, search for a master model that is the child of our item
+        if (!this.modelSource) {
+            const models: DBAPI.Model[] | null = await DBAPI.Model.fetchDerivedFromItems([itemDB.idItem]);
+            if (!models)
+                return this.recordError('wireItemToScene', `unable to compute models derived from item ${JSON.stringify(itemDB)}`);
+
+            let master: DBAPI.Model | undefined = undefined;
+            let masterCount: number = 0;
+            const idVPurposeMaster: number = SceneMigration.vocabMasterModel?.idVocabulary ?? -1;
+            for (const model of models) {
+                if (model.idVPurpose === idVPurposeMaster) {
+                    if (masterCount++ === 0)
+                        master = model;
+                }
+            }
+
+            if (masterCount === 1) {
+                this.modelSource = master;
+                this.log('wireItemToScene', `Found master model ${H.Helpers.JSONStringify(this.modelSource)} from item ${JSON.stringify(itemDB)}`);
+            } else
+                this.log('wireItemToScene', `Found ${masterCount} master models derived from item ${JSON.stringify(itemDB)}; unable to compute scene's master`);
+        }
+
         return { success: true };
     }
 
@@ -439,6 +518,13 @@ export class SceneMigration {
                 if (!await this.scene.update())
                     return this.recordError('extractSceneDetails', `unable to update scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
 
+                // compare this.scenePackage.SceneName with scene name in package
+                const sceneExtract: DBAPI.Scene = svx.SvxExtraction.extractScene();
+                if ((this.scene.Name ?? '') !== (sceneExtract.Name ?? ''))
+                    this.logError('extractSceneDetails', `Migration input scene name ${this.scene.Name} does not match svx.json name ${sceneExtract.Name}`);
+                if ((this.scene.Title ?? '') !== (sceneExtract.Title ?? ''))
+                    this.logError('extractSceneDetails', `Migration input scene title ${this.scene.Title} does not match svx.json title ${sceneExtract.Title}`);
+
                 this.log('extractSceneDetails', `updated scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
             }
         }
@@ -581,10 +667,12 @@ export class SceneMigration {
                 if (model) {
                     await this.createModelSceneXref(model, downloadType, FileSize);
                     const SOModel: DBAPI.SystemObject | null = await model.fetchSystemObject();
-                    if (SOModel)
-                        // launch si-packrat-inspect on this model -- do not await results
-                        WorkflowUtil.computeModelMetrics(model.Name, model.idModel, SOModel.idSystemObject, undefined, undefined, undefined /* FIXME */, this.userOwner?.idUser);
-                    else
+                    if (SOModel) {
+                        // Based on team's migration feedback from 1/23/2023, we skip running si-packrat-inspect on all scene resources
+                        this.log('fetchAndIngestResources', `skipping si-packrat-inspect on scene resource ${resource.filename}`);
+                        // // launch si-packrat-inspect on this model -- do not await results
+                        // WorkflowUtil.computeModelMetrics(model.Name, model.idModel, SOModel.idSystemObject, undefined, undefined, undefined, undefined /* FIXME */, this.userOwner?.idUser);
+                    } else
                         this.recordError('fetchAndIngestResources', `failed to fetch system object for model ${H.Helpers.JSONStringify(model)}`);
                 }
             }
@@ -658,18 +746,19 @@ export class SceneMigration {
             return null;
         }
 
-        // link each model as derived from both the scene and the master model
-        if (this.scene) {
-            const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.scene, model);
+        // wire master model to derived model
+        if (this.modelSource) {
+            const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.modelSource, model);
             if (!SOX1)
-                this.recordError('createModel', `unable to wire Scene ${H.Helpers.JSONStringify(this.scene)} and Model ${H.Helpers.JSONStringify(model)} together`);
+                this.recordError('createModel', `unable to wire master model ${H.Helpers.JSONStringify(this.modelSource)} and Model ${H.Helpers.JSONStringify(model)} together`);
         }
 
-        /*
-        const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.modelSource, model);
-        if (!SOX2)
-            return this.logError(`createSystemObjects unable to wire Model Source ${H.Helpers.JSONStringify(this.modelSource)} and Model ${H.Helpers.JSONStringify(model)} together`);
-        */
+        // wire scene to model
+        if (this.scene) {
+            const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(this.scene, model);
+            if (!SOX2)
+                this.recordError('createModel', `unable to wire Scene ${H.Helpers.JSONStringify(this.scene)} and Model ${H.Helpers.JSONStringify(model)} together`);
+        }
 
         this.log('createModel', 'Completed');
         return model;
@@ -704,10 +793,10 @@ export class SceneMigration {
     }
 
     private log(scope: string, message: string): void { // eslint-disable-line @typescript-eslint/no-explicit-any
-        LOG.info(`SceneMigration.${scope} (${this.scenePackage?.EdanUUID}): ${message}`, LOG.LS.eMIG);
+        LOG.info(`SceneMigration (${this.scenePackage?.EdanUUID}) ${scope}: ${message}`, LOG.LS.eMIG);
     }
 
     private logError(scope: string, message: string, error?: any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
-        LOG.error(`SceneMigration.${scope} (${this.scenePackage?.EdanUUID}): ${message}`, LOG.LS.eMIG, error);
+        LOG.error(`SceneMigration (${this.scenePackage?.EdanUUID}) ${scope}: ${message}`, LOG.LS.eMIG, error);
     }
 }

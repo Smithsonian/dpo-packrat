@@ -13,12 +13,12 @@ import { Metadata } from '../../../../../types/graphql';
 // import { eVocabularySetID } from '@dpo-packrat/common';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { useEdanUnitsNamed } from '../../../hooks/useDetailsView';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { sharedButtonProps } from '../../../../../utils/shared';
 import clsx from 'clsx';
 
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette, typography }) => createStyles({
     btn: {
         ...sharedButtonProps,
         width: 'fit-content',
@@ -48,7 +48,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         verticalAlign: 'bottom'
     },
     text: {
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8rem',
         '& .MuiInputBase-input': {
@@ -56,7 +56,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         }
     },
     autocompleteText: {
-        fontWeight: typography.fontWeightRegular,
+        fontWeight: 400,
         fontFamily: typography.fontFamily,
         fontSize: '0.8rem',
         '& .MuiAutocomplete-input:first-child': {
