@@ -3,6 +3,7 @@ import * as LOG from '../logger';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
+// import * as H from '../helpers';
 
 export type IdentifierDetails = {
     identifier: DBAPI.Identifier | null,
@@ -29,7 +30,6 @@ export class VerifierBase {
             LOG.error(`could not find identifier type in DB (identifier: ${identifier.idVIdentifierType} )`, LOG.LS.eTEST);
             return null;
         }
-        // if(debugLogs) console.log('Type:\t'+JSON.stringify(identifierType)); //temp
 
         // pull from enumeration from the CACHE (vocabulary id -> enum)
         const identifierTypeEnum: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(identifier.idVIdentifierType);
@@ -37,7 +37,6 @@ export class VerifierBase {
             LOG.error(`could not find enumerator for identifier type (${identifier.idVIdentifierType}) in Cache`, LOG.LS.eTEST);
             return null;
         }
-        // if(debugLogs) console.log('Enum:\t'+JSON.stringify(identifierTypeEnum,null,0));
 
         return { identifier, identifierType, identifierTypeEnum };
     }
@@ -142,38 +141,40 @@ export class VerifierBase {
         // TODO: relocate logic to central/shared location to benefit ingestion
 
         // see if Packrat's UnitEdan table has a direct match for this unit.
-        const edanUnits: DBAPI.UnitEdan[] | null = await DBAPI.UnitEdan.fetchFromName(edanUnit);
-        if(edanUnits && edanUnits.length==1 && edanUnits[0].idUnit) {
-            const result = DBAPI.Unit.fetch(edanUnits[0].idUnit);
+        const edanUnits: DBAPI.UnitEdan | null = await DBAPI.UnitEdan.fetchFromAbbreviation(edanUnit);
+        if(edanUnits && edanUnits.idUnit) { // && edanUnits.length==1 && edanUnits[0].idUnit) {
+            const result = DBAPI.Unit.fetch(edanUnits.idUnit);
             if(result) return result;
         }
 
-        LOG.info(`(WARNING) did not find EDAN unit in the UnitEdan DB. Doing less precise check... (${edanUnit}) `, LOG.LS.eTEST);
+        LOG.error(`did not find EDAN unit in the UnitEdan DB. investigate adding it... (${edanUnit}) `, LOG.LS.eTEST);
+        return null;
 
         // if edan unit not found then do a deeper (less precise) named search on Packrat's units
-        const packratUnits: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(edanUnit);
-        if(!packratUnits){
-            LOG.error(`did not find known Packrat unit for EDAN unit. (${edanUnit})`, LOG.LS.eTEST);
-            return null;
-        }
+        // const packratUnits: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(edanUnit);
+        // if(!packratUnits){
+        //     LOG.error(`did not find known Packrat unit for EDAN unit. (${edanUnit})`, LOG.LS.eTEST);
+        //     return null;
+        // }
 
         // make sure we didn't get multiples
-        if(packratUnits.length!=1) {
-            LOG.error(`received multiple hits for EDAN unit. Should only be 1 for subjects. Checking for direct match with our edanUnit. (${edanUnit} -> ${packratUnits.map(x=>{ return x.Abbreviation; }).join('|')})`, LOG.LS.eTEST);
+        // if(packratUnits.length!=1) {
+        //     LOG.error(`received multiple hits for EDAN unit. Should only be 1 for subjects. Checking for direct match with our edanUnit. (${edanUnit} -> ${packratUnits.map(x=>{ return x.Abbreviation; }).join('|')})`, LOG.LS.eTEST);
 
-            // now we check if our unit from packrat (for a subject) is in the returned results
-            for(const unit of packratUnits) {
-                // HACK: doing string compare to see if provided edanUnit string matches any of the returned Packrat units.
-                if(edanUnit===unit.Abbreviation || edanUnit===unit.Name) {
-                    LOG.info(`(WARNING) EDAN unit was found in returned Packrat units by comparing Name/Abbreviation. (${edanUnit})`, LOG.LS.eTEST);
-                    return unit;
-                }
-            }
-            return null;
-        }
+        //     // now we check if our unit from packrat (for a subject) is in the returned results
+        //     for(const unit of packratUnits) {
+        //         // HACK: doing string compare to see if provided edanUnit string matches any of the returned Packrat units.
+        //         if(edanUnit===unit.Abbreviation || edanUnit===unit.Name) {
+        //             LOG.info(`(WARNING) EDAN unit was found in returned Packrat units by comparing Name/Abbreviation. (${edanUnit})`, LOG.LS.eTEST);
+        //             LOG.info(`\n\tEDAN Unit: ${edanUnit}\n\tPackrat returns: ${H.Helpers.JSONStringify(packratUnits)}`, LOG.LS.eTEST);
+        //             return unit;
+        //         }
+        //     }
+        //     return null;
+        // }
 
         // return our first unit
-        return packratUnits[0];
+        // return packratUnits[0];
     }
 
     protected async getEdanRecordIdentifiers(record: COL.CollectionQueryResultRecord): Promise<IdentifierList | null> {
@@ -236,8 +237,6 @@ export class VerifierBase {
 
         // handle identifiers by checking if any returned by EDAN
         if(record.identifierMap) {
-
-            // console.log('EDAN: '+H.Helpers.JSONStringify(record.identifierMap));
             for (const [ label, content ] of record.identifierMap) {
 
                 // get our type for this identifier

@@ -2247,14 +2247,13 @@ import * as V from '../../utils/verifiers/EdanVerifier';
 
 function executeEdanVerifier(ICol: COL.ICollection) {
 
-    // bad: don't keep
+    jest.setTimeout(3000000);
+    // HACK: to simplify calling the verifier and satisfying JEST requirements
     test.only('Collections: EdanCollection.fieldCompare', async () => {
-        // const result = await executeVerifySubjectGuts(ICol);
-        const verifier: V.EdanVerifier = new V.EdanVerifier(ICol);
-        verifier.config.detailedLogs = false;
-        verifier.config.subjectLimit = 500;
-        verifier.config.systemObjectId = 463;
-        verifier.config.writeToFile = '../../EDAN-Verifier_Output.csv';
+        const verifierConfig: V.EdanVerifierConfig = {
+            collection: ICol,
+            writeToFile: '../../EDAN-Verifier_Output.csv' };
+        const verifier: V.EdanVerifier = new V.EdanVerifier(verifierConfig);
         const result: boolean = await verifier.verify();
         expect(result).toBeTruthy();
     });
