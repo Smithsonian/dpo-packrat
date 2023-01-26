@@ -455,9 +455,9 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                             }
                         }
 
-                        // As of 4/13/2021, Packrat will ignore Material Channels reported by Cook that do not reference UV Maps
-                        if (!materialUri && !UVMapEmbedded)
-                            continue;
+                        // Restored 1/25/2023 based on team feedback // As of 4/13/2021, Packrat will ignore Material Channels reported by Cook that do not reference UV Maps
+                        // if (!materialUri && !UVMapEmbedded)
+                        //     continue;
 
                         let AdditionalAttributes: string | null = null;
                         if (AddAttributes.length > 0) {
