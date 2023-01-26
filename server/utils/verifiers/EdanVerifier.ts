@@ -10,7 +10,11 @@ export type EdanVerifierConfig = {
     fixErrors?: boolean | undefined,        // do we try to fix errors (todo)
     subjectLimit?: number | undefined,      // total number of subjects to process
     systemObjectId?: number | undefined,    // limit execution to this specific SystemObject
-    writeToFile: string | undefined,        // should we dump the output to a specific path
+    writeToFile?: string | undefined,        // should we dump the output to a specific path
+};
+export type EdanVerifierResult = {
+    success: boolean,
+    csvOutput?: string | undefined,
 };
 
 //----------------------------------------------------------------
@@ -45,7 +49,7 @@ export class EdanVerifier extends V.VerifierBase {
             this.config.systemObjectId = -1; // limit execution to this specific SystemObject
     }
 
-    public async verify(): Promise<boolean> {
+    public async verify(): Promise<EdanVerifierResult> {
         // our structure and header for saved output to CSV
         const output: string[] = [];
         output.push('ID,MDM,URL,SUBJECT,STATUS,TEST,DESCRIPTION,PACKRAT,EDAN,NOTES');
@@ -54,11 +58,11 @@ export class EdanVerifier extends V.VerifierBase {
         const subjects: DBAPI.Subject[] | null = await DBAPI.Subject.fetchAll(); /* istanbul ignore if */
         if (!subjects) {
             LOG.error(`${this.config.logPrefix} could not get subjects from DB`, LOG.LS.eSYS);
-            return false;
+            return { success: false };
         }
         if(subjects.length<=0) {
             LOG.error(`${this.config.logPrefix} no subjects found in DB`, LOG.LS.eSYS);
-            return false;
+            return { success: false };
         }
         if(this.config.detailedLogs)
             LOG.info(`${this.config.logPrefix} Subjects: ${subjects.length}`, LOG.LS.eSYS);
@@ -417,6 +421,6 @@ export class EdanVerifier extends V.VerifierBase {
             });
         }
 
-        return true;
+        return { success: true, csvOutput: output.join('\n') };
     }
 }

@@ -2252,9 +2252,12 @@ function executeEdanVerifier(ICol: COL.ICollection) {
     test.only('Collections: EdanCollection.fieldCompare', async () => {
         const verifierConfig: V.EdanVerifierConfig = {
             collection: ICol,
-            writeToFile: '../../EDAN-Verifier_Output.csv' };
+            subjectLimit: 1,
+            // detailedLogs: true,
+            // writeToFile: '../../EDAN-Verifier_Output.csv'
+        };
         const verifier: V.EdanVerifier = new V.EdanVerifier(verifierConfig);
-        const result: boolean = await verifier.verify();
+        const result: V.EdanVerifierResult = await verifier.verify();
         expect(result).toBeTruthy();
     });
 
