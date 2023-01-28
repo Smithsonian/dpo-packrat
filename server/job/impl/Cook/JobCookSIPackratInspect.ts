@@ -146,27 +146,27 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             }
 
             const modelSource: DBAPI.Model = this.modelConstellation.Model;
-            if (modelSource.CountAnimations)
+            if (modelSource.CountAnimations !== null)
                 model.CountAnimations = modelSource.CountAnimations;
-            if (modelSource.CountCameras)
+            if (modelSource.CountCameras !== null)
                 model.CountCameras = modelSource.CountCameras;
-            if (modelSource.CountFaces)
+            if (modelSource.CountFaces !== null)
                 model.CountFaces = modelSource.CountFaces;
-            if (modelSource.CountTriangles)
+            if (modelSource.CountTriangles !== null)
                 model.CountTriangles = modelSource.CountTriangles;
-            if (modelSource.CountLights)
+            if (modelSource.CountLights !== null)
                 model.CountLights = modelSource.CountLights;
-            if (modelSource.CountMaterials)
+            if (modelSource.CountMaterials !== null)
                 model.CountMaterials = modelSource.CountMaterials;
-            if (modelSource.CountMeshes)
+            if (modelSource.CountMeshes !== null)
                 model.CountMeshes = modelSource.CountMeshes;
-            if (modelSource.CountVertices)
+            if (modelSource.CountVertices !== null)
                 model.CountVertices = modelSource.CountVertices;
-            if (modelSource.CountEmbeddedTextures)
+            if (modelSource.CountEmbeddedTextures !== null)
                 model.CountEmbeddedTextures = modelSource.CountEmbeddedTextures;
-            if (modelSource.CountLinkedTextures)
+            if (modelSource.CountLinkedTextures !== null)
                 model.CountLinkedTextures = modelSource.CountLinkedTextures;
-            if (modelSource.FileEncoding)
+            if (modelSource.FileEncoding !== null)
                 model.FileEncoding = modelSource.FileEncoding;
             if (modelSource.IsDracoCompressed != null)
                 model.IsDracoCompressed = modelSource.IsDracoCompressed;

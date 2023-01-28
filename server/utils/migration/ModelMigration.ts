@@ -74,7 +74,7 @@ export class ModelMigration {
             return res;
 
         if (!this.uniqueID || !this.masterModelGeometryFile || !this.masterModelFile)
-            return { success: false, error: 'No geometry present in model definition' };
+            return this.returnStatus('migrateModel', false, 'No geometry present in model definition');
 
         this.userOwner = await CACHE.UserCache.getUser(idUser);
         if (!this.userOwner)
@@ -156,7 +156,7 @@ export class ModelMigration {
     }
 
     private async extractMigrationInfo(): Promise<H.IOResults> {
-        let retValue: boolean = true;
+        // let retValue: boolean = true;
         let foundGeometry: boolean = false;
 
         let idSystemObjectItem: number | undefined = undefined;
@@ -172,8 +172,8 @@ export class ModelMigration {
             if (modelFile.geometry) {
                 const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
                 if (foundGeometry) {
-                    this.logStatus('extractMigrationInfo', false, `Skipping Secondary Geometry File ${filePath} vs already encountered ${this.masterModelLocation}`);
-                    retValue = false;
+                    this.logStatus('extractMigrationInfo', false, `WARN Skipping Secondary Geometry File ${filePath} vs already encountered ${this.masterModelLocation}`);
+                    // retValue = false; // Allow this to succeed
                     continue;
                 }
 
@@ -190,8 +190,10 @@ export class ModelMigration {
             // capture idSystemObject for item, if any, and ensure consistency
             if (idSystemObjectItem === undefined)
                 idSystemObjectItem = modelFile.idSystemObjectItem;
-            else if (idSystemObjectItem !== modelFile.idSystemObjectItem && modelFile.idSystemObjectItem)
-                return this.returnStatus('extractMigrationInfo', false, `called with inconsistent value for idSystemObjectItem (${modelFile.idSystemObjectItem}); expected ${idSystemObjectItem}`);
+            else if (idSystemObjectItem !== modelFile.idSystemObjectItem && modelFile.idSystemObjectItem) {
+                this.logStatus('extractMigrationInfo', false, `WARN called with inconsistent value for idSystemObjectItem (${modelFile.idSystemObjectItem}); expected ${idSystemObjectItem}`);
+                continue; // Just skip
+            }
 
             // capture testData flag, if set, and ensure consistency
             if (testData === undefined)
@@ -206,7 +208,8 @@ export class ModelMigration {
         }
 
         if (foundGeometry)
-            return { success: retValue, error: retValue ? undefined : 'Multiple Geometry Found' };
+            return { success: true };
+            // return { success: retValue, error: retValue ? undefined : 'Multiple Geometry Found' };
 
         this.uniqueID = undefined;
         this.masterModelGeometryFile = undefined;
@@ -476,12 +479,12 @@ export class ModelMigration {
         let results: H.IOResults = { success: true };
         for (const supportFile in this.supportFiles.values()) {
             if (!this.expectedSupportFiles.has(supportFile))
-                results = this.returnStatus('testSupportFiles', false, `Discovered support file ${supportFile} was not expected`);
+                results = this.returnStatus('testSupportFiles', false, `WARN Discovered support file ${supportFile} was not expected`);
         }
 
         for (const expectedSupportFile in this.expectedSupportFiles.values()) {
             if (!this.supportFiles.has(expectedSupportFile))
-                results = this.returnStatus('testSupportFiles', false, `Expected support file ${expectedSupportFile} was not discovered`, { filesMissing: true });
+                results = this.returnStatus('testSupportFiles', false, `WARN Expected support file ${expectedSupportFile} was not discovered`, { filesMissing: true });
         }
         return results;
     }
@@ -798,10 +801,10 @@ export class ModelMigration {
         if (modelFile.hash) {
             const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
             if (!hashRes.success) {
-                this.logStatus(`testFileExistence('${filePath}')`, false, `unable to compute hash ${hashRes.error}`);
+                this.logStatus(`testFileExistence('${filePath}')`, false, `WARN unable to compute hash ${hashRes.error}`);
                 success = false;
             } else if (hashRes.hash != modelFile.hash) {
-                this.logStatus(`testFileExistence('${filePath}')`, false, `computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
+                this.logStatus(`testFileExistence('${filePath}')`, false, `WARN computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
                 success = false;
             }
         }

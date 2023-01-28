@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as DBAPI from '../../db';
+import * as CACHE from '../../cache';
 import * as LOG from '../logger';
 import * as H from '../helpers';
 import * as SVX from '../../types/voyager';
 import * as THREE from 'three';
+import * as COMMON from '@dpo-packrat/common';
 
 export type SvxNonModelAsset = {
     uri: string;
@@ -76,6 +78,18 @@ export class SvxExtraction {
             ApprovedForPublication: false,
             idScene: 0
         });
+    }
+
+    extractUnits(): COMMON.eVocabularyID | undefined {
+        // scenes[scene].units
+        if (!this.document.scene)
+            return undefined;
+        if (!this.document.scenes)
+            return undefined;
+        if (this.document.scene >= this.document.scenes.length)
+            return undefined;
+        const scene = this.document.scenes[this.document.scene];
+        return CACHE.VocabularyCache.mapUnits(scene.units);
     }
 
     /** Pass in meta.collection['title'] and meta.collection['titles'] */
