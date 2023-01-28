@@ -1421,11 +1421,12 @@ class IngestDataWorker extends ResolverBase {
                     // In this case, we will receive the scene .svx.json file, supporting HTML, images, CSS, as well as models.
                     // Each model asset needs a Model and ModelSceneXref, and the asset in question should be owned by the model.
                     if (!AVInfo.isAttachment && SOBased instanceof DBAPI.Scene) {
-                        const { success, transformUpdated: modelTransformUpdated } = await SceneHelpers.handleComplexIngestionScene(SOBased, IAR, user.idUser, idAssetVersion, undefined);
+                        const { success, error, transformUpdated: modelTransformUpdated } = await SceneHelpers.handleComplexIngestionScene(SOBased, IAR, user.idUser, idAssetVersion, undefined);
                         if (success && modelTransformUpdated) {
                             transformUpdated = true;
                             LOG.info(`ingestData set transformUpdated to true from idAssetVersion ${idAssetVersion} for ${H.Helpers.JSONStringify(SOBased)}`, LOG.LS.eGQL);
-                        }
+                        } else if (!success)
+                            LOG.error(`ingestData use of SceneHelpers.handleComplexIngestionScene failed: ${error}`, LOG.LS.eGQL);
                     }
                 }
             }

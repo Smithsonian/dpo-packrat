@@ -295,7 +295,7 @@ class Migrator {
             LOG.info(message, LOG.LS.eMIG);
         else {
             this.success = false;
-            LOG.error(message, LOG.LS.eMIG, error);
+            LOG.error(`FAIL ${message}`, LOG.LS.eMIG, error);
         }
 
         this.results += `${message}<br/>\n`;

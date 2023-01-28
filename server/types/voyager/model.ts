@@ -1,7 +1,7 @@
 /* eslint-disable quotes, @typescript-eslint/brace-style */
 /**
  * NOTE: this file is part of the definition of a Voyager scene, found in a .svx.json file.
- * This was imported from Voyager's source/client/schema on 4/29/2021. It was then modified,
+ * This was imported from Voyager's source/client/schema on 1/27/2023. It was then modified,
  * minimally, to allow for use by Packrat. Ideally, in the future, we will extract out the
  * definition of this shared file format for use by both projects.
  */
@@ -24,7 +24,7 @@
  */
 
 // import { Dictionary } from "@ff/core/types";
-// import { ColorRGB, ColorRGBA, EUnitType, TUnitType, Vector3, Vector4 } from "./common";
+// import { ColorRGBA, EUnitType, TUnitType, Vector3, Vector4 } from "./common";
 type Dictionary<T> = Record<string, T>;
 import { ColorRGBA, TUnitType, Vector3, Vector4 } from "./common";
 
@@ -37,8 +37,8 @@ export type TNormalSpaceType = "Tangent" | "Object";
 export enum EDerivativeUsage { Image2D, Web3D, App3D, iOSApp3D, Print3D, Editorial3D }
 export type TDerivativeUsage = "Image2D" | "Web3D" | "App3D" | "iOSApp3D" | "Print3D" | "Editorial3D";
 
-export enum EDerivativeQuality { Thumb, Low, Medium, High, Highest, LOD, Stream, AR }
-export type TDerivativeQuality = "Thumb" | "Low" | "Medium" | "High" | "Highest" | "LOD" | "Stream" |"AR";
+export enum EDerivativeQuality { Thumb, Low, Medium, High, Highest, AR }
+export type TDerivativeQuality = "Thumb" | "Low" | "Medium" | "High" | "Highest" | "AR";
 
 export enum EAssetType { Model, Geometry, Image, Texture, Points, Volume }
 export type TAssetType = "Model" | "Geometry" | "Image" | "Texture" | "Points" | "Volume";
@@ -58,6 +58,7 @@ export interface IModel
 
     visible?: boolean;
     renderOrder?: number;
+    overlayMap?: number;
     shadowSide?: TSideType;
     translation?: Vector3;
     rotation?: Vector4;

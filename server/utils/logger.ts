@@ -144,31 +144,31 @@ function configureLogger(logPath: string | null): void {
 
     console.debug = function(...args) {
         if (!ending)
-            info(`console.debug: ${JSON.stringify(args)}`, LS.eCON);
+            info(`console.debug: ${handleConsoleArgs(args)}`, LS.eCON);
         return _debug.apply(console, args);
     };
 
     console.info = function(...args) {
         if (!ending)
-            info(`console.info: ${JSON.stringify(args)}`, LS.eCON);
+            info(`console.info: ${handleConsoleArgs(args)}`, LS.eCON);
         return _info.apply(console, args);
     };
 
     console.log = function(...args) {
         if (!ending)
-            info(`console.log: ${JSON.stringify(args)}`, LS.eCON);
+            info(`console.log: ${handleConsoleArgs(args)}`, LS.eCON);
         return _log.apply(console, args);
     };
 
     console.warn = function(...args) {
         if (!ending)
-            info(`console.warn: ${JSON.stringify(args)}`, LS.eCON);
+            info(`console.warn: ${handleConsoleArgs(args)}`, LS.eCON);
         return _warn.apply(console, args);
     };
 
     console.error = function(...args) {
         if (!ending)
-            error(`console.error: ${JSON.stringify(args)}`, LS.eCON);
+            error(`console.error: ${handleConsoleArgs(args)}`, LS.eCON);
         return _error.apply(console, args);
     };
 
@@ -179,6 +179,28 @@ function configureLogger(logPath: string | null): void {
 
     info('**************************', LS.eSYS);
     info(`Writing logs to ${path.resolve(logPath)}`, LS.eSYS);
+}
+
+function handleConsoleArgs(args): string {
+    if (typeof(args) === 'string')
+        return args;
+    if (!Array.isArray(args))
+        return JSON.stringify(args, null, 0);
+
+    let first: boolean = true;
+    let value: string = '';
+    for (const arg of args) {
+        if (first)
+            first = false;
+        else
+            value += ', ';
+
+        if (typeof(arg) === 'string')
+            value += arg;
+        else
+            value += JSON.stringify(arg);
+    }
+    return value;
 }
 
 configureLogger(null);
