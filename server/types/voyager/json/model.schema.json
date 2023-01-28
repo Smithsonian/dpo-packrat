@@ -137,8 +137,6 @@
                         "Medium",
                         "High",
                         "Highest",
-                        "LOD",
-                        "Stream",
                         "AR"
                     ]
                 },
@@ -227,6 +225,9 @@
             "type": "boolean"
         },
         "renderOrder": {
+            "type": "number"
+        },
+        "overlayMap": {
             "type": "number"
         },
         "shadowSide": {
