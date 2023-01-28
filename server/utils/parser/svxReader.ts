@@ -32,31 +32,17 @@ export class SvxExtraction {
     nonModelAssets: SvxNonModelAsset[] | null = null;
 
     extractScene(): DBAPI.Scene {
-        // first, attempt to extract Name and Title from metas -> collection -> title, sceneTitle
+        // first, attempt to extract Name and Title from metas -> collection -> title(s), metas -> collection -> titlesceneTitle
         let title: string = '';
         let sceneTitle: string = '';
         if (this.document.metas !== undefined) {
             for (const meta of this.document.metas) {
                 if (meta.collection) {
-                    if (title === '') {
-                        const collectionTitle = meta.collection['title'];
-                        if (collectionTitle) {
-                            if (typeof collectionTitle === 'string')
-                                title = collectionTitle;
-                            else if (typeof collectionTitle === 'object') {
-                                if (collectionTitle['EN'] && typeof collectionTitle['EN'] === 'string')
-                                    title = collectionTitle['EN'];
-                                else {
-                                    for (const language in collectionTitle) {
-                                        if (typeof collectionTitle[language]  === 'string') {
-                                            title = collectionTitle[language];
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    if (title === '') // first, try meta.collection.title
+                        title = this.extractTitleFromCollectionElement(meta.collection['title']);
+                    if (title === '') // next, try meta.collection.titles
+                        title = this.extractTitleFromCollectionElement(meta.collection['titles']);
+
                     if (sceneTitle === '' && meta.collection['sceneTitle'])
                         sceneTitle = meta.collection['sceneTitle'];
                     if (title && sceneTitle)
@@ -90,6 +76,26 @@ export class SvxExtraction {
             ApprovedForPublication: false,
             idScene: 0
         });
+    }
+
+    /** Pass in meta.collection['title'] and meta.collection['titles'] */
+    private extractTitleFromCollectionElement(collectionTitle: any): string {
+        if (!collectionTitle)
+            return '';
+
+        if (typeof collectionTitle === 'string')
+            return collectionTitle;
+        else if (typeof collectionTitle === 'object') {
+            if (collectionTitle['EN'] && typeof collectionTitle['EN'] === 'string')
+                return collectionTitle['EN'];
+            else {
+                for (const language in collectionTitle) {
+                    if (typeof collectionTitle[language]  === 'string')
+                        return collectionTitle[language];
+                }
+            }
+        }
+        return '';
     }
 
     private constructor(document: SVX.IDocument) {

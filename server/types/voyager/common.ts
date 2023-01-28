@@ -1,7 +1,7 @@
 /* eslint-disable quotes, @typescript-eslint/brace-style */
 /**
  * NOTE: this file is part of the definition of a Voyager scene, found in a .svx.json file.
- * This was imported from Voyager's source/client/schema on 4/29/2021. It was then modified,
+ * This was imported from Voyager's source/client/schema on 1/27/2023. It was then modified,
  * minimally, to allow for use by Packrat. Ideally, in the future, we will extract out the
  * definition of this shared file format for use by both projects.
  */
@@ -33,11 +33,13 @@ export type Quaternion = Vector4;
 export type ColorRGB = Vector3;
 export type ColorRGBA = Vector4;
 
-export type TLanguageType = "EN" | "ES" | "DE";
-export enum ELanguageType { EN, ES, DE }
+export type TLanguageType = "EN" | "ES" | "DE" | "NL" | "JA";
+export enum ELanguageType { EN, ES, DE, NL, JA }
 export enum ELanguageStringType {
     EN = 'English',
     ES = 'Spanish (Español)',
     DE = 'German (Deutsche)',
+    NL = 'Dutch (Nederlands)',
+    JA = 'Japanese (日本語)',
 }
 export const DEFAULT_LANGUAGE = "EN";
