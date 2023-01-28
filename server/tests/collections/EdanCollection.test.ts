@@ -27,7 +27,8 @@ enum eTestType {
     e3DPackageFetchTest,
     eScrapeDPO,
     eScrapeMigration,
-    eScrapeEDANListsMigration,
+    eScrapeEDANListsContents,
+    eScrapeEDANListsIDs,
     eScrapeEDAN,
     eOneOff,
 }
@@ -94,9 +95,15 @@ describe('Collections: EdanCollection', () => {
             });
             break;
 
-        case eTestType.eScrapeEDANListsMigration:
-            test('Collections: EdanCollection.scrape edanlists Migration', async () => {
+        case eTestType.eScrapeEDANListsContents:
+            test('Collections: EdanCollection.scrape edanlists Contents for Migration', async () => {
                 await scrapeDPOEdanLists(ICol, 'd:\\Work\\SI\\EdanScrape.EdanListsMigration.txt');
+            });
+            break;
+
+        case eTestType.eScrapeEDANListsIDs:
+            test('Collections: EdanCollection.scrape edanists IDs for Migration', async () => {
+                await scrapeDPOIDs(ICol, eTYPE, 'd:\\Work\\SI\\EdanScrape.EdanListsIDs.txt');
             });
             break;
 
@@ -421,6 +428,7 @@ async function scrapeDPOIDs(ICol: COL.ICollection, eTYPE: eTestType, fileName: s
     switch (eTYPE) {
         case eTestType.eScrapeDPO: await scrapeDPOEdanMDMWorker(ICol, IDLabelSet, records, true); gatherRaw = true; break;
         case eTestType.eScrapeMigration: await scrapeDPOIDsWorker(ICol, IDLabelSet, records); break;
+        case eTestType.eScrapeEDANListsIDs: await scrapeDPOEdanListIDsWorker(ICol, IDLabelSet, records); break;
     }
 
     const IDLabels: string[] = Array.from(IDLabelSet).sort((a, b) => a.localeCompare(b));
@@ -2328,7 +2336,112 @@ async function scrapeDPOIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200148', 'dpo_3d_200148', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200149', 'dpo_3d_200149', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200150', 'dpo_3d_200150', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '173', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040003', '173', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200006', '141', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040000', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040001', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040003', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_10250729', '204', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3572783', '204', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200035', '399', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200036', '399', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8477947', '388', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8478070', '388', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904639', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904641', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904656', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449492', '120', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449498', '120', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1927378', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939648', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939650', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939654', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1442896', '923', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1121083', '936', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_748896', '936', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1119960', '937', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1119964', '937', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1691697', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1692144', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1692150', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841743', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841746', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841749', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841750', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841752', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1277512', '903', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1277513', '903', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1067111', '920', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1067112', '920', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801982', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801983', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801984', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681358', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681359', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681360', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681361', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681362', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1296216', '910', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1296217', '910', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289214', '907', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289216', '907', IDLabelSet, records);
     // #endregion
+}
+
+async function scrapeDPOEdanListIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, records: EdanResult[]): Promise<void> {
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '173', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040003', '173', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200006', '141', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040000', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040001', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040003', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_10250729', '204', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3572783', '204', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200035', '399', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200036', '399', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8477947', '388', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8478070', '388', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904639', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904641', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904656', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449492', '120', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449498', '120', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1927378', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939648', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939650', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939654', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1442896', '923', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1121083', '936', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_748896', '936', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1119960', '937', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1119964', '937', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1691697', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1692144', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1692150', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841743', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841746', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841749', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841750', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841752', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1277512', '903', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1277513', '903', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1067111', '920', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1067112', '920', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801982', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801983', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801984', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681358', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681359', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681360', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681361', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681362', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1296216', '910', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1296217', '910', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289214', '907', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289216', '907', IDLabelSet, records);
 }
 
 // #region Handle Results
