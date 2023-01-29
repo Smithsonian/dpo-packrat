@@ -13,8 +13,8 @@ export class EventConsumerPublish extends EventConsumer {
         super(engine);
     }
 
-    protected async eventWorker<Key, Value>(data: EVENT.IEventData<Key, Value>[]): Promise<void> {
-        // inform audit interface of authentication event
+    protected async eventWorker<Value>(data: EVENT.IEventData<Value>[]): Promise<void> {
+        // inform audit interface of publishing event
         for (const dataItem of data) {
             if (typeof(dataItem.key) !== 'number') {
                 LOG.error(`EventConsumerPublish.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
@@ -22,8 +22,8 @@ export class EventConsumerPublish extends EventConsumer {
             }
 
             switch (dataItem.key) {
-                case EVENT.eEventKey.eSceneQCd:
-                    if (!await this.publishScene(dataItem.value))
+                case EVENT.eEventKey.ePubSceneQCd:
+                    if (!await this.sceneQCd(dataItem.value))
                         LOG.error('EventConsumerPublish.eventWorker failed publishing scene', LOG.LS.eEVENT);
                     break;
 
@@ -34,7 +34,7 @@ export class EventConsumerPublish extends EventConsumer {
         }
     }
 
-    protected async publishScene<Value>(dataItemValue: Value): Promise<boolean> {
+    protected async sceneQCd<Value>(dataItemValue: Value): Promise<boolean> {
         const audit: DBAPI.Audit = EventConsumerDB.convertDataToAudit(dataItemValue);
 
         let idSystemObject: number | null = audit.idSystemObject;
@@ -47,17 +47,17 @@ export class EventConsumerPublish extends EventConsumer {
             }
         }
 
-        LOG.info(`EventConsumerPublish.publishScene Scene QCd ${audit.idDBObject}`, LOG.LS.eEVENT);
+        LOG.info(`EventConsumerPublish.sceneQCd ${audit.idDBObject}`, LOG.LS.eEVENT);
         if (audit.idAudit === 0)
             audit.create(); // don't use await so this happens asynchronously
 
         if (!idSystemObject) {
-            LOG.error(`EventConsumerPublish.publishScene received eSceneQCd event for scene without idSystemObject ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eEVENT);
+            LOG.error(`EventConsumerPublish.sceneQCd received ePubSceneQCd event for scene without idSystemObject ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eEVENT);
             return false;
         }
 
         if (audit.getDBObjectType() !== COMMON.eSystemObjectType.eScene) {
-            LOG.error(`EventConsumerPublish.publishScene received eSceneQCd event for non scene object ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eEVENT);
+            LOG.error(`EventConsumerPublish.sceneQCd received ePubSceneQCd event for non scene object ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eEVENT);
             return false;
         }
 

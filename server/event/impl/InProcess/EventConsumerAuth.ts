@@ -10,7 +10,7 @@ export class EventConsumerAuth extends EventConsumer {
         super(engine);
     }
 
-    protected async eventWorker<Key, Value>(data: EVENT.IEventData<Key, Value>[]): Promise<void> {
+    protected async eventWorker<Value>(data: EVENT.IEventData<Value>[]): Promise<void> {
         // inform audit interface of authentication event
         for (const dataItem of data) {
             if (typeof(dataItem.key) !== 'number') {

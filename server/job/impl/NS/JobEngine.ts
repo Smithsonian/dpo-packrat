@@ -7,6 +7,7 @@ import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import * as REP from '../../../report/interface';
+import * as EVENT from '../../../event/interface';
 import * as COMMON from '@dpo-packrat/common';
 
 import * as NS from 'node-schedule';
@@ -23,7 +24,18 @@ class JobData {
     }
 }
 
+interface JobEventData {
+    idJobRun: number,
+    obj: any
+}
+
 export class JobEngine implements JOB.IJobEngine {
+    static setEventEngine(eventEngine: EVENT.IEventEngine): void {
+        LOG.info('JobEngine.setEventEngine called', LOG.LS.eJOB);
+        JobEngine.eventEngine = eventEngine;
+    }
+    private static eventEngine: EVENT.IEventEngine | null = null;       // don't import EventFactory to avoid circular dependencies
+    private eventProducer: EVENT.IEventProducer | null = null;
     private jobMap: Map<number, JobData> = new Map<number, JobData>();  // map from JobRun.idJobRun to JobData
 
     // #region IJobEngine interface
@@ -96,6 +108,11 @@ export class JobEngine implements JOB.IJobEngine {
             LOG.info(`JobEngine.jobCompleted [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`, LOG.LS.eJOB);
         }
     }
+
+    async jobEvent<Value>(_dataItem: EVENT.IEventData<Value>): Promise<void> {
+        // Expect Value to be of type JobEventData
+    }
+
     // #endregion
 
     // #region DB Record Maintenance
@@ -206,5 +223,45 @@ export class JobEngine implements JOB.IJobEngine {
 
         return job;
     }
+    // #endregion
+
+    // #region Job Events
+    async sendJobEvent(idJobRun: number, obj: any, key: EVENT.eEventKey): Promise<boolean> {
+        if (!this.eventProducer && JobEngine.eventEngine)
+            this.eventProducer = await JobEngine.eventEngine.createProducer();
+        if (!this.eventProducer) {
+            LOG.error('JobEngine.sendJobEvent unable to fetch event producer', LOG.LS.eJOB);
+            return false;
+        }
+
+        const eventDate: Date = new Date();
+        switch (key) {
+            case EVENT.eEventKey.eJobCreated:
+            case EVENT.eEventKey.eJobRunning:
+            case EVENT.eEventKey.eJobUpdated:
+            case EVENT.eEventKey.eJobWaiting:
+            case EVENT.eEventKey.eJobDone:
+            case EVENT.eEventKey.eJobError:
+            case EVENT.eEventKey.eJobCancelled:
+                break;
+            default:
+                LOG.error(`JobEngine.sendJobEvent asked to send a non-job event ${EVENT.eEventKey[key]}`, LOG.LS.eJOB);
+                return false;
+        }
+
+        const value: JobEventData = {
+            idJobRun,
+            obj
+        };
+
+        const data: EVENT.IEventData<JobEventData> = {
+            eventDate,
+            key,
+            value,
+        };
+        this.eventProducer.send(EVENT.eEventTopic.eJob, [data]);
+        return true;
+    }
+
     // #endregion
 }

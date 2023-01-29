@@ -94,7 +94,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 const Scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(systemObject.idScene);
                 if (!Scene)
                     LOG.error(`getDetailsTabForObject(${systemObject.idSystemObject}) unable to compute Scene details`, LOG.LS.eGQL);
-                const User: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eSceneQCd);
+                const User: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.ePubSceneQCd);
                 const sceneCanBeQCdRes: H.IOResults = await SH.SceneHelpers.sceneCanBeQCd(systemObject.idScene);
                 if (!sceneCanBeQCdRes.success && sceneCanBeQCdRes.error)
                     LOG.error(`getDetailsTabForObject(${systemObject.idSystemObject}) encountered error during SceneHelpers.sceneCanBeQCd: ${sceneCanBeQCdRes.error}`, LOG.LS.eGQL);

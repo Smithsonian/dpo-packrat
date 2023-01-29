@@ -14,7 +14,7 @@ export class EventConsumerDB extends EventConsumer {
         super(engine);
     }
 
-    protected async eventWorker<Key, Value>(data: EVENT.IEventData<Key, Value>[]): Promise<void> {
+    protected async eventWorker<Value>(data: EVENT.IEventData<Value>[]): Promise<void> {
         // inform audit interface of db event
         // inform cache and solr of systemobject events
         for (const dataItem of data) {

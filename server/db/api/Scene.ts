@@ -57,7 +57,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
             // Audit if someone marks this scene as QC'd
             if (ApprovedForPublication)
-                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
+                this.audit(eEventKey.ePubSceneQCd); // don't await, allow this to continue asynchronously
             return true;
         } catch (error) /* istanbul ignore next */ {
             return this.logError('create', error);
@@ -82,7 +82,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
             // Audit if someone marks this scene as QC'd
             if (ApprovedForPublication && !ApprovedForPublicationOrig)
-                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
+                this.audit(eEventKey.ePubSceneQCd); // don't await, allow this to continue asynchronously
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             return this.logError('update', error);
