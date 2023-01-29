@@ -190,6 +190,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (23, 1, 'Ingest
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (23, 2, 'Ingestion: Ingest Object');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 2, 'Ingestion');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 3, 'Upload');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 4, 'Verifier');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 2, 'Image');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 1, 'mm');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 2, 'cm');

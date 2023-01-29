@@ -237,6 +237,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eWorkflowTypeCookJob:                    testVocabulary(vocabulary, 'Cook Job'); break;
                     case COMMON.eVocabularyID.eWorkflowTypeIngestion:                  testVocabulary(vocabulary, 'Ingestion'); break;
                     case COMMON.eVocabularyID.eWorkflowTypeUpload:                     testVocabulary(vocabulary, 'Upload'); break;
+                    case COMMON.eVocabularyID.eWorkflowTypeVerifier:                   testVocabulary(vocabulary, 'Verifier'); break;
 
                     case COMMON.eVocabularyID.eWorkflowStepTypeStart:                  testVocabulary(vocabulary, 'Start'); break;
 
@@ -795,6 +796,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularySetID.eWorkflowType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeIngestion, COMMON.eVocabularySetID.eWorkflowType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeUpload, COMMON.eVocabularySetID.eWorkflowType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeVerifier, COMMON.eVocabularySetID.eWorkflowType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowStepTypeStart, COMMON.eVocabularySetID.eWorkflowStepWorkflowStepType)).toBeTruthy();
 
             expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion, COMMON.eVocabularySetID.eWorkflowEvent)).toBeTruthy();

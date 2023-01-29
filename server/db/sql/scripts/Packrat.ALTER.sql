@@ -484,3 +484,7 @@ UPDATE Unit SET ARKPrefix = 'uj5' WHERE Abbreviation = 'OCIO';
 ALTER TABLE ModelSceneXref MODIFY COLUMN `NAME` varchar(512) DEFAULT NULL;
 
 -- 2022-11-11 Deployed to Staging and Production
+
+-- 2023-01-29 Eric
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 4, 'Verifier');
+ALTER TABLE WorkflowRecord ADD 'Name' varchar(255);

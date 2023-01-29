@@ -7,6 +7,7 @@ export interface WorkflowParameters {
     idSystemObject?: number[] | undefined;            // array of system objects as input to this workflow; null for jobs not acting on system objects
     idProject?: number | undefined;                   // Project.idProject of project, if any
     idUserInitiator?: number | undefined;             // User.idUser of initiator, if any
+    autoStart?: boolean | undefined;                  // should the workflow engine immediately start the workflow
     parameters?: any | undefined;                     // Additional workflow parameters; each workflow template should define their own parameter interface
 }
 

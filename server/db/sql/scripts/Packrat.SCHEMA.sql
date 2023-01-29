@@ -626,6 +626,7 @@ CREATE TABLE IF NOT EXISTS `WorkflowReport` (
   `idWorkflow` int(11) NOT NULL,
   `MimeType` varchar(256) NOT NULL,
   `Data` longtext NOT NULL,
+  'Name' varchar(256) DEFAULT NULL, -- ADDED: EM (2023-01-29)
   PRIMARY KEY (`idWorkflowReport`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

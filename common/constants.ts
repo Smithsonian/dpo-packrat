@@ -175,6 +175,7 @@ export enum eVocabularyID {
     eWorkflowTypeCookJob,
     eWorkflowTypeIngestion,
     eWorkflowTypeUpload,
+    eWorkflowTypeVerifier,  // ADDED: EM (2023-01-28)
     eWorkflowStepTypeStart,
     eWorkflowEventIngestionUploadAssetVersion,
     eWorkflowEventIngestionIngestObject,

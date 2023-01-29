@@ -8,6 +8,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
     idWorkflow!: number;
     MimeType!: string;
     Data!: string;
+    Name!: string | null;
 
     constructor(input: WorkflowReportBase) {
         super(input);
@@ -43,6 +44,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
                     Workflow: { connect: { idWorkflow }, },
                     MimeType,
                     Data,
+                    Name: this.Name,
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {

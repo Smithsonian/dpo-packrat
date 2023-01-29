@@ -198,7 +198,19 @@ export class Downloader {
         const mimeType: string = WFReports[0].MimeType;
         const idWorkflowReport: number = WFReports[0].idWorkflowReport;
 
-        this.response.setHeader('Content-disposition', `inline; filename=WorkflowReport.${idWorkflowReport}.htm`);
+        // get/set our filename depending on if it's present or not
+        let filename: string = `WorkflowReport.${idWorkflowReport}`;
+        if(WFReports[0].Name) filename = WFReports[0].Name;
+
+        // add our extension based on mimeType
+        switch(mimeType) {
+            case 'text/html': filename += '.htm'; break;
+            case 'text/csv':  filename += '.csv'; break;
+            default: filename += '.htm';
+        }
+
+        // set our properties and configure the response
+        this.response.setHeader('Content-disposition', `inline; filename=${filename}`);
         if (mimeType)
             this.response.setHeader('Content-type', mimeType);
         let first: boolean = true;
