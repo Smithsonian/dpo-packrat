@@ -10,7 +10,7 @@ export type EdanVerifierConfig = {
     fixErrors?: boolean | undefined,        // do we try to fix errors (todo)
     subjectLimit?: number | undefined,      // total number of subjects to process
     systemObjectId?: number | undefined,    // limit execution to this specific SystemObject
-    writeToFile?: string | undefined,        // should we dump the output to a specific path
+    writeToFile?: string | undefined,       // should we dump the output to a specific path
 };
 export type EdanVerifierResult = {
     success: boolean,

@@ -28,7 +28,8 @@ export class ReportFactory {
                     idWorkflow,
                     MimeType: 'text/html',
                     Data: '',
-                    idWorkflowReport: 0
+                    idWorkflowReport: 0,
+                    Name: null
                 });
                 if (!await workflowReport.create()) {
                     LOG.error(`ReportFactory.getReport() unable to create WorkflowReport for workflow with ID ${JSON.stringify(idWorkflow)}`, LOG.LS.eRPT);
