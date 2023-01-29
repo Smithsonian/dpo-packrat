@@ -1,16 +1,15 @@
 import { IEventProducer } from './IEventProducer';
 import { IEventConsumer } from './IEventConsumer';
-import { eEventTopic } from './EventEnums';
+import { eEventTopic, eEventKey } from './EventEnums';
 
-export interface IEventData<Key, Value> {
+export interface IEventData<Value> {
     eventDate: Date;
-    key: Key;
+    key: eEventKey;
     value: Value;
 }
 
 export interface IEventEngine {
     createProducer(): Promise<IEventProducer | null>;
-    createConsumer(): Promise<IEventConsumer | null>;
-    /** Registers consumer for eTopic */
-    createConsumer(eTopic: eEventTopic): Promise<IEventConsumer | null>;
+    registerConsumer(eTopic: eEventTopic, consumer: IEventConsumer): Promise<boolean>;
+    unregisterConsumer(eTopic: eEventTopic, consumer: IEventConsumer): Promise<boolean>;
 }

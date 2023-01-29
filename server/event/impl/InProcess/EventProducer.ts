@@ -7,7 +7,7 @@ export class EventProducer implements EVENT.IEventProducer {
         this.engine = engine;
     }
 
-    async send<Key, Value>(eTopic: EVENT.eEventTopic, data: EVENT.IEventData<Key, Value>[]): Promise<void> {
+    async send<Value>(eTopic: EVENT.eEventTopic, data: EVENT.IEventData<Value>[]): Promise<void> {
         this.engine.receive(eTopic, data); // call without await, allow to be async
     }
 }

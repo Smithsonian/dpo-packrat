@@ -269,7 +269,7 @@ export enum eAuditType {
     eDBUpdate = 2,
     eDBDelete = 3,
     eAuthLogin = 4,
-    eSceneQCd = 5,
+    ePubSceneQCd = 5,
     eHTTPDownload = 6,
     eHTTPUpload = 7,
     eAuthFailed = 8,

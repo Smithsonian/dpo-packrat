@@ -11,8 +11,8 @@ export class EventConsumerHTTP extends EventConsumer {
         super(engine);
     }
 
-    protected async eventWorker<Key, Value>(data: EVENT.IEventData<Key, Value>[]): Promise<void> {
-        // inform audit interface of authentication event
+    protected async eventWorker<Value>(data: EVENT.IEventData<Value>[]): Promise<void> {
+        // inform audit interface of download & upload events
         for (const dataItem of data) {
             if (typeof(dataItem.key) !== 'number') {
                 LOG.error(`EventConsumerHTTP.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);

@@ -16,11 +16,11 @@ export abstract class EventConsumer implements EVENT.IEventConsumer {
     }
 
     // #region InProcess EventConsumer interface
-    protected abstract eventWorker<Key, Value>(data: EVENT.IEventData<Key, Value>[]): Promise<void>;
+    protected abstract eventWorker<Value>(data: EVENT.IEventData<Value>[]): Promise<void>;
     // #endregion
 
     /** Called for consumer to poll event system for events */
-    async poll<Key, Value>(eTopic: EVENT.eEventTopic, timeout: number): Promise<EVENT.IEventData<Key, Value>[] | null> {
+    async poll<Value>(eTopic: EVENT.eEventTopic, timeout: number): Promise<EVENT.IEventData<Value>[] | null> {
         await this.engine.registerConsumer(eTopic, this);
 
         const waitMutex: MutexInterface = withTimeout(new Mutex(), timeout);
@@ -49,7 +49,7 @@ export abstract class EventConsumer implements EVENT.IEventConsumer {
     }
 
     /** Called to let consumer know about events, when consumer has already been registered via IEventEngine.createConsumer(eTopic: eEventTopic) */
-    async event<Key, Value>(_eTopic: EVENT.eEventTopic, data: EVENT.IEventData<Key, Value>[]): Promise<void> {
+    async event<Value>(_eTopic: EVENT.eEventTopic, data: EVENT.IEventData<Value>[]): Promise<void> {
         this.eventData.concat(data);
         for (const mutex of this.completionMutexes)
             mutex.cancel();
