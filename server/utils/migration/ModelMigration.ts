@@ -318,7 +318,7 @@ export class ModelMigration {
             doNotUpdateParentVersion: false
         };
 
-        LOG.info(`ingestSupportFileWorker ${ISI.localFilePath}`, LOG.LS.eMIG);
+        this.logStatus('ingestSupportFileWorker', true, ISI.localFilePath ?? '');
 
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
@@ -383,7 +383,7 @@ export class ModelMigration {
         if (!xref)
             return this.returnStatus('wireItemToModel', false, `Unable to wire item ${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`);
 
-        LOG.info(`wireItemToModel ${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`, LOG.LS.eMIG);
+        this.logStatus('wireItemToModel', true, `${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`);
         return { success: true };
     }
 
@@ -391,7 +391,7 @@ export class ModelMigration {
         if (!ModelMigration.vocabMaster) {
             ModelMigration.vocabMaster = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
             if (!ModelMigration.vocabMaster)
-                LOG.error('ModelMigration unable to fetch vocabulary for Master Model Purpose', LOG.LS.eMIG);
+                this.logStatus('computeVocabMaster', false, 'unable to fetch vocabulary for Master Model Purpose');
         }
         return ModelMigration.vocabMaster;
     }
@@ -400,7 +400,7 @@ export class ModelMigration {
         if (!ModelMigration.vocabModelGeometryFile) {
             ModelMigration.vocabModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
             if (!ModelMigration.vocabModelGeometryFile)
-                LOG.error('ModelMigration unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eMIG);
+                this.logStatus('computeVocabModelGeometryFile', false, 'unable to fetch vocabulary for Asset Type Model Geometry File');
         }
         return ModelMigration.vocabModelGeometryFile;
     }
@@ -409,7 +409,7 @@ export class ModelMigration {
         if (!ModelMigration.vocabModelUVMapFile) {
             ModelMigration.vocabModelUVMapFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile);
             if (!ModelMigration.vocabModelUVMapFile)
-                LOG.error('ModelMigration unable to fetch vocabulary for Asset Type Model UV Map File', LOG.LS.eMIG);
+                this.logStatus('computeVocabUVMapFile', false, 'unable to fetch vocabulary for Asset Type Model UV Map File');
         }
         return ModelMigration.vocabModelUVMapFile;
     }
@@ -418,11 +418,10 @@ export class ModelMigration {
         if (!ModelMigration.vocabOtherFile) {
             ModelMigration.vocabOtherFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
             if (!ModelMigration.vocabOtherFile)
-                LOG.error('ModelMigration unable to fetch vocabulary for Asset Type Other File', LOG.LS.eMIG);
+                this.logStatus('computeVocabOtherFile', false, 'unable to fetch vocabulary for Asset Type Other File');
         }
         return ModelMigration.vocabOtherFile;
     }
-
     private async ingestExplicitSupportFiles(): Promise<IngestAssetResultSkippable> {
         let success: boolean = true;
         let error: string | undefined = undefined;
