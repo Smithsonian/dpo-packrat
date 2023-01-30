@@ -4,6 +4,7 @@ import * as WFP from '../../../workflow/impl/Packrat';
 import { WorkflowJob } from './WorkflowJob';
 import { WorkflowIngestion } from './WorkflowIngestion';
 import { WorkflowUpload } from './WorkflowUpload';
+import * as EVENT from '../../../event/interface';
 import * as COOK from '../../../job/impl/Cook';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
@@ -44,10 +45,22 @@ type ComputeSceneInfoResult = {
     licenseResolver?: DBAPI.LicenseResolver | undefined;
 };
 
-export class WorkflowEngine implements WF.IWorkflowEngine {
+export class WorkflowEngine implements WF.IWorkflowEngine, EVENT.IEventConsumer {
+    static setEventEngine(eventEngine: EVENT.IEventEngine): void {
+        LOG.info('WorkflowEngine.setEventEngine called', LOG.LS.eWF);
+        WorkflowEngine.eventEngine = eventEngine;
+    }
+
+    private static eventEngine: EVENT.IEventEngine | null = null;       // don't import EventFactory to avoid circular dependencies
+    private static registeredEventConsumer: boolean = false;
     private workflowMap: Map<number, WF.IWorkflow> = new Map<number, WF.IWorkflow>();
 
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
+        if (!WorkflowEngine.registeredEventConsumer && WorkflowEngine.eventEngine) {
+            WorkflowEngine.registeredEventConsumer = await WorkflowEngine.eventEngine.registerConsumer(EVENT.eEventTopic.eJob, this);
+            WorkflowEngine.registeredEventConsumer = await WorkflowEngine.eventEngine.registerConsumer(EVENT.eEventTopic.eWF, this);
+        }
+
         if (!workflowParams.eWorkflowType) {
             LOG.error(`WorkflowEngine.create called without workflow type ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
             return null;
@@ -75,7 +88,61 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return workflow;
     }
 
-    async jobUpdated(idJobRun: number): Promise<boolean> {
+    async event<Value>(eTopic: EVENT.eEventTopic, data: EVENT.IEventData<Value>[]): Promise<void> {
+        switch (eTopic) {
+            case EVENT.eEventTopic.eJob:
+            case EVENT.eEventTopic.eWF:
+                break;
+            default:
+                LOG.error(`WorkflowEngine.event skipping unexpected event with topic ${EVENT.eEventTopic[eTopic]} and data ${H.Helpers.JSONStringify(data)}`, LOG.LS.eWF);
+                return;
+        }
+
+        for (const dataItem of data) {
+            if (typeof(dataItem.key) !== 'number') {
+                LOG.error(`WorkflowEngine.event skipping event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eWF);
+                continue;
+            }
+
+            switch (dataItem.key) {
+                case EVENT.eEventKey.eJobCreated:
+                case EVENT.eEventKey.eJobRunning:
+                case EVENT.eEventKey.eJobUpdated:
+                case EVENT.eEventKey.eJobWaiting:
+                case EVENT.eEventKey.eJobDone:
+                case EVENT.eEventKey.eJobError:
+                case EVENT.eEventKey.eJobCancelled: {
+                    const idJobRun: number | null = H.Helpers.safeNumber(dataItem.value['idJobRun']);
+                    if (idJobRun === null) {
+                        LOG.error(`WorkflowEngine.event skipping job event missing idJobRun in value ${JSON.stringify(dataItem)}`, LOG.LS.eWF);
+                        continue;
+                    }
+
+                    LOG.info(`WorkflowEngine.event ${EVENT.eEventKey[dataItem.key]} ${JSON.stringify(dataItem)}`, LOG.LS.eWF);
+                    this.jobUpdated(idJobRun); // don't await to allow for asynchronous handling
+                } break;
+
+                case EVENT.eEventKey.eWFIngestObject:
+                    this.eventIngestionIngestObject(dataItem.value);
+                    break;
+
+                case EVENT.eEventKey.eWFGenerateSceneDownloads: {
+                    const idScene        = dataItem.value['idScene'];
+                    const workflowParams = dataItem.value['workflowParams'];
+                    if (idScene && typeof(idScene) === 'number' && workflowParams)
+                        this.generateSceneDownloads(idScene, workflowParams);
+                    else
+                        LOG.error(`WorkflowEngine.event eWFGenerateSceneDownloads called without valid parameters in ${H.Helpers.JSONStringify(dataItem)}`, LOG.LS.eWF);
+                } break;
+
+                default:
+                    LOG.error(`WorkflowEngine.event skipping event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eWF);
+                    break;
+            }
+        }
+    }
+
+    private async jobUpdated(idJobRun: number): Promise<boolean> {
         LOG.info(`WorkflowEngine.jobUpdated: ${idJobRun}`, LOG.LS.eWF);
 
         const jobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(idJobRun);
@@ -111,22 +178,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return result;
     }
 
-    async event(eWorkflowEvent: COMMON.eVocabularyID, workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
-        LOG.info(`WorkflowEngine.event ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
-        const idVWorkflowEvent: number | undefined = await WorkflowEngine.computeWorkflowIDFromEnum(eWorkflowEvent, COMMON.eVocabularySetID.eWorkflowEvent);
-        if (!idVWorkflowEvent) {
-            LOG.error(`WorkflowEngine.event called with invalid workflow event type ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
-            return null;
-        }
-
-        switch (eWorkflowEvent) {
-            case COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject: return this.eventIngestionIngestObject(workflowParams);
-            default:
-                LOG.info(`WorkflowEngine.event called with unhandled workflow event type ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
-                return null;
-        }
-    }
-
     async generateSceneDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow[] | null> {
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
         if (!scene) {
@@ -148,6 +199,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return await this.eventIngestionIngestObjectScene(CSIR, workflowParams, true);
     }
 
+    private async eventIngestionIngestObject(workflowParams: any): Promise<WF.IWorkflow[] | null>;
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
         LOG.info(`WorkflowEngine.eventIngestionIngestObject params=${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
         if (!workflowParams || !workflowParams.idSystemObject)

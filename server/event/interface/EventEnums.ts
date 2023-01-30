@@ -8,23 +8,21 @@ export enum eEventTopic {
 }
 
 export enum eEventKey {
-    eDBCreate,
-    eDBUpdate,
-    eDBDelete,
-    eAuthLogin,
-    ePubSceneQCd,
-    eHTTPDownload,
-    eHTTPUpload,
-    eAuthFailed,
-    eJobCreated,
-    eJobRunning,
-    eJobUpdated,
-    eJobWaiting,
-    eJobDone,
-    eJobError,
-    eJobCancelled,
-    eWFStart,
-    eWFIngestObject,
-    eWFDone,
+    eDBCreate,                  // value: Audit
+    eDBUpdate,                  // value: Audit
+    eDBDelete,                  // value: Audit
+    eAuthLogin,                 // value: Audit
+    ePubSceneQCd,               // value: Audit
+    eHTTPDownload,              // value: Audit
+    eHTTPUpload,                // value: Audit
+    eAuthFailed,                // value: Audit
+    eJobCreated,                // value: { idJobRun: number }
+    eJobRunning,                // value: { idJobRun: number }
+    eJobUpdated,                // value: { idJobRun: number }
+    eJobWaiting,                // value: { idJobRun: number }
+    eJobDone,                   // value: { idJobRun: number }
+    eJobError,                  // value: { idJobRun: number }
+    eJobCancelled,              // value: { idJobRun: number }
+    eWFIngestObject,            // value: WF.WorkflowParameters
+    eWFGenerateSceneDownloads,  // value: { idScene: number, workflowParams: WF.WorkflowParameters }
 }
-

@@ -986,6 +986,7 @@ describe('DB Creation Test Suite', () => {
                 Parameters: null,
                 Output: null,
                 Error: null,
+                Step: null,
                 idJobRun: 0
             });
         expect(jobRun).toBeTruthy();
@@ -1001,6 +1002,7 @@ describe('DB Creation Test Suite', () => {
                 Parameters: null,
                 Output: null,
                 Error: null,
+                Step: null,
                 idJobRun: 0
             });
             expect(await UTIL.createJobRunTest(jobRunTemp)).toBeTruthy();

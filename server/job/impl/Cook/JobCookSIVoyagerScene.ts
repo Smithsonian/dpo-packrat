@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import { JobCook } from './JobCook';
+import { JobEngine } from '../NS/JobEngine';
 import { CookRecipe } from './CookRecipe';
 import { Config } from '../../../config';
 
-import * as JOB from '../../interface';
 import { WorkflowUtil } from '../../../workflow/impl/Packrat/WorkflowUtil';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
@@ -161,7 +161,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private static vocabAssetTypeScene: DBAPI.Vocabulary | undefined = undefined;
     private static vocabAssetTypeModelGeometryFile: DBAPI.Vocabulary | undefined = undefined;
 
-    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
+    constructor(jobEngine: JobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIVoyagerSceneParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-vogager-scene',
             CookRecipe.getCookRecipeID('si-vogager-scene', '512211e5-f2e8-4723-93e9-e30116c88ab0'),

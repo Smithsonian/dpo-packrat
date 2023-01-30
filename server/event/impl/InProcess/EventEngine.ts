@@ -5,8 +5,6 @@ import { EventConsumerAuth } from './EventConsumerAuth';
 import { EventConsumerDB } from './EventConsumerDB';
 import { EventConsumerPublish } from './EventConsumerPublish';
 import { EventConsumerHTTP } from './EventConsumerHTTP';
-import { EventConsumerJob } from './EventConsumerJob';
-import { EventConsumerWF } from './EventConsumerWF';
 import { IEventData } from '../../interface';
 import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';
@@ -15,6 +13,8 @@ import * as LOG from '../../../utils/logger';
 // EventConsumer.poll registers a consumer and then deregisters it
 export class EventEngine implements EVENT.IEventEngine {
     private consumerMap: Map<EVENT.eEventTopic, Set<EventConsumer>> = new Map<EVENT.eEventTopic, Set<EventConsumer>>();
+    private static eventProducer: EVENT.IEventProducer | null = null;
+
     constructor() {
         LOG.info('EventEngine.constructor, wiring default consumers', LOG.LS.eEVENT);
         this.createSystemConsumer(EVENT.eEventTopic.eDB);
@@ -26,6 +26,16 @@ export class EventEngine implements EVENT.IEventEngine {
     }
 
     // #region IEventEngine interface, for creating event producers and managing event consumers
+    async send<Value>(eTopic: EVENT.eEventTopic, data: IEventData<Value>[]): Promise<void> {
+        if (EventEngine.eventProducer === null)
+            EventEngine.eventProducer = await this.createProducer();
+        if (EventEngine.eventProducer === null) {
+            LOG.error('EventEngine.send unable to create defualt event producer', LOG.LS.eEVENT);
+            return;
+        }
+        EventEngine.eventProducer.send(eTopic, data);
+    }
+
     async createProducer(): Promise<EVENT.IEventProducer | null> {
         LOG.info('EventEngine.createProducer', LOG.LS.eEVENT);
         return new EventProducer(this);
@@ -74,8 +84,6 @@ export class EventEngine implements EVENT.IEventEngine {
             case EVENT.eEventTopic.eDB: consumer = new EventConsumerDB(this); break;
             case EVENT.eEventTopic.ePublish: consumer = new EventConsumerPublish(this); break;
             case EVENT.eEventTopic.eHTTP: consumer = new EventConsumerHTTP(this); break;
-            case EVENT.eEventTopic.eJob: consumer = new EventConsumerJob(this); break;
-            case EVENT.eEventTopic.eWF: consumer = new EventConsumerWF(this); break;
             default: {
                 LOG.error(`EventEngine.createConsumer called with an unexpected topic ${EVENT.eEventTopic[eTopic]}`, LOG.LS.eEVENT);
                 return null;

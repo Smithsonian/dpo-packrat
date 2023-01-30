@@ -240,9 +240,6 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
                     case COMMON.eVocabularyID.eWorkflowStepTypeStart:                  testVocabulary(vocabulary, 'Start'); break;
 
-                    case COMMON.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion:   testVocabulary(vocabulary, 'Ingestion: Upload Asset Version'); break;
-                    case COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject:         testVocabulary(vocabulary, 'Ingestion: Ingest Object'); break;
-
                     case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsmm:             testVocabulary(vocabulary, 'mm'); break;
                     case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitscm:             testVocabulary(vocabulary, 'cm'); break;
                     case COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsm:              testVocabulary(vocabulary, 'm'); break;
@@ -343,7 +340,6 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularySetID.eAssetAssetType:
                     case COMMON.eVocabularySetID.eJobJobType:
                     case COMMON.eVocabularySetID.eWorkflowType:
-                    case COMMON.eVocabularySetID.eWorkflowEvent:
                     case COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits:
                     case COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType:
                     case COMMON.eVocabularySetID.eEdan3DResourceAttributeFileType:
@@ -594,8 +590,6 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eJobJobType, 'Cook: unwrap');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eWorkflowType, 'Cook Job');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eWorkflowStepWorkflowStepType, 'Start');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eWorkflowEvent, 'Ingestion: Upload Asset Version');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eWorkflowEvent, 'Ingestion: Ingest Object');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'mm');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'cm');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits, 'm');
@@ -797,7 +791,6 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeUpload, COMMON.eVocabularySetID.eWorkflowType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowStepTypeStart, COMMON.eVocabularySetID.eWorkflowStepWorkflowStepType)).toBeTruthy();
 
-            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion, COMMON.eVocabularySetID.eWorkflowEvent)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eEdan3DResourceAttributeUnitsmm, COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eEdan3DResourceAttributeModelFileTypeobj, COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eEdan3DResourceAttributeFileTypezip, COMMON.eVocabularySetID.eEdan3DResourceAttributeFileType)).toBeTruthy();

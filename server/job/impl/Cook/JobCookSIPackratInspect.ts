@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import { JobCook } from './JobCook';
+import { JobEngine } from '../NS/JobEngine';
 import { CookRecipe } from './CookRecipe';
 import { Config } from '../../../config';
 
-import * as JOB from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
@@ -693,7 +693,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     private parameters: JobCookSIPackratInspectParameters;
     private sourceMeshStream: NodeJS.ReadableStream | undefined;
 
-    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
+    constructor(jobEngine: JobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIPackratInspectParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-packrat-inspect',
             CookRecipe.getCookRecipeID('si-packrat-inspect', 'bb602690-76c9-11eb-9439-0242ac130002'),

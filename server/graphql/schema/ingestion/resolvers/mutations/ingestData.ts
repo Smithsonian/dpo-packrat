@@ -16,6 +16,7 @@ import { SceneHelpers } from '../../../../../utils';
 import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
 import * as NAV from '../../../../../navigation/interface';
+import * as EVENT from '../../../../../event/interface';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo } from '../../../../../storage/interface';
 import { VocabularyCache } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
@@ -1439,12 +1440,6 @@ class IngestDataWorker extends ResolverBase {
     }
 
     private async sendWorkflowIngestionEvent(ingestResMap: Map<number, IngestAssetResultCook | null>, modelTransformUpdated: boolean): Promise<boolean> {
-        const workflowEngine: WF.IWorkflowEngine | null | undefined = this.workflowHelper?.workflowEngine;
-        if (!workflowEngine) {
-            LOG.error('ingestData sendWorkflowIngestionEvent could not load WorkflowEngine', LOG.LS.eGQL);
-            return false;
-        }
-
         const user: User = this.user!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
         // prepare to wire together ingestion workflow step with output asset versions (in systemObjectSet)
@@ -1486,7 +1481,7 @@ class IngestDataWorker extends ResolverBase {
                 }
             }
 
-            let message: string = 'Sending WorkflowEngine IngestObject event';
+            let message: string = 'Sending Workflow Ingest Object event';
             if (IAR.systemObjectVersion?.idSystemObject) {
                 const pathObject: string = RouteBuilder.RepositoryDetails(IAR.systemObjectVersion.idSystemObject, eHrefMode.ePrependClientURL);
                 const hrefObject: string = H.Helpers.computeHref(pathObject, `System Object ${IAR.systemObjectVersion.idSystemObject}`);
@@ -1494,6 +1489,7 @@ class IngestDataWorker extends ResolverBase {
             }
             await this.appendToWFReport(message);
 
+            // Send Workflow Ingest Object event
             const parameters = {
                 modelTransformUpdated,
                 assetsIngested: IAR.assetsIngested,
@@ -1507,8 +1503,19 @@ class IngestDataWorker extends ResolverBase {
                 parameters
             };
 
-            // send workflow engine event, but don't wait for results
-            workflowEngine.event(COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);
+            const eventDate: Date = new Date();
+            const eventData: EVENT.IEventData<WF.WorkflowParameters> = {
+                eventDate,
+                key: EVENT.eEventKey.eWFIngestObject,
+                value: workflowParams
+            };
+
+            // send workflow event, but don't wait for results
+            const eventEngine: EVENT.IEventEngine | null = await EVENT.EventFactory.getInstance();
+            if (eventEngine)
+                eventEngine.send(EVENT.eEventTopic.eWF, [eventData]);
+            else
+                LOG.error(`ingestData sendWorkflowIngestionEvent failed to fetch event factory; could not send ${H.Helpers.JSONStringify(eventData)}`, LOG.LS.eGQL);
         }
 
         return ret;

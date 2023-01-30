@@ -323,6 +323,7 @@ model JobRun {
   Parameters    String?        @mariasql.Text
   Output        String?        @mariasql.LongText
   Error         String?        @mariasql.Text
+  Step          String?        @mariasql.Text
   Job           Job            @relation(fields: [idJob], references: [idJob], onDelete: NoAction, onUpdate: NoAction, map: "fk_jobrun_job1")
   WorkflowStep  WorkflowStep[]
 

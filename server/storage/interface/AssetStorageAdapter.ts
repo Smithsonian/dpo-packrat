@@ -4,6 +4,7 @@ import * as CACHE from '../../cache';
 import * as META from '../../metadata';
 import * as WF from '../../workflow/interface';
 import * as REP from '../../report/interface';
+import * as EVENT from '../../event/interface';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ST from '../impl/LocalStorage/SharedTypes';
@@ -529,13 +530,6 @@ export class AssetStorageAdapter {
             return { success: true };
 
         let error: string | undefined = undefined;
-        const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
-        if (!workflowEngine) {
-            error = 'ingestData createWorkflow could not load WorkflowEngine';
-            LOG.error(error, LOG.LS.eSTR);
-            return { success: false, error };
-        }
-
         const { transformUpdated } = await AssetStorageAdapter.detectAndHandleSceneIngest(IAR);
 
         // prepare to wire together ingestion workflow step with output asset versions (in systemObjectSet)
@@ -567,7 +561,7 @@ export class AssetStorageAdapter {
                     idWorkflowStepSystemObjectXref: 0
                 });
                 if (!await WSSOX.create()) {
-                    error = `ingestData sendWorkflowIngestionEvent failed to create WorkflowStepSystemObjectXref ${JSON.stringify(WSSOX, H.Helpers.saferStringify)}`;
+                    error = `AssetStorageAdapter sendWorkflowIngestionEvent failed to create WorkflowStepSystemObjectXref ${JSON.stringify(WSSOX, H.Helpers.saferStringify)}`;
                     LOG.error(error, LOG.LS.eSTR);
                 }
             }
@@ -575,7 +569,7 @@ export class AssetStorageAdapter {
 
         const wfReport: REP.IReport | null = await REP.ReportFactory.getReport();
         if (wfReport) {
-            let message: string = 'Sending WorkflowEngine IngestObject event';
+            let message: string = 'Sending Workflow Ingest Object event';
             if (IAR.systemObjectVersion?.idSystemObject) {
                 const pathObject: string = RouteBuilder.RepositoryDetails(IAR.systemObjectVersion.idSystemObject, eHrefMode.ePrependClientURL);
                 const hrefObject: string = H.Helpers.computeHref(pathObject, `System Object ${IAR.systemObjectVersion.idSystemObject}`);
@@ -586,6 +580,7 @@ export class AssetStorageAdapter {
                 LOG.error(`Unable to append ${message} to workflow report`, LOG.LS.eSTR);
         }
 
+        // Send Workflow Ingest Object event
         const parameters = {
             modelTransformUpdated: transformUpdated,
             assetsIngested: IAR.assetsIngested
@@ -598,8 +593,20 @@ export class AssetStorageAdapter {
             parameters
         };
 
-        // send workflow engine event, but don't wait for results
-        workflowEngine.event(COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject, workflowParams);
+        const eventDate: Date = new Date();
+        const eventData: EVENT.IEventData<WF.WorkflowParameters> = {
+            eventDate,
+            key: EVENT.eEventKey.eWFIngestObject,
+            value: workflowParams
+        };
+
+        // send workflow event, but don't wait for results
+        const eventEngine: EVENT.IEventEngine | null = await EVENT.EventFactory.getInstance();
+        if (eventEngine)
+            eventEngine.send(EVENT.eEventTopic.eWF, [eventData]);
+        else
+            LOG.error(`AssetStorageAdapter sendWorkflowIngestionEvent failed to fetch event factory; could not send ${H.Helpers.JSONStringify(eventData)}`, LOG.LS.eGQL);
+
         return { success: error === undefined ? true : false, error };
     }
 

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import { JobCook } from './JobCook';
+import { JobEngine } from '../NS/JobEngine';
 import { CookRecipe } from './CookRecipe';
 import { Config } from '../../../config';
 
-import * as JOB from '../../interface';
 import { WorkflowUtil } from '../../../workflow/impl/Packrat/WorkflowUtil';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
@@ -72,7 +72,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     private static vocabDownload: DBAPI.Vocabulary | undefined = undefined;
     private static vocabModelGeometryFile: DBAPI.Vocabulary | undefined = undefined;
 
-    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
+    constructor(jobEngine: JobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIGenerateDownloadsParameters, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, Config.job.cookClientId, 'si-generate-downloads',
             CookRecipe.getCookRecipeID('si-generate-downloads', 'fcef7b5c-2df5-4a63-8fe9-365dd1a5e39c'),

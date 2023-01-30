@@ -233,6 +233,7 @@ CREATE TABLE IF NOT EXISTS `JobRun` (
   `Parameters` text NULL,
   `Output` longtext NULL,
   `Error` text NULL,
+  `Step` text NULL,
   PRIMARY KEY (`idJobRun`),
   KEY `JobRun_idJob` (`idJob`),
   KEY `JobRun_Status` (`Status`)
