@@ -90,7 +90,6 @@ export class HttpServer {
         this.app.get(`${Downloader.httpRoute}*`, download);
 
         // endpoints for verifiers.
-        // include 'returnFile=true' query param to get a file back
         this.app.get('/verifier',Verifiers.routeRequest); // catch in case of misuse
         this.app.get('/verifier/:id', Verifiers.routeRequest);
 
