@@ -40,6 +40,7 @@ export async function routeRequest(request: Request, response: Response): Promis
 //       requires changing verifier to append after each subject, connecting tightly to workflow logic
 // TODO: fork verifier(s) so it does not use the same event loop as the main server improving performance
 //       https://nodejs.org/api/child_process.html
+// TODO: support server side events (SSE) to provide notifications to client on progress
 async function verifyEdanWorkflow(req: Request, response: Response): Promise<void> {
     LOG.info('(Workflows) Verifying EDAN Records from endpoint...', LOG.LS.eGQL);
 
