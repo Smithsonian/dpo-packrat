@@ -532,9 +532,9 @@ export class SceneMigration {
 
                 // compare this.scenePackage.SceneName with scene name in package
                 const sceneExtract: DBAPI.Scene = svx.SvxExtraction.extractScene();
-                if ((this.scene.Name ?? '') !== (sceneExtract.Name ?? ''))
+                if ((this.scene.Name?.toLowerCase() ?? '') !== (sceneExtract.Name?.toLowerCase() ?? ''))
                     this.logError('extractSceneDetails', `WARN Migration input scene name ${this.scene.Name} does not match svx.json name ${sceneExtract.Name}`);
-                if ((this.scene.Title ?? '') !== (sceneExtract.Title ?? ''))
+                if ((this.scene.Title?.toLowerCase() ?? '') !== (sceneExtract.Title?.toLowerCase() ?? ''))
                     this.logError('extractSceneDetails', `WARN Migration input scene title ${this.scene.Title} does not match svx.json title ${sceneExtract.Title}`);
 
                 this.log('extractSceneDetails', `updated scene metrics for ${H.Helpers.JSONStringify(this.scene)}`);
