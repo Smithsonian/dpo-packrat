@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IJob } from './IJob';
 import { IReport } from '../../report/interface';
-import * as EVENT from '../../event/interface';
 import * as COMMON from '@dpo-packrat/common';
 
 export interface JobCreationParameters {
@@ -15,6 +14,4 @@ export interface JobCreationParameters {
 
 export interface IJobEngine {
     create(jobParams: JobCreationParameters): Promise<IJob | null>;
-    jobCompleted(job: IJob): Promise<void>;
-    jobEvent<Value>(dataItem: EVENT.IEventData<Value>): Promise<void>;
 }

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types, no-constant-condition */
-import * as JOB from '../../interface';
-import { JobPackrat, JobIOResults } from  '../NS/JobPackrat';
+import { JobPackrat, JobIOResults } from '../NS/JobPackrat';
+import { JobEngine } from '../NS/JobEngine';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as STORE from '../../../storage/interface';
@@ -95,7 +95,7 @@ export abstract class JobCook<T> extends JobPackrat {
     protected abstract getParameters(): Promise<T>;
 
     // null jobId means create a new one
-    constructor(jobEngine: JOB.IJobEngine, clientId: string, jobName: string,
+    constructor(jobEngine: JobEngine, clientId: string, jobName: string,
         recipeId: string, jobId: string | null, idAssetVersions: number[] | null,
         report: REP.IReport | null, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, dbJobRun, report);
@@ -328,6 +328,18 @@ export abstract class JobCook<T> extends JobPackrat {
             const cookJobReport = axiosResponse.data;
             if (pollNumber <= 10 || ((pollNumber % 5) == 0))
                 LOG.info(`JobCook [${this.name()}] polling [${pollNumber}], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
+
+            // Look for changes in "step" reported by Cook; if so, record the change and then send updated event
+            const step = cookJobReport['step'];
+            if (typeof(step) === 'string') {
+                if (this._dbJobRun.Step !== step) {
+                    this._dbJobRun.Step = step;
+                    if (await this._dbJobRun.update())
+                        await this.recordUpdated();
+                    else
+                        LOG.error(`JobCook [${this.name()}] failed to update JobRun step to ${step}`, LOG.LS.eJOB);
+                }
+            }
             switch (cookJobReport['state']) {
                 case 'created':     await this.recordCreated();                                                         break;
                 case 'waiting':     await this.recordWaiting();                                                         break;

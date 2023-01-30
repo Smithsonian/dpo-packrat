@@ -81,7 +81,6 @@ export class VocabularyCache {
                 case 'Asset.AssetType':                         eVocabSetEnum = COMMON.eVocabularySetID.eAssetAssetType; break;
                 case 'Job.JobType':                             eVocabSetEnum = COMMON.eVocabularySetID.eJobJobType; break;
                 case 'Workflow.Type':                           eVocabSetEnum = COMMON.eVocabularySetID.eWorkflowType; break;
-                case 'Workflow.Event':                          eVocabSetEnum = COMMON.eVocabularySetID.eWorkflowEvent; break;
                 case 'Edan.3DResourceAttributeUnits':           eVocabSetEnum = COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits; break;
                 case 'Edan.3DResourceAttributeModelFileType':   eVocabSetEnum = COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType; break;
                 case 'Edan.3DResourceAttributeFileType':        eVocabSetEnum = COMMON.eVocabularySetID.eEdan3DResourceAttributeFileType; break;
@@ -312,13 +311,6 @@ export class VocabularyCache {
                 case COMMON.eVocabularySetID.eWorkflowStepWorkflowStepType: {
                     switch (vocabulary.Term) {
                         case 'Start':                           eVocabEnum = COMMON.eVocabularyID.eWorkflowStepTypeStart; break;
-                    }
-                } break;
-
-                case COMMON.eVocabularySetID.eWorkflowEvent: {
-                    switch (vocabulary.Term) {
-                        case 'Ingestion: Upload Asset Version': eVocabEnum = COMMON.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion; break;
-                        case 'Ingestion: Ingest Object':        eVocabEnum = COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject; break;
                     }
                 } break;
 
