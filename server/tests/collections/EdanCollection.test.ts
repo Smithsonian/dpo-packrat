@@ -2392,7 +2392,6 @@ async function scrapeDPOIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289216', '907', IDLabelSet, records);
     // #endregion
 }
-// #endregion
 
 async function scrapeDPOEdanListIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, records: EdanResult[]): Promise<void> {
     await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '173', IDLabelSet, records);
@@ -2447,6 +2446,7 @@ async function scrapeDPOEdanListIDsWorker(ICol: COL.ICollection, IDLabelSet: Set
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289214', '907', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289216', '907', IDLabelSet, records);
 }
+// #endregion
 
 // #region Handle Results
 async function handleResultsEdanLists(ICol: COL.ICollection, WS: NodeJS.WritableStream | null, query: string, id: string, unitFilter?: string | undefined): Promise<boolean> {
