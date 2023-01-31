@@ -736,6 +736,20 @@ export class VocabularyCache {
         return eVocabID ?  await VocabularyCache.vocabularyByEnum(eVocabID) : undefined;
     }
 
+    static mapUnits(units: string): COMMON.eVocabularyID | undefined {
+        switch (units.toLowerCase()) {
+            case 'mm': return COMMON.eVocabularyID.eModelUnitsMillimeter;
+            case 'cm': return COMMON.eVocabularyID.eModelUnitsCentimeter;
+            case 'm':  return COMMON.eVocabularyID.eModelUnitsMeter;
+            case 'km': return COMMON.eVocabularyID.eModelUnitsKilometer;
+            case 'in': return COMMON.eVocabularyID.eModelUnitsInch;
+            case 'ft': return COMMON.eVocabularyID.eModelUnitsFoot;
+            case 'yd': return COMMON.eVocabularyID.eModelUnitsYard;
+            case 'mi': return COMMON.eVocabularyID.eModelUnitsMile;
+            default: return undefined;
+        }
+    }
+
     static async isPreferredAsset(idVAssetType: number, SO: SystemObject): Promise<boolean> {
         switch (await VocabularyCache.vocabularyIdToEnum(idVAssetType)) {
             case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry:
