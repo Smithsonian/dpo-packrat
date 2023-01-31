@@ -206,8 +206,8 @@ export class SceneMigration {
                 }
             }
 
-            // if we have no subjects, or if we have multiple subjects, assign the license to the scene
-            if (!idSystemObjects || idSystemObjects.length > 1) {
+            // if we have no subjects
+            if (!idSystemObjects) {
                 if (!sceneSO)
                     sceneSO = await this.scene.fetchSystemObject();
                 if (!sceneSO)
@@ -226,8 +226,10 @@ export class SceneMigration {
                     return this.recordError('migrateScene', `failed to fetch assigned licenses for idSystemObject ${idSystemObject}`);
                 if (licenseAssignments.length > 0) {
                     for (const licenseAssignment of licenseAssignments) {
-                        if (licenseAssignment.assignmentActive() && licenseAssignment.idLicense !== License.idLicense)
-                            return this.recordError('migrateScene', `license ${H.Helpers.JSONStringify(licenseAssignment)} already assigned to ${idSystemObject} does not match to-be-assigned license of ${H.Helpers.JSONStringify(License)}`);
+                        if (licenseAssignment.assignmentActive() && licenseAssignment.idLicense !== License.idLicense) {
+                            this.recordError('migrateScene', `WARN license ${H.Helpers.JSONStringify(licenseAssignment)} already assigned to ${idSystemObject} does not match to-be-assigned license of ${H.Helpers.JSONStringify(License)}`);
+                            continue;
+                        }
                     }
                 }
 
