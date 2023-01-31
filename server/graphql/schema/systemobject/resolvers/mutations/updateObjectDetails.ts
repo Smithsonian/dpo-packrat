@@ -294,7 +294,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 const [CD] = CaptureDataPhoto;
 
-                CD.CameraSettingsUniform = maybe<boolean>(cameraSettingUniform);
+                CD.CameraSettingsUniform = H.Helpers.safeBoolean(cameraSettingUniform);
                 if (datasetType) CD.idVCaptureDatasetType = datasetType;
                 CD.CaptureDatasetFieldID = maybe<number>(datasetFieldId);
                 CD.idVItemPositionType = maybe<number>(itemPositionType);

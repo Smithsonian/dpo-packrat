@@ -647,7 +647,16 @@ export class SceneMigration {
             return this.recordError('fetchAndIngestResources', `called without required data for ${H.Helpers.JSONStringify(this.scenePackage)}`);
 
         const edanURL: string = `3d_package:${this.scenePackage.EdanUUID}`;
-        const edanRecord: COL.EdanRecord | null = await this.ICol.fetchContent(undefined, edanURL);
+        let edanRecord: COL.EdanRecord | null = null;
+
+        // try 3 times to get our content from EDAN
+        for (let retry: number = 1; retry <= 3; retry++) {
+            edanRecord = await this.ICol.fetchContent(undefined, edanURL);
+            if (edanRecord)
+                break;
+            else if (retry < 3)
+                await H.Helpers.sleep(1500);
+        }
         if (!edanRecord)
             return this.recordError('fetchAndIngestResources', `unable to fetch EDAN record for ${edanURL}`);
 
