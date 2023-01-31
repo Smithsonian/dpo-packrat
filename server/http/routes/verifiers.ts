@@ -146,12 +146,37 @@ async function verifyEdanWorkflow(req: Request, response: Response): Promise<voi
     // create our download URL for future use. (NOTE: using HTTP so localhost works)
     const workflowReportURL: string = `http://localhost:4000/download?idWorkflowReport=${idWorkflowReport}`;
     LOG.info(`EDAN verifier SUCCEEDED!! (${workflowReportURL})`,LOG.LS.eGQL);
-    sendResponseMessage(response,true,`<a href="${workflowReportURL}">DOWNLOAD</a>`);
+    sendResponseMessage(response,true,getResponseMarkup(true,'Download Report',workflowReportURL));//`<a href="${workflowReportURL}">DOWNLOAD</a>`);
 
     return;
 }
 
 function sendResponseMessage(response: Response, success: boolean, message: string) {
-    LOG.error(`EDAN Verifier ${(success)?'SUCCEEDED':'FAILED'}: ${message}`, LOG.LS.eGQL);
-    response.send(`Verifing EDAN records ${(success)?'SUCCEEDED':'FAILED'}: ${message}`);
+    if(success) {
+        LOG.info(`EDAN Verifier SUCCEEDED: ${message}`, LOG.LS.eGQL);
+        response.send(message);
+    } else {
+        LOG.error(`EDAN Verifier FAILED: ${message}`, LOG.LS.eGQL);
+        response.send(`Verifing EDAN records FAILED: ${message}`);
+    }
+}
+
+function getResponseMarkup(success: boolean, message?: string, url?: string): string {
+    let output = '';
+    output += '<div style="display: flex;align-items: center;flex-direction: column;margin-top:3rem;">';
+    output += '<div style="width: 15rem;border-radius: 1rem;background-color: #0079C4;display: flex;flex-direction: column;">';
+    output += '<img src="https://smithsonian.github.io/dpo-packrat/images/logo-name.png" style="width: 100%;object-fit: none;">';
+
+    output += '<div style="border: 1px solid #0079c4;text-align: center;font-size: 1rem;background-color: white;border-radius: 0 0 1rem 1rem;border-top: 0px;">';
+    if(success) {
+        output += `<a href="${url}" style="color: #0079C4; font-weight: bold; text-decoration: none;">${message}</a>`;
+    } else {
+        output += '<span style="font-size:1.5rem; color:red;">ERROR</span>';
+        output += `<p>${message}</p>`;
+    }
+    output += '</div>';
+
+    output += '</div>';
+    output += '</div>';
+    return output;
 }
