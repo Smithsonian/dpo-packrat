@@ -34,7 +34,7 @@ enum eTestType {
     eEDANVerifier,
 }
 
-const eTYPE: eTestType = +eTestType.eEDANVerifier; //+eTestType.eRegressionSuite; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eRegressionSuite!
+const eTYPE: eTestType = +eTestType.eRegressionSuite; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eRegressionSuite!
 
 const now: Date = new Date();
 const yyyymmdd: string = now.toISOString().split('T')[0];
