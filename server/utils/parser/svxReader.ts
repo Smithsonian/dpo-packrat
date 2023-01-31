@@ -82,9 +82,9 @@ export class SvxExtraction {
 
     extractUnits(): COMMON.eVocabularyID | undefined {
         // scenes[scene].units
-        if (!this.document.scene)
+        if (this.document.scene === undefined)
             return undefined;
-        if (!this.document.scenes)
+        if (this.document.scenes === undefined)
             return undefined;
         if (this.document.scene >= this.document.scenes.length)
             return undefined;
