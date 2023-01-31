@@ -758,15 +758,15 @@ export class SceneMigration {
         const AutomationTag: string = JobCookSIGenerateDownloads.computeModelAutomationTag(downloadType);
 
         const idVPurpose: number | null = SceneMigration.vocabDownload?.idVocabulary ?? null;
-        const idVUnits: number | null = Units?.idVocabulary ?? null;
+        const idVUnits: number | null = Units?.idVocabulary ?? this.modelSource?.idVUnits ?? null;
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
         const model: DBAPI.Model = new DBAPI.Model({
             idModel: 0,
             Name,
             Title: null,
             DateCreated: new Date(),
-            idVCreationMethod: null,
-            idVModality: null,
+            idVCreationMethod: this.modelSource?.idVCreationMethod ?? null,
+            idVModality: this.modelSource?.idVModality ?? null,
             idVPurpose,
             idVUnits,
             idVFileType: vFileType ? vFileType.idVocabulary : null,
