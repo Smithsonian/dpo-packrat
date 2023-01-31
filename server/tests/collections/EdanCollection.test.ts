@@ -27,7 +27,8 @@ enum eTestType {
     e3DPackageFetchTest,
     eScrapeDPO,
     eScrapeMigration,
-    eScrapeEDANListsMigration,
+    eScrapeEDANListsContents,
+    eScrapeEDANListsIDs,
     eScrapeEDAN,
     eOneOff,
     eEDANVerifier,
@@ -95,9 +96,15 @@ describe('Collections: EdanCollection', () => {
             });
             break;
 
-        case eTestType.eScrapeEDANListsMigration:
-            test('Collections: EdanCollection.scrape edanlists Migration', async () => {
+        case eTestType.eScrapeEDANListsContents:
+            test('Collections: EdanCollection.scrape edanlists Contents for Migration', async () => {
                 await scrapeDPOEdanLists(ICol, 'd:\\Work\\SI\\EdanScrape.EdanListsMigration.txt');
+            });
+            break;
+
+        case eTestType.eScrapeEDANListsIDs:
+            test('Collections: EdanCollection.scrape edanists IDs for Migration', async () => {
+                await scrapeDPOIDs(ICol, eTYPE, 'd:\\Work\\SI\\EdanScrape.EdanListsIDs.txt');
             });
             break;
 
@@ -404,6 +411,12 @@ function logUnitMap(unitMap: Map<string, number>, queryNumber: number, resultCou
 // #endregion
 
 // #region SCRAPE DPO
+type EdanMDMMetadata = {
+    name: string;
+    label?: string;
+    value: string;
+};
+
 async function scrapeDPOIDs(ICol: COL.ICollection, eTYPE: eTestType, fileName: string): Promise<void> {
     jest.setTimeout(1000 * 60 * 60 * 4);   // 4 hours
     const IDLabelSet: Set<string> = new Set<string>();
@@ -415,9 +428,11 @@ async function scrapeDPOIDs(ICol: COL.ICollection, eTYPE: eTestType, fileName: s
         return;
     }
 
+    let gatherRaw: boolean | undefined = undefined;
     switch (eTYPE) {
-        case eTestType.eScrapeDPO: await scrapeDPOEdanMDMWorker(ICol, IDLabelSet, records); break;
+        case eTestType.eScrapeDPO: await scrapeDPOEdanMDMWorker(ICol, IDLabelSet, records, true); gatherRaw = true; break;
         case eTestType.eScrapeMigration: await scrapeDPOIDsWorker(ICol, IDLabelSet, records); break;
+        case eTestType.eScrapeEDANListsIDs: await scrapeDPOEdanListIDsWorker(ICol, IDLabelSet, records); break;
     }
 
     const IDLabels: string[] = Array.from(IDLabelSet).sort((a, b) => a.localeCompare(b));
@@ -425,13 +440,56 @@ async function scrapeDPOIDs(ICol: COL.ICollection, eTYPE: eTestType, fileName: s
     WS.write('id\tname\tunit\tidentifierPublic\tidentifierCollection\trecords');
     for (const IDLabel of IDLabels)
         WS.write(`\t${IDLabel}`);
+    if (gatherRaw)
+        WS.write('\traw');
     WS.write('\n');
+
+    const metadataMap: Map<string, EdanMDMMetadata[]> = new Map<string, EdanMDMMetadata[]>(); // map of record.id -> Metadata[]
 
     for (const record of records) {
         WS.write(`${record.id}\t${record.name}\t${record.unit}\t${record.identifierPublic}\t${record.identifierCollection}\t${record.records}`);
         for (const IDLabel of IDLabels)
             WS.write(`\t${record.IDMap?.get(IDLabel) ?? ''}`);
+        if (gatherRaw) {
+            WS.write(`\t${JSON.stringify(record.raw, null, 0)}`);
+            const edanMDM: COL.EdanMDMContent | undefined = record.raw?.content;
+            if (edanMDM) {
+                const metadata: EdanMDMMetadata[] = [];
+
+                if (edanMDM?.descriptiveNonRepeating?.title?.label) metadata.push({ name: 'label', value: edanMDM.descriptiveNonRepeating.title.label });
+                if (edanMDM?.descriptiveNonRepeating?.title?.content) metadata.push({ name: 'title', value: edanMDM.descriptiveNonRepeating.title.content });
+                if (edanMDM?.descriptiveNonRepeating?.record_ID) metadata.push({ name: 'record', value: edanMDM.descriptiveNonRepeating.record_ID });
+                if (edanMDM?.descriptiveNonRepeating?.unit_code) metadata.push({ name: 'unit', value: edanMDM.descriptiveNonRepeating.unit_code });
+                if (edanMDM?.descriptiveNonRepeating?.metadata_usage?.access) metadata.push({ name: 'license', value: edanMDM.descriptiveNonRepeating.metadata_usage.access });
+                if (edanMDM?.descriptiveNonRepeating?.metadata_usage?.content) metadata.push({ name: 'license text', value: edanMDM.descriptiveNonRepeating.metadata_usage.content });
+
+                if (edanMDM?.indexedStructured?.object_type) { for (const value of edanMDM.indexedStructured.object_type) metadata.push({ name: 'object type', value }); }
+                if (edanMDM?.indexedStructured?.date) { for (const value of edanMDM.indexedStructured.date) metadata.push({ name: 'date', value }); }
+                if (edanMDM?.indexedStructured?.place) { for (const value of edanMDM.indexedStructured.place) metadata.push({ name: 'place', value }); }
+                if (edanMDM?.indexedStructured?.topic) { for (const value of edanMDM.indexedStructured.topic) metadata.push({ name: 'topic', value }); }
+
+                if (edanMDM?.freetext?.identifier) { for (const LC of edanMDM.freetext.identifier) metadata.push({ name: 'identifier (ft)', label: LC?.label, value: LC?.content }); }
+                if (edanMDM?.freetext?.dataSource) { for (const LC of edanMDM.freetext.dataSource) metadata.push({ name: 'data source (ft)', label: LC?.label, value: LC?.content }); }
+                if (edanMDM?.freetext?.date) { for (const LC of edanMDM.freetext.date) metadata.push({ name: 'date (ft)', label: LC?.label, value: LC?.content }); }
+                if (edanMDM?.freetext?.name) { for (const LC of edanMDM.freetext.name) metadata.push({ name: 'name (ft)', label: LC?.label, value: LC?.content }); }
+                if (edanMDM?.freetext?.objectRights) { for (const LC of edanMDM.freetext.objectRights) metadata.push({ name: 'object rights (ft)', label: LC?.label, value: LC?.content }); }
+                if (edanMDM?.freetext?.place) { for (const LC of edanMDM.freetext.place) metadata.push({ name: 'place (ft)', label: LC?.label, value: LC?.content }); }
+                if (edanMDM?.freetext?.taxonomicName) { for (const LC of edanMDM.freetext.taxonomicName) metadata.push({ name: 'taxonomic name (ft)', label: LC?.label, value: LC?.content }); }
+                if (edanMDM?.freetext?.notes) { for (const LC of edanMDM.freetext.notes) metadata.push({ name: 'notes (ft)', label: LC?.label, value: LC?.content }); }
+                if (edanMDM?.freetext?.physicalDescription) { for (const LC of edanMDM.freetext.physicalDescription) metadata.push({ name: 'physical description (ft)', label: LC?.label, value: LC?.content }); }
+
+                metadataMap.set(record.id, metadata);
+            }
+        }
         WS.write('\n');
+    }
+
+    if (metadataMap.size > 0) {
+        WS.write('\nid\tname\tlabel\tvalue\n');
+        for (const [id, metadataList] of metadataMap) {
+            for (const metadata of metadataList)
+                WS.write(`${id}\t${metadata.name}\t${metadata.label ?? ''}\t${metadata.value.replace(/(\n|\r)/g, ' ')}\n`);
+        }
     }
 
     WS.end();
@@ -468,157 +526,157 @@ async function scrapeDPOEdanLists(ICol: COL.ICollection, fileName: string): Prom
     await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1580421846495-1581355895303-0', '173', 'SI');
 }
 
-async function scrapeDPOEdanMDMWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, records: EdanResult[]): Promise<void> {
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200001', 'dpo_3d_200001', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200002', 'dpo_3d_200002', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200003', 'dpo_3d_200003', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200004', 'dpo_3d_200004', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200005', 'dpo_3d_200005', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200006', 'dpo_3d_200006', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200007', 'dpo_3d_200007', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200008', 'dpo_3d_200008', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200009', 'dpo_3d_200009', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200010', 'dpo_3d_200010', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200011', 'dpo_3d_200011', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200012', 'dpo_3d_200012', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200013', 'dpo_3d_200013', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200014', 'dpo_3d_200014', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200015', 'dpo_3d_200015', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200016', 'dpo_3d_200016', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200017', 'dpo_3d_200017', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200018', 'dpo_3d_200018', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200019', 'dpo_3d_200019', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200020', 'dpo_3d_200020', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200021', 'dpo_3d_200021', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200022', 'dpo_3d_200022', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200023', 'dpo_3d_200023', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200024', 'dpo_3d_200024', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200025', 'dpo_3d_200025', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200026', 'dpo_3d_200026', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200027', 'dpo_3d_200027', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200028', 'dpo_3d_200028', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200029', 'dpo_3d_200029', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200030', 'dpo_3d_200030', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200031', 'dpo_3d_200031', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200032', 'dpo_3d_200032', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200033', 'dpo_3d_200033', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200034', 'dpo_3d_200034', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200035', 'dpo_3d_200035', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200036', 'dpo_3d_200036', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200037', 'dpo_3d_200037', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200038', 'dpo_3d_200038', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200039', 'dpo_3d_200039', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200040', 'dpo_3d_200040', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200041', 'dpo_3d_200041', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200042', 'dpo_3d_200042', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200043', 'dpo_3d_200043', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200044', 'dpo_3d_200044', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200045', 'dpo_3d_200045', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200046', 'dpo_3d_200046', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200047', 'dpo_3d_200047', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200048', 'dpo_3d_200048', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200049', 'dpo_3d_200049', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200050', 'dpo_3d_200050', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200051', 'dpo_3d_200051', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200052', 'dpo_3d_200052', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200053', 'dpo_3d_200053', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200054', 'dpo_3d_200054', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200055', 'dpo_3d_200055', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200056', 'dpo_3d_200056', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200057', 'dpo_3d_200057', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200058', 'dpo_3d_200058', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200059', 'dpo_3d_200059', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200060', 'dpo_3d_200060', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200061', 'dpo_3d_200061', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200062', 'dpo_3d_200062', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200063', 'dpo_3d_200063', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200064', 'dpo_3d_200064', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200065', 'dpo_3d_200065', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200066', 'dpo_3d_200066', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200067', 'dpo_3d_200067', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200068', 'dpo_3d_200068', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200069', 'dpo_3d_200069', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200070', 'dpo_3d_200070', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200071', 'dpo_3d_200071', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200072', 'dpo_3d_200072', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200073', 'dpo_3d_200073', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200074', 'dpo_3d_200074', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200075', 'dpo_3d_200075', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200076', 'dpo_3d_200076', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200077', 'dpo_3d_200077', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200078', 'dpo_3d_200078', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200079', 'dpo_3d_200079', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200080', 'dpo_3d_200080', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200081', 'dpo_3d_200081', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200082', 'dpo_3d_200082', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200083', 'dpo_3d_200083', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200084', 'dpo_3d_200084', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200085', 'dpo_3d_200085', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200086', 'dpo_3d_200086', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200087', 'dpo_3d_200087', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200088', 'dpo_3d_200088', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200089', 'dpo_3d_200089', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200090', 'dpo_3d_200090', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200091', 'dpo_3d_200091', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200092', 'dpo_3d_200092', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200093', 'dpo_3d_200093', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200094', 'dpo_3d_200094', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200095', 'dpo_3d_200095', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200096', 'dpo_3d_200096', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200097', 'dpo_3d_200097', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200098', 'dpo_3d_200098', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200099', 'dpo_3d_200099', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200100', 'dpo_3d_200100', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200101', 'dpo_3d_200101', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200102', 'dpo_3d_200102', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200103', 'dpo_3d_200103', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200104', 'dpo_3d_200104', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200105', 'dpo_3d_200105', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200106', 'dpo_3d_200106', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200107', 'dpo_3d_200107', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200108', 'dpo_3d_200108', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200109', 'dpo_3d_200109', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200110', 'dpo_3d_200110', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200111', 'dpo_3d_200111', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200112', 'dpo_3d_200112', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200113', 'dpo_3d_200113', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200114', 'dpo_3d_200114', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200115', 'dpo_3d_200115', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200116', 'dpo_3d_200116', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200117', 'dpo_3d_200117', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200118', 'dpo_3d_200118', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200119', 'dpo_3d_200119', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200120', 'dpo_3d_200120', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200121', 'dpo_3d_200121', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200122', 'dpo_3d_200122', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200123', 'dpo_3d_200123', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200124', 'dpo_3d_200124', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200125', 'dpo_3d_200125', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200126', 'dpo_3d_200126', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200127', 'dpo_3d_200127', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200128', 'dpo_3d_200128', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200129', 'dpo_3d_200129', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200130', 'dpo_3d_200130', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200131', 'dpo_3d_200131', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200132', 'dpo_3d_200132', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200133', 'dpo_3d_200133', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200134', 'dpo_3d_200134', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200135', 'dpo_3d_200135', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200136', 'dpo_3d_200136', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200137', 'dpo_3d_200137', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200138', 'dpo_3d_200138', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200139', 'dpo_3d_200139', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200140', 'dpo_3d_200140', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200141', 'dpo_3d_200141', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200142', 'dpo_3d_200142', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200143', 'dpo_3d_200143', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200144', 'dpo_3d_200144', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200145', 'dpo_3d_200145', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200146', 'dpo_3d_200146', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200147', 'dpo_3d_200147', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200148', 'dpo_3d_200148', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200149', 'dpo_3d_200149', IDLabelSet, records);
-    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200150', 'dpo_3d_200150', IDLabelSet, records);
+async function scrapeDPOEdanMDMWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, records: EdanResult[], gatherRaw: boolean): Promise<void> {
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200001', 'dpo_3d_200001', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200002', 'dpo_3d_200002', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200003', 'dpo_3d_200003', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200004', 'dpo_3d_200004', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200005', 'dpo_3d_200005', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200006', 'dpo_3d_200006', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200007', 'dpo_3d_200007', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200008', 'dpo_3d_200008', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200009', 'dpo_3d_200009', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200010', 'dpo_3d_200010', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200011', 'dpo_3d_200011', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200012', 'dpo_3d_200012', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200013', 'dpo_3d_200013', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200014', 'dpo_3d_200014', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200015', 'dpo_3d_200015', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200016', 'dpo_3d_200016', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200017', 'dpo_3d_200017', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200018', 'dpo_3d_200018', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200019', 'dpo_3d_200019', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200020', 'dpo_3d_200020', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200021', 'dpo_3d_200021', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200022', 'dpo_3d_200022', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200023', 'dpo_3d_200023', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200024', 'dpo_3d_200024', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200025', 'dpo_3d_200025', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200026', 'dpo_3d_200026', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200027', 'dpo_3d_200027', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200028', 'dpo_3d_200028', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200029', 'dpo_3d_200029', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200030', 'dpo_3d_200030', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200031', 'dpo_3d_200031', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200032', 'dpo_3d_200032', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200033', 'dpo_3d_200033', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200034', 'dpo_3d_200034', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200035', 'dpo_3d_200035', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200036', 'dpo_3d_200036', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200037', 'dpo_3d_200037', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200038', 'dpo_3d_200038', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200039', 'dpo_3d_200039', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200040', 'dpo_3d_200040', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200041', 'dpo_3d_200041', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200042', 'dpo_3d_200042', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200043', 'dpo_3d_200043', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200044', 'dpo_3d_200044', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200045', 'dpo_3d_200045', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200046', 'dpo_3d_200046', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200047', 'dpo_3d_200047', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200048', 'dpo_3d_200048', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200049', 'dpo_3d_200049', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200050', 'dpo_3d_200050', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200051', 'dpo_3d_200051', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200052', 'dpo_3d_200052', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200053', 'dpo_3d_200053', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200054', 'dpo_3d_200054', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200055', 'dpo_3d_200055', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200056', 'dpo_3d_200056', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200057', 'dpo_3d_200057', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200058', 'dpo_3d_200058', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200059', 'dpo_3d_200059', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200060', 'dpo_3d_200060', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200061', 'dpo_3d_200061', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200062', 'dpo_3d_200062', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200063', 'dpo_3d_200063', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200064', 'dpo_3d_200064', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200065', 'dpo_3d_200065', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200066', 'dpo_3d_200066', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200067', 'dpo_3d_200067', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200068', 'dpo_3d_200068', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200069', 'dpo_3d_200069', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200070', 'dpo_3d_200070', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200071', 'dpo_3d_200071', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200072', 'dpo_3d_200072', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200073', 'dpo_3d_200073', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200074', 'dpo_3d_200074', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200075', 'dpo_3d_200075', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200076', 'dpo_3d_200076', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200077', 'dpo_3d_200077', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200078', 'dpo_3d_200078', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200079', 'dpo_3d_200079', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200080', 'dpo_3d_200080', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200081', 'dpo_3d_200081', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200082', 'dpo_3d_200082', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200083', 'dpo_3d_200083', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200084', 'dpo_3d_200084', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200085', 'dpo_3d_200085', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200086', 'dpo_3d_200086', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200087', 'dpo_3d_200087', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200088', 'dpo_3d_200088', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200089', 'dpo_3d_200089', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200090', 'dpo_3d_200090', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200091', 'dpo_3d_200091', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200092', 'dpo_3d_200092', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200093', 'dpo_3d_200093', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200094', 'dpo_3d_200094', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200095', 'dpo_3d_200095', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200096', 'dpo_3d_200096', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200097', 'dpo_3d_200097', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200098', 'dpo_3d_200098', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200099', 'dpo_3d_200099', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200100', 'dpo_3d_200100', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200101', 'dpo_3d_200101', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200102', 'dpo_3d_200102', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200103', 'dpo_3d_200103', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200104', 'dpo_3d_200104', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200105', 'dpo_3d_200105', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200106', 'dpo_3d_200106', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200107', 'dpo_3d_200107', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200108', 'dpo_3d_200108', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200109', 'dpo_3d_200109', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200110', 'dpo_3d_200110', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200111', 'dpo_3d_200111', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200112', 'dpo_3d_200112', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200113', 'dpo_3d_200113', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200114', 'dpo_3d_200114', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200115', 'dpo_3d_200115', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200116', 'dpo_3d_200116', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200117', 'dpo_3d_200117', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200118', 'dpo_3d_200118', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200119', 'dpo_3d_200119', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200120', 'dpo_3d_200120', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200121', 'dpo_3d_200121', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200122', 'dpo_3d_200122', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200123', 'dpo_3d_200123', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200124', 'dpo_3d_200124', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200125', 'dpo_3d_200125', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200126', 'dpo_3d_200126', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200127', 'dpo_3d_200127', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200128', 'dpo_3d_200128', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200129', 'dpo_3d_200129', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200130', 'dpo_3d_200130', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200131', 'dpo_3d_200131', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200132', 'dpo_3d_200132', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200133', 'dpo_3d_200133', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200134', 'dpo_3d_200134', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200135', 'dpo_3d_200135', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200136', 'dpo_3d_200136', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200137', 'dpo_3d_200137', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200138', 'dpo_3d_200138', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200139', 'dpo_3d_200139', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200140', 'dpo_3d_200140', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200141', 'dpo_3d_200141', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200142', 'dpo_3d_200142', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200143', 'dpo_3d_200143', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200144', 'dpo_3d_200144', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200145', 'dpo_3d_200145', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200146', 'dpo_3d_200146', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200147', 'dpo_3d_200147', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200148', 'dpo_3d_200148', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200149', 'dpo_3d_200149', IDLabelSet, records, gatherRaw);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200150', 'dpo_3d_200150', IDLabelSet, records, gatherRaw);
 }
 
 async function scrapeDPOIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, records: EdanResult[]): Promise<void> {
@@ -2130,9 +2188,265 @@ async function scrapeDPOIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>
     await handleResultsWithIDs(ICol, 'http://n2t.net/ark:/65665/3c32276ea-e29b-49b7-b699-2a57a621b6e6', '567', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'http://n2t.net/ark:/65665/3c34fa78d-02b8-4c1e-8a2a-2429ef6ab6a1', '689', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'https://collection.cooperhewitt.org/objects/18726645/', '10', IDLabelSet, records);
+
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200001', 'dpo_3d_200001', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200002', 'dpo_3d_200002', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200003', 'dpo_3d_200003', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200004', 'dpo_3d_200004', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200005', 'dpo_3d_200005', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200006', 'dpo_3d_200006', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200007', 'dpo_3d_200007', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200008', 'dpo_3d_200008', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200009', 'dpo_3d_200009', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200010', 'dpo_3d_200010', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200011', 'dpo_3d_200011', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200012', 'dpo_3d_200012', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200013', 'dpo_3d_200013', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200014', 'dpo_3d_200014', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200015', 'dpo_3d_200015', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200016', 'dpo_3d_200016', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200017', 'dpo_3d_200017', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200018', 'dpo_3d_200018', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200019', 'dpo_3d_200019', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200020', 'dpo_3d_200020', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200021', 'dpo_3d_200021', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200022', 'dpo_3d_200022', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200023', 'dpo_3d_200023', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200024', 'dpo_3d_200024', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200025', 'dpo_3d_200025', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200026', 'dpo_3d_200026', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200027', 'dpo_3d_200027', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200028', 'dpo_3d_200028', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200029', 'dpo_3d_200029', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200030', 'dpo_3d_200030', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200031', 'dpo_3d_200031', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200032', 'dpo_3d_200032', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200033', 'dpo_3d_200033', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200034', 'dpo_3d_200034', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200035', 'dpo_3d_200035', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200036', 'dpo_3d_200036', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200037', 'dpo_3d_200037', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200038', 'dpo_3d_200038', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200039', 'dpo_3d_200039', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200040', 'dpo_3d_200040', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200041', 'dpo_3d_200041', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200042', 'dpo_3d_200042', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200043', 'dpo_3d_200043', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200044', 'dpo_3d_200044', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200045', 'dpo_3d_200045', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200046', 'dpo_3d_200046', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200047', 'dpo_3d_200047', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200048', 'dpo_3d_200048', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200049', 'dpo_3d_200049', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200050', 'dpo_3d_200050', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200051', 'dpo_3d_200051', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200052', 'dpo_3d_200052', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200053', 'dpo_3d_200053', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200054', 'dpo_3d_200054', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200055', 'dpo_3d_200055', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200056', 'dpo_3d_200056', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200057', 'dpo_3d_200057', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200058', 'dpo_3d_200058', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200059', 'dpo_3d_200059', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200060', 'dpo_3d_200060', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200061', 'dpo_3d_200061', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200062', 'dpo_3d_200062', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200063', 'dpo_3d_200063', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200064', 'dpo_3d_200064', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200065', 'dpo_3d_200065', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200066', 'dpo_3d_200066', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200067', 'dpo_3d_200067', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200068', 'dpo_3d_200068', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200069', 'dpo_3d_200069', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200070', 'dpo_3d_200070', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200071', 'dpo_3d_200071', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200072', 'dpo_3d_200072', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200073', 'dpo_3d_200073', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200074', 'dpo_3d_200074', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200075', 'dpo_3d_200075', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200076', 'dpo_3d_200076', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200077', 'dpo_3d_200077', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200078', 'dpo_3d_200078', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200079', 'dpo_3d_200079', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200080', 'dpo_3d_200080', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200081', 'dpo_3d_200081', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200082', 'dpo_3d_200082', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200083', 'dpo_3d_200083', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200084', 'dpo_3d_200084', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200085', 'dpo_3d_200085', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200086', 'dpo_3d_200086', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200087', 'dpo_3d_200087', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200088', 'dpo_3d_200088', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200089', 'dpo_3d_200089', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200090', 'dpo_3d_200090', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200091', 'dpo_3d_200091', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200092', 'dpo_3d_200092', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200093', 'dpo_3d_200093', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200094', 'dpo_3d_200094', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200095', 'dpo_3d_200095', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200096', 'dpo_3d_200096', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200097', 'dpo_3d_200097', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200098', 'dpo_3d_200098', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200099', 'dpo_3d_200099', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200100', 'dpo_3d_200100', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200101', 'dpo_3d_200101', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200102', 'dpo_3d_200102', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200103', 'dpo_3d_200103', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200104', 'dpo_3d_200104', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200105', 'dpo_3d_200105', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200106', 'dpo_3d_200106', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200107', 'dpo_3d_200107', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200108', 'dpo_3d_200108', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200109', 'dpo_3d_200109', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200110', 'dpo_3d_200110', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200111', 'dpo_3d_200111', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200112', 'dpo_3d_200112', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200113', 'dpo_3d_200113', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200114', 'dpo_3d_200114', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200115', 'dpo_3d_200115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200116', 'dpo_3d_200116', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200117', 'dpo_3d_200117', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200118', 'dpo_3d_200118', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200119', 'dpo_3d_200119', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200120', 'dpo_3d_200120', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200121', 'dpo_3d_200121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200122', 'dpo_3d_200122', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200123', 'dpo_3d_200123', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200124', 'dpo_3d_200124', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200125', 'dpo_3d_200125', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200126', 'dpo_3d_200126', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200127', 'dpo_3d_200127', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200128', 'dpo_3d_200128', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200129', 'dpo_3d_200129', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200130', 'dpo_3d_200130', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200131', 'dpo_3d_200131', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200132', 'dpo_3d_200132', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200133', 'dpo_3d_200133', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200134', 'dpo_3d_200134', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200135', 'dpo_3d_200135', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200136', 'dpo_3d_200136', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200137', 'dpo_3d_200137', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200138', 'dpo_3d_200138', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200139', 'dpo_3d_200139', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200140', 'dpo_3d_200140', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200141', 'dpo_3d_200141', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200142', 'dpo_3d_200142', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200143', 'dpo_3d_200143', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200144', 'dpo_3d_200144', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200145', 'dpo_3d_200145', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200146', 'dpo_3d_200146', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200147', 'dpo_3d_200147', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200148', 'dpo_3d_200148', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200149', 'dpo_3d_200149', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200150', 'dpo_3d_200150', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '173', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040003', '173', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200006', '141', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040000', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040001', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040003', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_10250729', '204', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3572783', '204', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200035', '399', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200036', '399', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8477947', '388', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8478070', '388', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904639', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904641', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904656', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449492', '120', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449498', '120', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1927378', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939648', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939650', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939654', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1442896', '923', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1121083', '936', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_748896', '936', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1119960', '937', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1119964', '937', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1691697', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1692144', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1692150', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841743', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841746', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841749', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841750', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841752', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1277512', '903', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1277513', '903', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1067111', '920', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1067112', '920', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801982', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801983', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801984', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681358', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681359', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681360', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681361', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681362', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1296216', '910', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1296217', '910', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289214', '907', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289216', '907', IDLabelSet, records);
     // #endregion
 }
 // #endregion
+
+async function scrapeDPOEdanListIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, records: EdanResult[]): Promise<void> {
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '173', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040003', '173', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200006', '141', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040000', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040001', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040002', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nasm_A19730040003', '180', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_10250729', '204', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhpaleobiology_3572783', '204', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200035', '399', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200036', '399', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8477947', '388', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmnhanthropology_8478070', '388', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904639', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904641', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1904656', '121', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449492', '120', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1449498', '120', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1927378', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939648', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939650', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1939654', '115', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1442896', '923', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1121083', '936', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_748896', '936', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1119960', '937', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1119964', '937', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1691697', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1692144', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1692150', '914', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841743', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841746', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841749', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841750', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1841752', '916', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1277512', '903', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1277513', '903', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1067111', '920', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1067112', '920', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801982', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801983', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1801984', '930', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681358', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681359', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681360', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681361', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_681362', '935', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1296216', '910', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1296217', '910', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289214', '907', IDLabelSet, records);
+    await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289216', '907', IDLabelSet, records);
+}
 
 // #region Handle Results
 async function handleResultsEdanLists(ICol: COL.ICollection, WS: NodeJS.WritableStream | null, query: string, id: string, unitFilter?: string | undefined): Promise<boolean> {
@@ -2164,10 +2478,11 @@ async function handleResultsEdanLists(ICol: COL.ICollection, WS: NodeJS.Writable
     return false;
 }
 
-async function handleResultsWithIDs(ICol: COL.ICollection, query: string, id: string, IDLabelSet: Set<string>, records: EdanResult[]): Promise<boolean> {
+async function handleResultsWithIDs(ICol: COL.ICollection, query: string, id: string,
+    IDLabelSet: Set<string>, records: EdanResult[], gatherRaw?: boolean): Promise<boolean> {
 
     for (let retry: number = 1; retry <= 5; retry++) {
-        const results: COL.CollectionQueryResults | null = await ICol.queryCollection(query.trim(), 10, 0, { gatherIDMap: true });
+        const results: COL.CollectionQueryResults | null = await ICol.queryCollection(query.trim(), 10, 0, { gatherIDMap: true, gatherRaw });
         // LOG.info(`*** Edan Scrape: ${H.Helpers.JSONStringify(results)}`, LOG.LS.eTEST);
         if (results) {
             if (results.error)

@@ -4,6 +4,9 @@ import { eEventKey } from '../../event/interface/EventEnums';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
+const DB_OPERATION_RETRIES: number = 3;
+const DB_OPERATION_RETRY_DELAY: number = 1500;
+
 export abstract class DBObject<T> {
     public abstract fetchTableName(): string;
     public abstract fetchID(): number;
@@ -33,40 +36,60 @@ export abstract class DBObject<T> {
     }
 
     async create(): Promise<boolean> {
-        const retVal: boolean = await this.createWorker(); /* istanbul ignore else */
-        if (retVal) {
-            this.updateCachedValues();
-            this.audit(eEventKey.eDBCreate); // don't await, allow this to continue asynchronously
+        for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
+            if (await this.createWorker()) /* istanbul ignore else */ {
+                this.updateCachedValues();
+                this.audit(eEventKey.eDBCreate); // don't await, allow this to continue asynchronously
+                return this.logSuccess('create', retry);
+            } else if (retry < DB_OPERATION_RETRIES)
+                await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
-        return retVal;
+        return false;
     }
     async update(): Promise<boolean> {
-        const retVal: boolean = await this.updateWorker(); /* istanbul ignore else */
-        if (retVal) {
-            this.updateCachedValues();
-            this.audit(eEventKey.eDBUpdate); // don't await, allow this to continue asynchronously
+        for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
+            if (await this.updateWorker()) /* istanbul ignore else */ {
+                this.updateCachedValues();
+                this.audit(eEventKey.eDBUpdate); // don't await, allow this to continue asynchronously
+                return this.logSuccess('update', retry);
+            } else if (retry < DB_OPERATION_RETRIES)
+                await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
-        return retVal;
+        return false;
     }
     async delete(): Promise<boolean> {
-        const retVal: boolean = await this.deleteWorker(); /* istanbul ignore else */
-        if (retVal)
-            this.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
-        return retVal;
+        for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
+            if (await this.deleteWorker()) /* istanbul ignore else */ {
+                this.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
+                return this.logSuccess('delete', retry);
+            } else if (retry < DB_OPERATION_RETRIES)
+                await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
+        }
+        return false;
     }
 
     static async createMany<T>(data: DBObject<T>[]): Promise<boolean> {
-        const retVal: boolean = await this.createManyWorker<T>(data); /* istanbul ignore else */
-        if (retVal) {
-            for (const dataItem of data)
-                dataItem.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
+        for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
+            if (await this.createManyWorker<T>(data)) /* istanbul ignore else */ {
+                for (const dataItem of data)
+                    dataItem.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
+                return true;
+            } else if (retry < DB_OPERATION_RETRIES)
+                await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
-        return retVal;
+        return false;
     }
 
     protected logError(method: string, error?: any): boolean { // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-        LOG.error(`DBAPI.${this.fetchTableName()}.${method} ${H.Helpers.JSONStringify(this)}`, LOG.LS.eDB, error);
+        const errorMessage: string = (H.Helpers.safeString(error?.message) ?? '').replace(/(\n|\r)/g, ' ');
+        LOG.error(`DBAPI.${this.fetchTableName()}.${method} ${H.Helpers.JSONStringify(this)}: ${errorMessage}`, LOG.LS.eDB);
         return false;
+    }
+
+    private logSuccess(method: string, retry: number): boolean {
+        if (retry > 1)
+            LOG.info(`DBAPI.${this.fetchTableName()}.${method} ${H.Helpers.JSONStringify(this)} succeeded on retry ${retry}`, LOG.LS.eDB);
+        return true;
     }
 }
 
