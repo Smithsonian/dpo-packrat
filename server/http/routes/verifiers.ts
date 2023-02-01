@@ -10,11 +10,11 @@ import * as LOG from '../../utils/logger';
 import * as WFV from '../../workflow/impl/Packrat/WorkflowVerifier';
 import * as DBAPI from '../../db';
 import { ASL, LocalStore } from '../../utils/localStore';
+import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
 
 export async function routeRequest(request: Request, response: Response): Promise<void> {
 
     const verifierToRun = request.params.id;
-    console.warn(verifierToRun+'|'+JSON.stringify(request.params));
 
     // if nothing then complain
     if(verifierToRun===undefined) {
@@ -32,7 +32,7 @@ export async function routeRequest(request: Request, response: Response): Promis
         default: {
             LOG.error(`HTTP request: unsupported verify type (${verifierToRun})`, LOG.LS.eHTTP);
             response.send(`Request failed. Unsupported verify type/path (${verifierToRun})`);
-        }
+        } break;
     }
 }
 
@@ -51,12 +51,16 @@ async function verifyEdanWorkflow(req: Request, response: Response): Promise<voi
         return;
     }
 
+    // grab our local store and user ID
+    const LS: LocalStore | undefined = ASL.getStore();
+    const idUser: number | undefined | null = LS?.idUser;
+
     // create our workflow (but don't start) and add it to the DB
     const wfParams: WF.WorkflowParameters = {
         eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeVerifier,
         //idSystemObject: undefined, // not operating on SystemObjects
         //idProject: TODO: populate with idProject
-        //idUserInitiator: this.user?.idUser,   // not getting user at this point (but should when behind wall)
+        idUserInitiator: idUser ?? undefined,   // not getting user at this point (but should when behind wall)
         autoStart: false // don't start the workflow because we need to configure it
     };
     const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
@@ -101,8 +105,8 @@ async function verifyEdanWorkflow(req: Request, response: Response): Promise<voi
 
     // get the local store, our current report ID and fetch it
     // WHY: can the IReport higher up expose the id for fetch or grabbing the ID?
-    const LS: LocalStore = await ASL.getOrCreateStore();
-    const idWorkflowReport: number | undefined = LS.getWorkflowReportID();
+    // const LS: LocalStore = await ASL.getOrCreateStore();
+    const idWorkflowReport: number | undefined = LS?.getWorkflowReportID();
     if (!idWorkflowReport) {
         const error: string = 'could not get workflow report ID';
         sendResponseMessage(response,false,error);
@@ -144,7 +148,7 @@ async function verifyEdanWorkflow(req: Request, response: Response): Promise<voi
     }
 
     // create our download URL for future use. (NOTE: using HTTP so localhost works)
-    const workflowReportURL: string = `http://localhost:4000/download?idWorkflowReport=${idWorkflowReport}`;
+    const workflowReportURL: string = RouteBuilder.DownloadWorkflowReport(idWorkflowReport,eHrefMode.ePrependServerURL); //`http://localhost:4000/download?idWorkflowReport=${idWorkflowReport}`;
     LOG.info(`EDAN verifier SUCCEEDED!! (${workflowReportURL})`,LOG.LS.eGQL);
     sendResponseMessage(response,true,getResponseMarkup(true,'Download Report',workflowReportURL));//`<a href="${workflowReportURL}">DOWNLOAD</a>`);
 

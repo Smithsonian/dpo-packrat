@@ -4,6 +4,7 @@ import * as COL from '../../collections/interface/';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as L from 'lodash';
+import * as V from '../../utils/verifiers/EdanVerifier';
 // import { join } from 'path';
 
 afterAll(async done => {
@@ -2558,8 +2559,6 @@ async function handle3DContentQuery(ICol: COL.ICollection, _WS: NodeJS.WritableS
 
 //----------------------------------------------------------------
 // #region EDAN Verifier
-import * as V from '../../utils/verifiers/EdanVerifier';
-
 function executeEdanVerifier(ICol: COL.ICollection) {
 
     jest.setTimeout(3000000);
