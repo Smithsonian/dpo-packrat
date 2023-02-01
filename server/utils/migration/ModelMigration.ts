@@ -520,7 +520,7 @@ export class ModelMigration {
             if (channels && isArray(channels)) {
                 for (const channel of channels) {
                     if (channel.uri && !isEmbeddedTexture(channel.uri)) {
-                        const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(channel.uri);
+                        const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(channel.uri.trim());
                         if (ingestTextureRes.skipped)
                             continue;
                         if (!ingestTextureRes.success) {

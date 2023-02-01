@@ -5,6 +5,7 @@ type Query {
     getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
     getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
     getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
+    getVoyagerParams(input: GetVoyagerParamsInput!): GetVoyagerParamsResult!
     getVersionsForAsset(input: GetVersionsForAssetInput!): GetVersionsForAssetResult!
     getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
     getProjectList(input: GetProjectListInput!): GetProjectListResult!
@@ -214,6 +215,16 @@ input GetAssetDetailsForSystemObjectInput {
 type GetAssetDetailsForSystemObjectResult {
     columns: [ColumnDefinition!]!
     assetDetailRows: [JSON!]!
+}
+
+input GetVoyagerParamsInput {
+    idSystemObject: Int!
+}
+
+type GetVoyagerParamsResult {
+    path: String
+    document: String
+    idSystemObjectScene: Int
 }
 
 type DetailVersion {

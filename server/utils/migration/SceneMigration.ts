@@ -206,8 +206,8 @@ export class SceneMigration {
                 }
             }
 
-            // if we have no subjects, or if we have multiple subjects, assign the license to the scene
-            if (!idSystemObjects || idSystemObjects.length > 1) {
+            // if we have no subjects
+            if (!idSystemObjects) {
                 if (!sceneSO)
                     sceneSO = await this.scene.fetchSystemObject();
                 if (!sceneSO)
@@ -226,8 +226,10 @@ export class SceneMigration {
                     return this.recordError('migrateScene', `failed to fetch assigned licenses for idSystemObject ${idSystemObject}`);
                 if (licenseAssignments.length > 0) {
                     for (const licenseAssignment of licenseAssignments) {
-                        if (licenseAssignment.assignmentActive() && licenseAssignment.idLicense !== License.idLicense)
-                            return this.recordError('migrateScene', `license ${H.Helpers.JSONStringify(licenseAssignment)} already assigned to ${idSystemObject} does not match to-be-assigned license of ${H.Helpers.JSONStringify(License)}`);
+                        if (licenseAssignment.assignmentActive() && licenseAssignment.idLicense !== License.idLicense) {
+                            this.recordError('migrateScene', `WARN license ${H.Helpers.JSONStringify(licenseAssignment)} already assigned to ${idSystemObject} does not match to-be-assigned license of ${H.Helpers.JSONStringify(License)}`);
+                            continue;
+                        }
                     }
                 }
 
@@ -645,7 +647,16 @@ export class SceneMigration {
             return this.recordError('fetchAndIngestResources', `called without required data for ${H.Helpers.JSONStringify(this.scenePackage)}`);
 
         const edanURL: string = `3d_package:${this.scenePackage.EdanUUID}`;
-        const edanRecord: COL.EdanRecord | null = await this.ICol.fetchContent(undefined, edanURL);
+        let edanRecord: COL.EdanRecord | null = null;
+
+        // try 3 times to get our content from EDAN
+        for (let retry: number = 1; retry <= 3; retry++) {
+            edanRecord = await this.ICol.fetchContent(undefined, edanURL);
+            if (edanRecord)
+                break;
+            else if (retry < 3)
+                await H.Helpers.sleep(1500);
+        }
         if (!edanRecord)
             return this.recordError('fetchAndIngestResources', `unable to fetch EDAN record for ${edanURL}`);
 
@@ -758,15 +769,15 @@ export class SceneMigration {
         const AutomationTag: string = JobCookSIGenerateDownloads.computeModelAutomationTag(downloadType);
 
         const idVPurpose: number | null = SceneMigration.vocabDownload?.idVocabulary ?? null;
-        const idVUnits: number | null = Units?.idVocabulary ?? null;
+        const idVUnits: number | null = Units?.idVocabulary ?? this.modelSource?.idVUnits ?? null;
         const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
         const model: DBAPI.Model = new DBAPI.Model({
             idModel: 0,
             Name,
             Title: null,
             DateCreated: new Date(),
-            idVCreationMethod: null,
-            idVModality: null,
+            idVCreationMethod: this.modelSource?.idVCreationMethod ?? null,
+            idVModality: this.modelSource?.idVModality ?? null,
             idVPurpose,
             idVUnits,
             idVFileType: vFileType ? vFileType.idVocabulary : null,

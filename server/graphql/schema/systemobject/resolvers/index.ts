@@ -5,6 +5,7 @@ import Metadata from './types/Metadata';
 import getSystemObjectDetails from './queries/getSystemObjectDetails';
 import getSourceObjectIdentifer from './queries/getSourceObjectIdentifer';
 import getAssetDetailsForSystemObject from './queries/getAssetDetailsForSystemObject';
+import getVoyagerParams from './queries/getVoyagerParams';
 import getVersionsForAsset from './queries/getVersionsForAsset';
 import getDetailsTabDataForObject from './queries/getDetailsTabDataForObject';
 import getProjectList from './queries/getProjectList';
@@ -24,6 +25,7 @@ const resolvers = {
         getSystemObjectDetails,
         getSourceObjectIdentifer,
         getAssetDetailsForSystemObject,
+        getVoyagerParams,
         getVersionsForAsset,
         getDetailsTabDataForObject,
         getProjectList,
