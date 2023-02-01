@@ -6,16 +6,16 @@ import * as COMMON from '@dpo-packrat/common';
 // import * as H from '../helpers';
 
 export type IdentifierDetails = {
-    identifier: DBAPI.Identifier | null,
-    identifierType: DBAPI.Vocabulary | null,
-    identifierTypeEnum: COMMON.eVocabularyID | null,
+    identifier: DBAPI.Identifier | null;
+    identifierType: DBAPI.Vocabulary | null;
+    identifierTypeEnum: COMMON.eVocabularyID | null;
 };
 
 export type IdentifierList = {
-    preferred: IdentifierDetails | null,
-    edan: IdentifierDetails | null,
-    ark: IdentifierDetails | null,
-    details: IdentifierDetails[],  // complete list of all identifiers
+    preferred: IdentifierDetails | null;
+    edan: IdentifierDetails | null;
+    ark: IdentifierDetails | null;
+    details: IdentifierDetails[];  // complete list of all identifiers
 };
 
 export class VerifierBase {
@@ -25,16 +25,17 @@ export class VerifierBase {
     protected async getIdentifierType(identifier: DBAPI.Identifier): Promise<IdentifierDetails | null> {
 
         // grab the identifier type object from the Packrat DB
+        // TODO: use Vocabulary.CACHE to reduce DB hits
         const identifierType: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(identifier.idVIdentifierType);
         if(!identifierType){
-            LOG.error(`could not find identifier type in DB (identifier: ${identifier.idVIdentifierType} )`, LOG.LS.eTEST);
+            LOG.error(`could not find identifier type in DB (identifier: ${identifier.idVIdentifierType} )`, LOG.LS.eSYS);
             return null;
         }
 
         // pull from enumeration from the CACHE (vocabulary id -> enum)
         const identifierTypeEnum: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(identifier.idVIdentifierType);
         if(identifierTypeEnum===undefined){
-            LOG.error(`could not find enumerator for identifier type (${identifier.idVIdentifierType}) in Cache`, LOG.LS.eTEST);
+            LOG.error(`could not find enumerator for identifier type (${identifier.idVIdentifierType}) in Cache`, LOG.LS.eSYS);
             return null;
         }
 
@@ -50,14 +51,14 @@ export class VerifierBase {
         if(subject.idIdentifierPreferred) {
             const preferredIdentifier: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(subject.idIdentifierPreferred);
             if(!preferredIdentifier){
-                LOG.error(`subject's preferredId not found in the DB (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eTEST);
+                LOG.error(`subject's preferredId not found in the DB (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eSYS);
                 // subjectStats[i].isValid = false;
             } else {
                 // grab our identifier details (type) and store it
                 const preferredIdentifierDetails: IdentifierDetails | null = await this.getIdentifierType(preferredIdentifier);
                 if(preferredIdentifierDetails) {
                     result.preferred = preferredIdentifierDetails;
-                    result.details?.push(preferredIdentifierDetails);
+                    result.details.push(preferredIdentifierDetails);
                 }
 
                 // check for edan/ark and store as appropriate because the preferred id may be ARK too
@@ -76,11 +77,11 @@ export class VerifierBase {
         // grab our list of identifiers from the SystemObject id
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(systemObject.idSystemObject);
         if(!identifiers){
-            LOG.error(`could not get identifiers from subject (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eTEST);
+            LOG.error(`could not get identifiers from subject (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eSYS);
             return null;
         }
         if(identifiers.length<=0){
-            LOG.info(`(WARNING) no identifiers assigned to subject (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eTEST);
+            LOG.info(`(WARNING) no identifiers assigned to subject (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eSYS);
             return result;
         }
 
@@ -88,18 +89,20 @@ export class VerifierBase {
         for(const identifier of identifiers) {
 
             // get our details for this identifier, skip if error, store if valid
-            const details = await this.getIdentifierType(identifier);
+            const details: IdentifierDetails | null = await this.getIdentifierType(identifier);
             if(!details) {
-                LOG.error(`could not get identifier details from subject (identifier: ${identifier.IdentifierValue} | id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eTEST);
+                LOG.error(`could not get identifier details from subject (identifier: ${identifier.IdentifierValue} | id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eSYS);
                 continue;
             }
 
             // make sure it doesn't already exist before pushing it
+            // TODO: revisit test in case of 'undefines'
             let idExists: boolean = false;
             for(const id of result.details){
                 if(details.identifierTypeEnum===id.identifierTypeEnum &&
                     details.identifier?.IdentifierValue==id.identifier?.IdentifierValue) {
                     idExists = true;
+                    break;
                 }
             }
             if(idExists) continue;
@@ -126,7 +129,7 @@ export class VerifierBase {
 
         const packratUnit = await DBAPI.Unit.fetch(subject.idUnit);
         if(!packratUnit) {
-            LOG.error(`Packrat DB did not return a unit for subject. (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eTEST);
+            LOG.error(`Packrat DB did not return a unit for subject. (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eSYS);
             return null;
         }
 
@@ -137,7 +140,6 @@ export class VerifierBase {
 
     protected async getUnitFromEdanUnit(edanUnit: string): Promise<DBAPI.Unit | null> {
 
-        // TODO: additional verification or handling? (e.g. create new Unit for unknown types?)
         // TODO: relocate logic to central/shared location to benefit ingestion
 
         // see if Packrat's UnitEdan table has a direct match for this unit.
@@ -147,34 +149,8 @@ export class VerifierBase {
             if(result) return result;
         }
 
-        LOG.error(`did not find EDAN unit in the UnitEdan DB. investigate adding it... (${edanUnit}) `, LOG.LS.eTEST);
+        LOG.error(`did not find EDAN unit in the UnitEdan DB. investigate adding it... (${edanUnit}) `, LOG.LS.eSYS);
         return null;
-
-        // if edan unit not found then do a deeper (less precise) named search on Packrat's units
-        // const packratUnits: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(edanUnit);
-        // if(!packratUnits){
-        //     LOG.error(`did not find known Packrat unit for EDAN unit. (${edanUnit})`, LOG.LS.eTEST);
-        //     return null;
-        // }
-
-        // make sure we didn't get multiples
-        // if(packratUnits.length!=1) {
-        //     LOG.error(`received multiple hits for EDAN unit. Should only be 1 for subjects. Checking for direct match with our edanUnit. (${edanUnit} -> ${packratUnits.map(x=>{ return x.Abbreviation; }).join('|')})`, LOG.LS.eTEST);
-
-        //     // now we check if our unit from packrat (for a subject) is in the returned results
-        //     for(const unit of packratUnits) {
-        //         // HACK: doing string compare to see if provided edanUnit string matches any of the returned Packrat units.
-        //         if(edanUnit===unit.Abbreviation || edanUnit===unit.Name) {
-        //             LOG.info(`(WARNING) EDAN unit was found in returned Packrat units by comparing Name/Abbreviation. (${edanUnit})`, LOG.LS.eTEST);
-        //             LOG.info(`\n\tEDAN Unit: ${edanUnit}\n\tPackrat returns: ${H.Helpers.JSONStringify(packratUnits)}`, LOG.LS.eTEST);
-        //             return unit;
-        //         }
-        //     }
-        //     return null;
-        // }
-
-        // return our first unit
-        // return packratUnits[0];
     }
 
     protected async getEdanRecordIdentifiers(record: COL.CollectionQueryResultRecord): Promise<IdentifierList | null> {
@@ -193,7 +169,7 @@ export class VerifierBase {
                 for(const identifier of edanIdentifiers) {
                     const details: IdentifierDetails | null = await this.getIdentifierType(identifier);
                     if(!details) {
-                        LOG.error(`could not get details for EDAN identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eTEST);
+                        LOG.error(`could not get details for EDAN identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eSYS);
                         continue;
                     }
 
@@ -218,7 +194,7 @@ export class VerifierBase {
                 for(const identifier of arkIdentifiers) {
                     const details: IdentifierDetails | null = await this.getIdentifierType(identifier);
                     if(!details) {
-                        LOG.error(`could not get details for ARK identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eTEST);
+                        LOG.error(`could not get details for ARK identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eSYS);
                         continue;
                     }
 
@@ -242,14 +218,14 @@ export class VerifierBase {
                 // get our type for this identifier
                 const identifierType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapIdentifierType(label);
                 if (!identifierType) {
-                    LOG.error(`\tencountered unknown identifier type ${label} for EDAN record ${record.name}`, LOG.LS.eTEST);
+                    LOG.error(`\tencountered unknown identifier type ${label} for EDAN record ${record.name}`, LOG.LS.eSYS);
                     continue;
                 }
 
-                // pull from enumeration from the CACHE (vocabulary id -> enum)
+                // pull enumeration from the CACHE (vocabulary id -> enum)
                 const identifierTypeEnum: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(identifierType.idVocabulary);
                 if(identifierTypeEnum===undefined){
-                    LOG.error(`\tcould not find enumerator for identifier type (${identifierType.Term}) in Cache`, LOG.LS.eTEST);
+                    LOG.error(`\tcould not find enumerator for identifier type (${identifierType.Term}) in Cache`, LOG.LS.eSYS);
                     continue;
                 }
 
@@ -259,7 +235,7 @@ export class VerifierBase {
                     for(const identifier of identifiers) {
                         const details: IdentifierDetails | null = await this.getIdentifierType(identifier);
                         if(!details) {
-                            LOG.error(`could not get details for EDAN identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eTEST);
+                            LOG.error(`could not get details for EDAN identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eSYS);
                             continue;
                         }
 
@@ -269,7 +245,6 @@ export class VerifierBase {
                             break;
                         }
                     }
-
                 } else {
                     // didn't find the identifier in our database so create one
                     // TODO: make DBAPI.Identifier object
@@ -284,39 +259,8 @@ export class VerifierBase {
         return result;
     }
 
-    protected async replacePackratUnit(packratUnit: DBAPI.Unit | null, edanUnit: DBAPI.Unit): Promise<boolean> {
-
-        // if packrat unit is null, we need to create one and push to the system
-        if(!packratUnit) { return false; }
-        //     console.warn(edanUnit);
-
-        //     const unitArgs = {
-        //         idUnit: 0, // use Edan's?
-        //         Name: edanUnit.Name,
-        //         Abbreviation: edanUnit.Abbreviation,
-        //         ARKPrefix: edanUnit.ARKPrefix
-        //     };
-        //     packratUnit = new DBAPI.Unit(unitArgs);
-        //     const wasCreated: boolean = await packratUnit.create();
-        //     if(!wasCreated) {
-        //         LOG.error(`failed to create new unit in Packrat (unit: ${edanUnit.Name})`, LOG.LS.eTEST);
-        //         return false;
-        //     }
-
-        //     LOG.info(`Created new unit in Packrat (id: ${packratUnit.idUnit}} | unit: ${packratUnit.Name})`, LOG.LS.eTEST);
-        //     return true;
-        // }
-
-        // copy properties over. skip the id or things will break
-        packratUnit.Name = edanUnit.Name;
-        packratUnit.Abbreviation = edanUnit.Abbreviation;
-        packratUnit.ARKPrefix = edanUnit.ARKPrefix;
-
-        const result: boolean =  await packratUnit.update();
-        if(!result) {
-            LOG.error(`could not update Packrat unit (id: ${packratUnit.idUnit}} | unit: ${packratUnit.Name})`, LOG.LS.eTEST);
-            return false;
-        }
+    protected async replacePackratUnit(_packratUnit: DBAPI.Unit | null, _edanUnit: DBAPI.Unit): Promise<boolean> {
+        // TODO: update the Subject record, and point it at the correct idUnit for the Edan Unit
         return true;
     }
 
@@ -324,14 +268,6 @@ export class VerifierBase {
 
         // [?] do we remove previous identifiers?
         // [?] do we repurpose them by reassign new values keeping ids (still need to add/remove if count mismatch)?
-
-        // get subject system object for identifiers
-
-        // wipe all identifiers from subject
-        // for(const id of packratIdentifiers.details) {
-        //     await id.identifier?.delete();
-        // }
-
         // cycle through edan identifiers creating new entries in the DB for each attached to the same SystemObject
 
         return true;

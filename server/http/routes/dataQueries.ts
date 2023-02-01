@@ -36,6 +36,7 @@ export async function routeRequest(request: Request, response: Response): Promis
 // convenience routine routine for getting system object details to be used with routes.
 // NOTE: not connected as it should not be 'live' until an API is created and protected
 async function getSystemObjectDetails(req: Request, response: Response): Promise<void> {
+    // TODO: update to use direct call to getSystemObjectDetails (db/api/schema/systemobject/resolvers/queries/...)
 
     // grab our config options from query params
     const subjectLimit: number = (req.query.limit)?parseInt(req.query.limit as string):10000;
