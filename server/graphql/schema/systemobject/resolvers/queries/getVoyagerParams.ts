@@ -15,14 +15,17 @@ export default async function getVoyagerParams(_: Parent, args: QueryGetVoyagerP
     if (!oID)
         return logError(`getVoyagerParams unable to fetch object ID and type for ${idSystemObject}`);
 
-    let idSystemObjectScene: number | undefined = undefined;
+    let SceneSO: DBAPI.SystemObjectInfo | undefined = undefined;
     switch (oID.eObjectType) {
         default:
             return logError(`getVoyagerParams called for unsupported object type ${COMMON.eSystemObjectType[oID.eObjectType]}`);
 
-        case COMMON.eSystemObjectType.eScene:
-            idSystemObjectScene = idSystemObject;
-            break;
+        case COMMON.eSystemObjectType.eScene: {
+            const OIDT: DBAPI.SystemObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectAndSystemFromSystem(idSystemObject);
+            if (!OIDT)
+                return logError(`getVoyagerParams unable to fetch system object for scene with idSystemObject ${idSystemObject}`);
+            SceneSO = OIDT.sID;
+        } break;
 
         case COMMON.eSystemObjectType.eModel: { // Determine which scene, if any, to view for a model
             const model: DBAPI.Model | null = await DBAPI.Model.fetch(oID.idObject);
@@ -68,25 +71,37 @@ export default async function getVoyagerParams(_: Parent, args: QueryGetVoyagerP
             }
 
             if (selectedScene) {
-                const SceneSO: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(selectedScene);
+                SceneSO = await CACHE.SystemObjectCache.getSystemFromScene(selectedScene);
                 if (!SceneSO)
                     return logError(`getVoyagerParams unable to fetch system object from scene ${H.Helpers.JSONStringify(selectedScene)}`);
-                idSystemObjectScene = SceneSO.idSystemObject;
             } else
                 return log(true, `getVoyagerParams found no scene parents or children of model ${H.Helpers.JSONStringify(model)}`);
 
         } break;
     }
 
-    if (!idSystemObjectScene)
+    if (!SceneSO)
         return logError(`getVoyagerParams unable to compute scene idSystemObject from input ${idSystemObject} mapped to ${H.Helpers.JSONStringify(oID)}`);
 
-    const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObjectScene);
+    const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(SceneSO.idSystemObject);
     if (!assetVersions || assetVersions.length === 0)
-        return logError(`getVoyagerParams retrieved no asset versions for scene with id ${idSystemObjectScene}`);
+        return logError(`getVoyagerParams retrieved no asset versions for scene with id ${SceneSO.idSystemObject}`);
 
-    // The first asset is the "preferred asset" for the scene -- namely, it's svx.json
-    return { path: assetVersions[0].FilePath, document: assetVersions[0].FileName, idSystemObjectScene };
+    const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(SceneSO.idSystemObject);
+    if (!SO)
+        return logError(`getVoyagerParams unable to retrieve system object with ID ${SceneSO.idSystemObject}`);
+
+    // Find the "preferred asset" for the scene -- namely, it's svx.json
+    for (const assetVersion of assetVersions) {
+        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
+        if (!asset)
+            return logError(`getVoyagerParams retrieved no asset from asset version ${H.Helpers.JSONStringify(assetVersion)}`);
+
+        if (await CACHE.VocabularyCache.isPreferredAsset(asset.idVAssetType, SO))
+            return { path: assetVersion.FilePath, document: assetVersion.FileName, idSystemObjectScene: SceneSO.idSystemObject };
+    }
+    log(false, `getVoyagerParams found no preferred assets for idSystemObject ${SceneSO.idSystemObject}`);
+    return { path: assetVersions[0].FilePath, document: assetVersions[0].FileName, idSystemObjectScene: SceneSO.idSystemObject };
 }
 
 function logError(error: string): GetVoyagerParamsResult {
