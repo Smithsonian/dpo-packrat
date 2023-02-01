@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import VoyagerExplorer from './DetailsTab/VoyagerExplorer';
 import VoyagerStory from './DetailsTab/VoyagerStory';
 import { eSystemObjectType } from '@dpo-packrat/common';
-import { getObjectAssets } from '../../hooks/useDetailsView';
+import { getVoyagerParams } from '../../hooks/useDetailsView';
 import { eVoyagerStoryMode, getRootSceneDownloadUrlForVoyager, getModeForVoyager, getVoyagerStoryUrl } from '../../../../utils/repository';
 import API from '../../../../api';
 
@@ -49,22 +49,17 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     const [eMode, setMode] = useState(eVoyagerStoryMode.eViewer);
 
     useEffect(() => {
-        const fetchObjectAssets = async () => {
+        const fetchVoyagerParams = async () => {
             if (!idSystemObject)
                 return;
-            if (objectType !== eSystemObjectType.eScene)
+            if (objectType !== eSystemObjectType.eScene && objectType !== eSystemObjectType.eModel)
                 return;
 
-            const {
-                data: {
-                    getAssetDetailsForSystemObject: { assetDetailRows }
-                }
-            } = await getObjectAssets(idSystemObject);
+            const { data: { getVoyagerParams: { path, document, idSystemObjectScene } } } = await getVoyagerParams(idSystemObject);
+            // console.log(`getVoyagerParams path: ${path}, document: ${document}, idSystemObjectScene ${idSystemObjectScene}`);
 
-            if (assetDetailRows && assetDetailRows.length > 0) {
-                const path: string = assetDetailRows[0].filePath;
-                const root: string = getRootSceneDownloadUrlForVoyager(serverEndpoint, idSystemObject, path, eMode);
-                const document: string = assetDetailRows[0].name.label;
+            if (document) {
+                const root: string = getRootSceneDownloadUrlForVoyager(serverEndpoint, idSystemObjectScene, path, eMode);
                 // console.log(`Voyager root: ${root}, document: ${document}, mode: ${eVoyagerStoryMode[eMode]}`);
 
                 setPathLink(path);
@@ -74,16 +69,16 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
             }
         };
 
-        fetchObjectAssets();
+        fetchVoyagerParams();
     }, [idSystemObject]);
 
     const thumbnailContent = thumbnail ? <img className={classes.thumbnail} src={thumbnail} loading='lazy' alt='asset thumbnail' /> : null;
-
+    // console.log(`thumbnail: ${thumbnail}, thumbnailContent: ${thumbnailContent}`);
 
     return (
         <Box display='flex' flex={1} flexDirection='column' alignItems='start'>
             {objectType !== eSystemObjectType.eScene && thumbnailContent}
-            {objectType === eSystemObjectType.eScene && rootLink.length > 0 && documentLink.length > 0 && eMode === eVoyagerStoryMode.eViewer && (
+            {(objectType === eSystemObjectType.eScene || objectType === eSystemObjectType.eModel) && rootLink.length > 0 && documentLink.length > 0 && eMode === eVoyagerStoryMode.eViewer && (
                 <React.Fragment>
                     <VoyagerExplorer
                         id='Voyager-Explorer'
@@ -92,21 +87,25 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                         height='500px'
                         width='100%'
                     />
-                    <br />
-                    <Button
-                        className={classes.editButton}
-                        variant='contained'
-                        color='primary'
-                        disableElevation
-                        href={getVoyagerStoryUrl(serverEndpoint, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eEdit)}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                    >
-                        Edit
-                    </Button>
+                    {objectType === eSystemObjectType.eScene && (
+                        <React.Fragment>
+                            <br />
+                            <Button
+                                className={classes.editButton}
+                                variant='contained'
+                                color='primary'
+                                disableElevation
+                                href={getVoyagerStoryUrl(serverEndpoint, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eEdit)}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                            >
+                                Edit
+                            </Button>
+                        </React.Fragment>
+                    )}
                 </React.Fragment>
             )}
-            {objectType === eSystemObjectType.eScene && rootLink.length > 0 && documentLink.length > 0 && eMode !== eVoyagerStoryMode.eViewer && (
+            {(objectType === eSystemObjectType.eScene || objectType === eSystemObjectType.eModel) && rootLink.length > 0 && documentLink.length > 0 && eMode !== eVoyagerStoryMode.eViewer && (
                 <VoyagerStory id='Voyager-Story' root={rootLink} document={documentLink} mode={getModeForVoyager(eMode)}
                     height='500px' width='100%'
                 />
