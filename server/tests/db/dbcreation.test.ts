@@ -1695,7 +1695,8 @@ describe('DB Creation Test Suite', () => {
                 idWorkflow: workflow.idWorkflow,
                 MimeType: 'test/mimetype',
                 Data: 'WorkflowReport test',
-                idWorkflowReport: 0
+                idWorkflowReport: 0,
+                Name: null
             });
         expect(workflowReport).toBeTruthy();
     });

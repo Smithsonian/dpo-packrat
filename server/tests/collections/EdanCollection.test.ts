@@ -4,6 +4,7 @@ import * as COL from '../../collections/interface/';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as L from 'lodash';
+import * as V from '../../utils/verifiers/EdanVerifier';
 // import { join } from 'path';
 
 afterAll(async done => {
@@ -31,6 +32,7 @@ enum eTestType {
     eScrapeEDANListsIDs,
     eScrapeEDAN,
     eOneOff,
+    eEDANVerifier,
 }
 
 const eTYPE: eTestType = +eTestType.eRegressionSuite; // + needed here so that compiler stops thinking eTYPE has a type of eTestType.eRegressionSuite!
@@ -112,9 +114,12 @@ describe('Collections: EdanCollection', () => {
                 await scrapeEdan(ICol, 'd:\\Work\\SI\\EdanScrape.EDAN.txt', 0);
             });
             break;
+
+        case eTestType.eEDANVerifier:
+            executeEdanVerifier(ICol);
+            break;
     }
 });
-
 
 function executeTestQuery(ICol: COL.ICollection, query: string, expectNoResults: boolean,
     searchCollections: boolean = true, edanRecordType: string = ''): void {
@@ -674,7 +679,6 @@ async function scrapeDPOEdanMDMWorker(ICol: COL.ICollection, IDLabelSet: Set<str
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200149', 'dpo_3d_200149', IDLabelSet, records, gatherRaw);
     await handleResultsWithIDs(ICol, 'edanmdm:dpo_3d_200150', 'dpo_3d_200150', IDLabelSet, records, gatherRaw);
 }
-// #endregion
 
 async function scrapeDPOIDsWorker(ICol: COL.ICollection, IDLabelSet: Set<string>, records: EdanResult[]): Promise<void> {
     // #region vz_migration
@@ -2443,6 +2447,7 @@ async function scrapeDPOEdanListIDsWorker(ICol: COL.ICollection, IDLabelSet: Set
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289214', '907', IDLabelSet, records);
     await handleResultsWithIDs(ICol, 'edanmdm:nmah_1289216', '907', IDLabelSet, records);
 }
+// #endregion
 
 // #region Handle Results
 async function handleResultsEdanLists(ICol: COL.ICollection, WS: NodeJS.WritableStream | null, query: string, id: string, unitFilter?: string | undefined): Promise<boolean> {
@@ -2550,4 +2555,33 @@ async function handle3DContentQuery(ICol: COL.ICollection, _WS: NodeJS.WritableS
     LOG.error(`Content Query ${id ? id : ''}${url ? url : ''} [${queryID}] failed`, LOG.LS.eTEST);
     return false;
 }
+// #endregion
+
+//----------------------------------------------------------------
+// #region EDAN Verifier
+function executeEdanVerifier(ICol: COL.ICollection) {
+
+    jest.setTimeout(3000000);
+    // HACK: to simplify calling the verifier and satisfying JEST requirements
+    test.only('Collections: EdanCollection.fieldCompare', async () => {
+        const verifierConfig: V.EdanVerifierConfig = {
+            collection: ICol,
+            subjectLimit: 1,
+            // detailedLogs: true,
+            // writeToFile: '../../EDAN-Verifier_Output.csv'
+        };
+        const verifier: V.EdanVerifier = new V.EdanVerifier(verifierConfig);
+        const result: V.EdanVerifierResult = await verifier.verify();
+        expect(result).toBeTruthy();
+    });
+
+    //return true;
+}
+
+// #endregion
+
+//----------------------------------------------------------------
+// #region DB verifier
+
+
 // #endregion

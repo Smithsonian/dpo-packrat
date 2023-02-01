@@ -14,6 +14,8 @@ import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 
+import * as VERIFIERS from './routes/verifiers';
+
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
@@ -86,6 +88,10 @@ export class HttpServer {
         this.app.get('/migrate/*', migrate);
         this.app.get(`${Downloader.httpRoute}*`, HttpServer.idRequestMiddleware2);
         this.app.get(`${Downloader.httpRoute}*`, download);
+
+        // endpoints for verifiers.
+        this.app.get('/verifier',VERIFIERS.routeRequest); // catch in case of misuse
+        this.app.get('/verifier/:id', VERIFIERS.routeRequest);
 
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
         if (WDSV) {
