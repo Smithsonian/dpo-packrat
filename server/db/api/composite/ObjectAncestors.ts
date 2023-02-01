@@ -3,7 +3,8 @@ import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 
-import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
+import { ObjectGraph } from './ObjectGraph';
+import { eObjectGraphMode } from './ObjectGraphMode';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
 import { RepositoryPath } from '../../../types/graphql';
 import * as COMMON from '@dpo-packrat/common';

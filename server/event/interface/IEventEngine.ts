@@ -1,12 +1,7 @@
+import { IEventData } from './IEventData';
 import { IEventProducer } from './IEventProducer';
 import { IEventConsumer } from './IEventConsumer';
-import { eEventTopic, eEventKey } from './EventEnums';
-
-export interface IEventData<Value> {
-    eventDate: Date;
-    key: eEventKey;
-    value: Value;
-}
+import { eEventTopic } from './EventEnums';
 
 export interface IEventEngine {
     /** Publish an event */

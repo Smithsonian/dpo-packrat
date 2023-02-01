@@ -1,10 +1,10 @@
 import * as LOG from '../utils/logger';
 // import * as H from '../utils/helpers';
 import * as DBAPI from '../db';
-import { CacheControl } from './CacheControl';
+import { BaseCache } from './BaseCache';
 import * as COMMON from '@dpo-packrat/common';
 
-export class LicenseCache {
+export class LicenseCache extends BaseCache {
     private static singleton: LicenseCache | null = null;
     private licenseMap: Map<number, DBAPI.License> = new Map<number, DBAPI.License>(); // map of idLicense -> License
     private licenseEnumMap: Map<COMMON.eLicense, DBAPI.License> = new Map<COMMON.eLicense, DBAPI.License>(); // map of COMMON.eLicense -> License
@@ -13,10 +13,10 @@ export class LicenseCache {
     // **************************
     // Boilerplate Implementation
     // **************************
-    private constructor() { }
+    private constructor() { super(); }
 
     private async flushInternal(): Promise<void> {
-        for (let nTry: number = 1; nTry <= CacheControl.cacheBuildTries; nTry++) {
+        for (let nTry: number = 1; nTry <= BaseCache.cacheBuildTries; nTry++) {
             /* istanbul ignore else */
             if (await this.flushInternalWorker())
                 break;

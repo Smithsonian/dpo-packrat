@@ -1,3 +1,3 @@
-import passport from './passport';
+import passport from './passportImpl';
 
 export { passport };

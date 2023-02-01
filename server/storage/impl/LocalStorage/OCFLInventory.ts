@@ -4,10 +4,17 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as L from 'lodash';
 import { OperationInfo } from '../../interface/IStorage';
-import { OCFLObject, OCFLPathAndHash } from './OCFLObject';
+import { OCFLPathAndHash } from './OCFLPathAndHash';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
+
+declare class OCFLObject {
+    static versionFolderName(version: number): string;
+    static versionContentPartialPath(version: number): string;
+    get objectRoot(): string;
+    versionRoot(version: number): string;
+}
 
 export type OCFLInventoryManifestEntry = {
     hash: string;

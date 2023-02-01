@@ -1,17 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as EVENT from '../../interface';
-import { EventEngine } from './EventEngine';
 import * as LOG from '../../../utils/logger';
 
 import { Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
 
 export abstract class EventConsumer implements EVENT.IEventConsumer {
-    private engine: EventEngine;
+    private engine: EVENT.IEventEngine;
     private completionMutexes: MutexInterface[] = [];
     private eventData: any[] = [];
 
-    constructor(engine: EventEngine) {
+    constructor(engine: EVENT.IEventEngine) {
         this.engine = engine;
     }
 

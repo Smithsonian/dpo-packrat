@@ -1,5 +1,6 @@
 import { License, LicenseAssignment } from '../..';
-import { eObjectGraphMode, ObjectGraph } from './ObjectGraph';
+import { ObjectGraph } from './ObjectGraph';
+import { eObjectGraphMode } from './ObjectGraphMode';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
 import { ObjectGraphDataEntry } from './ObjectGraphDataEntry';
 import * as LOG from '../../../utils/logger';

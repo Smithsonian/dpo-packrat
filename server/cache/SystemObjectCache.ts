@@ -1,10 +1,10 @@
 import * as LOG from '../utils/logger';
 import * as DBAPI from '../db';
-import { CacheControl } from './CacheControl';
+import { BaseCache } from './BaseCache';
 import { SystemObject } from '../db';
 import * as COMMON from '@dpo-packrat/common';
 
-export class SystemObjectCache {
+export class SystemObjectCache extends BaseCache {
     private static singleton: SystemObjectCache | null = null;
 
     private objectIDToSystemMap: Map<string, DBAPI.SystemObjectInfo> = new Map<string, DBAPI.SystemObjectInfo>(); // map of `${idObject}|${eDBObjectType}` -> { idSystemObject, Retired }
@@ -14,10 +14,10 @@ export class SystemObjectCache {
     // **************************
     // Boilerplate Implementation
     // **************************
-    private constructor() { }
+    private constructor() { super(); }
 
     private async flushInternal(): Promise<void> {
-        for (let nTry: number = 1; nTry <= CacheControl.cacheBuildTries; nTry++) {
+        for (let nTry: number = 1; nTry <= BaseCache.cacheBuildTries; nTry++) {
             /* istanbul ignore else */
             if (await this.flushInternalWorker())
                 break;

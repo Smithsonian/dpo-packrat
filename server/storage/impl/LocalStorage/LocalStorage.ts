@@ -8,6 +8,7 @@ import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import { OCFLRoot, ComputeWriteStreamLocationResults } from './OCFLRoot';
 import * as OO from './OCFLObject';
+import { OCFLPathAndHash } from './OCFLPathAndHash';
 
 export class LocalStorage implements STORE.IStorage {
     private ocflRoot: OCFLRoot;
@@ -42,7 +43,7 @@ export class LocalStorage implements STORE.IStorage {
             }
 
             // LOG.info(`OCFLObject:\n${JSON.stringify(ocflObjectInitResults.ocflObject)}`, LOG.LS.eSTR);
-            const pathAndHash: OO.OCFLPathAndHash | null = ocflObjectInitResults.ocflObject.fileLocationAndHash(fileName, version);
+            const pathAndHash: OCFLPathAndHash | null = ocflObjectInitResults.ocflObject.fileLocationAndHash(fileName, version);
             if (!pathAndHash) {
                 retValue.success = false;
                 retValue.error = `LocalStorage.readStream unable to compute path and hash for ${fileName} version ${version}`;
