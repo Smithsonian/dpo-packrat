@@ -7,12 +7,16 @@ import * as STORE from '../../storage/interface';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { DownloaderParser, DownloaderParserResults, eDownloadMode } from './DownloaderParser';
-import { SitemapGenerator } from './SitemapGenerator';
 import { isAuthenticated } from '../auth';
 
 import { Request, Response } from 'express';
 import * as mime from 'mime-types';
 import path from 'path';
+import internal from 'stream';
+
+declare class SitemapGenerator {
+    static generate(writable: internal.Writable): Promise<boolean>;
+}
 
 /** Used to provide download access to assets and reports. Access with one of the following URL patterns:
  * ASSETS:

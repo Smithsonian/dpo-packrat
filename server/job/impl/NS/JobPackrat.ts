@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as JOB from '../../interface';
-import { JobEngine } from './JobEngine';
 import * as DBAPI from '../../../db';
 import * as REP from '../../../report/interface';
 import * as LOG from '../../../utils/logger';
@@ -9,6 +8,10 @@ import * as NS from 'node-schedule';
 import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 import * as COMMON from '@dpo-packrat/common';
 import { eEventKey } from '../../../event/interface';
+
+declare class JobEngine {
+    sendJobEvent(idJobRun: number, obj: any, key: eEventKey): Promise<boolean>;
+}
 
 export type JobIOResults = H.IOResults & {
     allowRetry?: boolean | undefined,

@@ -1,10 +1,10 @@
 import * as LOG from '../utils/logger';
-import { CacheControl } from './CacheControl';
+import { BaseCache } from './BaseCache';
 import { Vocabulary, VocabularySet, SystemObject } from '../db';
 import * as COMMON from '@dpo-packrat/common';
 import * as path from 'path';
 
-export class VocabularyCache {
+export class VocabularyCache extends BaseCache {
     private static singleton: VocabularyCache | null = null;
 
     private vocabMap:               Map<number, Vocabulary>         = new Map<number, Vocabulary>();        // map of Vocab ID     -> Vocabulary object
@@ -21,10 +21,10 @@ export class VocabularyCache {
     // **************************
     // Boilerplate Implementation
     // **************************
-    private constructor() { }
+    private constructor() { super(); }
 
     private async flushInternal(): Promise<void> {
-        for (let nTry: number = 1; nTry <= CacheControl.cacheBuildTries; nTry++) {
+        for (let nTry: number = 1; nTry <= BaseCache.cacheBuildTries; nTry++) {
             /* istanbul ignore else */
             if (await this.flushInternalWorker())
                 break;

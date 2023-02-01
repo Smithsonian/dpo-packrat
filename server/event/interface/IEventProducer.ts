@@ -1,4 +1,4 @@
-import { IEventData } from './IEventEngine';
+import { IEventData } from './IEventData';
 import { eEventTopic } from './EventEnums';
 
 export interface IEventProducer {

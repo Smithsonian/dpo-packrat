@@ -1,12 +1,11 @@
 import * as EVENT from '../../interface';
 import { EventConsumer } from './EventConsumer';
 import { EventConsumerDB } from './EventConsumerDB';
-import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
 import * as LOG from '../../../utils/logger';
 
 export class EventConsumerAuth extends EventConsumer {
-    constructor(engine: EventEngine) {
+    constructor(engine: EVENT.IEventEngine) {
         super(engine);
     }
 

@@ -12,11 +12,15 @@ import * as EVENT from '../../event/interface';
 import { SvxReader } from '../../utils/parser';
 import { IDocument } from '../../types/voyager';
 import * as COMMON from '@dpo-packrat/common';
-import { EdanCollection } from './EdanCollection';
+import { EdanLicenseInfo } from '../interface';
 
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import lodash from 'lodash';
+
+declare class EdanCollection {
+    static computeLicenseInfo(licenseText?: string | undefined, licenseCodes?: string | undefined, usageText?: string | undefined): EdanLicenseInfo;
+}
 
 export type SceneAssetCollector = {
     idSystemObject: number;

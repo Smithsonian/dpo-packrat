@@ -1,5 +1,8 @@
 import * as EVENT from '../../interface';
-import { EventEngine } from './EventEngine';
+
+declare class EventEngine {
+    receive<Value>(eTopic: EVENT.eEventTopic, data: EVENT.IEventData<Value>[]): Promise<void>;
+}
 
 export class EventProducer implements EVENT.IEventProducer {
     private engine: EventEngine;

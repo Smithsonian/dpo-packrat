@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types, no-constant-condition */
 import * as WF from '../../interface';
 import { WorkflowUtil, WorkflowUtilExtractAssetVersions } from './WorkflowUtil';
+import { WorkflowJobParameters } from './WorkflowJobParameters';
 import * as JOB from '../../../job/interface';
 import * as REP from '../../../report/interface';
 import * as DBAPI from '../../../db';
@@ -9,16 +10,6 @@ import * as COMMON from '@dpo-packrat/common';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import { Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
-
-export class WorkflowJobParameters {
-    eCookJob: COMMON.eVocabularyID;
-    cookJobParameters: any;
-
-    constructor(eCookJob: COMMON.eVocabularyID, cookJobParameters: any) {
-        this.eCookJob = eCookJob;
-        this.cookJobParameters = cookJobParameters;
-    }
-}
 
 // This Workflow executes a Job, such as a Cook recipe
 // It has a single step, "start", which launches the specified Job

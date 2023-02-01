@@ -4,6 +4,7 @@ import { Actor, Asset, AssetVersion, CaptureData, Identifier, IntermediaryFile, 
 import * as LOG from '../../../utils/logger';
 import * as L from 'lodash';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
+import { eObjectGraphMode } from './ObjectGraphMode';
 import * as COMMON from '@dpo-packrat/common';
 
 export type SystemObjectIDType = {
@@ -11,12 +12,6 @@ export type SystemObjectIDType = {
     idObject: number;
     eObjectType: COMMON.eSystemObjectType;
 };
-
-export enum eObjectGraphMode {
-    eAncestors,
-    eDescendents,
-    eAll
-}
 
 export type ObjectGraphSubjectIdentifier = {
     idSubject: number;

@@ -1,6 +1,7 @@
 import { OperationInfo } from '../../../../storage/interface/IStorage';
 import * as OR from '../../../../storage/impl/LocalStorage/OCFLRoot';
 import * as OO from '../../../../storage/impl/LocalStorage/OCFLObject';
+import { OCFLPathAndHash } from '../../../../storage/impl/LocalStorage/OCFLPathAndHash';
 import * as ST from '../../../../storage/impl/LocalStorage/SharedTypes';
 import * as DBAPI from '../../../../db';
 import * as H from '../../../../utils/helpers';
@@ -190,7 +191,7 @@ describe('OCFL Object', () => {
         if (!ocflObject)
             return;
 
-        let pathAndHash: OO.OCFLPathAndHash | null;
+        let pathAndHash: OCFLPathAndHash | null;
         pathAndHash = ocflObject.fileLocationAndHash(fileName4, 1); // non-existing file
         expect(pathAndHash).toBeFalsy();
 

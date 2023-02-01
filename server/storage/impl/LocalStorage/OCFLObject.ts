@@ -3,7 +3,8 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as L from 'lodash';
 import { OperationInfo } from '../../interface/IStorage';
-import * as INV from './OCFLInventory';
+import { OCFLInventory } from './OCFLInventory';
+import { OCFLPathAndHash } from './OCFLPathAndHash';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
@@ -12,11 +13,6 @@ export type OCFLObjectInitResults = {
     ocflObject: OCFLObject | null,
     success: boolean,
     error?: string,
-};
-
-export type OCFLPathAndHash = {
-    path: string;
-    hash: string;
 };
 
 enum eMoveFileType {
@@ -32,7 +28,7 @@ export class OCFLObject {
     private _createIfMissing: boolean = false;
 
     private _objectRoot: string = '';
-    private _ocflInventory: INV.OCFLInventory | null = null;
+    private _ocflInventory: OCFLInventory | null = null;
     private _newObject: boolean = false;
 
     async initialize(storageKey: string, objectRoot: string, createIfMissing: boolean): Promise<OCFLObjectInitResults> {
@@ -415,14 +411,14 @@ export class OCFLObject {
             return ioResults;
 
         // Confirm root inventory exists
-        let invResults = await INV.OCFLInventory.readFromDisk(this);
+        let invResults = await OCFLInventory.readFromDisk(this);
         if (!invResults.success || !invResults.ocflInventory) {
             ioResults.success = false;
             ioResults.error = invResults.error ? invResults.error : /* istanbul ignore next */ `Failed to read inventory for ${this._storageKey}`;
             return ioResults;
         }
 
-        const ocflInventoryRoot: INV.OCFLInventory = invResults.ocflInventory;
+        const ocflInventoryRoot: OCFLInventory = invResults.ocflInventory;
         const maxVersion: number = ocflInventoryRoot.headVersion;
         /* istanbul ignore next */
         if (maxVersion <= 0) {
@@ -439,7 +435,7 @@ export class OCFLObject {
 
         // Validate each inventory
         for (let version: number = 1; version <= maxVersion; version++) {
-            invResults = await INV.OCFLInventory.readFromDiskVersion(this, version);
+            invResults = await OCFLInventory.readFromDiskVersion(this, version);
             if (!invResults.success || !invResults.ocflInventory) {
                 ioResults.success = false;
                 ioResults.error = invResults.error ? invResults.error : /* istanbul ignore next */ `Failed to read inventory for ${this._storageKey}, version ${version}`;
@@ -447,7 +443,7 @@ export class OCFLObject {
                 return ioResults;
             }
 
-            const ocflInventory: INV.OCFLInventory = invResults.ocflInventory;
+            const ocflInventory: OCFLInventory = invResults.ocflInventory;
             ioResults = await ocflInventory.validate(this, false);
             /* istanbul ignore next */
             if (!ioResults.success) {
@@ -617,7 +613,7 @@ export class OCFLObject {
         /* istanbul ignore else */
         if (!this._ocflInventory) {
             if (!this._newObject) {
-                const results = await INV.OCFLInventory.readFromDisk(this);
+                const results = await OCFLInventory.readFromDisk(this);
                 /* istanbul ignore if */
                 if (!results.success || !results.ocflInventory) {
                     return {
@@ -627,7 +623,7 @@ export class OCFLObject {
                 }
                 this._ocflInventory = results.ocflInventory;
             } else {
-                this._ocflInventory = new INV.OCFLInventory();
+                this._ocflInventory = new OCFLInventory();
                 this._ocflInventory.id = this._storageKey;
             }
         }

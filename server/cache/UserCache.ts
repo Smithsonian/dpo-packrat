@@ -1,19 +1,19 @@
 import * as LOG from '../utils/logger';
 import * as DBAPI from '../db';
-import { CacheControl } from './CacheControl';
+import { BaseCache } from './BaseCache';
 import { User } from '../db';
 
-export class UserCache {
+export class UserCache extends BaseCache {
     private static singleton: UserCache | null = null;
     private userMap: Map<number, DBAPI.User> = new Map<number, DBAPI.User>(); // map of { idUser, User }
 
     // **************************
     // Boilerplate Implementation
     // **************************
-    private constructor() { }
+    private constructor() { super(); }
 
     private async flushInternal(): Promise<void> {
-        for (let nTry: number = 1; nTry <= CacheControl.cacheBuildTries; nTry++) {
+        for (let nTry: number = 1; nTry <= BaseCache.cacheBuildTries; nTry++) {
             /* istanbul ignore else */
             if (await this.flushInternalWorker())
                 break;

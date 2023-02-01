@@ -1,11 +1,16 @@
 import { Unit, Project, Subject, Item, SystemObjectIDType, Actor, Asset, AssetVersion, CaptureData, CaptureDataFile, IntermediaryFile,
     Model, ProjectDocumentation, Scene, Stakeholder, SystemObjectInfo, ObjectIDAndType, SystemObjectIDAndType } from '../..';
 import { ObjectGraphDataEntry, eApplyGraphStateDirection, ObjectGraphState } from './ObjectGraphDataEntry';
-import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
+import { eObjectGraphMode } from './ObjectGraphMode';
 import * as COMMON from '@dpo-packrat/common';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';
+
+declare class ObjectGraph {
+    constructor(idSystemObject: number, eMode: eObjectGraphMode, depth: number, objectGraphDatabase: ObjectGraphDatabase | null);
+    fetch(): Promise<boolean>;
+}
 
 export class ObjectGraphDatabase {
     objectMap: Map<number, ObjectGraphDataEntry> = new Map<number, ObjectGraphDataEntry>(); // map from SystemObject.idSystemObject to graph entry details
