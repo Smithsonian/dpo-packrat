@@ -75,16 +75,16 @@ export class JobCookStatistics {
         JCStat.numVertices = maybe<number>(statistics?.numVertices);
         JCStat.numTexCoordChannels = maybe<number>(statistics?.numTexCoordChannels);
         JCStat.numColorChannels = maybe<number>(statistics?.numColorChannels);
-        JCStat.hasNormals = maybe<boolean>(statistics?.hasNormals);
-        JCStat.hasVertexNormals = maybe<boolean>(statistics?.hasVertexNormals);
-        JCStat.hasVertexColors = maybe<boolean>(statistics?.hasVertexColors);
-        JCStat.hasTexCoords = maybe<boolean>(statistics?.hasTexCoords);
-        JCStat.hasBones = maybe<boolean>(statistics?.hasBones);
-        JCStat.hasTangents = maybe<boolean>(statistics?.hasTangents);
-        JCStat.isTwoManifoldUnbounded = maybe<boolean>(statistics?.isTwoManifoldUnbounded);
-        JCStat.isTwoManifoldBounded = maybe<boolean>(statistics?.isTwoManifoldBounded);
-        JCStat.selfIntersecting = maybe<boolean>(statistics?.selfIntersecting);
-        JCStat.isWatertight = maybe<boolean>(statistics?.isWatertight);
+        JCStat.hasNormals = H.Helpers.safeBoolean(statistics?.hasNormals);
+        JCStat.hasVertexNormals = H.Helpers.safeBoolean(statistics?.hasVertexNormals);
+        JCStat.hasVertexColors = H.Helpers.safeBoolean(statistics?.hasVertexColors);
+        JCStat.hasTexCoords = H.Helpers.safeBoolean(statistics?.hasTexCoords);
+        JCStat.hasBones = H.Helpers.safeBoolean(statistics?.hasBones);
+        JCStat.hasTangents = H.Helpers.safeBoolean(statistics?.hasTangents);
+        JCStat.isTwoManifoldUnbounded = H.Helpers.safeBoolean(statistics?.isTwoManifoldUnbounded);
+        JCStat.isTwoManifoldBounded = H.Helpers.safeBoolean(statistics?.isTwoManifoldBounded);
+        JCStat.selfIntersecting = H.Helpers.safeBoolean(statistics?.selfIntersecting);
+        JCStat.isWatertight = H.Helpers.safeBoolean(statistics?.isWatertight);
         JCStat.materialIndex = maybe<number[]>(statistics?.materialIndex);
         return JCStat;
     }
@@ -146,27 +146,27 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             }
 
             const modelSource: DBAPI.Model = this.modelConstellation.Model;
-            if (modelSource.CountAnimations)
+            if (modelSource.CountAnimations !== null)
                 model.CountAnimations = modelSource.CountAnimations;
-            if (modelSource.CountCameras)
+            if (modelSource.CountCameras !== null)
                 model.CountCameras = modelSource.CountCameras;
-            if (modelSource.CountFaces)
+            if (modelSource.CountFaces !== null)
                 model.CountFaces = modelSource.CountFaces;
-            if (modelSource.CountTriangles)
+            if (modelSource.CountTriangles !== null)
                 model.CountTriangles = modelSource.CountTriangles;
-            if (modelSource.CountLights)
+            if (modelSource.CountLights !== null)
                 model.CountLights = modelSource.CountLights;
-            if (modelSource.CountMaterials)
+            if (modelSource.CountMaterials !== null)
                 model.CountMaterials = modelSource.CountMaterials;
-            if (modelSource.CountMeshes)
+            if (modelSource.CountMeshes !== null)
                 model.CountMeshes = modelSource.CountMeshes;
-            if (modelSource.CountVertices)
+            if (modelSource.CountVertices !== null)
                 model.CountVertices = modelSource.CountVertices;
-            if (modelSource.CountEmbeddedTextures)
+            if (modelSource.CountEmbeddedTextures !== null)
                 model.CountEmbeddedTextures = modelSource.CountEmbeddedTextures;
-            if (modelSource.CountLinkedTextures)
+            if (modelSource.CountLinkedTextures !== null)
                 model.CountLinkedTextures = modelSource.CountLinkedTextures;
-            if (modelSource.FileEncoding)
+            if (modelSource.FileEncoding !== null)
                 model.FileEncoding = modelSource.FileEncoding;
             if (modelSource.IsDracoCompressed != null)
                 model.IsDracoCompressed = modelSource.IsDracoCompressed;
@@ -455,9 +455,9 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                             }
                         }
 
-                        // As of 4/13/2021, Packrat will ignore Material Channels reported by Cook that do not reference UV Maps
-                        if (!materialUri && !UVMapEmbedded)
-                            continue;
+                        // Restored 1/25/2023 based on team feedback // As of 4/13/2021, Packrat will ignore Material Channels reported by Cook that do not reference UV Maps
+                        // if (!materialUri && !UVMapEmbedded)
+                        //     continue;
 
                         let AdditionalAttributes: string | null = null;
                         if (AddAttributes.length > 0) {
@@ -593,6 +593,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let vFileType: DBAPI.Vocabulary | undefined = undefined;
         if (fileName)
             vFileType = await CACHE.VocabularyCache.mapModelFileByExtension(fileName);
+
         // LOG.info(`JobCookPackratInspect createModel ${fileName} -> ${JSON.stringify(vFileType)}`, LOG.LS.eJOB);
         return new DBAPI.Model({
             Name: fileName || '',
@@ -614,7 +615,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             CountEmbeddedTextures: modelStats ? maybe<number>(modelStats?.numEmbeddedTextures) : null,
             CountLinkedTextures: modelStats ? maybe<number>(modelStats?.numLinkedTextures) : null,
             FileEncoding: modelStats ? maybe<string>(modelStats?.fileEncoding) : null,
-            IsDracoCompressed: modelStats ? maybe<boolean>(modelStats?.isDracoCompressed) : null,
+            IsDracoCompressed: modelStats ? H.Helpers.safeBoolean(modelStats?.isDracoCompressed) : null,
             AutomationTag: null,
             CountTriangles: modelStats ? maybe<number>(modelStats?.numTriangles) : null,
             idModel
