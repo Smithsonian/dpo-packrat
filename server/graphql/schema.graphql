@@ -889,6 +889,16 @@ type GetVocabularyResult {
   Vocabulary: Vocabulary
 }
 
+input GetVoyagerParamsInput {
+  idSystemObject: Int!
+}
+
+type GetVoyagerParamsResult {
+  document: String
+  idSystemObjectScene: Int
+  path: String
+}
+
 input GetWorkflowInput {
   idWorkflow: Int!
 }
@@ -1570,6 +1580,7 @@ type Query {
   getVersionsForAsset(input: GetVersionsForAssetInput!): GetVersionsForAssetResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
   getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
+  getVoyagerParams(input: GetVoyagerParamsInput!): GetVoyagerParamsResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
   getWorkflowList(input: GetWorkflowListInput!): GetWorkflowListResult!
   searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!

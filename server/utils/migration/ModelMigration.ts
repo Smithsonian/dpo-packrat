@@ -74,7 +74,7 @@ export class ModelMigration {
             return res;
 
         if (!this.uniqueID || !this.masterModelGeometryFile || !this.masterModelFile)
-            return { success: false, error: 'No geometry present in model definition' };
+            return this.returnStatus('migrateModel', false, 'No geometry present in model definition');
 
         this.userOwner = await CACHE.UserCache.getUser(idUser);
         if (!this.userOwner)
@@ -156,7 +156,7 @@ export class ModelMigration {
     }
 
     private async extractMigrationInfo(): Promise<H.IOResults> {
-        let retValue: boolean = true;
+        // let retValue: boolean = true;
         let foundGeometry: boolean = false;
 
         let idSystemObjectItem: number | undefined = undefined;
@@ -172,8 +172,8 @@ export class ModelMigration {
             if (modelFile.geometry) {
                 const filePath: string = ModelMigrationFile.computeFilePath(modelFile);
                 if (foundGeometry) {
-                    this.logStatus('extractMigrationInfo', false, `Skipping Secondary Geometry File ${filePath} vs already encountered ${this.masterModelLocation}`);
-                    retValue = false;
+                    this.logStatus('extractMigrationInfo', false, `WARN Skipping Secondary Geometry File ${filePath} vs already encountered ${this.masterModelLocation}`);
+                    // retValue = false; // Allow this to succeed
                     continue;
                 }
 
@@ -190,8 +190,10 @@ export class ModelMigration {
             // capture idSystemObject for item, if any, and ensure consistency
             if (idSystemObjectItem === undefined)
                 idSystemObjectItem = modelFile.idSystemObjectItem;
-            else if (idSystemObjectItem !== modelFile.idSystemObjectItem && modelFile.idSystemObjectItem)
-                return this.returnStatus('extractMigrationInfo', false, `called with inconsistent value for idSystemObjectItem (${modelFile.idSystemObjectItem}); expected ${idSystemObjectItem}`);
+            else if (idSystemObjectItem !== modelFile.idSystemObjectItem && modelFile.idSystemObjectItem) {
+                this.logStatus('extractMigrationInfo', false, `WARN called with inconsistent value for idSystemObjectItem (${modelFile.idSystemObjectItem}); expected ${idSystemObjectItem}`);
+                continue; // Just skip
+            }
 
             // capture testData flag, if set, and ensure consistency
             if (testData === undefined)
@@ -206,7 +208,8 @@ export class ModelMigration {
         }
 
         if (foundGeometry)
-            return { success: retValue, error: retValue ? undefined : 'Multiple Geometry Found' };
+            return { success: true };
+            // return { success: retValue, error: retValue ? undefined : 'Multiple Geometry Found' };
 
         this.uniqueID = undefined;
         this.masterModelGeometryFile = undefined;
@@ -315,7 +318,7 @@ export class ModelMigration {
             doNotUpdateParentVersion: false
         };
 
-        LOG.info(`ingestSupportFileWorker ${ISI.localFilePath}`, LOG.LS.eMIG);
+        this.logStatus('ingestSupportFileWorker', true, ISI.localFilePath ?? '');
 
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success || !IAR.assetVersions || IAR.assetVersions.length < 1)
@@ -380,7 +383,7 @@ export class ModelMigration {
         if (!xref)
             return this.returnStatus('wireItemToModel', false, `Unable to wire item ${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`);
 
-        LOG.info(`wireItemToModel ${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`, LOG.LS.eMIG);
+        this.logStatus('wireItemToModel', true, `${H.Helpers.JSONStringify(itemDB)} to model ${H.Helpers.JSONStringify(this.model)}`);
         return { success: true };
     }
 
@@ -388,7 +391,7 @@ export class ModelMigration {
         if (!ModelMigration.vocabMaster) {
             ModelMigration.vocabMaster = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
             if (!ModelMigration.vocabMaster)
-                LOG.error('ModelMigration unable to fetch vocabulary for Master Model Purpose', LOG.LS.eMIG);
+                this.logStatus('computeVocabMaster', false, 'unable to fetch vocabulary for Master Model Purpose');
         }
         return ModelMigration.vocabMaster;
     }
@@ -397,7 +400,7 @@ export class ModelMigration {
         if (!ModelMigration.vocabModelGeometryFile) {
             ModelMigration.vocabModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
             if (!ModelMigration.vocabModelGeometryFile)
-                LOG.error('ModelMigration unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eMIG);
+                this.logStatus('computeVocabModelGeometryFile', false, 'unable to fetch vocabulary for Asset Type Model Geometry File');
         }
         return ModelMigration.vocabModelGeometryFile;
     }
@@ -406,7 +409,7 @@ export class ModelMigration {
         if (!ModelMigration.vocabModelUVMapFile) {
             ModelMigration.vocabModelUVMapFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile);
             if (!ModelMigration.vocabModelUVMapFile)
-                LOG.error('ModelMigration unable to fetch vocabulary for Asset Type Model UV Map File', LOG.LS.eMIG);
+                this.logStatus('computeVocabUVMapFile', false, 'unable to fetch vocabulary for Asset Type Model UV Map File');
         }
         return ModelMigration.vocabModelUVMapFile;
     }
@@ -415,11 +418,10 @@ export class ModelMigration {
         if (!ModelMigration.vocabOtherFile) {
             ModelMigration.vocabOtherFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
             if (!ModelMigration.vocabOtherFile)
-                LOG.error('ModelMigration unable to fetch vocabulary for Asset Type Other File', LOG.LS.eMIG);
+                this.logStatus('computeVocabOtherFile', false, 'unable to fetch vocabulary for Asset Type Other File');
         }
         return ModelMigration.vocabOtherFile;
     }
-
     private async ingestExplicitSupportFiles(): Promise<IngestAssetResultSkippable> {
         let success: boolean = true;
         let error: string | undefined = undefined;
@@ -476,12 +478,12 @@ export class ModelMigration {
         let results: H.IOResults = { success: true };
         for (const supportFile in this.supportFiles.values()) {
             if (!this.expectedSupportFiles.has(supportFile))
-                results = this.returnStatus('testSupportFiles', false, `Discovered support file ${supportFile} was not expected`);
+                results = this.returnStatus('testSupportFiles', false, `WARN Discovered support file ${supportFile} was not expected`);
         }
 
         for (const expectedSupportFile in this.expectedSupportFiles.values()) {
             if (!this.supportFiles.has(expectedSupportFile))
-                results = this.returnStatus('testSupportFiles', false, `Expected support file ${expectedSupportFile} was not discovered`, { filesMissing: true });
+                results = this.returnStatus('testSupportFiles', false, `WARN Expected support file ${expectedSupportFile} was not discovered`, { filesMissing: true });
         }
         return results;
     }
@@ -518,7 +520,7 @@ export class ModelMigration {
             if (channels && isArray(channels)) {
                 for (const channel of channels) {
                     if (channel.uri && !isEmbeddedTexture(channel.uri)) {
-                        const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(channel.uri);
+                        const ingestTextureRes: IngestAssetResultSkippable = await this.ingestSupportFile(channel.uri.trim());
                         if (ingestTextureRes.skipped)
                             continue;
                         if (!ingestTextureRes.success) {
@@ -798,10 +800,10 @@ export class ModelMigration {
         if (modelFile.hash) {
             const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
             if (!hashRes.success) {
-                this.logStatus(`testFileExistence('${filePath}')`, false, `unable to compute hash ${hashRes.error}`);
+                this.logStatus(`testFileExistence('${filePath}')`, false, `WARN unable to compute hash ${hashRes.error}`);
                 success = false;
             } else if (hashRes.hash != modelFile.hash) {
-                this.logStatus(`testFileExistence('${filePath}')`, false, `computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
+                this.logStatus(`testFileExistence('${filePath}')`, false, `WARN computed different hash ${hashRes.hash} than expected ${modelFile.hash}`);
                 success = false;
             }
         }
