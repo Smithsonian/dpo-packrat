@@ -63,8 +63,8 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose,
-                idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
+            const { Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose, idVFileType,
+                idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
                 CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
                 AutomationTag, CountTriangles, Title } = this;
             ({ idModel: this.idModel, Name: this.Name, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
@@ -100,8 +100,8 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idModel, Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose,
-                idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
+            const { idModel, Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose, idVFileType,
+                idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
                 CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
                 AutomationTag, CountTriangles, Title } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
