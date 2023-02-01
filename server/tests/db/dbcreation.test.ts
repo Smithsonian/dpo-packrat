@@ -5606,6 +5606,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(sceneFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Scene.fetchParentScenes', async () => {
+        let sceneFetch: DBAPI.Scene[] | null = null;
+        if (model) {
+            sceneFetch = await DBAPI.Scene.fetchParentScenes(model.idModel);
+            if (sceneFetch)
+                expect(sceneFetch.length).toEqual(0);
+        }
+        expect(sceneFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: Sentinel.fetchByURLBase', async () => {
         let sentinelFetch: DBAPI.Sentinel[] | null = null;
         if (sentinel) {
@@ -7937,6 +7947,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Scene.fetchByUUID('')).toBeNull();
         expect(await DBAPI.Scene.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.Scene.fetchChildrenScenes(0)).toBeNull();
+        expect(await DBAPI.Scene.fetchParentScenes(0)).toBeNull();
         expect(await DBAPI.Sentinel.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();

@@ -988,6 +988,17 @@ export type GetVocabularyResult = {
   Vocabulary?: Maybe<Vocabulary>;
 };
 
+export type GetVoyagerParamsInput = {
+  idSystemObject: Scalars['Int'];
+};
+
+export type GetVoyagerParamsResult = {
+  __typename?: 'GetVoyagerParamsResult';
+  document?: Maybe<Scalars['String']>;
+  idSystemObjectScene?: Maybe<Scalars['Int']>;
+  path?: Maybe<Scalars['String']>;
+};
+
 export type GetWorkflowInput = {
   idWorkflow: Scalars['Int'];
 };
@@ -1844,6 +1855,7 @@ export type Query = {
   getVersionsForAsset: GetVersionsForAssetResult;
   getVocabulary: GetVocabularyResult;
   getVocabularyEntries: GetVocabularyEntriesResult;
+  getVoyagerParams: GetVoyagerParamsResult;
   getWorkflow: GetWorkflowResult;
   getWorkflowList: GetWorkflowListResult;
   searchIngestionSubjects: SearchIngestionSubjectsResult;
@@ -2042,6 +2054,11 @@ export type QueryGetVocabularyArgs = {
 
 export type QueryGetVocabularyEntriesArgs = {
   input: GetVocabularyEntriesInput;
+};
+
+
+export type QueryGetVoyagerParamsArgs = {
+  input: GetVoyagerParamsInput;
 };
 
 
@@ -3061,6 +3078,13 @@ export type GetVersionsForAssetQueryVariables = Exact<{
 
 
 export type GetVersionsForAssetQuery = { __typename?: 'Query', getVersionsForAsset: { __typename?: 'GetVersionsForAssetResult', versions: Array<{ __typename?: 'DetailVersion', idSystemObject: number, idAssetVersion: number, version: number, name: string, creator: string, dateCreated: any, size: any, hash: string, ingested: boolean, Comment?: string | null, CommentLink?: string | null }> } };
+
+export type GetVoyagerParamsQueryVariables = Exact<{
+  input: GetVoyagerParamsInput;
+}>;
+
+
+export type GetVoyagerParamsQuery = { __typename?: 'Query', getVoyagerParams: { __typename?: 'GetVoyagerParamsResult', path?: string | null, document?: string | null, idSystemObjectScene?: number | null } };
 
 export type GetEdanUnitsNamedQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -5809,6 +5833,43 @@ export function useGetVersionsForAssetLazyQuery(baseOptions?: Apollo.LazyQueryHo
 export type GetVersionsForAssetQueryHookResult = ReturnType<typeof useGetVersionsForAssetQuery>;
 export type GetVersionsForAssetLazyQueryHookResult = ReturnType<typeof useGetVersionsForAssetLazyQuery>;
 export type GetVersionsForAssetQueryResult = Apollo.QueryResult<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>;
+export const GetVoyagerParamsDocument = gql`
+    query getVoyagerParams($input: GetVoyagerParamsInput!) {
+  getVoyagerParams(input: $input) {
+    path
+    document
+    idSystemObjectScene
+  }
+}
+    `;
+
+/**
+ * __useGetVoyagerParamsQuery__
+ *
+ * To run a query within a React component, call `useGetVoyagerParamsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetVoyagerParamsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetVoyagerParamsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetVoyagerParamsQuery(baseOptions: Apollo.QueryHookOptions<GetVoyagerParamsQuery, GetVoyagerParamsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetVoyagerParamsQuery, GetVoyagerParamsQueryVariables>(GetVoyagerParamsDocument, options);
+      }
+export function useGetVoyagerParamsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetVoyagerParamsQuery, GetVoyagerParamsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetVoyagerParamsQuery, GetVoyagerParamsQueryVariables>(GetVoyagerParamsDocument, options);
+        }
+export type GetVoyagerParamsQueryHookResult = ReturnType<typeof useGetVoyagerParamsQuery>;
+export type GetVoyagerParamsLazyQueryHookResult = ReturnType<typeof useGetVoyagerParamsLazyQuery>;
+export type GetVoyagerParamsQueryResult = Apollo.QueryResult<GetVoyagerParamsQuery, GetVoyagerParamsQueryVariables>;
 export const GetEdanUnitsNamedDocument = gql`
     query getEdanUnitsNamed {
   getEdanUnitsNamed {

@@ -170,7 +170,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
         }
     }
 
-    /** fetches scenes which are chilren of the specified idModelParent */
+    /** fetches scenes which are children of the specified idModelParent */
     static async fetchChildrenScenes(idModelParent: number): Promise<Scene[] | null> {
         if (!idModelParent)
             return null;
@@ -185,6 +185,25 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 WHERE SOM.idModel = ${idModelParent}`, Scene);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.Model.fetchChildrenScenes', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /** fetches scenes which are parent of the specified idModelParent */
+    static async fetchParentScenes(idModelChild: number): Promise<Scene[] | null> {
+        if (!idModelChild)
+            return null;
+        try {
+            return DBC.CopyArray<SceneBase, Scene>(
+                await DBC.DBConnection.prisma.$queryRaw<Scene[]>`
+                SELECT DISTINCT S.*
+                FROM Scene AS S
+                JOIN SystemObject AS SOM ON (S.idScene = SOM.idScene)
+                JOIN SystemObjectXref AS SOX ON (SOM.idSystemObject = SOX.idSystemObjectMaster)
+                JOIN SystemObject AS SOD ON (SOX.idSystemObjectDerived = SOD.idSystemObject)
+                WHERE SOD.idModel = ${idModelChild}`, Scene);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchParentScenes', LOG.LS.eDB, error);
             return null;
         }
     }

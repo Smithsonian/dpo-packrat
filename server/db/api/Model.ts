@@ -2,6 +2,7 @@
 import { Model as ModelBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
+import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
 
 export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemObjectBased {
@@ -54,7 +55,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         this.CountEmbeddedTextures = model.CountEmbeddedTextures;
         this.CountLinkedTextures = model.CountLinkedTextures;
         this.FileEncoding = model.FileEncoding;
-        this.IsDracoCompressed = model.IsDracoCompressed;
+        this.IsDracoCompressed = H.Helpers.safeBoolean(model.IsDracoCompressed);
         this.AutomationTag = model.AutomationTag;
         this.CountTriangles = model.CountTriangles;
         this.Title = model.Title;
@@ -62,10 +63,10 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose,
-                idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
-                CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag, CountTriangles,
-                Title } = this;
+            const { Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose, idVFileType,
+                idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
+                CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
+                AutomationTag, CountTriangles, Title } = this;
             ({ idModel: this.idModel, Name: this.Name, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
                 idVModality: this.idVModality, idVUnits: this.idVUnits,
                 idVPurpose: this.idVPurpose, idVFileType: this.idVFileType, idAssetThumbnail: this.idAssetThumbnail,
@@ -85,7 +86,9 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                         Vocabulary_Model_idVFileTypeToVocabulary:       idVFileType ? { connect: { idVocabulary: idVFileType }, } : undefined,
                         Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
                         CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures,
-                        CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag, CountTriangles, Title,
+                        CountLinkedTextures, FileEncoding,
+                        IsDracoCompressed: H.Helpers.safeBoolean(IsDracoCompressed),
+                        AutomationTag, CountTriangles, Title,
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
@@ -97,10 +100,10 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idModel, Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose,
-                idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes,
-                CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag, CountTriangles,
-                Title } = this;
+            const { idModel, Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose, idVFileType,
+                idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
+                CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
+                AutomationTag, CountTriangles, Title } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
                 where: { idModel, },
                 data: {
@@ -113,7 +116,9 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                     Vocabulary_Model_idVFileTypeToVocabulary:       idVFileType ? { connect: { idVocabulary: idVFileType }, } : { disconnect: true, },
                     Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
                     CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures,
-                    CountLinkedTextures, FileEncoding, IsDracoCompressed, AutomationTag, CountTriangles, Title,
+                    CountLinkedTextures, FileEncoding,
+                    IsDracoCompressed: H.Helpers.safeBoolean(IsDracoCompressed),
+                    AutomationTag, CountTriangles, Title,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
