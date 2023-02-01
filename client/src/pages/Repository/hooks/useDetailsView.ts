@@ -4,6 +4,7 @@ import { useQuery, FetchResult } from '@apollo/client';
 import { apolloClient } from '../../../graphql';
 import {
     GetAssetDetailsForSystemObjectDocument,
+    GetVoyagerParamsDocument,
     GetAssetDetailsForSystemObjectQueryResult,
     GetSystemObjectDetailsDocument,
     GetSystemObjectDetailsQueryResult,
@@ -59,6 +60,18 @@ export function useObjectAssets(idSystemObject: number): GetAssetDetailsForSyste
 export async function getObjectAssets(idSystemObject: number) {
     return await apolloClient.query({
         query: GetAssetDetailsForSystemObjectDocument,
+        variables: {
+            input: {
+                idSystemObject
+            }
+        },
+        fetchPolicy: 'no-cache'
+    });
+}
+
+export async function getVoyagerParams(idSystemObject: number) {
+    return await apolloClient.query({
+        query: GetVoyagerParamsDocument,
         variables: {
             input: {
                 idSystemObject
