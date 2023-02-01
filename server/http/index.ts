@@ -14,7 +14,7 @@ import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 
-import * as Verifiers from './routes/verifiers';
+import * as VERIFIERS from './routes/verifiers';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -90,8 +90,8 @@ export class HttpServer {
         this.app.get(`${Downloader.httpRoute}*`, download);
 
         // endpoints for verifiers.
-        this.app.get('/verifier',Verifiers.routeRequest); // catch in case of misuse
-        this.app.get('/verifier/:id', Verifiers.routeRequest);
+        this.app.get('/verifier',VERIFIERS.routeRequest); // catch in case of misuse
+        this.app.get('/verifier/:id', VERIFIERS.routeRequest);
 
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
         if (WDSV) {

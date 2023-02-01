@@ -206,7 +206,7 @@ export class Downloader {
         switch(mimeType) {
             case 'text/html': filename += '.htm'; break;
             case 'text/csv':  filename += '.csv'; break;
-            default: filename += '.htm';
+            default: filename += '.htm'; break;
         }
 
         // set our properties and configure the response

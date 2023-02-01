@@ -70,7 +70,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             this.workflowMap.set(WFC.workflow.idWorkflow, workflow);
 
         // if we want to automatically start the job
-        const doStart: boolean = (workflowParams.autoStart===undefined)?true:workflowParams.autoStart;
+        const doStart: boolean = (workflowParams.autoStart === undefined) ? true : workflowParams.autoStart;
         if(doStart) {
             const startResults: H.IOResults = await workflow.start();
             if (!startResults) {
