@@ -4,17 +4,17 @@ import * as DBAPI from '../../db';
 import * as V from './VerifierBase';
 
 export type EdanVerifierConfig = {
-    collection: COL.ICollection,
-    detailedLogs?: boolean | undefined,     // do we want to output detailed debug logs
-    logPrefix?: string | undefined,         // what should logs be prefixed with
-    fixErrors?: boolean | undefined,        // do we try to fix errors (todo)
-    subjectLimit?: number | undefined,      // total number of subjects to process
-    systemObjectId?: number | undefined,    // limit execution to this specific SystemObject
-    writeToFile?: string | undefined,       // should we dump the output to a specific path
+    collection: COL.ICollection;
+    detailedLogs?: boolean | undefined;     // do we want to output detailed debug logs
+    logPrefix?: string | undefined;         // what should logs be prefixed with
+    fixErrors?: boolean | undefined;        // do we try to fix errors (todo)
+    subjectLimit?: number | undefined;      // total number of subjects to process
+    systemObjectId?: number | undefined;    // limit execution to this specific SystemObject
+    writeToFile?: string | undefined;       // should we dump the output to a specific path
 };
 export type EdanVerifierResult = {
-    success: boolean,
-    csvOutput?: string | undefined,
+    success: boolean;
+    csvOutput?: string | undefined;
 };
 
 //----------------------------------------------------------------
