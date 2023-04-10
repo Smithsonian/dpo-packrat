@@ -93,7 +93,7 @@ export function parseIdentifiersToState(identifiers: IngestIdentifier[], default
     const parsedIdentifiers = identifiers.map(
         ({ identifier, identifierType, idIdentifier }: IngestIdentifier, index: number): StateIdentifier => ({
             id: index,
-            identifier,
+            identifier: identifier.toString(), // ensure the identifier (even if number) is stored as a string
             identifierType,
             idIdentifier,
             preferred: false
