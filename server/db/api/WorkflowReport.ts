@@ -8,6 +8,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
     idWorkflow!: number;
     MimeType!: string;
     Data!: string;
+    Name!: string | null;
 
     constructor(input: WorkflowReportBase) {
         super(input);
@@ -18,7 +19,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idWorkflow, MimeType, Data } = this;
+            const { idWorkflow, MimeType, Data, Name } = this;
             ({ idWorkflowReport: this.idWorkflowReport, idWorkflow: this.idWorkflow, MimeType: this.MimeType,
                 Data: this.Data } =
                 await DBC.DBConnection.prisma.workflowReport.create({
@@ -26,6 +27,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
                         Workflow: { connect: { idWorkflow }, },
                         MimeType,
                         Data,
+                        Name,
                     },
                 }));
             return true;
@@ -36,13 +38,14 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idWorkflowReport, idWorkflow, MimeType, Data } = this;
+            const { idWorkflowReport, idWorkflow, MimeType, Data, Name } = this;
             return await DBC.DBConnection.prisma.workflowReport.update({
                 where: { idWorkflowReport, },
                 data: {
                     Workflow: { connect: { idWorkflow }, },
                     MimeType,
                     Data,
+                    Name,
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {

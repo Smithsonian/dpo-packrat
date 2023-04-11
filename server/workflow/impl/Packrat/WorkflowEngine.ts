@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as WF from '../../interface';
 import * as WFP from '../../../workflow/impl/Packrat';
+
 import { WorkflowJob } from './WorkflowJob';
 import { WorkflowIngestion } from './WorkflowIngestion';
 import { WorkflowUpload } from './WorkflowUpload';
+import { WorkflowVerifier } from './WorkflowVerifier';
+
 import * as COOK from '../../../job/impl/Cook';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
@@ -66,10 +69,14 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if (WFC.workflow)
             this.workflowMap.set(WFC.workflow.idWorkflow, workflow);
 
-        const startResults: H.IOResults = await workflow.start();
-        if (!startResults) {
-            LOG.error(`WorkflowEngine.create failed to start workflow ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
-            return null;
+        // if we want to automatically start the job
+        const doStart: boolean = (workflowParams.autoStart === undefined) ? true : workflowParams.autoStart;
+        if(doStart) {
+            const startResults: H.IOResults = await workflow.start();
+            if (!startResults) {
+                LOG.error(`WorkflowEngine.create failed to start workflow ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
+                return null;
+            }
         }
         LOG.info(`WorkflowEngine.created workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
         return workflow;
@@ -553,6 +560,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             case COMMON.eVocabularyID.eWorkflowTypeCookJob: return await WorkflowJob.constructWorkflow(workflowParams, WFC);
             case COMMON.eVocabularyID.eWorkflowTypeIngestion: return await WorkflowIngestion.constructWorkflow(workflowParams, WFC);
             case COMMON.eVocabularyID.eWorkflowTypeUpload: return await WorkflowUpload.constructWorkflow(workflowParams, WFC);
+            case COMMON.eVocabularyID.eWorkflowTypeVerifier: return await WorkflowVerifier.constructWorkflow(workflowParams, WFC);
         }
         return null;
     }
