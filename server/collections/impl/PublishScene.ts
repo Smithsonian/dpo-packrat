@@ -18,10 +18,6 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import lodash from 'lodash';
 
-declare class EdanCollection {
-    static computeLicenseInfo(licenseText?: string | undefined, licenseCodes?: string | undefined, usageText?: string | undefined): EdanLicenseInfo;
-}
-
 export type SceneAssetCollector = {
     idSystemObject: number;
     asset: DBAPI.Asset;
@@ -115,7 +111,7 @@ export class PublishScene {
         const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(this.idSystemObject);
         if (!await this.updatePublishedState(LR, ePublishedStateIntended))
             return false;
-        const media_usage: COL.EdanLicenseInfo = EdanCollection.computeLicenseInfo(LR?.License?.Name); // eslint-disable-line camelcase
+        const media_usage: COL.EdanLicenseInfo = PublishScene.computeLicenseInfo(LR?.License?.Name); // eslint-disable-line camelcase
 
         const { status, publicSearch, downloads } = this.computeEdanSearchFlags(edanRecord, ePublishedStateIntended);
         const haveDownloads: boolean = (this.edan3DResourceList.length > 0);
@@ -758,5 +754,14 @@ export class PublishScene {
         }
         LOG.info(`PublishScene.computeEdanSearchFlags(${COMMON.ePublishedState[eState]}) = { status ${status}, publicSearch ${publicSearch}, downloads ${downloads} }`, LOG.LS.eCOLL);
         return { status, publicSearch, downloads };
+    }
+
+    static computeLicenseInfo(licenseText?: string | undefined, licenseCodes?: string | undefined, usageText?: string | undefined): EdanLicenseInfo {
+        const access: string = (licenseText && licenseText.toLowerCase() === 'cc0, publishable w/ downloads') ? 'CC0' : 'Usage conditions apply';
+        return {
+            access,
+            codes: licenseCodes ?? '',
+            text: usageText ?? '',
+        };
     }
 }

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as JOB from '../../interface';
+import { JobEngineBase } from './JobEngineBase';
 import { JobPackrat } from './JobPackrat';
 import * as COOK from '../Cook';
 import * as LOG from '../../../utils/logger';
@@ -29,7 +30,7 @@ interface JobEventData {
     obj: any
 }
 
-export class JobEngine implements JOB.IJobEngine, EVENT.IEventConsumer {
+export class JobEngine extends JobEngineBase implements JOB.IJobEngine, EVENT.IEventConsumer {
     static setEventEngine(eventEngine: EVENT.IEventEngine): void {
         LOG.info('JobEngine.setEventEngine called', LOG.LS.eJOB);
         JobEngine.eventEngine = eventEngine;

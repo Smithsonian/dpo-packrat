@@ -1,4 +1,5 @@
 import * as EVENT from '../../interface';
+import { EventEngineBase } from './EventEngineBase';
 import { EventProducer } from './EventProducer';
 import { EventConsumer } from './EventConsumer';
 import { EventConsumerAuth } from './EventConsumerAuth';
@@ -11,11 +12,13 @@ import * as LOG from '../../../utils/logger';
 
 // Maintains a set of registered consumers per topic
 // EventConsumer.poll registers a consumer and then deregisters it
-export class EventEngine implements EVENT.IEventEngine {
+export class EventEngine extends EventEngineBase implements EVENT.IEventEngine {
     private consumerMap: Map<EVENT.eEventTopic, Set<EventConsumer>> = new Map<EVENT.eEventTopic, Set<EventConsumer>>();
     private static eventProducer: EVENT.IEventProducer | null = null;
 
     constructor() {
+        super();
+
         LOG.info('EventEngine.constructor, wiring default consumers', LOG.LS.eEVENT);
         this.createSystemConsumer(EVENT.eEventTopic.eDB);
         this.createSystemConsumer(EVENT.eEventTopic.eAuth);
