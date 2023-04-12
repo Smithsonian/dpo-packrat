@@ -10,9 +10,10 @@ import { logtest } from './routes/logtest';
 import { heartbeat } from './routes/heartbeat';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
 import { migrate } from './routes/migrate';
-import { Downloader, download } from './routes/download';
+import { download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
+import { RouteBuilder } from './routes/routeBuilder';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -84,8 +85,8 @@ export class HttpServer {
         this.app.get('/solrindexprofiled', solrindexprofiled);
         this.app.get('/migrate', migrate);
         this.app.get('/migrate/*', migrate);
-        this.app.get(`${Downloader.httpRoute}*`, HttpServer.idRequestMiddleware2);
-        this.app.get(`${Downloader.httpRoute}*`, download);
+        this.app.get(`${RouteBuilder.httpRoute}*`, HttpServer.idRequestMiddleware2);
+        this.app.get(`${RouteBuilder.httpRoute}*`, download);
 
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
         if (WDSV) {
@@ -108,7 +109,7 @@ export class HttpServer {
     private static idRequestMiddleware(req: Request, _res, next): void {
         if (!req.originalUrl.startsWith('/auth/') &&
             !req.originalUrl.startsWith('/graphql') &&
-            !req.originalUrl.startsWith(Downloader.httpRoute) &&
+            !req.originalUrl.startsWith(RouteBuilder.httpRoute) &&
             !req.originalUrl.startsWith(WebDAVServer.httpRoute)) {
             const user = req['user'];
             const idUser = user ? user['idUser'] : undefined;
