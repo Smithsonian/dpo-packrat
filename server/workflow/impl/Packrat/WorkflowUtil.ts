@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types, no-constant-condition */
 import * as WF from '../../interface';
-import { WorkflowJobParameters } from './WorkflowJob';
+import { WorkflowJobParameters } from './WorkflowJobParameters';
 import * as COOK from '../../../job/impl/Cook';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';

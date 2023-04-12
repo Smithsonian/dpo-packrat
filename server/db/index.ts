@@ -67,6 +67,7 @@ export * from './api/composite/LicenseResolver';
 export * from './api/composite/ModelConstellation';
 export * from './api/composite/ObjectAncestors';
 export * from './api/composite/ObjectGraph';
+export * from './api/composite/ObjectGraphMode';
 export * from './api/composite/ObjectGraphDatabase';
 export * from './api/composite/ObjectGraphDataEntry';
 export * from './api/composite/SceneConstellation';

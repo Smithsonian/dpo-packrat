@@ -1,6 +1,6 @@
-import { IEventData } from './IEventEngine';
+import { IEventData } from './IEventData';
 import { eEventTopic } from './EventEnums';
 
 export interface IEventProducer {
-    send<Key, Value>(eTopic: eEventTopic, data: IEventData<Key, Value>[]): Promise<void>;
+    send<Value>(eTopic: eEventTopic, data: IEventData<Value>[]): Promise<void>;
 }

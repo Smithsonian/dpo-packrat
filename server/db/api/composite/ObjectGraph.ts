@@ -3,7 +3,8 @@ import { Actor, Asset, AssetVersion, CaptureData, Identifier, IntermediaryFile, 
     SystemObjectPairs, Unit } from '../..';
 import * as LOG from '../../../utils/logger';
 import * as L from 'lodash';
-import { ObjectGraphDatabase } from './ObjectGraphDatabase';
+import { ObjectGraphDatabaseBase } from './ObjectGraphDatabaseBase';
+import { eObjectGraphMode } from './ObjectGraphMode';
 import * as COMMON from '@dpo-packrat/common';
 
 export type SystemObjectIDType = {
@@ -11,12 +12,6 @@ export type SystemObjectIDType = {
     idObject: number;
     eObjectType: COMMON.eSystemObjectType;
 };
-
-export enum eObjectGraphMode {
-    eAncestors,
-    eDescendents,
-    eAll
-}
 
 export type ObjectGraphSubjectIdentifier = {
     idSubject: number;
@@ -73,9 +68,9 @@ export class ObjectGraph {
     systemObjectList: number[] = []; // array of idSystemObjects to be processed
     systemObjectProcessed: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map from idSystemObject -> { idSystemObject, id of database object, type of database object}
     systemObjectAdded: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map from idSystemObject -> { idSystemObject, id of database object, type of database object}
-    objectGraphDatabase: ObjectGraphDatabase | null = null; // non-null means we'll record relationship and hierarchy data in this object
+    objectGraphDatabase: ObjectGraphDatabaseBase | null = null; // non-null means we'll record relationship and hierarchy data in this object
 
-    constructor(idSystemObject: number, eMode: eObjectGraphMode, depth: number = 32, objectGraphDatabase: ObjectGraphDatabase | null = null) {
+    constructor(idSystemObject: number, eMode: eObjectGraphMode, depth: number = 32, objectGraphDatabase: ObjectGraphDatabaseBase | null = null) {
         this.idSystemObject = idSystemObject;
         this.eMode = eMode;
         this.depth = depth;

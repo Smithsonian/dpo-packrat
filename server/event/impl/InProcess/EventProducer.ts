@@ -1,13 +1,14 @@
 import * as EVENT from '../../interface';
-import { EventEngine } from './EventEngine';
+
+import { EventEngineBase } from './EventEngineBase';
 
 export class EventProducer implements EVENT.IEventProducer {
-    private engine: EventEngine;
-    constructor(engine: EventEngine) {
+    private engine: EventEngineBase;
+    constructor(engine: EventEngineBase) {
         this.engine = engine;
     }
 
-    async send<Key, Value>(eTopic: EVENT.eEventTopic, data: EVENT.IEventData<Key, Value>[]): Promise<void> {
+    async send<Value>(eTopic: EVENT.eEventTopic, data: EVENT.IEventData<Value>[]): Promise<void> {
         this.engine.receive(eTopic, data); // call without await, allow to be async
     }
 }

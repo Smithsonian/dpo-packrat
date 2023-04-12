@@ -1,10 +1,10 @@
 import * as LOG from '../utils/logger';
-import { CacheControl } from './CacheControl';
+import { BaseCache } from './BaseCache';
 import { Vocabulary, VocabularySet, SystemObject } from '../db';
 import * as COMMON from '@dpo-packrat/common';
 import * as path from 'path';
 
-export class VocabularyCache {
+export class VocabularyCache extends BaseCache {
     private static singleton: VocabularyCache | null = null;
 
     private vocabMap:               Map<number, Vocabulary>         = new Map<number, Vocabulary>();        // map of Vocab ID     -> Vocabulary object
@@ -21,10 +21,10 @@ export class VocabularyCache {
     // **************************
     // Boilerplate Implementation
     // **************************
-    private constructor() { }
+    private constructor() { super(); }
 
     private async flushInternal(): Promise<void> {
-        for (let nTry: number = 1; nTry <= CacheControl.cacheBuildTries; nTry++) {
+        for (let nTry: number = 1; nTry <= BaseCache.cacheBuildTries; nTry++) {
             /* istanbul ignore else */
             if (await this.flushInternalWorker())
                 break;
@@ -81,7 +81,6 @@ export class VocabularyCache {
                 case 'Asset.AssetType':                         eVocabSetEnum = COMMON.eVocabularySetID.eAssetAssetType; break;
                 case 'Job.JobType':                             eVocabSetEnum = COMMON.eVocabularySetID.eJobJobType; break;
                 case 'Workflow.Type':                           eVocabSetEnum = COMMON.eVocabularySetID.eWorkflowType; break;
-                case 'Workflow.Event':                          eVocabSetEnum = COMMON.eVocabularySetID.eWorkflowEvent; break;
                 case 'Edan.3DResourceAttributeUnits':           eVocabSetEnum = COMMON.eVocabularySetID.eEdan3DResourceAttributeUnits; break;
                 case 'Edan.3DResourceAttributeModelFileType':   eVocabSetEnum = COMMON.eVocabularySetID.eEdan3DResourceAttributeModelFileType; break;
                 case 'Edan.3DResourceAttributeFileType':        eVocabSetEnum = COMMON.eVocabularySetID.eEdan3DResourceAttributeFileType; break;
@@ -312,13 +311,6 @@ export class VocabularyCache {
                 case COMMON.eVocabularySetID.eWorkflowStepWorkflowStepType: {
                     switch (vocabulary.Term) {
                         case 'Start':                           eVocabEnum = COMMON.eVocabularyID.eWorkflowStepTypeStart; break;
-                    }
-                } break;
-
-                case COMMON.eVocabularySetID.eWorkflowEvent: {
-                    switch (vocabulary.Term) {
-                        case 'Ingestion: Upload Asset Version': eVocabEnum = COMMON.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion; break;
-                        case 'Ingestion: Ingest Object':        eVocabEnum = COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject; break;
                     }
                 } break;
 

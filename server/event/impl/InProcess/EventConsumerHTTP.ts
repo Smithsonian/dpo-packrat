@@ -1,18 +1,17 @@
 import * as EVENT from '../../interface';
 import { EventConsumer } from './EventConsumer';
 import { EventConsumerDB } from './EventConsumerDB';
-import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
 
 export class EventConsumerHTTP extends EventConsumer {
-    constructor(engine: EventEngine) {
+    constructor(engine: EVENT.IEventEngine) {
         super(engine);
     }
 
-    protected async eventWorker<Key, Value>(data: EVENT.IEventData<Key, Value>[]): Promise<void> {
-        // inform audit interface of authentication event
+    protected async eventWorker<Value>(data: EVENT.IEventData<Value>[]): Promise<void> {
+        // inform audit interface of download & upload events
         for (const dataItem of data) {
             if (typeof(dataItem.key) !== 'number') {
                 LOG.error(`EventConsumerHTTP.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);

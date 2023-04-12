@@ -1,13 +1,15 @@
 import { Unit, Project, Subject, Item, SystemObjectIDType, Actor, Asset, AssetVersion, CaptureData, CaptureDataFile, IntermediaryFile,
     Model, ProjectDocumentation, Scene, Stakeholder, SystemObjectInfo, ObjectIDAndType, SystemObjectIDAndType } from '../..';
+import { ObjectGraph } from './ObjectGraph';
+import { ObjectGraphDatabaseBase } from './ObjectGraphDatabaseBase';
 import { ObjectGraphDataEntry, eApplyGraphStateDirection, ObjectGraphState } from './ObjectGraphDataEntry';
-import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
+import { eObjectGraphMode } from './ObjectGraphMode';
 import * as COMMON from '@dpo-packrat/common';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';
 
-export class ObjectGraphDatabase {
+export class ObjectGraphDatabase extends ObjectGraphDatabaseBase {
     objectMap: Map<number, ObjectGraphDataEntry> = new Map<number, ObjectGraphDataEntry>(); // map from SystemObject.idSystemObject to graph entry details
 
     // used by ObjectGraph

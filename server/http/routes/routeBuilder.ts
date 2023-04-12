@@ -1,5 +1,4 @@
 import { Config } from '../../config';
-import { Downloader } from './download';
 
 export enum eHrefMode {
     eNone = 0,
@@ -8,70 +7,72 @@ export enum eHrefMode {
 }
 
 export class RouteBuilder {
+    static httpRoute: string = '/download';
+
     static RepositoryDetails(idSystemObject: number, eMode?: eHrefMode | undefined): string {
         return RouteBuilder.ApplyPrefix(`/repository/details/${idSystemObject}`, eMode);
     }
 
     /** Downloads the specified version of the specified asset */
     static DownloadAssetVersion(idAssetVersion: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idAssetVersion=${idAssetVersion}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idAssetVersion=${idAssetVersion}`, eMode);
     }
 
     /** Downloads the most recent asset version of the specified asset */
     static DownloadAsset(idAsset: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idAsset=${idAsset}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idAsset=${idAsset}`, eMode);
     }
 
     /** Computes the assets attached to system object with idSystemObject. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip. */
     static DownloadSystemObject(idSystemObject: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idSystemObject=${idSystemObject}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idSystemObject=${idSystemObject}`, eMode);
     }
 
     /** Computes the assets attached to system object with idSystemObject. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip.
      * If path is specified, computes the asset attached to system object with idSystemObject, found at the path /FOO/BAR.
      */
     static DownloadSystemObjectPath(idSystemObject: number, path?: string | undefined, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idSystemObject-${idSystemObject}${path}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idSystemObject-${idSystemObject}${path}`, eMode);
     }
 
     /** Computes the assets attached to system object version with idSystemObjectVersion. If just one, downloads it alone.  If multiple, computes a zip and downloads that zip. */
     static DownloadSystemObjectVersion(idSystemObjectVersion: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idSystemObjectVersion=${idSystemObjectVersion}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idSystemObjectVersion=${idSystemObjectVersion}`, eMode);
     }
 
     /** Downloads the comment for the system object version with idSystemObjectVersion */
     static DownloadMetadata(idMetadata: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idMetadata=${idMetadata}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idMetadata=${idMetadata}`, eMode);
     }
 
     /** Downloads the WorkflowReport(s) for the specified workflow ID */
     static DownloadWorkflow(idWorkflow: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idWorkflow=${idWorkflow}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idWorkflow=${idWorkflow}`, eMode);
     }
 
     /** Downloads the specified WorkflowReport */
     static DownloadWorkflowReport(idWorkflowReport: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idWorkflowReport=${idWorkflowReport}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idWorkflowReport=${idWorkflowReport}`, eMode);
     }
 
     /** Downloads the WorkflowReport(s) for workflows in the specified workflow set */
     static DownloadWorkflowSet(idWorkflowSet: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idWorkflowSet=${idWorkflowSet}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idWorkflowSet=${idWorkflowSet}`, eMode);
     }
 
     /** Downloads the JobRun output for idJobRun with the specified ID */
     static DownloadJobRun(idJobRun: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idJobRun=${idJobRun}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idJobRun=${idJobRun}`, eMode);
     }
 
     /** Downloads the comment for the system object version with idSystemObjectVersion */
     static DownloadSystemObjectVersionComment(idSystemObjectVersion: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idSystemObjectVersionComment=${idSystemObjectVersion}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idSystemObjectVersionComment=${idSystemObjectVersion}`, eMode);
     }
 
     /** Downloads the comment for the asset version with idAssetVersion */
     static DownloadAssetVersionComment(idAssetVersion: number, eMode?: eHrefMode | undefined): string {
-        return RouteBuilder.ApplyPrefix(`${Downloader.httpRoute}?idAssetVersionComment=${idAssetVersion}`, eMode);
+        return RouteBuilder.ApplyPrefix(`${RouteBuilder.httpRoute}?idAssetVersionComment=${idAssetVersion}`, eMode);
     }
 
     static ApplyPrefix(path: string, eMode?: eHrefMode | undefined): string {

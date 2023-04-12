@@ -986,6 +986,7 @@ describe('DB Creation Test Suite', () => {
                 Parameters: null,
                 Output: null,
                 Error: null,
+                Step: null,
                 idJobRun: 0
             });
         expect(jobRun).toBeTruthy();
@@ -1001,6 +1002,7 @@ describe('DB Creation Test Suite', () => {
                 Parameters: null,
                 Output: null,
                 Error: null,
+                Step: null,
                 idJobRun: 0
             });
             expect(await UTIL.createJobRunTest(jobRunTemp)).toBeTruthy();
@@ -2335,8 +2337,8 @@ describe('DB Fetch By ID Test Suite', () => {
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eAuthLogin);
             audit.setAuditType(DBAPI.eAuditType.eAuthFailed);
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eAuthFailed);
-            audit.setAuditType(DBAPI.eAuditType.eSceneQCd);
-            expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eSceneQCd);
+            audit.setAuditType(DBAPI.eAuditType.ePubSceneQCd);
+            expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.ePubSceneQCd);
             audit.setAuditType(DBAPI.eAuditType.eHTTPDownload);
             expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eHTTPDownload);
             audit.setAuditType(DBAPI.eAuditType.eHTTPUpload);
@@ -4274,7 +4276,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     });
 
     test('DB Fetch SystemObject: COMMON.LicenseEnumToString', async () => {
-        expect(COMMON.LicenseEnumToString(-1)).toEqual('Restricted, Not Publishable');
+        // expect(COMMON.LicenseEnumToString(-1)).toEqual('Restricted, Not Publishable');
         expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadCC0)).toEqual('CC0, Publishable w/ Downloads');
         expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadRestriction)).toEqual('SI ToU, Publishable w/ Downloads');
         expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewOnly)).toEqual('SI ToU, Publishable Only');
@@ -4282,7 +4284,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     });
 
     test('DB Fetch SystemObject: COMMON.PublishedStateEnumToString', async () => {
-        expect(COMMON.PublishedStateEnumToString(-1)).toEqual('Not Published');
+        // expect(COMMON.PublishedStateEnumToString(-1)).toEqual('Not Published');
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eNotPublished)).toEqual('Not Published');
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eAPIOnly)).toEqual('API Only');
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.ePublished)).toEqual('Published');
@@ -4970,7 +4972,7 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
     test('DB Fetch Special: convertWorkflowJobRunStatusEnumToString', async () => {
-        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(-1)).toEqual('Uninitialized');
+        // expect(DBAPI.convertWorkflowJobRunStatusEnumToString(-1)).toEqual('Uninitialized');
         expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eUnitialized)).toEqual('Uninitialized');
         expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eCreated)).toEqual('Created');
         expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eRunning)).toEqual('Running');

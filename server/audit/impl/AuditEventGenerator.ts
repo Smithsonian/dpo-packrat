@@ -46,7 +46,7 @@ export class AuditEventGenerator {
                 case EVENT.eEventKey.eDBDelete:     AuditType = eAuditType.eDBDelete;       eventTopic = EVENT.eEventTopic.eDB;         break;
                 case EVENT.eEventKey.eAuthLogin:    AuditType = eAuditType.eAuthLogin;      eventTopic = EVENT.eEventTopic.eAuth;       break;
                 case EVENT.eEventKey.eAuthFailed:   AuditType = eAuditType.eAuthFailed;     eventTopic = EVENT.eEventTopic.eAuth;       break;
-                case EVENT.eEventKey.eSceneQCd:     AuditType = eAuditType.eSceneQCd;       eventTopic = EVENT.eEventTopic.ePublish;    break;
+                case EVENT.eEventKey.ePubSceneQCd:  AuditType = eAuditType.ePubSceneQCd;    eventTopic = EVENT.eEventTopic.ePublish;    break;
                 case EVENT.eEventKey.eHTTPDownload: AuditType = eAuditType.eHTTPDownload;   eventTopic = EVENT.eEventTopic.eHTTP;       break;
                 case EVENT.eEventKey.eHTTPUpload:   AuditType = eAuditType.eHTTPUpload;     eventTopic = EVENT.eEventTopic.eHTTP;       break;
             }
@@ -62,7 +62,7 @@ export class AuditEventGenerator {
                 idAudit: 0
             };
 
-            const data: EVENT.IEventData<EVENT.eEventKey, Audit> = {
+            const data: EVENT.IEventData<Audit> = {
                 eventDate,
                 key,
                 value,

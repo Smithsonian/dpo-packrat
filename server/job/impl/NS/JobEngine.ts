@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as JOB from '../../interface';
+import { JobEngineBase } from './JobEngineBase';
 import { JobPackrat } from './JobPackrat';
 import * as COOK from '../Cook';
 import * as LOG from '../../../utils/logger';
@@ -7,6 +8,7 @@ import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import * as REP from '../../../report/interface';
+import * as EVENT from '../../../event/interface';
 import * as COMMON from '@dpo-packrat/common';
 
 import * as NS from 'node-schedule';
@@ -23,11 +25,28 @@ class JobData {
     }
 }
 
-export class JobEngine implements JOB.IJobEngine {
+interface JobEventData {
+    idJobRun: number,
+    obj: any
+}
+
+export class JobEngine extends JobEngineBase implements JOB.IJobEngine, EVENT.IEventConsumer {
+    static setEventEngine(eventEngine: EVENT.IEventEngine): void {
+        LOG.info('JobEngine.setEventEngine called', LOG.LS.eJOB);
+        JobEngine.eventEngine = eventEngine;
+    }
+
+    private static eventEngine: EVENT.IEventEngine | null = null;       // don't import EventFactory to avoid circular dependencies
+    private static registeredEventConsumer: boolean = false;
+
+    private eventProducer: EVENT.IEventProducer | null = null;
     private jobMap: Map<number, JobData> = new Map<number, JobData>();  // map from JobRun.idJobRun to JobData
 
     // #region IJobEngine interface
     async create(jobParams: JOB.JobCreationParameters): Promise<JOB.IJob | null> {
+        if (!JobEngine.registeredEventConsumer && JobEngine.eventEngine)
+            JobEngine.registeredEventConsumer = await JobEngine.eventEngine.registerConsumer(EVENT.eEventTopic.eJob, this);
+
         const idJob: number | null = jobParams.idJob;
         let eJobType: COMMON.eVocabularyID | null = jobParams.eJobType;
         let dbJob: DBAPI.Job | null = null;
@@ -88,14 +107,6 @@ export class JobEngine implements JOB.IJobEngine {
         LOG.info(`JobEngine.create [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`, LOG.LS.eJOB);
         return job;
     }
-
-    async jobCompleted(job: JOB.IJob): Promise<void> {
-        const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
-        if (dbJobRun) {
-            this.jobMap.delete(dbJobRun.idJobRun);
-            LOG.info(`JobEngine.jobCompleted [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`, LOG.LS.eJOB);
-        }
-    }
     // #endregion
 
     // #region DB Record Maintenance
@@ -136,7 +147,7 @@ export class JobEngine implements JOB.IJobEngine {
             idJobRun: 0, idJob: dbJob.idJob, Status: COMMON.eWorkflowJobRunStatus.eUnitialized,
             Result: null, DateStart: null, DateEnd: null, Configuration: JSON.stringify(configuration),
             Parameters: JSON.stringify(parameters, H.Helpers.saferStringify),
-            Output: null, Error: null
+            Output: null, Error: null, Step: null
         });
 
         if (!await dbJobRun.create()) {
@@ -206,5 +217,97 @@ export class JobEngine implements JOB.IJobEngine {
 
         return job;
     }
+    // #endregion
+
+    // #region IEventConsumer interface
+    async event<Value>(eTopic: EVENT.eEventTopic, data: EVENT.IEventData<Value>[]): Promise<void> {
+        if (eTopic !== EVENT.eEventTopic.eJob) {
+            LOG.error(`JobEngine.event skipping unexpected event with topic ${EVENT.eEventTopic[eTopic]} and data ${H.Helpers.JSONStringify(data)}`, LOG.LS.eWF);
+            return;
+        }
+
+        for (const dataItem of data) {
+            if (typeof(dataItem.key) !== 'number') {
+                LOG.error(`JobEngine.event skipping event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eJOB);
+                continue;
+            }
+
+            const idJobRun: number | null = this.extractJobRunID(dataItem);
+            if (idJobRun === null) {
+                LOG.error(`JobEngine.event skipping job event missing idJobRun in value ${JSON.stringify(dataItem)}`, LOG.LS.eJOB);
+                continue;
+            }
+
+            LOG.info(`JobEngine.event ${EVENT.eEventKey[dataItem.key]} ${JSON.stringify(dataItem)}`, LOG.LS.eJOB);
+            switch (dataItem.key) {
+                case EVENT.eEventKey.eJobCreated:
+                case EVENT.eEventKey.eJobRunning:
+                case EVENT.eEventKey.eJobUpdated:
+                case EVENT.eEventKey.eJobWaiting:
+                    break;
+
+                case EVENT.eEventKey.eJobDone:
+                case EVENT.eEventKey.eJobError:
+                case EVENT.eEventKey.eJobCancelled: {
+                    const jobData: JobData | undefined = this.jobMap.get(idJobRun);
+                    const job: JOB.IJob | undefined = jobData?.job;
+                    const dbJobRun: DBAPI.JobRun | null = job ? await job.dbJobRun() : null;
+                    if (job && dbJobRun) {
+                        this.jobMap.delete(dbJobRun.idJobRun);
+                        LOG.info(`JobEngine.jobEvent [${this.jobMap.size}]: job ${dbJobRun.idJobRun} ${EVENT.eEventKey[dataItem.key]}: ${job.name()}`, LOG.LS.eJOB);
+                    } else
+                        LOG.error(`JobEngine.jobEvent [${this.jobMap.size}]: unable to compute JobRun with id ${idJobRun}`, LOG.LS.eJOB);
+                } break;
+
+                default:
+                    LOG.error(`JobEngine.event skipping event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eJOB);
+                    break;
+            }
+        }
+    }
+
+    private extractJobRunID<Value>(dataItem: EVENT.IEventData<Value>): number | null {
+        return H.Helpers.safeNumber(dataItem.value['idJobRun']);
+    }
+    // #endregion
+
+    // #region Job Events
+    async sendJobEvent(idJobRun: number, obj: any, key: EVENT.eEventKey): Promise<boolean> {
+        if (!this.eventProducer && JobEngine.eventEngine)
+            this.eventProducer = await JobEngine.eventEngine.createProducer();
+        if (!this.eventProducer) {
+            LOG.error('JobEngine.sendJobEvent unable to fetch event producer', LOG.LS.eJOB);
+            return false;
+        }
+
+        const eventDate: Date = new Date();
+        switch (key) {
+            case EVENT.eEventKey.eJobCreated:
+            case EVENT.eEventKey.eJobRunning:
+            case EVENT.eEventKey.eJobUpdated:
+            case EVENT.eEventKey.eJobWaiting:
+            case EVENT.eEventKey.eJobDone:
+            case EVENT.eEventKey.eJobError:
+            case EVENT.eEventKey.eJobCancelled:
+                break;
+            default:
+                LOG.error(`JobEngine.sendJobEvent asked to send a non-job event ${EVENT.eEventKey[key]}`, LOG.LS.eJOB);
+                return false;
+        }
+
+        const value: JobEventData = {
+            idJobRun,
+            obj
+        };
+
+        const data: EVENT.IEventData<JobEventData> = {
+            eventDate,
+            key,
+            value,
+        };
+        this.eventProducer.send(EVENT.eEventTopic.eJob, [data]);
+        return true;
+    }
+
     // #endregion
 }

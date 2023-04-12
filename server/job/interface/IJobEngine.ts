@@ -14,5 +14,4 @@ export interface JobCreationParameters {
 
 export interface IJobEngine {
     create(jobParams: JobCreationParameters): Promise<IJob | null>;
-    jobCompleted(job: IJob): Promise<void>;
 }

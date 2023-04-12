@@ -3,7 +3,9 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as L from 'lodash';
 import { OperationInfo } from '../../interface/IStorage';
-import * as INV from './OCFLInventory';
+import { OCFLInventory } from './OCFLInventory';
+import { OCFLPathAndHash } from './OCFLPathAndHash';
+import { OCFLObjectBase } from './OCFLObjectBase';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
@@ -14,25 +16,19 @@ export type OCFLObjectInitResults = {
     error?: string,
 };
 
-export type OCFLPathAndHash = {
-    path: string;
-    hash: string;
-};
-
 enum eMoveFileType {
     eUnknown,
     eMove,
     eCopyThenDelete,
 }
 
-export class OCFLObject {
+export class OCFLObject extends OCFLObjectBase {
     private static _eMoveFileType: eMoveFileType = eMoveFileType.eUnknown;
 
     private _storageKey: string = '';
     private _createIfMissing: boolean = false;
 
-    private _objectRoot: string = '';
-    private _ocflInventory: INV.OCFLInventory | null = null;
+    private _ocflInventory: OCFLInventory | null = null;
     private _newObject: boolean = false;
 
     async initialize(storageKey: string, objectRoot: string, createIfMissing: boolean): Promise<OCFLObjectInitResults> {
@@ -110,7 +106,7 @@ export class OCFLObject {
 
         const version: number = this._ocflInventory.headVersion;
         const destFolder: string = this.versionContentFullPath(version);
-        const contentPath: string = OCFLObject.versionContentPartialPath(version);
+        const contentPath: string = OCFLObjectBase.versionContentPartialPath(version);
         let results: H.IOResults = { success: false, error: 'Uninitialized' };
 
         if (fileName) {
@@ -284,7 +280,7 @@ export class OCFLObject {
             return results;
 
         // record copied, renamed file
-        const contentPathDest: string = path.join(OCFLObject.versionContentPartialPath(version), fileNameNew);
+        const contentPathDest: string = path.join(OCFLObjectBase.versionContentPartialPath(version), fileNameNew);
         // LOG.info(`Calling OFCLInventory.addContent for ${fileNameNew} at ${contentPathDest}`, LOG.LS.eSTR);
         this._ocflInventory.addContent(contentPathDest, fileNameNew, hash);
 
@@ -415,14 +411,14 @@ export class OCFLObject {
             return ioResults;
 
         // Confirm root inventory exists
-        let invResults = await INV.OCFLInventory.readFromDisk(this);
+        let invResults = await OCFLInventory.readFromDisk(this);
         if (!invResults.success || !invResults.ocflInventory) {
             ioResults.success = false;
             ioResults.error = invResults.error ? invResults.error : /* istanbul ignore next */ `Failed to read inventory for ${this._storageKey}`;
             return ioResults;
         }
 
-        const ocflInventoryRoot: INV.OCFLInventory = invResults.ocflInventory;
+        const ocflInventoryRoot: OCFLInventory = invResults.ocflInventory;
         const maxVersion: number = ocflInventoryRoot.headVersion;
         /* istanbul ignore next */
         if (maxVersion <= 0) {
@@ -439,7 +435,7 @@ export class OCFLObject {
 
         // Validate each inventory
         for (let version: number = 1; version <= maxVersion; version++) {
-            invResults = await INV.OCFLInventory.readFromDiskVersion(this, version);
+            invResults = await OCFLInventory.readFromDiskVersion(this, version);
             if (!invResults.success || !invResults.ocflInventory) {
                 ioResults.success = false;
                 ioResults.error = invResults.error ? invResults.error : /* istanbul ignore next */ `Failed to read inventory for ${this._storageKey}, version ${version}`;
@@ -447,7 +443,7 @@ export class OCFLObject {
                 return ioResults;
             }
 
-            const ocflInventory: INV.OCFLInventory = invResults.ocflInventory;
+            const ocflInventory: OCFLInventory = invResults.ocflInventory;
             ioResults = await ocflInventory.validate(this, false);
             /* istanbul ignore next */
             if (!ioResults.success) {
@@ -533,29 +529,9 @@ export class OCFLObject {
         return ioResults;
     }
 
-    /** e.g. STORAGEROOT/REPO/35/6a/19/356a192b7913b04c54574d18c28d46e6395428ab/ */
-    get objectRoot(): string {
-        return this._objectRoot;
-    }
-
-    /** e.g. STORAGEROOT/REPO/35/6a/19/356a192b7913b04c54574d18c28d46e6395428ab/v1 */
-    versionRoot(version: number): string {
-        return path.join(this._objectRoot, OCFLObject.versionFolderName(version));
-    }
-
     /** e.g. STORAGEROOT/REPO/35/6a/19/356a192b7913b04c54574d18c28d46e6395428ab/v1/content */
     versionContentFullPath(version: number): string {
         return path.join(this.versionRoot(version), ST.OCFLStorageObjectContentFolder);
-    }
-
-    /** e.g. v1/content */
-    static versionContentPartialPath(version: number): string {
-        return path.join(OCFLObject.versionFolderName(version), ST.OCFLStorageObjectContentFolder);
-    }
-
-    /** e.g. v1 */
-    static versionFolderName(version: number): string {
-        return `v${version}`;
     }
 
     /** Use to compute the location in which to place a specific version of a specific file. Note that files stored may be in a different location due to
@@ -617,7 +593,7 @@ export class OCFLObject {
         /* istanbul ignore else */
         if (!this._ocflInventory) {
             if (!this._newObject) {
-                const results = await INV.OCFLInventory.readFromDisk(this);
+                const results = await OCFLInventory.readFromDisk(this);
                 /* istanbul ignore if */
                 if (!results.success || !results.ocflInventory) {
                     return {
@@ -627,7 +603,7 @@ export class OCFLObject {
                 }
                 this._ocflInventory = results.ocflInventory;
             } else {
-                this._ocflInventory = new INV.OCFLInventory();
+                this._ocflInventory = new OCFLInventory();
                 this._ocflInventory.id = this._storageKey;
             }
         }

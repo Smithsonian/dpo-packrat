@@ -58,7 +58,6 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eCaptureDataCaptureMethod,
                     eVocabularySetID.eJobJobType,
                     eVocabularySetID.eWorkflowType,
-                    eVocabularySetID.eWorkflowEvent,
                     eVocabularySetID.eEdan3DResourceAttributeUnits,
                     eVocabularySetID.eEdan3DResourceAttributeModelFileType,
                     eVocabularySetID.eEdan3DResourceAttributeFileType,

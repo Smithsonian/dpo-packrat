@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any */
 import * as EVENT from '../../interface';
 import { EventConsumer } from './EventConsumer';
-import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as NAV from '../../../navigation/interface';
@@ -10,11 +9,11 @@ import * as H from '../../../utils/helpers';
 import { eAuditType } from '../../../db';
 
 export class EventConsumerDB extends EventConsumer {
-    constructor(engine: EventEngine) {
+    constructor(engine: EVENT.IEventEngine) {
         super(engine);
     }
 
-    protected async eventWorker<Key, Value>(data: EVENT.IEventData<Key, Value>[]): Promise<void> {
+    protected async eventWorker<Value>(data: EVENT.IEventData<Value>[]): Promise<void> {
         // inform audit interface of db event
         // inform cache and solr of systemobject events
         for (const dataItem of data) {

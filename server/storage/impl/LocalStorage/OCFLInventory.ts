@@ -4,7 +4,9 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as L from 'lodash';
 import { OperationInfo } from '../../interface/IStorage';
-import { OCFLObject, OCFLPathAndHash } from './OCFLObject';
+import { OCFLPathAndHash } from './OCFLPathAndHash';
+import { OCFLObjectBase } from './OCFLObjectBase';
+
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
@@ -319,9 +321,9 @@ export class OCFLInventory implements OCFLInventoryType {
     addVersion(opInfo: OperationInfo): void {
         const oldVersion: number = this.headVersion;
         const version: number = oldVersion + 1;
-        const oldVersionString: string = (oldVersion > 0) ? OCFLObject.versionFolderName(oldVersion) : '';
+        const oldVersionString: string = (oldVersion > 0) ? OCFLObjectBase.versionFolderName(oldVersion) : '';
 
-        this.head = OCFLObject.versionFolderName(version);
+        this.head = OCFLObjectBase.versionFolderName(version);
         this.versions.addVersion(this.head, oldVersionString, opInfo);
     }
 
@@ -331,7 +333,7 @@ export class OCFLInventory implements OCFLInventoryType {
         if (this.headVersion <= 0)
             return true;
         const oldVersion: number = this.headVersion - 1;
-        const oldVersionString: string = (oldVersion > 0) ? OCFLObject.versionFolderName(oldVersion) : /* istanbul ignore next */ '';
+        const oldVersionString: string = (oldVersion > 0) ? OCFLObjectBase.versionFolderName(oldVersion) : /* istanbul ignore next */ '';
 
         const retValue: boolean = this.versions.removeVersion(this.head);
 
@@ -344,11 +346,11 @@ export class OCFLInventory implements OCFLInventoryType {
         if (version == -1)
             return this.manifest.getLatestContentPathAndHash(fileName);
 
-        const versionString: string = OCFLObject.versionFolderName(version);
+        const versionString: string = OCFLObjectBase.versionFolderName(version);
         const hash: string = this.versions.getHashForFilename(versionString, fileName);
         if (hash)
             return {
-                path: path.join(OCFLObject.versionContentPartialPath(version), fileName),
+                path: path.join(OCFLObjectBase.versionContentPartialPath(version), fileName),
                 hash
             };
         else
@@ -378,7 +380,7 @@ export class OCFLInventory implements OCFLInventoryType {
         return true;
     }
 
-    async validate(ocflObject: OCFLObject, isRootInventory: boolean): Promise<H.IOResults> {
+    async validate(ocflObject: OCFLObjectBase, isRootInventory: boolean): Promise<H.IOResults> {
         // LOG.info(`OCFLInventory.validate ${JSON.stringify(this)}`, LOG.LS.eSTR);
         let results: H.IOResults;
 
@@ -435,12 +437,12 @@ export class OCFLInventory implements OCFLInventoryType {
     }
 
     /** Write root inventory to disk */
-    async writeToDisk(ocflObject: OCFLObject): Promise<H.IOResults> {
+    async writeToDisk(ocflObject: OCFLObjectBase): Promise<H.IOResults> {
         return await this.writeToDiskWorker(ocflObject, 0);
     }
 
     /** Write version inventory to disk */
-    async writeToDiskVersion(ocflObject: OCFLObject): Promise<H.IOResults> {
+    async writeToDiskVersion(ocflObject: OCFLObjectBase): Promise<H.IOResults> {
         return await this.writeToDiskWorker(ocflObject, this.headVersion);
     }
 
@@ -448,7 +450,7 @@ export class OCFLInventory implements OCFLInventoryType {
         return `${hash} ${ST.OCFLStorageObjectInventoryFilename}`;
     }
 
-    async writeToDiskWorker(ocflObject: OCFLObject, version: number): Promise<H.IOResults> {
+    async writeToDiskWorker(ocflObject: OCFLObjectBase, version: number): Promise<H.IOResults> {
         const dest: string = OCFLInventory.inventoryFilePath(ocflObject, version);
         const hashResults: H.HashResults = await H.Helpers.writeJsonAndComputeHash(dest, this, ST.OCFLDigestAlgorithm);
         /* istanbul ignore if */
@@ -471,27 +473,27 @@ export class OCFLInventory implements OCFLInventoryType {
         }
     }
 
-    static inventoryFilePath(ocflObject: OCFLObject, version: number): string {
+    static inventoryFilePath(ocflObject: OCFLObjectBase, version: number): string {
         const foldername: string = (version == 0) ? ocflObject.objectRoot : ocflObject.versionRoot(version);
         return path.join(foldername, ST.OCFLStorageObjectInventoryFilename);
     }
 
-    static inventoryDigestPath(ocflObject: OCFLObject, version: number): string {
+    static inventoryDigestPath(ocflObject: OCFLObjectBase, version: number): string {
         const foldername: string = (version == 0) ? ocflObject.objectRoot : ocflObject.versionRoot(version);
         return path.join(foldername, ST.OCFLStorageObjectInventoryDigestFilename);
     }
 
     /** Read root inventory from disk */
-    static async readFromDisk(ocflObject: OCFLObject): Promise<OCFLInventoryReadResults> {
+    static async readFromDisk(ocflObject: OCFLObjectBase): Promise<OCFLInventoryReadResults> {
         return await OCFLInventory.readFromDiskWorker(ocflObject, 0);
     }
 
     /** Read version inventory from disk */
-    static async readFromDiskVersion(ocflObject: OCFLObject, version: number): Promise<OCFLInventoryReadResults> {
+    static async readFromDiskVersion(ocflObject: OCFLObjectBase, version: number): Promise<OCFLInventoryReadResults> {
         return await OCFLInventory.readFromDiskWorker(ocflObject, version);
     }
 
-    private static async readFromDiskWorker(ocflObject: OCFLObject, version: number): Promise<OCFLInventoryReadResults> {
+    private static async readFromDiskWorker(ocflObject: OCFLObjectBase, version: number): Promise<OCFLInventoryReadResults> {
         const retValue: OCFLInventoryReadResults = {
             ocflInventory: null,
             success: false

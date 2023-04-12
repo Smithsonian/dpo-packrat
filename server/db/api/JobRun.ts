@@ -17,6 +17,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
     Parameters!: string | null;
     Output!: string | null;
     Error!: string | null;
+    Step!: string | null;
 
     constructor(input: JobRunBase) {
         super(input);
@@ -36,7 +37,8 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
             Configuration: jobRunBase.Configuration,
             Parameters: jobRunBase.Parameters,
             Output: jobRunBase.Output,
-            Error: jobRunBase.Error
+            Error: jobRunBase.Error,
+            Step: jobRunBase.Step,
         });
     }
 
@@ -45,9 +47,9 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idJob, Status, Result, DateStart, DateEnd, Configuration, Parameters, Output, Error } = this;
+            const { idJob, Status, Result, DateStart, DateEnd, Configuration, Parameters, Output, Error, Step } = this;
             ({ idJobRun: this.idJobRun, idJob: this.idJob, Status: this.Status, Result: this.Result, DateStart: this.DateStart, DateEnd: this.DateEnd,
-                Configuration: this.Configuration, Parameters: this.Parameters, Output: this.Output, Error: this.Error } =
+                Configuration: this.Configuration, Parameters: this.Parameters, Output: this.Output, Error: this.Error, Step: this.Step } =
                 await DBC.DBConnection.prisma.jobRun.create({
                     data: {
                         Job: { connect: { idJob }, },
@@ -58,7 +60,8 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                         Configuration,
                         Parameters,
                         Output,
-                        Error
+                        Error,
+                        Step
                     }
                 }));
             return true;
@@ -70,7 +73,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idJobRun, idJob, Status, Result, DateStart, DateEnd, Configuration, Parameters, Output, Error } = this;
+            const { idJobRun, idJob, Status, Result, DateStart, DateEnd, Configuration, Parameters, Output, Error, Step } = this;
             return await DBC.DBConnection.prisma.jobRun.update({
                 where: { idJobRun, },
                 data: {
@@ -82,7 +85,8 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                     Configuration,
                     Parameters,
                     Output,
-                    Error
+                    Error,
+                    Step
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
