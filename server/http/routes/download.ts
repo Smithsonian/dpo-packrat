@@ -7,16 +7,13 @@ import * as STORE from '../../storage/interface';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { DownloaderParser, DownloaderParserResults, eDownloadMode } from './DownloaderParser';
+import { RouteBuilder } from './routeBuilder';
+import { SitemapGenerator } from './SitemapGenerator';
 import { isAuthenticated } from '../auth';
 
 import { Request, Response } from 'express';
 import * as mime from 'mime-types';
 import path from 'path';
-import internal from 'stream';
-
-declare class SitemapGenerator {
-    static generate(writable: internal.Writable): Promise<boolean>;
-}
 
 /** Used to provide download access to assets and reports. Access with one of the following URL patterns:
  * ASSETS:
@@ -43,7 +40,7 @@ export async function download(request: Request, response: Response): Promise<bo
     try {
         return await DL.execute();
     } catch (error) {
-        LOG.error(Downloader.httpRoute, LOG.LS.eHTTP, error);
+        LOG.error(RouteBuilder.httpRoute, LOG.LS.eHTTP, error);
         return false;
     }
 }
@@ -53,18 +50,16 @@ export class Downloader {
     private response: Response;
     private downloaderParser: DownloaderParser;
 
-    static httpRoute: string = '/download';
-
     constructor(request: Request, response: Response) {
         this.request = request;
         this.response = response;
-        this.downloaderParser = new DownloaderParser(Downloader.httpRoute, this.request.path, this.request.query);
+        this.downloaderParser = new DownloaderParser(RouteBuilder.httpRoute, this.request.path, this.request.query);
     }
 
     async execute(): Promise<boolean> {
         if (!isAuthenticated(this.request)) {
             AuditFactory.audit({ url: this.request.path, auth: false }, { eObjectType: 0, idObject: 0 }, eEventKey.eHTTPDownload);
-            LOG.error(`${Downloader.httpRoute} not authenticated`, LOG.LS.eHTTP);
+            LOG.error(`${RouteBuilder.httpRoute} not authenticated`, LOG.LS.eHTTP);
             return this.sendError(403);
         }
 
@@ -91,7 +86,7 @@ export class Downloader {
             case eDownloadMode.eAsset:
                 return (DPResults.assetVersion)
                     ? await this.emitDownload(DPResults.assetVersion)
-                    : this.sendError(404, `${Downloader.httpRoute}?idAsset=${this.downloaderParser.idAssetV} unable to fetch asset version`);
+                    : this.sendError(404, `${RouteBuilder.httpRoute}?idAsset=${this.downloaderParser.idAssetV} unable to fetch asset version`);
 
             case eDownloadMode.eSystemObject:
                 if (DPResults.assetVersions)
@@ -159,7 +154,7 @@ export class Downloader {
                 return false;
             }
         } else if (!this.downloaderParser.idSystemObjectV) {
-            LOG.error(`${Downloader.httpRoute} emitDownloadZip called with unexpected parameters`, LOG.LS.eHTTP);
+            LOG.error(`${RouteBuilder.httpRoute} emitDownloadZip called with unexpected parameters`, LOG.LS.eHTTP);
             return false;
         }
 
@@ -237,7 +232,7 @@ export class Downloader {
         const fileName: string = fileNameIn.replace(/,/g, '_'); // replace commas with underscores to avoid ERR_RESPONSE_HEADERS_MULTIPLE_CONTENT_DISPOSITION browser error
         if (!mimeType)
             mimeType = mime.lookup(fileName) || 'application/octet-stream';
-        LOG.info(`${Downloader.httpRoute} emitDownloadFromStream filename=${fileName}, mimetype=${mimeType}`, LOG.LS.eHTTP);
+        LOG.info(`${RouteBuilder.httpRoute} emitDownloadFromStream filename=${fileName}, mimetype=${mimeType}`, LOG.LS.eHTTP);
 
         this.response.setHeader('Content-disposition', 'attachment; filename=' + fileName);
         if (mimeType)

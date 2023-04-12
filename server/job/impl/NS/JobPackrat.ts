@@ -8,10 +8,7 @@ import * as NS from 'node-schedule';
 import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 import * as COMMON from '@dpo-packrat/common';
 import { eEventKey } from '../../../event/interface';
-
-declare class JobEngine {
-    sendJobEvent(idJobRun: number, obj: any, key: eEventKey): Promise<boolean>;
-}
+import { JobEngineBase } from './JobEngineBase';
 
 export type JobIOResults = H.IOResults & {
     allowRetry?: boolean | undefined,
@@ -20,13 +17,13 @@ export type JobIOResults = H.IOResults & {
 const JOB_RETRY_COUNT = 2;
 
 export abstract class JobPackrat implements JOB.IJob {
-    protected _jobEngine: JobEngine;
+    protected _jobEngine: JobEngineBase;
     protected _dbJobRun: DBAPI.JobRun;
     protected _nsJob: NS.Job | null = null;
     protected _report: REP.IReport | null = null;
     protected _results: JobIOResults = { success: false,  error: 'Not Started' };
 
-    constructor(jobEngine: JobEngine, dbJobRun: DBAPI.JobRun, report: REP.IReport | null) {
+    constructor(jobEngine: JobEngineBase, dbJobRun: DBAPI.JobRun, report: REP.IReport | null) {
         this._jobEngine = jobEngine;
         this._dbJobRun = dbJobRun;
         this._report = report;

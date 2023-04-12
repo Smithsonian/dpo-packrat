@@ -1,12 +1,10 @@
 import * as EVENT from '../../interface';
 
-declare class EventEngine {
-    receive<Value>(eTopic: EVENT.eEventTopic, data: EVENT.IEventData<Value>[]): Promise<void>;
-}
+import { EventEngineBase } from './EventEngineBase';
 
 export class EventProducer implements EVENT.IEventProducer {
-    private engine: EventEngine;
-    constructor(engine: EventEngine) {
+    private engine: EventEngineBase;
+    constructor(engine: EventEngineBase) {
         this.engine = engine;
     }
 
