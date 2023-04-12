@@ -21,8 +21,8 @@ export class EventEngine implements EVENT.IEventEngine {
         this.createSystemConsumer(EVENT.eEventTopic.eAuth);
         this.createSystemConsumer(EVENT.eEventTopic.ePublish);
         this.createSystemConsumer(EVENT.eEventTopic.eHTTP);
-        this.createSystemConsumer(EVENT.eEventTopic.eJob);
-        this.createSystemConsumer(EVENT.eEventTopic.eWF);
+        // this.createSystemConsumer(EVENT.eEventTopic.eJob);
+        // this.createSystemConsumer(EVENT.eEventTopic.eWF);
     }
 
     // #region IEventEngine interface, for creating event producers and managing event consumers
