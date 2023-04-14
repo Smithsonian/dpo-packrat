@@ -488,4 +488,4 @@ ALTER TABLE ModelSceneXref MODIFY COLUMN `NAME` varchar(512) DEFAULT NULL;
 -- 2023-01-29 Eric
 -- register 'verifier' as a vocabulary term, and add the 'Name' field to workflow reports
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 4, 'Verifier');
-ALTER TABLE WorkflowReport ADD Name VARCHAR(512) DEFAULT NULL;
+ALTER TABLE WorkflowReport ADD Name VARCHAR(512) DEFAULT '';

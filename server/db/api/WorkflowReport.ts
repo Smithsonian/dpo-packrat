@@ -8,7 +8,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
     idWorkflow!: number;
     MimeType!: string;
     Data!: string;
-    Name!: string | null;
+    Name!: string;
 
     constructor(input: WorkflowReportBase) {
         super(input);

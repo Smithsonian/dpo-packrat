@@ -89,7 +89,7 @@ export class HttpServer {
         this.app.get(`${Downloader.httpRoute}*`, HttpServer.idRequestMiddleware2);
         this.app.get(`${Downloader.httpRoute}*`, download);
 
-        this.app.get('verifier',VERIFIERS.routeRequest); // catch in case of misuse
+        this.app.get('/verifier',VERIFIERS.routeRequest); // catch in case of misuse
         this.app.get('/verifier/:id', VERIFIERS.routeRequest);
 
         const WDSV: WebDAVServer | null = await WebDAVServer.server();

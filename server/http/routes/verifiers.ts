@@ -13,8 +13,8 @@ import { ASL, LocalStore } from '../../utils/localStore';
 import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
 
 export async function routeRequest(request: Request, response: Response): Promise<void> {
-
     const verifierToRun = request.params.id;
+    console.warn(request);
 
     // if nothing then complain
     if(verifierToRun===undefined) {
