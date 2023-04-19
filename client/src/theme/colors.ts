@@ -26,7 +26,8 @@ const Colors: ColorType = {
         ingestion: '#FACA00',
         workflow: '#0093EE',
         reporting: '#81C926',
-        admin: '#FD7B1F'
+        admin: '#FD7B1F',
+        audit: '#CCC',
     },
     upload: {
         success: '#AFFFA9'

@@ -25,7 +25,6 @@ export type EdanVerifierResult = {
 // TODO: verify EDAN scene UUID are correct
 // TODO: verify EDAN 3d_package match the most recent published version
 // TODO: hook to endpoint and support running on a schedule via node_scheduler*
-// TODO: add to workflow reports*
 // TODO: fix DPO subject errors
 export class EdanVerifier extends V.VerifierBase {
 

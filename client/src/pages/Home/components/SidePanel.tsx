@@ -121,6 +121,13 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
             color: Colors.sidebarOptions.admin,
             isExpanded,
             isSelected: selectedOption.includes(HOME_ROUTES.ADMIN)
+        },
+        {
+            title: 'Audit',
+            type: HOME_ROUTES.AUDIT,
+            color: Colors.sidebarOptions.audit,
+            isExpanded,
+            isSelected: selectedOption.includes(HOME_ROUTES.AUDIT)
         }
     ];
 

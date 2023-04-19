@@ -65,6 +65,8 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
     },
 
     fetchWorkflowList: async (): Promise<void> => {
+        // pull out each of our fields and assign to our filter object,
+        // which is used in the GraphQL request
         const { workflowType, jobType, state, initiator, owner, dateFrom, dateTo, pageNumber, rowCount, sortBy, sortOrder } = get();
         set({ loading: true });
         const filter: GetWorkflowListInput = {
@@ -83,6 +85,7 @@ export const useWorkflowStore = create<WorkflowStore>((set: SetState<WorkflowSto
         // setting DateTo to null will return empty array
         if (dateTo) filter.DateTo = handleEndDate(dateTo);
 
+        // request to the server to get matching workflow items
         const { data } = await getWorkflowList(filter);
         if (data?.getWorkflowList?.WorkflowList) {
             const rows = data.getWorkflowList.WorkflowList as WorkflowListResult[];

@@ -121,6 +121,9 @@ function MenuOptionIcon({ type, color }: MenuOptionIconProps) {
         case HOME_ROUTES.ADMIN:
             return <FaCog size={20} color={color} />;
 
+        case HOME_ROUTES.AUDIT:
+            return <MdInsertChart size={20} color={color} />;
+
         default:
             return <FaChartLine size={20} color={color} />;
     }

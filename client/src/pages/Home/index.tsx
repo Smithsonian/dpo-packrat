@@ -14,6 +14,7 @@ import Repository from '../Repository';
 import Workflow from '../Workflow';
 import Admin from '../Admin';
 import AdminSidebarMenu from '../Admin/components/AdminSidebarMenu';
+import Audit from '../Audit';
 
 const useStyles = makeStyles({
     adminContainer: {
@@ -37,6 +38,7 @@ function Home(): React.ReactElement {
             <Route path={resolveRoute(HOME_ROUTES.WORKFLOW)} element={<Workflow />} />
             <Route path={`${resolveRoute(HOME_ROUTES.ADMIN)}/*`} element={<Box className={classes.adminContainer}><AdminSidebarMenu /><Admin /></Box>} />
             <Route path={`${resolveRoute(HOME_ROUTES.INGESTION)}/*`} element={<Ingestion />} />
+            <Route path={`${resolveRoute(HOME_ROUTES.AUDIT)}/*`} element={<Audit />} />
         </Routes>
     );
 }

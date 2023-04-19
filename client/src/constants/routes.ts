@@ -7,7 +7,7 @@
 export enum ROUTES {
     HOME = '/',
     LOGIN = '/login',
-    ABOUT = '/about'
+    ABOUT = '/about',
 }
 
 export enum HOME_ROUTES {
@@ -16,7 +16,8 @@ export enum HOME_ROUTES {
     INGESTION = 'ingestion',
     WORKFLOW = 'workflow',
     REPORTING = 'reporting',
-    ADMIN = 'admin'
+    ADMIN = 'admin',
+    AUDIT = 'audit'
 }
 
 export const HOME_ROUTE = {

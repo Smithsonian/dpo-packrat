@@ -92,6 +92,9 @@ export class HttpServer {
         this.app.get('/verifier',VERIFIERS.routeRequest); // catch in case of misuse
         this.app.get('/verifier/:id', VERIFIERS.routeRequest);
 
+        // placeholder for a top-level auditing page outside the Packrat "Home" pages
+        this.app.get('/audit',function(_req,_res) { _res.send('Packrat: Auditing...(coming soon)'); });
+
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
         if (WDSV) {
             this.app.use(WebDAVServer.httpRoute, HttpServer.idRequestMiddleware2);
