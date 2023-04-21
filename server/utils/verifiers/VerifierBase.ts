@@ -6,7 +6,6 @@ import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as WF from '../../workflow/interface';
 import * as H from '../../utils/helpers';
-// import * as REP from '../../report/interface';
 import { ASL, LocalStore } from '../localStore';
 import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
 import { WorkflowVerifier } from '../../workflow/impl/Packrat/WorkflowVerifier';
@@ -22,16 +21,14 @@ export type VerifierConfig = {
 };
 export type VerifierResult = {
     success: boolean;
-    error?: string;
+    error?: string | undefined;
     data?: any | undefined;
-    // csvOutput?: string | undefined;
 };
 export type IdentifierDetails = {
     identifier: DBAPI.Identifier | null;
     identifierType: DBAPI.Vocabulary | null;
     identifierTypeEnum: COMMON.eVocabularyID | null;
 };
-
 export type IdentifierList = {
     preferred: IdentifierDetails | null;
     edan: IdentifierDetails | null;
@@ -40,11 +37,7 @@ export type IdentifierList = {
 };
 
 export class VerifierBase {
-
     protected config: VerifierConfig;
-    // protected idReport: number | undefined = -1;
-    // protected reportData: string | undefined; // stores the report data when done (todo: add to report itself)
-    private LS: LocalStore | undefined;
     protected workflow: WorkflowVerifier | null;
 
     constructor(config: VerifierConfig) {
@@ -82,22 +75,21 @@ export class VerifierBase {
         }
 
         // get our local store for global values (e.g. user id)
-        this.LS = ASL.getStore();
-        const idUser: number | undefined | null = this.LS?.idUser;
+        const LS: LocalStore | undefined = ASL.getStore();
+        const idUser: number | undefined | null = LS?.idUser;
 
         // define our workflow parameters
         const wfParams: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeVerifier,
-            //idSystemObject: undefined, // not operating on SystemObjects
-            //idProject: TODO: populate with idProject
+            //idSystemObject: undefined,            // not operating on SystemObjects
+            //idProject:                            // TODO: populate with idProject
             idUserInitiator: idUser ?? undefined,   // not getting user at this point (but should when behind wall)
-            autoStart: true,   // if not set to true (default), then need to manually call 'start()' on workflow
-            parameters: {
-                verifier: this  // reference to this identifier so it can be called on by the Engine
-            }
+            autoStart: true,                        // if not set to true (default), then need to manually call 'start()' on workflow
+            parameters: {}                          // extra parameters that the WorkflowEngine owr derived IWorkflow may need
         };
 
         // todo: test failed creation to see if cast works
+        // create or workflow and automatically create a report object for future results
         this.workflow = await workflowEngine.create(wfParams) as WorkflowVerifier;
         if (!this.workflow) {
             const error: string = `${this.constructor.name} unable to create Verifier workflow: ${H.Helpers.JSONStringify(wfParams)}`;
@@ -113,78 +105,12 @@ export class VerifierBase {
         await this.setStatus(COMMON.eWorkflowJobRunStatus.eCreated);
         LOG.info(`${this.constructor.name} started`,LOG.LS.eAUDIT);
 
-        // LOG.info('creating workflow from route...',LOG.LS.eWF);
-        //LOG.info(H.Helpers.JSONStringify(this.workflow),LOG.LS.eWF);
-
-        //
-        // const iReport: REP.IReport | null = await REP.ReportFactory.getReport();
-        // if(!iReport) {
-        //     const error: string = 'EDAN Verifier workflow failed to get report.';
-        //     return { success: false, message: error };
-        // }
-        // console.log(iReport);
-
-        // ...
-        // const workflowResult: H.IOResults = await workflow.start();
-        // if(!workflowResult || workflowResult.success===false) {
-        //     const error: string = 'EDAN Verifier workflow failed to start. '+workflowResult?.error;
-        //     sendResponseMessage(response,false,error);
-        //     return;
-        // }
-
-        // // grab our report from the factory
-        // const iReport: REP.IReport | null = await REP.ReportFactory.getReport();
-        // if(!iReport) {
-        //     const error: string = `${this.constructor.name} failed to get workflow report.`;
-        //     return { success: false, message: error };
-        // }
-
-        // console.log(iReport);
-
-        // // get our report ID
-        // this.idReport = this.LS?.getWorkflowReportID();
-        // if (!this.idReport) {
-        //     const error: string = `${this.constructor.name} could not get workflow report ID`;
-        //     return { success: false, message: error };
-        // }
-
-        // console.log('report id: '+this.idReport);
-
         // return success and our id to keep check on it's completeness
         return { success: true, data: { isDone: false, idWorkflow, idWorkflowReport, workflowReportUrl } };
     }
     public stop(): VerifierResult | null {
+        // todo: stop an existing workflow and report
         return null;
-    }
-
-    public async getReport(allowPartial: boolean = false): Promise<VerifierResult> {
-
-        // see if we're done
-        if(!this.workflow)
-            return { success: false, error: `${this.constructor.name} cannot get report. workflow is null.` };
-
-        // if we're running return so caller can keep polling
-        const status: COMMON.eWorkflowJobRunStatus = this.getStatus();
-        if(allowPartial===false) {
-            if(status === COMMON.eWorkflowJobRunStatus.eRunning || status === COMMON.eWorkflowJobRunStatus.eWaiting) {
-                return { success: false, error: `${this.constructor.name} workflow is still running`, data: { status } };
-            }
-        }
-
-        // grab the report itself from our workflow
-        const report: DBAPI.WorkflowReport | null = await this.workflow.getReport();
-        if(!report)
-            return { success: false, error: `${this.constructor.name} cannot get report.`, data: { idWorkflow: this.workflow.getWorkflowID() } };
-
-        // send the report contents back
-        LOG.info(`${this.constructor.name} returned report (length: ${report.Data.length})`,LOG.LS.eAUDIT);
-        return {
-            success: true,
-            data: {
-                idWorkflow: this.workflow.getWorkflowID(),
-                idReport: this.workflow.getReportID,
-                content: report.Data
-            } };
     }
 
     public async verify(): Promise<VerifierResult> {

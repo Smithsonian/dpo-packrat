@@ -2,10 +2,7 @@ import * as WF from '../../interface';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
-// import * as COL from '../../../collections/interface/';
 import * as LOG from '../../../utils/logger';
-// import * as V from '../../../utils/verifiers';
-// import * as V from '../../../utils/verifiers/VerifierBase';
 import * as REP from '../../../report/interface';
 import { ASL, LocalStore } from '../../../utils/localStore';
 
@@ -18,9 +15,6 @@ export class WorkflowVerifier implements WF.IWorkflow {
     private workflowData: DBAPI.WorkflowConstellation;
     private idReport: number | undefined;
 
-    // public config: V.VerifierConfig | null = null; // can't pass in due to WorkflowEngine calls not accepting extra params
-    // public result: V.VerifierResult | null = null;
-
     static async constructWorkflow(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowVerifier | null> {
         return new WorkflowVerifier(workflowParams, WFC);
     }
@@ -32,36 +26,7 @@ export class WorkflowVerifier implements WF.IWorkflow {
     }
 
     async start(): Promise<H.IOResults> {
-        // if(this.config==null) {
-        //     LOG.error('WorkflowVerifier cannot start. configuration object not set.', LOG.LS.eWF);
-        //     return { success: false };
-        // }
-
-        LOG.info('starting verifier workflow...',LOG.LS.eWF);
-
-        // TODO: check for valid verifier parameter
-        // const verifier: V.VerifierBase = this.workflowParams.parameters.verifier;
-        // const result: V.VerifierResult = await verifier.start();
-        //const result: V.VerifierResult = await verifier.verify();
-
-        // const status: COMMON.eWorkflowJobRunStatus = verifier.getStatus();
-        // LOG.info('Done Status: '+H.Helpers.JSONStringify(status),LOG.LS.eWF);
-
-        /*
-        // FUTURE: create a new workflow step specific to verifier
-        // once started should be able to get active ID
-        // use ID with 'downloads' to get URL for report
-        // focus on 'downloads' for getting report
-        const verifierConfig: V.VerifierConfig = {
-            collection: COL.CollectionFactory.getInstance(),
-            subjectLimit: this.config.subjectLimit,
-            detailedLogs: this.config.detailedLogs,
-            systemObjectId: this.config.systemObjectId,
-            // writeToFile: '../../EDAN-Verifier_Output.csv'
-        };
-        const verifier: V.VerifierBase = new V.VerifierBase(verifierConfig);
-        this.result = await verifier.verify(); // TODO: how to avoid waiting for this and check at higher level
-*/
+        LOG.info('(Verifier) starting workflow...',LOG.LS.eWF);
 
         // check/create any needed workflow steps and change the state
         const workflowStep: DBAPI.WorkflowStep | null = (!this.workflowData.workflowStep || this.workflowData.workflowStep.length <= 0)
@@ -78,9 +43,8 @@ export class WorkflowVerifier implements WF.IWorkflow {
             return { success: false, error };
         }
 
-        // get ouyr local stor
+        // get our local store
         const LS: LocalStore | undefined = ASL.getStore();
-
 
         // get our report ID
         this.idReport = LS?.getWorkflowReportID();

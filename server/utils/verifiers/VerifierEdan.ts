@@ -51,7 +51,7 @@ export class VerifierEdan extends V.VerifierBase {
         if(this.config.detailedLogs)
             LOG.info(`${this.config.logPrefix} Subjects: ${subjects.length}`, LOG.LS.eAUDIT);
 
-        // loop through subjects, extract name, query from EDAN
+        // loop through subjects, extract name, query from EDAN and process
         for(let i=0; i<subjects.length; i++) {
 
             // adjust our counter for # of subjects and bail when done
@@ -396,14 +396,14 @@ export class VerifierEdan extends V.VerifierBase {
             }
         }
 
-        // HACK: dumping to local file until moved into Workflow reports.
-        // if(this.config.writeToFile !== undefined) {
-        //     require('fs').writeFile(this.config.writeToFile,output.join('\n'), err=>{
-        //         if(err) {
-        //             LOG.error(`${this.config.logPrefix}: ${err}`, LOG.LS.eAUDIT);
-        //         }
-        //     });
-        // }
+        // dumping to local file (if needed)
+        if(this.config.writeToFile !== undefined) {
+            require('fs').writeFile(this.config.writeToFile,output.join('\n'), err=>{
+                if(err) {
+                    LOG.error(`${this.config.logPrefix}: ${err}`, LOG.LS.eAUDIT);
+                }
+            });
+        }
 
         // set our state
         LOG.info(`${this.constructor.name} completed successfully`,LOG.LS.eAUDIT);
@@ -411,7 +411,7 @@ export class VerifierEdan extends V.VerifierBase {
 
         // figure out our desired name
         const now: string = new Date().toISOString().split('T')[0];
-        const name: string  = `${this.constructor.name}_Results_${now}`;
+        const name: string = `${this.constructor.name}_Results_${now}`;
 
         // make sure we have a report to modify
         const report: DBAPI.WorkflowReport | null | undefined = await this.workflow?.getReport();

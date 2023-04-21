@@ -2,19 +2,11 @@
 
 import { Request, Response } from 'express';
 import * as COL from '../../collections/interface/';
-// import * as WF from '../../workflow/interface';
-// import * as REP from '../../report/interface';
-// import * as COMMON from '@dpo-packrat/common';
-// import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
-// import * as WFV from '../../workflow/impl/Packrat/WorkflowVerifier';
 import * as DBAPI from '../../db';
-// import { ASL, LocalStore } from '../../utils/localStore';
 import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
-// import { VerifierEdan } from '../../utils/verifiers/VerifierEdan';
 import * as V from '../../utils/verifiers';
 import { Helpers } from '../../utils';
-// import { eWorkflowJobRunStatus } from '@dpo-packrat/common';
 
 export async function routeRequest(request: Request, response: Response): Promise<void> {
     const verifierToRun = request.params.id;
@@ -46,7 +38,7 @@ export async function routeRequest(request: Request, response: Response): Promis
 // TODO: progressively build up report so that if requested before done it returns partial results
 //       requires changing verifier to append after each subject, connecting tightly to workflow logic
 async function verifyEdanWorkflow(req: Request, response: Response): Promise<void> {
-    LOG.info('(Workflows) Verifying EDAN Records from endpoint...', LOG.LS.eGQL);
+    LOG.info('Verifying EDAN Records from endpoint...', LOG.LS.eAUDIT);
 
     // grab our config options from query params
     const verifierConfig: V.VerifierConfig = {
@@ -56,24 +48,23 @@ async function verifyEdanWorkflow(req: Request, response: Response): Promise<voi
         systemObjectId: (req.query.objectId)?parseInt(req.query.objectId as string):-1
     };
 
-    // console.time('start');
+    // create our verifier and initialize (autostarts workflow)
     const verifier: V.VerifierEdan = new V.VerifierEdan(verifierConfig);
     const result: V.VerifierResult = await verifier.init();
     if(result.success === false) {
         LOG.error('(EDAN Verifier) failed. '+result.error,LOG.LS.eHTTP);
-        sendResponseMessage(response, result.success, result.error??'EDAN Verification (Failed)');
-        return;
+        return sendResponseMessage(response, result.success, result.error??'EDAN Verification (Failed)');
     }
 
-    // fire off verify so it runs in the background
+    // fire off verify so it runs in the background as it may take awhile
     verifier.verify();
 
-    // extract our workflow
+    // extract our ids and URL for the report
     const idWorkflow: number = result.data.idWorkflow;
     const idWorkflowReport: number = result.data.idWorkflowReport;
     const workflowReportUrl: string = result.data.workflowReportUrl;
 
-    // wait briefly and if done then return the report
+    // wait briefly for it to finish. if done, then return the report
     // todo: handle option for allow partial return
     await Helpers.sleep(3000);
     if(verifier.isDone()===true)
@@ -81,160 +72,14 @@ async function verifyEdanWorkflow(req: Request, response: Response): Promise<voi
 
     // if not done, send info back to client so they can keep trying through alt endpoint
     LOG.info(`verifier result: ${Helpers.JSONStringify({ idWorkflow,idWorkflowReport,workflowReportUrl })}`,LOG.LS.eAUDIT);
-    sendResponseReport(response,idWorkflowReport,false);
-
-    /*//---------------------------------------------
-    // TESTING
-    //---------------------------------------------
-    // if not done, we're going to keep trying
-    // placing functions inside loop to simulate external polling
-    const timeout: number = Date.now() + 5000; // 5s in the future
-
-    // loop until we're done. (simulates external polling)
-        while(Date.now() <= timeout) {
-
-        // get our step from the DB
-        const workflowStep: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflow(idWorkflow);
-        if(!workflowStep) {
-            sendResponseMessage(response,false,'failed to get workflow step');
-            return;
-        }
-        if(workflowStep.length<=0) {
-            sendResponseMessage(response, false, 'no steps for given workflow');
-            return;
-        }
-        LOG.info(`workflow step:\n ${Helpers.JSONStringify(workflowStep[0])}`,LOG.LS.eAUDIT);
-
-        // see if we're done, dump the report and break.
-        if(workflowStep[0].isDone())
-            return sendResponseReport(response,idWorkflowReport,true);
-
-        // otherwise, sleep for 3s and try again
-        console.log('sleeping...');
-        await Helpers.sleep(3000);
-    }
-    if(Date.now() > timeout) {
-        const error = `(EDAN Verifier) Timed out (status: ${verifier.getStatus()}`;
-        sendResponseMessage(response, false, error);
-        return;
-    }
-    */
-
-    // if not, we return info so the client can poll for it.
-    // LOG.info(Helpers.JSONStringify(result),LOG.LS.eHTTP);
-    // sendResponseMessage(response, result.success, Helpers.JSONStringify(result.data));
-
-    // create our workflow (but don't start) and add it to the DB
-    // const wfParams: WF.WorkflowParameters = {
-    //     eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeVerifier,
-    //     //idSystemObject: undefined, // not operating on SystemObjects
-    //     //idProject: TODO: populate with idProject
-    //     idUserInitiator: idUser ?? undefined,   // not getting user at this point (but should when behind wall)
-    //     autoStart: false, // don't start the workflow because we need to configure it
-    //     parameters: {
-    //         verifier: new V.VerifierEdan(verifierConfig)
-    //     }
-    // };
-    // const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
-    // if (!workflow) {
-    //     const error: string = `unable to create EDAN Verifier workflow: ${H.Helpers.JSONStringify(wfParams)}`;
-    //     sendResponseMessage(response,false,error);
-    //     return;
-    // }
-
-    // LOG.info('creating workflow from route...',LOG.LS.eWF);
-    // LOG.info(H.Helpers.JSONStringify(wfParams),LOG.LS.eWF);
-
-    /*
-    // grab our config options from query params
-    const returnFile: boolean = req.query.returnFile==='true'?true:false;
-    const detailedLogs: boolean = req.query.details==='true'?true:false;
-    const subjectLimit: number = (req.query.limit)?parseInt(req.query.limit as string):10000;
-    const systemObjectId: number = (req.query.objectId)?parseInt(req.query.objectId as string):-1;
-
-    // cast it to our verifier type (TODO: catch fails) and configure
-    const verifierWorkflow = workflow as WFV.WorkflowVerifier;
-    verifierWorkflow.config = {
-        collection: COL.CollectionFactory.getInstance(),
-        detailedLogs,
-        subjectLimit,
-        systemObjectId
-    };
-
-    // start our workflow
-    // TODO: check during execution for it timing out
-    const workflowResult: H.IOResults = await verifierWorkflow.start();
-    if(!workflowResult || workflowResult.success===false) {
-        const error: string = 'EDAN Verifier workflow failed to start. '+workflowResult?.error;
-        sendResponseMessage(response,false,error);
-        return;
-    }
-
-    // get/create our report
-    const iReport: REP.IReport | null = await REP.ReportFactory.getReport();
-    if(!iReport) {
-        const error: string = 'EDAN Verifier workflow failed to get report.';
-        LOG.error(error, LOG.LS.eGQL);
-        response.send('Verifing EDAN records FAILED!\n'+error);
-        return;
-    }
-
-    // get the local store, our current report ID and fetch it
-    // WHY: can the IReport higher up expose the id for fetch or grabbing the ID?
-    // const LS: LocalStore = await ASL.getOrCreateStore();
-    const idWorkflowReport: number | undefined = LS?.getWorkflowReportID();
-    if (!idWorkflowReport) {
-        const error: string = 'could not get workflow report ID';
-        sendResponseMessage(response,false,error);
-        return;
-    }
-
-    // get our report from the DB and configure
-    const workflowReport = await DBAPI.WorkflowReport.fetch(idWorkflowReport);
-    if (!workflowReport) {
-        sendResponseMessage(response,false,`unable to fetch report with id ${idWorkflowReport}`);
-        return;
-    }
-
-    // if we have CSV output add it to our report
-    if(verifierWorkflow.result && verifierWorkflow.result.csvOutput) {
-
-        // our desired filename
-        const now: string = new Date().toISOString().split('T')[0];
-
-        workflowReport.MimeType = 'text/csv';
-        workflowReport.Data = verifierWorkflow.result.csvOutput;
-        workflowReport.Name = 'EDANVerifier_Results_'+now;
-        workflowReport.update();
-    } else {
-        const error: string = 'Error with verifier result';
-        sendResponseMessage(response,false,`unable to fetch report with id ${idWorkflowReport}`);
-        workflowReport.Data = error;
-        workflowReport.update();
-        return;
-    }
-
-    // if we return the file then do so, overwriting any message
-    if(returnFile && verifierWorkflow.result.csvOutput!=undefined) {
-        response.setHeader('Content-disposition', `attachment; filename=${workflowReport.Name}.csv`);
-        response.set('Content-Type', 'text/csv');
-        response.statusMessage = 'Verifying EDAN records SUCCEEDED!';
-        response.status(200).send(verifierWorkflow.result.csvOutput);
-        return;
-    }
-
-    // create our download URL for future use. (NOTE: using HTTP so localhost works)
-    const workflowReportURL: string = RouteBuilder.DownloadWorkflowReport(idWorkflowReport,eHrefMode.ePrependServerURL); //`http://localhost:4000/download?idWorkflowReport=${idWorkflowReport}`;
-    LOG.info(`EDAN verifier SUCCEEDED!! (${workflowReportURL})`,LOG.LS.eGQL);
-    sendResponseMessage(response,true,getResponseMarkup(true,'Download Report',workflowReportURL));//`<a href="${workflowReportURL}">DOWNLOAD</a>`);
-*/
-    return;
+    return sendResponseReport(response,idWorkflowReport,false);
 }
 
 async function getReport(request: Request, response: Response): Promise<void> {
 
     // GOTCHA: only checking for first report for a workflow id. should aggregate or identify based on last step
 
+    // grab our ids from query params
     let idWorkflow: number | undefined = (request.query.idWorkflow)?parseInt(request.query.idWorkflow as string):undefined;
     let idWorkflowReport: number | undefined = (request.query.idWorkflowReport)?parseInt(request.query.idWorkflowReport as string):undefined;
 
@@ -257,7 +102,7 @@ async function getReport(request: Request, response: Response): Promise<void> {
     }
 
     // report out
-    LOG.info(`(EDAN Verifier) getting report for workflow ${idWorkflow}, from report id: ${idWorkflowReport}`,LOG.LS.eAUDIT);
+    LOG.info(`verifier getting report for workflow ${idWorkflow}, from report id: ${idWorkflowReport}`,LOG.LS.eAUDIT);
 
     // get our step from the DB
     const workflowStep: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflow(idWorkflow);
@@ -267,22 +112,15 @@ async function getReport(request: Request, response: Response): Promise<void> {
         return sendResponseMessage(response, false, 'no steps for given workflow');
 
     // see if we're done, dump the report and break.
-    if(workflowStep[0].isDone())
-        return sendResponseReport(response,idWorkflowReport,true);
-
-    // send message notifying user we're not done yet
-    // todo: just return report in it's state, if not partial then just strip out data
-    sendResponseMessage(response,true,'Report is not ready yet...');
-    return;
+    const allowPartial: boolean = (request.query.allowPartial==='true'?true:false)??false;
+    return sendResponseReport(response,idWorkflowReport,workflowStep[0].isDone(),allowPartial);
 }
 
-async function sendResponseReport(response: Response, idWorkflowReport: number, isComplete: boolean, sendFile: boolean = false) {
+async function sendResponseReport(response: Response, idWorkflowReport: number, isComplete: boolean, allowPartial: boolean = false, sendFile: boolean = false) {
 
     const workflowReport = await DBAPI.WorkflowReport.fetch(idWorkflowReport);
-    if (!workflowReport) {
-        sendResponseMessage(response,false,`unable to fetch report with id ${idWorkflowReport}`);
-        return;
-    }
+    if (!workflowReport)
+        return sendResponseMessage(response,false,`unable to fetch report with id ${idWorkflowReport}`);
 
     // build our response
     const workflowReportUrl: string = RouteBuilder.DownloadWorkflowReport(idWorkflowReport,eHrefMode.ePrependServerURL);
@@ -291,27 +129,41 @@ async function sendResponseReport(response: Response, idWorkflowReport: number, 
         idWorkflowReport,
         workflowReportUrl,
         mimeType: workflowReport.MimeType,
-        data: (isComplete)?workflowReport.Data:'pending...'
+        data: (isComplete || allowPartial)?workflowReport.Data:'pending...'
     };
 
-    // if we need to send as text/csv file, do so
-    // todo: add content type to report
-    if(sendFile===false) {
-        response.send(result);
-    } else {
-        response.setHeader('Content-disposition', `attachment; filename=${workflowReport.Name}.csv`);
+    // if we need to send as a text/csv file, do so
+    if(sendFile===true) {
+
+        // get our extension
+        let extension: string;
+        switch(result.mimeType) {
+            case 'txt/csv': { extension = 'csv'; } break;
+            case 'text/html': { extension = 'html'; } break;
+            default: { extension = 'text'; }
+        }
+
+        // setup our headers and send it
+        response.setHeader('Content-disposition', `attachment; filename=${workflowReport.Name}.${extension}`);
         response.set('Content-Type', result.mimeType);
         response.statusMessage = 'Verifying EDAN records SUCCEEDED!';
         response.status(200).send(result.data);
+    } else {
+        response.send(result);
     }
 }
 function sendResponseMessage(response: Response, success: boolean, message: string) {
+    const result = {
+        success,
+        message
+    };
+
     if(success) {
-        LOG.info(`(EDAN Verifier) SUCCEEDED: ${message}`, LOG.LS.eGQL);
-        response.send(message);
+        LOG.info(`(Verifier) SUCCEEDED: ${message}`, LOG.LS.eAUDIT);
+        response.send(result);
     } else {
-        LOG.error(`(EDAN Verifier) FAILED: ${message}`, LOG.LS.eGQL);
-        response.send(`Verifing EDAN records FAILED: ${message}`);
+        LOG.error(`(Verifier) FAILED: ${message}`, LOG.LS.eAUDIT);
+        response.send(result);
     }
 }
 /*
