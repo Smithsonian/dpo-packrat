@@ -89,7 +89,7 @@ export class HttpServer {
         this.app.get(`${Downloader.httpRoute}*`, HttpServer.idRequestMiddleware2);
         this.app.get(`${Downloader.httpRoute}*`, download);
 
-        this.app.get('/verifier',VERIFIERS.routeRequest); // catch in case of misuse
+        this.app.get('/verifier', VERIFIERS.routeRequest); // catch in case of misuse
         this.app.get('/verifier/:id', VERIFIERS.routeRequest);
 
         // placeholder for a top-level auditing page outside the Packrat "Home" pages

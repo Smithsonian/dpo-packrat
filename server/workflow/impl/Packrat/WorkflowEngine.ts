@@ -56,7 +56,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return null;
         }
 
-        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}] ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+        LOG.info(`WorkflowEngine.creating workflow [${this.workflowMap.size}] ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
         if (!WFC)
             return null;
@@ -74,11 +74,15 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if(doStart) {
             const startResults: H.IOResults = await workflow.start();
             if (!startResults) {
-                LOG.error(`WorkflowEngine.create failed to start workflow ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
+                LOG.error(`WorkflowEngine.create failed to start workflow ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}.`, LOG.LS.eWF);
+                return null;
+            } else if(startResults.error != undefined) {
+                LOG.error(`WorkflowEngine.create encountered error starting workflow ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}. (${startResults.error})`, LOG.LS.eWF);
                 return null;
             }
         }
-        LOG.info(`WorkflowEngine.created workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
+        // LOG.info(`WorkflowEngine.created workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
+        LOG.info('WorkflowEngine.created workflow', LOG.LS.eWF);
         return workflow;
     }
 

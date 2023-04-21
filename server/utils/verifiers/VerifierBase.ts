@@ -1,10 +1,31 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as COL from '../../collections/interface';
 import * as LOG from '../logger';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
-// import * as H from '../helpers';
+import * as WF from '../../workflow/interface';
+import * as H from '../../utils/helpers';
+// import * as REP from '../../report/interface';
+import { ASL, LocalStore } from '../localStore';
+import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
+import { WorkflowVerifier } from '../../workflow/impl/Packrat/WorkflowVerifier';
 
+export type VerifierConfig = {
+    collection: COL.ICollection;            // what collection to operate on. mostly used for EDAN
+    detailedLogs?: boolean | undefined;     // do we want to output detailed debug logs
+    logPrefix?: string | undefined;         // what should logs be prefixed with
+    fixErrors?: boolean | undefined;        // do we try to fix errors (todo)
+    subjectLimit?: number | undefined;      // total number of subjects to process
+    systemObjectId?: number | undefined;    // limit execution to this specific SystemObject
+    writeToFile?: string | undefined;       // should we dump the output to a specific path
+};
+export type VerifierResult = {
+    success: boolean;
+    error?: string;
+    data?: any | undefined;
+    // csvOutput?: string | undefined;
+};
 export type IdentifierDetails = {
     identifier: DBAPI.Identifier | null;
     identifierType: DBAPI.Vocabulary | null;
@@ -20,7 +41,184 @@ export type IdentifierList = {
 
 export class VerifierBase {
 
-    constructor() {}
+    protected config: VerifierConfig;
+    // protected idReport: number | undefined = -1;
+    // protected reportData: string | undefined; // stores the report data when done (todo: add to report itself)
+    private LS: LocalStore | undefined;
+    protected workflow: WorkflowVerifier | null;
+
+    constructor(config: VerifierConfig) {
+        this.config = config;
+        this.workflow = null;
+
+        // defaults if undefined
+        if(this.config.detailedLogs === undefined)
+            this.config.detailedLogs = false;
+        if(this.config.logPrefix === undefined)
+            this.config.logPrefix = 'Base Verifier';
+        if(this.config.fixErrors === undefined)
+            this.config.fixErrors = false;
+        if(this.config.subjectLimit === undefined)
+            this.config.subjectLimit = 10000; // total number of subjects to process
+        if(this.config.systemObjectId === undefined)
+            this.config.systemObjectId = -1; // limit execution to this specific SystemObject
+    }
+
+    public async init(): Promise<VerifierResult> {
+        // This routine creates a workflow for the validator and starts it
+        // clear any existing report data
+        await this.setStatus(COMMON.eWorkflowJobRunStatus.eUnitialized);
+        LOG.info(`${this.constructor.name} starting...`,LOG.LS.eAUDIT);
+        // if(this.reportData != undefined && this.reportData.length > 0) {
+        //     LOG.info('clearing existing report data.',LOG.LS.eAUDIT);
+        //     this.reportData = undefined;
+        // }
+
+        // grab an instance of our engine so we can create workflows
+        const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+        if (!workflowEngine) {
+            const error: string = 'verifiers createWorkflow could not load WorkflowEngine';
+            return { success: false, error };
+        }
+
+        // get our local store for global values (e.g. user id)
+        this.LS = ASL.getStore();
+        const idUser: number | undefined | null = this.LS?.idUser;
+
+        // define our workflow parameters
+        const wfParams: WF.WorkflowParameters = {
+            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeVerifier,
+            //idSystemObject: undefined, // not operating on SystemObjects
+            //idProject: TODO: populate with idProject
+            idUserInitiator: idUser ?? undefined,   // not getting user at this point (but should when behind wall)
+            autoStart: true,   // if not set to true (default), then need to manually call 'start()' on workflow
+            parameters: {
+                verifier: this  // reference to this identifier so it can be called on by the Engine
+            }
+        };
+
+        // todo: test failed creation to see if cast works
+        this.workflow = await workflowEngine.create(wfParams) as WorkflowVerifier;
+        if (!this.workflow) {
+            const error: string = `${this.constructor.name} unable to create Verifier workflow: ${H.Helpers.JSONStringify(wfParams)}`;
+            return { success: false, error };
+        }
+
+        // grab our workflow and report ids
+        const idWorkflow: number | undefined = this.workflow.getWorkflowID();
+        const idWorkflowReport: number | undefined = this.workflow.getReportID();
+        const workflowReportUrl: string = idWorkflowReport?RouteBuilder.DownloadWorkflowReport(idWorkflowReport,eHrefMode.ePrependServerURL):'null';
+
+        // set our status
+        await this.setStatus(COMMON.eWorkflowJobRunStatus.eCreated);
+        LOG.info(`${this.constructor.name} started`,LOG.LS.eAUDIT);
+
+        // LOG.info('creating workflow from route...',LOG.LS.eWF);
+        //LOG.info(H.Helpers.JSONStringify(this.workflow),LOG.LS.eWF);
+
+        //
+        // const iReport: REP.IReport | null = await REP.ReportFactory.getReport();
+        // if(!iReport) {
+        //     const error: string = 'EDAN Verifier workflow failed to get report.';
+        //     return { success: false, message: error };
+        // }
+        // console.log(iReport);
+
+        // ...
+        // const workflowResult: H.IOResults = await workflow.start();
+        // if(!workflowResult || workflowResult.success===false) {
+        //     const error: string = 'EDAN Verifier workflow failed to start. '+workflowResult?.error;
+        //     sendResponseMessage(response,false,error);
+        //     return;
+        // }
+
+        // // grab our report from the factory
+        // const iReport: REP.IReport | null = await REP.ReportFactory.getReport();
+        // if(!iReport) {
+        //     const error: string = `${this.constructor.name} failed to get workflow report.`;
+        //     return { success: false, message: error };
+        // }
+
+        // console.log(iReport);
+
+        // // get our report ID
+        // this.idReport = this.LS?.getWorkflowReportID();
+        // if (!this.idReport) {
+        //     const error: string = `${this.constructor.name} could not get workflow report ID`;
+        //     return { success: false, message: error };
+        // }
+
+        // console.log('report id: '+this.idReport);
+
+        // return success and our id to keep check on it's completeness
+        return { success: true, data: { isDone: false, idWorkflow, idWorkflowReport, workflowReportUrl } };
+    }
+    public stop(): VerifierResult | null {
+        return null;
+    }
+
+    public async getReport(allowPartial: boolean = false): Promise<VerifierResult> {
+
+        // see if we're done
+        if(!this.workflow)
+            return { success: false, error: `${this.constructor.name} cannot get report. workflow is null.` };
+
+        // if we're running return so caller can keep polling
+        const status: COMMON.eWorkflowJobRunStatus = this.getStatus();
+        if(allowPartial===false) {
+            if(status === COMMON.eWorkflowJobRunStatus.eRunning || status === COMMON.eWorkflowJobRunStatus.eWaiting) {
+                return { success: false, error: `${this.constructor.name} workflow is still running`, data: { status } };
+            }
+        }
+
+        // grab the report itself from our workflow
+        const report: DBAPI.WorkflowReport | null = await this.workflow.getReport();
+        if(!report)
+            return { success: false, error: `${this.constructor.name} cannot get report.`, data: { idWorkflow: this.workflow.getWorkflowID() } };
+
+        // send the report contents back
+        LOG.info(`${this.constructor.name} returned report (length: ${report.Data.length})`,LOG.LS.eAUDIT);
+        return {
+            success: true,
+            data: {
+                idWorkflow: this.workflow.getWorkflowID(),
+                idReport: this.workflow.getReportID,
+                content: report.Data
+            } };
+    }
+
+    public async verify(): Promise<VerifierResult> {
+        return { success: true };
+    }
+
+    public isDone(): boolean {
+
+        // get our status and then see if it's in a completed state
+        const status: COMMON.eWorkflowJobRunStatus = this.getStatus();
+
+        const workflowComplete: boolean = (status === COMMON.eWorkflowJobRunStatus.eDone
+            || status === COMMON.eWorkflowJobRunStatus.eError
+            || status === COMMON.eWorkflowJobRunStatus.eCancelled);
+
+        return workflowComplete;
+    }
+    public getStatus(): COMMON.eWorkflowJobRunStatus {
+        if(this.workflow === null) {
+            LOG.error(`${this.constructor.name} cannot get status. no workflow set.`,LOG.LS.eAUDIT);
+            return COMMON.eWorkflowJobRunStatus.eUnitialized;
+        }
+
+        return (this.workflow as WorkflowVerifier).getStatus();
+    }
+    protected async setStatus(status: COMMON.eWorkflowJobRunStatus ): Promise<boolean> {
+        // set the status of our workflow to reflect the current state of operations
+        const result: WF.WorkflowUpdateResults | undefined = await this.workflow?.updateStatus(status);
+        if(result?.success === false){
+            LOG.error(`Cannot set workflow status in ${this.constructor.name}. ${result.error??'unknown error'}`,LOG.LS.eAUDIT);
+            return false;
+        }
+        return true;
+    }
 
     protected async getIdentifierType(identifier: DBAPI.Identifier): Promise<IdentifierDetails | null> {
 
@@ -28,14 +226,14 @@ export class VerifierBase {
         // TODO: use Vocabulary.CACHE to reduce DB hits
         const identifierType: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(identifier.idVIdentifierType);
         if(!identifierType){
-            LOG.error(`could not find identifier type in DB (identifier: ${identifier.idVIdentifierType} )`, LOG.LS.eSYS);
+            LOG.error(`could not find identifier type in DB (identifier: ${identifier.idVIdentifierType} )`, LOG.LS.eAUDIT);
             return null;
         }
 
         // pull from enumeration from the CACHE (vocabulary id -> enum)
         const identifierTypeEnum: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(identifier.idVIdentifierType);
         if(identifierTypeEnum===undefined){
-            LOG.error(`could not find enumerator for identifier type (${identifier.idVIdentifierType}) in Cache`, LOG.LS.eSYS);
+            LOG.error(`could not find enumerator for identifier type (${identifier.idVIdentifierType}) in Cache`, LOG.LS.eAUDIT);
             return null;
         }
 
@@ -51,7 +249,7 @@ export class VerifierBase {
         if(subject.idIdentifierPreferred) {
             const preferredIdentifier: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(subject.idIdentifierPreferred);
             if(!preferredIdentifier){
-                LOG.error(`subject's preferredId not found in the DB (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eSYS);
+                LOG.error(`subject's preferredId not found in the DB (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
                 // subjectStats[i].isValid = false;
             } else {
                 // grab our identifier details (type) and store it
@@ -77,11 +275,11 @@ export class VerifierBase {
         // grab our list of identifiers from the SystemObject id
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(systemObject.idSystemObject);
         if(!identifiers){
-            LOG.error(`could not get identifiers from subject (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eSYS);
+            LOG.error(`could not get identifiers from subject (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
             return null;
         }
         if(identifiers.length<=0){
-            LOG.info(`(WARNING) no identifiers assigned to subject (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eSYS);
+            LOG.info(`(WARNING) no identifiers assigned to subject (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
             return result;
         }
 
@@ -91,7 +289,7 @@ export class VerifierBase {
             // get our details for this identifier, skip if error, store if valid
             const details: IdentifierDetails | null = await this.getIdentifierType(identifier);
             if(!details) {
-                LOG.error(`could not get identifier details from subject (identifier: ${identifier.IdentifierValue} | id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eSYS);
+                LOG.error(`could not get identifier details from subject (identifier: ${identifier.IdentifierValue} | id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
                 continue;
             }
 
@@ -129,7 +327,7 @@ export class VerifierBase {
 
         const packratUnit = await DBAPI.Unit.fetch(subject.idUnit);
         if(!packratUnit) {
-            LOG.error(`Packrat DB did not return a unit for subject. (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eSYS);
+            LOG.error(`Packrat DB did not return a unit for subject. (id: ${subject.idSubject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
             return null;
         }
 
@@ -149,7 +347,7 @@ export class VerifierBase {
             if(result) return result;
         }
 
-        LOG.error(`did not find EDAN unit in the UnitEdan DB. investigate adding it... (${edanUnit}) `, LOG.LS.eSYS);
+        LOG.error(`did not find EDAN unit in the UnitEdan DB. investigate adding it... (${edanUnit}) `, LOG.LS.eAUDIT);
         return null;
     }
 
@@ -169,7 +367,7 @@ export class VerifierBase {
                 for(const identifier of edanIdentifiers) {
                     const details: IdentifierDetails | null = await this.getIdentifierType(identifier);
                     if(!details) {
-                        LOG.error(`could not get details for EDAN identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eSYS);
+                        LOG.error(`could not get details for EDAN identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eAUDIT);
                         continue;
                     }
 
@@ -194,7 +392,7 @@ export class VerifierBase {
                 for(const identifier of arkIdentifiers) {
                     const details: IdentifierDetails | null = await this.getIdentifierType(identifier);
                     if(!details) {
-                        LOG.error(`could not get details for ARK identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eSYS);
+                        LOG.error(`could not get details for ARK identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eAUDIT);
                         continue;
                     }
 
@@ -218,14 +416,14 @@ export class VerifierBase {
                 // get our type for this identifier
                 const identifierType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapIdentifierType(label);
                 if (!identifierType) {
-                    LOG.error(`\tencountered unknown identifier type ${label} for EDAN record ${record.name}`, LOG.LS.eSYS);
+                    LOG.error(`\tencountered unknown identifier type ${label} for EDAN record ${record.name}`, LOG.LS.eAUDIT);
                     continue;
                 }
 
                 // pull enumeration from the CACHE (vocabulary id -> enum)
                 const identifierTypeEnum: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(identifierType.idVocabulary);
                 if(identifierTypeEnum===undefined){
-                    LOG.error(`\tcould not find enumerator for identifier type (${identifierType.Term}) in Cache`, LOG.LS.eSYS);
+                    LOG.error(`\tcould not find enumerator for identifier type (${identifierType.Term}) in Cache`, LOG.LS.eAUDIT);
                     continue;
                 }
 
@@ -235,7 +433,7 @@ export class VerifierBase {
                     for(const identifier of identifiers) {
                         const details: IdentifierDetails | null = await this.getIdentifierType(identifier);
                         if(!details) {
-                            LOG.error(`could not get details for EDAN identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eSYS);
+                            LOG.error(`could not get details for EDAN identifier (type: ${identifier.idVIdentifierType} | value:${identifier.IdentifierValue})`, LOG.LS.eAUDIT);
                             continue;
                         }
 

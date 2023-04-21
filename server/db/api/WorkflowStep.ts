@@ -72,6 +72,13 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
     setState(eState: COMMON.eWorkflowJobRunStatus): void {
         this.State = eState;
     }
+    isDone(): boolean {
+        // returns if the steps is completed or not
+        const status: COMMON.eWorkflowJobRunStatus = this.getState();
+        return (status === COMMON.eWorkflowJobRunStatus.eDone
+            || status === COMMON.eWorkflowJobRunStatus.eError
+            || status === COMMON.eWorkflowJobRunStatus.eCancelled);
+    }
 
     static async fetch(idWorkflowStep: number): Promise<WorkflowStep | null> {
         if (!idWorkflowStep)
