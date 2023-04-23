@@ -1,7 +1,7 @@
 // element for holding auditing, verification, and outward facing reports/utils
 import { Box, Container, Typography } from '@material-ui/core';
 import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 // define the CSS styles we're going to use
 const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
@@ -51,6 +51,23 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
 function Audit(): React.ReactElement {
     const classes = useStyles();
 
+    const [verifierType, setVerifierType] = useState('edan');
+    // const [verifierData, setVerifierData] = useState({});
+
+    useEffect(() => {
+        fetch('http://localhost:4000/verifier/edan?limit=2')
+        // fetch('https://jsonplaceholder.typicode.com/posts')
+            .then(response => response.json())
+            .then(json => {
+                const data = JSON.parse(json.data);
+                console.log(json);
+                console.log(data);
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+    },[verifierType]);
+
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
@@ -61,6 +78,9 @@ function Audit(): React.ReactElement {
                     <Typography className={classes.subtitle} variant='body1'>
                         Auditing (coming soon...)
                     </Typography>
+                    <div>
+                        <button onClick={() => setVerifierType('edan')}>Refresh</button>
+                    </div>
                 </Container>
             </Box>
         </Box>

@@ -36,6 +36,16 @@ export type IdentifierList = {
     ark: IdentifierDetails | null;
     details: IdentifierDetails[];  // complete list of all identifiers
 };
+export type VerifierReportResult = {
+    success: boolean;
+    error?: string;
+    isComplete?: boolean;
+    idWorkflowReport?: number;
+    workflowReportUrl?: string;
+    mimeType?: string;
+    isCompressed?: boolean;
+    data?: string;
+};
 
 export class VerifierBase {
     protected config: VerifierConfig;
@@ -401,8 +411,8 @@ export class VerifierBase {
         return (identifier.IdentifierValue.startsWith('dpo_3d') || identifier.IdentifierValue.startsWith('edanmdm:dpo_3d'));
     }
 
-    protected getSystemObjectDetailsURL(systemObject: DBAPI.SystemObject): string {
-        return '=HYPERLINK("https://packrat-test.si.edu:8443/repository/details/'+systemObject.idSystemObject+'")';
+    protected getSystemObjectDetailsURL(systemObject: DBAPI.SystemObject,addPrefix: boolean = false): string {
+        return ((addPrefix)?'=HYPERLINK("':'')+'https://packrat-test.si.edu:8443/repository/details/'+systemObject.idSystemObject+((addPrefix)?'")':'');
     }
 
 }

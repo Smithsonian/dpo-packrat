@@ -3,6 +3,7 @@ import * as LOG from '../logger';
 import * as DBAPI from '../../db';
 import * as V from './VerifierBase';
 import * as COMMON from '@dpo-packrat/common';
+import { Helpers } from '../helpers';
 
 //----------------------------------------------------------------
 // EDAN VERIFIER
@@ -13,6 +14,24 @@ import * as COMMON from '@dpo-packrat/common';
 // TODO: verify EDAN 3d_package match the most recent published version
 // TODO: hook to endpoint and support running on a schedule via node_scheduler*
 // TODO: fix DPO subject errors
+// TODO: convert JSON output into CSV via separate function vs. inline
+type EdanTestOutput = {
+    testType: string,
+    status: string,
+    message: string,
+    packratData: string[],
+    edanData: string[],
+    actions: string
+};
+type EdanJsonOutput = {
+    idSystemObject: number | undefined,
+    idSubject: number | undefined,
+    subject: string | undefined,
+    edanRecord: string | undefined,
+    objectURL: string | undefined,
+    tests: EdanTestOutput[] | undefined
+};
+
 export class VerifierEdan extends V.VerifierBase {
 
     constructor(config: V.VerifierConfig){
@@ -27,12 +46,17 @@ export class VerifierEdan extends V.VerifierBase {
     }
 
     public async verify(): Promise<V.VerifierResult> {
-
         LOG.info(`${this.constructor.name} verifying...`,LOG.LS.eAUDIT);
 
         // our structure and header for saved output to CSV
-        const output: string[] = [];
-        output.push('ID,MDM,URL,SUBJECT,STATUS,TEST,DESCRIPTION,PACKRAT,EDAN,NOTES');
+        const csvOutput: string[] = [];
+        csvOutput.push('ID,MDM,URL,SUBJECT,STATUS,TEST,DESCRIPTION,PACKRAT,EDAN,NOTES');
+
+        // our structure for holding JSON results
+        const jsonOutput: EdanJsonOutput[] = [];
+
+        // TODO: CSV export from config option
+        const exportCSV: boolean = false;
 
         // fetch all subjects from Packrat DB
         const subjects: DBAPI.Subject[] | null = await DBAPI.Subject.fetchAll(); /* istanbul ignore if */
@@ -176,29 +200,61 @@ export class VerifierEdan extends V.VerifierBase {
             }
 
             // a structure to hold our output
-            const outputPrefix = `${systemObject.idSystemObject},${packratIdentifiers.edan?.identifier?.IdentifierValue},${this.getSystemObjectDetailsURL(systemObject)},${JSON.stringify(subject.Name)},`;
+            const csvOutputPrefix = `${systemObject.idSystemObject},${packratIdentifiers.edan?.identifier?.IdentifierValue},${this.getSystemObjectDetailsURL(systemObject)},${JSON.stringify(subject.Name)},`;
+            const output: EdanJsonOutput = {
+                idSystemObject: systemObject.idSystemObject,
+                idSubject: subject.idSubject,
+                subject: subject.Name,
+                edanRecord: packratIdentifiers.edan?.identifier?.IdentifierValue,
+                objectURL: this.getSystemObjectDetailsURL(systemObject,exportCSV),
+                tests: []
+            };
+            jsonOutput.push(output);
 
             // Compare: Name
             if(packratName!=edanName) {
                 LOG.error(`${this.config.logPrefix} Subject name in Packrat and EDAN are not the same (id:${systemObject.idSystemObject} | Packrat:${packratName} | EDAN:${edanName})`, LOG.LS.eAUDIT);
-                let str = outputPrefix;
-                str += 'error,';
+                let str = csvOutputPrefix;
+                str += 'fail,';
                 str += 'name,';
                 str += 'Subject name not the same,';
                 str += '"' + packratName + '",';
                 str += '"' + edanName + '",';
                 str += ((isDPOSubject)?'DPO created subject. needs manual fix':'EDAN subject. needs manual fix.')+',';
-                output.push(str);
+                csvOutput.push(str);
+
+                // json output
+                const testName: EdanTestOutput = {
+                    status: 'fail',
+                    testType: 'name',
+                    message: 'Subject name not the same',
+                    packratData: [packratName],
+                    edanData: [edanName],
+                    actions: (isDPOSubject)?'DPO created subject. needs manual fix':'EDAN subject. needs manual fix.'
+                };
+                output.tests?.push(testName);
+
             } else {
                 LOG.info(`${this.config.logPrefix} name compare succeeded!`, LOG.LS.eAUDIT);
-                let str = outputPrefix;
-                str += 'success,';
+                let str = csvOutputPrefix;
+                str += 'pass,';
                 str += 'name,';
                 str += ',';
                 str += '"' + packratName + '",';
                 str += '"' + edanName + '",';
                 str += ',';
-                output.push(str);
+                csvOutput.push(str);
+
+                // json output
+                const testName: EdanTestOutput = {
+                    status: 'pass',
+                    testType: 'name',
+                    message: '',
+                    packratData: [packratName],
+                    edanData: [edanName],
+                    actions: ''
+                };
+                output.tests?.push(testName);
             }
 
             // Compare: Units
@@ -211,94 +267,155 @@ export class VerifierEdan extends V.VerifierBase {
 
                 // if we couldn't find the unit, add error otherwise success
                 if(!foundUnit) {
-                    LOG.error(`${this.config.logPrefix} Packrat unit does not match EDAN units (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                    let str = outputPrefix;
-                    str += 'error,';
-                    str += 'units,';
-                    str += 'Packrat unit does not match EDAN units,';
+                    LOG.error(`${this.config.logPrefix} Packrat unit does not match EDAN unit (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                    let str = csvOutputPrefix;
+                    str += 'fail,';
+                    str += 'unit,';
+                    str += 'Packrat unit does not match EDAN unit,';
                     str += '"' + packratUnit.Abbreviation + ' - ' + packratUnit.Name + '",';
                     str += '"' + edanUnit.Abbreviation + ' - ' + edanUnit.Name +'",';
 
                     // apply edan unit packrat subject
+                    let actions: string = '';
                     if(isDPOSubject) {
-                        str += 'DPO subject. needs manual fix to update EDAN unit info';
+                        actions += 'DPO subject. needs manual fix to update EDAN unit info';
                     } else {
                         if(this.config.fixErrors) {
                             const replaceUnitResult: boolean = await this.replacePackratUnit(packratUnit,edanUnit);
                             if(!replaceUnitResult) {
                                 LOG.error(`${this.config.logPrefix} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                                str += 'EDAN subject. failed to automatic update. check logs or do manually';
+                                actions += 'EDAN subject. failed to automatic update. check logs or do manually';
                             } else {
                                 LOG.info(`${this.config.logPrefix} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                                str += 'EDAN subject. updated Packrat unit to match EDAN';
+                                actions += 'EDAN subject. updated Packrat unit to match EDAN';
                             }
                         } else {
-                            str += 'EDAN subject. automatic updating disabled. rerun or manual fix required';
+                            actions += 'EDAN subject. automatic updating disabled. rerun or manual fix required';
                         }
                     }
 
                     // store for output
-                    output.push(str);
+                    str += actions;
+                    csvOutput.push(str);
+
+                    // json output
+                    const testUnit: EdanTestOutput = {
+                        status: 'fail',
+                        testType: 'unit',
+                        message: 'Packrat unit does not match EDAN units',
+                        packratData: [packratUnit.Abbreviation + ' - ' + packratUnit.Name],
+                        edanData: [edanUnit.Abbreviation + ' - ' + edanUnit.Name],
+                        actions
+                    };
+                    output.tests?.push(testUnit);
+
                 } else {
                     LOG.info(`${this.config.logPrefix} Unit compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                    let str = outputPrefix;
-                    str += 'success,';
-                    str += 'units,';
+                    let str = csvOutputPrefix;
+                    str += 'pass,';
+                    str += 'unit,';
                     str += ',';
                     str += '"' + packratUnit.Abbreviation + ' - ' + packratUnit.Name + '",';
                     str += '"' + edanUnit.Abbreviation + ' - ' + edanUnit.Name + '",';
-                    output.push(str);
+                    csvOutput.push(str);
+
+                    // json output
+                    const testUnit: EdanTestOutput = {
+                        status: 'pass',
+                        testType: 'unit',
+                        message: '',
+                        packratData: [packratUnit.Abbreviation + ' - ' + packratUnit.Name],
+                        edanData: [edanUnit.Abbreviation + ' - ' + edanUnit.Name],
+                        actions: ''
+                    };
+                    output.tests?.push(testUnit);
                 }
             } else if(packratUnit && !edanUnit) {
                 LOG.error(`${this.config.logPrefix} Packrat unit not found in EDAN record (id:${systemObject.idSystemObject} | subject:${subject.Name} | packrat:${JSON.stringify(packratUnit)})`, LOG.LS.eAUDIT);
-                let str = outputPrefix;
-                str += 'error,';
-                str += 'units,';
+                let str = csvOutputPrefix;
+                str += 'fail,';
+                str += 'unit,';
                 str += 'Packrat unit not found in EDAN,';
                 str += '"' + packratUnit.Abbreviation + ' - ' + packratUnit.Name + '",';
                 str += 'null,';
                 str += ((isDPOSubject)?'DPO created subject. needs manual fix to apply to EDAN.':'EDAN subject. needs manual fix because EDAN should have unit assigned. (todo)')+',';
-                output.push(str);
+                csvOutput.push(str);
+
+                // json output
+                const testUnit: EdanTestOutput = {
+                    status: 'fail',
+                    testType: 'unit',
+                    message: 'Packrat unit not found in EDAN',
+                    packratData: [packratUnit.Abbreviation + ' - ' + packratUnit.Name],
+                    edanData: ['null'],
+                    actions: (isDPOSubject)?'DPO created subject. needs manual fix to apply to EDAN.':'EDAN subject. needs manual fix because EDAN should have unit assigned. (todo)'
+                };
+                output.tests?.push(testUnit);
+
             } else if(!packratUnit && edanUnit) {
                 LOG.error(`${this.config.logPrefix} EDAN unit not found in Packrat (id:${systemObject.idSystemObject} | subject:${subject.Name} | EDAN:${edanUnit.Name})`, LOG.LS.eAUDIT);
-                let str = outputPrefix;
-                str += 'error,';
-                str += 'units,';
+                let str = csvOutputPrefix;
+                str += 'fail,';
+                str += 'unit,';
                 str += 'EDAN unit not found in Packrat,';
                 str += 'null,';
                 str += '"' + edanUnit.Abbreviation + ' - ' + edanUnit.Name +'",';
 
                 // apply edan unit to packrat unit (creating new unit in process)
+                let actions: string = '';
                 if(isDPOSubject) {
-                    str += 'DPO subject. needs manual fix as Packrat should have unit';
+                    actions += 'DPO subject. needs manual fix as Packrat should have unit';
                 } else {
                     if(this.config.fixErrors) {
                         const replaceUnitResult: boolean = await this.replacePackratUnit(packratUnit,edanUnit);
                         if(!replaceUnitResult) {
                             LOG.error(`${this.config.logPrefix} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                            str += 'EDAN subject. failed to automatic update. check logs or do manually';
+                            actions += 'EDAN subject. failed to automatic update. check logs or do manually';
                         } else {
                             LOG.info(`${this.config.logPrefix} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                            str += 'EDAN subject. updated Packrat unit to match EDAN';
+                            actions += 'EDAN subject. updated Packrat unit to match EDAN';
                         }
                     } else {
-                        str += 'EDAN subject. automatic updating disabled. rerun or manual fix required';
+                        actions += 'EDAN subject. automatic updating disabled. rerun or manual fix required';
                     }
                 }
 
                 // store for output
-                output.push(str);
+                str += actions;
+                csvOutput.push(str);
+
+                // json output
+                const testUnit: EdanTestOutput = {
+                    status: 'fail',
+                    testType: 'unit',
+                    message: 'EDAN unit not found in Packrat',
+                    packratData: ['null'],
+                    edanData: [edanUnit.Abbreviation + ' - ' + edanUnit.Name],
+                    actions
+                };
+                output.tests?.push(testUnit);
 
             } else {
                 LOG.error(`${this.config.logPrefix} Packrat & EDAN units not found (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                let str = outputPrefix;
-                str += 'error,';
-                str += 'units,';
-                str += 'Packrat and EDAN units not,';
+                let str = csvOutputPrefix;
+                str += 'fail,';
+                str += 'unit,';
+                str += 'Packrat and EDAN units not found,';
                 str += 'null,';
                 str += 'null,';
                 str += 'needs manual fix as neither source has a unit,';
-                output.push(str);
+                csvOutput.push(str);
+
+                // json output
+                const testUnit: EdanTestOutput = {
+                    status: 'fail',
+                    testType: 'unit',
+                    message: 'Packrat and EDAN units not found',
+                    packratData: ['null'],
+                    edanData: ['null'],
+                    actions: 'Needs manual fix as neither source has a unit'
+                };
+                output.tests?.push(testUnit);
             }
 
             // Compare: Identifiers
@@ -309,7 +426,6 @@ export class VerifierEdan extends V.VerifierBase {
                 const edanIdCount = edanIdentifiers.details.length;
 
                 // build our list of identifiers
-                // TODO: clean strings for CSV output
                 const strPackratIds: string[] = (packratIdentifiers.details)?(packratIdentifiers.details?.map(id=>{ return id.identifier?.IdentifierValue+' ('+id.identifierType?.Term+')'; })):([]);
                 const strEdanIds: string[] = [];
                 for(const id of edanIdentifiers.details) {
@@ -350,55 +466,112 @@ export class VerifierEdan extends V.VerifierBase {
                     }
 
                     // build our output string
-                    let str = outputPrefix;
-                    str += 'error,';
-                    str += 'identifiers,';
+                    let str = csvOutputPrefix;
+                    str += 'fail,';
+                    str += 'identifier,';
                     str += 'Packrat identifiers do not match EDAN,';
                     str += '"'+strPackratIds.sort().join('\n')+'",';
                     str += '"'+strEdanIds.sort().join('\n')+'",';
 
                     // apply edan unit to packrat unit (creating new unit in process)
+                    let actions: string = '';
                     if(isDPOSubject) {
-                        str += 'DPO subject. needs manual fix';
+                        actions += 'DPO subject. needs manual fix';
                     } else {
                         if(this.config.fixErrors) {
                             const replaceUnitResult: boolean = await this.replacePackratIdentifiers(packratIdentifiers,edanIdentifiers,systemObject);
                             if(!replaceUnitResult) {
                                 LOG.error(`${this.config.logPrefix} failed to update Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                                str += 'EDAN subject. failed to automatic update. check logs or do manually';
+                                actions += 'EDAN subject. failed to automatic update. check logs or do manually';
                             } else {
                                 LOG.info(`${this.config.logPrefix} successfully updated Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                                str += 'EDAN subject. updated Packrat identifiers to match EDAN';
+                                actions += 'EDAN subject. updated Packrat identifiers to match EDAN';
                             }
                         } else {
-                            str += 'EDAN subject. automatic updating disabled. rerun or manual fix required';
+                            actions += 'EDAN subject. automatic updating disabled. rerun or manual fix required';
                         }
                     }
 
                     // store for output
-                    output.push(str);
+                    str += actions;
+                    csvOutput.push(str);
+
+                    // json output
+                    const testIdentifier: EdanTestOutput = {
+                        status: 'fail',
+                        testType: 'identifier',
+                        message: 'Packrat identifiers do not match EDAN',
+                        packratData: strPackratIds.sort(),
+                        edanData: strEdanIds.sort(),
+                        actions: (isDPOSubject)?'DPO created subject. needs manual fix':'EDAN subject. needs manual fix.'
+                    };
+                    output.tests?.push(testIdentifier);
 
                 } else {
                     LOG.info(`${this.config.logPrefix} Identifier compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                    let str = outputPrefix;
-                    str += 'success,';
-                    str += 'identifiers,';
+                    let str = csvOutputPrefix;
+                    str += 'pass,';
+                    str += 'identifier,';
                     str += ',';
                     str += '"'+strPackratIds.sort().join('\n')+'",';
                     str += '"'+strEdanIds.sort().join('\n')+'",';
                     str += ',';
-                    output.push(str);
+                    csvOutput.push(str);
+
+                    // json output
+                    const testIdentifier: EdanTestOutput = {
+                        status: 'pass',
+                        testType: 'identifier',
+                        message: '',
+                        packratData: strPackratIds.sort(),
+                        edanData: strEdanIds.sort(),
+                        actions: ''
+                    };
+                    output.tests?.push(testIdentifier);
                 }
             } else if(packratIdentifiers && !edanIdentifiers) {
-                // TODO
+
+                const strPackratIds: string[] = (packratIdentifiers.details)?(packratIdentifiers.details?.map(id=>{ return id.identifier?.IdentifierValue+' ('+id.identifierType?.Term+')'; })):([]);
+                const strEdanIds: string[] = [];
+
+                // TODO: CSV
+
+                // json output
+                const testIdentifier: EdanTestOutput = {
+                    status: 'fail',
+                    testType: 'identifier',
+                    message: 'No EDAN identifiers found',
+                    packratData: strPackratIds.sort(),
+                    edanData: strEdanIds.sort(),
+                    actions: 'Investigate for possible connection error or invalid object'
+                };
+                output.tests?.push(testIdentifier);
             } else if(!packratIdentifiers && edanIdentifiers) {
-                // TODO
+
+                const strPackratIds: string[] = [];
+                const strEdanIds: string[] = [];
+                for(const id of edanIdentifiers.details) {
+                    strEdanIds.push(id.identifier?.IdentifierValue+' ('+id.identifierType?.Term+')');
+                }
+
+                // TODO: CSV
+
+                // json output
+                const testIdentifier: EdanTestOutput = {
+                    status: 'fail',
+                    testType: 'identifier',
+                    message: 'No Packrat identifiers found',
+                    packratData: strPackratIds.sort(),
+                    edanData: strEdanIds.sort(),
+                    actions: 'Investigate for invalid object'
+                };
+                output.tests?.push(testIdentifier);
             }
         }
 
         // dumping to local file (if needed)
         if(this.config.writeToFile !== undefined) {
-            require('fs').writeFile(this.config.writeToFile,output.join('\n'), err=>{
+            require('fs').writeFile(this.config.writeToFile,csvOutput.join('\n'), err=>{
                 if(err) {
                     LOG.error(`${this.config.logPrefix}: ${err}`, LOG.LS.eAUDIT);
                 }
@@ -419,10 +592,10 @@ export class VerifierEdan extends V.VerifierBase {
             return { success: false, error: `${this.constructor.name} cannot get report.`, data: { idWorkflow: this.workflow?.getWorkflowID() } };
 
         // prepare our data and update the report itself in the DB
-        report.MimeType = 'text/csv';
-        report.Data = output.join('\n');
+        report.MimeType = (exportCSV)?'text/csv':'text/json';
+        report.Data = (exportCSV)?csvOutput.join('\n'):Helpers.JSONStringify(jsonOutput);
         report.Name = name;
-        report.update();
+        await report.update();
 
         // return the data in case needed by other routines downstream
         return { success: true, data: { content: report.Data } };

@@ -105,9 +105,9 @@ async function getReport(request: Request, response: Response): Promise<void> {
     // get our step from the DB
     const workflowStep: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflow(idWorkflow);
     if(!workflowStep)
-        return sendResponseMessage(response,false,'failed to get workflow step');
+        return sendResponseMessage(response,false,`failed to get workflow step (id:${idWorkflowReport})`);
     if(workflowStep.length<=0)
-        return sendResponseMessage(response, false, 'no steps for given workflow');
+        return sendResponseMessage(response, false, `no steps for given workflow (id:${idWorkflowReport})`);
 
     // see if we're done, dump the report and return
     const allowPartial: boolean = (request.query.allowPartial==='true'?true:false)??false;
@@ -122,11 +122,13 @@ async function sendResponseReport(response: Response, idWorkflowReport: number, 
 
     // build our response
     const workflowReportUrl: string = RouteBuilder.DownloadWorkflowReport(idWorkflowReport,eHrefMode.ePrependServerURL);
-    const result = {
+    const result: V.VerifierReportResult = {
+        success: true,
         isComplete,
         idWorkflowReport,
         workflowReportUrl,
         mimeType: workflowReport.MimeType,
+        isCompressed: false,
         data: (isComplete || allowPartial)?workflowReport.Data:'pending...'
     };
 
@@ -138,7 +140,8 @@ async function sendResponseReport(response: Response, idWorkflowReport: number, 
         switch(result.mimeType) {
             case 'txt/csv': { extension = 'csv'; } break;
             case 'text/html': { extension = 'html'; } break;
-            default: { extension = 'text'; }
+            case 'text/json': { extension = 'json'; } break;
+            default: { extension = 'txt'; }
         }
 
         // setup our headers and send it
@@ -151,10 +154,12 @@ async function sendResponseReport(response: Response, idWorkflowReport: number, 
     }
 }
 function sendResponseMessage(response: Response, success: boolean, message: string) {
-    const result = {
-        success,
-        message
+
+    const result: V.VerifierReportResult = {
+        success: true,
     };
+    if(success===false)
+        result.error = message;
 
     if(success) {
         LOG.info(`(Verifier) SUCCEEDED: ${message}`, LOG.LS.eAUDIT);
