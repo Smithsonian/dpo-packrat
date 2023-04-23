@@ -35,8 +35,8 @@ export async function routeRequest(request: Request, response: Response): Promis
     }
 }
 
-// TODO: progressively build up report so that if requested before done it returns partial results
-//       requires changing verifier to append after each subject, connecting tightly to workflow logic
+// verifies Packrat agains EDAN records. this routine is the launch point for the operation
+// with subsequent polling through /verifier/report?... endpoint
 async function verifyEdanWorkflow(req: Request, response: Response): Promise<void> {
     LOG.info('Verifying EDAN Records from endpoint...', LOG.LS.eAUDIT);
 
@@ -45,7 +45,8 @@ async function verifyEdanWorkflow(req: Request, response: Response): Promise<voi
         collection: COL.CollectionFactory.getInstance(),
         detailedLogs: req.query.details==='true'?true:false,
         subjectLimit: (req.query.limit)?parseInt(req.query.limit as string):10000,
-        systemObjectId: (req.query.objectId)?parseInt(req.query.objectId as string):-1
+        systemObjectId: (req.query.objectId)?parseInt(req.query.objectId as string):-1,
+        allowPartial: (req.query.allowPartial==='true'?true:false)??false,
     };
 
     // create our verifier and initialize (autostarts workflow)
@@ -63,16 +64,13 @@ async function verifyEdanWorkflow(req: Request, response: Response): Promise<voi
     const idWorkflow: number = result.data.idWorkflow;
     const idWorkflowReport: number = result.data.idWorkflowReport;
     const workflowReportUrl: string = result.data.workflowReportUrl;
+    LOG.info(`verifier result: ${Helpers.JSONStringify({ idWorkflow,idWorkflowReport,workflowReportUrl })}`,LOG.LS.eAUDIT);
 
     // wait briefly for it to finish. if done, then return the report
-    // todo: handle option for allow partial return
     await Helpers.sleep(3000);
-    if(verifier.isDone()===true)
-        return sendResponseReport(response,idWorkflowReport,true);
 
-    // if not done, send info back to client so they can keep trying through alt endpoint
-    LOG.info(`verifier result: ${Helpers.JSONStringify({ idWorkflow,idWorkflowReport,workflowReportUrl })}`,LOG.LS.eAUDIT);
-    return sendResponseReport(response,idWorkflowReport,false);
+    // send info back to client so they can keep trying through alt endpoint if not done, otherwise send full report
+    return sendResponseReport(response,idWorkflowReport,verifier.isDone(),verifierConfig.allowPartial);
 }
 
 async function getReport(request: Request, response: Response): Promise<void> {
@@ -111,7 +109,7 @@ async function getReport(request: Request, response: Response): Promise<void> {
     if(workflowStep.length<=0)
         return sendResponseMessage(response, false, 'no steps for given workflow');
 
-    // see if we're done, dump the report and break.
+    // see if we're done, dump the report and return
     const allowPartial: boolean = (request.query.allowPartial==='true'?true:false)??false;
     return sendResponseReport(response,idWorkflowReport,workflowStep[0].isDone(),allowPartial);
 }

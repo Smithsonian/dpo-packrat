@@ -18,6 +18,7 @@ export type VerifierConfig = {
     subjectLimit?: number | undefined;      // total number of subjects to process
     systemObjectId?: number | undefined;    // limit execution to this specific SystemObject
     writeToFile?: string | undefined;       // should we dump the output to a specific path
+    allowPartial?: boolean | undefined;     // allow for partial results to be returned
 };
 export type VerifierResult = {
     success: boolean;
@@ -62,10 +63,7 @@ export class VerifierBase {
         // clear any existing report data
         await this.setStatus(COMMON.eWorkflowJobRunStatus.eUnitialized);
         LOG.info(`${this.constructor.name} starting...`,LOG.LS.eAUDIT);
-        // if(this.reportData != undefined && this.reportData.length > 0) {
-        //     LOG.info('clearing existing report data.',LOG.LS.eAUDIT);
-        //     this.reportData = undefined;
-        // }
+        // todo: catchup multiple subsequent runs on same class/instance. (make singleton?)
 
         // grab an instance of our engine so we can create workflows
         const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
