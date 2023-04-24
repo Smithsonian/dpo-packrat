@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // element for holding auditing, verification, and outward facing reports/utils
 import { Box, Container, Typography } from '@material-ui/core';
 import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
+import useVerifier from './hooks/useVerifier';
 
 // define the CSS styles we're going to use
 const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
@@ -52,21 +55,18 @@ function Audit(): React.ReactElement {
     const classes = useStyles();
 
     const [verifierType, setVerifierType] = useState('edan');
-    // const [verifierData, setVerifierData] = useState({});
+    const { data, isPending, error } = useVerifier(verifierType);
 
     useEffect(() => {
-        fetch('http://localhost:4000/verifier/edan?limit=2')
-        // fetch('https://jsonplaceholder.typicode.com/posts')
-            .then(response => response.json())
-            .then(json => {
-                const data = JSON.parse(json.data);
-                console.log(json);
-                console.log(data);
-            })
-            .catch((err) => {
-                console.error(err);
-            });
-    },[verifierType]);
+        if(!data) return;
+        console.warn(data);
+    }, [data]);
+    useEffect(() => {
+        console.log('pending changed: '+isPending);
+    },[isPending]);
+    useEffect(() => {
+        console.log('error changed: '+error);
+    },[error]);
 
     return (
         <Box className={classes.container}>
@@ -80,11 +80,24 @@ function Audit(): React.ReactElement {
                     </Typography>
                     <div>
                         <button onClick={() => setVerifierType('edan')}>Refresh</button>
+                        {(isPending===true)?<h2>Loading...</h2>:<h2>success!</h2> }
+                        {error && <h3>Error: {getErrorMessage(error)}</h3>}
+
+                        {/* our data list */}
+                        {data && data.data.map(item => {
+                            return <pre key={`${item.idSubject}:${item.idSytemObject}`}>{JSON.stringify(item)}</pre>;
+                        })}
                     </div>
                 </Container>
             </Box>
         </Box>
     );
+
+    function getErrorMessage(error: string): string {
+        // todo: more granular handling of different status codes and messages
+        console.log(error);
+        return error;
+    }
 }
 
 export default Audit;
