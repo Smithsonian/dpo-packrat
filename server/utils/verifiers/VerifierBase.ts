@@ -12,13 +12,14 @@ import { WorkflowVerifier } from '../../workflow/impl/Packrat/WorkflowVerifier';
 
 export type VerifierConfig = {
     collection: COL.ICollection;            // what collection to operate on. mostly used for EDAN
-    detailedLogs?: boolean | undefined;     // do we want to output detailed debug logs
-    logPrefix?: string | undefined;         // what should logs be prefixed with
-    fixErrors?: boolean | undefined;        // do we try to fix errors (todo)
-    subjectLimit?: number | undefined;      // total number of subjects to process
-    systemObjectId?: number | undefined;    // limit execution to this specific SystemObject
-    writeToFile?: string | undefined;       // should we dump the output to a specific path
-    allowPartial?: boolean | undefined;     // allow for partial results to be returned
+    detailedLogs: boolean | undefined;      // do we want to output detailed debug logs
+    prefix?: string | undefined;            // what should logs be prefixed with
+    fixErrors: boolean | undefined;         // do we try to fix errors (todo)
+    subjectLimit: number | undefined;       // total number of subjects to process
+    idSystemObject: number | undefined;     // limit execution to this specific SystemObject
+    writeToFile: string | undefined;        // should we dump the output to a specific path
+    allowPartial: boolean | undefined;      // allow for partial results to be returned
+    forceUpdate: boolean | undefined;       // should we force a re-run of the validation. only used for a 'full run'
 };
 export type VerifierResult = {
     success: boolean;
@@ -58,21 +59,21 @@ export class VerifierBase {
         // defaults if undefined
         if(this.config.detailedLogs === undefined)
             this.config.detailedLogs = false;
-        if(this.config.logPrefix === undefined)
-            this.config.logPrefix = 'Base Verifier';
         if(this.config.fixErrors === undefined)
             this.config.fixErrors = false;
         if(this.config.subjectLimit === undefined)
             this.config.subjectLimit = 10000; // total number of subjects to process
-        if(this.config.systemObjectId === undefined)
-            this.config.systemObjectId = -1; // limit execution to this specific SystemObject
+        if(this.config.idSystemObject === undefined)
+            this.config.idSystemObject = -1; // limit execution to this specific SystemObject
+        // if(this.config.prefix === undefined)
+        //     this.config.prefix = this.constructor.name;
     }
 
     public async init(): Promise<VerifierResult> {
         // This routine creates a workflow for the validator and starts it
         // clear any existing report data
         await this.setStatus(COMMON.eWorkflowJobRunStatus.eUnitialized);
-        LOG.info(`${this.constructor.name} starting...`,LOG.LS.eAUDIT);
+        LOG.info(`${this.getVerifierPrefix()} starting...`,LOG.LS.eAUDIT);
         // todo: catchup multiple subsequent runs on same class/instance. (make singleton?)
 
         // grab an instance of our engine so we can create workflows
@@ -100,18 +101,32 @@ export class VerifierBase {
         // create or workflow and automatically create a report object for future results
         this.workflow = await workflowEngine.create(wfParams) as WorkflowVerifier;
         if (!this.workflow) {
-            const error: string = `${this.constructor.name} unable to create Verifier workflow: ${H.Helpers.JSONStringify(wfParams)}`;
+            const error: string = `${this.getVerifierPrefix()} unable to create Verifier workflow: ${H.Helpers.JSONStringify(wfParams)}`;
             return { success: false, error };
         }
 
-        // grab our workflow and report ids
+        // grab our workflow and report idsVerifierEdan
         const idWorkflow: number | undefined = this.workflow.getWorkflowID();
         const idWorkflowReport: number | undefined = this.workflow.getReportID();
         const workflowReportUrl: string = idWorkflowReport?RouteBuilder.DownloadWorkflowReport(idWorkflowReport,eHrefMode.ePrependServerURL):'null';
 
+        // make sure we have a report to modify and init defaults
+        const report: DBAPI.WorkflowReport | null | undefined = await this.workflow?.getReport();
+        if(report) {
+            // figure out our desired name
+            const now: string = new Date().toISOString().split('T')[0];
+            const name: string = `${this.getVerifierPrefix(false)}_${(this.isFullRun())?'FullReport':'Results'}_${now}`;
+
+            // prepare our data and update to defaults in the DB
+            report.MimeType = 'text/json';
+            report.Data = H.Helpers.JSONStringify({ status: 'pending...' });
+            report.Name = name;
+            await report.update();
+        }
+
         // set our status
         await this.setStatus(COMMON.eWorkflowJobRunStatus.eCreated);
-        LOG.info(`${this.constructor.name} started`,LOG.LS.eAUDIT);
+        LOG.info(`${this.getVerifierPrefix()} started`,LOG.LS.eAUDIT);
 
         // return success and our id to keep check on it's completeness
         return { success: true, data: { isDone: false, idWorkflow, idWorkflowReport, workflowReportUrl } };
@@ -123,6 +138,17 @@ export class VerifierBase {
 
     public async verify(): Promise<VerifierResult> {
         return { success: true };
+    }
+    public isFullRun(): boolean {
+        const result = ((this.config.subjectLimit && this.config.subjectLimit<=0) &&
+            (this.config.idSystemObject && this.config.idSystemObject<=0) &&
+            !this.config.forceUpdate);
+        return (result===true)?true:false;
+    }
+    public getVerifierPrefix(wrapWithBrackets: boolean = true): string {
+        return ((wrapWithBrackets)?'(':'')+
+                ((this.config.prefix)?this.config.prefix:this.constructor.name)+
+                ((wrapWithBrackets)?')':'');
     }
 
     public isDone(): boolean {
@@ -138,7 +164,7 @@ export class VerifierBase {
     }
     public getStatus(): COMMON.eWorkflowJobRunStatus {
         if(this.workflow === null) {
-            LOG.error(`${this.constructor.name} cannot get status. no workflow set.`,LOG.LS.eAUDIT);
+            LOG.error(`${this.getVerifierPrefix()} cannot get status. no workflow set.`,LOG.LS.eAUDIT);
             return COMMON.eWorkflowJobRunStatus.eUnitialized;
         }
 
@@ -148,7 +174,7 @@ export class VerifierBase {
         // set the status of our workflow to reflect the current state of operations
         const result: WF.WorkflowUpdateResults | undefined = await this.workflow?.updateStatus(status);
         if(result?.success === false){
-            LOG.error(`Cannot set workflow status in ${this.constructor.name}. ${result.error??'unknown error'}`,LOG.LS.eAUDIT);
+            LOG.error(`Cannot set workflow status in ${this.getVerifierPrefix()}. ${result.error??'unknown error'}`,LOG.LS.eAUDIT);
             return false;
         }
         return true;

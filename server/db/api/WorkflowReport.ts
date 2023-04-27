@@ -93,4 +93,22 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
             return null;
         }
     }
+
+    static async fetchFromName(name: string, absoluteMatch: boolean = true): Promise<WorkflowReport[] | null> {
+        // returns any reports with the given name.
+        // 'absoluteMatch' requires a complete match of the string vs. loose
+        if (name.length<=0)
+            return null;
+        try {
+            const stringQuery: string = (absoluteMatch)?name:`%${name}%`;
+            return DBC.CopyArray<WorkflowReportBase, WorkflowReport>(
+                await DBC.DBConnection.prisma.$queryRaw<WorkflowReport[]>`
+                SELECT DISTINCT WR.*
+                FROM WorkflowReport AS WR
+                WHERE WR.Name LIKE ${(stringQuery)}`, WorkflowReport);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.WorkflowReport.fetchFromName', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }

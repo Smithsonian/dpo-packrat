@@ -797,6 +797,11 @@ export class ModelMigration {
         const res: H.StatResults = await H.Helpers.stat(filePath);
         let success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
 
+        // record our error if we don't get what we expect from fs.Stat
+        if(!res.success && res.error) {
+            this.logStatus(`testFileExistence('${filePath}')`, false, res.error);
+        }
+
         if (modelFile.hash) {
             const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
             if (!hashRes.success) {

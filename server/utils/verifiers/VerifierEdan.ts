@@ -41,12 +41,12 @@ export class VerifierEdan extends V.VerifierBase {
         this.config.collection = config.collection;
 
         // if we don't have a prefix or it's assigned to the base, reset it
-        if(this.config.logPrefix === undefined || this.config.logPrefix === 'Base Verifier')
-            this.config.logPrefix = 'EDAN Verifier';
+        // if(this.config.prefix === undefined)
+        //     this.config.prefix = 'EDAN Verifier';
     }
 
     public async verify(): Promise<V.VerifierResult> {
-        LOG.info(`${this.constructor.name} verifying...`,LOG.LS.eAUDIT);
+        LOG.info(`${this.getVerifierPrefix()} verifying...`,LOG.LS.eAUDIT);
 
         // our structure and header for saved output to CSV
         const csvOutput: string[] = [];
@@ -62,18 +62,18 @@ export class VerifierEdan extends V.VerifierBase {
         const subjects: DBAPI.Subject[] | null = await DBAPI.Subject.fetchAll(); /* istanbul ignore if */
         if (!subjects) {
             await this.setStatus(COMMON.eWorkflowJobRunStatus.eError);
-            const error: string = `${this.config.logPrefix} could not get subjects from DB`;
+            const error: string = `${this.getVerifierPrefix()} could not get subjects from DB`;
             LOG.error(error, LOG.LS.eAUDIT);
             return { success: false, error };
         }
         if(subjects.length<=0) {
             await this.setStatus(COMMON.eWorkflowJobRunStatus.eError);
-            const error: string = `${this.config.logPrefix} no subjects found in DB`;
+            const error: string = `${this.getVerifierPrefix()} no subjects found in DB`;
             LOG.error(error, LOG.LS.eAUDIT);
             return { success: false, error  };
         }
         if(this.config.detailedLogs)
-            LOG.info(`${this.config.logPrefix} Subjects: ${subjects.length}`, LOG.LS.eAUDIT);
+            LOG.info(`${this.getVerifierPrefix()} Subjects: ${subjects.length}`, LOG.LS.eAUDIT);
 
         // loop through subjects, extract name, query from EDAN and process
         for(let i=0; i<subjects.length; i++) {
@@ -91,38 +91,38 @@ export class VerifierEdan extends V.VerifierBase {
                 continue;
             }
             if(this.config.detailedLogs)
-                LOG.info(`${this.config.logPrefix} SystemObject: ${JSON.stringify(systemObject)}`, LOG.LS.eAUDIT);
+                LOG.info(`${this.getVerifierPrefix()} SystemObject: ${JSON.stringify(systemObject)}`, LOG.LS.eAUDIT);
 
             // (debug) if not the desired subject id skip
-            if(this.config.systemObjectId && this.config.systemObjectId>0){
-                if(systemObject.idSystemObject!==this.config.systemObjectId) {
+            if(this.config.idSystemObject && this.config.idSystemObject>0){
+                if(systemObject.idSystemObject!==this.config.idSystemObject) {
                     if(this.config.detailedLogs)
-                        LOG.info(`${this.config.logPrefix} Subject skipping. IDs don not match.`, LOG.LS.eAUDIT);
+                        LOG.info(`${this.getVerifierPrefix()} Subject skipping. IDs don not match.`, LOG.LS.eAUDIT);
                     continue;
                 }
             }
 
-            LOG.info(`${this.config.logPrefix} processing subject: ${subject.Name}`, LOG.LS.eAUDIT);
+            LOG.info(`${this.getVerifierPrefix()} processing subject: ${subject.Name}`, LOG.LS.eAUDIT);
             if(this.config.detailedLogs)
-                LOG.info(`${this.config.logPrefix} Subject:\t ${JSON.stringify(subject,null,0)}`, LOG.LS.eAUDIT);
+                LOG.info(`${this.getVerifierPrefix()} Subject:\t ${JSON.stringify(subject,null,0)}`, LOG.LS.eAUDIT);
 
             // get our subject's unit from Packrat DB
             const packratUnit: DBAPI.Unit | null = await this.getSubjectUnit(subject);
             if(!packratUnit) {
-                LOG.error(`${this.config.logPrefix} could not find a unit for subject. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
+                LOG.error(`${this.getVerifierPrefix()} could not find a unit for subject. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
                 continue;
             }
             if(this.config.detailedLogs)
-                LOG.info(`${this.config.logPrefix} Packrat Units: ${JSON.stringify(packratUnit,null,0)}`, LOG.LS.eAUDIT);
+                LOG.info(`${this.getVerifierPrefix()} Packrat Units: ${JSON.stringify(packratUnit,null,0)}`, LOG.LS.eAUDIT);
 
             // get our subject's identifiers, details, and SystemObject id
             const packratIdentifiers: V.IdentifierList | null = await this.getSubjectIdentifiers(subject,systemObject);
             if(!packratIdentifiers) {
-                LOG.error(`${this.config.logPrefix} could not get identifiers for subject. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
+                LOG.error(`${this.getVerifierPrefix()} could not get identifiers for subject. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
                 continue;
             }
             if(this.config.detailedLogs)
-                LOG.info(`${this.config.logPrefix} Packrat Identifiers: ${JSON.stringify(packratIdentifiers,null,0)}`, LOG.LS.eAUDIT);
+                LOG.info(`${this.getVerifierPrefix()} Packrat Identifiers: ${JSON.stringify(packratIdentifiers,null,0)}`, LOG.LS.eAUDIT);
 
             // if we have an EDAN (should 100% be true) then determine if from DPO or not
             // defaults to all subjects coming from EDAN
@@ -130,7 +130,7 @@ export class VerifierEdan extends V.VerifierBase {
             if(packratIdentifiers.edan && packratIdentifiers.edan.identifier) {
                 isDPOSubject = this.isIdentifierFromDPO(packratIdentifiers.edan.identifier);
             } else {
-                LOG.error(`${this.config.logPrefix} could not get EDAN ID for subject. source of subject is ambiguous. (id: ${systemObject.idSystemObject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
+                LOG.error(`${this.getVerifierPrefix()} could not get EDAN ID for subject. source of subject is ambiguous. (id: ${systemObject.idSystemObject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
             }
 
             // get our packrat name
@@ -145,11 +145,11 @@ export class VerifierEdan extends V.VerifierBase {
             else if(packratIdentifiers.preferred?.identifier)
                 query = packratIdentifiers.preferred.identifier.IdentifierValue;
             else {
-                LOG.error(`${this.config.logPrefix} no good options for querying EDAN for subject. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
+                LOG.error(`${this.getVerifierPrefix()} no good options for querying EDAN for subject. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name})`, LOG.LS.eAUDIT);
                 continue;
             }
             if(this.config.detailedLogs)
-                LOG.info(`${this.config.logPrefix} Query: ${query}`, LOG.LS.eAUDIT);
+                LOG.info(`${this.getVerifierPrefix()} Query: ${query}`, LOG.LS.eAUDIT);
 
             // query EDAN with our identifier and skip if nothing returned
             const options: COL.CollectionQueryOptions | null = {
@@ -159,11 +159,11 @@ export class VerifierEdan extends V.VerifierBase {
             };
             const results: COL.CollectionQueryResults | null = await this.config.collection.queryCollection(query, 10, 0, options);
             if(!results || results.records.length<=0) {
-                LOG.error(`${this.config.logPrefix} did not receive records for subject and identifier. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name} | query: ${query})`, LOG.LS.eAUDIT);
+                LOG.error(`${this.getVerifierPrefix()} did not receive records for subject and identifier. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name} | query: ${query})`, LOG.LS.eAUDIT);
                 continue;
             }
             if(this.config.detailedLogs)
-                LOG.info(`${this.config.logPrefix} EDAN Results: ${JSON.stringify(results,null,0)}`, LOG.LS.eAUDIT);
+                LOG.info(`${this.getVerifierPrefix()} EDAN Results: ${JSON.stringify(results,null,0)}`, LOG.LS.eAUDIT);
 
             // structure to hold our units/identifiers
             let edanUnit: DBAPI.Unit | null = null;
@@ -177,26 +177,26 @@ export class VerifierEdan extends V.VerifierBase {
                 // get our EDAN units from this record
                 const unit: DBAPI.Unit | null = await this.getUnitFromEdanUnit(record.unit);
                 if(!unit)
-                    LOG.error(`${this.config.logPrefix} no known units found for subject (id: ${systemObject.idSystemObject} | subject: ${subject.Name}) and EDAN record name (${record.name})`, LOG.LS.eAUDIT);
+                    LOG.error(`${this.getVerifierPrefix()} no known units found for subject (id: ${systemObject.idSystemObject} | subject: ${subject.Name}) and EDAN record name (${record.name})`, LOG.LS.eAUDIT);
                 else
                     edanUnit = unit;
                 if(this.config.detailedLogs)
-                    LOG.info(`${this.config.logPrefix} EDAN Units: ${JSON.stringify(unit,null,0)}`, LOG.LS.eAUDIT);
+                    LOG.info(`${this.getVerifierPrefix()} EDAN Units: ${JSON.stringify(unit,null,0)}`, LOG.LS.eAUDIT);
 
                 // get our EDAN identifiers from this record
                 const identifiers: V.IdentifierList | null = await this.getEdanRecordIdentifiers(record);
                 if(!identifiers)
-                    LOG.error(`${this.config.logPrefix} no EDAN identifiers found for subject (id: ${systemObject.idSystemObject} | subject: ${subject.Name}) and EDAN record name (${record.name})`, LOG.LS.eAUDIT);
+                    LOG.error(`${this.getVerifierPrefix()} no EDAN identifiers found for subject (id: ${systemObject.idSystemObject} | subject: ${subject.Name}) and EDAN record name (${record.name})`, LOG.LS.eAUDIT);
                 else
                     edanIdentifiers = identifiers;
                 if(this.config.detailedLogs)
-                    LOG.info(`${this.config.logPrefix} EDAN Ids: ${JSON.stringify(identifiers,null,0)}`, LOG.LS.eAUDIT);
+                    LOG.info(`${this.getVerifierPrefix()} EDAN Ids: ${JSON.stringify(identifiers,null,0)}`, LOG.LS.eAUDIT);
 
                 // get our name
                 edanName = record.name;
 
             } else {
-                LOG.error(`${this.config.logPrefix} received multiple records from EDAN when expecting 1. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name} | query: ${query})`, LOG.LS.eAUDIT);
+                LOG.error(`${this.getVerifierPrefix()} received multiple records from EDAN when expecting 1. skipping... (id: ${systemObject.idSystemObject} | subject: ${subject.Name} | query: ${query})`, LOG.LS.eAUDIT);
             }
 
             // a structure to hold our output
@@ -213,7 +213,7 @@ export class VerifierEdan extends V.VerifierBase {
 
             // Compare: Name
             if(packratName!=edanName) {
-                LOG.error(`${this.config.logPrefix} Subject name in Packrat and EDAN are not the same (id:${systemObject.idSystemObject} | Packrat:${packratName} | EDAN:${edanName})`, LOG.LS.eAUDIT);
+                LOG.error(`${this.getVerifierPrefix()} Subject name in Packrat and EDAN are not the same (id:${systemObject.idSystemObject} | Packrat:${packratName} | EDAN:${edanName})`, LOG.LS.eAUDIT);
                 let str = csvOutputPrefix;
                 str += 'fail,';
                 str += 'name,';
@@ -235,7 +235,7 @@ export class VerifierEdan extends V.VerifierBase {
                 output.tests?.push(testName);
 
             } else {
-                LOG.info(`${this.config.logPrefix} name compare succeeded!`, LOG.LS.eAUDIT);
+                LOG.info(`${this.getVerifierPrefix()} name compare succeeded!`, LOG.LS.eAUDIT);
                 let str = csvOutputPrefix;
                 str += 'pass,';
                 str += 'name,';
@@ -267,7 +267,7 @@ export class VerifierEdan extends V.VerifierBase {
 
                 // if we couldn't find the unit, add error otherwise success
                 if(!foundUnit) {
-                    LOG.error(`${this.config.logPrefix} Packrat unit does not match EDAN unit (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                    LOG.error(`${this.getVerifierPrefix()} Packrat unit does not match EDAN unit (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
                     let str = csvOutputPrefix;
                     str += 'fail,';
                     str += 'unit,';
@@ -283,10 +283,10 @@ export class VerifierEdan extends V.VerifierBase {
                         if(this.config.fixErrors) {
                             const replaceUnitResult: boolean = await this.replacePackratUnit(packratUnit,edanUnit);
                             if(!replaceUnitResult) {
-                                LOG.error(`${this.config.logPrefix} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                                LOG.error(`${this.getVerifierPrefix()} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
                                 actions += 'EDAN subject. failed to automatic update. check logs or do manually';
                             } else {
-                                LOG.info(`${this.config.logPrefix} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                                LOG.info(`${this.getVerifierPrefix()} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
                                 actions += 'EDAN subject. updated Packrat unit to match EDAN';
                             }
                         } else {
@@ -310,7 +310,7 @@ export class VerifierEdan extends V.VerifierBase {
                     output.tests?.push(testUnit);
 
                 } else {
-                    LOG.info(`${this.config.logPrefix} Unit compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                    LOG.info(`${this.getVerifierPrefix()} Unit compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
                     let str = csvOutputPrefix;
                     str += 'pass,';
                     str += 'unit,';
@@ -331,7 +331,7 @@ export class VerifierEdan extends V.VerifierBase {
                     output.tests?.push(testUnit);
                 }
             } else if(packratUnit && !edanUnit) {
-                LOG.error(`${this.config.logPrefix} Packrat unit not found in EDAN record (id:${systemObject.idSystemObject} | subject:${subject.Name} | packrat:${JSON.stringify(packratUnit)})`, LOG.LS.eAUDIT);
+                LOG.error(`${this.getVerifierPrefix()} Packrat unit not found in EDAN record (id:${systemObject.idSystemObject} | subject:${subject.Name} | packrat:${JSON.stringify(packratUnit)})`, LOG.LS.eAUDIT);
                 let str = csvOutputPrefix;
                 str += 'fail,';
                 str += 'unit,';
@@ -353,7 +353,7 @@ export class VerifierEdan extends V.VerifierBase {
                 output.tests?.push(testUnit);
 
             } else if(!packratUnit && edanUnit) {
-                LOG.error(`${this.config.logPrefix} EDAN unit not found in Packrat (id:${systemObject.idSystemObject} | subject:${subject.Name} | EDAN:${edanUnit.Name})`, LOG.LS.eAUDIT);
+                LOG.error(`${this.getVerifierPrefix()} EDAN unit not found in Packrat (id:${systemObject.idSystemObject} | subject:${subject.Name} | EDAN:${edanUnit.Name})`, LOG.LS.eAUDIT);
                 let str = csvOutputPrefix;
                 str += 'fail,';
                 str += 'unit,';
@@ -369,10 +369,10 @@ export class VerifierEdan extends V.VerifierBase {
                     if(this.config.fixErrors) {
                         const replaceUnitResult: boolean = await this.replacePackratUnit(packratUnit,edanUnit);
                         if(!replaceUnitResult) {
-                            LOG.error(`${this.config.logPrefix} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                            LOG.error(`${this.getVerifierPrefix()} failed to update Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
                             actions += 'EDAN subject. failed to automatic update. check logs or do manually';
                         } else {
-                            LOG.info(`${this.config.logPrefix} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                            LOG.info(`${this.getVerifierPrefix()} successfully updated Packrat unit to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
                             actions += 'EDAN subject. updated Packrat unit to match EDAN';
                         }
                     } else {
@@ -396,7 +396,7 @@ export class VerifierEdan extends V.VerifierBase {
                 output.tests?.push(testUnit);
 
             } else {
-                LOG.error(`${this.config.logPrefix} Packrat & EDAN units not found (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                LOG.error(`${this.getVerifierPrefix()} Packrat & EDAN units not found (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
                 let str = csvOutputPrefix;
                 str += 'fail,';
                 str += 'unit,';
@@ -453,16 +453,16 @@ export class VerifierEdan extends V.VerifierBase {
                 // if we have a mismatch then output
                 if(idMismatch) {
                     // log error and details
-                    LOG.error(`${this.config.logPrefix} Packrat has different identifiers than EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
-                    LOG.error(`${this.config.logPrefix} \tPackrat: `+strPackratIds.sort().join(','), LOG.LS.eAUDIT);
-                    LOG.error(`${this.config.logPrefix} \t   EDAN: `+strEdanIds, LOG.LS.eAUDIT);
+                    LOG.error(`${this.getVerifierPrefix()} Packrat has different identifiers than EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                    LOG.error(`${this.getVerifierPrefix()} \tPackrat: `+strPackratIds.sort().join(','), LOG.LS.eAUDIT);
+                    LOG.error(`${this.getVerifierPrefix()} \t   EDAN: `+strEdanIds, LOG.LS.eAUDIT);
 
                     // if we're an EDAN subject then we need to fix the situation
                     if(!isDPOSubject) {
                         // TODO: wipe out Packrat identifiers and replace with EDAN modifiers
                         const replaceIdsResult: boolean = await this.replacePackratIdentifiers(packratIdentifiers,edanIdentifiers,systemObject);
                         if(!replaceIdsResult)
-                            LOG.error(`${this.config.logPrefix} could not replace Packrat identifiers. function not finished.`, LOG.LS.eAUDIT);
+                            LOG.error(`${this.getVerifierPrefix()} could not replace Packrat identifiers. function not finished.`, LOG.LS.eAUDIT);
                     }
 
                     // build our output string
@@ -481,10 +481,10 @@ export class VerifierEdan extends V.VerifierBase {
                         if(this.config.fixErrors) {
                             const replaceUnitResult: boolean = await this.replacePackratIdentifiers(packratIdentifiers,edanIdentifiers,systemObject);
                             if(!replaceUnitResult) {
-                                LOG.error(`${this.config.logPrefix} failed to update Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                                LOG.error(`${this.getVerifierPrefix()} failed to update Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
                                 actions += 'EDAN subject. failed to automatic update. check logs or do manually';
                             } else {
-                                LOG.info(`${this.config.logPrefix} successfully updated Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                                LOG.info(`${this.getVerifierPrefix()} successfully updated Packrat identifiers to match EDAN (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
                                 actions += 'EDAN subject. updated Packrat identifiers to match EDAN';
                             }
                         } else {
@@ -508,7 +508,7 @@ export class VerifierEdan extends V.VerifierBase {
                     output.tests?.push(testIdentifier);
 
                 } else {
-                    LOG.info(`${this.config.logPrefix} Identifier compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
+                    LOG.info(`${this.getVerifierPrefix()} Identifier compare succeeded! (id:${systemObject.idSystemObject} | subject:${subject.Name})`, LOG.LS.eAUDIT);
                     let str = csvOutputPrefix;
                     str += 'pass,';
                     str += 'identifier,';
@@ -573,28 +573,23 @@ export class VerifierEdan extends V.VerifierBase {
         if(this.config.writeToFile !== undefined) {
             require('fs').writeFile(this.config.writeToFile,csvOutput.join('\n'), err=>{
                 if(err) {
-                    LOG.error(`${this.config.logPrefix}: ${err}`, LOG.LS.eAUDIT);
+                    LOG.error(`${this.getVerifierPrefix()}: ${err}`, LOG.LS.eAUDIT);
                 }
             });
         }
 
         // set our state
-        LOG.info(`${this.constructor.name} completed successfully`,LOG.LS.eAUDIT);
+        LOG.info(`${this.getVerifierPrefix()} completed successfully`,LOG.LS.eAUDIT);
         await this.setStatus(COMMON.eWorkflowJobRunStatus.eDone);
-
-        // figure out our desired name
-        const now: string = new Date().toISOString().split('T')[0];
-        const name: string = `${this.constructor.name}_Results_${now}`;
 
         // make sure we have a report to modify
         const report: DBAPI.WorkflowReport | null | undefined = await this.workflow?.getReport();
         if(!report)
-            return { success: false, error: `${this.constructor.name} cannot get report.`, data: { idWorkflow: this.workflow?.getWorkflowID() } };
+            return { success: false, error: `${this.getVerifierPrefix()} cannot get report.`, data: { idWorkflow: this.workflow?.getWorkflowID() } };
 
         // prepare our data and update the report itself in the DB
         report.MimeType = (exportCSV)?'text/csv':'text/json';
         report.Data = (exportCSV)?csvOutput.join('\n'):Helpers.JSONStringify(jsonOutput);
-        report.Name = name;
         await report.update();
 
         // return the data in case needed by other routines downstream

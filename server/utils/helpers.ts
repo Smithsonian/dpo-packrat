@@ -255,6 +255,7 @@ export class Helpers {
     }
 
     static async stat(filePath: string): Promise<StatResults> {
+        // gets stats on the directory/file provided. often used to determine if a file exists.
         const res: StatResults = {
             stat: null,
             success: true

@@ -3,10 +3,12 @@
 /* eslint-disable react/display-name */
 
 // element for holding auditing, verification, and outward facing reports/utils
-import { Box, Container, Typography, Tooltip, TextField } from '@material-ui/core';
+import { Box, Container, Typography, Tooltip, TextField, LinearProgress } from '@material-ui/core';
+import Alert from '@material-ui/lab/Alert';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridColumns, GridToolbarContainer, GridToolbarFilterButton } from '@material-ui/data-grid';
+import { inflateSync } from 'zlib';
 
 // define the CSS styles we're going to use
 const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => createStyles({
@@ -93,34 +95,25 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => createStyles({
         textAlign: 'center',
         flexDirection: 'row',
         maxWidth: 'none',
-    },
-    statusErrorContainer: {
-        flex: 1,
-        border: '1px solid darkred',
-        padding: 0,
         margin: 0,
-        borderTop: 0,
-        borderRadius: '0 0 20px 20px',
-        paddingBottom: 5,
-        background: 'pink',
-        color: 'darkred',
-        textAlign: 'center',
-        display: 'flex',
-        flexDirection: 'column',
-    },
-    statusInfoContainer: {
-        flex: 1,
-        border: '1px solid steelblue',
         padding: 0,
-        margin: 0,
-        borderTop: 0,
-        borderRadius: '0 0 20px 20px',
-        paddingBottom: 5,
-        background: 'aliceblue',
-        color: 'steelblue',
-        textAlign: 'center',
-        display: 'flex',
-        flexDirection: 'column',
+    },
+    statusError: {
+        width: '100%',
+        border: `1px solid ${palette.error.dark}`,
+        borderRadius: 0,
+        borderWidth: '1px 0 1px 0',
+    },
+    statusInfo: {
+        border: `1px solid ${palette.info.light}`,
+        borderRadius: 0,
+        borderWidth: '0px 0 1px 0',
+    },
+    statusSuccess: {
+        width: '100%',
+        border: `1px solid ${palette.success.dark}`,
+        borderRadius: 0,
+        borderWidth: '1px 0 1px 0', // top, right, bottom, left
     },
     statusText: {
         margin: 0
@@ -184,18 +177,18 @@ const columns: GridColumns = [
     {   field: 'id',
         headerName: 'ID',
         type: 'number',
-        width: 100,
+        width: 75,
     },
     {   field: 'subject',
         headerName: 'Subject Name',
         flex: 3
     },
-    {   field: 'url',
-        headerName: 'URL',
+    {   field: 'details',
+        headerName: 'Details',
         width: 100,
         sortable: false,
         renderCell: params => (
-            <a href={params.row.url} target='_blank' rel='noopener noreferrer'>Link</a>
+            <a href={params.row.details} target='_blank' rel='noopener noreferrer'>Edit</a>
         )
     },
     {   field: 'testSubject',
@@ -224,16 +217,36 @@ const columns: GridColumns = [
     },
 ];
 
+enum StatusStateEnum {
+    uninitialized = -1,
+    error = 0,
+    running = 1,
+    loading = 2,
+    success = 10,
+}
+type Status = {
+    state: StatusStateEnum;
+    message: string;
+};
+
 function Audit(): React.ReactElement {
     const classes = useStyles();
 
-    const [isPending, setIsPending] = useState<boolean>(false);
-    const [error, setError] = useState<string|null>(null);
+    // const [isPending, setIsPending] = useState<boolean>(false);
+    // const [error, setError] = useState<string|null>(null);
+    const [status, setStatus] = useState<Status>({ state: StatusStateEnum.uninitialized, message: 'uninitialized' });
     const [configLimit, setConfigLimit] = useState<number>();
     // const [configID, setConfigID] = useState<number>();
 
     const [data, setData] = useState<any>(null);
     const [chartData, setChartData] = useState<any>(null);
+
+
+    // side effect for onMount
+    useEffect(() => {
+        // todo: check if local storage has previous session.
+        //       if so, load it (or grab from the server)
+    },[]);
 
     // reactive side effects that trigger based on changes in the data/variable
     useEffect(() => {
@@ -247,6 +260,7 @@ function Audit(): React.ReactElement {
                 subject: item.subject,
                 url: item.objectURL,
                 testSubject: {
+                    id: item.idSystemObject, // duplicated so cell callbacks can reference it
                     status: item.tests[0].status,
                     message: item.tests[0].message,
                     packrat: item.tests[0].packratData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:p0`}>{i}<br></br></span>; }),
@@ -254,6 +268,7 @@ function Audit(): React.ReactElement {
                     style: (item.tests[0].status==='fail')?classes.cellFail:classes.cellPass,
                 },
                 testUnit: {
+                    id: item.idSystemObject, // duplicated so cell callbacks can reference it
                     status: item.tests[1].status,
                     message: item.tests[1].message,
                     packrat: item.tests[1].packratData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:p1`}>{i}<br></br></span>; }),
@@ -261,6 +276,7 @@ function Audit(): React.ReactElement {
                     style: (item.tests[1].status==='fail')?classes.cellFail:classes.cellPass,
                 },
                 testIdentifier: {
+                    id: item.idSystemObject, // duplicated so cell callbacks can reference it
                     status: item.tests[2].status,
                     message: item.tests[2].message,
                     packrat: item.tests[2].packratData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:p2`}>{i}<br></br></span>; }),
@@ -273,20 +289,53 @@ function Audit(): React.ReactElement {
 
     }, [data,classes]);
 
+    // handle any changes in status
+    useEffect(() => {
+        if(status.state===StatusStateEnum.success) {
+            setTimeout(() => {
+                if(status.state===StatusStateEnum.success)
+                    setStatus({ state: StatusStateEnum.running, message: status.message });
+            }, 3000);
+        }
+    }, [status]);
+
     // helper routines for polling a report and assigning data to the state
+    // todo: procedurally get the server address
     const getVerifierReport = (idWorkflowReport: number) => {
-        console.log('checking report endpoint');
-        return fetch(`http://localhost:4000/verifier/report?idWorkflowReport=${idWorkflowReport}`)
+        const server: string = `${'http://localhost:4000'}`;
+        const endpoint: string = `${server}/verifier/report?idWorkflowReport=${idWorkflowReport}`;
+
+        return fetch(endpoint)
             .then(response => response.json());
     };
     const AssignData = (json: any) => {
-        // parse and re-assign our data (todo: handle if compressed)
-        json.data = JSON.parse(json.data);
+        // parse and re-assign our data
+        try {
+            // if we're compressed, inflate it
+            if(json.isCompressed) {
+                // convert from 'base64' which is what it was sent as
+                // then inflate it and convert to standard characters
+                const buffer: Buffer = Buffer.from(json.data,'base64');
+                json.data = inflateSync(buffer).toString('utf-8');
+            }
 
-        // set our states
-        setIsPending(false);
-        setError(null);
-        setData(json);
+            // convert it to an json object
+            json.data = JSON.parse(json.data);
+
+            // set our states
+            // setIsPending(false);
+            // setError(null);
+            setStatus({ state: StatusStateEnum.success, message: 'loaded and assigned data' });
+            setData(json);
+
+        } catch(err) {
+            // set our states
+            // setError((err instanceof Error)?err.message:'failed to assign data. unknown type');
+            // setIsPending(false);
+            setStatus({ state: StatusStateEnum.error,
+                message: (err instanceof Error)?err.message:'failed to assign data. unknown type' });
+            setData(null);
+        }
     };
     const setVerifier = (verifier: string) => {
         // make sure verifier is correct
@@ -298,8 +347,9 @@ function Audit(): React.ReactElement {
         const intervalCycle: number = 5000; // 5s
 
         // reset our states
-        setIsPending(true);
-        setError(null);
+        // setIsPending(true);
+        // setError(null);
+        setStatus({ state: StatusStateEnum.loading, message: 'loading verifier results' });
         setData(null);
 
         // figure out our endpoint
@@ -345,20 +395,13 @@ function Audit(): React.ReactElement {
                 }
             })
             .catch((err) => {
-                setIsPending(false);
-                setError(err.message);
+                // setIsPending(false);
+                // setError(err.message);
+                setStatus({ state: StatusStateEnum.error, message: err.message });
             });
 
         // cleanup
         return () => { clearInterval(interval); };
-    };
-    const getStatusMessage = () => {
-        return (
-            (!isPending && !error)?
-                <p>Tap &apos;SUBMIT&apos; above to start validation</p>
-                :
-                ''
-        );
     };
     const onConfigLimitChange = (e) => {
         if (!e.target.validity.patternMismatch) {
@@ -370,6 +413,55 @@ function Audit(): React.ReactElement {
     //         setConfigID(e.target.value.split(/\D/).join(''));
     //     }
     // };
+
+    const renderStatusBox = (status: Status) => {
+        console.log(status.state);
+
+        switch(status.state) {
+
+            case StatusStateEnum.uninitialized: {
+                return (
+                    // todo: add future instructions for first-time visitor
+                    <p>Tap &apos;SUBMIT&apos; above to start validation</p>
+                );
+            }
+
+            case StatusStateEnum.error: {
+                return (
+                    <Alert severity='error' className={classes.statusError}>
+                        <p className={classes.statusText}>Error: {status.message}</p>
+                    </Alert>
+                );
+            }
+
+            case StatusStateEnum.success: {
+                return (
+                    <Alert severity='success' className={classes.statusSuccess}>
+                        <p className={classes.statusText}>{status.message}</p>
+                    </Alert>
+                );
+            }
+
+            case StatusStateEnum.loading: {
+                return (
+                    <div style={{ flex: 1 }}>
+                        <Alert severity='info' className={classes.statusInfo}>
+                            <p className={classes.statusText}>{status.message}</p>
+                        </Alert>
+                        <LinearProgress />
+                    </div>
+                );
+            }
+
+            default: {
+                return (
+                    <Container className={classes.statusContainer}>
+                        {''}
+                    </Container>
+                );
+            }
+        }
+    };
 
     // return our JSX markup
     return (
@@ -406,25 +498,11 @@ function Audit(): React.ReactElement {
                 </Container>
             </Container>
             <Container className={classes.statusContainer}>
-                {
-                    (error)?
-                        <Box className={classes.statusErrorContainer}>
-                            <h3 className={classes.statusText}>Error</h3>
-                            <p className={classes.statusText}>some error message</p>
-                        </Box>
-                        :''
-                }
-                {
-                    (isPending)?
-                        <Box className={classes.statusInfoContainer}>
-                            <p className={classes.statusText}>Loading...</p>
-                        </Box>
-                        :''
-                }
+                { renderStatusBox(status) }
             </Container>
             <Container className={classes.dataResultsContainer}>
                 {
-                    (chartData && !isPending)?
+                    (chartData && status.state!==StatusStateEnum.loading)?
                         <Box className={classes.dataResultsContainer}>
                             <DataGrid
                                 rows={chartData}
@@ -441,7 +519,7 @@ function Audit(): React.ReactElement {
                             />
                         </Box>
                         :
-                        getStatusMessage()
+                        ''
                 }
             </Container>
             <Box className={classes.footer}></Box>
