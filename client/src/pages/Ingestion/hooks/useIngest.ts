@@ -321,10 +321,10 @@ function useIngest(): UseIngest {
 
                 return { success, message: message || '' };
             }
-
+        //This error message is auto-generated.  It does not lead to a custom message unless there's a throw.
         } catch (error) {
             const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Ingestion failed${message}`);
+            toast.error(`Ingestion failed ${message}`);
         }
 
         return { success: false, message: 'unable to start ingestion process' };
