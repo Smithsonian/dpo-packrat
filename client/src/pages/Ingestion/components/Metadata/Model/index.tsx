@@ -95,7 +95,7 @@ function Model(props: ModelProps): React.ReactElement {
     const { metadataIndex, fieldErrors } = props;
     const classes = useStyles();
     const tableClasses = useTableStyles();
-    const  metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
+    const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { model, file } = metadata;
     const { idAsset } = file;
     const [updateMetadataField] = useMetadataStore(state => [state.updateMetadataField]);

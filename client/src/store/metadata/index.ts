@@ -146,7 +146,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     getCurrentMetadata: (id: FileId): StateMetadata | undefined => {
         const { metadatas } = get();
         return metadatas.find(({ file }) => file.id === id);
-        console.log(metadatas);
     },
     getMetadataInfo: (id: FileId): MetadataInfo => {
         const { metadatas } = get();
