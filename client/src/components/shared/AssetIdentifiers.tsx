@@ -111,6 +111,8 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
                             System will create an identifier
                         </Typography>
                     </Box>
+
+                    {/*May need to write the logic here to check if there are no identifiers in existence.*/}
                     {!identifiers.length && (
                         <Button
                             className={classes.addIdentifierButton}
