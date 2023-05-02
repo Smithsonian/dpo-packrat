@@ -235,6 +235,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
         setIsSaving(false);
     };
 
+    //  This opens up the dialog box when you click the 'Add' button on the Parents or Children block.
     return (
         <Dialog
             open={open}

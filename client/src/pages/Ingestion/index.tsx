@@ -25,6 +25,7 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
+
 function Ingestion(): React.ReactElement {
     const classes = useStyles();
     const { metadatas } = useMetadataStore();
@@ -36,6 +37,7 @@ function Ingestion(): React.ReactElement {
     useEffect(() => {
         const updatedOptions: IngestionSidebarOption[] = [];
 
+        // Basically, as you progress through the steps in the Ingestion process, the second sidebar will "add" a link.
         if (metadatas.length) {
             if (includeSubjectItem) {
                 updatedOptions.push({
@@ -64,6 +66,7 @@ function Ingestion(): React.ReactElement {
         ingestionReset(true);
     }, []);
 
+    // Menu routes for the second sidebar in Ingestion
     return (
         <Box className={classes.container}>
             <IngestionSidebarMenu title='INGESTION' paramIdentifier={INGESTION_PARAMS_TYPE.STEP} options={options} />
@@ -79,6 +82,7 @@ function Ingestion(): React.ReactElement {
 
 export default Ingestion;
 
+// This is the error message that appears if somebody closes out the window mid-Ingestion
 export function confirmLeaveIngestion(): boolean {
     const { href: url } = window.location;
     if (url.includes(resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)) || url.includes(resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP))) {
