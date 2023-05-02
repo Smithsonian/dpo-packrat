@@ -322,7 +322,7 @@ class IngestDataWorker extends ResolverBase {
             const edanId: string | null = this.getICollection().checkEdanIdentifier(identifier.identifier);
 
             //Uncomment to Console Test in Terminal
-            console.log({ regexTestValue: regexEdan.test(edanId ?? ''), edanValue: edanId });
+            //console.log({ regexTestValue: regexEdan.test(edanId ?? ""), edanValue: edanId })
 
             if  (!edanId)
                 return { success: false, error: `Invalid EDAN Record ID: ${identifier.identifier}}` };
