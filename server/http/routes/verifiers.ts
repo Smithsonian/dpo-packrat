@@ -64,8 +64,8 @@ async function verifyEdanWorkflow(req: Request, response: Response): Promise<voi
         console.log('>>> running full report');
 
         // figure out our report name
-        const now: string = new Date().toISOString().split('T')[0];
-        const reportName: string = `VerifierEdan_FullReport_${now}`;
+        // const now: string = new Date().toISOString().split('T')[0];
+        const reportName: string = `VerifierEdan_FullReport_${'2023-04-27'}`; //${now}`;
 
         // see if we have a report from today in the DB
         const existingReports: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromName(reportName);

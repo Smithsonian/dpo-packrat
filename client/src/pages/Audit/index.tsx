@@ -3,12 +3,13 @@
 /* eslint-disable react/display-name */
 
 // element for holding auditing, verification, and outward facing reports/utils
-import { Box, Container, Typography, Tooltip, TextField, LinearProgress } from '@material-ui/core';
+import { Box, Container, Typography, Tooltip, TextField, LinearProgress, Tabs, Tab } from '@material-ui/core';
 import Alert from '@material-ui/lab/Alert';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridColumns, GridToolbarContainer, GridToolbarFilterButton } from '@material-ui/data-grid';
-import { inflateSync } from 'zlib';
+// import useFetchAuditReport, { FetchReportRequest, FetchReportStatus } from './hooks/useFetchAuditReport';
+// import { inflateSync } from 'zlib';
 
 // define the CSS styles we're going to use
 const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => createStyles({
@@ -173,11 +174,12 @@ const getCustomToolbar = () => {
         </GridToolbarContainer>
     );
 };
-const columns: GridColumns = [
+
+const columnsEdan: GridColumns = [
     {   field: 'id',
         headerName: 'ID',
         type: 'number',
-        width: 75,
+        width: 100,
     },
     {   field: 'subject',
         headerName: 'Subject Name',
@@ -216,7 +218,11 @@ const columns: GridColumns = [
         sortComparator: (v1: any, v2: any) => { return (!v1 || !v2)?0:v1.status.localeCompare(v2.status); }
     },
 ];
-
+enum AuditTypeEnum {
+    EDAN = 0,
+    Database = 1,
+    Storage = 2,
+}
 enum StatusStateEnum {
     uninitialized = -1,
     error = 0,
@@ -232,191 +238,157 @@ type Status = {
 function Audit(): React.ReactElement {
     const classes = useStyles();
 
-    // const [isPending, setIsPending] = useState<boolean>(false);
-    // const [error, setError] = useState<string|null>(null);
     const [status, setStatus] = useState<Status>({ state: StatusStateEnum.uninitialized, message: 'uninitialized' });
     const [configLimit, setConfigLimit] = useState<number>();
-    // const [configID, setConfigID] = useState<number>();
+    const [pageSize, setPageSize] = useState<number>(15);
+    const [auditType, setAuditType] = useState<AuditTypeEnum>(AuditTypeEnum.EDAN);
+
+    // const { state: edanState, data: edanData, message: edanMessage } = useFetchAuditReport(null);
 
     const [data, setData] = useState<any>(null);
-    const [chartData, setChartData] = useState<any>(null);
+    const [tableData, setChartData] = useState<any>(null);
 
-
-    // side effect for onMount
-    useEffect(() => {
-        // todo: check if local storage has previous session.
-        //       if so, load it (or grab from the server)
-    },[]);
-
-    // reactive side effects that trigger based on changes in the data/variable
-    useEffect(() => {
-        if(!data) return;
-        console.warn(data);
-
-        const formattedData: any[] = [];
-        data.data.forEach(item => {
-            formattedData.push({
-                id: item.idSystemObject,
-                subject: item.subject,
-                url: item.objectURL,
-                testSubject: {
-                    id: item.idSystemObject, // duplicated so cell callbacks can reference it
-                    status: item.tests[0].status,
-                    message: item.tests[0].message,
-                    packrat: item.tests[0].packratData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:p0`}>{i}<br></br></span>; }),
-                    edan: item.tests[0].edanData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:e0`}>{i}<br></br></span>; }),
-                    style: (item.tests[0].status==='fail')?classes.cellFail:classes.cellPass,
-                },
-                testUnit: {
-                    id: item.idSystemObject, // duplicated so cell callbacks can reference it
-                    status: item.tests[1].status,
-                    message: item.tests[1].message,
-                    packrat: item.tests[1].packratData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:p1`}>{i}<br></br></span>; }),
-                    edan: item.tests[1].edanData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:e1`}>{i}<br></br></span>; }),
-                    style: (item.tests[1].status==='fail')?classes.cellFail:classes.cellPass,
-                },
-                testIdentifier: {
-                    id: item.idSystemObject, // duplicated so cell callbacks can reference it
-                    status: item.tests[2].status,
-                    message: item.tests[2].message,
-                    packrat: item.tests[2].packratData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:p2`}>{i}<br></br></span>; }),
-                    edan: item.tests[2].edanData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:e2`}>{i}<br></br></span>; }),
-                    style: (item.tests[2].status==='fail')?classes.cellFail:classes.cellPass,
-                }
-            });
-        });
-        setChartData(formattedData);
-
-    }, [data,classes]);
-
-    // handle any changes in status
-    useEffect(() => {
-        if(status.state===StatusStateEnum.success) {
-            setTimeout(() => {
-                if(status.state===StatusStateEnum.success)
-                    setStatus({ state: StatusStateEnum.running, message: status.message });
-            }, 3000);
-        }
-    }, [status]);
 
     // helper routines for polling a report and assigning data to the state
     // todo: procedurally get the server address
-    const getVerifierReport = (idWorkflowReport: number) => {
-        const server: string = `${'http://localhost:4000'}`;
-        const endpoint: string = `${server}/verifier/report?idWorkflowReport=${idWorkflowReport}`;
+    // const getAuditReport = (idWorkflowReport: number) => {
+    //     const server: string = `${'http://localhost:4000'}`;
+    //     const endpoint: string = `${server}/verifier/report?idWorkflowReport=${idWorkflowReport}`;
 
-        return fetch(endpoint)
-            .then(response => response.json());
-    };
-    const AssignData = (json: any) => {
-        // parse and re-assign our data
-        try {
-            // if we're compressed, inflate it
-            if(json.isCompressed) {
-                // convert from 'base64' which is what it was sent as
-                // then inflate it and convert to standard characters
-                const buffer: Buffer = Buffer.from(json.data,'base64');
-                json.data = inflateSync(buffer).toString('utf-8');
-            }
+    //     return fetch(endpoint)
+    //         .then(response => response.json());
+    // };
+    // const AssignData = (json: any) => {
+    //     // parse and re-assign our data
+    //     try {
+    //         // if we're compressed, inflate it
+    //         if(json.isCompressed) {
+    //             // convert from 'base64' which is what it was sent as
+    //             // then inflate it and convert to standard characters
+    //             const buffer: Buffer = Buffer.from(json.data,'base64');
+    //             json.data = inflateSync(buffer).toString('utf-8');
+    //         }
 
-            // convert it to an json object
-            json.data = JSON.parse(json.data);
+    //         // convert it to an json object
+    //         json.data = JSON.parse(json.data);
 
-            // set our states
-            // setIsPending(false);
-            // setError(null);
-            setStatus({ state: StatusStateEnum.success, message: 'loaded and assigned data' });
-            setData(json);
+    //         // set our states
+    //         // setIsPending(false);
+    //         // setError(null);
+    //         setStatus({ state: StatusStateEnum.success, message: 'loaded and assigned data' });
+    //         setData(json);
 
-        } catch(err) {
-            // set our states
-            // setError((err instanceof Error)?err.message:'failed to assign data. unknown type');
-            // setIsPending(false);
-            setStatus({ state: StatusStateEnum.error,
-                message: (err instanceof Error)?err.message:'failed to assign data. unknown type' });
-            setData(null);
-        }
-    };
-    const setVerifier = (verifier: string) => {
-        // make sure verifier is correct
-        let verifierPath: string = verifier;
-        if(verifierPath!=='edan') { verifierPath='edan'; }
+    //     } catch(err) {
+    //         // set our states
+    //         // setError((err instanceof Error)?err.message:'failed to assign data. unknown type');
+    //         // setIsPending(false);
+    //         setStatus({ state: StatusStateEnum.error,
+    //             message: (err instanceof Error)?err.message:'failed to assign data. unknown type' });
+    //         setData(null);
+    //     }
+    // };
+    // const startAudit = (verifier: string) => {
+    //     // make sure verifier is correct
+    //     let verifierPath: string = verifier;
+    //     if(verifierPath!=='edan') { verifierPath='edan'; }
 
-        // hold onto our interval if request takes longer
-        let interval;
-        const intervalCycle: number = 5000; // 5s
+    //     // hold onto our interval if request takes longer
+    //     let interval;
+    //     const intervalCycle: number = 5000; // 5s
 
-        // reset our states
-        // setIsPending(true);
-        // setError(null);
-        setStatus({ state: StatusStateEnum.loading, message: 'loading verifier results' });
-        setData(null);
+    //     // reset our states
+    //     setStatus({ state: StatusStateEnum.loading, message: 'loading verifier results' });
+    //     setData(null);
 
-        // figure out our endpoint
-        let endpoint = `http://localhost:4000/verifier/${verifierPath}?`;
-        if(configLimit && configLimit>0) { endpoint += `limit=${configLimit}&`; }
-        // if(configID && configID>0) { endpoint += `idSystemObject=${configID}`; }
+    //     // figure out our endpoint
+    //     let endpoint = `http://localhost:4000/verifier/${verifierPath}?`;
+    //     if(configLimit && configLimit>0) { endpoint += `limit=${configLimit}&`; }
+    //     // if(configID && configID>0) { endpoint += `idSystemObject=${configID}`; }
 
-        // notify through console
-        console.log(`(Verifier) grabbing ${(configLimit && configLimit>0)?configLimit:'all'} subjects`);
+    //     // notify through console
+    //     console.log(`(Verifier) grabbing ${(configLimit && configLimit>0)?configLimit:'all'} subjects`);
 
-        // fetch our data
-        fetch(endpoint)
-            .then(response => {
-                if(!response.ok || response.status>=300) {
-                    throw new Error(`${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(json => {
-                // console.log(json);
+    //     // fetch our data
+    //     fetch(endpoint)
+    //         .then(response => {
+    //             if(!response.ok || response.status>=300) {
+    //                 throw new Error(`${response.status}: ${response.statusText}`);
+    //             }
+    //             return response.json();
+    //         })
+    //         .then(json => {
+    //             // console.log(json);
 
-                // if not successful, throw error
-                if(json.success===false)
-                    throw Error(json?.error);
+    //             // if not successful, throw error
+    //             if(json.success===false)
+    //                 throw Error(json?.error);
 
-                // if we're already done then set our data
-                if(json.isComplete===true) {
-                    // we have our data so return it
-                    AssignData(json);
-                } else {
-                    // we don't have our data yet so we keep checking
-                    // todo: define a timeout so not going forever. throw an error on fail
-                    interval = setInterval(() => {
-                        console.log('calling get report');
-                        getVerifierReport(json.idWorkflowReport)
-                            .then(json => {
-                                if(json.isComplete===true) {
-                                    AssignData(json);
-                                    clearInterval(interval);
-                                }
-                            });
-                    }, intervalCycle);
-                }
-            })
-            .catch((err) => {
-                // setIsPending(false);
-                // setError(err.message);
-                setStatus({ state: StatusStateEnum.error, message: err.message });
-            });
+    //             // if we're already done then set our data
+    //             if(json.isComplete===true) {
+    //                 // we have our data so return it
+    //                 AssignData(json);
+    //             } else {
+    //                 // we don't have our data yet so we keep checking
+    //                 // todo: define a timeout so not going forever. throw an error on fail
+    //                 interval = setInterval(() => {
+    //                     console.log('calling get report');
+    //                     getAuditReport(json.idWorkflowReport)
+    //                         .then(json => {
+    //                             if(json.isComplete===true) {
+    //                                 AssignData(json);
+    //                                 clearInterval(interval);
+    //                             }
+    //                         });
+    //                 }, intervalCycle);
+    //             }
+    //         })
+    //         .catch((err) => {
+    //             setStatus({ state: StatusStateEnum.error, message: err.message });
+    //         });
 
-        // cleanup
-        return () => { clearInterval(interval); };
-    };
+    //     // cleanup
+    //     return () => { clearInterval(interval); };
+    // };
     const onConfigLimitChange = (e) => {
         if (!e.target.validity.patternMismatch) {
             setConfigLimit(e.target.value.split(/\D/).join(''));
         }
     };
-    // const onConfigIdChange = (e) => {
-    //     if (!e.target.validity.patternMismatch) {
-    //         setConfigID(e.target.value.split(/\D/).join(''));
-    //     }
-    // };
+    const renderAuditOptions = (auditType: AuditTypeEnum) => {
+        switch(auditType) {
 
+            case 0: { // edan
+                return (
+                    <div style={{ flex: 1 }}>
+                        <TextField
+                            className={classes.verifierConfigInput}
+                            inputProps={{ inputMode: 'numeric', pattern: '^-?[0-9]\\d*\\.?\\d*$' }}
+                            helperText='# of objects to verify. (empty for all)'
+                            id='verify-limit-input'
+                            label='Limit'
+                            onChange={onConfigLimitChange}
+                            value={configLimit || ''}
+                        />
+
+                        {/* <button className={classes.verifierTypeButton} onClick={() => startAudit('edan')}>Fetch</button> */}
+                    </div>
+                );
+            }
+
+            case 1: { // database
+                return (
+                    <div style={{ flex: 1, minHeight: 50, textAlign: 'center' }}>
+                        No options available
+                    </div>
+                );
+            }
+
+            default: {
+                return ('');
+            }
+        }
+    };
     const renderStatusBox = (status: Status) => {
-        console.log(status.state);
-
         switch(status.state) {
 
             case StatusStateEnum.uninitialized: {
@@ -463,6 +435,103 @@ function Audit(): React.ReactElement {
         }
     };
 
+    // side effect for onMount
+    useEffect(() => {
+        // todo: check if local storage has previous session.
+        //       if so, load it (or grab from the server)
+        setData('');
+    },[]);
+
+    // reactive side effects that trigger based on changes in the data/variable
+    useEffect(() => {
+        if(!data) return;
+        console.warn(data);
+
+        const formattedData: any[] = [];
+        data.data.forEach(item => {
+            formattedData.push({
+                id: item.idSystemObject,
+                subject: item.subject,
+                details: item.objectURL,
+                testSubject: {
+                    id: item.idSystemObject, // duplicated so cell callbacks can reference it
+                    status: item.tests[0].status,
+                    message: item.tests[0].message,
+                    packrat: item.tests[0].packratData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:p0`}>{i}<br></br></span>; }),
+                    edan: item.tests[0].edanData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:e0`}>{i}<br></br></span>; }),
+                    style: (item.tests[0].status==='fail')?classes.cellFail:classes.cellPass,
+                },
+                testUnit: {
+                    id: item.idSystemObject, // duplicated so cell callbacks can reference it
+                    status: item.tests[1].status,
+                    message: item.tests[1].message,
+                    packrat: item.tests[1].packratData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:p1`}>{i}<br></br></span>; }),
+                    edan: item.tests[1].edanData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:e1`}>{i}<br></br></span>; }),
+                    style: (item.tests[1].status==='fail')?classes.cellFail:classes.cellPass,
+                },
+                testIdentifier: {
+                    id: item.idSystemObject, // duplicated so cell callbacks can reference it
+                    status: item.tests[2].status,
+                    message: item.tests[2].message,
+                    packrat: item.tests[2].packratData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:p2`}>{i}<br></br></span>; }),
+                    edan: item.tests[2].edanData.map(i => { return <span key={`${item.idSubject}:${Math.random()}:e2`}>{i}<br></br></span>; }),
+                    style: (item.tests[2].status==='fail')?classes.cellFail:classes.cellPass,
+                }
+            });
+        });
+        setChartData(formattedData);
+
+    }, [data,classes]);
+
+    // handle any changes in status
+    useEffect(() => {
+        if(status.state===StatusStateEnum.success) {
+            setTimeout(() => {
+                if(status.state===StatusStateEnum.success)
+                    setStatus({ state: StatusStateEnum.running, message: status.message });
+            }, 3000);
+        }
+    }, [status]);
+
+    // when we switch to a new section
+    const changeAuditType = (_event,newType) => {
+        console.log(newType);
+
+        const oldType = auditType;
+        console.log(`Auditor changing from "${AuditTypeEnum[oldType]}" to "${AuditTypeEnum[newType]}"`);
+        setAuditType(newType);
+
+        // switch(newType) {
+        //     case 0: // edan
+        //         startAudit('edan');
+        //         break;
+
+        //     case 1: // database
+        //         console.warn('database audit type not supported');
+        //         break;
+
+        //     default: // undefined
+        //         console.error(`unsupported audit type: ${newType}`);
+        // }
+    };
+    useEffect(() => {
+        console.log(`in useEffect for auditType: ${auditType}`);
+        switch(auditType) {
+            case 0: // edan
+                // startAudit('edan');
+                break;
+
+            case 1: // database
+                console.warn('database audit type not supported');
+                break;
+
+            default: // undefined
+                console.error(`unsupported audit type: ${auditType}`);
+        }
+
+    },[auditType]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
     // return our JSX markup
     return (
         <Box className={classes.container}>
@@ -474,44 +543,37 @@ function Audit(): React.ReactElement {
                     Auditing: Verifiers
                 </Typography>
                 <Container className={classes.verifierTypeContainer}>
-                    <button className={classes.verifierTypeButton} onClick={() => setVerifier('edan')}>Submit</button>
+                    <Tabs
+                        value={auditType}
+                        indicatorColor='primary'
+                        textColor='primary'
+                        onChange={ changeAuditType }
+                        aria-label='changing audit type'
+                    >
+                        <Tab label='EDAN' />
+                        <Tab label='Database' />
+                        <Tab label='Storage' disabled />
+                    </Tabs>
+                </Container>
+                <Container className={classes.statusContainer}>
+                    { renderStatusBox(status) }
                 </Container>
                 <Container className={classes.verifierConfigContainer}>
-                    <TextField
-                        className={classes.verifierConfigInput}
-                        inputProps={{ inputMode: 'numeric', pattern: '^-?[0-9]\\d*\\.?\\d*$' }}
-                        helperText='# of objects to verify. (empty for all)'
-                        id='verify-limit-input'
-                        label='Limit'
-                        onChange={onConfigLimitChange}
-                        value={configLimit || ''}
-                    />
-                    {/* <TextField
-                        className={classes.verifierConfigInput}
-                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
-                        helperText='a specific SystemObject ID'
-                        id='verify-system-obj-id-input'
-                        label='Object Id'
-                        onChange={onConfigIdChange}
-                        value={configID || ''}
-                    /> */}
+                    { renderAuditOptions(auditType) }
                 </Container>
-            </Container>
-            <Container className={classes.statusContainer}>
-                { renderStatusBox(status) }
             </Container>
             <Container className={classes.dataResultsContainer}>
                 {
-                    (chartData && status.state!==StatusStateEnum.loading)?
+                    (tableData && status.state!==StatusStateEnum.loading)?
                         <Box className={classes.dataResultsContainer}>
                             <DataGrid
-                                rows={chartData}
-                                columns={columns}
+                                rows={tableData}
+                                columns={columnsEdan}
                                 rowHeight={40}
                                 scrollbarSize={5}
-                                rowsPerPageOptions={[100]}
-                                pageSize={15}
-                                // pageSizeOptions={[5, 10, 25]}
+                                rowsPerPageOptions={[15,25,50,100]}
+                                pageSize={pageSize}
+                                onPageSizeChange={(newPageSize) => setPageSize(newPageSize.pageSize)}
                                 density='compact'
                                 disableSelectionOnClick
                                 autoHeight
