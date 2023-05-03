@@ -13,14 +13,15 @@ import { Link } from 'react-router-dom';
 import { Colors } from '../../theme';
 import LoadingButton from '../controls/LoadingButton';
 
-const useStyles = makeStyles(({ palette, breakpoints }) => ({
+const useStyles = makeStyles(({breakpoints }) => ({
     uploadContainer: {
         display: 'flex',
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '10px 0px',
-        background: palette.background.paper
+        padding: '10px',
+        //background: palette.background.paper
+        background: 'rgb(236, 245, 253)' 
     },
     container: {
         display: 'flex',
@@ -30,7 +31,8 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         width: '53vw',
         padding: '20px 0px',
         marginLeft: 20,
-        background: palette.background.paper
+        //background: palette.background.paper
+        background: 'rgb(236, 245, 253)' 
     },
     navButton: {
         minHeight: 35,
@@ -45,7 +47,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     },
     link: {
         textDecoration: 'none'
-    }
+    },
 }));
 
 interface SidebarBottomNavigatorProps {

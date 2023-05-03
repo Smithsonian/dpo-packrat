@@ -61,7 +61,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => createStyles(
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
         color: Colors.defaults.white
-    }
+    },
 }));
 
 function Uploads(): React.ReactElement {
@@ -286,17 +286,18 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
 
     return (
         <React.Fragment>
-            <UploadFilesPicker />
-            <SidebarBottomNavigator
-                leftLabel='Discard'
-                rightLabel='Ingest'
-                leftLoading={discardingFiles}
-                rightLoading={gettingAssetDetails}
-                onClickLeft={onDiscard}
-                onClickRight={onIngest}
-                uploadVersion
-            />
-            <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
+          
+                <UploadFilesPicker />
+                <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
+                <SidebarBottomNavigator
+                    leftLabel='Discard'
+                    rightLabel='Ingest'
+                    leftLoading={discardingFiles}
+                    rightLoading={gettingAssetDetails}
+                    onClickLeft={onDiscard}
+                    onClickRight={onIngest}
+                    uploadVersion
+                />
         </React.Fragment>
     );
 }
