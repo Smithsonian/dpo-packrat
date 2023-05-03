@@ -33,7 +33,7 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         flexDirection: 'column',
         alignItems: 'center',
         minHeight: '16vh',
-        height: '30vh',
+        height: '25vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
         width: '100%',
@@ -79,8 +79,8 @@ function UploadList(props: UploadListProps): React.ReactElement {
         <Box className={classes.container}>
             <FieldType
                 required
-                align='center'
-                label='Upload Files'
+                align='left'
+                label='Upload Files.'
                 labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
                 width={'calc(100% - 20px)'}
                 padding='10px'
