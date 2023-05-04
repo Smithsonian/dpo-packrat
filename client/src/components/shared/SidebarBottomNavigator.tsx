@@ -15,7 +15,7 @@ import LoadingButton from '../controls/LoadingButton';
 
 const useStyles = makeStyles(({breakpoints }) => ({
     uploadContainer: {
-        display: 'flex',
+        //display: 'flex', 
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -24,7 +24,7 @@ const useStyles = makeStyles(({breakpoints }) => ({
         background: 'rgb(236, 245, 253)' 
     },
     container: {
-        display: 'flex',
+        //display: 'flex',
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
