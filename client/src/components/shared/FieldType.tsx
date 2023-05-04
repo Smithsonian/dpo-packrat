@@ -12,7 +12,8 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'flex',
         padding: ({ padding }: FieldTypeProps) => padding ? padding : '0px 10px',
-        borderRadius: 5,
+        //borderRadius: 5,
+        //border: `1px dashed #0086ff`,
         width: ({ width }: FieldTypeProps) => width || '100%',
         marginTop: ({ marginTop }: FieldTypeProps) => spacing(marginTop || 0),
         backgroundColor: ({ required, error }: FieldTypeProps) => (error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light)
