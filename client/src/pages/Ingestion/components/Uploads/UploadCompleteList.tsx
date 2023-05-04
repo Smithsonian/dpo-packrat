@@ -107,7 +107,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
             <React.Fragment>
                 {!completed.length && (
                     <Typography className={classes.listDetail} variant='body1'>
-                        No files available
+                        No files available.
                     </Typography>
                 )}
                 <FileList files={completed} />

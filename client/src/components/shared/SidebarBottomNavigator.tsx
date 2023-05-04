@@ -6,7 +6,7 @@
  * This component renders bottom navigation view, used in data upload
  * and ingestion flow
  */
-import { Box } from '@material-ui/core';
+import { Box, TypographyProps } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -28,11 +28,11 @@ const useStyles = makeStyles(({breakpoints }) => ({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
-        width: '53vw',
-        padding: '20px 0px',
-        marginLeft: 20,
+        width: '100%',
+        padding: '20px',
+        //marginLeft: 20,
         //background: palette.background.paper
-        background: 'rgb(236, 245, 253)' 
+        //background: 'rgb(236, 245, 253)' 
     },
     navButton: {
         minHeight: 35,
@@ -51,6 +51,7 @@ const useStyles = makeStyles(({breakpoints }) => ({
 }));
 
 interface SidebarBottomNavigatorProps {
+    btnProps?: TypographyProps;
     leftLabel: string;
     leftLoading?: boolean;
     leftRoute?: string;
@@ -70,7 +71,7 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
     // console.log(`SidebarBottomNavigator ${JSON.stringify(props)}, onClickRight ${onClickRight ? 'defined' : 'NOT defined'}`);
 
     let leftButton = (
-        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={leftLoading || false} disabled={disableNavigation} onClick={onClickLeft}>
+        <LoadingButton className={classes.navButton} style={{marginRight: '30px'}} disableElevation loaderSize={15} loading={leftLoading || false} disabled={disableNavigation} onClick={onClickLeft}>
             {leftLabel}
         </LoadingButton>
     );

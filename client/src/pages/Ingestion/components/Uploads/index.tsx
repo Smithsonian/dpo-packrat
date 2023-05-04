@@ -44,7 +44,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => createStyles(
         justifyContent: 'center',
         height: '30vh',
         width: '40vw',
-        border: `1px dashed ${palette.primary.main}`,
+        //border: `1px dashed ${palette.primary.main}`,
         borderRadius: 10,
         backgroundColor: palette.primary.light
     },
