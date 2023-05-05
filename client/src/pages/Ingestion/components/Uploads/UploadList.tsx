@@ -24,8 +24,8 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        marginTop: 20,
-        marginBottom: 40,
+        //marginTop: 20,
+        //marginBottom: 40,
         border: `1px dashed ${palette.primary.main}`
     },
     list: {
@@ -33,7 +33,7 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         flexDirection: 'column',
         alignItems: 'center',
         minHeight: '16vh',
-        height: '30vh',
+        height: '25vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
         width: '100%',
@@ -60,8 +60,13 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
     },
     title: {
         margin: '1% 0px',
-        fontSize: '1em',
-        fontWeight: 500
+        fontSize: '.8em',
+    },
+    subtitle: {
+        margin: '1% 0px',
+        fontSize: '.8em',
+        color: '#878585',
+        marginBottom: '2.5em'
     }
 }));
 
@@ -76,26 +81,29 @@ function UploadList(props: UploadListProps): React.ReactElement {
     const { loading, open } = props;
 
     return (
-        <Box className={classes.container}>
-            <FieldType
-                required
-                align='center'
-                label='Upload Files'
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
-                width={'calc(100% - 20px)'}
-                padding='10px'
-            >
-                <UploadListHeader />
-                <Box className={classes.list}>
-                    <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
-                    <Typography className={classes.title}>Drag and drop files here or click the button</Typography>
-                    <BsCloudUpload className={classes.icon} size='50px' />
-                    <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
-                        Browse files
-                    </Button>
-                </Box>
-            </FieldType>
-        </Box>
+        <div>
+            <Box className={classes.container}>
+                <FieldType
+                    required
+                    align='left'
+                    label='Upload Files.'
+                    labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
+                    width={'calc(100% - 20px)'}
+                    padding='10px'
+                >
+                    <UploadListHeader />
+                    <Box className={classes.list}>
+                        <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
+                        <BsCloudUpload className={classes.icon} size='50px' />
+                        <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
+                            Browse files
+                        </Button>
+                        <Typography className={classes.title}>Drag and drop files here or choose file.</Typography>
+                    </Box>
+                </FieldType>
+            </Box>
+            <Typography className={classes.subtitle}>Supported Formats: <br /> Model Type: obj, ply, stl, x3d, wrl, dae, or fbx*.<br /> Textures: jpg, png, tif, tga, bmp</Typography>
+        </div>
     );
 }
 

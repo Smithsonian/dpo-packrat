@@ -17,6 +17,8 @@ import SubjectList from './SubjectList';
 import { Helmet } from 'react-helmet';
 import useIngest from '../../hooks/useIngest';
 import { confirmLeaveIngestion } from '../..';
+import { HelpOutline } from '@material-ui/icons';
+//import { Tooltip } from 'client/src/components/controls/ToolTip';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -36,7 +38,9 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     filesLabel: {
         color: palette.primary.dark,
-        marginRight: 20
+        marginRight: 20,
+        fontWeight: 'bold',
+        fontSize: '1em'
     },
     fileChip: {
         marginRight: 10
