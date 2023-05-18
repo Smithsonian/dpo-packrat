@@ -8,8 +8,6 @@ import * as REP from '../../../report/interface';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import { Config } from '../../../config';
-
-// import { ZipStream } from '../../../utils/zipStream';
 import { ZipFile } from '../../../utils';
 import { SvxReader } from '../../../utils/parser';
 
@@ -118,7 +116,6 @@ export class WorkflowUpload implements WF.IWorkflow {
                 // it's not a model (e.g. Capture Data)
                 // use ZipFile so we don't need to load it all into memory
                 const filePath: string = Config.storage.rootStaging+'/'+assetVersion.StorageKeyStaging;
-                // const ZS: ZipStream = new ZipStream(RSR.readStream);
                 const ZS: ZipFile = new ZipFile(filePath,true);
                 const zipRes: H.IOResults = await ZS.load();
                 if (!zipRes.success)
