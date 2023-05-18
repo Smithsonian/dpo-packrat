@@ -7,7 +7,10 @@ import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
-import { ZipStream } from '../../../utils/zipStream';
+import { Config } from '../../../config';
+
+// import { ZipStream } from '../../../utils/zipStream';
+import { ZipFile } from '../../../utils';
 import { SvxReader } from '../../../utils/parser';
 
 // import * as sharp from 'sharp';
@@ -95,6 +98,7 @@ export class WorkflowUpload implements WF.IWorkflow {
             if (!asset)
                 return this.handleError(`WorkflowUpload.validateFiles unable to load asset for ${assetVersion.idAsset}`);
 
+            // see if the passed in file is a model
             const isModel: boolean = await this.testIfModel(assetVersion.FileName, asset);
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion);
@@ -103,12 +107,19 @@ export class WorkflowUpload implements WF.IWorkflow {
             this.appendToWFReport(`Upload validation of ${RSR.fileName}`);
 
             let fileRes: H.IOResults = { success: true };
-            if (isModel) // if we're a model, zipped or not, validate the entire file/collection as is:
+            if (isModel) {
+                // if we're a model, zipped or not, validate the entire file/collection as is:
                 fileRes = await this.validateFileModel(RSR.fileName, RSR.readStream, false, idSystemObject);
-            else if (path.extname(RSR.fileName).toLowerCase() !== '.zip') // not a zip
+            } else if (path.extname(RSR.fileName).toLowerCase() !== '.zip') { // not a zip
+                // we are not a zip
                 fileRes = await this.validateFile(RSR.fileName, RSR.readStream, false, idSystemObject, asset);
-            else {
-                const ZS: ZipStream = new ZipStream(RSR.readStream);
+            } else {
+
+                // it's not a model (e.g. Capture Data)
+                // use ZipFile so we don't need to load it all into memory
+                const filePath: string = Config.storage.rootStaging+'/'+assetVersion.StorageKeyStaging;
+                // const ZS: ZipStream = new ZipStream(RSR.readStream);
+                const ZS: ZipFile = new ZipFile(filePath,true);
                 const zipRes: H.IOResults = await ZS.load();
                 if (!zipRes.success)
                     return this.handleError(`WorkflowUpload.validateFiles unable to unzip asset version ${RSR.fileName}: ${zipRes.error}`);
@@ -206,6 +217,8 @@ export class WorkflowUpload implements WF.IWorkflow {
     }
 
     private async testIfModel(fileName: string, asset: DBAPI.Asset): Promise<boolean> {
+        // compare our model extension to defined vocabulary for models and geometry files.
+        // if it doesn't resolve to either type then fail the check.
         if (await CACHE.VocabularyCache.mapModelFileByExtension(fileName) !== undefined)
             return true;
         // might be zipped; check asset
