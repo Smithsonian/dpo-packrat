@@ -17,7 +17,7 @@ import SubjectList from './SubjectList';
 import { Helmet } from 'react-helmet';
 import useIngest from '../../hooks/useIngest';
 import { confirmLeaveIngestion } from '../..';
-import { HelpOutline } from '@material-ui/icons';
+//import { HelpOutline } from '@material-ui/icons';
 //import { Tooltip } from 'client/src/components/controls/ToolTip';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -157,6 +157,7 @@ function SubjectItem(): React.ReactElement {
                     label='Subject(s) Selected'
                     marginTop={2}
                     padding='10px'
+                    labelTooltip='This shows the subject currently selected.'
                 >
                     <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
                 </FieldType>
@@ -168,6 +169,7 @@ function SubjectItem(): React.ReactElement {
                     label='Media Group'
                     marginTop={2}
                     padding='10px'
+                    labelTooltip='Media groups are basically a group of digital assets that when grouped together can be used to make up a single subject or portion of a subject.  Each subject can have more than one media group'
                 >
                     <ItemList />
                 </FieldType>
