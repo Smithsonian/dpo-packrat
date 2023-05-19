@@ -15,6 +15,8 @@ import { SubjectUnitIdentifier } from '../../../../types/graphql';
 import SubjectList from './SubjectList';
 import { toast } from 'react-toastify';
 import { actionOnKeyPress } from '../../../../utils/shared';
+// import { HelpOutline } from '@material-ui/icons';
+// import Tooltip from "@material-ui/core/Tooltip";
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -38,11 +40,11 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
 }));
 
 type SearchListProps = {
-    EdanOnly?: boolean
+    EdanOnly?: boolean;
 };
 
 function SearchList(props: SearchListProps): React.ReactElement {
-    const { EdanOnly } = props;
+    const { EdanOnly} = props;
     const classes = useStyles();
     const [query, setQuery] = useState('');
     const [searchSubject, { data, called, loading, error }] = useLazyQuery(SearchIngestionSubjectsDocument, { fetchPolicy: 'no-cache' });
@@ -80,7 +82,10 @@ function SearchList(props: SearchListProps): React.ReactElement {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
 
     return (
-        <FieldType required={false} label='Search for Subject' marginTop={2} padding='10px'>
+        <FieldType required={false} label='Search for Subject' marginTop={2} padding='10px' labelTooltip='This is gitgthe entity that the digital asset(s) is based on and where it will be saved to.'>
+          {/* <Tooltip title="Lorem ipsum dolor sit amet" placement="bottom">
+            <HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} />
+          </Tooltip> */}
             <Box className={classes.container}>
                 <label htmlFor='searchSubjectFilter' style={{ display: 'none' }}>Search Subject</label>
                 <TextField
