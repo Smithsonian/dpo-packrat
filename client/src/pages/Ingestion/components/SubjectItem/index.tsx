@@ -41,6 +41,9 @@ const useStyles = makeStyles(({ palette }) => ({
         marginRight: 20,
         fontWeight: 'bold',
         fontSize: '1em'
+        marginRight: 20,
+        fontWeight: 'bold',
+        fontSize: '1em'
     },
     fileChip: {
         marginRight: 10
