@@ -28,7 +28,6 @@ export class ZipFile implements IZip {
     async load(): Promise<H.IOResults> {
         try {
             this._zip = new StreamZip({ file: this._fileName, storeEntries: true });
-
             return new Promise<H.IOResults>((resolve) => {
                 /* istanbul ignore else */
                 if (this._zip) {
