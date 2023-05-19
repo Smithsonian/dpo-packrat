@@ -47,8 +47,8 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     async upload(): Promise<UploadAssetResult> {
+        // entry point for file upload requests coming from the client
         this.LS = await ASL.getOrCreateStore();
-
         const UAR: UploadAssetResult = await this.uploadWorker();
 
         const success: boolean = (UAR.status === UploadStatus.Complete);
@@ -63,6 +63,8 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     private async uploadWorker(): Promise<UploadAssetResult> {
+        // creates a WorkflowReport for the upload request allowing for asynchronous handling
+
         const { filename, createReadStream } = this.apolloFile;
         AuditFactory.audit({ url: `/ingestion/uploads/${filename}`, auth: (this.user !== undefined) }, { eObjectType: COMMON.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 }, eEventKey.eHTTPUpload);
 
@@ -83,6 +85,7 @@ class UploadAssetWorker extends ResolverBase {
             return { status: UploadStatus.Failed, error: 'Storage unavailable' };
         }
 
+        // get a write stream for us to store the incoming stream
         const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
         if (!WSResult.success || !WSResult.writeStream || !WSResult.storageKey) {
             LOG.error(`uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`, LOG.LS.eGQL);
@@ -96,6 +99,7 @@ class UploadAssetWorker extends ResolverBase {
         }
 
         try {
+            // write our incoming stream of bytes to a file in local storage (staging)
             const fileStream = createReadStream();
             const stream = fileStream.pipe(writeStream);
 
