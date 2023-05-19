@@ -96,7 +96,7 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
     return (
         //The Identifier Component
         <Box marginBottom='10px'>
-            <FieldType required label={label} padding='10px'>
+            <FieldType required label={label} padding='10px' labelTooltip='Assign an identifier to your digital asset here.  The identifier will make it easier to search for the digital asset later.'>
                 <Box display='flex' justifyContent='space-between'>
                     <Box className={classes.assetIdentifier}>
                         <label htmlFor='systemCreated' style={{ display: 'none' }}>System Created Identifier</label>
