@@ -875,6 +875,7 @@ model WorkflowReport {
   idWorkflow       Int
   MimeType         String   @mariasql.VarChar(256)
   Data             String   @mariasql.LongText
+  Name             String   @mariasql.VarChar(512)
   Workflow         Workflow @relation(fields: [idWorkflow], references: [idWorkflow], onDelete: NoAction, onUpdate: NoAction, map: "fk_workflowreport_workflow1")
 
   @@index([idWorkflow], map: "fk_workflowreport_workflow1")

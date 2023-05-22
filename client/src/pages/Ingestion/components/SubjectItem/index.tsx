@@ -17,7 +17,7 @@ import SubjectList from './SubjectList';
 import { Helmet } from 'react-helmet';
 import useIngest from '../../hooks/useIngest';
 import { confirmLeaveIngestion } from '../..';
-import { HelpOutline } from '@material-ui/icons';
+// import { HelpOutline } from '@material-ui/icons';
 //import { Tooltip } from 'client/src/components/controls/ToolTip';
 
 const useStyles = makeStyles(({ palette }) => ({

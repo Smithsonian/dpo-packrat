@@ -13,15 +13,15 @@ import { Link } from 'react-router-dom';
 import { Colors } from '../../theme';
 import LoadingButton from '../controls/LoadingButton';
 
-const useStyles = makeStyles(({breakpoints }) => ({
+const useStyles = makeStyles(({ breakpoints }) => ({
     uploadContainer: {
-        //display: 'flex', 
+        //display: 'flex',
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '10px',
         //background: palette.background.paper
-        background: 'rgb(236, 245, 253)' 
+        background: 'rgb(236, 245, 253)'
     },
     container: {
         //display: 'flex',
@@ -32,7 +32,7 @@ const useStyles = makeStyles(({breakpoints }) => ({
         padding: '20px',
         //marginLeft: 20,
         //background: palette.background.paper
-        //background: 'rgb(236, 245, 253)' 
+        //background: 'rgb(236, 245, 253)'
     },
     navButton: {
         minHeight: 35,
@@ -71,7 +71,7 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
     // console.log(`SidebarBottomNavigator ${JSON.stringify(props)}, onClickRight ${onClickRight ? 'defined' : 'NOT defined'}`);
 
     let leftButton = (
-        <LoadingButton className={classes.navButton} style={{marginRight: '30px'}} disableElevation loaderSize={15} loading={leftLoading || false} disabled={disableNavigation} onClick={onClickLeft}>
+        <LoadingButton className={classes.navButton} style={{ marginRight: '30px' }} disableElevation loaderSize={15} loading={leftLoading || false} disabled={disableNavigation} onClick={onClickLeft}>
             {leftLabel}
         </LoadingButton>
     );
