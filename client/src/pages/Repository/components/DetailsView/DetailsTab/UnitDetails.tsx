@@ -46,7 +46,7 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
                                 {/* <Typography className={classes.labelText}>Abbreviation</Typography> */}
                                 <LabelTooltipText
                                     label="Abbreviation"
-                                    labelTooltipTxt="This is the subtitle of this media asset."
+                                    labelTooltipTxt="This is the shortened version of the name chosen."
                                 />
                             </TableCell>
                             <TableCell className={clsx(classes.tableCell, classes.valueText)}>
@@ -68,7 +68,7 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
                                 {/* <Typography className={classes.labelText}>ARKPrefix</Typography> */}
                                 <LabelTooltipText
                                     label="ARKPrefx"
-                                    labelTooltipTxt="This is the subtitle of this media asset."
+                                    labelTooltipTxt="The ARK prefix is used to show a 'shortened' version of the ARK URL that only contains the ID of the unit selected."
                                 />
                             </TableCell>
                             <TableCell className={clsx(classes.tableCell, classes.valueText)}>
